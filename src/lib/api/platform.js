@@ -1024,6 +1024,7 @@ export async function fetchCohortsWithStats(organizationId) {
       name: c.name,
       start: c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "TBD",
       end: c.ends_at ? new Date(c.ends_at).toLocaleDateString() : "TBD",
+      endsAt: c.ends_at || null,
       members: members || 0,
       courses: courses || 0,
       progress,
