@@ -1,0 +1,75 @@
+/* Global responsive helpers and mobile-first tweaks
+   - Add box-sizing, responsive images/iframes
+   - Small-screen padding and touch-target improvements
+   - Prevent overflow and long-word breaks
+   - Keep desktop (>=900px) layout intact by using max-width media queries
+*/
+
+/* Preserve existing reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  height: 100dvh;
+}
+
+/* Make media and embedded content scale down on small screens */
+img, picture, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+iframe {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Prevent long unbroken strings from overflowing */
+body, input, button, textarea, select {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Increase tappable area on small screens */
+button, .ta-btn, .tai button, .tai .ta-btn, [role="button"] {
+  min-height: 44px;
+  padding: 10px 14px;
+}
+
+/* Mobile-first spacing reductions for narrow viewports */
+:root {
+  --page-side-padding: 16px;
+}
+
+@media (max-width: 899px) {
+  /* Reduce heavy paddings that were desktop-oriented */
+  .ta-topbar, .tai-topbar, .ta-content, .tai-body {
+    padding-left: var(--page-side-padding);
+    padding-right: var(--page-side-padding);
+  }
+
+  /* Ensure search input and title compress reasonably */
+  .ta-search { width: 100%; max-width: none; }
+  .ta-h1, .tai-h1 { font-size: clamp(18px, 4.5vw, 22px); }
+
+  /* Mobile toast and banners should respect safe area and not overflow */
+  .tai-toast, .tai-demo-banner {
+    left: 16px;
+    right: 16px;
+    transform: none;
+    width: auto;
+    max-width: none;
+    border-radius: 12px;
+  }
+
+  /* Ensure content columns don't push past small screens */
+  .tai-app, .ta-main, .ta-content { width: 100%; max-width: 100%; }
+}
+
+/* Keep existing desktop rules intact — only constrain our mobile rules to max-width */

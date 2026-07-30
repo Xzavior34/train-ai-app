@@ -1,0 +1,5 @@
+/* Minor additions to public/offline.html to ensure mobile friendliness (no visual change on desktop) */
+html, body { height: 100%; margin: 0; }
+body { display:flex; align-items:center; justify-content:center; padding: 24px; box-sizing: border-box; }
+.card { max-width: 100%; width: 420px; box-sizing: border-box; margin: 0 12px; }
+button { min-height: 44px; padding: 11px 20px; }
