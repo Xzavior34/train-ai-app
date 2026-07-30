@@ -561,8 +561,10 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform 
                 <MessagesScreen
                   activeMentorThread={activeMentorThread} setActiveMentorThread={setActiveMentorThread}
                   messageInput={messageInput} setMessageInput={setMessageInput}
-                  conversationMessages={[]} conversationLoading={false}
-                  session={session} user={user} back={back} showToast={showToast} sendMentorMessage={sendMentorMessage}
+                  messageThreads={messageThreads} threadsLoading={messageThreadsQuery.loading}
+                  conversationMessages={conversationQuery.data || []} conversationLoading={conversationQuery.loading}
+                  session={session} user={user} back={back} showToast={showToast}
+                  handleSendMessage={handleSendMessage}
                 />
               )}
               {screen === "notifications" && (

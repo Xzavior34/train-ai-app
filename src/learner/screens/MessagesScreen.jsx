@@ -1,46 +1,98 @@
 import React from "react";
-import { TopBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
+import { TopBar, Avatar, initialsOf } from "../components/LearnerUI.jsx";
 import { Send } from "lucide-react";
 
 export function MessagesScreen({
   activeMentorThread, setActiveMentorThread, messageInput, setMessageInput,
-  conversationMessages, conversationLoading, session, user, back, showToast, sendMentorMessage
+  messageThreads = [], threadsLoading, conversationMessages = [], conversationLoading,
+  session, back, handleSendMessage
 }) {
   return (
     <div className="tai-fade-in">
       <TopBar title="Direct Messages" sub="Chat with mentors & tutors" onBack={back} />
-      <div className="tai-card" style={{ minHeight: 400, display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, overflowY: "auto" }} className="tai-col tai-gap10">
-          {conversationMessages.length === 0 && <div className="tai-empty">No messages in this conversation yet.</div>}
-          {conversationMessages.map(m => {
-            const isMe = m.sender_id === session?.user?.id;
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: "220px 1fr", minHeight: 440 }}>
+
+        {/* Thread list */}
+        <div style={{ borderRight: "1px solid var(--border)", background: "var(--surface-2)", overflowY: "auto" }}>
+          {threadsLoading && <div className="tai-empty" style={{ padding: 16, fontSize: 12.5 }}>Loading...</div>}
+          {!threadsLoading && messageThreads.length === 0 && (
+            <div className="tai-empty" style={{ padding: 16, fontSize: 12.5 }}>
+              No conversations yet — message a mentor from Community or Mentors to start one.
+            </div>
+          )}
+          {messageThreads.map(t => {
+            const isActive = activeMentorThread?.counterpartId === t.counterpartId;
             return (
-              <div key={m.id} className="tai-row tai-gap8" style={{ alignSelf: isMe ? "flex-end" : "flex-start", maxWidth: "80%" }}>
-                {!isMe && <Avatar initials={initialsOf(m.user_profiles?.display_name)} size={28} />}
-                <div style={{
-                  background: isMe ? "var(--primary)" : "var(--surface-2)",
-                  color: isMe ? "#fff" : "var(--text)",
-                  padding: "10px 14px", borderRadius: 14, fontSize: 13.5
-                }}>
-                  {m.content}
+              <div
+                key={t.counterpartId}
+                onClick={() => setActiveMentorThread(t)}
+                style={{
+                  padding: "10px 12px",
+                  cursor: "pointer",
+                  background: isActive ? "var(--surface)" : "transparent",
+                  borderLeft: isActive ? "3px solid var(--primary)" : "3px solid transparent",
+                  borderBottom: "1px solid var(--border)",
+                }}
+              >
+                <div className="tai-row tai-gap8">
+                  <Avatar initials={initialsOf(t.name)} size={30} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="tai-row tai-between">
+                      <span style={{ fontWeight: 700, fontSize: 12.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.name}</span>
+                      {t.unread > 0 && (
+                        <span style={{ fontSize: 9.5, fontWeight: 800, background: "var(--primary)", color: "#fff", borderRadius: 99, padding: "1px 6px" }}>{t.unread}</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.last}</div>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="tai-row tai-gap8 tai-mt12">
-          <input className="tai-input" style={{ flex: 1 }} placeholder="Write a message..." value={messageInput} onChange={e => setMessageInput(e.target.value)}
-            onKeyDown={async e => {
-              if (e.key === "Enter" && messageInput.trim() && activeMentorThread && session?.user?.id) {
-                await sendMentorMessage({ senderId: session.user.id, receiverId: activeMentorThread.counterpartId, content: messageInput.trim() });
-                setMessageInput(""); showToast("Message sent!");
-              }
-            }} />
-          <button className="tai-iconbtn" style={{ background: "var(--primary)", color: "#fff" }} onClick={async () => {
-            if (!messageInput.trim() || !activeMentorThread || !session?.user?.id) return;
-            await sendMentorMessage({ senderId: session.user.id, receiverId: activeMentorThread.counterpartId, content: messageInput.trim() });
-            setMessageInput(""); showToast("Message sent!");
-          }}><Send size={16} /></button>
+
+        {/* Conversation */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {!activeMentorThread ? (
+            <div className="tai-empty" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              Select a conversation to start chatting.
+            </div>
+          ) : (
+            <>
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--border)", fontWeight: 700, fontSize: 13.5 }}>
+                {activeMentorThread.name}
+              </div>
+              <div style={{ flex: 1, overflowY: "auto", padding: 14 }} className="tai-col tai-gap10">
+                {conversationLoading && <div className="tai-empty">Loading messages...</div>}
+                {!conversationLoading && conversationMessages.length === 0 && <div className="tai-empty">No messages in this conversation yet — say hello!</div>}
+                {conversationMessages.map(m => {
+                  const isMe = m.sender_id === session?.user?.id;
+                  return (
+                    <div key={m.id} className="tai-row tai-gap8" style={{ alignSelf: isMe ? "flex-end" : "flex-start", maxWidth: "80%" }}>
+                      {!isMe && <Avatar initials={initialsOf(activeMentorThread.name)} size={28} />}
+                      <div style={{
+                        background: isMe ? "var(--primary)" : "var(--surface-2)",
+                        color: isMe ? "#fff" : "var(--text)",
+                        padding: "10px 14px", borderRadius: 14, fontSize: 13.5
+                      }}>
+                        {m.content}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="tai-row tai-gap8" style={{ padding: 12, borderTop: "1px solid var(--border)" }}>
+                <input
+                  className="tai-input" style={{ flex: 1 }} placeholder="Write a message..."
+                  value={messageInput} onChange={e => setMessageInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") handleSendMessage(); }}
+                />
+                <button className="tai-iconbtn" style={{ background: "var(--primary)", color: "#fff" }} onClick={handleSendMessage}>
+                  <Send size={16} />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
