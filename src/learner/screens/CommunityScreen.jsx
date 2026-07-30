@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { PlusCircle, Heart, MessageCircle, Send, Users, UserPlus, TrendingUp, Activity, ArrowLeft, X, ThumbsUp, ThumbsDown, Layers, CheckCircle2 } from "lucide-react";
+import { PlusCircle, Heart, MessageCircle, Send, Users, TrendingUp, Activity, ArrowLeft, X, ThumbsUp, ThumbsDown, Layers, CheckCircle2 } from "lucide-react";
 
 // Small reusable stat block for the member profile modal (level/streak/points
 // pulled from the real user_gamification_stats table).
@@ -426,8 +426,8 @@ function ForumCategoryPanel({
 export function CommunityScreen({
   communityTab = "posts", setCommunityTab, posts = [], newPostText = "", setNewPostText,
   expandedPost, setExpandedPost, replyInput = "", setReplyInput, studyGroupsQuery = {},
-  joinedGroupIds = new Set(), myGroupIdsQuery = {}, communityPeopleQuery = {}, followedPeople = new Set(),
-  setFollowedPeople, memberStatsQuery = {}, activityFeedQuery = {},
+  joinedGroupIds = new Set(), myGroupIdsQuery = {}, communityPeopleQuery = {},
+  memberStatsQuery = {}, activityFeedQuery = {},
   user = {}, session = {}, showToast = () => {}, postsQuery = {},
   createCommunityPost = () => {}, togglePostReaction = () => {}, addPostComment = () => {},
   joinStudyGroup = () => {}, leaveStudyGroup = () => {},
@@ -966,13 +966,6 @@ export function CommunityScreen({
                 showToast(`Opening chat with ${name}...`);
               }}>
                 <MessageCircle size={14} /> Message {selectedMember.display_name?.split(" ")[0] || "Learner"}
-              </button>
-              <button className="tai-btn tai-btn-outline" style={{ width: "100%" }} onClick={() => {
-                const name = selectedMember.display_name || selectedMember.name || "Learner";
-                if (setFollowedPeople) setFollowedPeople(prev => new Set(prev).add(selectedMember.user_id));
-                showToast(`Followed ${name}`);
-              }}>
-                <UserPlus size={14} /> {followedPeople.has(selectedMember.user_id) ? "Following" : "Follow"}
               </button>
             </div>
           </div>
