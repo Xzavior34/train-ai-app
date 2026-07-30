@@ -26,12 +26,16 @@ export async function updateUserAvatar(userId, avatarUrl) {
   if (error) throw error;
 }
 
-export async function fetchOrgMembers() {
+export async function fetchOrgMembers(organizationId) {
   if (!supabase) return [];
-  const { data, error } = await supabase
-    .from("user_profiles")
-    .select("*")
-    .order("last_active_at", { ascending: false });
+  let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
+  // A plain org admin never sees other orgs' rows regardless of this filter
+  // (RLS already scopes them) — this only matters for super_admins, whose
+  // RLS grants unconditional read access to every org's user_profiles.
+  // Without this, switching tenants in the super-admin Tenant selector
+  // silently kept showing every organization's members mixed together.
+  if (organizationId) query = query.eq("organization_id", organizationId);
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
@@ -105,7 +109,7 @@ export async function fetchCohorts(organizationId) {
   return data || [];
 }
 
-export async function fetchComplianceAssignments() {
+export async function fetchComplianceAssignments(organizationId) {
   if (!supabase) return [];
   // courses(title, category) has a real FK and embeds fine; user_profiles
   // does not, so it's attached via a manual lookup instead.
@@ -114,8 +118,14 @@ export async function fetchComplianceAssignments() {
     .select("*, courses(title, category)")
     .order("due_at", { ascending: true });
   if (error) throw error;
-  const rows = data || [];
-  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
+  let rows = data || [];
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id), "user_id, display_name, avatar_url, organization_id");
+  // compliance_assignments has no organization_id column of its own — scope
+  // by the assigned learner's own org instead. Without this, a super_admin
+  // (or any admin whose RLS doesn't already narrow this table) would see
+  // every organization's compliance assignments mixed together, and
+  // switching tenants in the org selector wouldn't change anything shown here.
+  if (organizationId) rows = rows.filter((r) => profiles[r.user_id]?.organization_id === organizationId);
   return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
 }
 
