@@ -1,0 +1,983 @@
+import React, { useState, useMemo, useEffect } from "react";
+import { TopBar, Avatar, Tag, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { PlusCircle, Heart, MessageCircle, Send, Users, UserPlus, TrendingUp, Activity, ArrowLeft, X, ThumbsUp, ThumbsDown, Layers, CheckCircle2 } from "lucide-react";
+
+// Small reusable stat block for the member profile modal (level/streak/points
+// pulled from the real user_gamification_stats table).
+function StatPill({ label, value }) {
+  return (
+    <div style={{ flex: 1, textAlign: "center", background: "var(--surface-2)", borderRadius: 12, padding: "10px 6px" }}>
+      <div style={{ fontSize: 15, fontWeight: 800 }}>{value}</div>
+      <div style={{ fontSize: 10, color: "var(--text-2)", textTransform: "uppercase", letterSpacing: ".04em", marginTop: 2 }}>{label}</div>
+    </div>
+  );
+}
+
+// Study group chat — reads/writes the real `study_group_messages` table.
+// Complete Study Group Workspace — includes Discussion, Members list, and Shared Resources.
+function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMessages, sendStudyGroupMessage, fetchStudyGroupMembers, showToast, push, goTab }) {
+  const [activeTab, setActiveTab] = useState("discussion"); // "discussion" | "members" | "resources"
+  const [input, setInput] = useState("");
+  const [localMessages, setLocalMessages] = useState([]);
+
+  const messagesQuery = useSupabaseQuery(async () => {
+    if (!group?.id || !fetchStudyGroupMessages) return [];
+    return fetchStudyGroupMessages(group.id);
+  }, [group?.id]);
+
+  const membersQuery = useSupabaseQuery(async () => {
+    if (!group?.id || !fetchStudyGroupMembers) return [];
+    return fetchStudyGroupMembers(group.id);
+  }, [group?.id]);
+  const groupMembers = membersQuery.data || [];
+
+  const dbMessages = messagesQuery.data || [];
+  // Real thread only — dbMessages plus this session's own optimistic sends.
+  // (Previously this seeded two invented "Sarah Jenkins"/"Alex Rivera"
+  // welcome messages into every empty group, making it look like real peers
+  // had already posted. The "No posts yet" empty state below is the honest
+  // signal for a genuinely empty thread.)
+  const messages = useMemo(() => [...dbMessages, ...localMessages], [dbMessages, localMessages]);
+
+  // Real member count for this specific group: prefer the live members
+  // fetch (membersQuery, below) and fall back to the embedded
+  // `study_group_members(count)` aggregate already returned by
+  // fetchStudyGroups() — never a hardcoded "1".
+  const realMemberCount = !membersQuery.loading
+    ? groupMembers.length
+    : (group?.study_group_members?.[0]?.count ?? 0);
+
+  async function send() {
+    if (!input.trim() || !group?.id) return;
+    const text = input.trim();
+    setInput("");
+    const posterName = session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "You";
+    const newMsg = {
+      id: "msg-" + Date.now(),
+      sender_id: session?.user?.id || "me",
+      message: text,
+      created_at: new Date().toISOString(),
+      user_profiles: {
+        display_name: posterName,
+        avatar_url: session?.user?.user_metadata?.avatar_url || null,
+        role: "Learner",
+      },
+    };
+    setLocalMessages(prev => [...prev, newMsg]);
+
+    if (sendStudyGroupMessage && session?.user?.id) {
+      try {
+        await sendStudyGroupMessage({ studyGroupId: group.id, senderId: session.user.id, message: text });
+        if (messagesQuery.refetch) messagesQuery.refetch();
+      } catch (e) {
+        // Maintained locally
+      }
+    }
+  }
+
+  return (
+    <div className="tai-card" style={{ display: "flex", flexDirection: "column", minHeight: 440 }}>
+      {/* Group Header & Meta */}
+      <div style={{ borderBottom: "1px solid var(--border)", paddingBottom: 14 }}>
+        <div className="tai-row tai-between">
+          <div className="tai-row tai-gap10">
+            <button className="tai-iconbtn" onClick={onBack} aria-label="Back to study groups"><ArrowLeft size={16} /></button>
+            <div>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <div style={{ fontWeight: 800, fontSize: 16 }}>{group?.name || "Study Group Workspace"}</div>
+                <Tag>{group?.topic || "Study Group"}</Tag>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 3 }}>
+                {group?.description || "Collaborative workspace for study group members"}
+              </div>
+            </div>
+          </div>
+          <span className="tai-row tai-gap4" style={{ fontSize: 12, color: "var(--primary)", fontWeight: 700 }}>
+            <Users size={14} /> {realMemberCount} Member{realMemberCount === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        {/* Group Sub-Tabs */}
+        <div className="tai-row tai-gap8 tai-mt14">
+          <div
+            className={`tai-pill ${activeTab === "discussion" ? "tai-pill-active" : "tai-pill-inactive"}`}
+            onClick={() => setActiveTab("discussion")}
+            style={{ cursor: "pointer", fontSize: 12 }}
+          >
+            💬 Discussion Board
+          </div>
+          <div
+            className={`tai-pill ${activeTab === "members" ? "tai-pill-active" : "tai-pill-inactive"}`}
+            onClick={() => setActiveTab("members")}
+            style={{ cursor: "pointer", fontSize: 12 }}
+          >
+            👥 Group Members ({realMemberCount})
+          </div>
+          <div
+            className={`tai-pill ${activeTab === "resources" ? "tai-pill-active" : "tai-pill-inactive"}`}
+            onClick={() => setActiveTab("resources")}
+            style={{ cursor: "pointer", fontSize: 12 }}
+          >
+            📌 Shared Resources
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Content 1: Discussion Board */}
+      {activeTab === "discussion" && (
+        <div className="tai-col" style={{ flex: 1, justifyContent: "space-between", marginTop: 12 }}>
+          <div className="tai-col tai-gap10" style={{ maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
+            {messagesQuery.loading && messages.length === 0 && <div className="tai-empty">Loading group posts...</div>}
+            {!messagesQuery.loading && messages.length === 0 && (
+              <div className="tai-empty">No posts in this group workspace yet — share a question or update!</div>
+            )}
+            {messages.map(m => {
+              const isMe = m.sender_id === session?.user?.id || m.sender_id === "me";
+              const authorName = m.user_profiles?.display_name || (isMe ? "You" : "Group Member");
+              const initials = initialsOf(authorName);
+              return (
+                <div key={m.id} className="tai-card" style={{ background: "var(--surface-2)", padding: "12px 14px", width: "100%" }}>
+                  <div className="tai-row tai-between">
+                    <div className="tai-row tai-gap10">
+                      <Avatar initials={initials} size={32} src={m.user_profiles?.avatar_url} />
+                      <div>
+                        <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                          <span style={{ fontWeight: 700, fontSize: 13.5 }}>{authorName}</span>
+                          {isMe && <Tag tone="primary">You</Tag>}
+                          {m.user_profiles?.role && <Tag tone="neutral">{m.user_profiles.role}</Tag>}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{timeAgo(m.created_at)}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="tai-body-text tai-mt8" style={{ fontSize: 13, lineHeight: 1.45 }}>
+                    {m.message}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="tai-row tai-gap8 tai-mt14" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+            <input
+              className="tai-input"
+              style={{ flex: 1 }}
+              placeholder={`Post a message or question to ${group?.name || "study group"}...`}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") send(); }}
+            />
+            <button className="tai-btn tai-btn-primary" onClick={send}>
+              <Send size={15} /> Post
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tab Content 2: Group Members — real study_group_members rows for
+          THIS group specifically, not a generic community-people slice. */}
+      {activeTab === "members" && (
+        <div className="tai-col tai-gap10 tai-mt12">
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 4 }}>
+            Learners currently enrolled in this study group:
+          </div>
+          {membersQuery.loading && <div className="tai-empty">Loading members...</div>}
+          {!membersQuery.loading && groupMembers.length === 0 && (
+            <div className="tai-empty">No members yet — invite a peer to join this group.</div>
+          )}
+          {groupMembers.map(m => (
+            <div key={m.user_id} className="tai-row tai-between" style={{ background: "var(--surface-2)", padding: "10px 12px", borderRadius: 10 }}>
+              <div className="tai-row tai-gap10">
+                <Avatar initials={initialsOf(m.display_name)} size={32} src={m.avatar_url} />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{m.display_name}{m.user_id === session?.user?.id ? " (You)" : ""}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.role === "lead" ? "Group Lead" : "Member"}</div>
+                </div>
+              </div>
+              <Tag tone="success">Active</Tag>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tab Content 3: Shared Resources — this group's linked course
+          (study_groups.course_id, a real FK) is the only actual "resource"
+          the schema has for a study group; there's no dedicated shared-files
+          table, so rather than inventing a fake syllabus card, this links
+          straight to the real course when one is set. */}
+      {activeTab === "resources" && (
+        <div className="tai-col tai-gap10 tai-mt12">
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 4 }}>
+            Shared resources for this group:
+          </div>
+          {group?.courses?.title ? (
+            <div className="tai-card" style={{ background: "var(--surface-2)" }}>
+              <div className="tai-row tai-between">
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>📘 {group.courses.title}</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 2 }}>This group's linked course — open it for lessons & materials.</div>
+                </div>
+                <button
+                  className="tai-btn tai-btn-outline tai-btn-sm"
+                  onClick={() => {
+                    if (push) push("courseDetail", { id: group.course_id });
+                    else if (goTab) goTab("courses");
+                  }}
+                >
+                  Open course
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="tai-empty">No shared resources yet — this group isn't linked to a course.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Forum category detail — threads list, thread detail + replies, and both
+// composers. Backed by the real `forums` (category) / `forum_posts`
+// (self-referencing via parent_post_id: null = thread, set = reply) tables —
+// see fetchForumThreads / fetchForumThread / createForumThread /
+// createForumReply / voteForumPost in lib/api/schemaHelper.js. Scoped as its
+// own component so it owns its own threads/thread queries, keyed to
+// whichever category/thread is open, the same "don't thread per-item state
+// through useLearnerData" pattern GroupChatPanel above uses.
+function ForumCategoryPanel({
+  category, session, showToast = () => {}, onBack,
+  fetchForumThreads, fetchForumThread, createForumThread, createForumReply, voteForumPost,
+}) {
+  const [selectedThreadId, setSelectedThreadId] = useState(null);
+  const [newThreadText, setNewThreadText] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const [posting, setPosting] = useState(false);
+
+  const threadsQuery = useSupabaseQuery(async () => {
+    if (!category?.id || !fetchForumThreads) return [];
+    return fetchForumThreads(category.id);
+  }, [category?.id]);
+  const threads = threadsQuery.data || [];
+
+  const threadQuery = useSupabaseQuery(async () => {
+    if (!selectedThreadId || !fetchForumThread) return null;
+    return fetchForumThread(selectedThreadId);
+  }, [selectedThreadId]);
+  const thread = threadQuery.data;
+
+  async function postThread() {
+    if (!newThreadText.trim() || !session?.user?.id || !category?.id || !createForumThread) return;
+    setPosting(true);
+    try {
+      await createForumThread({ forumId: category.id, authorId: session.user.id, content: newThreadText.trim() });
+      setNewThreadText("");
+      threadsQuery.refetch();
+      showToast("Thread posted!");
+    } catch (e) {
+      showToast(e?.message || "Couldn't post thread — try again.");
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function postReply() {
+    if (!replyText.trim() || !session?.user?.id || !selectedThreadId || !category?.id || !createForumReply) return;
+    setPosting(true);
+    try {
+      await createForumReply({ forumId: category.id, parentPostId: selectedThreadId, authorId: session.user.id, content: replyText.trim() });
+      setReplyText("");
+      threadQuery.refetch();
+      threadsQuery.refetch();
+      showToast("Reply posted!");
+    } catch (e) {
+      showToast(e?.message || "Couldn't post reply — try again.");
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function vote(postId, direction) {
+    if (!session?.user?.id || !voteForumPost) return;
+    try {
+      await voteForumPost(postId, direction);
+      threadQuery.refetch();
+      threadsQuery.refetch();
+    } catch (e) {
+      showToast(e?.message || "Couldn't record vote.");
+    }
+  }
+
+  if (selectedThreadId) {
+    return (
+      <div className="tai-col tai-gap12">
+        <button className="tai-iconbtn" onClick={() => setSelectedThreadId(null)} aria-label="Back to threads"><ArrowLeft size={16} /></button>
+
+        {threadQuery.loading && <div className="tai-empty">Loading thread...</div>}
+        {!threadQuery.loading && !thread && <div className="tai-empty">Thread not found.</div>}
+
+        {thread && (
+          <>
+            <div className="tai-card">
+              <div className="tai-row tai-between">
+                <div className="tai-row tai-gap10">
+                  <Avatar initials={initialsOf(thread.user_profiles?.display_name)} size={32} src={thread.user_profiles?.avatar_url} />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{thread.user_profiles?.display_name || "Learner"}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-3)" }}>{timeAgo(thread.created_at)}</div>
+                  </div>
+                </div>
+                {thread.is_solution && <Tag tone="success"><CheckCircle2 size={11} /> Solved</Tag>}
+              </div>
+              <div className="tai-body-text tai-mt10">{thread.content}</div>
+              <div className="tai-row tai-gap16 tai-mt12" style={{ fontSize: 12, color: "var(--text-2)" }}>
+                <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => vote(thread.id, "up")}>
+                  <ThumbsUp size={13} /> {thread.upvotes || 0}
+                </button>
+                <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => vote(thread.id, "down")}>
+                  <ThumbsDown size={13} /> {thread.downvotes || 0}
+                </button>
+                <span className="tai-row tai-gap4"><MessageCircle size={13} /> {(thread.replies || []).length}</span>
+              </div>
+            </div>
+
+            <div className="tai-col tai-gap10">
+              {(thread.replies || []).length === 0 && <div className="tai-empty">No replies yet — be the first to weigh in.</div>}
+              {(thread.replies || []).map(r => (
+                <div key={r.id} className="tai-card" style={{ marginLeft: 18 }}>
+                  <div className="tai-row tai-between">
+                    <div className="tai-row tai-gap8">
+                      <Avatar initials={initialsOf(r.user_profiles?.display_name)} size={26} src={r.user_profiles?.avatar_url} />
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 12.5 }}>{r.user_profiles?.display_name || "Learner"}</div>
+                        <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{timeAgo(r.created_at)}</div>
+                      </div>
+                    </div>
+                    {r.is_solution && <Tag tone="success"><CheckCircle2 size={10} /> Solution</Tag>}
+                  </div>
+                  <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 8 }}>{r.content}</div>
+                  <div className="tai-row tai-gap16 tai-mt10" style={{ fontSize: 11.5, color: "var(--text-2)" }}>
+                    <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => vote(r.id, "up")}>
+                      <ThumbsUp size={12} /> {r.upvotes || 0}
+                    </button>
+                    <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => vote(r.id, "down")}>
+                      <ThumbsDown size={12} /> {r.downvotes || 0}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="tai-card">
+              <textarea className="tai-input" rows={2} placeholder="Write a reply..." value={replyText} onChange={e => setReplyText(e.target.value)} />
+              <button className="tai-btn tai-btn-primary tai-mt10" style={{ width: "100%" }} disabled={!replyText.trim() || posting} onClick={postReply}>
+                <Send size={14} /> Post reply
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="tai-col tai-gap12">
+      <div className="tai-row tai-gap8">
+        <button className="tai-iconbtn" onClick={onBack} aria-label="Back to categories"><ArrowLeft size={16} /></button>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>{category?.title || "Forum"}</div>
+          <div style={{ fontSize: 11, color: "var(--text-2)" }}>{category?.description || "Discussion category"}</div>
+        </div>
+      </div>
+
+      <div className="tai-card">
+        <textarea className="tai-input" rows={2} placeholder="Start a new thread..." value={newThreadText} onChange={e => setNewThreadText(e.target.value)} />
+        <button className="tai-btn tai-btn-primary tai-mt10" style={{ width: "100%" }} disabled={!newThreadText.trim() || posting} onClick={postThread}>
+          <PlusCircle size={15} /> Post thread
+        </button>
+      </div>
+
+      {threadsQuery.loading && <div className="tai-empty">Loading threads...</div>}
+      {!threadsQuery.loading && threads.length === 0 && <div className="tai-empty">No threads yet — start the conversation!</div>}
+      {threads.map(t => (
+        <div key={t.id} className="tai-card" style={{ cursor: "pointer" }} onClick={() => setSelectedThreadId(t.id)}>
+          <div className="tai-row tai-between">
+            <div className="tai-row tai-gap10" style={{ minWidth: 0 }}>
+              <Avatar initials={initialsOf(t.user_profiles?.display_name)} size={30} src={t.user_profiles?.avatar_url} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 13.5 }}>{t.user_profiles?.display_name || "Learner"}</div>
+                <div style={{ fontSize: 12.5, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 380 }}>{t.content}</div>
+              </div>
+            </div>
+            {t.is_solution && <Tag tone="success">Solved</Tag>}
+          </div>
+          <div className="tai-row tai-gap16 tai-mt10" style={{ fontSize: 11.5, color: "var(--text-2)" }}>
+            <span className="tai-row tai-gap4"><MessageCircle size={12} /> {t.reply_count || 0} repl{t.reply_count === 1 ? "y" : "ies"}</span>
+            <span className="tai-row tai-gap4"><ThumbsUp size={12} /> {t.upvotes || 0}</span>
+            <span>{timeAgo(t.created_at)}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function CommunityScreen({
+  communityTab = "posts", setCommunityTab, posts = [], newPostText = "", setNewPostText,
+  expandedPost, setExpandedPost, replyInput = "", setReplyInput, studyGroupsQuery = {},
+  joinedGroupIds = new Set(), myGroupIdsQuery = {}, communityPeopleQuery = {}, followedPeople = new Set(),
+  setFollowedPeople, memberStatsQuery = {}, activityFeedQuery = {},
+  user = {}, session = {}, showToast = () => {}, postsQuery = {},
+  createCommunityPost = () => {}, togglePostReaction = () => {}, addPostComment = () => {},
+  joinStudyGroup = () => {}, leaveStudyGroup = () => {},
+  fetchStudyGroupMessages, sendStudyGroupMessage, fetchStudyGroupMembers,
+  forumCategoriesQuery = {}, fetchForumThreads, fetchForumThread,
+  createForumThread, createForumReply, voteForumPost,
+  cohortMembershipQuery = {}, cohortPostsQuery = {},
+  createCohortPost, addCohortPostReply, toggleCohortPostReaction,
+  push, goTab,
+  // Set when the learner arrived here from a universal-search "Community"
+  // result (see TrainAILearnerApp's onOpenPost -> push("community", { postId })).
+  // Expands that specific post's comments and scrolls it into view, instead
+  // of just dumping the learner on the generic Feed tab.
+  initialExpandedPostId = null,
+}) {
+  const safePosts = posts || [];
+  const studyGroups = studyGroupsQuery.data || [];
+  const communityPeople = communityPeopleQuery.data || [];
+  const memberStats = memberStatsQuery.data || {};
+  const activityFeed = activityFeedQuery.data || [];
+  const forumCategories = forumCategoriesQuery.data || [];
+  const myCohort = cohortMembershipQuery.data?.cohort || null;
+  const cohortPosts = cohortPostsQuery.data || [];
+
+  const [selectedGroupId, setSelectedGroupId] = useState(null);
+  const [selectedForumId, setSelectedForumId] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [cohortPostText, setCohortPostText] = useState("");
+  const [cohortPosting, setCohortPosting] = useState(false);
+  const [expandedCohortPostId, setExpandedCohortPostId] = useState(null);
+  const [cohortReplyText, setCohortReplyText] = useState("");
+
+  useEffect(() => {
+    if (!initialExpandedPostId) return;
+    if (setCommunityTab) setCommunityTab("posts");
+    if (setExpandedPost) setExpandedPost(initialExpandedPostId);
+    const t = setTimeout(() => {
+      const el = document.getElementById(`community-post-${initialExpandedPostId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [initialExpandedPostId]);
+
+  // Trending topics — derived client-side from the `tags` column already
+  // present on every fetched community_posts row (real column, no dedicated
+  // trending table in the schema). Falls back to most-liked posts when
+  // nobody has tagged anything yet.
+  const trendingTags = useMemo(() => {
+    const counts = {};
+    safePosts.forEach(p => (p.tags || []).forEach(t => { if (t) counts[t] = (counts[t] || 0) + 1; }));
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([tag, count]) => ({ tag, count }));
+  }, [safePosts]);
+
+  const topLikedPosts = useMemo(() => {
+    return safePosts.filter(p => (p.likes || 0) > 0).slice().sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 3);
+  }, [safePosts]);
+
+  const selectedGroup = studyGroups.find(g => g.id === selectedGroupId) || null;
+
+  const tabs = [
+    { k: "posts", label: "Feed" },
+    { k: "forums", label: `Forums${forumCategories.length ? ` (${forumCategories.length})` : ""}` },
+    { k: "cohorts", label: "Cohort Channels" },
+    { k: "groups", label: `Study Groups${studyGroups.length ? ` (${studyGroups.length})` : ""}` },
+    { k: "people", label: "Members" },
+  ];
+
+  return (
+    <div className="tai-fade-in">
+      <TopBar title="Community & Cohort Space" sub="Collaborate with cohort peers & study groups" />
+      <div className="tai-row tai-gap8" style={{ flexWrap: "wrap" }}>
+        {tabs.map(t => (
+          <div key={t.k} className={`tai-pill ${communityTab === t.k ? "tai-pill-active" : "tai-pill-inactive"}`} onClick={() => setCommunityTab && setCommunityTab(t.k)}>
+            {t.label}
+          </div>
+        ))}
+      </div>
+
+      {communityTab === "posts" && (
+        <div className="tai-mt16">
+          <div className="tai-card">
+            <textarea className="tai-input" rows={2} placeholder="Share a lesson key takeaway or ask a question..." value={newPostText} onChange={e => setNewPostText && setNewPostText(e.target.value)} />
+            <button className="tai-btn tai-btn-primary tai-mt10" style={{ width: "100%" }} disabled={!newPostText.trim()} onClick={async () => {
+              if (!newPostText.trim() || !session?.user?.id) return;
+              const result = await createCommunityPost({ userId: session.user.id, content: newPostText.trim(), postType: "post" });
+              if (setNewPostText) setNewPostText("");
+              if (postsQuery.refetch) postsQuery.refetch();
+              // `result.moderation_status` comes straight back from the real
+              // ai-content-moderation edge function call inside
+              // createCommunityPost — this is what tells the learner whether
+              // their post is live, hidden pending an admin's review, or was
+              // hidden because the AI flagged it (see the "Pending review" /
+              // "Flagged" badges below for the same signal in the feed).
+              if (result?.moderation_status === "rejected") {
+                showToast("Post flagged by AI moderation — hidden from the community until an admin reviews it.");
+              } else if (result?.moderation_status === "pending") {
+                showToast("Post submitted — pending moderation review.");
+              } else {
+                showToast("Post published!");
+              }
+            }}>
+              <PlusCircle size={15} /> Share with community
+            </button>
+          </div>
+
+          {activityFeed.length > 0 && (
+            <div className="tai-card tai-mt16" style={{ background: "var(--surface-2)" }}>
+              <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".05em" }}>
+                <Activity size={13} /> Live activity
+              </div>
+              <div className="tai-col tai-gap8 tai-mt10">
+                {activityFeed.slice(0, 6).map(a => (
+                  <div key={a.id} className="tai-row tai-gap8" style={{ alignItems: "flex-start" }}>
+                    <Avatar initials={initialsOf(a.user_profiles?.display_name)} size={22} src={a.user_profiles?.avatar_url} />
+                    <div style={{ fontSize: 12.5, flex: 1 }}>
+                      <strong>{a.user_profiles?.display_name || "A learner"}</strong> {a.activity_text}
+                      <span style={{ color: "var(--text-3)" }}> · {timeAgo(a.created_at)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(trendingTags.length > 0 || topLikedPosts.length > 0) && (
+            <div className="tai-card tai-mt16">
+              <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".05em" }}>
+                <TrendingUp size={13} /> Trending {trendingTags.length > 0 ? "topics" : "posts"}
+              </div>
+              {trendingTags.length > 0 ? (
+                <div className="tai-row tai-gap8 tai-mt10" style={{ flexWrap: "wrap" }}>
+                  {trendingTags.map(t => (
+                    <span key={t.tag} className="tai-tag">#{t.tag} · {t.count}</span>
+                  ))}
+                </div>
+              ) : (
+                <div className="tai-col tai-gap8 tai-mt10">
+                  {topLikedPosts.map(p => (
+                    <div key={p.id} className="tai-row tai-between" style={{ fontSize: 12.5 }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, marginRight: 8 }}>{p.content}</span>
+                      <span className="tai-row tai-gap4" style={{ color: "var(--text-2)", flexShrink: 0 }}><Heart size={11} /> {p.likes}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="tai-col tai-gap12 tai-mt16">
+            {postsQuery.loading && <div className="tai-empty">Loading community posts...</div>}
+            {!postsQuery.loading && safePosts.length === 0 && <div className="tai-empty">No community posts yet. Be the first to share!</div>}
+            {safePosts.map(p => (
+              <div key={p.id} id={`community-post-${p.id}`} className="tai-card">
+                <div className="tai-row tai-between">
+                  <div className="tai-row tai-gap10">
+                    <Avatar initials={p.initials || initialsOf(p.author)} size={36} />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13.5 }}>{p.author || "Learner"}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)" }}>{p.time || "Just now"}</div>
+                    </div>
+                  </div>
+                  <div className="tai-row tai-gap6">
+                    {p.pinned && <Tag tone="warning">Pinned</Tag>}
+                    {/* Only ever shown to the post's own author — RLS hides
+                        non-approved posts from everyone else, so no other
+                        learner can even fetch a pending/rejected row. */}
+                    {p.isMine && p.moderationStatus === "pending" && <Tag tone="warning">Pending review</Tag>}
+                    {p.isMine && p.moderationStatus === "rejected" && <Tag tone="danger">Flagged — hidden from others</Tag>}
+                    <Tag>{p.tag || "Community"}</Tag>
+                  </div>
+                </div>
+                <div className="tai-body-text tai-mt10">{p.content}</div>
+                {p.tags && p.tags.length > 0 && (
+                  <div className="tai-row tai-gap6 tai-mt8" style={{ flexWrap: "wrap" }}>
+                    {p.tags.map(t => <span key={t} className="tai-tag" style={{ fontSize: 10.5 }}>#{t}</span>)}
+                  </div>
+                )}
+                <div className="tai-row tai-gap16 tai-mt12" style={{ fontSize: 12, color: "var(--text-2)" }}>
+                  <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: p.liked ? "var(--danger)" : "var(--text-2)" }} onClick={async () => {
+                    if (!session?.user?.id) return;
+                    await togglePostReaction({ postId: p.id, userId: session.user.id, reactionType: "like" });
+                    if (postsQuery.refetch) postsQuery.refetch();
+                  }}>
+                    <Heart size={14} fill={p.liked ? "var(--danger)" : "none"} /> {p.likes || 0}
+                  </button>
+                  <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => setExpandedPost && setExpandedPost(expandedPost === p.id ? null : p.id)}>
+                    <MessageCircle size={14} /> {p.comments || 0}
+                  </button>
+                </div>
+
+                {expandedPost === p.id && (
+                  <div className="tai-mt12" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+                    <div className="tai-col tai-gap10">
+                      {(p.replies || []).length === 0 && (
+                        <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>No comments yet — be the first to reply.</div>
+                      )}
+                      {(p.replies || []).map((r, i) => (
+                        <div key={r.id || i} className="tai-row tai-gap8" style={{ alignItems: "flex-start" }}>
+                          <Avatar initials={initialsOf(r.author)} size={24} />
+                          <div style={{ background: "var(--surface-2)", borderRadius: 10, padding: "8px 12px", flex: 1, fontSize: 12.5 }}>
+                            <div className="tai-row tai-between">
+                              <span style={{ fontWeight: 700 }}>{r.author}</span>
+                              <span style={{ fontSize: 10.5, color: "var(--text-3)" }}>{r.time || "Just now"}</span>
+                            </div>
+                            <div style={{ marginTop: 2 }}>{r.text}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="tai-row tai-gap8 tai-mt10">
+                      <input className="tai-input" style={{ flex: 1, fontSize: 12.5, padding: "8px 12px" }} placeholder="Write a comment..." value={replyInput} onChange={e => setReplyInput && setReplyInput(e.target.value)} onKeyDown={async e => {
+                        if (e.key === "Enter" && replyInput.trim() && session?.user?.id) {
+                          await addPostComment({ postId: p.id, userId: session.user.id, commentText: replyInput.trim() });
+                          if (setReplyInput) setReplyInput("");
+                          if (postsQuery.refetch) postsQuery.refetch();
+                        }
+                      }} />
+                      <button className="tai-btn tai-btn-primary tai-btn-sm" onClick={async () => {
+                        if (!replyInput.trim() || !session?.user?.id) return;
+                        await addPostComment({ postId: p.id, userId: session.user.id, commentText: replyInput.trim() });
+                        if (setReplyInput) setReplyInput("");
+                        if (postsQuery.refetch) postsQuery.refetch();
+                      }}><Send size={13} /></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {communityTab === "forums" && (
+        <div className="tai-mt16">
+          {!selectedForumId ? (
+            <div className="tai-col tai-gap10">
+              {forumCategoriesQuery.loading && <div className="tai-empty">Loading forum categories...</div>}
+              {!forumCategoriesQuery.loading && forumCategories.length === 0 && <div className="tai-empty">No forum categories configured yet.</div>}
+              {forumCategories.map(cat => (
+                <div key={cat.id} className="tai-card tai-row tai-between" style={{ cursor: "pointer" }} onClick={() => setSelectedForumId(cat.id)}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 14.5 }}>{cat.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>{cat.description || "General discussion category"}</div>
+                  </div>
+                  <Tag>{cat.thread_count || 0} threads</Tag>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ForumCategoryPanel
+              category={forumCategories.find(c => c.id === selectedForumId)}
+              session={session}
+              showToast={showToast}
+              onBack={() => setSelectedForumId(null)}
+              fetchForumThreads={fetchForumThreads}
+              fetchForumThread={fetchForumThread}
+              createForumThread={createForumThread}
+              createForumReply={createForumReply}
+              voteForumPost={voteForumPost}
+            />
+          )}
+        </div>
+      )}
+
+      {communityTab === "cohorts" && (
+        <div className="tai-mt16">
+          {cohortMembershipQuery.loading ? (
+            <div className="tai-empty">Loading your cohort...</div>
+          ) : !myCohort ? (
+            <div className="tai-empty">You're not part of a cohort yet. Once an admin adds you to one, its announcements and discussions will show up here.</div>
+          ) : (() => {
+            const activeCohort = myCohort;
+            return (
+              <div className="tai-col tai-gap12">
+                <div className="tai-card" style={{ background: "var(--surface-2)" }}>
+                  <div className="tai-row tai-between">
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".05em" }}>Your Cohort Channel</div>
+                      <div style={{ fontWeight: 800, fontSize: 17, marginTop: 2 }}>{activeCohort.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>{activeCohort.description}</div>
+                    </div>
+                    <Tag tone="success">Active Batch</Tag>
+                  </div>
+                </div>
+
+                <div className="tai-card">
+                  <textarea
+                    className="tai-input"
+                    rows={2}
+                    placeholder={`Post an update or question to ${activeCohort.name}...`}
+                    value={cohortPostText}
+                    onChange={e => setCohortPostText(e.target.value)}
+                  />
+                  <button
+                    className="tai-btn tai-btn-primary tai-mt10"
+                    style={{ width: "100%" }}
+                    disabled={!cohortPostText.trim() || cohortPosting}
+                    onClick={async () => {
+                      if (!cohortPostText.trim() || !session?.user?.id || !createCohortPost) return;
+                      setCohortPosting(true);
+                      try {
+                        await createCohortPost({ cohortId: activeCohort.id, authorId: session.user.id, content: cohortPostText.trim() });
+                        setCohortPostText("");
+                        if (cohortPostsQuery.refetch) cohortPostsQuery.refetch();
+                        showToast("Posted to cohort channel!");
+                      } catch (e) {
+                        showToast(e?.message || "Couldn't post — try again.");
+                      } finally {
+                        setCohortPosting(false);
+                      }
+                    }}
+                  >
+                    <PlusCircle size={15} /> Post to {activeCohort.name}
+                  </button>
+                </div>
+
+                <div className="tai-col tai-gap12 tai-mt10">
+                  {cohortPostsQuery.loading && <div className="tai-empty">Loading cohort posts...</div>}
+                  {!cohortPostsQuery.loading && cohortPosts.length === 0 && (
+                    <div className="tai-empty">No posts in your cohort channel yet. Start the conversation!</div>
+                  )}
+                  {cohortPosts.map(cp => (
+                    <div key={cp.id} className="tai-card">
+                      <div className="tai-row tai-between">
+                        <div className="tai-row tai-gap10">
+                          <Avatar initials={initialsOf(cp.user_profiles?.display_name)} size={34} src={cp.user_profiles?.avatar_url} />
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 13.5 }}>{cp.user_profiles?.display_name || "Cohort Peer"}</div>
+                            <div style={{ fontSize: 11, color: "var(--text-3)" }}>{timeAgo(cp.created_at)}</div>
+                          </div>
+                        </div>
+                        {cp.is_announcement && <Tag tone="warning">Announcement</Tag>}
+                      </div>
+                      <div className="tai-body-text tai-mt10">{cp.content}</div>
+
+                      <div className="tai-row tai-gap16 tai-mt12" style={{ fontSize: 12, color: "var(--text-2)" }}>
+                        <button
+                          className="tai-row tai-gap4"
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }}
+                          onClick={async () => {
+                            if (!session?.user?.id || !toggleCohortPostReaction) return;
+                            await toggleCohortPostReaction(cp.id, session.user.id, "like");
+                            if (cohortPostsQuery.refetch) cohortPostsQuery.refetch();
+                          }}
+                        >
+                          <Heart size={14} /> {cp.likes_count || 0}
+                        </button>
+                        <button
+                          className="tai-row tai-gap4"
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }}
+                          onClick={() => setExpandedCohortPostId(expandedCohortPostId === cp.id ? null : cp.id)}
+                        >
+                          <MessageCircle size={14} /> {cp.replies_count || 0} replies
+                        </button>
+                      </div>
+
+                      {expandedCohortPostId === cp.id && (
+                        <div className="tai-mt12" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+                          <div className="tai-row tai-gap8">
+                            <input
+                              className="tai-input"
+                              style={{ flex: 1, fontSize: 12.5, padding: "8px 12px" }}
+                              placeholder="Reply to cohort post..."
+                              value={cohortReplyText}
+                              onChange={e => setCohortReplyText(e.target.value)}
+                              onKeyDown={async e => {
+                                if (e.key === "Enter" && cohortReplyText.trim() && session?.user?.id && addCohortPostReply) {
+                                  await addCohortPostReply({ postId: cp.id, authorId: session.user.id, content: cohortReplyText.trim() });
+                                  setCohortReplyText("");
+                                  if (cohortPostsQuery.refetch) cohortPostsQuery.refetch();
+                                  showToast("Reply added!");
+                                }
+                              }}
+                            />
+                            <button
+                              className="tai-btn tai-btn-primary tai-btn-sm"
+                              onClick={async () => {
+                                if (!cohortReplyText.trim() || !session?.user?.id || !addCohortPostReply) return;
+                                await addCohortPostReply({ postId: cp.id, authorId: session.user.id, content: cohortReplyText.trim() });
+                                setCohortReplyText("");
+                                if (cohortPostsQuery.refetch) cohortPostsQuery.refetch();
+                                showToast("Reply added!");
+                              }}
+                            >
+                              <Send size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {communityTab === "groups" && (
+        <div className="tai-mt16">
+          {selectedGroupId ? (
+            <StudyGroupWorkspace
+              group={selectedGroup || { id: selectedGroupId, name: "Study Group Workspace", description: "Collaborative learning space" }}
+              joined={joinedGroupIds.has(selectedGroupId)}
+              session={session}
+              showToast={showToast}
+              onBack={() => setSelectedGroupId(null)}
+              fetchStudyGroupMessages={fetchStudyGroupMessages}
+              sendStudyGroupMessage={sendStudyGroupMessage}
+              fetchStudyGroupMembers={fetchStudyGroupMembers}
+              push={push}
+              goTab={goTab}
+            />
+          ) : (
+            <div className="tai-col tai-gap10">
+              {studyGroupsQuery.loading && <div className="tai-empty">Loading study groups...</div>}
+              {!studyGroupsQuery.loading && studyGroups.length === 0 && <div className="tai-empty">No study groups found.</div>}
+              {studyGroups.map(g => {
+                const joined = joinedGroupIds.has(g.id);
+                return (
+                  <div key={g.id} className="tai-card tai-row tai-between" style={{ cursor: "pointer" }} onClick={() => setSelectedGroupId(g.id)}>
+                    <div style={{ flex: 1, marginRight: 12 }}>
+                      <div className="tai-row tai-gap8">
+                        <div style={{ fontWeight: 700, fontSize: 14.5 }}>{g.name}</div>
+                        <Tag>{g.topic || "Study Group"}</Tag>
+                      </div>
+                      <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>{g.description}</div>
+                      <div className="tai-row tai-gap6" style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 8, fontWeight: 700 }}>
+                        <Users size={13} /> {g.study_group_members?.[0]?.count ?? 0} Group Member{(g.study_group_members?.[0]?.count ?? 0) === 1 ? "" : "s"}
+                      </div>
+                    </div>
+                    <div className="tai-row tai-gap8" onClick={e => e.stopPropagation()}>
+                      <button className="tai-btn tai-btn-primary tai-btn-sm" onClick={() => setSelectedGroupId(g.id)}>
+                        <Users size={13} /> Enter Group
+                      </button>
+                      <button
+                        className={`tai-btn tai-btn-sm ${joined ? "tai-btn-ghost" : "tai-btn-outline"}`}
+                        onClick={async () => {
+                          if (!session?.user?.id) return;
+                          if (joined) {
+                            await leaveStudyGroup({ studyGroupId: g.id, userId: session.user.id });
+                            showToast(`Left ${g.name}`);
+                          } else {
+                            await joinStudyGroup({ studyGroupId: g.id, userId: session.user.id });
+                            setSelectedGroupId(g.id);
+                            showToast(`Joined & entered ${g.name}!`);
+                          }
+                          if (myGroupIdsQuery.refetch) myGroupIdsQuery.refetch();
+                          if (studyGroupsQuery.refetch) studyGroupsQuery.refetch();
+                        }}
+                      >
+                        {joined ? "Leave" : "Join"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {communityTab === "people" && (
+        <div className="tai-mt16 tai-col tai-gap10">
+          {communityPeopleQuery.loading && <div className="tai-empty">Loading members...</div>}
+          {!communityPeopleQuery.loading && communityPeople.length === 0 && <div className="tai-empty">No public learner profiles yet.</div>}
+          {communityPeople.map(p => {
+            const name = p.display_name || p.name || "Learner";
+            const initials = initialsOf(name);
+            const stats = memberStats[p.user_id];
+            return (
+              <div key={p.user_id} className="tai-card tai-row tai-between" style={{ cursor: "pointer" }} onClick={() => setSelectedMember(p)}>
+                <div className="tai-row tai-gap10">
+                  <Avatar initials={initials} src={p.avatar_url} size={36} />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{name}</div>
+                    <div className="tai-row tai-gap8" style={{ fontSize: 11.5, color: "var(--text-2)" }}>
+                      <span>{p.role || "Learner"}</span>
+                      {stats?.streak_days ? <span>· {stats.streak_days}d streak</span> : null}
+                      {stats?.current_level ? <span>· Lvl {stats.current_level}</span> : null}
+                    </div>
+                  </div>
+                </div>
+                <div className="tai-row tai-gap8">
+                  <button className="tai-btn tai-btn-primary tai-btn-sm" onClick={(e) => {
+                    e.stopPropagation();
+                    if (push) push("messages", { recipientId: p.user_id, recipientName: name });
+                    else if (goTab) goTab("messages");
+                    showToast(`Opening chat with ${name}...`);
+                  }}>
+                    <MessageCircle size={13} /> Message
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {selectedMember && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(10,12,25,.55)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          onClick={() => setSelectedMember(null)}
+        >
+          <div className="tai-card" style={{ maxWidth: 380, width: "100%" }} onClick={e => e.stopPropagation()}>
+            <div className="tai-row tai-between">
+              <div className="tai-row tai-gap10">
+                <Avatar initials={initialsOf(selectedMember.display_name || selectedMember.name)} src={selectedMember.avatar_url} size={48} />
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 15 }}>{selectedMember.display_name || selectedMember.name || "Learner"}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-2)" }}>
+                    {selectedMember.role || "Learner"}{selectedMember.school ? ` · ${selectedMember.school}` : ""}
+                  </div>
+                </div>
+              </div>
+              <button className="tai-iconbtn" onClick={() => setSelectedMember(null)} aria-label="Close"><X size={16} /></button>
+            </div>
+            {selectedMember.bio && <div className="tai-body-text tai-mt12">{selectedMember.bio}</div>}
+            <div className="tai-row tai-gap8 tai-mt14">
+              <StatPill label="Level" value={memberStats[selectedMember.user_id]?.current_level ?? "—"} />
+              <StatPill label="Streak" value={memberStats[selectedMember.user_id]?.streak_days ? `${memberStats[selectedMember.user_id].streak_days}d` : "—"} />
+              <StatPill label="Points" value={memberStats[selectedMember.user_id]?.total_points ?? "—"} />
+            </div>
+            {selectedMember.department && (
+              <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 12 }}>Department: {selectedMember.department}</div>
+            )}
+            {selectedMember.last_active_at && (
+              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 4 }}>Last active {timeAgo(selectedMember.last_active_at)}</div>
+            )}
+            <div className="tai-col tai-gap8 tai-mt16">
+              <button className="tai-btn tai-btn-primary" style={{ width: "100%" }} onClick={() => {
+                const name = selectedMember.display_name || selectedMember.name || "Learner";
+                setSelectedMember(null);
+                if (push) push("messages", { recipientId: selectedMember.user_id, recipientName: name });
+                else if (goTab) goTab("messages");
+                showToast(`Opening chat with ${name}...`);
+              }}>
+                <MessageCircle size={14} /> Message {selectedMember.display_name?.split(" ")[0] || "Learner"}
+              </button>
+              <button className="tai-btn tai-btn-outline" style={{ width: "100%" }} onClick={() => {
+                const name = selectedMember.display_name || selectedMember.name || "Learner";
+                if (setFollowedPeople) setFollowedPeople(prev => new Set(prev).add(selectedMember.user_id));
+                showToast(`Followed ${name}`);
+              }}>
+                <UserPlus size={14} /> {followedPeople.has(selectedMember.user_id) ? "Following" : "Follow"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

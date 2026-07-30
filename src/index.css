@@ -1,0 +1,58 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  height: 100dvh;
+}
+
+html {
+  -webkit-text-size-adjust: 100%; /* prevent iOS Safari auto font-inflation on rotate */
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none; /* stop the whole page rubber-banding/pull-to-refresh in the wrapped app */
+}
+
+/* Respect reduced-motion preference across both apps' fade-in animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* --- Accessibility preferences (see src/components/common/AccessibilityPanel.jsx) ---
+   Applied via classes on <html>, persisted in localStorage, restored on boot in App.jsx. */
+
+/* The learner/platform screens hard-code px sizes in inline styles (no rem
+   usage anywhere in this codebase), so a plain `html { font-size }` change
+   would have no visible effect. `zoom` scales the whole rendered page
+   (text + layout) regardless of unit, which is what actually makes the
+   small/large choice visible. Supported in Chromium/WebKit-based mobile
+   webviews (this app's primary target via Capacitor) and modern Safari. */
+html.tai-font-small { zoom: 0.92; }
+html.tai-font-large { zoom: 1.12; }
+
+html.tai-reduced-motion *, html.tai-reduced-motion *::before, html.tai-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+html.tai-high-contrast .tai,
+html.tai-high-contrast .ta {
+  --border: #000000;
+  --text-2: #000000;
+  --text-3: #1a1a1a;
+  --surface-2: #E2E2E2;
+}
+html.tai-high-contrast .tai-card,
+html.tai-high-contrast .ta-card {
+  border-width: 2px;
+}

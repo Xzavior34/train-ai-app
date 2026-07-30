@@ -1,0 +1,604 @@
+import React, { useState, useEffect, useContext } from "react";
+import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
+import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check } from "lucide-react";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners } from "../../lib/api/platform.js";
+import FileUploadZone from "../../components/common/FileUploadZone.jsx";
+
+export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId, setSelectedCourseId, currentUserId }) {
+  const showToast = useContext(ToastContext);
+  const [activeCourseId, setActiveCourseId] = useState(selectedCourseId || null);
+  const [activeTab, setActiveTab] = useState("overview"); // overview, curriculum, learners
+
+  // Sync external prop if coming from search click
+  useEffect(() => {
+    if (selectedCourseId) {
+      setActiveCourseId(selectedCourseId);
+    }
+  }, [selectedCourseId]);
+
+  const [newCourseOpen, setNewCourseOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newCategory, setNewCategory] = useState("Data & AI");
+  const [newCoverImageUrl, setNewCoverImageUrl] = useState("");
+
+  const coursesQuery = useSupabaseQuery(async () => fetchCourses(orgId), [orgId]);
+  const courses = coursesQuery.data || [];
+
+  const activeCourse = courses.find(c => c.id === activeCourseId) || null;
+
+  // Active course edit form state
+  const [editTitle, setEditTitle] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+  const [editLevel, setEditLevel] = useState("beginner");
+  const [editHours, setEditHours] = useState(0);
+  const [editPrice, setEditPrice] = useState(0);
+  const [editDescription, setEditDescription] = useState("");
+  const [editIsPublished, setEditIsPublished] = useState(false);
+  const [editCoverImageUrl, setEditCoverImageUrl] = useState("");
+  const [editLessons, setEditLessons] = useState([]);
+  const [editRequiresApproval, setEditRequiresApproval] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (activeCourse) {
+      setEditTitle(activeCourse.title || "");
+      setEditCategory(activeCourse.category || "General");
+      setEditLevel(activeCourse.level || "beginner");
+      setEditHours(activeCourse.duration_hours || 0);
+      setEditPrice(activeCourse.price || 0);
+      setEditDescription(activeCourse.description || "");
+      setEditIsPublished(!!activeCourse.is_published);
+      setEditCoverImageUrl(activeCourse.cover_image_url || "");
+      setEditLessons(activeCourse.lessons ? [...activeCourse.lessons].sort((a, b) => (a.order_index || 0) - (b.order_index || 0)) : []);
+      setEditRequiresApproval(!!activeCourse.requires_approval);
+    }
+  }, [activeCourseId, activeCourse]);
+
+  // "Apply for a course" — staff side (see supabase/migrations/0100_course_applications.sql).
+  // RLS already scopes fetchCourseApplications to whatever this admin/instructor
+  // is allowed to see, so this is safe to load unconditionally per active course.
+  const applicationsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseApplications(activeCourse.id) : []), [activeCourse?.id]);
+  const pendingApplications = (applicationsQuery.data || []).filter(a => a.status === "pending");
+  const enrolledLearnersQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseEnrolledLearners(activeCourse.id) : []), [activeCourse?.id]);
+
+  async function handleDecideApplication(app, decision) {
+    try {
+      await decideCourseApplication({ applicationId: app.id, userId: app.user_id, courseId: app.course_id, decision, reviewedBy: currentUserId });
+      applicationsQuery.refetch();
+      coursesQuery.refetch();
+      showToast(decision === "approved" ? `Approved — ${app.user_profiles?.display_name || "learner"} is now enrolled.` : "Application rejected.");
+    } catch (e) {
+      showToast(e?.message || "Could not update this application.");
+    }
+  }
+
+  const handleSaveCourseSettings = async () => {
+    if (!activeCourse) return;
+    setIsSaving(true);
+    try {
+      await updateCourse(activeCourse.id, {
+        title: editTitle.trim(),
+        category: editCategory.trim(),
+        level: editLevel,
+        hours: Number(editHours),
+        price: Number(editPrice),
+        description: editDescription.trim(),
+        status: editIsPublished ? "published" : "draft",
+        coverImageUrl: editCoverImageUrl || undefined,
+        requiresApproval: editRequiresApproval,
+      });
+      await replaceCourseLessons(activeCourse.id, editLessons);
+      await coursesQuery.refetch();
+      showToast("Course management changes saved successfully!");
+    } catch (err) {
+      showToast("Failed to update course: " + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!activeCourse) return;
+    if (!window.confirm(`Are you sure you want to archive course "${activeCourse.title}"?`)) return;
+    try {
+      await deleteCourse(activeCourse.id);
+      if (setSelectedCourseId) setSelectedCourseId(null);
+      setActiveCourseId(null);
+      await coursesQuery.refetch();
+      showToast("Course archived successfully!");
+    } catch (err) {
+      showToast("Failed to archive course: " + err.message);
+    }
+  };
+
+  const handleAddLesson = () => {
+    setEditLessons(prev => [
+      ...prev,
+      {
+        id: `temp-${Date.now()}`,
+        title: `Lesson ${prev.length + 1}`,
+        duration_minutes: 15,
+        video_url: "",
+      }
+    ]);
+  };
+
+  const handleUpdateLesson = (idx, field, val) => {
+    setEditLessons(prev => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], [field]: val };
+      return copy;
+    });
+  };
+
+  const handleRemoveLesson = (idx) => {
+    setEditLessons(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleCloseActiveCourse = () => {
+    if (setSelectedCourseId) setSelectedCourseId(null);
+    setActiveCourseId(null);
+  };
+
+  return (
+    <div className="ta-fade">
+      <TopBar
+        title={activeCourse ? `Managing: ${activeCourse.title}` : "Content & Course Management"}
+        sub={activeCourse ? "Admin workspace to edit settings, curriculum, and publishing" : "Build, manage, and publish organization courses"}
+        orgSelector={orgSelector}
+        onNavigate={setScreen}
+        right={
+          activeCourse ? (
+            <div className="ta-row ta-gap8">
+              <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={handleCloseActiveCourse}>
+                <ArrowLeft size={14} /> Back to Courses
+              </button>
+              <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleSaveCourseSettings} disabled={isSaving}>
+                <Save size={14} /> {isSaving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          ) : (
+            <button className="ta-btn ta-btn-primary" onClick={() => setNewCourseOpen(true)}>
+              <Plus size={15} /> Create course
+            </button>
+          )
+        }
+      />
+
+      <div className="ta-content">
+        {/* ================================================================= */}
+        {/* ADMIN WORKSPACE: DETAILED COURSE MANAGEMENT VIEW                   */}
+        {/* ================================================================= */}
+        {activeCourse ? (
+          <div className="ta-col ta-gap24">
+            {/* Header banner card */}
+            <div className="ta-card" style={{ background: "var(--surface)", position: "relative" }}>
+              <div className="ta-row ta-between ta-gap16" style={{ flexWrap: "wrap" }}>
+                <div className="ta-row ta-gap16" style={{ minWidth: 0, flex: 1 }}>
+                  {activeCourse.cover_image_url ? (
+                    <img
+                      src={activeCourse.cover_image_url}
+                      alt=""
+                      style={{ width: 100, height: 75, objectFit: "cover", borderRadius: 10, flexShrink: 0, border: "1px solid var(--border)" }}
+                    />
+                  ) : (
+                    <div style={{ width: 100, height: 75, borderRadius: 10, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid var(--border)" }}>
+                      <BookOpen size={32} color="var(--primary)" />
+                    </div>
+                  )}
+                  <div className="ta-col" style={{ minWidth: 0, justifyContent: "center" }}>
+                    <div className="ta-row ta-gap8" style={{ marginBottom: 4 }}>
+                      <Tag>{editCategory || "General"}</Tag>
+                      <Tag tone={editIsPublished ? "success" : "warning"}>
+                        {editIsPublished ? "Published (Live for Learners)" : "Draft (Hidden from Learners)"}
+                      </Tag>
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 20, color: "var(--text)" }}>{editTitle || activeCourse.title}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+                      {activeCourse.enrollment_count || 0} Learners Enrolled · {editLessons.length} Lessons · {editHours || 0} Total Hours
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ta-row ta-gap10">
+                  <button
+                    className={`ta-btn ta-btn-sm ${editIsPublished ? "ta-btn-outline" : "ta-btn-primary"}`}
+                    onClick={() => setEditIsPublished(!editIsPublished)}
+                  >
+                    {editIsPublished ? "Unpublish (Make Draft)" : "Publish Course Now"}
+                  </button>
+                  <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={handleDeleteCourse}>
+                    <Trash2 size={14} /> Archive Course
+                  </button>
+                </div>
+              </div>
+
+              {/* Navigation Tabs for Managing Course */}
+              <div className="ta-row ta-gap16" style={{ marginTop: 20, borderBottom: "1px solid var(--border)", paddingBottom: 10 }}>
+                <button
+                  className={`ta-btn ta-btn-sm ${activeTab === "overview" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                  onClick={() => setActiveTab("overview")}
+                >
+                  <Settings size={14} /> Course Settings & Metadata
+                </button>
+                <button
+                  className={`ta-btn ta-btn-sm ${activeTab === "curriculum" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                  onClick={() => setActiveTab("curriculum")}
+                >
+                  <Layers size={14} /> Curriculum & Lessons ({editLessons.length})
+                </button>
+                <button
+                  className={`ta-btn ta-btn-sm ${activeTab === "learners" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                  onClick={() => setActiveTab("learners")}
+                >
+                  <Users size={14} /> Enrolled Students ({activeCourse.enrollment_count || 0})
+                </button>
+                <button
+                  className={`ta-btn ta-btn-sm ${activeTab === "applications" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                  onClick={() => setActiveTab("applications")}
+                >
+                  <CheckCircle2 size={14} /> Applications {pendingApplications.length > 0 ? `(${pendingApplications.length} pending)` : ""}
+                </button>
+              </div>
+            </div>
+
+            {/* TAB 1: OVERVIEW & SETTINGS */}
+            {activeTab === "overview" && (
+              <div className="ta-grid ta-grid-2 ta-gap24">
+                <div className="ta-card ta-col ta-gap16">
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Basic Information</div>
+
+                  <div className="ta-col ta-gap4">
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Course Title</label>
+                    <input
+                      className="ta-input"
+                      value={editTitle}
+                      onChange={e => setEditTitle(e.target.value)}
+                      placeholder="Course title..."
+                      style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%" }}
+                    />
+                  </div>
+
+                  <div className="ta-grid ta-grid-2 ta-gap12">
+                    <div className="ta-col ta-gap4">
+                      <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Category</label>
+                      <input
+                        className="ta-input"
+                        value={editCategory}
+                        onChange={e => setEditCategory(e.target.value)}
+                        placeholder="e.g. Data & AI, Cloud"
+                        style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%" }}
+                      />
+                    </div>
+                    <div className="ta-col ta-gap4">
+                      <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Difficulty Level</label>
+                      <select
+                        className="ta-input"
+                        value={editLevel}
+                        onChange={e => setEditLevel(e.target.value)}
+                        style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%", background: "var(--surface)" }}
+                      >
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="ta-grid ta-grid-2 ta-gap12">
+                    <div className="ta-col ta-gap4">
+                      <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Duration (Hours)</label>
+                      <input
+                        type="number"
+                        className="ta-input"
+                        value={editHours}
+                        onChange={e => setEditHours(e.target.value)}
+                        style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%" }}
+                      />
+                    </div>
+                    <div className="ta-col ta-gap4">
+                      <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Price ($)</label>
+                      <input
+                        type="number"
+                        className="ta-input"
+                        value={editPrice}
+                        onChange={e => setEditPrice(e.target.value)}
+                        style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="ta-col ta-gap4">
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Course Description</label>
+                    <textarea
+                      rows={5}
+                      className="ta-input"
+                      value={editDescription}
+                      onChange={e => setEditDescription(e.target.value)}
+                      placeholder="Detailed overview for students..."
+                      style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%", fontFamily: "var(--font)" }}
+                    />
+                  </div>
+                </div>
+
+                <div className="ta-card ta-col ta-gap16">
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Cover Image & Media</div>
+                  {editCoverImageUrl && (
+                    <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", maxHeight: 180 }}>
+                      <img src={editCoverImageUrl} alt="Cover Preview" style={{ width: "100%", height: 180, objectFit: "cover" }} />
+                    </div>
+                  )}
+
+                  <div>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", marginBottom: 6, display: "block" }}>Upload Cover Image</label>
+                    <FileUploadZone
+                      bucket="uploads"
+                      pathPrefix="courses/covers"
+                      accept="image/*"
+                      maxSizeMB={5}
+                      label="Drag and drop a course banner image, or click to upload"
+                      onUploaded={(url) => setEditCoverImageUrl(url)}
+                    />
+                  </div>
+
+                  <div className="ta-card" style={{ background: "var(--surface-2)", marginTop: 10 }}>
+                    <div className="ta-row ta-gap8" style={{ fontWeight: 700, fontSize: 13, color: "var(--text)" }}>
+                      <ShieldCheck size={16} color="var(--primary)" /> Admin Access Controls
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6, lineHeight: 1.5 }}>
+                      As an admin, any changes saved here instantly update the platform database. Setting status to <strong>Draft</strong> hides this course from student search and catalog listings.
+                    </div>
+                    <label className="ta-row ta-gap8 ta-mt10" style={{ fontSize: 12.5, cursor: "pointer" }}>
+                      <input type="checkbox" checked={editRequiresApproval} onChange={(e) => setEditRequiresApproval(e.target.checked)} />
+                      Require approval to join — learners request to enroll and you approve/reject them (Applications tab)
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: CURRICULUM & LESSONS */}
+            {activeTab === "curriculum" && (
+              <div className="ta-card ta-col ta-gap16">
+                <div className="ta-row ta-between">
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 16 }}>Curriculum & Lesson Builder</div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+                      Manage lessons, video resources, and sequence for this course.
+                    </div>
+                  </div>
+                  <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddLesson}>
+                    <Plus size={14} /> Add New Lesson
+                  </button>
+                </div>
+
+                {editLessons.length === 0 ? (
+                  <div className="ta-empty" style={{ padding: 40, border: "1px dashed var(--border)", borderRadius: 12 }}>
+                    No lessons created yet. Click "Add New Lesson" above to build the curriculum.
+                  </div>
+                ) : (
+                  <div className="ta-col ta-gap12" style={{ marginTop: 10 }}>
+                    {editLessons.map((l, idx) => (
+                      <div
+                        key={l.id || `lesson-${idx}`}
+                        className="ta-card ta-row ta-between ta-gap12"
+                        style={{ background: "var(--surface-3)", padding: 14, borderRadius: 10, border: "1px solid var(--border)" }}
+                      >
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
+                          {idx + 1}
+                        </div>
+
+                        <div className="ta-grid ta-grid-3 ta-gap12" style={{ flex: 1, minWidth: 0 }}>
+                          <div className="ta-col ta-gap4">
+                            <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Lesson Title</label>
+                            <input
+                              className="ta-input"
+                              value={l.title || ""}
+                              onChange={e => handleUpdateLesson(idx, "title", e.target.value)}
+                              placeholder="Lesson title..."
+                              style={{ padding: "6px 10px", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)" }}
+                            />
+                          </div>
+
+                          <div className="ta-col ta-gap4">
+                            <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Duration (Mins)</label>
+                            <input
+                              type="number"
+                              className="ta-input"
+                              value={l.duration_minutes || l.duration || 15}
+                              onChange={e => handleUpdateLesson(idx, "duration_minutes", Number(e.target.value))}
+                              style={{ padding: "6px 10px", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)" }}
+                            />
+                          </div>
+
+                          <div className="ta-col ta-gap4">
+                            <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Video / Resource URL</label>
+                            <input
+                              className="ta-input"
+                              value={l.video_url || l.videoUrl || ""}
+                              onChange={e => handleUpdateLesson(idx, "video_url", e.target.value)}
+                              placeholder="https://..."
+                              style={{ padding: "6px 10px", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)" }}
+                            />
+                          </div>
+                        </div>
+
+                        <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ color: "var(--danger)" }} onClick={() => handleRemoveLesson(idx)} title="Remove Lesson">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 3: ENROLLED STUDENTS & STATS */}
+            {activeTab === "learners" && (
+              <div className="ta-card ta-col ta-gap16">
+                <div style={{ fontWeight: 700, fontSize: 16 }}>Enrolled Learners & Engagement</div>
+                <div className="ta-row ta-gap16">
+                  <div className="ta-card ta-stat" style={{ flex: 1 }}>
+                    <div className="ta-stat-lbl">Total Enrolled Learners</div>
+                    <div className="ta-stat-val">{activeCourse.enrollment_count || 0}</div>
+                  </div>
+                  <div className="ta-card ta-stat" style={{ flex: 1 }}>
+                    <div className="ta-stat-lbl">Curriculum Lessons</div>
+                    <div className="ta-stat-val">{editLessons.length}</div>
+                  </div>
+                  <div className="ta-card ta-stat" style={{ flex: 1 }}>
+                    <div className="ta-stat-lbl">Course Status</div>
+                    <div className="ta-stat-val" style={{ fontSize: 18, color: editIsPublished ? "var(--success)" : "var(--warning)" }}>
+                      {editIsPublished ? "Published" : "Draft"}
+                    </div>
+                  </div>
+                </div>
+
+                <table className="ta-table">
+                  <thead><tr><th>Learner</th><th>Progress</th><th>Enrolled</th><th>Completed</th></tr></thead>
+                  <tbody>
+                    {enrolledLearnersQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading enrolled learners...</td></tr>}
+                    {!enrolledLearnersQuery.loading && (enrolledLearnersQuery.data || []).length === 0 && (
+                      <tr><td colSpan={4} className="ta-empty">No learners enrolled in this course yet.</td></tr>
+                    )}
+                    {(enrolledLearnersQuery.data || []).map(l => (
+                      <tr key={l.userId}>
+                        <td style={{ fontWeight: 600 }}>{l.name}</td>
+                        <td>{l.progress}%</td>
+                        <td style={{ fontSize: 12.5 }}>{l.enrolledAt ? new Date(l.enrolledAt).toLocaleDateString() : "—"}</td>
+                        <td style={{ fontSize: 12.5 }}>{l.completedAt ? new Date(l.completedAt).toLocaleDateString() : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* TAB 4: APPLY-FOR-COURSE APPROVAL QUEUE */}
+            {activeTab === "applications" && (
+              <div className="ta-card ta-col ta-gap16">
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Course Applications</div>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+                    {editRequiresApproval
+                      ? "Learners requesting to join this course show up here. Approving enrolls them immediately."
+                      : "This course doesn't require approval yet — turn on \"Require approval to join\" in Course Settings for requests to appear here."}
+                  </div>
+                </div>
+                <table className="ta-table">
+                  <thead><tr><th>Learner</th><th>Message</th><th>Requested</th><th>Status</th><th></th></tr></thead>
+                  <tbody>
+                    {applicationsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading applications...</td></tr>}
+                    {!applicationsQuery.loading && (applicationsQuery.data || []).length === 0 && (
+                      <tr><td colSpan={5} className="ta-empty">No applications for this course yet.</td></tr>
+                    )}
+                    {(applicationsQuery.data || []).map(a => (
+                      <tr key={a.id}>
+                        <td style={{ fontWeight: 600 }}>{a.user_profiles?.display_name || "Unnamed learner"}</td>
+                        <td style={{ fontSize: 12.5, color: "var(--text-2)" }}>{a.message || "—"}</td>
+                        <td style={{ fontSize: 12.5 }}>{a.created_at ? new Date(a.created_at).toLocaleDateString() : "—"}</td>
+                        <td>
+                          <Tag tone={a.status === "approved" ? "success" : a.status === "rejected" ? "danger" : "warning"}>
+                            {a.status.toUpperCase()}
+                          </Tag>
+                        </td>
+                        <td>
+                          {a.status === "pending" && (
+                            <div className="ta-row ta-gap6">
+                              <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => handleDecideApplication(a, "approved")}>
+                                <Check size={13} /> Approve
+                              </button>
+                              <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => handleDecideApplication(a, "rejected")}>
+                                <X size={13} /> Reject
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ================================================================= */
+          /* DEFAULT: ALL COURSES GRID VIEW                                     */
+          /* ================================================================= */
+          <>
+            <div className="ta-grid ta-grid-3">
+              {coursesQuery.loading && <div className="ta-empty">Loading courses...</div>}
+              {!coursesQuery.loading && courses.length === 0 && <div className="ta-empty">No courses created yet.</div>}
+              {courses.map(c => (
+                <div key={c.id} className="ta-card ta-col ta-between" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                  <div>
+                    {c.cover_image_url ? (
+                      <img
+                        src={c.cover_image_url}
+                        alt=""
+                        style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 10, marginBottom: 12 }}
+                      />
+                    ) : (
+                      <div style={{ width: "100%", height: 120, borderRadius: 10, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                        <BookOpen size={36} color="var(--primary)" />
+                      </div>
+                    )}
+                    <div className="ta-row ta-between">
+                      <Tag>{c.category || "General"}</Tag>
+                      <Tag tone={c.is_published ? "success" : "warning"}>{c.is_published ? "Published" : "Draft"}</Tag>
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 16, marginTop: 10 }}>{c.title}</div>
+                    <div className="ta-body ta-mt6" style={{ fontSize: 12.5, color: "var(--text-2)", lineClamp: 2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {c.description || "No description provided."}
+                    </div>
+                  </div>
+
+                  <div className="ta-row ta-between" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
+                      {c.enrollment_count || 0} Enrolled · {c.lessons?.length || 0} Lessons
+                    </div>
+                    <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => setActiveCourseId(c.id)}>
+                      <Settings size={13} /> Manage Course
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {newCourseOpen && (
+              <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
+                <div className="ta-title" style={{ fontWeight: 800, fontSize: 18 }}>Create New Course</div>
+                <div className="ta-grid ta-grid-2 ta-mt12 ta-gap12">
+                  <input className="ta-input" placeholder="Course title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)" }} />
+                  <input className="ta-input" placeholder="Category (e.g. Data & AI)..." value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)" }} />
+                </div>
+                <div className="ta-mt12">
+                  <div className="ta-label" style={{ marginBottom: 6, fontSize: 12, fontWeight: 700 }}>Cover image (optional)</div>
+                  <FileUploadZone
+                    bucket="uploads"
+                    pathPrefix="courses/covers"
+                    accept="image/*"
+                    maxSizeMB={5}
+                    label="Drag and drop a cover image, or click to browse"
+                    onUploaded={(url) => setNewCoverImageUrl(url)}
+                  />
+                </div>
+                <div className="ta-row ta-gap8 ta-mt12">
+                  <button className="ta-btn ta-btn-primary" onClick={async () => {
+                    if (!newTitle.trim()) return;
+                    await createCourse({ organizationId: orgId, title: newTitle.trim(), category: newCategory.trim(), status: "published", coverImageUrl: newCoverImageUrl || undefined }, currentUserId);
+                    setNewCourseOpen(false); setNewTitle(""); setNewCoverImageUrl("");
+                    coursesQuery.refetch();
+                    showToast("Course created successfully!");
+                  }}>Save & Publish Course</button>
+                  <button className="ta-btn ta-btn-outline" onClick={() => setNewCourseOpen(false)}>Cancel</button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

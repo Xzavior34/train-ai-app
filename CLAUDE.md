@@ -1,0 +1,1 @@
+many sub fuction are missing like cohort also being in community admin able to manage individual courses and cohort and others also put the real train ai logo from the other file and the blue should be the same all cards that are ment to have fuction should and not just only disploay for example cohort
