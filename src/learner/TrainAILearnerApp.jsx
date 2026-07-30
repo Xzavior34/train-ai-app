@@ -24,7 +24,8 @@ import {
   createCommunityPost, addPostComment, togglePostReaction, bookMentorshipSession, sendMentorMessage,
   joinStudyGroup, leaveStudyGroup, fetchStudyGroupMessages, sendStudyGroupMessage, fetchStudyGroupMembers, fetchMentorAvailability,
   fetchForumThreads, fetchForumThread, createForumThread, createForumReply, voteForumPost,
-  addCohortPostReply, toggleCohortPostReaction, generateAIQuiz
+  addCohortPostReply, toggleCohortPostReaction, generateAIQuiz,
+  fetchMentorMessageThreads, fetchMentorMessageThread, markMentorMessagesRead
 } from "../lib/api/schemaHelper.js";
 import { updateUserAvatar, fetchOrgBranding, createCohortPost } from "../lib/api/platform.js";
 import { CheckCircle2 } from "lucide-react";
@@ -267,6 +268,71 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform 
 
   const [messageInput, setMessageInput] = useState("");
   const [activeMentorThread, setActiveMentorThread] = useState(null);
+
+  // Direct Messages — was previously a non-functional shell: conversationMessages
+  // was hardcoded to [] and nothing ever called setActiveMentorThread, so the
+  // recipientId/recipientName pushed from Community's "Message" buttons was
+  // silently discarded and the Send button permanently no-op'd. Real thread
+  // list + conversation fetch, mirroring the working mentor-side
+  // MentorMessagesScreen.jsx, using the same schemaHelper.js functions.
+  const messageThreadsQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return [];
+    return fetchMentorMessageThreads(session.user.id);
+  }, [session?.user?.id]);
+  const messageThreads = (() => {
+    const myId = session?.user?.id;
+    if (!myId) return [];
+    const rows = messageThreadsQuery.data || [];
+    const byCounterpart = new Map();
+    for (const r of rows) {
+      const counterpartId = r.sender_id === myId ? r.receiver_id : r.sender_id;
+      const counterpartProfile = r.sender_id === myId ? r.receiver : r.sender;
+      if (!byCounterpart.has(counterpartId)) {
+        byCounterpart.set(counterpartId, {
+          counterpartId,
+          name: counterpartProfile?.display_name || "Mentor",
+          last: r.content,
+          time: r.created_at,
+          unread: 0,
+        });
+      }
+      if (r.receiver_id === myId && !r.is_read) {
+        byCounterpart.get(counterpartId).unread += 1;
+      }
+    }
+    return [...byCounterpart.values()];
+  })();
+
+  useEffect(() => {
+    if (screen !== "messages") return;
+    if (params?.recipientId) {
+      setActiveMentorThread({ counterpartId: params.recipientId, name: params.recipientName || "Mentor" });
+    } else if (!activeMentorThread && messageThreads.length > 0) {
+      setActiveMentorThread(messageThreads[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen, params?.recipientId, messageThreadsQuery.loading]);
+
+  const conversationQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id || !activeMentorThread?.counterpartId) return [];
+    return fetchMentorMessageThread(session.user.id, activeMentorThread.counterpartId);
+  }, [session?.user?.id, activeMentorThread?.counterpartId]);
+
+  useEffect(() => {
+    if (session?.user?.id && activeMentorThread?.counterpartId) {
+      markMentorMessagesRead(session.user.id, activeMentorThread.counterpartId).then(() => messageThreadsQuery.refetch());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, activeMentorThread?.counterpartId]);
+
+  async function handleSendMessage() {
+    if (!messageInput.trim() || !activeMentorThread?.counterpartId || !session?.user?.id) return;
+    await sendMentorMessage({ senderId: session.user.id, receiverId: activeMentorThread.counterpartId, content: messageInput.trim() });
+    setMessageInput("");
+    conversationQuery.refetch();
+    messageThreadsQuery.refetch();
+    showToast("Message sent!");
+  }
   const [weeklyGoal, setWeeklyGoal] = useState(user.weeklyGoal);
   const [requestingSession, setRequestingSession] = useState(false);
   const [sessionRequestSent, setSessionRequestSent] = useState(false);
