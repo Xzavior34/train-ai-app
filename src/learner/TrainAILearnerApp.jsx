@@ -231,32 +231,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform 
   }));
 
   const joinedGroupIds = new Set(myGroupIdsQuery.data || []);
-  // Community "Follow" has no dedicated table in the shared schema (no
-  // migration ever added a followers/connections table), so persisting it
-  // server-side is out of scope here — but leaving it as bare in-memory
-  // React state silently threw away every follow on refresh with no way for
-  // the learner to know that. Mirrors the same "real, disclosed, local-device
-  // only" persistence pattern ConsentBanner/AccessibilityPanel already use in
-  // this app: it survives reloads on this device, scoped per signed-in user.
-  const followStorageKey = session?.user?.id ? `trainai_followed_people_${session.user.id}` : null;
-  const [followedPeople, setFollowedPeople] = useState(new Set());
-  useEffect(() => {
-    if (!followStorageKey) return;
-    try {
-      const raw = window.localStorage.getItem(followStorageKey);
-      setFollowedPeople(raw ? new Set(JSON.parse(raw)) : new Set());
-    } catch {
-      setFollowedPeople(new Set());
-    }
-  }, [followStorageKey]);
-  useEffect(() => {
-    if (!followStorageKey) return;
-    try {
-      window.localStorage.setItem(followStorageKey, JSON.stringify([...followedPeople]));
-    } catch {
-      // best-effort only — a persistence failure here shouldn't break the UI
-    }
-  }, [followStorageKey, followedPeople]);
   const notifications = notificationsQuery.data || [];
 
   async function markAllNotificationsRead() {
@@ -488,7 +462,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform 
                   expandedPost={expandedPost} setExpandedPost={setExpandedPost}
                   replyInput={replyInput} setReplyInput={setReplyInput}
                   studyGroupsQuery={studyGroupsQuery} joinedGroupIds={joinedGroupIds} myGroupIdsQuery={myGroupIdsQuery}
-                  communityPeopleQuery={communityPeopleQuery} followedPeople={followedPeople} setFollowedPeople={setFollowedPeople}
+                  communityPeopleQuery={communityPeopleQuery}
                   memberStatsQuery={memberStatsQuery} activityFeedQuery={activityFeedQuery}
                   user={user} session={session} showToast={showToast} postsQuery={postsQuery}
                   createCommunityPost={createCommunityPost} togglePostReaction={togglePostReaction} addPostComment={addPostComment}
