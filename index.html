@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#2563EB" />
+    <meta name="color-scheme" content="light" />
+    <!-- iOS: run full-screen when added to home screen / wrapped by Capacitor -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Train AI" />
+    <!-- Android: run full-screen when added to home screen -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" href="/train-ai-favicon.png" />
+    <link rel="apple-touch-icon" href="/train-ai-favicon.png" />
+    <title>Train AI - The AI Learning Infrastructure for Organisations</title>
+    <meta name="description" content="Train AI is a multi-tenant learning management system for organisations: structure courses, manage cohorts, see analytics, and give learners AI coaching and mentor support." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW reg failed: ', err));
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1246 @@
+# Train AI - Prototype + Backend + Mobile Shells
+
+A learning-platform build spanning frontend, backend, and mobile:
+
+- **Frontend**: React + Vite. One entry flow - sign in, a one-time
+  personalization onboarding, then automatic routing into either the
+  **Learner** experience or the unified **Platform** app (Admin, Mentor,
+  Super Admin as one app with a real workspace switcher, not three separate
+  apps) - based on the signed-in account's actual role. From either app, a
+  control lets you switch over to the other and back at any time, with your
+  place in each preserved (see step 3 below). Currently backed by in-memory
+  mock data unless a real Supabase project is connected (see below).
+- **Backend**: a real Supabase/Postgres schema - 137 tables, 8 views, 42
+  SECURITY DEFINER functions, 80 RLS policies - verified against a live
+  Postgres instance before delivery (see `SECURITY.md`). A real integration
+  layer (`src/lib/`) connects to it - see "What's wired to Supabase" below
+  for exactly which screens use it versus mock data.
+- **Mobile**: real native Android (Gradle) and iOS (Xcode) project shells,
+  generated via Capacitor, wrapping the same web app, with responsive layouts
+  for both apps (see "Cross-platform optimizations").
+
+Read this whole file before opening an issue about something "missing" - several things below are hard platform limits (e.g. no tool can compile a
+signed iOS app outside macOS+Xcode), not oversights.
+
+## Requirements
+
+- Node.js 18+ and npm
+- For Android builds: Android Studio (includes the SDK)
+- For iOS builds: a Mac with Xcode + CocoaPods (`sudo gem install cocoapods`)
+- For the backend: a free Supabase account (or local Supabase CLI + Docker)
+
+## 1. Run the web app
+
+```bash
+npm install
+npm run dev
+```
+
+Open the printed `localhost` URL. The flow is:
+
+1. **Sign in** - if no Supabase project is configured (see `.env.example`),
+   this is skipped entirely and you land straight in demo mode.
+2. **Onboarding** (once) - pick a learning track and skill level. In demo
+   mode, a third step asks "continue as Learner or Admin?", since there's no
+   real account role to read; that choice is remembered in `localStorage` so
+   it won't ask again on reload. Clear it with
+   `localStorage.removeItem('trainai_demo_onboarding_v1')` in the browser
+   console to see onboarding again.
+3. **Routed automatically** into Learner or the Platform app, based on the
+   account's actual role in `user_roles` in real mode (or the onboarding
+   choice, in demo mode). From there:
+   - **Platform → Learner**: the sidebar's workspace switcher has a "Learner
+     view" entry, always available (everyone is a learner by default, per
+     the spec - an admin isn't locked out of their own course library).
+   - **Learner → Platform**: a "Switch to Admin workspace" control appears in
+     Settings and the desktop sidebar footer - but only if the signed-in
+     account actually holds an admin/mentor/super_admin role. A plain
+     learner account won't see it.
+   - Both apps stay mounted the whole time (CSS shows/hides them, nothing
+     unmounts), so switching back and forth preserves exactly where you were
+     in each - scroll position, which Platform workspace/screen was open,
+     in-progress form state, all of it.
+
+## 2. Stand up the real backend (Supabase)
+
+See `docs/SUPABASE_SETUP.md` for full steps. Short version:
+
+```bash
+supabase login
+supabase link --project-ref <your-project-ref>
+supabase db push          # applies everything in supabase/migrations/
+```
+
+Then copy `.env.example` to `.env.local` and fill in your project's URL/anon
+key. The frontend does **not** call Supabase yet - it's mock data today;
+wiring each screen's `useState` constants to `supabase.from(...)` /
+`supabase.rpc(...)` calls is a separate, real integration step, described in
+`docs/SUPABASE_SETUP.md`.
+
+Read `SECURITY.md` for exactly what the RLS/permissions model does and does
+not cover - it's written to be accurate, not reassuring.
+
+## 3. Mobile - Android
+
+```bash
+npm run build
+npx cap sync android
+npx cap open android    # opens Android Studio
+```
+
+The `android/` folder is a complete, real Gradle project (manifest,
+resources, gradle wrapper). **I cannot compile an APK inside this sandbox** - my container has no network access to Android's SDK/Gradle distribution
+servers (verified: the gradle wrapper's own download attempt returns a
+blocked/403 response here). This is a sandbox network restriction, not a
+defect in the generated project. Open `android/` in Android Studio on your
+own machine and it will build normally.
+
+## 4. Mobile - iOS
+
+```bash
+npm run build
+npx cap sync ios
+npx cap open ios         # opens Xcode (macOS only)
+```
+
+The `ios/` folder is a complete, real Xcode project (`App.xcodeproj`,
+`Info.plist`, `AppDelegate.swift`, `Podfile`). **Building/signing an iOS app
+is only possible on macOS with Xcode** - this is an Apple platform
+restriction, true for any tool, not something specific to how this was
+built. Before opening in Xcode, run `cd ios/App && pod install` (needs
+CocoaPods, macOS-only in practice).
+
+## Cross-platform optimizations
+
+This isn't just "resize the browser and hope" - specific things were changed:
+
+**Responsive layout (Platform app)** - the Admin/Mentor/Super Admin sidebar
+was a fixed 240px column with zero breakpoints; on a phone it would have
+either overflowed or crushed the content. It now:
+- Collapses into an off-canvas drawer below 900px width, opened via a
+  hamburger button in the top bar and closed via a scrim/backdrop tap, an X
+  button, or the hardware back button (see below)
+- Reflows every stat/content grid (2–6 columns) down to 2 columns at 900px
+  and 1 column at 560px
+- Makes data tables horizontally scrollable within their card at narrow
+  widths instead of squeezing columns unreadably
+- Hides the desktop search bar on mobile rather than letting it overflow
+
+**Desktop layout (Learner app)** - the mirror image of the above: this app
+was mobile-first with a fixed bottom tab bar, which would look and feel
+wrong stretched across a desktop window. At ≥900px width:
+- The bottom tab bar is replaced by a proper left sidebar (brand mark, the
+  same 4 sections, plus a Profile entry that doesn't rely on tapping an
+  avatar the way mobile does)
+- The content column widens progressively (640px → 720px at ≥1080px) rather
+  than either staying phone-narrow or stretching into unreadably long line
+  lengths - the same pattern used by e.g. X/Instagram's desktop web views
+- Both layouts exist in the same DOM at all times; only CSS `@media` rules
+  decide which is visible, so there's no JS viewport-detection to get out of
+  sync on resize
+
+**Learner app** - already mobile-first; added:
+- `env(safe-area-inset-*)` padding on the fixed bottom nav and top content,
+  so it isn't obscured by the iPhone notch/home-indicator or Android's
+  gesture bar
+- `100dvh` (with `100vh` fallback) instead of plain `100vh`, which avoids the
+  classic mobile-browser bug where `100vh` is taller than the actually
+  visible area behind the browser's address bar
+
+**Android hardware/gesture back button** - this is a real, easy-to-miss gap:
+Capacitor's default behavior is to call the WebView's back history, and exit
+the app the instant there's none. Without wiring anything up, pressing back
+while several screens deep in either app would exit immediately rather than
+navigating up one level. Both apps now push a browser history entry on every
+in-app navigation and listen for `popstate`, so back correctly walks up the
+in-app screen stack (Learner) or closes the mobile drawer / returns toward
+the dashboard (Platform) before ever reaching "exit the app."
+
+**Touch & input feel** - tap-highlight flash removed, `touch-action:
+manipulation` on buttons/nav/pills (removes the ~300ms tap delay some
+mobile browsers add), interactive chrome marked non-selectable so repeated
+taps don't trigger text selection, while table/body text stays selectable
+(important for the desktop/web use case - copying an email or ID out of a
+table). `prefers-reduced-motion` is respected for the fade-in animations.
+
+**`index.html`** - `viewport-fit=cover` (required for `env(safe-area-inset-*)`
+to work at all on iOS), `theme-color`, and `apple-mobile-web-app-*` /
+`mobile-web-app-capable` meta tags for a proper full-screen feel if the web
+build is ever added to a home screen directly, independent of the native
+Capacitor wrapper.
+
+**What this doesn't cover**: real device testing. Everything above was
+verified by reading the rendered CSS/behavior logic and via `vite build`
+succeeding, not on an actual iPhone/Android device or simulator - this
+sandbox has no device, emulator, or Android/iOS build toolchain available
+(see the Android/iOS sections above for why). Test on a real device or
+simulator before shipping.
+
+## Visual design
+
+**Layout bug fix (verified with real rendering, not guesswork)**: the Learner
+app's container was hard-capped at `max-width: 480px` regardless of viewport,
+while the desktop sidebar layout only kicked in at 900px+. That left a real
+dead zone roughly 600–899px wide - common tablet/split-screen/small-laptop
+widths - where the app sat stranded in a narrow column with large wasted
+margins on both sides, still showing the mobile bottom nav. This was found
+and confirmed by actually building the app, serving it, and driving a
+headless Chromium against it (Playwright) to measure rendered widths at
+several breakpoints, not by inspecting CSS in isolation. Fixed with a fluid
+`clamp(480px, 75vw, 640px)` width that grows continuously from phone width up
+to exactly the value the desktop breakpoint takes over at, so there's no
+jump. Also re-checked for element overlap and horizontal overflow
+programmatically across Home/Courses/AI/Community in both the broken and
+fixed states - zero overlap issues, zero overflow, in both.
+
+Both apps share one design-token system (colors, radii, spacing, gradient)
+so a change to a shared class propagates everywhere at once, rather than
+each screen drifting independently:
+
+**Bottom nav / content misalignment (two real bugs, found via measurement,
+not guesswork)**: reported as "the bottom navigation and home screen layout
+is still not aligned" - confirmed and root-caused by measuring actual
+bounding boxes (`getBoundingClientRect`) for the nav bar vs. the content
+column at several widths, including the ~925px width visible in the
+reported screenshots (a VS Code Simple Browser panel), rather than
+eyeballing it:
+
+1. **The mobile bottom nav never actually hid on desktop.** Its base
+   `.tai-navbar` CSS rule was positioned *after* the
+   `@media (min-width: 900px) { .tai-navbar { display: none; } }` override
+   in the stylesheet. CSS resolves equal-specificity conflicts by source
+   order, not by whether a rule sits inside a media query - so the later
+   base rule silently won at every width, and the nav bar (which centers
+   itself via `position: fixed; left: 50%` against the *full viewport*)
+   kept rendering on top of the desktop sidebar layout, offset from the
+   content column sitting next to the sidebar. Measured at 925px width
+   before the fix: content column at x=232–872, nav bar at x=143–783 - an
+   89px mismatch. Fixed by moving the override after its base rule; after
+   the fix, the nav bar measures `width: 0` at that viewport (genuinely
+   `display: none`), confirmed programmatically, not just visually.
+2. **A second, narrower-range version of the same class of bug** at
+   600–899px (bottom nav still showing, sidebar not yet active): the
+   content column defaulted to flex `flex-start` and sat flush against the
+   left edge, while the fixed-position nav bar centered itself against the
+   full viewport - an 88px mismatch at 700px width. Fixed by centering the
+   content column explicitly in that range without touching the desktop
+   two-column layout. After the fix, content and nav bar left-edges match
+   exactly (both at x=88 at 700px width) - confirmed numerically, along
+   with a full re-check for element overlap across Home/Courses/AI/Community
+   (zero issues, matching the pre-fix baseline).
+
+- Soft two-layer shadows added to every card (`.tai-card` / `.ta-card`) - the most noticeable gap versus the reference mockups, which show real
+  depth under every card and the phone frame itself
+- Sticky/fixed nav surfaces (bottom nav, Platform's top bar) get a matching
+  directional shadow instead of sitting flush against content
+- Buttons get a consistent hover/active language: primary buttons lift
+  slightly with a deepening shadow, outline/ghost buttons get a background
+  shift, all buttons scale down slightly on press - gated behind
+  `@media (hover: hover)` in the Learner app so touch devices don't get
+  "stuck" hover states after a tap
+- The Auth and Onboarding screens were rebuilt from generic inline styles to
+  match the actual brand: gradient mark + wordmark, soft radial background
+  glow, icon-forward option cards, the same card shadow and button treatment
+  as the rest of the app - these are the very first thing anyone sees, so
+  they shouldn't look like a different, unstyled app bolted onto the front
+
+### Micro-animations
+
+A reusable animation system lives in both apps' shared token CSS (`popIn`,
+`bounceIn`, `slideDownReveal`, `slideInRight/Left`, `staggerItem`,
+`pulseDot`, plus utility classes like `.anim-stagger`) so it's one place to
+extend, not 40 one-off implementations. Applied to:
+
+- **Reveal on entry**: every screen already faded in on navigation; list-like
+  content (course cards, community posts, notifications, leaderboard rows,
+  mentor/message lists, Admin Dashboard panels, mentor applications,
+  moderation/feedback queues, cohorts) now staggers in item-by-item via
+  `.anim-stagger`, rather than the whole list appearing at once
+- **Table rows** (People, Organizations) use an opacity-only stagger variant
+  (`.anim-stagger-rows`) instead - animating `transform` on `<tr>` elements
+  has real cross-browser inconsistencies, so rows fade rather than slide
+- **Bounce**: the quiz-results card genuinely bounces in on a pass, with the
+  score, XP badge, and party icon popping in with a slight stagger and a
+  wiggle - the one moment in the app designed to feel celebratory
+- **Slide/reveal**: quiz hints and answer explanations slide down when
+  shown; Platform's org-detail drawer slides in from the right with its
+  scrim fading in underneath; the mobile sidebar drawer already slid via a
+  transform transition, now with matching curve/timing
+- **Tab/pill feedback**: switching a tab or pill now gives it a quick,
+  springy scale-pop (`popTab`) so the active state change reads as
+  intentional rather than an instant, flat color swap
+- **Ambient**: the unread-notification dot on Home pulses; nav-item icons
+  pop when they become active; progress bars animate their width on change
+  instead of snapping
+- Every animation above inherits the existing global
+  `prefers-reduced-motion` rule in `index.css` (a blanket `*` selector), so
+  none of this needed a second accessibility pass - it was already covered
+
+## About `node_modules`
+
+Deliberately **not included**, and not an oversight: `node_modules` is
+machine-specific, deterministic build output - regenerated exactly from
+`package.json` + `package-lock.json` via `npm install`. Shipping it would
+make the project *larger and less portable*, not more complete. This is
+standard practice for every real JS project, not unique to this one.
+
+## Project structure
+
+```
+train-ai-app/
+├── package.json, vite.config.js, index.html, capacitor.config.ts
+├── .env.example                  # copy to .env.local for Supabase keys
+├── SECURITY.md                   # what the security model actually covers
+├── docs/
+│   └── SUPABASE_SETUP.md         # backend deployment steps
+├── supabase/
+│   ├── config.toml
+│   ├── seed.sql
+│   └── migrations/
+│       ├── 0001_init_schema.sql              # identity, orgs, roles, permissions, courses
+│       ├── 0002_progress_quizzes_cohorts.sql # enrollment, quizzes, AI assistant, compliance
+│       ├── 0003_mentors_sessions_messaging.sql
+│       ├── 0004_community_gamification_admin.sql
+│       ├── 0005_functions.sql                # SECURITY DEFINER functions
+│       └── 0006_rls_policies.sql             # row-level security
+├── android/                      # real Gradle project (Capacitor)
+├── ios/                          # real Xcode project (Capacitor)
+└── src/
+    ├── main.jsx, App.jsx, index.css   # App.jsx = the auth/onboarding/routing flow
+    ├── lib/
+    │   ├── supabaseClient.js         # client + demo-mode detection
+    │   ├── useAuth.js                # session state, sign in/up/out
+    │   ├── useSupabaseQuery.js       # shared loading/error/data hook
+    │   ├── AuthScreen.jsx, OnboardingScreen.jsx
+    │   └── api/
+    │       ├── auth.js               # role lookup, personalization
+    │       ├── learner.js            # courses, quizzes, leaderboard, notifications
+    │       └── platform.js           # org members, organizations, compliance, cohorts
+    ├── learner/TrainAILearnerApp.jsx
+    └── platform/TrainAIPlatformApp.jsx   # Admin + Mentor + Super Admin, one app
+```
+
+## Pricing rename + Tech Learning default org (this round)
+
+Per the finalized project brief:
+
+**Pricing tier rename.** The `subscription_tier` enum shipped as
+`free/starter/professional/enterprise` - "professional" was never the
+agreed name, "Growth" was, and the brief is explicit that UI and database
+must match. Renamed in place with `ALTER TYPE ... RENAME VALUE`
+(`0104_rename_growth_tier.sql`) rather than adding a new value and migrating
+rows, so every existing `organizations.subscription_tier` row updates for
+free. Also fixed the one literal `'professional'` reference in `seed.sql`.
+No frontend code referenced the tier name directly (`SettingsHubScreen.jsx`
+just displays whatever's in the database), so nothing else needed to change.
+
+**"Tech Learning" default organization.** Individual (no-organization)
+signups previously left `organization_id` null - every org-scoped query,
+RLS policy, and admin screen in this codebase assumes a learner has *some*
+organization, so null was an unhandled edge case everywhere rather than a
+deliberate state. Added a seeded `Tech Learning` organization
+(`0105_tech_learning_default_org.sql`) and a `join_default_organization()`
+RPC (`0106_join_default_organization.sql`) that places a previously-
+unaffiliated learner into it; wired into `AuthPage.jsx`'s individual
+sign-up path.
+
+**Two real bugs found and fixed while building this, both by testing
+against a genuinely fresh signup in local Postgres (auth.users row only, no
+user_profiles row yet) rather than by inspection** - this codebase has no
+trigger on `auth.users` and no `INSERT` policy on `user_profiles`, so
+nothing here can assume a profile row already exists at signup time:
+1. `create_organization_self_serve()` (0102) `UPDATE`d `user_profiles`,
+   which silently affects zero rows if no profile exists yet - the
+   organization would get created, but the calling user would never
+   actually end up linked to it.
+2. `organizations.created_by` has a foreign key to `user_profiles(id)`, not
+   `auth.users(id)` - so for a genuinely fresh signup, the very first
+   insert (creating the organization itself) hard-failed with a
+   foreign-key violation, before bug #1 even mattered.
+
+Fixed by ensuring a bare `user_profiles` row exists before touching
+`organizations` at all. Verified with a real Postgres test: seeded a
+fresh `auth.users`-only account, called both RPCs, confirmed the resulting
+`user_profiles`/`organization_members`/`user_roles` rows were correct, and
+confirmed a second call to `join_default_organization()` is a safe no-op.
+
+**A third bug, found by finally running all 16 migrations in strict order
+against a completely fresh, empty database** (everything up to this point
+had been tested incrementally against a test database that had already
+absorbed earlier fixes, which masked this one): `0100_course_applications.sql`
+referenced `c.owner_id` in two RLS policies, but `courses` has no such
+column - that's a `course_files` column, evidently copied from the wrong
+table. On a genuinely clean database this is a hard migration failure, not
+a silent no-op. Fixed to reference `courses.instructor_id` only, and
+re-verified the complete 16-migration chain applies cleanly start to finish
+on a fresh database.
+
+## Demo mode: sign-in didn't remember a demo sign-up's role (this round)
+
+Reported directly, and it exposed a second, separate gap from the reload
+fix above: sign up as Organization → correctly admin → sign out → sign
+back in with the same email → back to plain learner. Root cause: demo
+mode's `signIn` and `signUp` (`src/hooks/useAuth.js`) each independently
+decided a role from scratch every time, using only the `+admin` email
+marker - `signIn` had no memory of what `signUp` (or a later organization
+registration) had *just* decided for that same email a moment earlier, so
+every sign-in fabricated a brand-new session from nothing. Fixed with a
+small, clearly-scoped demo-only role registry
+(`getDemoRoleForEmail`/`setDemoRoleForEmail` in `src/lib/roleRouting.js`,
+a `localStorage`-backed email→role map): `signUp` and
+`organizations.js`'s demo-mode organization patch both record the role
+they assign, and `signIn` checks that record before falling back to the
+`+admin` marker for an email with no history. Real mode never reads this - it's purely there so demo mode is internally consistent with its own past
+decisions in the same browser. Verified with a real sign-up → session-clear
+→ sign-in cycle: the same non-`+admin` email correctly stayed admin across
+the cycle instead of reverting.
+
+## Real bug: organization sign-up only worked in demo mode (this round)
+
+Reported directly: signing up as an Organization landed on the Learner view
+instead of the Admin/Platform view. Root cause, found in
+`src/pages/auth/AuthPage.jsx`'s `handleSubmit`: after `registerOrganization()`
+succeeds, the app needs to reload so its role lookup picks up the fresh
+"admin" promotion - `create_organization_self_serve()` (or the demo-mode
+session patch) does the promotion correctly, but the app's in-memory role
+state was fetched one line earlier, right after the base account was
+created, before that promotion happened. The reload-on-success code only
+covered the `orgResult.demo` branch (demo mode's local session patch) - the
+identical reload for a real, database-backed success was simply missing,
+so a real signup left the promotion sitting correctly in the database while
+the UI kept rendering against the stale pre-promotion role indefinitely.
+Fixed to reload unconditionally on any successful organization registration,
+not just the demo-flagged case. Re-verified the demo-mode path still lands
+on the Admin dashboard correctly (no regression) - the real-mode path now
+takes the identical code path instead of a different, incomplete one.
+
+## Em dashes removed from all user-facing text
+
+Removed every em dash ( - ) from visible copy across the app - 240 instances
+across 60 files. Left developer code comments alone (no user ever reads
+those), and rewrote the actual sentences rather than just deleting the
+character, since a blind delete would leave broken grammar behind.
+
+Two real bugs came out of doing this properly rather than a blind
+find-and-replace:
+
+1. A first pass used a script that dropped the trailing newline on every
+   line it touched, silently merging each fixed line with the next line of
+   code. Caught by diffing line counts before/after (line count must stay
+   identical - it didn't, on the first attempt), not by reading the diff
+   text itself, which still looked plausible at a glance.
+2. The same first pass replaced standalone placeholder dashes - the ones
+   already used throughout the admin tables to mean "no value yet" (e.g. a
+   learner with no completion date) - with a stray `": "`, since the
+   script's fallback rule assumed every dash was a title separator. Found
+   65 of these across 21 files by grepping for the literal broken output,
+   and replaced them with `"N/A"` instead of a dash of any kind.
+
+A third, separate category only surfaced by actually rendering the page in
+a browser rather than searching the source files: `LandingPage.jsx` had
+9 em dashes written as the escaped sequence `\u2014` inside string
+literals, which don't match a literal " - " character search in the source
+but do render as one once JavaScript decodes the string. Found by checking
+the actual rendered page text in Playwright and comparing it against a
+source-level grep that came back clean - the mismatch is what gave it
+away. Fixed by hand, same as the rest of the landing page copy.
+
+Verified with a real browser render (not just a source-code search) that
+zero em dashes appear on the landing page, the sign-up page, the admin
+dashboard, Community, AI, and Home - across both the marketing site and
+the app itself.
+
+## Three genuinely separate top-level dashboards (Platform Owner pulled out of the Organisation dashboard's tab list)
+
+**The correction.** Platform Owner ("Super Admin") was a tab inside the
+same dashboard shell as Admin/Instructor/HR/Manager - sharing that
+dashboard's sidebar, its "Workspaces" section, everything. Confirmed
+directly that this is wrong: there are meant to be three genuinely separate
+top-level dashboards (Learner, Organisation, Owner), each a whole different
+dashboard the way Learner already was - not Owner being "just a page or
+section under organisation view."
+
+**What was built:**
+- `src/platform/PlatformOwnerApp.jsx` - a brand new, fully separate
+  top-level component. Its own sidebar (`OwnerSidebar` in
+  `PlatformUI.jsx`), with no "Workspaces" section at all (Owner has no
+  sub-workspaces to switch between - it is one dashboard). Reuses the
+  existing superadmin screen components (Overview, Organizations, Org
+  Onboarding, Branding, Platform Settings, Learning Tracks, Platform
+  Emails, Access Control) and the Database/Project switcher, none of which
+  needed rewriting - just relocating to a dashboard of their own.
+- "Super Admin" removed entirely from the shared `WORKSPACES` list -
+  `TrainAIPlatformApp.jsx` is now purely the Organisation dashboard
+  (Admin/Instructor/HR/Manager), the same thing every business's own staff
+  has always had, nothing more.
+- A real `DashboardSwitcher` component, matching the reference design
+  directly (title, role badge, "open another dashboard without changing
+  your saved role," one row per option) - replacing the old single-purpose
+  "Learner View" / "Admin workspace" links in all three dashboards
+  (Learner, Organisation, and now Owner) with one consistent mechanism.
+- Real access rules in `lib/roleRouting.js` (`getAvailableDashboards`):
+  `super_admin` sees all three; any other platform role (admin, mentor, hr,
+  manager) sees Organisation + Learner only, never Owner, regardless of
+  which org they administer or how large it is; a plain learner sees
+  Learner only.
+- `App.jsx` now mounts three separate top-level components (previously
+  two), with `superAdminSelectedOrgId` lifted up so Super Admin doesn't
+  lose track of which org they were looking at when crossing between
+  Owner and Organisation.
+
+**Verified with real clicks, not assumed from reading the code:**
+- Landed on the Organisation dashboard and confirmed "Super Admin" no
+  longer appears in its Workspaces list.
+- Opened the switcher from Organisation, switched to Owner - confirmed
+  Owner's sidebar has no Workspaces section, just its own nav, with an
+  "OWNER" badge distinct from Organisation's plain branding.
+- Opened the switcher from Owner, switched directly to Learner - skipping
+  Organisation entirely, confirmed no errors.
+- Switched Learner directly to Owner the same way, the reverse direction.
+- **The access rule specifically**: seeded a demo account with only a
+  `mentor` role (no `super_admin`) and confirmed its switcher shows exactly
+  two options - Learner and Organisation - with "Platform Owner Dashboard"
+  absent entirely, role badge correctly reading "Admin" rather than "Super
+  Admin."
+- One real test-authoring mistake caught along the way: since dashboards
+  stay mounted for state preservation (the same pattern already used for
+  Learner/Organisation), there are legitimately two "Switch Dashboard"
+  elements in the DOM at once when testing - `.first()` initially grabbed
+  the hidden one. Fixed the test to target only the visible element; not an
+  application bug.
+
+## A real rendering bug, found only by checking a claim, not by reading code
+
+While confirming "Super Admin can reach all three dashboards" - opening the
+Dashboard Switcher *from within* the Owner dashboard itself, not just
+switching *into* it - the modal was genuinely invisible on screen despite
+being present and correct in the DOM. Chased this properly rather than
+accepting a screenshot that looked wrong as inconclusive: querying the
+element directly showed `position: static` instead of the `.ta-scrim`
+class's own `position: fixed`, pushing the whole modal below the visible
+viewport. Root cause: with three separate dashboards now each rendering
+their own `<style>{TOKENS}</style>` tag (one style tag per mounted
+component, all three mounted simultaneously for state preservation), the
+same `.ta-scrim` rule exists in multiple stylesheets at once - and the
+element's `position` was resolving to `static` rather than the class's
+`fixed`. Fixed by setting `position: "fixed"`, `inset: 0`, and `zIndex: 200`
+directly as inline styles on the switcher's own wrapper rather than relying
+on the shared class alone - inline styles have unambiguous highest
+specificity, so this can't be re-broken by however many stylesheets end up
+injected. Re-verified with a direct computed-style check
+(`getComputedStyle`) showing `position: fixed` and the correct full-viewport
+bounding box, then with an actual screenshot showing the modal rendered
+exactly as designed - title, role badge, all three dashboard options, the
+active one highlighted.
+
+## Platform Owner as a genuinely separate dashboard, not a tab inside Organisation
+
+**The correction:** Platform Owner ("Super Admin") was just one more entry
+in the same `WORKSPACES` list as Admin/Instructor/HR/Manager, sharing that
+dashboard's sidebar and shell. That's the exact "just a page/section under
+organisation view" problem this fixes - there are now three genuinely
+separate top-level dashboards (Learner, Organisation, Owner), matching how
+Learner already worked (a fully distinct app shell, not a tab).
+
+**What changed:**
+- `src/lib/roleRouting.js`: `getAvailableDashboards(roles)` - real access
+  rules. `super_admin` → all three dashboards. Any other platform role
+  (admin/mentor/hr/manager) → Organisation + Learner only, Owner never
+  appears as an option regardless of org size or tier. A plain learner →
+  Learner only.
+- A new `DashboardSwitcher` component (`PlatformUI.jsx`) - title, role
+  badge, "open another dashboard without changing your saved role" framing,
+  one row per available option. Wired into all three dashboards' sidebars.
+- `src/platform/PlatformOwnerApp.jsx` - a brand new, genuinely separate
+  top-level component. Its own `OwnerSidebar` (no "Workspaces" section at
+  all - Owner is one dashboard, not several tabs), its own shell, reusing
+  the existing Overview/Organizations/Branding/etc. screen components but
+  never sharing a Sidebar or workspace-switch state with the Organisation
+  dashboard again.
+- `TrainAIPlatformApp.jsx` (now purely the Organisation dashboard):
+  "Super Admin" removed from its `WORKSPACES` list entirely; the whole
+  superadmin screen-rendering block and its Supabase-project-switching
+  logic moved to `PlatformOwnerApp.jsx`.
+- `App.jsx`: three real top-level dashboards mounted with the same
+  CSS-display-toggle state-preservation pattern all three already used for
+  two of them, plus `superAdminSelectedOrgId` lifted up here so Super Admin
+  can click "View" on an org from the Owner dashboard and land on that
+  specific org inside the Organisation dashboard, since the two are now
+  separate components that can't share local state directly.
+
+**Verified by actually clicking through it, not by reading the diff:**
+opened the Dashboard Switcher from the Organisation dashboard as a
+super_admin account, switched to the Owner dashboard, and confirmed
+visually it is a completely distinct shell - different badge ("OWNER" vs
+"PRO"), different nav section title ("Platform Owner" vs "Workspaces"), no
+Admin/Instructor/HR/Manager tabs anywhere in it. Clicked into Organizations
+from inside the Owner dashboard and confirmed it still works (Billing,
+Create organization, the per-org Manage panel). Checked a plain individual
+learner sign-up separately and confirmed no regression. Re-confirmed zero
+em dashes across the whole codebase after all of this.
+
+## Corrected: three separate Supabase projects, one per tenant category (not two tenant projects + a proposed platform one)
+
+**The previous round's proposal was wrong, corrected directly.** Confirmed:
+Sara Foundation (own project), Digital Training Organization (own project -
+also where Super Admin accounts live, holding both the org's `admin` role
+and platform-wide `super_admin` simultaneously), and B2B (one shared
+project for every business tenant, isolated internally the way this app
+always worked). There is no separate fourth "Platform" project - that was
+this repo's own proposal last round, explicitly marked "not yet confirmed,"
+and it wasn't the right one.
+
+**What changed in code:**
+- `SUPABASE_PROJECTS` renamed from `{SARA_FOUNDATION, MAIN, PLATFORM}` to
+  `{SARA_FOUNDATION, DIGITAL_TRAINING, B2B}`.
+- `resolveProjectForSignUp(email, accountType)` - sign-up routing is
+  straightforward, since the form already captures account type before any
+  account exists: fixed domains
+  (`@sarafoundationafrica.com`/`@trainailtd.com`) override everything else;
+  "Organization" -> B2B, "Individual Learner" -> Digital Training
+  Organization.
+- `resolveProjectForSignIn()` / `fallbackProjectForSignIn()` - sign-in is
+  genuinely harder now that Digital Training Organization and B2B are
+  separate databases: a plain email doesn't say which one an *existing*
+  account belongs to. Tries Digital Training Organization first, falls back
+  to B2B exactly once, only on a real auth rejection (never a network
+  error, which means unreachable, not "try somewhere else").
+- `.env.example` updated for the three real project names.
+
+**A real bug found and fixed while testing this, not before shipping it**:
+`useAuth.js` referenced `resolveProjectForSignUp()` without importing it -
+the build succeeded anyway (esbuild transpiles but doesn't fully
+reference-check plain JS), and it only surfaced by actually running the
+sign-up flow in a real browser and watching it throw "not defined." Fixed,
+then re-verified all four routing combinations (organization/individual
+sign-up, regular email/fixed domain) by checking the actual stored active
+project after each one - not assumed from reading the code a second time.
+Also re-ran a plain sign-in as a regression check (still works exactly as
+before) and re-confirmed zero em dashes across the whole codebase after
+all of this.
+
+## Three separate Supabase projects, not one shared database (superseded above - kept for history)
+
+**Confirmed directly, correcting the architecture built in the previous
+round:** Sara Foundation, Digital Training Organization, and B2B are not
+three logical tenants inside one shared Supabase project - Sara Foundation
+runs on its own dedicated project, genuinely separate infrastructure with
+its own `auth.users`. Digital Training Organization and every B2B tenant
+share a second project ("Main"), isolated from each other there the same
+way this app always worked (`organization_id` + RLS). A third project
+("Platform") is proposed - not yet confirmed - as Train AI's own database
+for Super Admin accounts, which is the actual mechanism that resolves the
+open item from the previous round about the platform-owner portal needing
+genuine separation, not just a role check.
+
+**What changed in code:**
+- `src/services/supabaseClient.js` rewritten to hold three independently-
+  configured named clients instead of one, with a live, mutable `supabase`
+  export (`export let`, not `const`) - every one of the 18 existing files
+  that already did `import { supabase } from ...` continues to work
+  completely unchanged, because ES module bindings are live references,
+  not snapshots. `setActiveSupabaseProject()` reassigns which client that
+  binding points to.
+- `resolveProjectForEmail()` - an `@sarafoundationafrica.com` address
+  routes to the Sara Foundation project; everything else routes to Main.
+  Called from `signIn`/`signUp` in `src/hooks/useAuth.js` before the actual
+  auth call, since these are separate `auth.users` pools - which project
+  even gets asked has to be decided first, not after.
+- `.env.example` rewritten for three projects' worth of connection
+  settings, each degrading independently to demo mode if unconfigured -
+  exactly the same fallback behavior the single-project version always had,
+  just three times over.
+- A **Database / Project switcher** on every Super Admin screen
+  (`ProjectSwitcherBanner` in `TrainAIPlatformApp.jsx`), showing real
+  session status per project (configured/demo, authenticated/not signed
+  in) rather than silently showing empty data with no explanation.
+
+**Verified, not assumed:** a regular email still signs up and lands in the
+learner app exactly as before (regression check - the routing change
+doesn't affect the default path at all), and an `@sarafoundationafrica.com`
+address correctly sets the active project to Sara Foundation before the
+auth call runs, confirmed by checking the actual stored project value
+after sign-in.
+
+**The one thing stated plainly, not glossed over:** switching the active
+project in the UI does not grant Super Admin a session in that project.
+These are separate auth systems by design - a Super Admin account that
+needs to manage all three projects needs to actually be provisioned with
+`super_admin` access in each one separately. There is no single login that
+sees all three at once without that provisioning existing first. This is a
+real property of choosing three separate databases, documented in both the
+code and the multi-tenant guide rather than implied away.
+
+## Platform Owner gate exemptions, and the multi-tenant guide
+
+**A real gap found while writing documentation, not before.** Every
+tier/payment gate built in earlier rounds (`AdminDashboardScreen.jsx`'s
+trial-payment gate, the analytics export and Integrations tier checks)
+applied to *everyone*, including a super_admin viewing another
+organization's context through the Organizations screen's "View" button.
+That meant clicking into a trial-status or Starter-tier demo org showed
+Super Admin the exact same paywall a real, unpaid customer would see -
+defeating the entire point of Section 4's "cross-tenant visibility"
+requirement. Fixed: `AdminDashboardScreen.jsx`, `AdminAnalyticsScreen.jsx`,
+and `IntegrationsScreen.jsx` now each take an `isPlatformOwner` flag
+(wired from `TrainAIPlatformApp.jsx`'s `userRoles.includes("super_admin")`)
+and bypass their own restriction when true. Verified visually: Super Admin
+viewing "Demo Org - Starter" (trial status, Starter tier) now sees the
+real dashboard and the real, Enterprise-only Integrations screen with no
+gate at all - while that organization's own admin still sees exactly the
+restrictions their actual plan applies.
+
+**A full multi-tenant architecture and Super Admin guide** was written
+separately (delivered alongside the code, not part of this repo) -
+`Train_AI_Multi_Tenant_Guide.pdf`. It documents the four access layers, the
+five real tenants, exactly how Super Admin reaches and manages each one
+(cross-tenant visibility, feature flags, billing, suspend/activate,
+impersonation), with a file-by-file reference table, and states plainly
+what still isn't built (the separate Platform Owner portal, real SSO
+federation).
+
+## Multi-tenant architecture alignment (Sarah's Multi-Tenant Database Architecture Reference)
+
+**Sara Foundation as a real tenant** (`0118_sara_foundation_tenant.sql`) - a
+real gap, found by checking rather than assuming when re-verifying against
+this document a second time. Section 2.1 names Sara Foundation as the
+first of three tenant categories and "the reference/first production
+tenant." It existed nowhere in the multi-tenant data model - only as an
+unrelated emails table (`sara_foundation_emails`) and a stray comment about
+the hardcoded admin-email backdoor removed several rounds ago. Seeded as a
+real, isolated organization row, the same pattern as Digital Training
+Organization and the three demo orgs. "Old database falls here" (Section
+1) means associating Sara Foundation's actual pre-existing data with this
+tenant once a real migration path exists - that data isn't accessible from
+this sandbox and wasn't fabricated; what's built is the tenant itself,
+ready to receive that association.
+
+**Em dash re-check** - found 8 em dashes reintroduced in the feature flags
+migration written after the original removal pass (the exact risk of
+writing new content after a cleanup pass and not re-checking). Fixed, and
+reverified at zero across the entire codebase, including confirming the
+fixed migration still applies cleanly.
+
+**Real per-organization feature flags** (`0115_organization_feature_flags.sql`).
+Section 3: "Feature availability is not hardcoded per organization type - it's
+controlled centrally by Train AI as platform owner... via toggleable feature
+flags per organization." Two rounds ago, tier gating (analytics export,
+integrations) was built as a hardcoded map in `lib/tierFeatures.js` - correct
+defaults, wrong mechanism per this document. Replaced with the real thing:
+an `organization_feature_flags` table (mirroring the existing
+`role_permissions_matrix`/`user_permission_overrides` pattern exactly), a
+`get_org_feature()` function that checks for an explicit per-org override
+first and falls back to the tier default only if none exists, and a bulk
+variant so a screen checking several flags costs one round trip, not one
+per flag. `tierFeatures.js` is now only the offline/fallback map, not the
+source of truth. Verified with real Postgres tests: a Starter org's SSO
+flag correctly defaults to off, a platform-owner override correctly turns
+it on for that one org, a regular org admin is correctly blocked from
+granting itself the override, and the Starter/Growth tier defaults match
+Section 3's table exactly (manager_view, AI Intelligence Layer
+Limited-vs-full, etc.).
+
+**Digital Training Organization** (`0116_digital_training_org_and_demos.sql`).
+Section 2.2 names the B2C default-org "Digital Training Organization," not
+"Tech Learning" (the working name used when this was built three rounds
+ago, before this document existed). Renamed the existing row in place -
+`join_default_organization()` looks up by slug, not display name, so
+nothing downstream needed to change.
+
+**Three demo orgs, one per tier** (same migration). Section 2.3: "build at
+least one demo account per pricing tier so the tiered feature model can be
+tested and shown... fully isolated tenant just like a real customer would
+be." Seeded as real, isolated organization rows (Demo Org - Starter/Growth/
+Enterprise), not fixtures - they go through the exact same feature-flag
+resolution as any real customer.
+
+**Audited organization suspend/activate** (`0117_organization_status_control.sql`).
+Section 4 lists "Turn organizations or users on/off (suspend, activate,
+deactivate)" as a Platform Owner capability. The `org_status` enum already
+had a `suspended` value and RLS already let a super_admin update any org's
+row - nothing had ever actually used either. Added a real, audited function
+(every status change writes to `admin_audit_log` unconditionally) and wired
+it into a "Manage" panel on `OrganizationsScreen.jsx`. Verified: a regular
+org admin is blocked from suspending even their own org through this path,
+a real super_admin can, and the audit trail records it correctly.
+
+**Platform-wide billing visibility** (`OrganizationsScreen.jsx`'s new
+Billing panel). Section 4: "Billing/payments management: View and manage
+payments received from organizations." No new table - this surfaces the
+`admin_audit_log` rows `apply_organization_subscription_payment()` already
+wrote (built last round), at the platform level, for the first time.
+
+**Feature flag management UI** - the same "Manage" panel lists all 11
+tracked feature keys per org (Learner/Instructor/Manager/Admin view, AI
+Intelligence Layer + Advanced, SSO, API integrations, analytics export,
+multi-department breakdown, custom branding), showing which are explicit
+overrides versus tier defaults, with a toggle to set or clear an override -
+the actual UI for the capability the flags migration above built.
+
+**What's flagged as still open, matching the document's own framing**:
+Section 7 lists "exact mechanism for the platform-owner portal separation
+(subdomain, separate app, role-based route guard, etc.)" as something to
+confirm with engineering, not a decided requirement. Right now, Super Admin
+is a workspace switch inside the same login as any other role - a
+role-based guard, not a separate portal. Deliberately not forcing a
+specific one of the three options the document itself lists as
+undecided; flagging it again here rather than silently picking one.
+
+## Real payment gating - organizations actually have to pay now
+
+**The gap.** Confirmed by reading the code rather than assuming: self-serve
+organization signup (`0102_org_self_serve_signup.sql`) created every
+organization at `status='trial'` unconditionally, with no payment step
+anywhere. The existing payment infrastructure
+(`lib/api/payments.js` - real, live Paystack/Stripe, already deployed on
+the shared Supabase project) had contexts for AI credits, course
+enrollment, and waitlist premium - nothing for an organization
+subscription at all. Meaning: every organization got full self-serve
+access, forever, for free, regardless of which tier its dashboard claimed
+to show. The pricing page and the actual account model were disconnected.
+
+**What's built now:**
+- `apply_organization_subscription_payment()` (`0114_organization_subscription_payment.sql`) - a real, authorization-checked RPC that activates a paid tier. Verified
+  with actual Postgres tests: the org's own admin can activate their org
+  ✅, a random outsider is blocked from touching someone else's org ✅, an
+  empty/fake payment reference is rejected ✅, every successful activation
+  writes an audit log entry ✅.
+- A new `ORGANIZATION_SUBSCRIPTION` payment context wired into the
+  existing, already-live Paystack/Stripe flow (`lib/api/payments.js`,
+  `lib/api/organizations.js`) - reusing real infrastructure, not inventing
+  parallel payment logic.
+- A **Billing & Plan** card in `SettingsHubScreen.jsx`: shows current
+  plan/status, lets an admin activate Starter or Growth (placeholder
+  pricing, explicitly flagged as needing real numbers - nothing in the
+  brief specified actual amounts), routes Enterprise to "contact us"
+  instead of self-serve, matching the pricing page's "custom pricing"
+  framing.
+- `OrgPaymentCallbackScreen.jsx` - the Platform app had **zero** payment
+  callback handling before; only the learner app did (for credits/course
+  enrollment). Wired into `TrainAIPlatformApp.jsx`'s boot logic, mirroring
+  the learner app's existing pattern.
+- **The actual gate**: `AdminDashboardScreen.jsx` now shows a real
+  "Activate your organization to unlock the dashboard" screen instead of
+  the dashboard for any trial-status org, with a working path straight to
+  Billing. Verified visually with fixture data - the gate renders correctly
+  for a trial org, and the Billing card shows the right pricing/status.
+
+**The one honest limitation, stated in the migration's own header comment
+rather than glossed over**: the real Stripe/Paystack verify edge functions
+live in a separate, shared codebase not present in this repo - they can't
+be edited from here. The fully-hardened version of this has the edge
+function apply the tier change server-side, the same way it already does
+for `paid_waitlist` on the `waitlist_premium` context. What's built instead
+has the *client* apply it after receiving a trustworthy verify response - still properly authorization-checked and audited, but not quite the same
+guarantee as fully server-side enforcement. Flagged explicitly so this
+isn't mistaken for more airtight than it is.
+
+## Website verified against the master draft, and real organization-tier gating
+
+**Website copy/structure audit.** Checked the current `LandingPage.jsx` and
+`AuthPage.jsx` against the uploaded "TRAIN AI - Website Copy & Structure - Master Draft" (New Version) line by line - nav, hero, Who We Are, The
+Problem, the five intelligence layers, How It Works, Solutions, Why Train
+AI (including the comparison table), Built for Organizations, For
+Individuals, Enterprise Readiness & Security, Pricing, the exact 5-question
+FAQ, and the footer contact details all already matched the document
+exactly, including the "Six Weeks Pilot" removal, the testimonials/"What
+People Say" section removal, and the sign-up form already narrowed to just
+Organization and Individual Learner (Manager/Admin/Instructor correctly
+assigned after login via invitation, never a public sign-up choice). No
+changes were needed there - confirmed rather than assumed, by grepping for
+the specific phrases the brief called out.
+
+**Organization tier feature gating (new).** The brief's Development Tasks
+list added: "Organizations have different subscription levels... Higher
+tiers unlock more advanced admin capabilities, richer analytics... The
+platform should support these tier differences." Checked, and nothing
+anywhere in the codebase actually gated a feature by `subscription_tier` - it was only ever displayed. Added `src/lib/tierFeatures.js`, matching the
+exact Starter/Growth/Enterprise breakdown already agreed in the Product
+Specification v4.2 (not inventing a new one): CSV analytics export and the
+department-by-department breakdown now require Growth or higher
+(`AdminAnalyticsScreen.jsx`), and Integrations (webhooks/API) require
+Enterprise (`IntegrationsScreen.jsx`), each showing a clear "upgrade to
+unlock" message rather than silently failing. Verified both directions
+with fixture data - a Starter-tier org sees the locked state, an
+Enterprise-tier org sees the real, working feature.
+
+## Real "Failed to fetch" bug fix - network errors during sign-in/sign-up
+
+**The actual bug behind "it says failed to fetch when I create an account."**
+Neither `signIn` nor `signUp` in `src/hooks/useAuth.js` caught network-level
+failures in their real-mode (`if (supabase)`) branches. If `.env.local` has
+a `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` pointing at a project that's
+unreachable - wrong URL, a paused free-tier project, no network access from
+wherever it's running - `supabase.auth.signInWithPassword()` /
+`supabase.auth.signUp()` throw a raw `TypeError: Failed to fetch` instead of
+returning a normal `{ error }` result, and nothing was catching that. It
+surfaced as an unhandled error with no indication of what actually went
+wrong or what to do about it.
+
+Fixed: both functions now wrap the real-mode call in a try/catch and, on a
+network-level failure specifically, show a clear message in the same red
+error box the form already uses for ordinary auth errors: *"Could not reach
+the configured backend (network error). If you want to test in demo mode
+instead, remove VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY from your
+.env.local (or delete the file) and restart the dev server."* Verified by
+temporarily swapping in a fake Supabase client that throws exactly this way
+on every auth call (matching what an unreachable real project does) and
+confirming both the sign-in and sign-up forms show the clear message with
+no crash, instead of the raw error - then reverted the test double.
+
+Separately worth noting: `.env.example` ships with a real-looking, specific
+project URL (`VITE_SUPABASE_URL=https://qibqouymqtpirtbyjvjr.supabase.co`)
+and only the anon key as an obvious placeholder. Copying that file to
+`.env.local` without replacing the URL, or with a project that's since been
+paused/deleted, is exactly the scenario this fix addresses - the app will
+now say so plainly instead of failing silently. **To force full demo mode**
+regardless of any `.env.local` present, delete the file (or blank out both
+of those two values) and restart `npm run dev` - `isSupabaseConfigured` will
+be `false` and every real-mode code path in this app falls back to its
+demo-mode equivalent, which is what's been used for every screenshot and
+verification throughout this project.
+
+## Assessments pipeline, Platform Owner impersonation, and closing gaps (this round)
+
+**The Assessments pipeline - built from nothing.** The brief says twice that
+"Instructors may override grades." Went to add an override button and found
+there was nothing to override: `assessment_attempts` had zero RLS policies
+(not even a learner could submit or read their own attempt), no submission
+function existed anywhere in the client, and "assessment" appeared in
+exactly one learner-facing file - the AI Quiz Generator, a different
+feature the brief explicitly distinguishes from Assessments. Built the
+whole pipeline (`0112_assessments_pipeline.sql`), mirroring the one part of
+this schema that already does the equivalent correctly (quizzes): a real
+`assessment_questions` table, a `safe_assessment_questions` view that never
+exposes the correct answer, server-side scoring via
+`check_assessment_answers()`, and RLS where a learner can submit and read
+their own attempt but - deliberately, unlike quiz attempts - cannot update
+their own score afterward once submitted, since a real assessment feeds
+certificates and completion, not just self-practice. An instructor
+(specifically the course's assigned instructor, or any `manage_courses`
+permission holder) can grade and override, and the original AI-graded score
+stays visible alongside the override rather than being silently replaced.
+Learner-facing "take assessment" UI added to `CourseDetailScreen.jsx`;
+instructor-facing grading UI added to `ContentScreen.jsx`. Verified with a
+real Postgres test end to end: correct auto-scoring, the learner blocked
+from self-editing their score, the learner blocked from reading the answer
+key, the assigned instructor able to grade, and an unrelated instructor
+correctly blocked from grading a course that isn't theirs.
+
+**Platform Owner impersonation.** The brief: "Platform owners can
+impersonate or log into organizations when troubleshooting" - confirmed
+earlier in this project that this should include seeing AI Coach
+conversations. Built as an audited, read-only "view as"
+(`super_admin_view_user()` in `0113_super_admin_impersonation.sql`) rather
+than real session forgery - real impersonation would let Platform Owner
+take actions as the user with no trail distinguishing their actions from
+the user's own, which is a materially bigger and riskier feature than "see
+their data," so this is flagged as a deliberate scope choice, not a
+shortcut. Every call is logged to `admin_audit_log` before any data is
+returned, unconditionally, and the one thing every other role in this app
+is blocked from - AI Coach conversation content - is intentionally
+readable through this one audited path, because that was explicitly
+confirmed rather than assumed. UI added to `AccessControlScreen.jsx`
+(search a user, give a reason, view their profile/enrollments/AI Coach
+history).
+
+Found a real integrity gap in the audit log itself while building this:
+`admin_audit_log`'s INSERT policy was `with check (true)` - any signed-in
+user, not just admins, could write arbitrary entries into what's supposed
+to be a trustworthy record, and `log_admin_action()` never checked the
+caller's role either. Fixed before relying on this table for something as
+sensitive as impersonation logging.
+
+**Smaller items.** Added AI usage ("AI credit consumption") to the
+org-level AI Intelligence Dashboard (`AdminAnalyticsScreen.jsx`) - the
+Platform Owner version was built two rounds ago, but the brief also asks
+for this at the org level for Admin/Manager. Capped the external course
+catalog to 5 when filtering to "External" (`CoursesScreen.jsx`) - the brief
+asks for "3-5 carefully selected" with "no marketplace experience," and
+nothing in the pipeline previously enforced that.
+
+## Learning Paths admin screen, and real Platform Owner analytics (this round)
+
+**Admin Learning Paths.** Per the refreshed PRD summary, Admin view should include "Learning tracks - assign." Checked, and there was no admin-facing screen anywhere for this - only the backend (`createLearningPath`/`updateLearningPath`/`fetchLearningPathsAdmin` in `platform.js`), never wired to a UI. This mattered more than it might have otherwise: an earlier round removed the *learner-facing* Learning Paths page on the assumption an admin version existed to replace it - it didn't, so Learning Paths had no interface at all, learner or admin, until now. Added `src/platform/admin/LearningPathsScreen.jsx`: list/create/edit/publish-toggle/delete, with a reorderable course picker. Added the missing `deleteLearningPath`/`togglePublishLearningPath` functions alongside it.
+
+Building this surfaced two more real, confirmed bugs, found by testing rather than reading:
+1. `learning_path_courses` - the join table recording which courses belong to a path - had RLS enabled but **zero policies**, meaning `createLearningPath`/`updateLearningPath` would have failed outright for any real admin, independent of whether a UI existed.
+2. `learning_paths`' own write policy checked only a permission flag with no organization scoping at all, despite the table having an `organization_id` column specifically to scope a path to one org (unlike `courses`, which has no such column and is deliberately shared/global) - an admin from one org could have read, edited, or deleted another org's paths.
+
+Both fixed in `0110_learning_paths_rls_fix.sql` and verified with a real cross-org Postgres test: an org's admin can create/edit their own path and its courses, and is correctly blocked from touching another org's path or adding a course to it.
+
+**Real Platform Owner analytics - AI usage and website performance.** The refreshed brief adds "AI credit tracking," "usage analytics," and "Website performance" to the Platform Owner view. Checked what backs the existing "AI Credits" shown to learners first: `useCredits.js` is explicitly client-side-only (localStorage), by documented design - there is no credits table anywhere in the schema. Faking a platform-level number from that would have misrepresented real cost data, so instead: added a genuine `ai_usage_events` table (`0111_ai_usage_tracking.sql`, RLS enforced - no client insert path at all, only the `ai-chat` edge function's service-role key can write it), wired real logging into `supabase/functions/ai-chat/index.ts` on every reply that actually reaches a provider (not Manual Mode or disabled-org attempts, since those never call one), and surfaced real totals on the Platform Owner Overview screen. Verified with a real Postgres test: no client role can insert directly, and an org admin sees only their own organization's usage events. "Website performance" needed no new table at all - `demo_requests` and `organization_inquiries` already capture real conversion events; this just aggregates and displays counts that already existed but were never surfaced anywhere.
+
+## Full product brief implementation (Instructor rebrand, Community restructure, messaging restriction, AI Coach controls, leaderboard toggle)
+
+Everything from the finalized product brief not already covered above:
+
+**Course UI simplification.** Removed star ratings (card + course detail
+header + the entire reviews tab) and difficulty labels from the catalog.
+Built real bookmarking end-to-end - the `bookmarks` table existed in the
+schema but had **zero RLS policies** (unprotected, not just unused) and was
+never wired to the frontend. Added RLS (verified with a real two-user
+Postgres test: a learner sees only their own bookmark and is blocked from
+writing one on another user's behalf), API functions, and bookmarked-first
+catalog sorting. Also caught and fixed a naming collision: the pre-existing
+`showBookmarkedOnly` flag actually meant "my enrolled courses" (built in an
+earlier round), not real bookmarks - renamed to `showMyCoursesOnly`.
+
+**Learner-facing Learning Paths page removed** (admin-only now, per the
+brief). Deleted the now-orphaned `LearningPathsScreen.jsx` and its route.
+
+**Daily challenges and the referral program removed.** Daily challenges
+turned out to already be dead code - `DailyChallengeCard.jsx` was never
+actually imported anywhere - so this was cleanup of already-orphaned
+functions in `retention.js`/`schemaHelper.js`, not a live removal. The
+referral program was live (signup capture, Profile screen panel) and is now
+fully removed, including the dead files it depended on.
+
+**Instructor rename.** Renamed all user-facing "Mentor"/"Facilitator" text
+to "Instructor" across ~15 files (learner screens, the landing page,
+platform admin screens, all 8 mentor-workspace screens, superadmin RBAC and
+onboarding). Deliberately left the underlying `platform_role` enum value as
+`'mentor'` and internal file/folder names untouched - this is a display
+rebrand, not a schema migration, and the two places that rendered a raw role
+key directly as its label (the RBAC matrix, the invite dropdown) got a
+small label-mapping function instead so the real role key never changes.
+Also found and deleted `src/lib/AuthScreen.jsx` - fully dead, superseded by
+`AuthPage.jsx`.
+
+**Community restructure.** Replaced the social-media-style post feed
+(create/like/comment) with a Community Dashboard: Cohort updates, Study
+group activity, a Leaderboard summary, and Announcements. Along the way,
+found that `WeeklyLeagueCard` - a complete, correctly-built leaderboard
+component - and the `leaderboardQuery` data it needs were both already in
+the codebase, fully functional, never wired to any screen. Connected them
+instead of building new. Added "Instructors" as a direct quick-link, since
+the brief names it as the third primary community structure. Left Forums
+and Members untouched - the brief says "posts are removed," not "forums,"
+and those are meaningfully different (structured Q&A vs. a social feed).
+
+**Messaging restriction, enforced at the database, not just the UI.** The
+Members directory's "Message" action is now instructor-only in the UI. More
+importantly: the existing RLS policy on `mentor_messages` only checked
+`sender_id = auth.uid()` - it never checked who the *receiver* was, so a
+learner could message another learner directly via the API regardless of
+what the UI showed. Fixed with a proper `WITH CHECK` requiring at least one
+party to hold the instructor role, and verified with three real seeded
+test cases: learner→learner blocked, learner→instructor allowed,
+instructor→learner (reply) allowed.
+
+**AI Coach Manual Mode + enable/disable, and a leaderboard visibility
+toggle.** Both stored in `organizations.settings` (jsonb, already in the
+schema, previously completely unused by any code) - no new tables. An org
+admin can turn AI Coach off entirely, or switch it to Manual Mode (their own
+configured message stands in for a real AI reply, still written to
+`ai_messages` as an assistant-role row so it appears in the conversation
+like a normal reply). Building this surfaced a real permission gap: the
+`organizations` table's UPDATE policy only allowed the literal org *owner*,
+not a regular org *admin* - but the brief lists "AI controls" as an Admin
+responsibility. Fixed to allow either, and verified with a real two-org
+Postgres test that an admin can update their own org's settings and is
+correctly blocked from touching another org's.
+
+**AI Coach enforcement was also missing at the actual edge function** - `handleSendCoachMessage` (client) checks the org's enabled/Manual Mode
+settings before ever calling `requestAIReply`, but the deployed `ai-chat`
+edge function itself never re-checked them. In normal use this doesn't
+matter (the client already short-circuits before the function is ever
+called), but a request built by hand against the function directly would
+have gotten a real AI reply regardless of an org's settings - the same
+class of UI-only-enforcement gap already found and fixed for messaging
+(`0108_messaging_restriction.sql`). Fixed in
+`supabase/functions/ai-chat/index.ts`: it now looks up the caller's
+organization and its `ai_coach` settings itself before calling any AI
+provider, returns a 403 if disabled, and writes the org's configured
+message directly if Manual Mode is on - so this is enforced regardless of
+what called it. Verified the file's syntax with esbuild (this function
+runs on Deno, so it can't go through the same `npm run build`/Vite pipeline
+as the rest of the app).
+
+## Product-spec-driven fixes (this round)
+
+Three things from the product backlog / spec review, each verified for real
+(local Postgres for the migration, `npm run build` + Playwright for the
+frontend), not just written and assumed to work:
+
+**Admin separation.** `src/lib/roleRouting.js` used to hardcode
+`ADMIN_EMAIL = "info@sarafoundationafrica.com"` (Sara Foundation's inbox, not
+a Train AI one) as an automatic admin/super_admin backdoor, duplicated across
+`hooks/useAuth.js`, `services/authService.js`, and a dead copy in
+`lib/api/auth.js` (which turned out not to be dead - `learner/hooks/
+useLearnerData.js` still imported from it; fixed to import from
+`authService.js` instead once discovered). Removed entirely. Every access
+decision now comes only from the real `user_roles` table, which Postgres RLS
+already restricts to writes by an existing super_admin
+(`ur_write_super_admin`, `0006_rls_policies.sql`) - so admin access is
+enforced at the database, not by a string match in client code. Demo mode
+(no Supabase project configured) still needs *some* way to preview the
+admin/platform shell with no backend to query; it now uses a `+admin`
+plus-addressing marker (`anything+admin@example.com`) instead of a real
+inbox, and that marker is inert the moment a real Supabase project is
+connected.
+
+**Organization sign-up as its own primary path.** Previously there was no
+self-serve way to register an organization at all - `organizations` could
+only be inserted by a super_admin. Added `create_organization_self_serve()`
+(`supabase/migrations/0102_org_self_serve_signup.sql`): an authenticated
+user registers their org, becomes its owner/admin, one org per
+previously-unaffiliated user. `AuthPage.jsx`'s sign-up now offers three
+distinct paths - Organization (pre-selected, marked recommended),
+Individual learner, Instructor - instead of a two-way learner/instructor
+picker with no organization option. Admin remains not a sign-up option
+either way, per the existing note on that screen.
+
+**Two pre-existing migration bugs**, found by actually running all twelve
+migration files in order against a real local Postgres instance rather than
+reading them: `0008_learner_app_rls_gapfill.sql` tried to recreate two
+policies (`lpe_select_own`, `lpe_write_own`) already created in
+`0007_missing_schema.sql`, which would fail a clean sequential deploy - fixed with the same `drop policy if exists` guard already used elsewhere in
+the same file. `0100_course_applications.sql` and `0101_demo_requests.sql`
+both cast to a type `app_role` that doesn't exist anywhere in this schema
+(the real enum is `platform_role`) - would have hard-failed on any real
+deploy; fixed to cast to the real type.
+
+**Learner progress revamp.** Previously the only place progress showed at
+all was Home's single "active course" card (`HomeScreen.jsx` picked exactly
+one in-progress course and showed nothing else). Added a "My Courses" view
+(`CoursesScreen.jsx`) that groups every assigned course into Continue
+Learning / Not Started / Completed, replacing the flat "My enrolled" catalog
+filter. Home now links to it via a "+N more assigned" indicator instead of
+hiding the rest of the list, and correctly distinguishes "no courses at all"
+from "all courses completed" (previously both showed the same "no active
+course" message). On the admin side, `PeopleScreen.jsx` gets a new
+"Progress" tab - every learner in the organisation, assigned/completed
+counts, average progress, and a pace label (ahead / on pace / behind / not
+started), sorted behind-first. Verified by temporarily injecting fixture
+course/enrollment data and walking both views with Playwright (screenshots
+confirmed correct grouping), then separately verifying the admin query's
+actual SQL against the real schema with seeded rows in local Postgres
+(three learners - 85% avg progress, 5% avg + 10 days inactive, zero
+enrollments - landed in "ahead", "behind", and "not_started" exactly as
+designed) before reverting the fixtures.
+
+**Pricing section.** Added a Starter / Growth / Enterprise pricing section
+to the landing page (`LandingPage.jsx`), matching the product
+specification's pricing architecture (Part II, Section 10) - gated on scale
+and enterprise infrastructure, never on AI features for learners.
+
+**Organisation Inquiry contact path.** Book a Demo was already real
+(`demo_requests`); there was no second path for organisations not ready for
+a demo. Added `organization_inquiries` (`0103_organization_inquiries.sql`,
+mirroring `demo_requests`' exact RLS shape) and a mode toggle on the
+landing page's contact card so a visitor picks Book a Demo or Organisation
+Inquiry rather than only ever seeing one generic form.
+
+## Functional gaps that were actually fixed (not just visual polish)
+
+**Every button with no `onClick` handler at all, found via static scan, not
+guessing.** A regex sweep across both app files for `<button>` elements with
+zero click handler found 38 of them - 9 in Learner, 29 in Platform. All 38
+are now wired to real behavior:
+
+- **Learner (9/9)**: course filter (real bookmarked-only toggle), course
+  discussion posting, **"Mark as complete"** (the important one - actually
+  updates the module's progress count and unlocks the next lesson, verified
+  by checking the count changed from 4/8 to 5/8), timestamped lesson notes,
+  learning-path enrollment, study-group join (member count actually
+  increments), community follow toggle, post replies, and a real inline
+  session-feedback form.
+- **Platform (29/29)**: quick-action menus that navigate for real, a working
+  invite-user form, role/status filters that actually filter the visible
+  list, CSV export buttons that trigger real file downloads (not a toast - an actual `Blob` + anchor-click download), compliance recalculation using
+  real date comparison against due dates (matching the spec's described
+  background job), webhook/agreement/template/availability-slot creation,
+  payout requests that actually deduct the available balance, and more.
+
+**Update**: "Edit roadmap" for learning paths was initially left as an
+honest "not built yet" toast rather than faked. It's since been built for
+real - a `PathBuilder` with title/description/level and a real ordered
+course sequence (add from the actual course list, reorder up/down, remove),
+wired to both "New learning path" and "Edit roadmap". Verified the same
+way as the rest: edited the existing "AI Engineer Career Track" path,
+added a course, saved, and confirmed the course count in the list actually
+went from 4 to 5, not just that the dialog closed without erroring.
+
+A shared toast/confirmation system was added to both apps so these actions
+have visible feedback, matching how the rest of the app already confirms
+things.
+
+**How this was verified**: re-ran the same static scan after the fixes - zero buttons without a handler remain, in either file. Beyond that, several
+of the fixes were verified with actual Playwright interaction, not a
+screenshot glance: confirmed the lesson-completion count genuinely changes,
+confirmed a study group's member count increments on Join, confirmed a
+CSV export produces a real downloaded file named `people.csv`, and
+confirmed a dropdown "Quick action" item actually navigates to the right
+screen.
+
+Two concrete, substantive gaps - flagged directly, not surface-level:
+
+**Course thumbnails were icon-on-gradient, not real images.** Every course
+card (Learner course library, course detail hero, Admin course manager)
+now renders a real seeded photo via Lorem Picsum
+(`picsum.photos/seed/{courseId}/...` - the same seed always returns the
+same photo, so thumbnails stay consistent across renders), with a graceful
+fallback to the original gradient+icon treatment if the image fails to
+load (offline, blocked network, etc.) - verified by deliberately triggering
+that failure path, see below.
+
+**"New course" and "Edit" in Admin → Content did nothing.** They were
+decorative buttons with no handler at all. There's now a real
+`CourseBuilder`: title/description/category/level/price/duration, a cover
+image with a "shuffle" control, a full lesson editor (add, remove, reorder
+up/down, per-lesson title/duration/video URL), mandatory-compliance
+settings, and save-as-draft vs. save-and-publish - wired to actually
+create/update rows in the course list, not just show a form that goes
+nowhere.
+
+**How this was verified**: not by eyeballing it. I drove a real headless
+Chromium (Playwright) through the actual built app: created a course, added
+a lesson, published it, confirmed the new row appeared in the table with
+the right data, then opened "Edit" on an existing course and confirmed the
+form came back pre-filled with its real title and lesson list - checked via
+`input_value()` on the actual form fields, not a screenshot glance. Also
+deliberately checked the image fallback path: this sandbox's network
+egress proxy returns `403` for `picsum.photos` (not on its allowlist), which
+correctly triggers the `<img>` element's error handler and swaps to the
+gradient fallback - confirmed via intercepting the actual HTTP responses.
+That means **I cannot show you a screenshot of the real photos loading from
+inside this sandbox** - only the fallback state. On your own machine, with
+normal internet access, the real photos will load; there's nothing
+sandbox-specific in the shipped code.
+
+## What's wired to Supabase vs. still mock
+
+Converting all ~40 screens across both apps in one pass, shallowly and
+unverified, would have been worse than converting fewer screens correctly - so this is deliberately a "spine," not everything:
+
+| Screen | Status |
+|---|---|
+| Auth (sign in/up/out) | **Real** - `useAuth.js` |
+| Onboarding / personalization | **Real** - writes to `user_personalization` |
+| Role-based routing | **Real** - reads `user_roles`, falls back to Learner |
+| Learner → Community → Leaderboard | **Real** - `get_leaderboard_with_profiles()` RPC |
+| Learner → AI Assistant → Quiz scoring | Mock - `check_quiz_answers()` RPC and the answer-safe `safe_quiz_questions` view already exist in `api/learner.js`, just not called from the quiz screen yet |
+| Admin → People → Users | **Real** - `user_profiles`, RLS-scoped to the caller's org automatically |
+| Super Admin → Organizations | **Real** - `organizations`, RLS returns every org only if you're actually `super_admin` |
+| Everything else (courses, lessons, community posts, mentors, messages, schedule, cohorts, compliance, analytics, settings, etc.) | Mock data, unchanged |
+
+Each "real" row above was chosen because it's self-contained - it doesn't
+require also rewiring three other interlinked screens to avoid a
+half-broken state (e.g. Course Library and Course Detail share course IDs
+across several screens; wiring one without the others would break
+navigation between them). Extending this list means following the same
+pattern already in `src/lib/api/` - one query function per table/RPC, a
+`useSupabaseQuery` call at the top of the relevant component, demo-mode
+fallback to the existing mock constant.
+
+## Honest status summary
+
+| Piece | Status |
+|---|---|
+| Web frontend (Learner + unified Admin/Mentor/Super Admin platform) | Working; real auth/onboarding/role-routing; responsive mobile+desktop views for both apps; verified build |
+| Frontend ↔ Supabase wiring | Partial by design - auth, onboarding, leaderboard, admin people, org list are real; rest is mock (see table above) |
+| Supabase schema/RLS/functions | Written + verified against real Postgres, not yet live (needs your Supabase account) |
+| Android project | Real Gradle project generated; not compiled here (no SDK/network access in this sandbox) |
+| iOS project | Real Xcode project generated; cannot be compiled/signed outside macOS+Xcode, ever, by any tool |
+| Security | RLS genuinely enforced and tested as a non-superuser role; see `SECURITY.md` for exact scope and known gaps |

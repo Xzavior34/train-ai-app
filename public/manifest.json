@@ -1,0 +1,22 @@
+{
+  "name": "Train AI - The AI Learning Infrastructure for Organisations",
+  "short_name": "Train AI",
+  "description": "Multi-tenant learning management system for organisations - structured courses, cohorts, analytics, AI coaching, and mentor support.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0E1A",
+  "theme_color": "#2563EB",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/train-ai-favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/train-ai-favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
