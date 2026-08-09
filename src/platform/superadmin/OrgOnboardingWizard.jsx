@@ -279,7 +279,7 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
 
 /* ----------------------- Step 3: invite people ---------------------------- */
 
-const INVITE_ROLES = ["learner", "mentor", "admin", "hr", "manager"];
+const INVITE_ROLES = ["learner", "mentor", "admin", "manager"];
 // Display label only - see the same note in AccessControlScreen.jsx.
 const INVITE_ROLE_LABEL = { mentor: "Instructor" };
 const ORG_ROLES = ["member", "admin", "owner"];

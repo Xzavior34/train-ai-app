@@ -233,8 +233,7 @@ export function StatCard({ stat }) {
 const WORKSPACES = [
   { key: "admin", label: "Admin", subtitle: "Northwind Academy", icon: Building2, roles: ["admin", "super_admin"] },
   { key: "mentor", label: "Instructor View", subtitle: "Instructor Portal", icon: GraduationCap, roles: ["mentor", "admin", "super_admin"] },
-  { key: "hr", label: "HR", subtitle: "Workforce & Compliance", icon: ShieldCheck, roles: ["hr", "admin", "super_admin"] },
-  { key: "manager", label: "My Team", subtitle: "Team Manager", icon: Users, roles: ["manager", "hr", "admin", "super_admin"] },
+  { key: "manager", label: "My Team", subtitle: "Team Manager", icon: Users, roles: ["manager", "admin", "super_admin"] },
   // "superadmin" removed from here on purpose - Platform Owner is no longer
   // a workspace tab sharing this dashboard's sidebar. It is its own
   // top-level dashboard now (src/platform/PlatformOwnerApp.jsx), reached
@@ -278,15 +277,11 @@ export const SUPERADMIN_NAV = [
   { key: "access", label: "Access Control", icon: ShieldCheck },
 ];
 
-const HR_NAV = [
-  { key: "dashboard", label: "HR Overview", icon: LayoutDashboard },
-];
-
 const MANAGER_NAV = [
   { key: "dashboard", label: "My Team", icon: Users },
 ];
 
-const NAV_BY_WORKSPACE = { admin: ADMIN_NAV, mentor: MENTOR_NAV, hr: HR_NAV, manager: MANAGER_NAV, superadmin: SUPERADMIN_NAV };
+const NAV_BY_WORKSPACE = { admin: ADMIN_NAV, mentor: MENTOR_NAV, manager: MANAGER_NAV, superadmin: SUPERADMIN_NAV };
 
 // Owner's own sidebar - deliberately NOT the same Sidebar component the
 // Organisation dashboard uses. That one always renders a "Workspaces"

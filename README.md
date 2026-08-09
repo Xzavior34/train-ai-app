@@ -509,6 +509,54 @@ section under organisation view."
   the hidden one. Fixed the test to target only the visible element; not an
   application bug.
 
+## HR removed, and two real Community Dashboard bugs found by testing
+
+**HR fully removed as an organization role**, confirmed directly. Removed
+from the shared `WORKSPACES` list, the nav mapping, default-workspace
+routing, screen-navigation logic, the actual render block, the invite-role
+picker (`OrgOnboardingWizard.jsx`), the RBAC permission matrix
+(`AccessControlScreen.jsx`), and `roleRouting.js`'s platform-roles list.
+Deleted the orphaned `HrDashboardScreen.jsx` file. The `platform_role`
+database enum still contains the `hr` value - removing an enum value
+requires recreating the whole type, which is invasive for no real benefit
+once the value is simply unreachable from anywhere in the app. Verified
+with a real Playwright test: zero "HR" text anywhere in the sidebar, no
+console errors, a screenshot confirming Workspaces now shows exactly Admin,
+Instructor View, My Team.
+
+**Community Dashboard - checked against the newly detailed spec item by
+item**, rather than assumed correct from earlier work. Most of it already
+matched (Announcements, Cohort updates, Study group activity, Leaderboard
+summary, Instructor access - the old social feed genuinely gone). Two
+explicitly-required pieces were missing: "Upcoming sessions" and "Quick
+links to assigned courses/resources." Building these surfaced two real,
+separate bugs:
+
+1. `upcomingSessionsQuery`, `cohortResourcesQuery`, `cohortSessionsQuery`,
+   and `enrollmentsQuery` were already being passed as props into
+   `CommunityScreen` from the parent - but never destructured in the
+   component's own function signature, so React silently dropped every one
+   of them. No error, no warning - the data was simply never reaching the
+   component. Fixed by adding them to the destructured props.
+2. Found while verifying the fix with fixture data: the "Resources" quick
+   link still showed 0 when it should have shown 2. Traced this properly -
+   added temporary diagnostic logging directly in `useLearnerData.js`
+   rather than guessing - and confirmed the data-fetching layer worked
+   perfectly (`cohortResourcesQuery` correctly resolved to the real 2-item
+   result). The actual bug: `cohortResourcesQuery` was only ever passed to
+   `CohortScreen` (a different, separate component) in
+   `TrainAILearnerApp.jsx` - never to `CommunityScreen` at all. An earlier
+   grep for this variable name matched that other component's prop-passing
+   and was mistaken for confirmation it reached the right place. Fixed by
+   actually adding it to `CommunityScreen`'s own props, then re-verified
+   with the same fixture data showing the correct count.
+
+Also caught and reverted a redundant addition made mid-fix: a new
+`fetchMyUpcomingSessions` function was written before realizing a working
+equivalent (`fetchUpcomingLearnerSessions`) already existed and was already
+used elsewhere in the app - removed the duplicate rather than leaving two
+functions doing the same thing.
+
 ## A real rendering bug, found only by checking a claim, not by reading code
 
 While confirming "Super Admin can reach all three dashboards" - opening the

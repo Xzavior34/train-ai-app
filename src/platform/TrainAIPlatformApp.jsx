@@ -25,21 +25,20 @@ import { DiscussionsScreen } from "./mentor/DiscussionsScreen.jsx";
 import { MentorAnalyticsScreen } from "./mentor/MentorAnalyticsScreen.jsx";
 import { AdministrativeScreen } from "./mentor/AdministrativeScreen.jsx";
 import { MentorSettingsScreen } from "./mentor/MentorSettingsScreen.jsx";
-import { HrDashboardScreen } from "./hr/HrDashboardScreen.jsx";
-import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { CheckCircle2 } from "lucide-react";
+import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 
 // Picks which workspace tab a signed-in platform user lands on by default,
 // in descending order of privilege - admin/super_admin keep the previous
-// hardcoded "admin" default, mentor keeps its own tab, and hr/manager (which
+// hardcoded "admin" default, mentor keeps its own tab, and manager (which
 // previously had no tab to fall into at all and landed on the Admin
-// workspace's full CRUD screens by accident) now get their own scoped
-// landing spot instead.
+// workspace's full CRUD screens by accident) gets its own scoped landing
+// spot instead. HR removed entirely - confirmed directly that HR is not an
+// organization role; Admin/Manager/Instructor is the full set.
 function defaultWorkspaceForRoles(roles = []) {
   if (roles.includes("admin") || roles.includes("super_admin")) return "admin";
   if (roles.includes("mentor")) return "mentor";
-  if (roles.includes("hr")) return "hr";
   if (roles.includes("manager")) return "manager";
   return "admin";
 }
@@ -81,7 +80,6 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   const [screenByWorkspace, setScreenByWorkspace] = useState({
     admin: "dashboard",
     mentor: "dashboard",
-    hr: "dashboard",
     manager: "dashboard",
   });
   const [selectedCohortId, setSelectedCohortId] = useState(null);
@@ -99,8 +97,6 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
     if (!ws) {
       if (["mentor-dashboard", "schedule", "mentees", "messages", "discussions", "mentor-analytics", "administrative", "mentor-settings"].includes(targetScreen)) {
         ws = "mentor";
-      } else if (["hr-overview"].includes(targetScreen)) {
-        ws = "hr";
       } else if (["manager-overview"].includes(targetScreen)) {
         ws = "manager";
       } else {
@@ -204,12 +200,6 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} />}
                   {screen === "admin" && <AdministrativeScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "settings" && <MentorSettingsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} />}
-                </>
-              )}
-
-              {workspace === "hr" && (
-                <>
-                  {screen === "dashboard" && <HrDashboardScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} />}
                 </>
               )}
 

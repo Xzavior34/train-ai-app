@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { PlusCircle, Heart, MessageCircle, Send, Users, TrendingUp, Activity, ArrowLeft, X, ThumbsUp, ThumbsDown, Layers, CheckCircle2, Megaphone, ChevronRight, GraduationCap } from "lucide-react";
+import { PlusCircle, Heart, MessageCircle, Send, Users, TrendingUp, Activity, ArrowLeft, X, ThumbsUp, ThumbsDown, Layers, CheckCircle2, Megaphone, ChevronRight, GraduationCap, Calendar, BookOpen, FileText } from "lucide-react";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
 
 // Small reusable stat block for the member profile modal (level/streak/points
@@ -439,6 +439,7 @@ export function CommunityScreen({
   createCohortPost, addCohortPostReply, toggleCohortPostReaction,
   leaderboardQuery = {},
   leaderboardEnabled = true,
+  upcomingSessionsQuery = {}, cohortResourcesQuery = {}, cohortSessionsQuery = {}, enrollmentsQuery = {},
   push, goTab,
   // Set when the learner arrived here from a universal-search "Community"
   // result (see TrainAILearnerApp's onOpenPost -> push("community", { postId })).
@@ -590,6 +591,57 @@ export function CommunityScreen({
               rankings ("Leaderboard visibility is configurable. Admins can
               disable rankings."). */}
           {leaderboardEnabled && <WeeklyLeagueCard rows={leaderboardRows} loading={leaderboardLoading} />}
+
+          {/* Upcoming sessions - explicitly required alongside cohort
+              updates/study group activity/announcements. The booking data
+              itself (upcomingSessionsQuery) already existed and was already
+              used elsewhere (Home dashboard) - it just was never passed
+              into or rendered by this component at all until now. */}
+          {(upcomingSessionsQuery.data || []).length > 0 && (
+            <div className="tai-card tai-mt12">
+              <div className="tai-row tai-between">
+                <div className="tai-row tai-gap8"><Calendar size={16} color="var(--primary)" /><div className="tai-title-sm">Upcoming sessions</div></div>
+                <span className="tai-link" style={{ fontSize: 12 }} onClick={() => push("mentors")}>All sessions</span>
+              </div>
+              <div className="tai-col tai-gap8 tai-mt10">
+                {(upcomingSessionsQuery.data || []).slice(0, 3).map((s) => (
+                  <div key={s.id} className="tai-row tai-between">
+                    <span style={{ fontSize: 12.5, fontWeight: 600 }}>{s.title || "1:1 session"} - {s.mentors?.user_profiles?.display_name || "Instructor"}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>{new Date(s.scheduled_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quick links to assigned courses and resources - explicitly
+              required. Deliberately a lightweight link strip rather than
+              duplicating the full Courses screen or Cohort resources list
+              here - the Community Dashboard's job is to surface that these
+              exist and get someone there in one tap, not to re-render them
+              in full. */}
+          <div className="tai-row tai-gap10 tai-mt12" style={{ flexWrap: "wrap" }}>
+            <div className="tai-card" style={{ flex: 1, minWidth: 140, cursor: "pointer" }} onClick={() => goTab && goTab("courses")}>
+              <div className="tai-row ta-gap8" style={{ gap: 8 }}>
+                <BookOpen size={16} color="var(--primary)" />
+                <div>
+                  <div style={{ fontSize: 12.5, fontWeight: 700 }}>Assigned courses</div>
+                  <div style={{ fontSize: 11, color: "var(--text-2)" }}>{(enrollmentsQuery.data || []).length} in progress</div>
+                </div>
+              </div>
+            </div>
+            {myCohort && (
+              <div className="tai-card" style={{ flex: 1, minWidth: 140, cursor: "pointer" }} onClick={() => push("cohort")}>
+                <div className="tai-row ta-gap8" style={{ gap: 8 }}>
+                  <FileText size={16} color="var(--primary)" />
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700 }}>Resources</div>
+                    <div style={{ fontSize: 11, color: "var(--text-2)" }}>{(cohortResourcesQuery.data || []).length} shared in your cohort</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Instructors - third primary community structure per the brief */}
           <div className="tai-card tai-mt12" style={{ cursor: "pointer" }} onClick={() => push("mentors")}>

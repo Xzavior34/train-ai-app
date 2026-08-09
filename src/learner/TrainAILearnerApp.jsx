@@ -657,6 +657,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   createCohortPost={createCohortPost} addCohortPostReply={addCohortPostReply} toggleCohortPostReaction={toggleCohortPostReaction}
                   leaderboardQuery={leaderboardQuery}
                   leaderboardEnabled={leaderboardEnabled}
+                  upcomingSessionsQuery={upcomingSessionsQuery}
+                  enrollmentsQuery={enrollmentsQuery}
+                  cohortResourcesQuery={cohortResourcesQuery}
                   push={push} goTab={goTab}
                   initialExpandedPostId={params.postId}
                 />

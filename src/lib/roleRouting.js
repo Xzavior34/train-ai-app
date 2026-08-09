@@ -21,7 +21,16 @@
 
 // Roles that land in the "platform" shell (TrainAIPlatformApp) instead of
 // the "learner" shell (TrainAILearnerApp).
-const PLATFORM_ROLES = ["admin", "mentor", "super_admin", "hr", "manager"];
+// Confirmed directly: HR is not an organization role anymore - the
+// organization role structure is Admin, Manager, Instructor (plus
+// Learner), matching the org chart in the requirements doc exactly
+// (Platform Owner -> Organization -> Admin/Manager/Instructor ->
+// Learners). 'hr' remains a valid value in the platform_role database
+// enum (removing an enum value is invasive and risky to do via migration
+// for no real benefit when the value is simply unused) but is no longer
+// reachable from anywhere in the application - no workspace, no role
+// picker, no permission matrix column references it.
+const PLATFORM_ROLES = ["admin", "mentor", "super_admin", "manager"];
 
 // Demo-mode-only convention (see useAuth.js) for previewing the admin/
 // platform experience with no Supabase project connected at all - there is

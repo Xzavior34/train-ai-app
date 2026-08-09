@@ -5,13 +5,17 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchSuperAdmins, grantSuperAdminByUserId, revokeSuperAdmin, fetchGlobalPermissionMatrix, setGlobalPermission, searchUsersForImpersonation, viewUserAsSuperAdmin } from "../../lib/api/platform.js";
 
 // Fixed role/permission universe for the RBAC matrix below. These match the
-// real `app_role` enum in the shared schema (learner, mentor, admin,
-// super_admin, hr, manager) and the permission_key values the reference
-// train-ai-ltd-main admin console already uses against the same real
-// `role_permissions_matrix` table - not invented for this app. The matrix
-// starts blank for any role/permission pair with no row yet; toggling a
-// switch upserts one via setGlobalPermission.
-const RBAC_ROLES = ["super_admin", "admin", "hr", "manager", "mentor", "learner"];
+// real `app_role` enum in the shared schema and the permission_key values
+// the reference train-ai-ltd-main admin console already uses against the
+// same real `role_permissions_matrix` table - not invented for this app.
+// HR removed from this list on confirmation that it is not an organization
+// role (Admin/Manager/Instructor is the full set) - the enum value itself
+// stays defined at the database level (removing it is invasive for no real
+// benefit once it's simply unused), but nothing in the application surfaces
+// it as an assignable role anymore. The matrix starts blank for any
+// role/permission pair with no row yet; toggling a switch upserts one via
+// setGlobalPermission.
+const RBAC_ROLES = ["super_admin", "admin", "manager", "mentor", "learner"];
 // Display label only - the underlying platform_role enum value stays
 // 'mentor' (RLS, has_role(), and every permission check key off it), but
 // the role is called "Instructor" everywhere a person actually reads it.
