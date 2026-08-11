@@ -509,6 +509,45 @@ section under organisation view."
   the hidden one. Fixed the test to target only the visible element; not an
   application bug.
 
+## "How will instructor manage study group" - a direct question with a real answer of "they couldn't at all," plus a genuine infinite-recursion bug caught by testing
+
+The direct, honest answer to the question as asked: before this round,
+there was no way. No navigation entry existed for an instructor to reach
+study groups at all, and the underlying database only let the group's
+*creator* manage it - an instructor added to help facilitate a
+learner-created group had no path to actually do anything.
+
+**Fixing the access itself surfaced a genuine infinite-recursion RLS bug**,
+caught only by running a real `UPDATE` against a real database, not by
+reading either policy in isolation: `study_groups`' write policy checked
+`study_group_members` (is the caller a member), while
+`study_group_members`' write policy checked `study_groups` right back (did
+the caller create this group) - each policy's evaluation triggered the
+other's, which triggered the first's again. Postgres correctly refused
+this outright rather than doing something silently wrong. Fixed with the
+same pattern already used everywhere else in this schema for exactly this
+situation (`is_org_admin()`, `has_role()`, etc.) - two small
+`SECURITY DEFINER` helper functions whose internal queries don't
+re-trigger the calling policy's own RLS evaluation, breaking the cycle.
+Re-verified the fix from a genuine cold start, then re-ran every
+previously-passing test on the corrected database to confirm nothing else
+regressed.
+
+**Built the actual instructor-facing screen** ("My Study Groups" in the
+instructor nav) - shows every group the instructor is a real member of,
+lets them edit the group's description and remove a member, all backed by
+the now-working RLS rather than a UI that merely looks functional.
+
+**Caught a real duplicate function declaration while building this** - a
+function I wrote already existed elsewhere in the same file from earlier
+work, and the build correctly refused to compile rather than silently
+picking one. Removed the redundant copy and rebuilt clean.
+
+Verified with a real fixture-backed screenshot showing the group list, the
+editable description, and the member-removal control all working - not
+just a clean build, given the standing lesson that a clean build alone has
+already once hidden a genuine runtime crash in this project.
+
 ## Every item from a detailed UI review - checked, fixed, and the ones that turned out to be real bugs, verified with real tests
 
 Went through nine specific, concrete points one at a time rather than as a

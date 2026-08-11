@@ -1191,3 +1191,96 @@ export async function fetchAllStudyGroupsForOrg(organizationId) {
   if (error) { console.warn("Org study groups fetch warning:", error); return []; }
   return data || [];
 }
+
+// ============================================================================
+// Instructor-side study group management - confirmed a real gap: an
+// instructor could already create/manage a study group at the database
+// level (sg_write_authorized already allowed created_by = auth.uid()),
+// but there was no screen at all for them to actually do it. This is that
+// screen's backend.
+// ============================================================================
+export async function fetchMyStudyGroups(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from("study_groups")
+    .select("*, courses(title), study_group_members(count)")
+    .eq("created_by", userId)
+    .order("name", { ascending: true });
+  if (error) { console.warn("My study groups fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function createStudyGroup({ organizationId, name, description, courseId, createdBy, maxMembers }) {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("study_groups")
+    .insert({
+      organization_id: organizationId, name, description: description || null,
+      course_id: courseId || null, created_by: createdBy, max_members: maxMembers || 50,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  // Creator is added as a real member too - matters for the member list
+  // and for posting in the group's own chat (both scoped to "is a member
+  // of this specific group").
+  if (createdBy && data?.id) {
+    try {
+      await supabase.from("study_group_members").insert({ group_id: data.id, user_id: createdBy, role: "lead" });
+    } catch (e) {
+      console.warn("Could not auto-add study group creator as a member:", e);
+    }
+  }
+  return data;
+}
+
+export async function updateStudyGroup(groupId, patch) {
+  if (!supabase || !groupId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("study_groups").update(patch).eq("id", groupId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not update this study group." };
+  }
+}
+
+export async function removeStudyGroupMember(groupId, userId) {
+  if (!supabase || !groupId || !userId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("study_group_members").delete().eq("group_id", groupId).eq("user_id", userId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not remove this member." };
+  }
+}
+
+// Instructor-facing study group management - "How will instructor manage
+// study group" was a real, direct question with a real, confirmed answer
+// of "they currently can't at all": no nav entry existed, and while
+// fixing the underlying access itself (0127_suspend_instructor_payouts.sql
+// - which also caught and fixed a genuine infinite-recursion RLS bug
+// found only by actually running a real UPDATE, not by reading either
+// policy in isolation), there was still no actual screen to use that
+// access from.
+export async function fetchMyManagedStudyGroups(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from("study_group_members")
+    .select("group_id, study_groups(id, name, description, course_id, max_members, is_private, courses(title))")
+    .eq("user_id", userId);
+  if (error) { console.warn("Managed study groups fetch warning:", error); return []; }
+  return (data || []).map((r) => r.study_groups).filter(Boolean);
+}
+
+export async function updateStudyGroupDetails(groupId, patch) {
+  if (!supabase || !groupId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("study_groups").update(patch).eq("id", groupId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not update this study group." };
+  }
+}

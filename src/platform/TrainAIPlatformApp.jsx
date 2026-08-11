@@ -18,6 +18,7 @@ import { ComplianceScreen } from "./admin/ComplianceScreen.jsx";
 import { IntegrationsScreen } from "./admin/IntegrationsScreen.jsx";
 import { SettingsHubScreen } from "./admin/SettingsHubScreen.jsx";
 import { MentorDashboardScreen } from "./mentor/MentorDashboardScreen.jsx";
+import { MentorStudyGroupsScreen } from "./mentor/MentorStudyGroupsScreen.jsx";
 import { MentorScheduleScreen } from "./mentor/MentorScheduleScreen.jsx";
 import { MenteesScreen } from "./mentor/MenteesScreen.jsx";
 import { MentorMessagesScreen } from "./mentor/MentorMessagesScreen.jsx";
@@ -216,6 +217,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                       setScreen={setScreen}
                     />
                   )}
+                  {screen === "studygroups" && <MentorStudyGroupsScreen mentorId={session?.user?.id} orgSelector={orgSelector} />}
                   {screen === "schedule" && <MentorScheduleScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} />}
                   {screen === "messages" && <MentorMessagesScreen userId={session?.user?.id} mentorId={mentorId} orgSelector={orgSelector} selectedLearnerForChat={selectedLearnerForChat} setScreen={setScreen} />}

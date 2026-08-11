@@ -221,7 +221,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
 
   async function handleRequestCertificate() {
     if (!params?.id) return;
-    const result = await requestCertificate(params.id);
+    const result = await requestCertificate(params.id, session?.user?.id);
     if (result.success) {
       showToast(result.status === "issued" ? "Certificate issued!" : "Certificate requested - awaiting instructor approval.");
       myCertificateQuery.refetch();

@@ -2,7 +2,32 @@ import { supabase } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 
 export async function fetchPublishedCourses() {
-  if (!supabase) return [];
+  if (!supabase) {
+    // Demo mode fixture data - this was a real, confirmed problem, not a
+    // hypothetical: with zero courses, "Assessment" and "Certificate" are
+    // genuinely unreachable in demo mode, regardless of whether the tab
+    // visibility logic itself is correct (verified separately, and it is)
+    // - there is nothing to click into at all. A representative demo
+    // catalog fixes the actual root cause rather than the symptom.
+    const now = new Date().toISOString();
+    return [
+      {
+        id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "An introduction to core AI concepts for the workplace.",
+        category: "AI", level: "beginner", duration_hours: 4, course_source: "internal", is_published: true, is_approved: true,
+        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
+      },
+      {
+        id: "demo-course-compliance-101", title: "Workplace Compliance 101", description: "Mandatory compliance training covering core policies.",
+        category: "Compliance", level: "beginner", duration_hours: 2, course_source: "internal", is_published: true, is_approved: true,
+        is_mandatory: true, price: 0, requires_approval: false, created_at: now,
+      },
+      {
+        id: "demo-course-external-leadership", title: "Leadership Essentials", description: "A curated external course on foundational leadership skills.",
+        category: "Leadership", level: "intermediate", duration_hours: 6, course_source: "external", is_published: true, is_approved: true,
+        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
+      },
+    ];
+  }
   const { data, error } = await supabase
     .from("courses")
     .select("*")
@@ -569,14 +594,31 @@ export async function toggleCourseBookmark(userId, courseId, isCurrentlyBookmark
 // so the correct answers are never sent to the client. See
 // 0112_assessments_pipeline.sql.
 export async function fetchAssessmentForCourse(courseId) {
-  if (!supabase || !courseId) return null;
+  if (!supabase || !courseId) {
+    // Matches the demo course catalog above - without this, clicking into
+    // "AI Fundamentals" in demo mode would show "no assessment yet" even
+    // though the whole point of this fixture is to demonstrate the real
+    // flow.
+    if (courseId === "demo-course-ai-fundamentals") {
+      return { id: "demo-assessment-ai-fundamentals", course_id: courseId, title: "AI Fundamentals Final Assessment" };
+    }
+    return null;
+  }
   const { data, error } = await supabase.from("assessments").select("*").eq("course_id", courseId).maybeSingle();
   if (error) { console.warn("Assessment fetch warning:", error); return null; }
   return data;
 }
 
 export async function fetchSafeAssessmentQuestions(assessmentId) {
-  if (!supabase || !assessmentId) return [];
+  if (!supabase || !assessmentId) {
+    if (assessmentId === "demo-assessment-ai-fundamentals") {
+      return [
+        { id: "demo-q1", question: "What does \"AI\" stand for?", options: ["Artificial Intelligence", "Automated Interface", "Applied Informatics", "Autonomous Integration"] },
+        { id: "demo-q2", question: "Which of these is a common use of AI at work?", options: ["Drafting emails", "Watering plants", "Filing paper documents", "Answering the phone manually"] },
+      ];
+    }
+    return [];
+  }
   const { data, error } = await supabase
     .from("safe_assessment_questions")
     .select("*")
@@ -586,8 +628,23 @@ export async function fetchSafeAssessmentQuestions(assessmentId) {
   return data || [];
 }
 
+// Demo-mode-only in-memory attempt store - a real, confirmed gap:
+// submitAssessmentAttempt() returned a convincing fake success, but
+// fetchMyAssessmentAttempt() always returned null regardless, since demo
+// mode has no backend to persist to. That meant the screen could never
+// transition to "already submitted" or show the certificate section after
+// a genuine, successful-looking submission - not a real backend bug, but
+// a real UX dead end in the one environment most people actually explore
+// this feature in. Scoped to this module's lifetime (a browser tab
+// session), keyed by assessmentId+userId - intentionally not persisted to
+// localStorage, matching this app's existing "in-memory only" rule for
+// anything demo-mode.
+const demoAssessmentAttempts = new Map();
+
 export async function fetchMyAssessmentAttempt(assessmentId, userId) {
-  if (!supabase || !assessmentId || !userId) return null;
+  if (!supabase || !assessmentId || !userId) {
+    return demoAssessmentAttempts.get(`${assessmentId}:${userId}`) || null;
+  }
   const { data, error } = await supabase
     .from("assessment_attempts")
     .select("*")
@@ -606,7 +663,15 @@ export async function submitAssessmentAttempt(assessmentId, answersByQuestionId,
     // real" result rather than a confusing "could not submit" error that
     // looks like a bug when it's actually just the absence of a backend.
     const answeredCount = Object.keys(answersByQuestionId || {}).length;
-    return { score: answeredCount > 0 ? 100 : 0, correct_count: answeredCount, total: answeredCount, total_points: answeredCount, demo: true };
+    const score = answeredCount > 0 ? 100 : 0;
+    // Stored so fetchMyAssessmentAttempt() reflects this submission
+    // immediately after - see the store's own comment above for why this
+    // matters.
+    demoAssessmentAttempts.set(`${assessmentId}:${userId}`, {
+      id: `demo-attempt-${assessmentId}`, assessment_id: assessmentId, user_id: userId,
+      score, completed_at: new Date().toISOString(), overridden_by: null,
+    });
+    return { score, correct_count: answeredCount, total: answeredCount, total_points: answeredCount, demo: true };
   }
   const { data, error } = await supabase.rpc("check_assessment_answers", {
     p_assessment_id: assessmentId,
@@ -636,14 +701,31 @@ export async function submitAssessmentAttempt(assessmentId, answersByQuestionId,
 // Certificates - explicitly in-scope for v1, previously entirely unbuilt.
 // See 0120_certificates.sql for the full 8-step workflow this wraps.
 export async function fetchCertificateForCourse(courseId) {
-  if (!supabase || !courseId) return null;
+  if (!supabase || !courseId) {
+    if (courseId === "demo-course-ai-fundamentals") {
+      return { title: "Certificate of AI Fundamentals Completion", passing_score_pct: 70, requires_admin_approval: true };
+    }
+    return null;
+  }
   const { data, error } = await supabase.from("certificate_templates").select("*").eq("course_id", courseId).maybeSingle();
   if (error) { console.warn("Certificate template fetch warning:", error); return null; }
   return data;
 }
 
+// Same in-memory demo store pattern as demoAssessmentAttempts above, for
+// the same reason: requestCertificate() previously always returned
+// { success: false, error: "Not available in demo mode." } - the one
+// write in this entire app that didn't follow the established "soft,
+// honest fake success" pattern every other demo-mode write uses. That
+// meant a learner could pass the demo assessment, click "Request
+// certificate," and be told it failed - a real, confusing dead end in the
+// one environment most people explore this feature in.
+const demoCertificates = new Map();
+
 export async function fetchMyCertificateForCourse(courseId, userId) {
-  if (!supabase || !courseId || !userId) return null;
+  if (!supabase || !courseId || !userId) {
+    return demoCertificates.get(`${courseId}:${userId}`) || null;
+  }
   const { data, error } = await supabase.from("certificates").select("*").eq("course_id", courseId).eq("user_id", userId).maybeSingle();
   if (error) { console.warn("Certificate fetch warning:", error); return null; }
   return data;

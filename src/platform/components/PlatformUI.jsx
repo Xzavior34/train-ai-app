@@ -233,7 +233,7 @@ export function StatCard({ stat }) {
 const WORKSPACES = [
   { key: "admin", label: "Admin", subtitle: "Northwind Academy", icon: Building2, roles: ["admin", "super_admin"] },
   { key: "mentor", label: "Instructor View", subtitle: "Instructor Portal", icon: GraduationCap, roles: ["mentor", "admin", "super_admin"] },
-  { key: "manager", label: "My Team", subtitle: "Team Manager", icon: Users, roles: ["manager", "admin", "super_admin"] },
+  { key: "manager", label: "Manager View", subtitle: "Team Manager", icon: Users, roles: ["manager", "admin", "super_admin"] },
   // "superadmin" removed from here on purpose - Platform Owner is no longer
   // a workspace tab sharing this dashboard's sidebar. It is its own
   // top-level dashboard now (src/platform/PlatformOwnerApp.jsx), reached
@@ -259,6 +259,7 @@ const MENTOR_NAV = [
   { key: "dashboard", label: "Instructor Overview", icon: LayoutDashboard },
   { key: "schedule", label: "Availability & Sessions", icon: Calendar },
   { key: "cohorts", label: "My Cohorts", icon: Layers },
+  { key: "studygroups", label: "My Study Groups", icon: Users },
   { key: "mentees", label: "My Learners", icon: Users },
   { key: "messages", label: "Direct Messages", icon: MessageSquare },
   { key: "discussions", label: "Learner Q&A", icon: MessagesSquare },
@@ -280,7 +281,7 @@ export const SUPERADMIN_NAV = [
 ];
 
 const MANAGER_NAV = [
-  { key: "dashboard", label: "My Team", icon: Users },
+  { key: "dashboard", label: "Manager View", icon: Users },
 ];
 
 const NAV_BY_WORKSPACE = { admin: ADMIN_NAV, mentor: MENTOR_NAV, manager: MANAGER_NAV, superadmin: SUPERADMIN_NAV };

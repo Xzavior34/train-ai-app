@@ -96,3 +96,86 @@ create policy sg_select_own_org on study_groups for select
     or organization_id is null
     or is_super_admin(auth.uid())
   );
+
+-- ============================================================================
+-- A real infinite-recursion bug found by testing, not caught by reading
+-- the code: study_groups' write policy checks study_group_members (is the
+-- caller a member), and study_group_members' write policy checks
+-- study_groups (did the caller create this group) - each policy's
+-- evaluation triggers the other's, which triggers the first's again.
+-- Postgres correctly refuses this outright ("infinite recursion detected
+-- in policy for relation study_groups") rather than silently doing
+-- something wrong - caught only because a real UPDATE was actually run
+-- against a real database, not from reading either policy in isolation.
+--
+-- Fixed with the same pattern already used everywhere else in this schema
+-- for exactly this situation (is_org_admin(), has_role(), etc.) - a
+-- SECURITY DEFINER function's internal query does not re-trigger RLS
+-- evaluation the way a direct EXISTS subquery inside a policy does,
+-- breaking the cycle.
+-- ============================================================================
+
+create or replace function is_study_group_creator(check_user_id uuid, check_group_id uuid)
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from study_groups sg where sg.id = check_group_id and sg.created_by = check_user_id);
+$$;
+
+create or replace function is_study_group_member(check_user_id uuid, check_group_id uuid)
+returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from study_group_members sgm where sgm.group_id = check_group_id and sgm.user_id = check_user_id);
+$$;
+
+-- Instructor study group management - a real gap found while building the
+-- actual management screen for this: sgm_write_own
+-- (0008_learner_app_rls_gapfill.sql) only ever allowed a user to
+-- insert/delete their *own* row in study_group_members - meaning an
+-- instructor managing their own group could never remove a different
+-- learner from it, only themselves. Extended so the group's creator (or
+-- an org admin) can manage any member row for that specific group, while
+-- an ordinary member can still only ever manage their own.
+drop policy if exists sgm_write_own on study_group_members;
+drop policy if exists sgm_write_own_or_group_creator on study_group_members;
+create policy sgm_write_own_or_group_creator on study_group_members for all
+  using (
+    user_id = auth.uid()
+    or is_org_admin(auth.uid())
+    or is_study_group_creator(auth.uid(), group_id)
+  )
+  with check (
+    is_org_admin(auth.uid())
+    or is_study_group_creator(auth.uid(), group_id)
+    -- Self-join is allowed, but only ever as an ordinary member - a real
+    -- bug found by testing, not assumed safe: without the role check
+    -- below, any unrelated user could self-insert as 'lead' into a study
+    -- group they didn't create, since "user_id = auth.uid()" alone says
+    -- nothing about which role they're claiming.
+    or (user_id = auth.uid() and role = 'member')
+  );
+
+-- Instructors can manage a study group they're a genuine member of, not
+-- only ones they personally created - same scoping pattern already used
+-- for cohorts (0126/above: instructor assigned via membership, not just
+-- "created it" or an org-wide permission grant that may or may not be
+-- configured for the mentor role in a given organization's permission
+-- matrix). sg_write_authorized (0008_learner_app_rls_gapfill.sql)
+-- previously only covered created_by = auth.uid() or a configurable
+-- manage_courses permission - this adds a third, always-true path.
+-- Uses is_study_group_member() (not a direct EXISTS on
+-- study_group_members) - see the recursion note above.
+drop policy if exists sg_write_authorized on study_groups;
+drop policy if exists sg_write_authorized_or_member_instructor on study_groups;
+create policy sg_write_authorized_or_member_instructor on study_groups for all
+  using (
+    created_by = auth.uid()
+    or effective_has_permission(auth.uid(), 'manage_courses')
+    or is_super_admin(auth.uid())
+    or (has_role(auth.uid(), 'mentor'::platform_role) and is_study_group_member(auth.uid(), id))
+  )
+  with check (
+    created_by = auth.uid()
+    or effective_has_permission(auth.uid(), 'manage_courses')
+    or is_super_admin(auth.uid())
+    or (has_role(auth.uid(), 'mentor'::platform_role) and is_study_group_member(auth.uid(), id))
+  );
