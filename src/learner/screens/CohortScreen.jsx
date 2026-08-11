@@ -14,7 +14,7 @@ import { PlusCircle, Heart, MessageCircle, Send, FileText, Link2, Video, Calenda
 // already add resources and schedule sessions for a cohort.
 export function CohortScreen({
   cohort, cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
-  createCohortPost, addCohortPostReply, toggleCohortPostReaction,
+  cohortCoursesQuery, cohortMembersQuery,
   session, showToast = () => {}, back,
 }) {
   const [tab, setTab] = useState("chat"); // "chat" | "resources" | "sessions"
@@ -29,6 +29,9 @@ export function CohortScreen({
   const now = Date.now();
   const upcomingSessions = sessions.filter(s => new Date(s.starts_at).getTime() >= now);
   const pastSessions = sessions.filter(s => new Date(s.starts_at).getTime() < now);
+  const instructorMembers = (cohortMembersQuery?.data || []).filter(
+    m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin"
+  );
 
   if (cohortMembershipQuery?.loading && !cohort) {
     return (
@@ -55,8 +58,10 @@ export function CohortScreen({
       <div className="tai-row tai-gap8 tai-mt10">
         {[
           { k: "chat", label: "Chat" },
+          { k: "courses", label: "Courses" },
           { k: "resources", label: "Resources" },
           { k: "sessions", label: "Sessions" },
+          { k: "members", label: "Instructor" },
         ].map(t => (
           <div
             key={t.k}
@@ -70,40 +75,21 @@ export function CohortScreen({
 
       {tab === "chat" && (
         <div className="tai-col tai-gap12 tai-mt16">
-          <div className="tai-card">
-            <textarea
-              className="tai-input"
-              rows={2}
-              placeholder={`Post an update or question to ${cohort.name}...`}
-              value={postText}
-              onChange={e => setPostText(e.target.value)}
-            />
-            <button
-              className="tai-btn tai-btn-primary tai-mt10"
-              style={{ width: "100%" }}
-              disabled={!postText.trim() || posting}
-              onClick={async () => {
-                if (!postText.trim() || !session?.user?.id || !createCohortPost) return;
-                setPosting(true);
-                try {
-                  await createCohortPost({ cohortId: cohort.id, authorId: session.user.id, content: postText.trim() });
-                  setPostText("");
-                  cohortPostsQuery?.refetch?.();
-                  showToast("Posted to cohort chat!");
-                } catch (e) {
-                  showToast(e?.message || "Couldn't post. Try again.");
-                } finally {
-                  setPosting(false);
-                }
-              }}
-            >
-              <PlusCircle size={15} /> Post to {cohort.name}
-            </button>
-          </div>
-
+          {/* No compose box here - confirmed directly, correcting an
+              earlier, too-narrow reading of the messaging restriction:
+              "learners should not message learners at all, only
+              instructors" means no learner-to-learner communication of any
+              kind, including posting into a shared cohort channel other
+              learners would see. This screen is only ever viewed by
+              learners (instructors post cohort updates through
+              CohortDetailScreen.jsx in the admin/instructor app instead,
+              already a separate, real code path) - learners can read every
+              update here, they just can't post one. Enforced at the
+              database level too (0126_no_learner_to_learner_messaging.sql),
+              not just by removing this UI. */}
           {cohortPostsQuery?.loading && <div className="tai-empty">Loading cohort chat...</div>}
           {!cohortPostsQuery?.loading && posts.length === 0 && (
-            <div className="tai-empty">No posts in your cohort chat yet. Start the conversation!</div>
+            <div className="tai-empty">No posts in your cohort chat yet.</div>
           )}
           {posts.map(cp => (
             <div key={cp.id} className="tai-card">
@@ -143,43 +129,38 @@ export function CohortScreen({
               {expandedPostId === cp.id && (
                 <div className="tai-mt12" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
                   <div className="tai-col tai-gap8 tai-mt8">
+                    {(cp.cohort_post_replies || []).length === 0 && (
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>No replies yet.</div>
+                    )}
                     {(cp.cohort_post_replies || []).map(rep => (
                       <div key={rep.id} style={{ fontSize: 12.5 }}>
-                        <strong>{rep.user_profiles?.display_name || "Cohort Peer"}:</strong> {rep.content}
+                        <strong>{rep.user_profiles?.display_name || "Instructor"}:</strong> {rep.content}
                       </div>
                     ))}
                   </div>
-                  <div className="tai-row tai-gap8 tai-mt10">
-                    <input
-                      className="tai-input"
-                      style={{ flex: 1, fontSize: 12.5, padding: "8px 12px" }}
-                      placeholder="Reply to cohort post..."
-                      value={replyText}
-                      onChange={e => setReplyText(e.target.value)}
-                      onKeyDown={async e => {
-                        if (e.key === "Enter" && replyText.trim() && session?.user?.id && addCohortPostReply) {
-                          await addCohortPostReply({ postId: cp.id, authorId: session.user.id, content: replyText.trim() });
-                          setReplyText("");
-                          cohortPostsQuery?.refetch?.();
-                          showToast("Reply added!");
-                        }
-                      }}
-                    />
-                    <button
-                      className="tai-btn tai-btn-primary tai-btn-sm"
-                      onClick={async () => {
-                        if (!replyText.trim() || !session?.user?.id || !addCohortPostReply) return;
-                        await addCohortPostReply({ postId: cp.id, authorId: session.user.id, content: replyText.trim() });
-                        setReplyText("");
-                        cohortPostsQuery?.refetch?.();
-                        showToast("Reply added!");
-                      }}
-                    >
-                      <Send size={13} />
-                    </button>
-                  </div>
+                  {/* No reply composer here - same restriction as the main
+                      compose box above: a learner's reply would be visible
+                      to every other learner in the cohort, which is exactly
+                      the learner-to-learner communication this was
+                      corrected to remove entirely, not just narrow. */}
                 </div>
               )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "courses" && (
+        <div className="tai-col tai-gap10 tai-mt16">
+          {cohortCoursesQuery?.loading && <div className="tai-empty">Loading assigned courses...</div>}
+          {!cohortCoursesQuery?.loading && (cohortCoursesQuery?.data || []).length === 0 && (
+            <div className="tai-empty">No courses assigned to your cohort yet.</div>
+          )}
+          {(cohortCoursesQuery?.data || []).map(cc => (
+            <div key={cc.id} className="tai-card">
+              <div style={{ fontWeight: 700, fontSize: 14 }}>{cc.courses?.title || "Untitled course"}</div>
+              {cc.courses?.description && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>{cc.courses.description}</div>}
+              {cc.due_at && <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>Due {new Date(cc.due_at).toLocaleDateString()}</div>}
             </div>
           ))}
         </div>
@@ -267,6 +248,33 @@ export function CohortScreen({
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {tab === "members" && (
+        <div className="tai-col tai-gap8 tai-mt16">
+          {/* Shows only the instructor, not fellow learners - confirmed
+              directly, repeated instruction: no learner-to-learner
+              visibility of any kind in Community, not just no messaging.
+              The underlying cohort_members data still includes every
+              learner (needed for real membership/attendance tracking
+              elsewhere), but this specific view filters to instructor-role
+              members only before ever rendering anything. */}
+          {cohortMembersQuery?.loading && <div className="tai-empty">Loading instructor...</div>}
+          {!cohortMembersQuery?.loading && instructorMembers.length === 0 && (
+            <div className="tai-empty">No instructor assigned to this cohort yet.</div>
+          )}
+          {instructorMembers.map(m => (
+            <div key={m.id} className="tai-card tai-row tai-gap10" style={{ alignItems: "center" }}>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                {(m.user_profiles?.display_name || "U").slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{m.user_profiles?.display_name || "Unnamed"}</div>
+                <div style={{ fontSize: 11, color: "var(--text-2)", textTransform: "capitalize" }}>Instructor</div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -1,6 +1,9 @@
 import React from "react";
 import { Avatar, ProgressBar } from "../components/LearnerUI.jsx";
 import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
+import { fetchAIInsights } from "../../lib/api/schemaHelper.js";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { Sparkles } from "lucide-react";
 import { Bell, GraduationCap, Play, BookOpen, Users, Zap, ChevronRight, Layers } from "lucide-react";
 
 // Deliberately minimal - per product feedback the previous home screen
@@ -134,7 +137,7 @@ export function HomeScreen({
             </div>
             <div>
               <div className="tai-label">Community</div>
-              <div style={{ fontWeight: 700, fontSize: 14.5, marginTop: 2 }}>Study groups, forums & posts</div>
+              <div style={{ fontWeight: 700, fontSize: 14.5, marginTop: 2 }}>Cohort updates, study groups & sessions</div>
             </div>
           </div>
           <ChevronRight size={18} color="var(--text-3)" />

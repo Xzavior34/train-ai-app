@@ -34,7 +34,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
         <div className="ta-grid ta-grid-4">
           <StatCard stat={{ label: "Instructor rating", value: loading ? "N/A" : (mentor?.rating != null ? Number(mentor.rating).toFixed(1) : "0.0"), icon: Star }} />
           <StatCard stat={{ label: "Total sessions", value: loading ? "N/A" : (mentor?.total_sessions ?? 0), icon: Calendar }} />
-          <StatCard stat={{ label: "Mentees helped", value: loading ? "N/A" : menteesHelped, icon: Users }} />
+          <StatCard stat={{ label: "Learners helped", value: loading ? "N/A" : menteesHelped, icon: Users }} />
           <StatCard stat={{ label: "Earnings to date", value: loading ? "N/A" : `$${totalEarnings.toFixed(2)}`, icon: DollarSign }} />
         </div>
       </div>

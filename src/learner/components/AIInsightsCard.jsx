@@ -2,6 +2,7 @@ import React from "react";
 import { Sparkles, RefreshCw, BookOpen, Clock, Target, GraduationCap } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAIInsights } from "../../lib/api/schemaHelper.js";
+import { fetchOrgAIInsightsSettings } from "../../lib/api/organizations.js";
 
 // Turns the markdown-ish text the real `ai-insights` edge function returns
 // (it's prompted with "Format the response in markdown with clear sections",
@@ -51,11 +52,22 @@ function renderInsightsText(raw) {
 // averageScore, enrolledCourses } }` from an LLM. Self-contained (owns its
 // own query) so it only fires when actually mounted on the Achievements
 // screen, matching the pattern GroupChatPanel uses on CommunityScreen.
-export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits }) {
+export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, orgId }) {
   const insightsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return null;
     return fetchAIInsights();
   }, [session?.user?.id]);
+
+  // AI Insights manual mode - PRD 8.3, previously entirely unbuilt (only
+  // AI Coach had this). When the org has switched this on, a real learner
+  // never sees the real AI-generated analysis at all - the admin's own
+  // announcement text replaces it entirely, the same posture AI Coach's
+  // manual mode already uses (never blend real AI output with a manual
+  // override in the same card).
+  const orgInsightsSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgAIInsightsSettings(orgId) : null), [orgId]);
+  const insightsEnabled = orgInsightsSettingsQuery.data?.enabled !== false;
+  const insightsManualMode = !!orgInsightsSettingsQuery.data?.manual_mode;
+  const insightsManualMessage = orgInsightsSettingsQuery.data?.manual_message;
 
   const result = insightsQuery.data;
   const stats = result?.stats;
@@ -68,6 +80,19 @@ export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits }
     if (outOfCredits) { onBuyCredits && onBuyCredits(); return; }
     if (consumeCredit) consumeCredit(1);
     insightsQuery.refetch();
+  }
+
+  if (!insightsEnabled) return null;
+
+  if (insightsManualMode) {
+    return (
+      <div className="tai-card tai-mt12" style={{ borderColor: "var(--primary)" }}>
+        <div className="tai-row tai-gap8"><Sparkles size={16} color="var(--primary)" /><div style={{ fontWeight: 700, fontSize: 14 }}>A note from your organization</div></div>
+        <div style={{ fontSize: 12.8, color: "var(--text-2)", marginTop: 8, lineHeight: 1.5 }}>
+          {insightsManualMessage || "Your organization has enabled manual insights, but hasn't added a message yet."}
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -185,6 +185,40 @@ export async function fetchMyWaitlistStatus({ email, userId } = {}) {
  * the actual front door for the B2B positioning (organisations booking a
  * demo/pilot), not an individual paying to "skip the line".
  */
+// Campaign attribution - PRD Platform Owner Analytics, confirmed unbuilt.
+// Reads standard utm_source/utm_medium/utm_campaign query params on first
+// landing-page visit, persists them in sessionStorage so they survive
+// through to whichever form (Book a Demo or Organisation Inquiry) is
+// eventually submitted, potentially several page interactions later -
+// not read fresh at submit time, since the URL's query string is usually
+// already gone by then.
+const UTM_STORAGE_KEY = "trainai_utm_attribution_v1";
+
+export function captureAttributionFromURL() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const utm = {
+      utm_source: params.get("utm_source") || null,
+      utm_medium: params.get("utm_medium") || null,
+      utm_campaign: params.get("utm_campaign") || null,
+    };
+    if (utm.utm_source || utm.utm_medium || utm.utm_campaign) {
+      sessionStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utm));
+    }
+  } catch {
+    // best-effort only - never blocks the page from loading
+  }
+}
+
+function readStoredAttribution() {
+  try {
+    const raw = sessionStorage.getItem(UTM_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 export async function submitDemoRequest({ fullName, workEmail, companyName, teamSize, message, source = "landing_page" } = {}) {
   const normalizedEmail = normalizeEmail(workEmail);
   if (!fullName?.trim() || !isValidEmail(normalizedEmail) || !companyName?.trim()) {
@@ -193,6 +227,7 @@ export async function submitDemoRequest({ fullName, workEmail, companyName, team
   if (!supabase) return { success: true }; // demo mode. Nothing to persist
 
   try {
+    const attribution = readStoredAttribution();
     const { error } = await supabase.from("demo_requests").insert({
       full_name: fullName.trim(),
       work_email: normalizedEmail,
@@ -200,6 +235,7 @@ export async function submitDemoRequest({ fullName, workEmail, companyName, team
       team_size: teamSize || null,
       message: message?.trim() || null,
       source,
+      ...attribution,
     });
     if (error) throw error;
     return { success: true };
@@ -221,6 +257,7 @@ export async function submitOrganizationInquiry({ fullName, workEmail, companyNa
   if (!supabase) return { success: true }; // demo mode. Nothing to persist
 
   try {
+    const attribution = readStoredAttribution();
     const { error } = await supabase.from("organization_inquiries").insert({
       full_name: fullName.trim(),
       work_email: normalizedEmail,
@@ -228,6 +265,7 @@ export async function submitOrganizationInquiry({ fullName, workEmail, companyNa
       inquiry_type: inquiryType || "other",
       message: message?.trim() || null,
       source,
+      ...attribution,
     });
     if (error) throw error;
     return { success: true };

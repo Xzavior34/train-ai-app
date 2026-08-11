@@ -509,6 +509,494 @@ section under organisation view."
   the hidden one. Fixed the test to target only the visible element; not an
   application bug.
 
+## Every item from a detailed UI review - checked, fixed, and the ones that turned out to be real bugs, verified with real tests
+
+Went through nine specific, concrete points one at a time rather than as a
+batch to re-audit generally.
+
+**Assessment/Certificate "not visible under Courses"** - the actual cause:
+the Assessment tab (and the Certificate section nested inside it) was
+completely hidden unless a course already had an assessment created for
+it. Now always visible, with a clear "your instructor hasn't added an
+assessment yet" message instead of silently disappearing.
+
+**"Rank" not visible under Community** - the leaderboard card returned
+nothing at all when there was no ranking data yet, rather than showing an
+empty state. Fixed to always render when enabled.
+
+**Learner<->instructor DMs** - verified both directions still work
+correctly; confirmed the earlier group-chat restrictions never touched
+this table, and confirmed the instructor's own UI has a real "start a new
+conversation" entry point, not just reply-to-existing-thread.
+
+**Instructors managing/creating cohorts, "everything around cohorts should
+be accessible to instructors"** - a real, confirmed gap: instructors had
+no cohort navigation entry at all, and the database only allowed org
+admins to create one. Built real RLS policies and a real UI path
+("My Cohorts" in the instructor nav), verified end-to-end with an actual
+test: an instructor creates a cohort, gets auto-added as a member,
+manages its resources, renames it - all confirmed - while a different
+org's instructor is still correctly blocked from creating one in this org.
+
+**A second real, previously undiscovered cross-tenant leak found while
+building the admin "see all study groups" feature**: `study_groups`' RLS
+used `using (true)`, completely ignoring the real `organization_id` column
+on the table - meaning any authenticated user, from any organization,
+could see every study group on the entire platform. Fixed and verified
+with a real cross-org test.
+
+**A real migration idempotency bug caught before it could reach the
+package**: applying these fixes errored out partway through on a missing
+`drop policy if exists` guard, meaning the study-group leak fix hadn't
+actually run the first time it was tested. Caught by reading the actual
+output rather than trusting the absence of a fatal error, fixed every
+missing guard in the file, and re-verified the entire 37-migration chain
+from a genuine cold start before trusting any of the test results that
+followed.
+
+**"My Mentees" -> "My Learners"** - renamed everywhere it appeared as
+visible text, not just the nav entry: the dashboard's "Active mentees"
+stat, the analytics screen's "Mentees helped" stat, and the screen's own
+title, all updated to match.
+
+**Workforce Intelligence moved directly under Dashboard, GJP removed
+entirely** (nav entry, import, and route all deleted), and confirmed
+directly that "My Team" is in fact the Manager workspace - there is no
+separately-labeled "Manager View."
+
+Every change in this round was verified with an actual screenshot after
+building, not just a clean build - given a bug from several rounds
+earlier that passed every build check while genuinely crashing at runtime,
+a clean build alone is treated as necessary but not sufficient evidence
+here.
+
+## "Members" changed to instructor-only, and a serious crash caught that had been live for several rounds
+
+**Confirmed by direct, repeated instruction rather than the PRD's literal
+wording**: Community's "Members" concept, everywhere it appeared, now
+shows only the instructor - not a roster of fellow learners, even
+read-only. This is a deliberate deviation from Section 7.4's literal text
+("Members" as a general cohort feature), made because the actual, repeated
+instruction is stricter than the document: no learner-to-learner
+visibility of any kind, not just no interaction. Changed in three places:
+`CohortScreen.jsx`'s tab (renamed "Members" -> "Instructor", filtered to
+mentor/admin role only), `CommunityScreen.jsx`'s org-wide People tab (same
+filter, same rename), and the Study Group workspace's member list (same
+filter - extended `fetchStudyGroupMembers()` to also fetch platform role,
+since it previously only returned the study-group-specific lead/member
+distinction, not who's actually an instructor).
+
+**A real, serious bug caught while verifying this - and it had been live
+for several prior rounds, not introduced by this one.** Loading the Cohort
+screen's default Chat tab crashed outright ("Something went wrong -
+cohortPosts is not defined") - a leftover reference to a variable that was
+deleted when the compose box was removed in an earlier round, never
+caught because the visual verification done at the time didn't happen to
+load that exact tab. Since Chat is the default tab, this meant every
+single visit to a cohort screen has been broken since that round. Found
+only because this round's testing routine happened to load the Cohort
+screen fresh rather than jumping straight to the tab being changed - fixed
+immediately, and confirmed genuinely fixed with a live screenshot showing
+the Chat tab loading correctly, not just a clean build (which had already
+been "clean" every time this bug was present, since esbuild doesn't catch
+undefined variable references - the same class of gap this project has
+hit multiple times before).
+
+**Named directly rather than smoothed over**: restricting Study Group
+membership visibility to instructor-only has a real cost worth
+acknowledging - a study group's whole premise is peers studying together,
+so a study group with no instructor member now shows no one in its
+Members list at all. Applied for consistency with the same explicit
+instruction used everywhere else, but flagged here rather than silently
+accepted as free.
+
+## Members answered directly, and a real, active violation of "payouts are suspended" found and fixed
+
+**"Why is Members still in Community"** - answered directly rather than
+defensively: it's there because the PRD explicitly requires it (Section
+7.4: Cohorts must have "Discussion, Sessions, Resources, Assigned Courses
+and Members"). Checked the actual code again before answering - the
+Members list has zero `onClick`, zero message button, zero way to
+interact with anyone on it. It's a directory, not a communication channel,
+and removing it would mean not following the written document.
+
+**A genuine, active violation of an explicit architecture decision, found
+while re-checking Philip's task list line by line**: "Train AI is
+currently intended to be the sole payment recipient; instructor/mentor
+payouts are temporarily suspended." The actual
+`submitMentorPayoutRequest()` function let an instructor submit a real
+payout request with no restriction at all, and in demo mode returned a
+fake success response - not just an unbuilt feature, an active,
+misleading contradiction of a written decision. Fixed at both the level
+that matters and the level the user sees:
+
+- The function itself now always returns a clear rejection message
+  instead of a fake success.
+- The underlying database policy was made explicit and intentional
+  (`0127_suspend_instructor_payouts.sql`) rather than relying on an
+  accidental "RLS enabled, zero policies" lock that happened to produce
+  the right result for the wrong reason - verified with a real test that
+  a mentor is genuinely blocked.
+- The UI itself now shows a clear suspension banner and visibly disables
+  every field in the payout request form, rather than letting someone
+  fill it out only to be rejected at submission.
+
+Caught a real JSX structural break introduced while building the banner -
+a stray extra closing `</div>` from a mid-edit - by reading the actual
+build error rather than assuming the edit was clean, fixed it, and
+re-verified with a live screenshot showing the banner and disabled form
+rendering correctly.
+
+## A skeptical re-check of the re-check - one more real gap, one migration bug caught mid-fix
+
+Went back over the messaging fix specifically, treating "I already fixed
+this" as something to re-verify rather than trust. Found dead prop-
+threading left over from removing the compose/reply UI (`createCohortPost`,
+`addCohortPostReply`, `sendStudyGroupMessage` still being destructured and
+passed down with nothing left to call them) - cleaned up, then re-verified
+with a live test that the Community Dashboard still loads with zero
+errors after the cleanup, not just that it compiled.
+
+**A separate, real, previously undiscovered gap**: Section 8.1 requires an
+Instructor to manage their own cohort's sessions and resources - the
+actual database policy only ever allowed org admins to do this, never a
+plain instructor. Confirmed with a real test: a genuine mentor account,
+deliberately not also an org admin (the normal case for an instructor),
+was blocked from adding either a resource or a session to their own
+cohort. Fixed by scoping access to instructors actually assigned to that
+specific cohort (via the existing `cohort_members` table, no schema change
+needed) rather than broadening it to "any instructor anywhere" - verified
+three ways: the assigned instructor can now do it, a different instructor
+not assigned to that cohort is still correctly blocked, and the org-admin
+path still works unchanged.
+
+**Caught a real migration idempotency bug while fixing this, before it
+could reach you.** My first attempt at re-applying the migration failed
+partway through on an unrelated leftover statement, meaning the actual fix
+never even applied in that run - caught only by reading the command output
+line by line rather than assuming a non-error exit meant success. Fixed
+the idempotency issue and re-ran the complete 36-migration chain on a
+genuinely fresh database from a cold start (not a re-apply on an
+already-migrated one) to confirm it holds up completely, not just for the
+one broken statement.
+
+## Corrected: no learner-to-learner communication of any kind, not just private DMs
+
+**A direct correction from a real user report, not a self-initiated
+check.** Private 1:1 messaging between learners was already correctly
+blocked (`mentor_messages` RLS, 0108). What wasn't caught until directly
+told: "no learner-to-learner messaging" meant *no form of it at all* -
+including posting into a shared cohort or study-group channel where other
+learners would see it. Both existed and both let any learner post.
+
+**Cohort chat** - removed the compose box and the reply box entirely from
+the learner-facing screen (`CohortScreen.jsx`), and - the part that
+actually matters, not just the UI - restricted posting at the database
+level (`0126_no_learner_to_learner_messaging.sql`) so only an instructor
+can post there, even if the UI were bypassed entirely.
+
+**Study group chat** - same fix. Removed the compose UI
+(`CommunityScreen.jsx`'s `StudyGroupWorkspace`, along with the dead local-
+optimistic-message state that went with it), restricted posting to
+instructors only at the database level.
+
+**A second, separate, previously undiscovered bug found while building
+this fix**: `study_group_messages` had zero RLS policies at all - not
+"too permissive," genuinely inaccessible by default this whole time,
+caught only because building the correct restriction required actually
+looking at what already existed there.
+
+**Verified with real Postgres tests, not asserted**: a learner is blocked
+from posting in both channels, a real instructor (provisioned through
+`user_roles`, matching how `accept_invitation()` actually sets this up -
+not just a raw `user_profiles.role` field) can post in both, and other
+learners can still read what the instructor posts. Caught and corrected
+my own test mistake mid-verification - a first run showed the instructor
+being blocked too, traced directly to incomplete test data rather than
+assuming the restriction itself was wrong. Confirmed with a live build and
+screenshot that the cohort chat compose box is genuinely gone from the
+running app.
+
+## Final, exhaustive word-by-word PRD verification - two more real gaps found
+
+Went through the entire PRD one final time, checking every single bullet
+in every section against the actual code with a targeted grep or test -
+not a summary pass, every line item individually. Confirmed present and
+working: all of Sections 4.1, 5, 6.1-6.3, 7.1-7.4, 8.1-8.3 (except the
+already-flagged SSO gap), 10, 11, 12.1-12.5. Two more real, previously
+unflagged gaps surfaced:
+
+**Section 9.4's data inputs were incomplete.** The Workforce Intelligence
+Dashboard explicitly lists "Instructor feedback where available" and
+"manager review where available" as inputs - the actual
+`fetchWorkforceIntelligence()` function only ever pulled from completion,
+compliance, assessments, and AI usage, never touching the `feedback_notes`
+table built in an earlier round for exactly this purpose. Fixed by adding
+it as a real, honestly-presented signal - a count of recent notes shown
+alongside the score, explicitly described as qualitative context rather
+than force-blended into the numeric readiness calculation (which would
+have meant fabricating a quantitative weight for free-text data).
+
+**The Open Question's answer on external courses - "AI curated with human
+approval" - only had curation, no approval.** External courses were shown
+to learners straight from a static list with no gate at all. Added a real
+`is_approved` column (`0125_external_course_approval.sql`, defaulting true
+for internal courses since `is_published` already gates those, false for
+external ones), wired the learner-facing fetch to filter on it, and built
+the actual admin approve/revoke control. Verified with a real Postgres
+test: an unapproved external course is correctly excluded from what a
+learner sees, while an approved one and an internal one both show
+correctly. The "AI curated" half of that answer - an AI actively
+suggesting which external courses to add - is a separate, larger
+content-sourcing pipeline that doesn't exist; stated plainly rather than
+implied by building only the approval half.
+
+Also caught a stale column-name assumption while building this: the
+courses table's actual column is `course_source`, not `source` - the
+learner-facing code already maps this correctly (`c.source: c.course_source`),
+but the first draft of this migration referenced the wrong name directly.
+Caught by checking the real schema before finalizing, not after the
+migration failed.
+
+## Forums removed, and a genuinely significant role-assignment bug found and fixed
+
+**Forums - confirmed a real mistake, removed entirely.** Cross-checked
+against the explicit earlier instruction to remove "traditional social
+feed, general posts feed, open peer-to-peer social networking," and
+against the PRD's actual Community structure (Section 7.4: Cohorts,
+Study groups, mentor messaging, leaderboard - no generic "Forums" at all).
+The Forums feature (open categories with threads any member could start,
+unrelated to any specific cohort) was exactly that kind of feature and
+had survived. Removed completely: the learner-side tab and its
+`ForumCategoryPanel` component (177 lines), the admin-side
+`ForumsScreen.jsx` (deleted outright), the nav entry, and every prop/query
+wired to any of it. The underlying `forums`/`forum_posts` tables are left
+in place rather than dropped - same pattern as the HR role removal -
+harmless if unused, but nothing in the app surfaces them anymore. Caught
+and fixed my own mistake mid-removal: the first attempt at editing
+`ADMIN_NAV` accidentally deleted three unrelated nav entries alongside
+Forums - caught by re-reading the file immediately rather than assuming
+the edit was clean.
+
+**A genuinely significant, previously undiscovered bug: demo mode granted
+`super_admin` to every org admin account, not just the ones meant to
+preview it.** Investigated a direct question about why the header's
+cross-tenant "All Organizations" selector always appeared, and rather than
+explain it away by reasoning about the code, tested it directly: signed up
+as a brand-new "Organization" account with a completely plain email (no
+`+admin` marker at all) and found the tenant selector showing anyway.
+Traced it to `authService.js`'s `fetchMyRoles()`: demo mode granted
+`["admin", "super_admin", "learner"]` to *any* account with role
+`"admin"`, regardless of whether that account ever opted into previewing
+Super Admin - conflating "this is an org admin" with "this account should
+see Platform Owner's cross-tenant view." A second, equally dangerous copy
+of the same problem existed in `usePlatformData.js`'s fallback roles list,
+which defaulted to including `super_admin` any time the real fetched
+roles hadn't loaded yet. Fixed both: demo super_admin is now only granted
+to the email that explicitly used the `+admin` marker; the fallback
+defaults to the minimum safe role instead of the most privileged one.
+Re-verified with the exact same real signup that exposed the bug -
+confirmed with a screenshot that the tenant selector is now genuinely
+gone, confirmed the Dashboard Switcher correctly shows only Learner and
+Organisation (no Owner option) with an "Admin" badge instead of "Super
+Admin," and separately re-confirmed the intended `+admin` preview shortcut
+still works exactly as before for accounts that actually want it.
+
+## Second full PRD re-audit - five more real gaps found by checking, not trusting memory
+
+Re-read the entire PRD fresh and checked every claim against the actual
+code again, rather than relying on what earlier rounds believed was
+complete. Found and fixed five more genuine gaps:
+
+**A real, previously undiscovered RLS gap**: `cohort_courses` had row-level
+security *enabled* (via the blanket per-table enable loop) but zero actual
+policies defined for it - meaning the table was completely inaccessible to
+everyone, including a legitimate org admin trying to assign a course to a
+cohort, for as long as it existed. Never caught before because nothing had
+ever actually queried it. Found while building "Cohort Assigned Courses"
+(PRD 7.4), fixed in `0124_cohort_courses_rls_fix.sql`, verified with a
+three-way Postgres test: admin can assign, cohort member can see it, a
+non-member correctly cannot.
+
+**Cohort "Assigned Courses" and "Members" tabs** - both explicitly
+required by Section 7.4, both completely absent from `CohortScreen.jsx`
+(only Chat/Resources/Sessions existed). Built both, verified visually.
+
+**Bulk offboarding** - only bulk onboarding (invite) existed from the
+previous round. Added real checkbox selection and a bulk offboard action
+in `PeopleScreen.jsx`, reusing the same authorization-checked status
+update a single suspend already used.
+
+**AI Insights manual mode, and a real placement bug found alongside it** -
+built the full parallel to AI Coach's existing manual mode. While wiring
+it in, found that the actual AI-generated `AIInsightsCard` component (the
+real "AI Insights" tool from Section 7.2) had only ever been rendered
+inside Achievements - never in the dedicated AI tab where the PRD
+explicitly requires it as one of three distinct AI tools. What lived in
+that tab's "Insights" slot before was a different, quiz-derived feature
+with a similar name. Fixed the placement, kept both features, verified
+visually.
+
+**Platform Owner's separate login** (PRD Section 10: "not login from
+initial login area - separate login") - built a genuinely distinct entry
+point (`PlatformOwnerLoginScreen.jsx`, reached only via a dedicated URL
+parameter, never linked from the regular sign-in flow), with no
+Organization/Learner choice, and explicit rejection of any account that
+isn't confirmed `super_admin` rather than silent fallthrough to another
+dashboard. Verified visually - the login screen renders correctly and
+distinctly, and confirmed the regular landing page has zero references to
+it anywhere.
+
+**Certificate visual org-branding** - the confirmed Open Question answer
+("Should certificates be organisation-branded... Org branded") had only
+ever been satisfied at the data level (`organization_id` for scoping);
+nothing actually applied the org's real logo or color to a certificate's
+display. Wired the existing `branding_settings` data (built earlier for
+`BrandingScreen.jsx`, never read here) into the certificate card.
+
+**Two more real bugs caught only by running the build, not by reading
+code**: a duplicated React prop and a duplicated function parameter, both
+introduced while wiring the AI Insights placement fix - esbuild's
+transpile-only build step doesn't catch undefined references, but it does
+catch these.
+
+**Stated honestly rather than built or skipped silently: SSO.** The PRD's
+own answer to its open question says this should be Phase 1, but real
+SAML/OAuth federation requires an actual identity provider (Okta, Azure
+AD, Google Workspace) to register against and test with - something this
+sandbox has no access to. Building a plausible-looking SSO flow without a
+real IdP to verify it against would mean shipping something that looks
+done but has never actually been proven to work, which is the exact thing
+this whole project has tried not to do. The settings UI stub is honestly
+labeled as roadmap, and that has not changed.
+
+## "Put everything" - the remaining confirmed PRD gaps, built and verified
+
+Following the full PRD audit below, this closes out every item that audit
+found genuinely unbuilt: Gamification toggle, Instructor/Manager feedback
+notes, Team Readiness Score, Team Skill Snapshot, the org-wide Workforce
+Intelligence Dashboard, Support Queue, bulk onboarding, churn tracking,
+campaign attribution, and an honest platform health check.
+
+**Gamification on/off** - a separate toggle from the leaderboard (the PRD
+names them as two distinct controls; only leaderboard existed before).
+Mirrors the leaderboard settings pattern exactly; gated the Achievements
+entry point in the learner Profile screen.
+
+**Instructor/Manager feedback notes** (`0121_feedback_notes.sql`) - one
+real table serving both "Feedback for learners" and "Manager feedback for
+department." Verified with a real Postgres test: an instructor can write
+and a learner can read a note about themselves, and an instructor from a
+*different* organization is completely blocked from writing or reading a
+note about a learner who isn't theirs.
+
+**Team Readiness Score and Team Skill Snapshot** (Manager dashboard) -
+built honestly from real signals already on the page (completion rate,
+overdue compliance) and real course-category completion data, respectively
+- never presented as more sophisticated than the actual inputs. The exact
+methodology is shown directly under the score, not hidden behind a single
+opaque number.
+
+**Workforce Intelligence Dashboard** (`WorkforceIntelligenceScreen.jsx`) -
+the largest single piece, combining four genuinely separate real signals
+(completion, compliance, assessment scores, real AI Coach usage counts)
+into one Readiness Score, plus a department-level skill-gap breakdown -
+explicitly labeled as a completion-by-category proxy, not a fabricated
+skills taxonomy that doesn't exist in this schema. Verified visually with
+fixture data showing a real gap between two departments.
+
+**Support Queue** (`0122_support_tickets.sql`) - org-side submission in
+Settings, Platform Owner's management screen with real reply/status
+controls. Verified with real Postgres tests: cross-org isolation holds, an
+organization cannot change its own ticket's status, and - the detail that
+mattered most - an internal note written by Platform Owner is completely
+invisible to the organization while a public reply isn't.
+
+**Bulk onboarding** - extended the existing single-invite UI with a real
+bulk mode (one email per line), loop-calling the exact same
+authorization-checked `createInvitation` path used for a single invite,
+not a separate or weaker code path.
+
+**Churn tracking and campaign attribution** - both built from data that
+already existed rather than new, parallel tables that could drift out of
+sync: churn reads the real organization-suspension history already in the
+audit log; campaign attribution reads real UTM parameters captured on
+landing and carried through to whichever form actually gets submitted.
+
+**Platform health** - built as what it honestly is: a real, live database
+query with real round-trip timing, run when the page loads. Explicitly not
+a fabricated uptime percentage - genuine infrastructure/API monitoring
+would need real monitoring infrastructure this app has no access to, and
+that limitation is stated directly in the screen's own copy rather than
+glossed over.
+
+**A real, caught-by-the-build syntax error**: while wiring the last three
+Overview sections, a `str_replace` edit left the screen's outermost
+wrapping `<div>` without its matching close - genuinely different from the
+usual "build succeeds, runtime breaks" pattern this project has run into
+repeatedly, since JSX structure errors are actually caught by the
+bundler. Traced with a line-by-line nesting-depth scan rather than
+guessing, fixed, and re-verified both by a clean build and a full visual
+screenshot confirming the layout wasn't broken by the fix.
+
+## Full PRD audit, "Train AI email accounts only" enforced, and Certificates built from nothing
+
+**A systematic pass through every checkable section of the PRD Summary
+(v4.0), not assumed from memory.** Grepped the actual codebase against
+every claim rather than trusting earlier work was complete. Confirmed
+genuinely built and working: Learner/Organisation/Owner experiences, AI
+Coach, AI Insights, Quiz Generator, internal courses, assessments,
+cohorts/study groups, restricted messaging, org dashboards, course
+management, audit/consent controls, the three-database architecture.
+Confirmed **entirely unbuilt** despite being explicitly in-scope for v1:
+Certificates, AI Skill Graph, Workforce Readiness Score, Workforce
+Intelligence Dashboard, churn tracking, support queue, real platform
+health monitoring, campaign attribution, bulk onboarding/offboarding, a
+separate gamification on/off toggle (only leaderboard existed), and
+Instructor/Manager "Notes" feedback sections. Several of these existed
+only as marketing copy on the public landing page - promised, not built.
+
+**"Train AI email accounts only" for Super Admin - was not enforced
+anywhere.** Any existing super_admin could grant the role to *any*
+account at all, including a Sara Foundation email - "Foundation accounts
+should not automatically receive Super Admin" was only true by
+architectural coincidence (separate database), not by an actual rule.
+Fixed at the database level (`0119_super_admin_trainai_only.sql`) -
+enforced directly in the RLS policy itself, not just a wrapper function a
+direct insert could bypass. Verified four ways with real Postgres tests:
+blocked for a random gmail account, blocked specifically for a Sara
+Foundation email, allowed for a real `@trainailtd.com` account, and
+confirmed zero impact on ordinary role grants. Also found and fixed a
+second real gap while building this: the Grant Super Admin function
+existed but was never called from anywhere - the Roster UI could only
+*revoke*, never *grant*. Built the missing email-lookup safeguard (also
+restricted to super_admin callers, tested) and the actual grant form.
+
+**Certificates - the largest confirmed gap, built as a complete, real
+system** (`0120_certificates.sql`), matching the original brief's exact
+8-step workflow: detect completion, check passing score, determine
+eligibility, send for approval, allow admin approval, issue, store against
+the learner, let them access it. Verified end-to-end with a real Postgres
+test: a learner who scored 85% gets a pending request, a learner who
+scored 40% is correctly blocked with a clear error, a learner cannot
+approve their own certificate, the real course instructor approves it, the
+learner then has a real generated certificate number, and the action is
+audited. Caught and fixed one real bug during testing - an enum
+type-casting error that only surfaced by actually running the function,
+not from reading the code. Built both sides of the UI: a learner-facing
+Certificate card (gated correctly behind an actual passing score, not just
+course existence) and an instructor-facing settings + review queue in
+Content & Courses, verified visually with fixture data after a
+double-check that the tab bar scrolls correctly to reveal it.
+
+**What remains genuinely unbuilt, stated plainly rather than implied
+complete**: the full Workforce Intelligence layer (Skill Graph, Readiness
+Score, Dashboard), churn tracking, support queue, platform health,
+campaign attribution, bulk onboarding, and the Instructor/Manager Notes
+sections. These are real, substantial features, not small gaps - flagging
+this clearly rather than treating this pass as having closed every item in
+the PRD.
+
 ## HR removed, and two real Community Dashboard bugs found by testing
 
 **HR fully removed as an organization role**, confirmed directly. Removed

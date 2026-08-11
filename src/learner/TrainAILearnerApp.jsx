@@ -3,7 +3,7 @@ import { useAuth } from "../lib/useAuth.js";
 import { useLearnerData } from "./hooks/useLearnerData.js";
 import { TOKENS, BottomNav, DesktopSidebar, timeAgo, NotificationBellContext } from "./components/LearnerUI.jsx";
 import { SearchBar } from "./components/SearchBar.jsx";
-import { fetchOrgAISettings, fetchOrgLeaderboardSettings } from "../lib/api/organizations.js";
+import { fetchOrgAISettings, fetchOrgLeaderboardSettings, fetchOrgGamificationSettings } from "../lib/api/organizations.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { CoursesScreen } from "./screens/CoursesScreen.jsx";
 import { CourseDetailScreen } from "./screens/CourseDetailScreen.jsx";
@@ -22,16 +22,16 @@ import { useCredits } from "./hooks/useCredits.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { enrollInCourse, markLessonComplete, addCourseNote, postCourseDiscussionMessage, addLessonNote, markNotificationRead, submitQuizAnswers, fetchSafeQuizQuestions, awardAIQuizCompletionPoints, requestCourseApplication, fetchMyCourseApplications,
   fetchAssessmentForCourse, fetchSafeAssessmentQuestions, fetchMyAssessmentAttempt, submitAssessmentAttempt,
+  fetchCertificateForCourse, fetchMyCertificateForCourse, requestCertificate,
 } from "../lib/api/learner.js";
 import {
   createCommunityPost, addPostComment, togglePostReaction, bookMentorshipSession, sendMentorMessage,
-  joinStudyGroup, leaveStudyGroup, fetchStudyGroupMessages, sendStudyGroupMessage, fetchStudyGroupMembers, fetchMentorAvailability,
-  fetchForumThreads, fetchForumThread, createForumThread, createForumReply, voteForumPost,
-  addCohortPostReply, toggleCohortPostReaction, generateAIQuiz,
+  joinStudyGroup, leaveStudyGroup, fetchStudyGroupMessages, fetchStudyGroupMembers, fetchMentorAvailability,
+  generateAIQuiz,
   fetchMentorMessageThreads, fetchMentorMessageThread, markMentorMessagesRead,
   fetchOrCreateAIConversation, fetchAIChatMessages, sendAIChatMessage, requestAIReply
 } from "../lib/api/schemaHelper.js";
-import { updateUserAvatar, fetchOrgBranding, createCohortPost } from "../lib/api/platform.js";
+import { updateUserAvatar, fetchOrgBranding } from "../lib/api/platform.js";
 import { CheckCircle2 } from "lucide-react";
 
 // Paystack/Stripe redirect the browser back to this same page (no router in
@@ -103,8 +103,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     user, courses, coursesLoading, courseById, lessonsForCurrentCourse, courseLessonsQuery,
     courseNotesQuery, courseDiscussionQuery, courseReviewsQuery, lessonNotesQuery,
     quizzesQuery, quizAttemptsQuery, postsQuery, studyGroupsQuery,
-    myGroupIdsQuery, communityPeopleQuery, forumCategoriesQuery, activityFeedQuery, memberStatsQuery, notificationsQuery, upcomingSessionsQuery, mentorsQuery,
-    cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
+    myGroupIdsQuery, communityPeopleQuery, activityFeedQuery, memberStatsQuery, notificationsQuery, upcomingSessionsQuery, mentorsQuery,
+    cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery, cohortCoursesQuery, cohortMembersQuery,
     gamificationStatsQuery, achievementsQuery, streakActivityQuery, leaderboardQuery, enrollmentsQuery, lessonProgressQuery,
     userProfileQuery, handleToggleBookmark,
   } = learnerData;
@@ -173,6 +173,12 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   // configurable. Admins can disable rankings."
   const orgLeaderboardSettingsQuery = useSupabaseQuery(async () => fetchOrgLeaderboardSettings(orgId), [orgId]);
   const leaderboardEnabled = orgLeaderboardSettingsQuery.data?.enabled !== false;
+  // Gamification on/off - separate control from the leaderboard toggle
+  // above (PRD: "Option to on gamification or off - on and off leadership
+  // board" names two distinct toggles; only the leaderboard one existed
+  // before this). Gates streaks/points/badges visibility across the app.
+  const orgGamificationSettingsQuery = useSupabaseQuery(async () => fetchOrgGamificationSettings(orgId), [orgId]);
+  const gamificationEnabled = orgGamificationSettingsQuery.data?.enabled !== false;
 
   // Assessments - distinct from AI Quiz Generator, tied to the course
   // currently open in CourseDetailScreen. Gated on screen === "courseDetail"
@@ -199,6 +205,28 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       myAssessmentAttemptQuery.refetch();
     } catch (e) {
       showToast(e?.message || "Could not submit your assessment.");
+    }
+  }
+
+  // Certificates - explicitly in-scope for v1, gated the same way as
+  // assessmentQuery above (screen === "courseDetail" only).
+  const certificateQuery = useSupabaseQuery(async () => {
+    if (screen !== "courseDetail" || !params?.id) return null;
+    return fetchCertificateForCourse(params.id);
+  }, [screen === "courseDetail", params?.id]);
+  const myCertificateQuery = useSupabaseQuery(async () => {
+    if (!params?.id || !session?.user?.id) return null;
+    return fetchMyCertificateForCourse(params.id, session.user.id);
+  }, [params?.id, session?.user?.id]);
+
+  async function handleRequestCertificate() {
+    if (!params?.id) return;
+    const result = await requestCertificate(params.id);
+    if (result.success) {
+      showToast(result.status === "issued" ? "Certificate issued!" : "Certificate requested - awaiting instructor approval.");
+      myCertificateQuery.refetch();
+    } else {
+      showToast(result.error || "Could not request a certificate.");
     }
   }
 
@@ -591,6 +619,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   addCourseNote={addCourseNote} postCourseDiscussionMessage={postCourseDiscussionMessage}
                   assessmentQuery={assessmentQuery} assessmentQuestionsQuery={assessmentQuestionsQuery}
                   myAssessmentAttemptQuery={myAssessmentAttemptQuery} handleSubmitAssessment={handleSubmitAssessment}
+                  certificateQuery={certificateQuery} myCertificateQuery={myCertificateQuery} handleRequestCertificate={handleRequestCertificate}
+                  orgBrandingQuery={orgBrandingQuery}
                 />
               )}
               {screen === "lesson" && (
@@ -610,6 +640,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "ai" && (
                 <AIQuizScreen
+                  orgId={orgId}
                   aiTab={aiTab} setAiTab={setAiTab}
                   quizSourceMode={quizSourceMode} setQuizSourceMode={setQuizSourceMode}
                   activeQuizSource={activeQuizSource} setActiveQuizSource={setActiveQuizSource}
@@ -649,12 +680,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   user={user} session={session} showToast={showToast} postsQuery={postsQuery}
                   createCommunityPost={createCommunityPost} togglePostReaction={togglePostReaction} addPostComment={addPostComment}
                   joinStudyGroup={joinStudyGroup} leaveStudyGroup={leaveStudyGroup}
-                  fetchStudyGroupMessages={fetchStudyGroupMessages} sendStudyGroupMessage={sendStudyGroupMessage} fetchStudyGroupMembers={fetchStudyGroupMembers}
-                  forumCategoriesQuery={forumCategoriesQuery}
-                  fetchForumThreads={fetchForumThreads} fetchForumThread={fetchForumThread}
-                  createForumThread={createForumThread} createForumReply={createForumReply} voteForumPost={voteForumPost}
+                  fetchStudyGroupMessages={fetchStudyGroupMessages} fetchStudyGroupMembers={fetchStudyGroupMembers}
                   cohortMembershipQuery={cohortMembershipQuery} cohortPostsQuery={cohortPostsQuery}
-                  createCohortPost={createCohortPost} addCohortPostReply={addCohortPostReply} toggleCohortPostReaction={toggleCohortPostReaction}
                   leaderboardQuery={leaderboardQuery}
                   leaderboardEnabled={leaderboardEnabled}
                   upcomingSessionsQuery={upcomingSessionsQuery}
@@ -671,9 +698,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   cohortPostsQuery={cohortPostsQuery}
                   cohortResourcesQuery={cohortResourcesQuery}
                   cohortSessionsQuery={cohortSessionsQuery}
-                  createCohortPost={createCohortPost}
-                  addCohortPostReply={addCohortPostReply}
-                  toggleCohortPostReaction={toggleCohortPostReaction}
+                  cohortCoursesQuery={cohortCoursesQuery}
+                  cohortMembersQuery={cohortMembersQuery}
                   session={session} showToast={showToast} back={back}
                 />
               )}
@@ -713,6 +739,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   onOpenDashboardSwitcher={() => setSwitcherOpen(true)}
                   credits={credits} onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}
                   session={session} onAvatarUploaded={handleAvatarUploaded} showToast={showToast}
+                  gamificationEnabled={gamificationEnabled}
                 />
               )}
               {screen === "achievements" && (

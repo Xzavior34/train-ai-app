@@ -17,7 +17,27 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 // card only presents data that's genuinely already available.
 export function WeeklyLeagueCard({ rows = [], loading }) {
   if (loading) return null;
-  if (!rows.length) return null;
+
+  // Previously returned null with zero rows - meaning "Rank" effectively
+  // didn't exist at all wherever there was no leaderboard data yet (a
+  // brand new org, or demo mode), rather than looking like an intentional,
+  // present section. A real empty state instead, so the feature is always
+  // visible when enabled, even before there's anything to rank.
+  if (!rows.length) {
+    return (
+      <div className="tai-card tai-mt12">
+        <div className="tai-row tai-gap10">
+          <div className="tai-iconbtn" style={{ background: "#FDF4DC", border: "none", color: "#B8860B" }}>
+            <Trophy size={16} />
+          </div>
+          <div style={{ fontWeight: 700, fontSize: 14 }}>Rank</div>
+        </div>
+        <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 8 }}>
+          No ranking data yet - complete lessons and assessments to appear on the leaderboard.
+        </div>
+      </div>
+    );
+  }
 
   const top = rows.slice(0, 5);
   const you = rows.find((r) => r.you);

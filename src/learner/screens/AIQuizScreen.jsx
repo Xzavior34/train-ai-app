@@ -1,8 +1,10 @@
 import React from "react";
 import { TopBar, StatTile, Avatar, optionLabel, optionValue, initialsOf } from "../components/LearnerUI.jsx";
 import { Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight, GraduationCap, Sparkles, Send, Bot } from "lucide-react";
+import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 
 export function AIQuizScreen({
+  orgId,
   aiTab, setAiTab,
   quizSourceMode, setQuizSourceMode,
   quizTopic, setQuizTopic,
@@ -381,7 +383,17 @@ export function AIQuizScreen({
 
       {aiTab === "insights" && (
         <div className="tai-mt16 tai-col tai-gap10">
-          <div className="tai-title-sm">Skill Mastery Insights</div>
+          {/* The real "AI Insights" tool (PRD 7.2's third distinct AI tool,
+              backed by the actual ai-insights edge function) - was
+              previously only ever rendered inside AchievementsScreen.jsx,
+              not here where the PRD explicitly places it, alongside AI
+              Coach and Quiz Generator as one of the AI area's three tools.
+              Kept the existing quiz-mastery breakdown below it too - a
+              real, useful signal, just not what "AI Insights" means in the
+              PRD. */}
+          <AIInsightsCard session={session} credits={credits} consumeCredit={consumeCredit} onBuyCredits={onBuyCredits} orgId={orgId} />
+
+          <div className="tai-title-sm tai-mt12">Skill Mastery (from your quizzes)</div>
           {weakAreas.length === 0 ? (
             <div className="tai-empty">Great job! All quiz average scores are above 70%.</div>
           ) : (

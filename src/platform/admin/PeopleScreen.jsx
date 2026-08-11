@@ -32,6 +32,11 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
   const showToast = useContext(ToastContext);
   const [tab, setTab] = useState("all");
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkEmails, setBulkEmails] = useState("");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [selectedMemberIds, setSelectedMemberIds] = useState(new Set());
+  const [bulkOffboarding, setBulkOffboarding] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("learner");
   const [search, setSearch] = useState("");
@@ -85,15 +90,58 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
           <div className="ta-card ta-mt16">
             <div className="ta-row ta-between mb-4">
               <div className="ta-search"><Search size={14} /><input className="ta-input" style={{ border: "none", padding: 0 }} placeholder="Search members..." value={search} onChange={e => setSearch(e.target.value)} /></div>
+              {selectedMemberIds.size > 0 && (
+                <div className="ta-row ta-gap8">
+                  <span style={{ fontSize: 12, color: "var(--text-2)" }}>{selectedMemberIds.size} selected</span>
+                  <button
+                    className="ta-btn ta-btn-danger ta-btn-sm"
+                    disabled={bulkOffboarding}
+                    onClick={async () => {
+                      // Bulk offboarding - PRD 8.3 "bulk onboarding/offboarding
+                      // (Inviting or removing learners to the organisation)."
+                      // Only onboarding (bulk invite, PeopleScreen's invite modal)
+                      // was built before this - offboarding was a real, separate
+                      // gap. Loops the exact same authorization-checked
+                      // updateOrgMemberStatus() call used for a single suspend,
+                      // not a separate bulk-specific code path.
+                      setBulkOffboarding(true);
+                      let succeeded = 0;
+                      for (const userId of selectedMemberIds) {
+                        try {
+                          await updateOrgMemberStatus(userId, orgId, "suspended");
+                          succeeded++;
+                        } catch { /* continue with the rest */ }
+                      }
+                      setBulkOffboarding(false);
+                      setSelectedMemberIds(new Set());
+                      membersQuery.refetch();
+                      showToast(`${succeeded} member${succeeded === 1 ? "" : "s"} offboarded (suspended).`);
+                    }}
+                  >
+                    {bulkOffboarding ? "Offboarding..." : `Offboard ${selectedMemberIds.size} selected`}
+                  </button>
+                </div>
+              )}
             </div>
             <div className="ta-table-wrap">
             <table className="ta-table">
-              <thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th style={{ width: 32 }}><input type="checkbox" checked={filteredMembers.length > 0 && selectedMemberIds.size === filteredMembers.length} onChange={(e) => setSelectedMemberIds(e.target.checked ? new Set(filteredMembers.map((m) => m.user_id)) : new Set())} /></th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
-                {membersQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading members...</td></tr>}
-                {!membersQuery.loading && filteredMembers.length === 0 && <tr><td colSpan={4} className="ta-empty">No members found.</td></tr>}
+                {membersQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading members...</td></tr>}
+                {!membersQuery.loading && filteredMembers.length === 0 && <tr><td colSpan={5} className="ta-empty">No members found.</td></tr>}
                 {filteredMembers.map(m => (
                   <tr key={m.user_id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedMemberIds.has(m.user_id)}
+                        onChange={(e) => {
+                          const next = new Set(selectedMemberIds);
+                          if (e.target.checked) next.add(m.user_id); else next.delete(m.user_id);
+                          setSelectedMemberIds(next);
+                        }}
+                      />
+                    </td>
                     <td><div className="ta-row ta-gap10"><Avatar initials={(m.display_name || "U").slice(0, 2).toUpperCase()} size={32} /><span style={{ fontWeight: 600 }}>{m.display_name || "User"}</span></div></td>
                     <td><Tag>{m.role || "learner"}</Tag></td>
                     <td><Tag tone={m.status === "active" ? "success" : "warning"}>{m.status || "active"}</Tag></td>
@@ -146,10 +194,10 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
             </div>
             <div className="ta-table-wrap">
               <table className="ta-table">
-                <thead><tr><th>Learner</th><th>Department</th><th>Assigned</th><th>Completed</th><th>Avg. progress</th><th>Pace</th></tr></thead>
+                <thead><tr><th>Learner</th><th>Department</th><th>Assigned</th><th>Completed</th><th>Pending</th><th>Avg. progress</th><th>Pace</th></tr></thead>
                 <tbody>
-                  {progressQuery.loading && <tr><td colSpan={6} className="ta-empty">Loading learner progress...</td></tr>}
-                  {!progressQuery.loading && sortedProgressRows.length === 0 && <tr><td colSpan={6} className="ta-empty">No learners in this organization yet.</td></tr>}
+                  {progressQuery.loading && <tr><td colSpan={7} className="ta-empty">Loading learner progress...</td></tr>}
+                  {!progressQuery.loading && sortedProgressRows.length === 0 && <tr><td colSpan={7} className="ta-empty">No learners in this organization yet.</td></tr>}
                   {sortedProgressRows.map(r => {
                     const meta = PACE_META[r.pace] || PACE_META.on_pace;
                     return (
@@ -158,6 +206,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                         <td>{r.department}</td>
                         <td>{r.assignedCount}</td>
                         <td>{r.completedCount}</td>
+                        <td>{Math.max(0, r.assignedCount - r.completedCount)}</td>
                         <td>{r.assignedCount > 0 ? `${r.avgProgress}%` : "N/A"}</td>
                         <td><Tag tone={meta.tone} icon={meta.Icon}>{meta.label}</Tag></td>
                       </tr>
@@ -304,25 +353,73 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
 
         {inviteOpen && (
           <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
-            <div className="ta-title">Invite New User</div>
-            <div className="ta-grid ta-grid-2 ta-mt12">
-              <input className="ta-input" placeholder="User email address..." value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} />
-              <select className="ta-input" value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
-                <option value="learner">Learner</option>
-                <option value="mentor">Instructor</option>
-                <option value="admin">Admin</option>
-              </select>
+            <div className="ta-row ta-between">
+              <div className="ta-title">{bulkMode ? "Bulk Invite Users" : "Invite New User"}</div>
+              <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setBulkMode((v) => !v)}>
+                {bulkMode ? "Switch to single invite" : "Switch to bulk invite"}
+              </button>
             </div>
-            <div className="ta-row ta-gap8 ta-mt12">
-              <button className="ta-btn ta-btn-primary" onClick={async () => {
-                if (!inviteEmail.trim() || !orgId) return;
-                await createInvitation({ organizationId: orgId, email: inviteEmail.trim(), role: inviteRole });
-                setInviteOpen(false); setInviteEmail("");
-                invitationsQuery.refetch();
-                showToast("Invitation sent!");
-              }}>Send invitation</button>
-              <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
-            </div>
+            {!bulkMode ? (
+              <>
+                <div className="ta-grid ta-grid-2 ta-mt12">
+                  <input className="ta-input" placeholder="User email address..." value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} />
+                  <select className="ta-input" value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
+                    <option value="learner">Learner</option>
+                    <option value="mentor">Instructor</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+                <div className="ta-row ta-gap8 ta-mt12">
+                  <button className="ta-btn ta-btn-primary" onClick={async () => {
+                    if (!inviteEmail.trim() || !orgId) return;
+                    await createInvitation({ organizationId: orgId, email: inviteEmail.trim(), role: inviteRole });
+                    setInviteOpen(false); setInviteEmail("");
+                    invitationsQuery.refetch();
+                    showToast("Invitation sent!");
+                  }}>Send invitation</button>
+                  <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+                  One email per line - PRD "bulk onboarding/offboarding," confirmed unbuilt before this. Each one goes through the exact same real invitation flow as a single invite (createInvitation, same authorization checks) - just looped, not a separate/weaker code path.
+                </div>
+                <textarea className="ta-input ta-mt12" rows={6} placeholder={"jane@company.com\nbob@company.com\n..."} value={bulkEmails} onChange={(e) => setBulkEmails(e.target.value)} />
+                <select className="ta-input ta-mt8" style={{ width: 200 }} value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
+                  <option value="learner">Learner</option>
+                  <option value="mentor">Instructor</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <div className="ta-row ta-gap8 ta-mt12">
+                  <button
+                    className="ta-btn ta-btn-primary"
+                    disabled={bulkSubmitting}
+                    onClick={async () => {
+                      const emails = bulkEmails.split("\n").map((e) => e.trim()).filter((e) => e && e.includes("@"));
+                      if (!emails.length || !orgId) return;
+                      setBulkSubmitting(true);
+                      let succeeded = 0, failed = 0;
+                      for (const email of emails) {
+                        try {
+                          await createInvitation({ organizationId: orgId, email, role: inviteRole });
+                          succeeded++;
+                        } catch {
+                          failed++;
+                        }
+                      }
+                      setBulkSubmitting(false);
+                      setInviteOpen(false); setBulkEmails(""); setBulkMode(false);
+                      invitationsQuery.refetch();
+                      showToast(`${succeeded} invitation${succeeded === 1 ? "" : "s"} sent${failed > 0 ? `, ${failed} failed` : ""}.`);
+                    }}
+                  >
+                    {bulkSubmitting ? "Sending..." : `Send ${bulkEmails.split("\n").filter((e) => e.trim().includes("@")).length} invitations`}
+                  </button>
+                  <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

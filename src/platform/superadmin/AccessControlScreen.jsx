@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { TopBar, Avatar, Tag, Switch, ToastContext } from "../components/PlatformUI.jsx";
 import { ShieldCheck, UserCheck, Eye, Search } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchSuperAdmins, grantSuperAdminByUserId, revokeSuperAdmin, fetchGlobalPermissionMatrix, setGlobalPermission, searchUsersForImpersonation, viewUserAsSuperAdmin } from "../../lib/api/platform.js";
+import { fetchSuperAdmins, grantSuperAdminByUserId, revokeSuperAdmin, fetchGlobalPermissionMatrix, setGlobalPermission, searchUsersForImpersonation, viewUserAsSuperAdmin, findUserIdByEmail } from "../../lib/api/platform.js";
 
 // Fixed role/permission universe for the RBAC matrix below. These match the
 // real `app_role` enum in the shared schema and the permission_key values
@@ -188,13 +188,56 @@ export function AccessControlScreen() {
   const showToast = useContext(ToastContext);
   const superAdminsQuery = useSupabaseQuery(async () => fetchSuperAdmins(), []);
   const superAdmins = superAdminsQuery.data || [];
+  const [grantEmail, setGrantEmail] = useState("");
+  const [granting, setGranting] = useState(false);
+
+  async function handleGrant() {
+    if (!grantEmail.trim()) return;
+    setGranting(true);
+    try {
+      const userId = await findUserIdByEmail(grantEmail.trim());
+      if (!userId) {
+        showToast(`No account found for ${grantEmail.trim()} - they need to sign up first.`);
+        return;
+      }
+      const result = await grantSuperAdminByUserId(userId);
+      if (!result.success) {
+        showToast(result.error || "Could not grant Super Admin.");
+      } else {
+        showToast(`Super Admin granted to ${grantEmail.trim()}.`);
+        setGrantEmail("");
+        superAdminsQuery.refetch();
+      }
+    } catch (e) {
+      showToast(e?.message || "Could not grant Super Admin.");
+    } finally {
+      setGranting(false);
+    }
+  }
 
   return (
     <div className="ta-fade">
       <TopBar title="Access Control" sub="Super Admin roster & role-based permissions" />
       <div className="ta-content">
         <div className="ta-card">
-          <div className="ta-title">Super Admin Roster</div>
+          <div className="ta-row ta-between">
+            <div className="ta-title">Super Admin Roster</div>
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+            Super Admin can only be granted to a real, existing @trainailtd.com account - enforced by the database itself, not just this form.
+          </div>
+          <div className="ta-row ta-gap8 ta-mt12">
+            <input
+              className="ta-input" style={{ flex: 1 }}
+              placeholder="name@trainailtd.com"
+              value={grantEmail}
+              onChange={(e) => setGrantEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleGrant()}
+            />
+            <button className="ta-btn ta-btn-primary" disabled={granting || !grantEmail.trim()} onClick={handleGrant}>
+              {granting ? "Granting..." : "Grant Super Admin"}
+            </button>
+          </div>
           <div className="ta-table-wrap">
           <table className="ta-table ta-mt12">
             <thead><tr><th>User</th><th>Role</th><th>Actions</th></tr></thead>

@@ -145,6 +145,54 @@ export async function updateOrgAISettings(organizationId, patch) {
   }
 }
 
+// AI Insights manual mode - PRD Section 8.3 "Moderation settings - (Turn
+// off or set AI coach to manual mode, AI insights to manual mode (pass
+// instructions or announcements)." Only AI Coach's manual mode existed
+// before this - AI Insights had no equivalent admin control at all, a
+// real, separate gap from AI Coach's. Same storage shape and pattern as
+// AI Coach settings above, in its own settings->'ai_insights' namespace so
+// the two can be configured independently (an org might want AI Coach
+// live but AI Insights replaced with a manual announcement, or vice
+// versa).
+const DEFAULT_AI_INSIGHTS_SETTINGS = { enabled: true, manual_mode: false, manual_message: "" };
+
+export async function fetchOrgAIInsightsSettings(organizationId) {
+  if (!supabase || !organizationId) return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+  try {
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (error || !data) return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+    return { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...(data.settings?.ai_insights || {}) };
+  } catch (e) {
+    console.warn("AI Insights settings fetch warning:", e);
+    return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+  }
+}
+
+export async function updateOrgAIInsightsSettings(organizationId, patch) {
+  if (!supabase || !organizationId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (fetchError) throw fetchError;
+    const nextSettings = {
+      ...(existing?.settings || {}),
+      ai_insights: { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...(existing?.settings?.ai_insights || {}), ...patch },
+    };
+    const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save AI Insights settings." };
+  }
+}
+
 // Leaderboard visibility - "Leaderboard visibility is configurable. Admins
 // can disable rankings." Same pattern as AI Coach settings above: stored in
 // organizations.settings->'leaderboard', no new table.
@@ -184,6 +232,52 @@ export async function updateOrgLeaderboardSettings(organizationId, patch) {
     return { success: true };
   } catch (e) {
     return { success: false, error: e?.message || "Could not save leaderboard settings." };
+  }
+}
+
+// Gamification on/off - explicitly a separate toggle from the leaderboard
+// in the PRD ("Reminder systems and notifications (Option to on
+// gamification or off) - on and off leadership board" lists them as two
+// distinct controls). Only the leaderboard toggle was ever built; this is
+// the missing one. Controls streaks/points/badges visibility, independent
+// of whether rankings are shown - an org can want progress badges without
+// a competitive leaderboard, or vice versa.
+const DEFAULT_GAMIFICATION_SETTINGS = { enabled: true };
+
+export async function fetchOrgGamificationSettings(organizationId) {
+  if (!supabase || !organizationId) return { ...DEFAULT_GAMIFICATION_SETTINGS };
+  try {
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (error || !data) return { ...DEFAULT_GAMIFICATION_SETTINGS };
+    return { ...DEFAULT_GAMIFICATION_SETTINGS, ...(data.settings?.gamification || {}) };
+  } catch (e) {
+    console.warn("Gamification settings fetch warning:", e);
+    return { ...DEFAULT_GAMIFICATION_SETTINGS };
+  }
+}
+
+export async function updateOrgGamificationSettings(organizationId, patch) {
+  if (!supabase || !organizationId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (fetchError) throw fetchError;
+    const nextSettings = {
+      ...(existing?.settings || {}),
+      gamification: { ...DEFAULT_GAMIFICATION_SETTINGS, ...(existing?.settings?.gamification || {}), ...patch },
+    };
+    const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save gamification settings." };
   }
 }
 

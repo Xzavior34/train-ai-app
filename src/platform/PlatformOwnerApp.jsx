@@ -11,6 +11,7 @@ import { PlatformSettingsScreen } from "./superadmin/PlatformSettingsScreen.jsx"
 import { TracksScreen } from "./superadmin/TracksScreen.jsx";
 import { EmailsScreen } from "./superadmin/EmailsScreen.jsx";
 import { AccessControlScreen } from "./superadmin/AccessControlScreen.jsx";
+import { SupportQueueScreen } from "./superadmin/SupportQueueScreen.jsx";
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 
@@ -150,6 +151,7 @@ export default function PlatformOwnerApp({ onSwitchDashboard, userRoles: userRol
                 {screen === "settings" && <PlatformSettingsScreen orgSelector={orgSelector} />}
                 {screen === "tracks" && <TracksScreen orgSelector={orgSelector} />}
                 {screen === "emails" && <EmailsScreen orgSelector={orgSelector} />}
+                {screen === "support" && <SupportQueueScreen currentUserId={session?.user?.id} />}
                 {screen === "access" && <AccessControlScreen orgSelector={orgSelector} />}
               </div>
             </div>

@@ -3,7 +3,8 @@ import { TopBar, ToastContext, Switch, Tag } from "../components/PlatformUI.jsx"
 import { Lock } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, startOrganizationSubscriptionPayment, TIER_PRICING } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING } from "../../lib/api/organizations.js";
+import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 
 // Previously seeded from `profileQuery.data?.organizations?.name`, which
 // never exists - fetchCurrentUserProfile() (used to build profileQuery in
@@ -19,6 +20,26 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
   const org = orgQuery.data;
   const [payingTier, setPayingTier] = useState(null);
+  const ticketsQuery = useSupabaseQuery(async () => (orgId ? fetchMyOrgSupportTickets(orgId) : []), [orgId]);
+  const [ticketSubject, setTicketSubject] = useState("");
+  const [ticketDescription, setTicketDescription] = useState("");
+  const [submittingTicket, setSubmittingTicket] = useState(false);
+
+  async function handleSubmitTicket() {
+    if (!ticketSubject.trim()) return;
+    setSubmittingTicket(true);
+    try {
+      const result = await createSupportTicket({ organizationId: orgId, createdBy: profileQuery?.data?.id, subject: ticketSubject, description: ticketDescription, priority: "normal" });
+      if (!result.success) showToast(result.error || "Could not submit your request.");
+      else {
+        showToast("Support request submitted - Train AI will respond soon.");
+        setTicketSubject(""); setTicketDescription("");
+        ticketsQuery.refetch();
+      }
+    } finally {
+      setSubmittingTicket(false);
+    }
+  }
 
   async function handleUpgrade(tier) {
     if (!userEmail) {
@@ -72,6 +93,39 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
     }
   }
 
+  // AI Insights manual mode - separate from AI Coach (PRD 8.3 names both
+  // as distinct moderation controls). Same organizations.settings pattern,
+  // its own 'ai_insights' namespace.
+  const aiInsightsSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgAIInsightsSettings(orgId) : null), [orgId]);
+  const [insightsEnabled, setInsightsEnabled] = useState(true);
+  const [insightsManualMode, setInsightsManualMode] = useState(false);
+  const [insightsManualMessage, setInsightsManualMessage] = useState("");
+  const [savingInsights, setSavingInsights] = useState(false);
+
+  useEffect(() => {
+    if (aiInsightsSettingsQuery.data) {
+      setInsightsEnabled(aiInsightsSettingsQuery.data.enabled !== false);
+      setInsightsManualMode(!!aiInsightsSettingsQuery.data.manual_mode);
+      setInsightsManualMessage(aiInsightsSettingsQuery.data.manual_message || "");
+    }
+  }, [aiInsightsSettingsQuery.data]);
+
+  async function handleSaveAIInsightsSettings(patch) {
+    if (!orgId) return;
+    setSavingInsights(true);
+    try {
+      const result = await updateOrgAIInsightsSettings(orgId, patch);
+      if (!result.success) {
+        showToast(result.error || "Could not save AI Insights settings");
+      } else {
+        showToast("AI Insights settings saved!");
+        aiInsightsSettingsQuery.refetch();
+      }
+    } finally {
+      setSavingInsights(false);
+    }
+  }
+
   // Leaderboard visibility - "Leaderboard visibility is configurable.
   // Admins can disable rankings."
   const leaderboardSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgLeaderboardSettings(orgId) : null), [orgId]);
@@ -100,6 +154,39 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
       }
     } finally {
       setSavingLeaderboard(false);
+    }
+  }
+
+  // Gamification on/off - separate control from the leaderboard per the
+  // PRD ("Option to on gamification or off - on and off leadership
+  // board" lists two distinct toggles). Controls streaks/points/badges;
+  // the leaderboard toggle above controls rankings visibility separately.
+  const gamificationSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgGamificationSettings(orgId) : null), [orgId]);
+  const [gamificationEnabled, setGamificationEnabled] = useState(true);
+  const [savingGamification, setSavingGamification] = useState(false);
+
+  useEffect(() => {
+    if (gamificationSettingsQuery.data) {
+      setGamificationEnabled(gamificationSettingsQuery.data.enabled !== false);
+    }
+  }, [gamificationSettingsQuery.data]);
+
+  async function handleToggleGamification() {
+    if (!orgId) return;
+    const next = !gamificationEnabled;
+    setGamificationEnabled(next);
+    setSavingGamification(true);
+    try {
+      const result = await updateOrgGamificationSettings(orgId, { enabled: next });
+      if (!result.success) {
+        showToast(result.error || "Could not save gamification settings");
+        setGamificationEnabled(!next);
+      } else {
+        showToast("Gamification settings saved!");
+        gamificationSettingsQuery.refetch();
+      }
+    } finally {
+      setSavingGamification(false);
     }
   }
 
@@ -229,7 +316,62 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             )}
             {savingAI && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 8 }}>Saving...</div>}
           </div>
+
+          <div className="ta-card ta-mt16" style={{ maxWidth: 600 }}>
+            <div className="ta-title">AI Insights</div>
+            <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+              Control whether learners in your organization get real, personalised AI Insights - separate from AI Coach's controls above.
+            </div>
+
+            <div className="ta-row ta-between ta-mt16">
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 600 }}>Enable AI Insights</div>
+                <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Turn off to hide AI Insights for your learners entirely.</div>
+              </div>
+              <Switch on={insightsEnabled} onChange={() => { const next = !insightsEnabled; setInsightsEnabled(next); handleSaveAIInsightsSettings({ enabled: next }); }} />
+            </div>
+
+            <div className="ta-row ta-between ta-mt16" style={{ opacity: insightsEnabled ? 1 : 0.5 }}>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 600 }}>Manual Mode</div>
+                <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Replace personalised AI Insights with your own announcement or instructions.</div>
+              </div>
+              <Switch
+                on={insightsManualMode}
+                onChange={() => { if (!insightsEnabled) return; const next = !insightsManualMode; setInsightsManualMode(next); handleSaveAIInsightsSettings({ manual_mode: next }); }}
+              />
+            </div>
+
+            {insightsEnabled && insightsManualMode && (
+              <div className="ta-mt16">
+                <div className="ta-label">Custom announcement</div>
+                <textarea
+                  className="ta-input ta-mt6" style={{ width: "100%", minHeight: 80 }}
+                  placeholder="e.g. This week, focus on completing your compliance modules before Friday."
+                  value={insightsManualMessage}
+                  onChange={(e) => setInsightsManualMessage(e.target.value)}
+                  onBlur={() => handleSaveAIInsightsSettings({ manual_message: insightsManualMessage })}
+                />
+                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>Saves automatically when you click away.</div>
+              </div>
+            )}
+            {savingInsights && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 8 }}>Saving...</div>}
+          </div>
           </>
+        )}
+
+        {orgId && !orgQuery.loading && !orgQuery.error && (
+          <div className="ta-card ta-mt16" style={{ maxWidth: 600 }}>
+            <div className="ta-title">Gamification</div>
+            <div className="ta-row ta-between ta-mt16">
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 600 }}>Enable streaks, points & badges</div>
+                <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Turn off to hide gamification elements entirely - separate from the leaderboard toggle below, which only controls whether rankings are visible.</div>
+              </div>
+              <Switch on={gamificationEnabled} onChange={handleToggleGamification} />
+            </div>
+            {savingGamification && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 8 }}>Saving...</div>}
+          </div>
         )}
 
         {orgId && !orgQuery.loading && !orgQuery.error && (
@@ -243,6 +385,30 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
               <Switch on={leaderboardEnabled} onChange={handleToggleLeaderboard} />
             </div>
             {savingLeaderboard && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 8 }}>Saving...</div>}
+          </div>
+        )}
+
+        {orgId && (
+          <div className="ta-card ta-mt16" style={{ maxWidth: 600 }}>
+            <div className="ta-title">Support</div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Submit a request to Train AI - status updates and replies appear below.</div>
+            <input className="ta-input ta-mt12" placeholder="Subject" value={ticketSubject} onChange={(e) => setTicketSubject(e.target.value)} />
+            <textarea className="ta-input ta-mt8" rows={3} placeholder="Describe the issue or question..." value={ticketDescription} onChange={(e) => setTicketDescription(e.target.value)} />
+            <button className="ta-btn ta-btn-primary ta-mt8" disabled={submittingTicket || !ticketSubject.trim()} onClick={handleSubmitTicket}>
+              {submittingTicket ? "Submitting..." : "Submit request"}
+            </button>
+            <div className="ta-col ta-gap8 ta-mt16">
+              {(ticketsQuery.data || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No support requests yet.</div>}
+              {(ticketsQuery.data || []).map((t) => (
+                <div key={t.id} className="ta-row ta-between" style={{ background: "var(--surface-2)", borderRadius: 8, padding: "8px 10px" }}>
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 600 }}>{t.subject}</div>
+                    <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{new Date(t.created_at).toLocaleDateString()}</div>
+                  </div>
+                  <Tag tone={t.status === "resolved" || t.status === "closed" ? "success" : t.status === "in_progress" ? "warning" : "default"}>{t.status.replace("_", " ")}</Tag>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

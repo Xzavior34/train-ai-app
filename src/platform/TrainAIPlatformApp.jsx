@@ -8,14 +8,14 @@ import { AdminDashboardScreen } from "./admin/AdminDashboardScreen.jsx";
 import { PeopleScreen } from "./admin/PeopleScreen.jsx";
 import { ContentScreen } from "./admin/ContentScreen.jsx";
 import { LearningPathsScreen } from "./admin/LearningPathsScreen.jsx";
+import { WorkforceIntelligenceScreen } from "./admin/WorkforceIntelligenceScreen.jsx";
 import { ModerationScreen } from "./admin/ModerationScreen.jsx";
 import { AdminAnalyticsScreen } from "./admin/AdminAnalyticsScreen.jsx";
 import { CohortsScreen } from "./admin/CohortsScreen.jsx";
+import { AdminStudyGroupsScreen } from "./admin/AdminStudyGroupsScreen.jsx";
 import { CohortDetailScreen } from "./admin/CohortDetailScreen.jsx";
-import { ForumsScreen } from "./admin/ForumsScreen.jsx";
 import { ComplianceScreen } from "./admin/ComplianceScreen.jsx";
 import { IntegrationsScreen } from "./admin/IntegrationsScreen.jsx";
-import { GJPScreen } from "./admin/GJPScreen.jsx";
 import { SettingsHubScreen } from "./admin/SettingsHubScreen.jsx";
 import { MentorDashboardScreen } from "./mentor/MentorDashboardScreen.jsx";
 import { MentorScheduleScreen } from "./mentor/MentorScheduleScreen.jsx";
@@ -159,6 +159,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "people" && <PeopleScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
                   {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "paths" && <LearningPathsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
+                  {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "moderation" && <ModerationScreen orgSelector={orgSelector} setScreen={setScreen} />}
                   {screen === "analytics" && <AdminAnalyticsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
                   {screen === "cohorts" && (
@@ -166,6 +167,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                       orgId={effectiveOrgId}
                       orgSelector={orgSelector}
                       setScreen={setScreen}
+                      currentUserId={session?.user?.id}
                       onOpenCohort={(cohortId) => {
                         setSelectedCohortId(cohortId);
                         setScreen("cohort-detail");
@@ -182,10 +184,9 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                       setScreen={setScreen}
                     />
                   )}
-                  {screen === "forums" && <ForumsScreen orgSelector={orgSelector} setScreen={setScreen} />}
+                  {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "compliance" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
-                  {screen === "gjp" && <GJPScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
                   {screen === "settings" && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} />}
                 </>
               )}
@@ -193,8 +194,30 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
               {workspace === "mentor" && (
                 <>
                   {screen === "dashboard" && <MentorDashboardScreen mentorId={mentorId} orgSelector={orgSelector} />}
+                  {screen === "cohorts" && (
+                    <CohortsScreen
+                      orgId={effectiveOrgId}
+                      orgSelector={orgSelector}
+                      setScreen={setScreen}
+                      currentUserId={session?.user?.id}
+                      onOpenCohort={(cohortId) => {
+                        setSelectedCohortId(cohortId);
+                        setScreen("mentor-cohort-detail");
+                      }}
+                    />
+                  )}
+                  {screen === "mentor-cohort-detail" && (
+                    <CohortDetailScreen
+                      orgId={effectiveOrgId}
+                      cohortId={selectedCohortId}
+                      currentUserId={session?.user?.id}
+                      onBack={() => setScreen("cohorts")}
+                      orgSelector={orgSelector}
+                      setScreen={setScreen}
+                    />
+                  )}
                   {screen === "schedule" && <MentorScheduleScreen mentorId={mentorId} orgSelector={orgSelector} />}
-                  {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} />}
+                  {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} />}
                   {screen === "messages" && <MentorMessagesScreen userId={session?.user?.id} mentorId={mentorId} orgSelector={orgSelector} selectedLearnerForChat={selectedLearnerForChat} setScreen={setScreen} />}
                   {screen === "discussions" && <DiscussionsScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} />}
@@ -205,7 +228,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
 
               {workspace === "manager" && (
                 <>
-                  {screen === "dashboard" && <ManagerDashboardScreen userId={session?.user?.id} profileQuery={profileQuery} orgSelector={orgSelector} />}
+                  {screen === "dashboard" && <ManagerDashboardScreen userId={session?.user?.id} profileQuery={profileQuery} orgSelector={orgSelector} orgId={effectiveOrgId} />}
                 </>
               )}
             </div>

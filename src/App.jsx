@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import TrainAILearnerApp from "./learner/TrainAILearnerApp.jsx";
 import TrainAIPlatformApp from "./platform/TrainAIPlatformApp.jsx";
 import PlatformOwnerApp from "./platform/PlatformOwnerApp.jsx";
+import { PlatformOwnerLoginScreen } from "./pages/PlatformOwnerLoginScreen.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import LandingPage from "./pages/public/LandingPage.jsx";
 import AuthPage from "./pages/auth/AuthPage.jsx";
@@ -18,6 +19,27 @@ import { getAuthenticatorAssuranceLevel } from "./lib/api/mfa.js";
 
 export default function App() {
   const { session, loading, authError, signIn, signUp, signOut, isDemoMode } = useAuth();
+
+  // Platform Owner's separate login - PRD Section 10: "not login from
+  // initial login area - separate login." Checked before any of the
+  // regular auth/session logic below runs, and returns immediately if
+  // matched - this path never touches AuthPage, never shows the
+  // Organization/Individual Learner choice, and isn't linked from
+  // anywhere in the regular flow.
+  const [ownerPortalAuthenticated, setOwnerPortalAuthenticated] = useState(false);
+  const isOwnerPortalURL = (() => {
+    try {
+      return new URLSearchParams(window.location.search).get("portal") === "owner";
+    } catch {
+      return false;
+    }
+  })();
+  if (isOwnerPortalURL && !ownerPortalAuthenticated) {
+    return <PlatformOwnerLoginScreen onAuthenticated={() => setOwnerPortalAuthenticated(true)} />;
+  }
+  if (isOwnerPortalURL && ownerPortalAuthenticated) {
+    return <PlatformOwnerApp onSwitchDashboard={() => {}} userRoles={["super_admin"]} />;
+  }
 
   // Step-up MFA gate: "checking" while we ask Supabase for this session's
   // Authenticator Assurance Level, "required" when the user has a verified

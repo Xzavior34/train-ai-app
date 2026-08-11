@@ -129,21 +129,17 @@ export async function fetchMentorEarnings(mentorId) {
   return data || [];
 }
 
+// Instructor/mentor payouts are temporarily suspended - "Train AI is
+// currently intended to be the sole payment recipient; instructor/mentor
+// payouts are temporarily suspended" (explicit architecture decision).
+// Confirmed a real, direct violation of this: this function let an
+// instructor actually submit a real payout request with no restriction at
+// all. Earnings tracking itself is unaffected (mentors can still see what
+// they've earned) - only the ability to request a payout is blocked,
+// matching "temporarily suspended" rather than removing earnings
+// visibility entirely.
 export async function submitMentorPayoutRequest(mentorId, amount, paymentMethod) {
-  if (!supabase) return { id: `payout_${Date.now()}`, mentor_id: mentorId, amount, status: "pending" };
-  const { data, error } = await supabase
-    .from("mentor_payout_requests")
-    .insert({
-      mentor_id: mentorId,
-      amount,
-      payment_method: paymentMethod,
-      status: "pending",
-      requested_at: new Date().toISOString()
-    })
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  return { success: false, error: "Payouts are temporarily suspended while Train AI is the sole payment recipient. Your earnings are still being tracked and will be available once payouts resume." };
 }
 
 // This mentor's own payout request history (real `mentor_payout_requests`
@@ -619,11 +615,17 @@ export async function fetchStudyGroupMembers(groupId) {
     .eq("group_id", groupId);
   if (error) { console.warn("Study group members fetch warning:", error); return []; }
   const rows = data || [];
-  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
+  // Also fetches platform_role now (not just display_name/avatar) - needed
+  // to filter this list down to instructors only, confirmed by repeated
+  // direct instruction (no learner-to-learner visibility anywhere in
+  // Community). "role" on the row above is this study group's own
+  // lead/member distinction, unrelated to platform role.
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id), "user_id, display_name, avatar_url, role");
   return rows.map((r) => ({
     ...r,
     display_name: profiles[r.user_id]?.display_name || "Learner",
     avatar_url: profiles[r.user_id]?.avatar_url || null,
+    platform_role: profiles[r.user_id]?.role || "learner",
   }));
 }
 
@@ -1146,3 +1148,46 @@ export async function claimMysteryBox(userId) {
   return data;
 }
 
+
+// Cohort "Assigned Courses" and "Members" - PRD Section 7.4 explicitly
+// lists both as required cohort structure ("Cohorts - Discussion,
+// Sessions, Resources, Assigned Courses and Members"). Confirmed a real
+// gap: cohort_courses and cohort_members both already existed as real
+// tables (0002_progress_quizzes_cohorts.sql), but CohortScreen.jsx had
+// zero references to either - only Chat/Resources/Sessions existed as
+// tabs.
+export async function fetchCohortAssignedCourses(cohortId) {
+  if (!supabase || !cohortId) return [];
+  const { data, error } = await supabase
+    .from("cohort_courses")
+    .select("id, due_at, courses(id, title, description)")
+    .eq("cohort_id", cohortId);
+  if (error) { console.warn("Cohort courses fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function fetchCohortMembers(cohortId) {
+  if (!supabase || !cohortId) return [];
+  const { data, error } = await supabase
+    .from("cohort_members")
+    .select("id, added_at, user_profiles(id, display_name, avatar_url, role)")
+    .eq("cohort_id", cohortId);
+  if (error) { console.warn("Cohort members fetch warning:", error); return []; }
+  return data || [];
+}
+
+// Admin-wide Study Groups view - confirmed directly: "Admins should be
+// able to see and access all study groups." Org-scoped (via
+// sg_select_own_org RLS, 0127_suspend_instructor_payouts.sql - a real
+// cross-tenant leak was found and fixed here too, sg_select_all previously
+// used "using (true)" ignoring organization_id entirely).
+export async function fetchAllStudyGroupsForOrg(organizationId) {
+  if (!supabase || !organizationId) return [];
+  const { data, error } = await supabase
+    .from("study_groups")
+    .select("*, courses(title), study_group_members(count)")
+    .eq("organization_id", organizationId)
+    .order("name", { ascending: true });
+  if (error) { console.warn("Org study groups fetch warning:", error); return []; }
+  return data || [];
+}

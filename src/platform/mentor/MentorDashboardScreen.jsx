@@ -25,7 +25,7 @@ export function MentorDashboardScreen({ mentorId }) {
       <div className="ta-content">
         <div className="ta-grid ta-grid-4">
           <StatCard stat={{ label: "Upcoming sessions", value: upcomingSessions.length, icon: Calendar }} />
-          <StatCard stat={{ label: "Active mentees", value: menteeCount, icon: Users }} />
+          <StatCard stat={{ label: "Active learners", value: menteeCount, icon: Users }} />
           <StatCard stat={{ label: "Instructor rating", value: avgRating, icon: Star }} />
           <StatCard stat={{ label: "Total earnings", value: `$${totalEarnings.toFixed(2)}`, icon: DollarSign }} />
         </div>

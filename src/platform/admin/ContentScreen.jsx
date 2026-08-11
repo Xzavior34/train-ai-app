@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
-import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
-import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap } from "lucide-react";
+import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
+import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore } from "../../lib/api/platform.js";
+import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate } from "../../lib/api/platform.js";
+import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 
 function GradingRow({ attempt, currentUserId, onOverride }) {
@@ -99,6 +100,19 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   // is allowed to see, so this is safe to load unconditionally per active course.
   const applicationsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseApplications(activeCourse.id) : []), [activeCourse?.id]);
   const assessmentAttemptsQuery = useSupabaseQuery(async () => (activeCourse ? fetchAssessmentAttemptsForCourse(activeCourse.id) : []), [activeCourse?.id]);
+  const certRequestsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCertificateRequestsForCourse(activeCourse.id) : []), [activeCourse?.id]);
+  const certTemplateQuery = useSupabaseQuery(async () => (activeCourse ? fetchCertificateForCourse(activeCourse.id) : null), [activeCourse?.id]);
+  const pendingCertCount = (certRequestsQuery.data || []).filter((r) => r.status === "pending").length;
+  const [certTitle, setCertTitle] = useState("Certificate of Completion");
+  const [certPassingScore, setCertPassingScore] = useState("70");
+  const [certRequiresApproval, setCertRequiresApproval] = useState(true);
+  useEffect(() => {
+    if (certTemplateQuery.data) {
+      setCertTitle(certTemplateQuery.data.title || "Certificate of Completion");
+      setCertPassingScore(String(certTemplateQuery.data.passing_score_pct ?? 70));
+      setCertRequiresApproval(certTemplateQuery.data.requires_admin_approval !== false);
+    }
+  }, [certTemplateQuery.data]);
   const pendingApplications = (applicationsQuery.data || []).filter(a => a.status === "pending");
   const enrolledLearnersQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseEnrolledLearners(activeCourse.id) : []), [activeCourse?.id]);
 
@@ -293,6 +307,13 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   style={{ flexShrink: 0, whiteSpace: "nowrap" }}
                 >
                   <GraduationCap size={14} /> Assessment Grading
+                </button>
+                <button
+                  className={`ta-btn ta-btn-sm ${activeTab === "certificates" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                  onClick={() => setActiveTab("certificates")}
+                  style={{ flexShrink: 0, whiteSpace: "nowrap" }}
+                >
+                  <Award size={14} /> Certificates {pendingCertCount > 0 ? `(${pendingCertCount} pending)` : ""}
                 </button>
               </div>
             </div>
@@ -620,6 +641,87 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 </div>
               </div>
             )}
+
+            {/* TAB: CERTIFICATES - explicitly in-scope for v1
+                (0120_certificates.sql), previously entirely unbuilt. Two
+                jobs: configure the template (passing score, whether it
+                needs approval) and review pending requests. */}
+            {activeTab === "certificates" && (
+              <div className="ta-col ta-gap16">
+                <div className="ta-card">
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Certificate Settings</div>
+                  <div className="ta-row ta-gap12 ta-mt12" style={{ flexWrap: "wrap" }}>
+                    <div>
+                      <div className="ta-label">Title</div>
+                      <input className="ta-input ta-mt6" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} placeholder="Certificate of Completion" />
+                    </div>
+                    <div>
+                      <div className="ta-label">Passing score (%)</div>
+                      <input className="ta-input ta-mt6" style={{ width: 90 }} type="number" min={0} max={100} value={certPassingScore} onChange={(e) => setCertPassingScore(e.target.value)} />
+                    </div>
+                    <div>
+                      <div className="ta-label">Approval</div>
+                      <div className="ta-row ta-gap8 ta-mt6">
+                        <Switch on={certRequiresApproval} onChange={() => setCertRequiresApproval((v) => !v)} />
+                        <span style={{ fontSize: 12 }}>{certRequiresApproval ? "Requires admin approval" : "Issued instantly on passing"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    className="ta-btn ta-btn-primary ta-mt12"
+                    onClick={async () => {
+                      const result = await upsertCertificateTemplate({
+                        courseId: activeCourse.id, organizationId: orgId, title: certTitle,
+                        passingScorePct: Number(certPassingScore) || 70, requiresApproval: certRequiresApproval,
+                      }, currentUserId);
+                      showToast(result.success ? "Certificate settings saved." : (result.error || "Could not save."));
+                      if (result.success) certRequestsQuery.refetch();
+                    }}
+                  >
+                    Save certificate settings
+                  </button>
+                </div>
+
+                <div className="ta-card">
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Certificate Requests</div>
+                  <div className="ta-table-wrap ta-mt12">
+                    <table className="ta-table">
+                      <thead><tr><th>Learner</th><th>Score</th><th>Status</th><th>Requested</th><th>Action</th></tr></thead>
+                      <tbody>
+                        {certRequestsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading requests...</td></tr>}
+                        {!certRequestsQuery.loading && (certRequestsQuery.data || []).length === 0 && (
+                          <tr><td colSpan={5} className="ta-empty">No certificate requests yet.</td></tr>
+                        )}
+                        {(certRequestsQuery.data || []).map((req) => (
+                          <tr key={req.id}>
+                            <td>{req.user_profiles?.display_name || "Unnamed learner"}</td>
+                            <td>{req.score_pct}%</td>
+                            <td><Tag tone={req.status === "issued" ? "success" : req.status === "rejected" ? "danger" : "warning"}>{req.status}</Tag></td>
+                            <td style={{ fontSize: 11.5 }}>{new Date(req.requested_at).toLocaleDateString()}</td>
+                            <td>
+                              {req.status === "pending" ? (
+                                <div className="ta-row ta-gap6">
+                                  <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={async () => {
+                                    const result = await reviewCertificate(req.id, true);
+                                    showToast(result.success ? "Certificate approved." : (result.error || "Could not approve."));
+                                    if (result.success) certRequestsQuery.refetch();
+                                  }}>Approve</button>
+                                  <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => {
+                                    const result = await reviewCertificate(req.id, false, "Not approved");
+                                    showToast(result.success ? "Certificate rejected." : (result.error || "Could not reject."));
+                                    if (result.success) certRequestsQuery.refetch();
+                                  }}>Reject</button>
+                                </div>
+                              ) : <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{req.certificate_number || "-"}</span>}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* ================================================================= */
@@ -647,6 +749,21 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       <Tag>{c.category || "General"}</Tag>
                       <Tag tone={c.is_published ? "success" : "warning"}>{c.is_published ? "Published" : "Draft"}</Tag>
                     </div>
+                    {c.course_source === "external" && (
+                      <div className="ta-row ta-between ta-mt6">
+                        <Tag tone={c.is_approved ? "success" : "danger"}>{c.is_approved ? "External - Approved" : "External - Pending Approval"}</Tag>
+                        <button
+                          className="ta-btn ta-btn-ghost ta-btn-sm"
+                          onClick={async () => {
+                            await updateCourse(c.id, { is_approved: !c.is_approved });
+                            coursesQuery.refetch();
+                            showToast(c.is_approved ? "External course approval revoked." : "External course approved - learners can now see it.");
+                          }}
+                        >
+                          {c.is_approved ? "Revoke" : "Approve"}
+                        </button>
+                      </div>
+                    )}
                     <div style={{ fontWeight: 800, fontSize: 16, marginTop: 10 }}>{c.title}</div>
                     <div className="ta-body ta-mt6" style={{ fontSize: 12.5, color: "var(--text-2)", lineClamp: 2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {c.description || "No description provided."}

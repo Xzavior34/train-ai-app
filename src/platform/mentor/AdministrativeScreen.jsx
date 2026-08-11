@@ -43,10 +43,14 @@ export function AdministrativeScreen({ mentorId }) {
     if (amount > availableBalance) { showToast("Amount exceeds your available balance."); return; }
     setSubmitting(true);
     try {
-      await submitMentorPayoutRequest(mentorId, amount, { type: payoutMethod, details: payoutDetails || null });
-      setPayoutAmount(""); setPayoutDetails("");
-      payoutsQuery.refetch();
-      showToast("Payout request submitted.");
+      const result = await submitMentorPayoutRequest(mentorId, amount, { type: payoutMethod, details: payoutDetails || null });
+      if (result?.success === false) {
+        showToast(result.error);
+      } else {
+        setPayoutAmount(""); setPayoutDetails("");
+        payoutsQuery.refetch();
+        showToast("Payout request submitted.");
+      }
     } catch (e) {
       showToast(e.message || "Could not submit payout request.");
     } finally {
@@ -117,20 +121,25 @@ export function AdministrativeScreen({ mentorId }) {
 
         {tab === "payouts" && (
           <>
-            <div className="ta-card ta-mt16" style={{ maxWidth: 560 }}>
+            <div className="ta-card ta-mt16" style={{ maxWidth: 560, borderColor: "var(--warning, #B45309)" }}>
+              <div style={{ fontSize: 12.5, color: "var(--warning, #B45309)", fontWeight: 600 }}>
+                Payouts are temporarily suspended - Train AI is currently the sole payment recipient. Your earnings below are still being tracked correctly and will be available once payouts resume.
+              </div>
+            </div>
+            <div className="ta-card ta-mt16" style={{ maxWidth: 560, opacity: 0.6 }}>
               <div className="ta-title">Request a withdrawal</div>
               <div className="ta-label ta-mt12">Amount ($)</div>
-              <input className="ta-input ta-mt6" type="number" min="0" step="0.01" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} placeholder={`Up to $${availableBalance.toFixed(2)}`} />
+              <input className="ta-input ta-mt6" type="number" min="0" step="0.01" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} placeholder={`Up to $${availableBalance.toFixed(2)}`} disabled />
               <div className="ta-label ta-mt12">Payout method</div>
-              <select className="ta-input ta-mt6" value={payoutMethod} onChange={e => setPayoutMethod(e.target.value)}>
+              <select className="ta-input ta-mt6" value={payoutMethod} onChange={e => setPayoutMethod(e.target.value)} disabled>
                 {PAYOUT_METHODS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
               </select>
               <div className="ta-label ta-mt12">Account details</div>
-              <input className="ta-input ta-mt6" value={payoutDetails} onChange={e => setPayoutDetails(e.target.value)} placeholder="Account number / email / phone" />
-              <button className="ta-btn ta-btn-primary ta-mt16" disabled={!mentorId || submitting || availableBalance <= 0} onClick={handleRequestPayout}>
+              <input className="ta-input ta-mt6" value={payoutDetails} onChange={e => setPayoutDetails(e.target.value)} placeholder="Account number / email / phone" disabled />
+              <button className="ta-btn ta-btn-primary ta-mt16" disabled title="Payouts are temporarily suspended">
                 <Send size={15} /> Request Payout
               </button>
-              {availableBalance <= 0 && <div className="ta-empty" style={{ padding: "10px 0 0" }}>No available balance to withdraw yet.</div>}
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>Disabled while payouts are suspended.</div>
             </div>
 
             <div className="ta-card ta-mt16">

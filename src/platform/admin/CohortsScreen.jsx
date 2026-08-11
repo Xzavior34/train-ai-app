@@ -4,7 +4,7 @@ import { Plus, Layers } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortsWithStats, createCohort } from "../../lib/api/platform.js";
 
-export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen }) {
+export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
   const [newCohortOpen, setNewCohortOpen] = useState(false);
   const [name, setName] = useState("");
@@ -60,7 +60,14 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen }) {
             <div className="ta-row ta-gap8 ta-mt12">
               <button className="ta-btn ta-btn-primary" onClick={async () => {
                 if (!name.trim() || !orgId) return;
-                await createCohort({ organizationId: orgId, name: name.trim() });
+                // createdBy matters specifically for an instructor creating
+                // their own cohort - without it, they'd never get
+                // auto-added as a cohort_members row (see createCohort()
+                // in lib/api/platform.js), and the resource/session
+                // management RLS scoped to "instructors assigned to this
+                // specific cohort" would lock them out of what they just
+                // created.
+                await createCohort({ organizationId: orgId, name: name.trim(), createdBy: currentUserId });
                 setNewCohortOpen(false); setName("");
                 cohortsQuery.refetch();
                 showToast("Cohort created!");

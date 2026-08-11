@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail,
-  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket
+  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { DASHBOARD_META } from "../../lib/roleRouting.js";
@@ -242,23 +242,24 @@ const WORKSPACES = [
 
 const ADMIN_NAV = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { key: "workforce", label: "Workforce Intelligence", icon: Brain },
   { key: "people", label: "People & Access", icon: Users },
   { key: "content", label: "Content & Courses", icon: BookOpen },
   { key: "paths", label: "Learning Paths", icon: Map },
   { key: "moderation", label: "Content Moderation", icon: Flag },
   { key: "analytics", label: "Analytics Hub", icon: BarChart3 },
   { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
-  { key: "forums", label: "Forums", icon: MessageSquare },
+  { key: "studygroups", label: "Study Groups", icon: Users },
   { key: "compliance", label: "Compliance", icon: ShieldCheck },
   { key: "integrations", label: "Integrations", icon: Plug },
-  { key: "gjp", label: "GJP Placements", icon: Briefcase },
   { key: "settings", label: "Settings Hub", icon: Settings },
 ];
 
 const MENTOR_NAV = [
   { key: "dashboard", label: "Instructor Overview", icon: LayoutDashboard },
   { key: "schedule", label: "Availability & Sessions", icon: Calendar },
-  { key: "mentees", label: "My Mentees", icon: Users },
+  { key: "cohorts", label: "My Cohorts", icon: Layers },
+  { key: "mentees", label: "My Learners", icon: Users },
   { key: "messages", label: "Direct Messages", icon: MessageSquare },
   { key: "discussions", label: "Learner Q&A", icon: MessagesSquare },
   { key: "analytics", label: "My Performance", icon: BarChart3 },
@@ -274,6 +275,7 @@ export const SUPERADMIN_NAV = [
   { key: "settings", label: "Platform Settings", icon: Settings },
   { key: "tracks", label: "Learning Tracks", icon: Map },
   { key: "emails", label: "Platform Emails", icon: Mail },
+  { key: "support", label: "Support Queue", icon: LifeBuoy },
   { key: "access", label: "Access Control", icon: ShieldCheck },
 ];
 

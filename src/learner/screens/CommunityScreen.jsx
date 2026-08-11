@@ -17,10 +17,8 @@ function StatPill({ label, value }) {
 
 // Study group chat - reads/writes the real `study_group_messages` table.
 // Complete Study Group Workspace - includes Discussion, Members list, and Shared Resources.
-function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMessages, sendStudyGroupMessage, fetchStudyGroupMembers, showToast, push, goTab }) {
+function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMessages, fetchStudyGroupMembers, showToast, push, goTab }) {
   const [activeTab, setActiveTab] = useState("discussion"); // "discussion" | "members" | "resources"
-  const [input, setInput] = useState("");
-  const [localMessages, setLocalMessages] = useState([]);
 
   const messagesQuery = useSupabaseQuery(async () => {
     if (!group?.id || !fetchStudyGroupMessages) return [];
@@ -32,14 +30,9 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
     return fetchStudyGroupMembers(group.id);
   }, [group?.id]);
   const groupMembers = membersQuery.data || [];
+  const instructorGroupMembers = groupMembers.filter(m => m.platform_role === "mentor" || m.platform_role === "admin");
 
-  const dbMessages = messagesQuery.data || [];
-  // Real thread only - dbMessages plus this session's own optimistic sends.
-  // (Previously this seeded two invented "Sarah Jenkins"/"Alex Rivera"
-  // welcome messages into every empty group, making it look like real peers
-  // had already posted. The "No posts yet" empty state below is the honest
-  // signal for a genuinely empty thread.)
-  const messages = useMemo(() => [...dbMessages, ...localMessages], [dbMessages, localMessages]);
+  const messages = messagesQuery.data || [];
 
   // Real member count for this specific group: prefer the live members
   // fetch (membersQuery, below) and fall back to the embedded
@@ -48,34 +41,6 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
   const realMemberCount = !membersQuery.loading
     ? groupMembers.length
     : (group?.study_group_members?.[0]?.count ?? 0);
-
-  async function send() {
-    if (!input.trim() || !group?.id) return;
-    const text = input.trim();
-    setInput("");
-    const posterName = session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "You";
-    const newMsg = {
-      id: "msg-" + Date.now(),
-      sender_id: session?.user?.id || "me",
-      message: text,
-      created_at: new Date().toISOString(),
-      user_profiles: {
-        display_name: posterName,
-        avatar_url: session?.user?.user_metadata?.avatar_url || null,
-        role: "Learner",
-      },
-    };
-    setLocalMessages(prev => [...prev, newMsg]);
-
-    if (sendStudyGroupMessage && session?.user?.id) {
-      try {
-        await sendStudyGroupMessage({ studyGroupId: group.id, senderId: session.user.id, message: text });
-        if (messagesQuery.refetch) messagesQuery.refetch();
-      } catch (e) {
-        // Maintained locally
-      }
-    }
-  }
 
   return (
     <div className="tai-card" style={{ display: "flex", flexDirection: "column", minHeight: 440 }}>
@@ -131,7 +96,7 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
           <div className="tai-col tai-gap10" style={{ maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
             {messagesQuery.loading && messages.length === 0 && <div className="tai-empty">Loading group posts...</div>}
             {!messagesQuery.loading && messages.length === 0 && (
-              <div className="tai-empty">No posts in this group workspace yet. Share a question or update!</div>
+              <div className="tai-empty">No updates from your instructor in this group yet.</div>
             )}
             {messages.map(m => {
               const isMe = m.sender_id === session?.user?.id || m.sender_id === "me";
@@ -159,20 +124,15 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
               );
             })}
           </div>
-
-          <div className="tai-row tai-gap8 tai-mt14" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
-            <input
-              className="tai-input"
-              style={{ flex: 1 }}
-              placeholder={`Post a message or question to ${group?.name || "study group"}...`}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") send(); }}
-            />
-            <button className="tai-btn tai-btn-primary" onClick={send}>
-              <Send size={15} /> Post
-            </button>
-          </div>
+          {/* No compose box here - confirmed directly: no
+              learner-to-learner communication of any kind, including a
+              study group's own discussion board. Enforced at the database
+              level too (0126_no_learner_to_learner_messaging.sql) - only
+              an instructor member of this specific group could post here,
+              which is why this is read-only rather than gated by role:
+              study groups are learner-created/joined in practice, so this
+              board realistically stays empty unless an instructor is
+              actually a member, which is honest rather than misleading. */}
         </div>
       )}
 
@@ -180,20 +140,29 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
           THIS group specifically, not a generic community-people slice. */}
       {activeTab === "members" && (
         <div className="tai-col tai-gap10 tai-mt12">
+          {/* Instructor only, same principle applied consistently - though
+              worth flagging directly: a study group's whole premise is
+              peers studying together, so filtering its member list down to
+              "instructor only" means a study group with no instructor
+              member shows nothing here at all. Applied for consistency
+              with the same explicit instruction used for Cohort's
+              Instructor tab and Community's People tab - but this is the
+              one place where that tension is real enough to name rather
+              than silently accept. */}
           <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 4 }}>
-            Learners currently enrolled in this study group:
+            Instructor for this study group:
           </div>
-          {membersQuery.loading && <div className="tai-empty">Loading members...</div>}
-          {!membersQuery.loading && groupMembers.length === 0 && (
-            <div className="tai-empty">No members yet. Invite a peer to join this group.</div>
+          {membersQuery.loading && <div className="tai-empty">Loading...</div>}
+          {!membersQuery.loading && instructorGroupMembers.length === 0 && (
+            <div className="tai-empty">No instructor assigned to this study group yet.</div>
           )}
-          {groupMembers.map(m => (
+          {instructorGroupMembers.map(m => (
             <div key={m.user_id} className="tai-row tai-between" style={{ background: "var(--surface-2)", padding: "10px 12px", borderRadius: 10 }}>
               <div className="tai-row tai-gap10">
                 <Avatar initials={initialsOf(m.display_name)} size={32} src={m.avatar_url} />
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{m.display_name}{m.user_id === session?.user?.id ? " (You)" : ""}</div>
-                  <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.role === "lead" ? "Group Lead" : "Member"}</div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{m.display_name}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-3)" }}>Instructor</div>
                 </div>
               </div>
               <Tag tone="success">Active</Tag>
@@ -239,191 +208,15 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
   );
 }
 
-// Forum category detail - threads list, thread detail + replies, and both
-// composers. Backed by the real `forums` (category) / `forum_posts`
-// (self-referencing via parent_post_id: null = thread, set = reply) tables
-// see fetchForumThreads / fetchForumThread / createForumThread /
-// createForumReply / voteForumPost in lib/api/schemaHelper.js. Scoped as its
-// own component so it owns its own threads/thread queries, keyed to
-// whichever category/thread is open, the same "don't thread per-item state
-// through useLearnerData" pattern GroupChatPanel above uses.
-function ForumCategoryPanel({
-  category, session, showToast = () => {}, onBack,
-  fetchForumThreads, fetchForumThread, createForumThread, createForumReply, voteForumPost,
-}) {
-  const [selectedThreadId, setSelectedThreadId] = useState(null);
-  const [newThreadText, setNewThreadText] = useState("");
-  const [replyText, setReplyText] = useState("");
-  const [posting, setPosting] = useState(false);
-
-  const threadsQuery = useSupabaseQuery(async () => {
-    if (!category?.id || !fetchForumThreads) return [];
-    return fetchForumThreads(category.id);
-  }, [category?.id]);
-  const threads = threadsQuery.data || [];
-
-  const threadQuery = useSupabaseQuery(async () => {
-    if (!selectedThreadId || !fetchForumThread) return null;
-    return fetchForumThread(selectedThreadId);
-  }, [selectedThreadId]);
-  const thread = threadQuery.data;
-
-  async function postThread() {
-    if (!newThreadText.trim() || !session?.user?.id || !category?.id || !createForumThread) return;
-    setPosting(true);
-    try {
-      await createForumThread({ forumId: category.id, authorId: session.user.id, content: newThreadText.trim() });
-      setNewThreadText("");
-      threadsQuery.refetch();
-      showToast("Thread posted!");
-    } catch (e) {
-      showToast(e?.message || "Couldn't post thread. Try again.");
-    } finally {
-      setPosting(false);
-    }
-  }
-
-  async function postReply() {
-    if (!replyText.trim() || !session?.user?.id || !selectedThreadId || !category?.id || !createForumReply) return;
-    setPosting(true);
-    try {
-      await createForumReply({ forumId: category.id, parentPostId: selectedThreadId, authorId: session.user.id, content: replyText.trim() });
-      setReplyText("");
-      threadQuery.refetch();
-      threadsQuery.refetch();
-      showToast("Reply posted!");
-    } catch (e) {
-      showToast(e?.message || "Couldn't post reply. Try again.");
-    } finally {
-      setPosting(false);
-    }
-  }
-
-  async function vote(postId, direction) {
-    if (!session?.user?.id || !voteForumPost) return;
-    try {
-      await voteForumPost(postId, direction);
-      threadQuery.refetch();
-      threadsQuery.refetch();
-    } catch (e) {
-      showToast(e?.message || "Couldn't record vote.");
-    }
-  }
-
-  if (selectedThreadId) {
-    return (
-      <div className="tai-col tai-gap12">
-        <button className="tai-iconbtn" onClick={() => setSelectedThreadId(null)} aria-label="Back to threads"><ArrowLeft size={16} /></button>
-
-        {threadQuery.loading && <div className="tai-empty">Loading thread...</div>}
-        {!threadQuery.loading && !thread && <div className="tai-empty">Thread not found.</div>}
-
-        {thread && (
-          <>
-            <div className="tai-card">
-              <div className="tai-row tai-between">
-                <div className="tai-row tai-gap10">
-                  <Avatar initials={initialsOf(thread.user_profiles?.display_name)} size={32} src={thread.user_profiles?.avatar_url} />
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{thread.user_profiles?.display_name || "Learner"}</div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)" }}>{timeAgo(thread.created_at)}</div>
-                  </div>
-                </div>
-                {thread.is_solution && <Tag tone="success"><CheckCircle2 size={11} /> Solved</Tag>}
-              </div>
-              <div className="tai-body-text tai-mt10">{thread.content}</div>
-              <div className="tai-row tai-gap16 tai-mt12" style={{ fontSize: 12, color: "var(--text-2)" }}>
-                <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => vote(thread.id, "up")}>
-                  <ThumbsUp size={13} /> {thread.upvotes || 0}
-                </button>
-                <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => vote(thread.id, "down")}>
-                  <ThumbsDown size={13} /> {thread.downvotes || 0}
-                </button>
-                <span className="tai-row tai-gap4"><MessageCircle size={13} /> {(thread.replies || []).length}</span>
-              </div>
-            </div>
-
-            <div className="tai-col tai-gap10">
-              {(thread.replies || []).length === 0 && <div className="tai-empty">No replies yet. Be the first to weigh in.</div>}
-              {(thread.replies || []).map(r => (
-                <div key={r.id} className="tai-card" style={{ marginLeft: 18 }}>
-                  <div className="tai-row tai-between">
-                    <div className="tai-row tai-gap8">
-                      <Avatar initials={initialsOf(r.user_profiles?.display_name)} size={26} src={r.user_profiles?.avatar_url} />
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 12.5 }}>{r.user_profiles?.display_name || "Learner"}</div>
-                        <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{timeAgo(r.created_at)}</div>
-                      </div>
-                    </div>
-                    {r.is_solution && <Tag tone="success"><CheckCircle2 size={10} /> Solution</Tag>}
-                  </div>
-                  <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 8 }}>{r.content}</div>
-                  <div className="tai-row tai-gap16 tai-mt10" style={{ fontSize: 11.5, color: "var(--text-2)" }}>
-                    <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => vote(r.id, "up")}>
-                      <ThumbsUp size={12} /> {r.upvotes || 0}
-                    </button>
-                    <button className="tai-row tai-gap4" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-2)" }} onClick={() => vote(r.id, "down")}>
-                      <ThumbsDown size={12} /> {r.downvotes || 0}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="tai-card">
-              <textarea className="tai-input" rows={2} placeholder="Write a reply..." value={replyText} onChange={e => setReplyText(e.target.value)} />
-              <button className="tai-btn tai-btn-primary tai-mt10" style={{ width: "100%" }} disabled={!replyText.trim() || posting} onClick={postReply}>
-                <Send size={14} /> Post reply
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="tai-col tai-gap12">
-      <div className="tai-row tai-gap8">
-        <button className="tai-iconbtn" onClick={onBack} aria-label="Back to categories"><ArrowLeft size={16} /></button>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>{category?.title || "Forum"}</div>
-          <div style={{ fontSize: 11, color: "var(--text-2)" }}>{category?.description || "Discussion category"}</div>
-        </div>
-      </div>
-
-      <div className="tai-card">
-        <textarea className="tai-input" rows={2} placeholder="Start a new thread..." value={newThreadText} onChange={e => setNewThreadText(e.target.value)} />
-        <button className="tai-btn tai-btn-primary tai-mt10" style={{ width: "100%" }} disabled={!newThreadText.trim() || posting} onClick={postThread}>
-          <PlusCircle size={15} /> Post thread
-        </button>
-      </div>
-
-      {threadsQuery.loading && <div className="tai-empty">Loading threads...</div>}
-      {!threadsQuery.loading && threads.length === 0 && <div className="tai-empty">No threads yet. Start the conversation!</div>}
-      {threads.map(t => (
-        <div key={t.id} className="tai-card" style={{ cursor: "pointer" }} onClick={() => setSelectedThreadId(t.id)}>
-          <div className="tai-row tai-between">
-            <div className="tai-row tai-gap10" style={{ minWidth: 0 }}>
-              <Avatar initials={initialsOf(t.user_profiles?.display_name)} size={30} src={t.user_profiles?.avatar_url} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 13.5 }}>{t.user_profiles?.display_name || "Learner"}</div>
-                <div style={{ fontSize: 12.5, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 380 }}>{t.content}</div>
-              </div>
-            </div>
-            {t.is_solution && <Tag tone="success">Solved</Tag>}
-          </div>
-          <div className="tai-row tai-gap16 tai-mt10" style={{ fontSize: 11.5, color: "var(--text-2)" }}>
-            <span className="tai-row tai-gap4"><MessageCircle size={12} /> {t.reply_count || 0} repl{t.reply_count === 1 ? "y" : "ies"}</span>
-            <span className="tai-row tai-gap4"><ThumbsUp size={12} /> {t.upvotes || 0}</span>
-            <span>{timeAgo(t.created_at)}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
+// Confirmed against the requirement to remove "traditional social feed,
+// general posts feed, open peer-to-peer social networking" - the Forums
+// feature (generic categories with open threads any member could start,
+// unrelated to any specific cohort or study group) was exactly that kind
+// of feature and directly contradicted it. Removed entirely from here and
+// from the Admin side (ForumsScreen.jsx deleted). The underlying
+// `forums`/`forum_posts` database tables are left in place rather than
+// dropped - matching the same pattern used for the HR role - but nothing
+// in the application surfaces them anymore.
 export function CommunityScreen({
   communityTab = "posts", setCommunityTab, posts = [], newPostText = "", setNewPostText,
   expandedPost, setExpandedPost, replyInput = "", setReplyInput, studyGroupsQuery = {},
@@ -432,11 +225,8 @@ export function CommunityScreen({
   user = {}, session = {}, showToast = () => {}, postsQuery = {},
   createCommunityPost = () => {}, togglePostReaction = () => {}, addPostComment = () => {},
   joinStudyGroup = () => {}, leaveStudyGroup = () => {},
-  fetchStudyGroupMessages, sendStudyGroupMessage, fetchStudyGroupMembers,
-  forumCategoriesQuery = {}, fetchForumThreads, fetchForumThread,
-  createForumThread, createForumReply, voteForumPost,
+  fetchStudyGroupMessages, fetchStudyGroupMembers,
   cohortMembershipQuery = {}, cohortPostsQuery = {},
-  createCohortPost, addCohortPostReply, toggleCohortPostReaction,
   leaderboardQuery = {},
   leaderboardEnabled = true,
   upcomingSessionsQuery = {}, cohortResourcesQuery = {}, cohortSessionsQuery = {}, enrollmentsQuery = {},
@@ -450,14 +240,13 @@ export function CommunityScreen({
   const safePosts = posts || [];
   const studyGroups = studyGroupsQuery.data || [];
   const communityPeople = communityPeopleQuery.data || [];
+  const instructorPeople = communityPeople.filter(p => p.role === "mentor" || p.role === "admin");
   const memberStats = memberStatsQuery.data || {};
   const activityFeed = activityFeedQuery.data || [];
-  const forumCategories = forumCategoriesQuery.data || [];
   const myCohort = cohortMembershipQuery.data?.cohort || null;
   const cohortPosts = cohortPostsQuery.data || [];
 
   const [selectedGroupId, setSelectedGroupId] = useState(null);
-  const [selectedForumId, setSelectedForumId] = useState(null);
   const [selectedMember, setSelectedMember] = useState(null);
   const [cohortPostText, setCohortPostText] = useState("");
   const [cohortPosting, setCohortPosting] = useState(false);
@@ -501,10 +290,9 @@ export function CommunityScreen({
 
   const tabs = [
     { k: "posts", label: "Dashboard" },
-    { k: "forums", label: `Forums${forumCategories.length ? ` (${forumCategories.length})` : ""}` },
     { k: "cohorts", label: "Cohort Channels" },
     { k: "groups", label: `Study Groups${studyGroups.length ? ` (${studyGroups.length})` : ""}` },
-    { k: "people", label: "Members" },
+    { k: "people", label: "Instructors" },
   ];
 
   return (
@@ -660,38 +448,6 @@ export function CommunityScreen({
       )}
 
 
-      {communityTab === "forums" && (
-        <div className="tai-mt16">
-          {!selectedForumId ? (
-            <div className="tai-col tai-gap10">
-              {forumCategoriesQuery.loading && <div className="tai-empty">Loading forum categories...</div>}
-              {!forumCategoriesQuery.loading && forumCategories.length === 0 && <div className="tai-empty">No forum categories configured yet.</div>}
-              {forumCategories.map(cat => (
-                <div key={cat.id} className="tai-card tai-row tai-between" style={{ cursor: "pointer" }} onClick={() => setSelectedForumId(cat.id)}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14.5 }}>{cat.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>{cat.description || "General discussion category"}</div>
-                  </div>
-                  <Tag>{cat.thread_count || 0} threads</Tag>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <ForumCategoryPanel
-              category={forumCategories.find(c => c.id === selectedForumId)}
-              session={session}
-              showToast={showToast}
-              onBack={() => setSelectedForumId(null)}
-              fetchForumThreads={fetchForumThreads}
-              fetchForumThread={fetchForumThread}
-              createForumThread={createForumThread}
-              createForumReply={createForumReply}
-              voteForumPost={voteForumPost}
-            />
-          )}
-        </div>
-      )}
-
       {communityTab === "cohorts" && (
         <div className="tai-mt16">
           {cohortMembershipQuery.loading ? (
@@ -724,7 +480,6 @@ export function CommunityScreen({
               showToast={showToast}
               onBack={() => setSelectedGroupId(null)}
               fetchStudyGroupMessages={fetchStudyGroupMessages}
-              sendStudyGroupMessage={sendStudyGroupMessage}
               fetchStudyGroupMembers={fetchStudyGroupMembers}
               push={push}
               goTab={goTab}
@@ -780,9 +535,14 @@ export function CommunityScreen({
 
       {communityTab === "people" && (
         <div className="tai-mt16 tai-col tai-gap10">
-          {communityPeopleQuery.loading && <div className="tai-empty">Loading members...</div>}
-          {!communityPeopleQuery.loading && communityPeople.length === 0 && <div className="tai-empty">No public learner profiles yet.</div>}
-          {communityPeople.map(p => {
+          {/* Instructors only - same principle as CohortScreen's Members
+              tab, confirmed by repeated direct instruction: no
+              learner-to-learner visibility anywhere in Community, not just
+              no messaging. Fellow learners' profiles are never listed
+              here, even read-only. */}
+          {communityPeopleQuery.loading && <div className="tai-empty">Loading instructors...</div>}
+          {!communityPeopleQuery.loading && instructorPeople.length === 0 && <div className="tai-empty">No instructor profiles yet.</div>}
+          {instructorPeople.map(p => {
             const name = p.display_name || p.name || "Learner";
             const initials = initialsOf(name);
             const stats = memberStats[p.user_id];

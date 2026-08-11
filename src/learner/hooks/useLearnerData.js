@@ -20,7 +20,7 @@ import {
   fetchAllMentors, fetchUpcomingLearnerSessions,
   fetchCommunityActivityFeed, fetchGamificationStatsByUserIds,
   fetchForumCategories, fetchMyCohortMembership, fetchCohortPostsFeed,
-  fetchCohortResources, fetchCohortSessions
+  fetchCohortResources, fetchCohortSessions, fetchCohortAssignedCourses, fetchCohortMembers
 } from "../../lib/api/schemaHelper.js";
 import { initialsOf, gradForIndex, timeAgo } from "../components/LearnerUI.jsx";
 
@@ -236,6 +236,17 @@ export function useLearnerData(session, screen, params) {
     if (!cohortId) return [];
     return fetchCohortResources(cohortId);
   }, [cohortId]);
+  // Cohort "Assigned Courses" and "Members" - PRD 7.4, a real gap found and
+  // fixed (cohort_courses had RLS enabled with zero policies until
+  // 0124_cohort_courses_rls_fix.sql - nothing had ever queried it before).
+  const cohortCoursesQuery = useSupabaseQuery(async () => {
+    if (!cohortId) return [];
+    return fetchCohortAssignedCourses(cohortId);
+  }, [cohortId]);
+  const cohortMembersQuery = useSupabaseQuery(async () => {
+    if (!cohortId) return [];
+    return fetchCohortMembers(cohortId);
+  }, [cohortId]);
   const cohortSessionsQuery = useSupabaseQuery(async () => {
     if (!cohortId) return [];
     return fetchCohortSessions(cohortId);
@@ -336,6 +347,8 @@ export function useLearnerData(session, screen, params) {
     cohortMembershipQuery,
     cohortPostsQuery,
     cohortResourcesQuery,
+    cohortCoursesQuery,
+    cohortMembersQuery,
     cohortSessionsQuery,
     memberStatsQuery,
     notificationsQuery,

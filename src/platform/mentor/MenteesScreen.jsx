@@ -1,10 +1,58 @@
 import React, { useState } from "react";
-import { TopBar, Avatar, Tag, ProgressBar } from "../components/PlatformUI.jsx";
-import { BookOpen, Calendar, CheckCircle2, MessageSquare, X, Search, Filter } from "lucide-react";
+import { TopBar, Avatar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
+import { BookOpen, Calendar, CheckCircle2, MessageSquare, X, Search, Filter, StickyNote } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchAllPlatformLearners } from "../../lib/api/platform.js";
+import { fetchAllPlatformLearners, fetchNotesForLearner, addLearnerFeedbackNote } from "../../lib/api/platform.js";
 
-export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLearnerForChat }) {
+// Instructor "Feedback for learners (Note section)" - PRD Section 8.1,
+// confirmed unbuilt before this. See 0121_feedback_notes.sql for the real
+// table and RLS behind this (cross-org writes/reads both blocked, tested).
+function LearnerNotesSection({ learnerId, orgId, authorId }) {
+  const showToast = React.useContext(ToastContext);
+  const notesQuery = useSupabaseQuery(async () => (learnerId ? fetchNotesForLearner(learnerId) : []), [learnerId]);
+  const [noteText, setNoteText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function handleAddNote() {
+    if (!noteText.trim()) return;
+    setSaving(true);
+    try {
+      const result = await addLearnerFeedbackNote(learnerId, orgId, authorId, noteText);
+      if (!result.success) {
+        showToast(result.error || "Could not save this note.");
+      } else {
+        setNoteText("");
+        notesQuery.refetch();
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="ta-mt16" style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+      <div className="ta-row ta-gap8"><StickyNote size={15} color="var(--primary)" /><div style={{ fontWeight: 700, fontSize: 13.5 }}>Feedback notes</div></div>
+      <div className="ta-row ta-gap8 ta-mt10">
+        <input className="ta-input" style={{ flex: 1 }} placeholder="Add a note about this learner..." value={noteText} onChange={(e) => setNoteText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddNote()} />
+        <button className="ta-btn ta-btn-primary ta-btn-sm" disabled={saving || !noteText.trim()} onClick={handleAddNote}>Add</button>
+      </div>
+      <div className="ta-col ta-gap8 ta-mt10">
+        {notesQuery.loading && <div style={{ fontSize: 12, color: "var(--text-3)" }}>Loading notes...</div>}
+        {!notesQuery.loading && (notesQuery.data || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No notes yet.</div>}
+        {(notesQuery.data || []).map((n) => (
+          <div key={n.id} style={{ background: "var(--surface-2)", borderRadius: 8, padding: "8px 10px" }}>
+            <div style={{ fontSize: 12.5 }}>{n.note_text}</div>
+            <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 4 }}>
+              {n.user_profiles?.display_name || "Instructor"} - {new Date(n.created_at).toLocaleDateString()}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLearnerForChat, orgId }) {
   const [selectedMentee, setSelectedMentee] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
@@ -29,7 +77,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
 
   return (
     <div className="ta-fade">
-      <TopBar title="Mentees & Learner Progress" sub="Search all platform learners, monitor progress & launch direct messaging" orgSelector={orgSelector} />
+      <TopBar title="My Learners & Progress" sub="Search all platform learners, monitor progress & launch direct messaging" orgSelector={orgSelector} />
       <div className="ta-content">
 
         {/* Search & Filter Bar */}
@@ -210,6 +258,8 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                     </button>
                   )}
                 </div>
+
+                <LearnerNotesSection learnerId={selectedMentee.id} orgId={orgId} authorId={mentorId} />
               </div>
             )}
       </div>

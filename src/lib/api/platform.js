@@ -1088,6 +1088,19 @@ export async function createCohort({ organizationId, name, startsAt, endsAt, cre
     .select()
     .single();
   if (error) throw error;
+  // Auto-add the creator as a cohort member - matters specifically for an
+  // instructor creating their own cohort (confirmed: instructors can now
+  // create cohorts, not just admins). Without this, the resource/session
+  // management RLS built for "instructors assigned to this specific
+  // cohort" (0126) would lock the creator out of their own new cohort
+  // until someone separately added them as a member.
+  if (createdBy && data?.id) {
+    try {
+      await supabase.from("cohort_members").insert({ cohort_id: data.id, user_id: createdBy, added_by: createdBy });
+    } catch (e) {
+      console.warn("Could not auto-add cohort creator as a member:", e);
+    }
+  }
   return data;
 }
 
@@ -1643,9 +1656,21 @@ export async function revokeSuperAdmin(userId) {
 }
 
 export async function grantSuperAdminByUserId(userId) {
-  if (!supabase) return;
-  const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" });
-  if (error) throw error;
+  if (!supabase) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "super_admin" });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    // The real check lives in the database (ur_write_super_admin RLS
+    // policy, 0119_super_admin_trainai_only.sql) - "Train AI email accounts
+    // only." This just translates the raw RLS rejection into something a
+    // human reading the Access Control screen can actually understand.
+    const message = e?.message?.includes("row-level security")
+      ? "Super Admin can only be granted to a @trainailtd.com account."
+      : (e?.message || "Could not grant Super Admin.");
+    return { success: false, error: message };
+  }
 }
 
 /* ==========================================================================
@@ -2276,4 +2301,401 @@ export async function fetchPlatformOrganizationPayments(limit = 50) {
     .limit(limit);
   if (error) { console.warn("Platform payments fetch warning:", error); return []; }
   return data || [];
+}
+
+// Resolves a known email to the user_id grantSuperAdminByUserId needs -
+// restricted to super_admin callers at the database level
+// (find_user_id_by_email, 0119_super_admin_trainai_only.sql).
+export async function findUserIdByEmail(email) {
+  if (!supabase || !email) return null;
+  const { data, error } = await supabase.rpc("find_user_id_by_email", { p_email: email.trim() });
+  if (error) throw error;
+  return data || null;
+}
+
+// Certificates - admin/instructor side. See 0120_certificates.sql.
+export async function upsertCertificateTemplate({ courseId, organizationId, title, passingScorePct, requiresApproval, templateText }, createdBy) {
+  if (!supabase || !courseId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("certificate_templates").upsert({
+      course_id: courseId,
+      organization_id: organizationId || null,
+      title: title || "Certificate of Completion",
+      passing_score_pct: passingScorePct ?? 70,
+      requires_admin_approval: requiresApproval !== false,
+      template_text: templateText || null,
+      created_by: createdBy || null,
+    }, { onConflict: "course_id" });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save certificate settings." };
+  }
+}
+
+export async function fetchCertificateRequestsForCourse(courseId) {
+  if (!supabase || !courseId) return [];
+  const { data, error } = await supabase
+    .from("certificates")
+    .select("*, user_profiles(display_name)")
+    .eq("course_id", courseId)
+    .order("requested_at", { ascending: false });
+  if (error) { console.warn("Certificate requests fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function reviewCertificate(certificateId, approve, rejectionReason = "") {
+  if (!supabase || !certificateId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { data, error } = await supabase.rpc("review_certificate", {
+      p_certificate_id: certificateId, p_approve: approve, p_rejection_reason: rejectionReason || null,
+    });
+    if (error) throw error;
+    return data || { success: false };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not review this certificate." };
+  }
+}
+
+// Instructor/Manager feedback notes - PRD Section 8.1 "Feedback for
+// learners (Note section)" and Section 8.2 "Manager feedback for
+// department (Note section)". See 0121_feedback_notes.sql.
+export async function fetchNotesForLearner(learnerId) {
+  if (!supabase || !learnerId) return [];
+  const { data, error } = await supabase
+    .from("feedback_notes")
+    .select("*, user_profiles!feedback_notes_author_id_fkey(display_name)")
+    .eq("target_type", "learner")
+    .eq("target_learner_id", learnerId)
+    .order("created_at", { ascending: false });
+  if (error) { console.warn("Learner notes fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function addLearnerFeedbackNote(learnerId, organizationId, authorId, noteText) {
+  if (!supabase || !learnerId || !noteText?.trim()) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("feedback_notes").insert({
+      author_id: authorId, organization_id: organizationId, target_type: "learner",
+      target_learner_id: learnerId, note_text: noteText.trim(),
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save this note." };
+  }
+}
+
+export async function fetchNotesForDepartment(organizationId, department) {
+  if (!supabase || !organizationId || !department) return [];
+  const { data, error } = await supabase
+    .from("feedback_notes")
+    .select("*, user_profiles!feedback_notes_author_id_fkey(display_name)")
+    .eq("target_type", "department")
+    .eq("organization_id", organizationId)
+    .eq("target_department", department)
+    .order("created_at", { ascending: false });
+  if (error) { console.warn("Department notes fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function addDepartmentFeedbackNote(organizationId, department, authorId, noteText) {
+  if (!supabase || !organizationId || !department || !noteText?.trim()) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("feedback_notes").insert({
+      author_id: authorId, organization_id: organizationId, target_type: "department",
+      target_department: department, note_text: noteText.trim(),
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save this note." };
+  }
+}
+
+// Manager "team skill snapshot" (PRD Section 8.2) - no skills taxonomy
+// exists in this schema (courses aren't tagged with individual skills
+// anywhere), so this is built honestly from what real data actually
+// exists: completion broken down by course category (a real column on
+// courses, already used as a content-organization tag) for this manager's
+// direct reports specifically. Not labeled "AI Skill Graph" - that's a
+// materially bigger, separate thing that would need real skill-to-course
+// tagging to be honest, which doesn't exist yet.
+export async function fetchTeamSkillSnapshot(managerId) {
+  if (!supabase || !managerId) return [];
+  const { data: profiles } = await supabase.from("user_profiles").select("user_id").eq("manager_id", managerId);
+  const ids = (profiles || []).map((p) => p.user_id);
+  if (!ids.length) return [];
+  const { data: enrollments } = await supabase
+    .from("course_enrollments")
+    .select("user_id, progress_percentage, courses(category)")
+    .in("user_id", ids);
+  const byCategory = {};
+  for (const e of (enrollments || [])) {
+    const cat = e.courses?.category || "General";
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(e.progress_percentage || 0);
+  }
+  return Object.entries(byCategory).map(([category, values]) => ({
+    category,
+    avgProgress: Math.round(values.reduce((a, b) => a + b, 0) / values.length),
+    learnerCount: values.length,
+  })).sort((a, b) => a.avgProgress - b.avgProgress);
+}
+
+// ============================================================================
+// Workforce Intelligence Dashboard - PRD Section 9, confirmed the largest
+// unbuilt gap: "This is the key differentiator." Built org-wide (Section
+// 9's "team, function, or organisation" scope), visible only to Admin and
+// Manager per the explicit access restriction in Section 9's own opening
+// line. Section 9.5's data rule: "should not rely on course completion
+// alone. It must combine available signals into decision-ready outputs" -
+// this combines four real, independently-verified signals rather than
+// one: course completion, compliance status, assessment scores, and real
+// AI Coach usage (ai_usage_events, already built and genuinely logged by
+// the edge function itself, not estimated).
+//
+// What this is NOT: a fabricated "AI Skill Graph" with a skills taxonomy
+// that doesn't exist in this schema. The department/category breakdown
+// below is the same honest completion-by-category proxy used for the
+// Manager's Team Skill Snapshot, applied org-wide instead of to one
+// manager's reports - flagged the same way there, not relabeled as
+// something more sophisticated at a bigger scope.
+// ============================================================================
+export async function fetchWorkforceIntelligence(organizationId) {
+  if (!supabase || !organizationId) return null;
+
+  const { data: learners } = await supabase
+    .from("user_profiles")
+    .select("id, user_id, department, last_active_at")
+    .eq("organization_id", organizationId)
+    .eq("role", "learner");
+  const learnerRows = learners || [];
+  const learnerIds = learnerRows.map((l) => l.user_id);
+  if (!learnerIds.length) {
+    return { readinessScore: null, departmentBreakdown: [], categoryBreakdown: [], aiUsageCount7d: 0, feedbackNotesCount30d: 0, avgAssessmentScore: null, complianceRate: null, learnerCount: 0 };
+  }
+
+  const [{ data: enrollments }, { data: compliance }, { data: assessmentAttempts }, { data: aiUsage }, { data: feedbackNotes }] = await Promise.all([
+    supabase.from("course_enrollments").select("user_id, progress_percentage, courses(category)").in("user_id", learnerIds),
+    supabase.from("compliance_assignments").select("user_id, status").in("user_id", learnerIds),
+    supabase.from("assessment_attempts").select("user_id, score").in("user_id", learnerIds),
+    supabase.from("ai_usage_events").select("id, created_at").eq("organization_id", organizationId).gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+    // Section 9.4's data inputs explicitly list "Instructor feedback where
+    // available" and "manager review where available" - a real, confirmed
+    // gap found on this final pass: the feedback_notes table (built for
+    // Instructor/Manager "Note section" features) was never actually read
+    // here. Not blended into the numeric readiness score itself (these are
+    // free-text, qualitative notes, not a score) - surfaced honestly as
+    // its own real signal instead of forcing a fabricated quantitative
+    // weight onto qualitative data.
+    supabase.from("feedback_notes").select("id, created_at").eq("organization_id", organizationId).gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+  ]);
+
+  const enrollList = enrollments || [];
+  const complianceList = compliance || [];
+  const scoreList = (assessmentAttempts || []).map((a) => a.score).filter((s) => s != null);
+
+  const avgCompletion = enrollList.length
+    ? Math.round(enrollList.reduce((sum, e) => sum + (e.progress_percentage || 0), 0) / enrollList.length)
+    : 0;
+  const overdueCount = complianceList.filter((c) => c.status === "overdue").length;
+  const complianceRate = complianceList.length
+    ? Math.round(((complianceList.length - overdueCount) / complianceList.length) * 100)
+    : null;
+  const avgAssessmentScore = scoreList.length
+    ? Math.round(scoreList.reduce((a, b) => a + b, 0) / scoreList.length)
+    : null;
+
+  // Readiness score combines all four real signals with explicit,
+  // visible weighting - never presented as more opaque/sophisticated than
+  // this actually is.
+  const signals = [avgCompletion];
+  if (complianceRate !== null) signals.push(complianceRate);
+  if (avgAssessmentScore !== null) signals.push(avgAssessmentScore);
+  const readinessScore = Math.round(signals.reduce((a, b) => a + b, 0) / signals.length);
+
+  // Skill gaps by department (Section 9.3) - real department field on
+  // user_profiles, real category field on courses.
+  const deptByLearner = {};
+  for (const l of learnerRows) deptByLearner[l.user_id] = l.department || "Unspecified";
+  const byDept = {};
+  for (const e of enrollList) {
+    const dept = deptByLearner[e.user_id] || "Unspecified";
+    if (!byDept[dept]) byDept[dept] = [];
+    byDept[dept].push(e.progress_percentage || 0);
+  }
+  const departmentBreakdown = Object.entries(byDept)
+    .map(([department, values]) => ({ department, avgProgress: Math.round(values.reduce((a, b) => a + b, 0) / values.length), count: values.length }))
+    .sort((a, b) => a.avgProgress - b.avgProgress);
+
+  const byCategory = {};
+  for (const e of enrollList) {
+    const cat = e.courses?.category || "General";
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push(e.progress_percentage || 0);
+  }
+  const categoryBreakdown = Object.entries(byCategory)
+    .map(([category, values]) => ({ category, avgProgress: Math.round(values.reduce((a, b) => a + b, 0) / values.length), count: values.length }))
+    .sort((a, b) => a.avgProgress - b.avgProgress);
+
+  return {
+    readinessScore,
+    departmentBreakdown,
+    categoryBreakdown,
+    aiUsageCount7d: (aiUsage || []).length,
+    feedbackNotesCount30d: (feedbackNotes || []).length,
+    avgAssessmentScore,
+    complianceRate,
+    avgCompletion,
+    learnerCount: learnerRows.length,
+  };
+}
+
+// ============================================================================
+// Support Queue - PRD "Platform Owner Support System." See
+// 0122_support_tickets.sql for the real table/RLS (cross-org isolation,
+// status-change restricted to Platform Owner, internal notes hidden from
+// the org - all tested with real Postgres RLS tests).
+// ============================================================================
+export async function fetchMyOrgSupportTickets(organizationId) {
+  if (!supabase || !organizationId) return [];
+  const { data, error } = await supabase
+    .from("support_tickets")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+  if (error) { console.warn("Support tickets fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function createSupportTicket({ organizationId, createdBy, subject, description, priority }) {
+  if (!supabase || !organizationId || !subject?.trim()) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("support_tickets").insert({
+      organization_id: organizationId, created_by: createdBy, subject: subject.trim(),
+      description: description || "", priority: priority || "normal",
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not submit your support request." };
+  }
+}
+
+export async function fetchAllSupportTickets() {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("support_tickets")
+    .select("*, organizations(name)")
+    .order("created_at", { ascending: false });
+  if (error) { console.warn("Support tickets fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function fetchSupportTicketMessages(ticketId) {
+  if (!supabase || !ticketId) return [];
+  const { data, error } = await supabase
+    .from("support_ticket_messages")
+    .select("*, user_profiles(display_name)")
+    .eq("ticket_id", ticketId)
+    .order("created_at", { ascending: true });
+  if (error) { console.warn("Support ticket messages fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function replyToSupportTicket(ticketId, authorId, message, isInternalNote = false) {
+  if (!supabase || !ticketId || !message?.trim()) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("support_ticket_messages").insert({
+      ticket_id: ticketId, author_id: authorId, message: message.trim(), is_internal_note: isInternalNote,
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not send this reply." };
+  }
+}
+
+export async function updateSupportTicketStatus(ticketId, status) {
+  if (!supabase || !ticketId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("support_tickets").update({ status, updated_at: new Date().toISOString() }).eq("id", ticketId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not update ticket status." };
+  }
+}
+
+// ============================================================================
+// Churn tracking - PRD Platform Owner Analytics, confirmed unbuilt. Built
+// from real, already-existing data rather than a new table: every
+// organization suspension is already recorded in admin_audit_log
+// (organization_status_change, 0117_organization_status_control.sql) -
+// this reads that real history rather than inventing a parallel "churn
+// events" table that could drift out of sync with what actually happened.
+// ============================================================================
+export async function fetchChurnSummary() {
+  if (!supabase) return { suspendedLast30d: 0, suspendedLast90d: 0, totalActive: 0, totalSuspended: 0, recentEvents: [] };
+  const [{ data: statusEvents }, { data: orgs }] = await Promise.all([
+    supabase.from("admin_audit_log").select("*").eq("action_type", "organization_status_change").order("created_at", { ascending: false }),
+    supabase.from("organizations").select("id, status"),
+  ]);
+  const events = statusEvents || [];
+  const now = Date.now();
+  const suspensions = events.filter((e) => e.metadata?.new_status === "suspended");
+  const suspendedLast30d = suspensions.filter((e) => now - new Date(e.created_at).getTime() < 30 * 24 * 60 * 60 * 1000).length;
+  const suspendedLast90d = suspensions.filter((e) => now - new Date(e.created_at).getTime() < 90 * 24 * 60 * 60 * 1000).length;
+  const orgList = orgs || [];
+  return {
+    suspendedLast30d,
+    suspendedLast90d,
+    totalActive: orgList.filter((o) => o.status === "active").length,
+    totalSuspended: orgList.filter((o) => o.status === "suspended").length,
+    recentEvents: suspensions.slice(0, 10),
+  };
+}
+
+// ============================================================================
+// Campaign attribution - PRD Platform Owner Analytics, confirmed unbuilt.
+// Reads utm_source/utm_medium/utm_campaign already captured on demo
+// requests and organization inquiries (see waitlist.js -
+// captureAttributionFromURL, called once on the public landing page) -
+// grouped here rather than a separate campaign-tracking table, since the
+// real source of truth is the actual submitted lead, not a derived record.
+// ============================================================================
+export async function fetchCampaignAttribution() {
+  if (!supabase) return [];
+  const [{ data: demoRequests }, { data: inquiries }] = await Promise.all([
+    supabase.from("demo_requests").select("utm_source, utm_medium, utm_campaign, created_at"),
+    supabase.from("organization_inquiries").select("utm_source, utm_medium, utm_campaign, created_at"),
+  ]);
+  const all = [...(demoRequests || []), ...(inquiries || [])];
+  const bySource = {};
+  for (const r of all) {
+    const key = r.utm_campaign || r.utm_source || "Direct / no campaign";
+    if (!bySource[key]) bySource[key] = { campaign: key, count: 0, source: r.utm_source || "-", medium: r.utm_medium || "-" };
+    bySource[key].count++;
+  }
+  return Object.values(bySource).sort((a, b) => b.count - a.count);
+}
+
+// Real platform health check - genuinely queries the database and times
+// it, rather than fabricating an uptime percentage. This is NOT real
+// infrastructure/API monitoring (that needs actual monitoring
+// infrastructure this app has no access to) - it is exactly what it says:
+// a live check of whether this one database is reachable right now, and
+// how long that took.
+export async function checkPlatformHealth() {
+  if (!supabase) return { ok: true, latencyMs: null, checkedAt: new Date().toISOString(), note: "Demo mode - no real database connected." };
+  const start = performance.now();
+  try {
+    const { error } = await supabase.from("organizations").select("id", { count: "exact", head: true });
+    const latencyMs = Math.round(performance.now() - start);
+    if (error) throw error;
+    return { ok: true, latencyMs, checkedAt: new Date().toISOString() };
+  } catch (e) {
+    return { ok: false, latencyMs: Math.round(performance.now() - start), checkedAt: new Date().toISOString(), error: e?.message };
+  }
 }

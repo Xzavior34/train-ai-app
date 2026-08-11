@@ -7,6 +7,12 @@ export async function fetchPublishedCourses() {
     .from("courses")
     .select("*")
     .eq("is_published", true)
+    // External course approval gate (PRD Open Question: "AI curated with
+    // human approval") - is_approved defaults true for internal courses
+    // (is_published already gates those) and false for external ones
+    // until an admin explicitly approves them. Learners must never see an
+    // unapproved external course; this is the actual enforcement point.
+    .eq("is_approved", true)
     .order("created_at", { ascending: false });
   if (error) {
     console.warn("Could not fetch published courses:", error);
@@ -625,4 +631,43 @@ export async function submitAssessmentAttempt(assessmentId, answersByQuestionId,
     .single();
   if (insertErr) throw insertErr;
   return { ...result, attempt };
+}
+
+// Certificates - explicitly in-scope for v1, previously entirely unbuilt.
+// See 0120_certificates.sql for the full 8-step workflow this wraps.
+export async function fetchCertificateForCourse(courseId) {
+  if (!supabase || !courseId) return null;
+  const { data, error } = await supabase.from("certificate_templates").select("*").eq("course_id", courseId).maybeSingle();
+  if (error) { console.warn("Certificate template fetch warning:", error); return null; }
+  return data;
+}
+
+export async function fetchMyCertificateForCourse(courseId, userId) {
+  if (!supabase || !courseId || !userId) return null;
+  const { data, error } = await supabase.from("certificates").select("*").eq("course_id", courseId).eq("user_id", userId).maybeSingle();
+  if (error) { console.warn("Certificate fetch warning:", error); return null; }
+  return data;
+}
+
+export async function fetchMyCertificates(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from("certificates")
+    .select("*, courses(title)")
+    .eq("user_id", userId)
+    .eq("status", "issued")
+    .order("issued_at", { ascending: false });
+  if (error) { console.warn("Certificates fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function requestCertificate(courseId) {
+  if (!supabase || !courseId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { data, error } = await supabase.rpc("request_certificate", { p_course_id: courseId });
+    if (error) throw error;
+    return data || { success: false };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not request a certificate." };
+  }
 }

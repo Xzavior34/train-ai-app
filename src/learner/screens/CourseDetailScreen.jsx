@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
-import { Clock, Layers, Rocket, CheckCircle2, Lock, ChevronRight, Video, Edit3, Send, GraduationCap } from "lucide-react";
+import { Clock, Layers, Rocket, CheckCircle2, Lock, ChevronRight, Video, Edit3, Send, GraduationCap, Award, X } from "lucide-react";
 
 function CourseCoverImage({ course, children }) {
   const [errored, setErrored] = useState(false);
@@ -29,6 +29,7 @@ export function CourseDetailScreen({
   newNoteText, setNewNoteText, params, setParams, push, back, showToast, enrollInCourse,
   enrollmentsQuery, handleEnroll, addCourseNote, postCourseDiscussionMessage,
   assessmentQuery, assessmentQuestionsQuery, myAssessmentAttemptQuery, handleSubmitAssessment,
+  certificateQuery, myCertificateQuery, handleRequestCertificate, orgBrandingQuery,
   myApplication, handleRequestJoin
 }) {
   if (!course) return <div className="tai-empty">Course not found.</div>;
@@ -104,7 +105,7 @@ export function CourseDetailScreen({
       )}
 
       <div className="tai-row tai-gap8 tai-mt16">
-        {["lessons", "notes", "discussion", ...(assessmentQuery?.data ? ["assessment"] : [])].map((t) => (
+        {["lessons", "notes", "discussion", "assessment"].map((t) => (
           <div key={t} className={`tai-pill ${tab === t ? "tai-pill-active" : "tai-pill-inactive"}`} onClick={() => setTabLocal(t)}>
             {t[0].toUpperCase() + t.slice(1)}
           </div>
@@ -229,6 +230,84 @@ export function CourseDetailScreen({
           onSubmit={handleSubmitAssessment}
         />
       )}
+
+      {tab === "assessment" && certificateQuery?.data && myAssessmentAttemptQuery?.data && (
+        <CertificateCard
+          template={certificateQuery.data}
+          myAttempt={myAssessmentAttemptQuery.data}
+          myCertificate={myCertificateQuery?.data}
+          onRequest={handleRequestCertificate}
+          branding={orgBrandingQuery?.data}
+        />
+      )}
+    </div>
+  );
+}
+
+// Certificates - explicitly in-scope for v1 (0120_certificates.sql), shown
+// once a learner has actually submitted the course's assessment. Never
+// shows a certificate as available just because a course exists - only
+// once a real, scored attempt exists to check against the template's real
+// passing threshold.
+function CertificateCard({ template, myAttempt, myCertificate, onRequest, branding }) {
+  const [requesting, setRequesting] = useState(false);
+  const passed = (myAttempt?.score ?? 0) >= (template?.passing_score_pct ?? 70);
+
+  if (myCertificate?.status === "issued") {
+    // Org-branded per the confirmed Open Question answer ("Should
+    // certificates be organisation-branded... Org branded") - previously
+    // the template had organization_id for data scoping only, nothing
+    // actually applied the org's real logo/color anywhere on the
+    // certificate itself. branding_settings already existed (built for
+    // BrandingScreen.jsx) and was simply never read here.
+    const accentColor = branding?.primary_color || "var(--success)";
+    return (
+      <div className="tai-mt16 tai-card" style={{ borderColor: accentColor, borderWidth: 2 }}>
+        {branding?.logo_url && (
+          <img src={branding.logo_url} alt="" style={{ height: 28, marginBottom: 10, objectFit: "contain" }} />
+        )}
+        <div className="tai-row tai-gap8">
+          <Award size={18} color={accentColor} />
+          <div style={{ fontWeight: 700 }}>{template.title}</div>
+        </div>
+        <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>
+          Certificate number: <strong>{myCertificate.certificate_number}</strong> - issued {new Date(myCertificate.issued_at).toLocaleDateString()}
+        </div>
+      </div>
+    );
+  }
+
+  if (myCertificate?.status === "pending") {
+    return (
+      <div className="tai-mt16 tai-card">
+        <div className="tai-row tai-gap8"><Clock size={18} color="var(--warning, #B45309)" /><div style={{ fontWeight: 700 }}>Certificate awaiting approval</div></div>
+        <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Your instructor will review this shortly.</div>
+      </div>
+    );
+  }
+
+  if (myCertificate?.status === "rejected") {
+    return (
+      <div className="tai-mt16 tai-card">
+        <div className="tai-row tai-gap8"><X size={18} color="var(--danger)" /><div style={{ fontWeight: 700 }}>Certificate request not approved</div></div>
+        {myCertificate.rejection_reason && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>{myCertificate.rejection_reason}</div>}
+      </div>
+    );
+  }
+
+  if (!passed) return null;
+
+  return (
+    <div className="tai-mt16 tai-card">
+      <div className="tai-row tai-gap8"><Award size={18} color="var(--primary)" /><div style={{ fontWeight: 700 }}>You're eligible for a certificate</div></div>
+      <div style={{ fontSize: 11.5, color: "var(--text-2)", margin: "4px 0 12px" }}>{template.title} - {template.requires_admin_approval ? "requires instructor approval" : "issued instantly"}</div>
+      <button
+        className="tai-btn tai-btn-primary"
+        disabled={requesting}
+        onClick={async () => { setRequesting(true); try { await onRequest(); } finally { setRequesting(false); } }}
+      >
+        {requesting ? "Requesting..." : "Request certificate"}
+      </button>
     </div>
   );
 }
@@ -265,6 +344,10 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
         )}
       </div>
     );
+  }
+
+  if (!assessment) {
+    return <div className="tai-mt16 tai-empty">Your instructor hasn't added an assessment to this course yet.</div>;
   }
 
   if (questions.length === 0) {

@@ -7,7 +7,7 @@ import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { usePushNotifications } from "../hooks/usePushNotifications.js";
 
-export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpenDashboardSwitcher, credits, onBuyCredits, session, onAvatarUploaded, showToast }) {
+export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpenDashboardSwitcher, credits, onBuyCredits, session, onAvatarUploaded, showToast, gamificationEnabled = true }) {
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [showMfaSetup, setShowMfaSetup] = useState(false);
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
@@ -153,7 +153,7 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
         </div>
       </div>
 
-      {push && (
+      {push && gamificationEnabled !== false && (
         <div className="tai-card tai-mt12" style={{ cursor: "pointer" }} onClick={() => push("achievements")}>
           <div className="tai-row tai-between">
             <div className="tai-row tai-gap10">

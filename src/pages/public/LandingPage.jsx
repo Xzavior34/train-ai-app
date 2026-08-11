@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowRight, BookOpen, GraduationCap, Cpu, ShieldCheck, CheckCircle2, Globe, X,
   Brain, Layers, ChevronDown, ChevronUp, HelpCircle, ClipboardList, UserPlus, Rocket,
   Building2, Users, Target, TrendingUp, AlertTriangle, Eye, Lock, Compass, BarChart3,
   GitCompare, Table, School, Handshake, Briefcase
 } from "lucide-react";
-import { submitDemoRequest, submitOrganizationInquiry } from "../../lib/api/waitlist.js";
+import { submitDemoRequest, submitOrganizationInquiry, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 
 // ============================================================================
 // Copy source: "TRAIN AI - Website Copy & Structure - Master Draft" (New
@@ -200,6 +200,11 @@ const FAQ_ITEMS = [
 ];
 
 export default function LandingPage({ onNavigate }) {
+  // Campaign attribution (PRD Platform Owner Analytics) - captured once on
+  // mount, before any UTM query params could be lost to navigation within
+  // this single-page app.
+  useEffect(() => { captureAttributionFromURL(); }, []);
+
   const [demoName, setDemoName] = useState("");
   const [demoEmail, setDemoEmail] = useState("");
   const [demoCompany, setDemoCompany] = useState("");
