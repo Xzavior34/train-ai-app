@@ -548,6 +548,85 @@ editable description, and the member-removal control all working - not
 just a clean build, given the standing lesson that a clean build alone has
 already once hidden a genuine runtime crash in this project.
 
+## The assessment-creation gap, actually closed - real questions, real answers, reachable by both roles
+
+Finished what last round only flagged as a gap: nobody could create an
+assessment anywhere before this - only grading of already-submitted
+attempts existed. Built the actual UI in ContentScreen.jsx's Assessment
+tab - create an assessment for a course, add multiple-choice questions
+with a marked correct answer, delete a question - sitting directly above
+the existing grading table rather than as a separate screen. The database
+side needed nothing new: `assessments_write_authorized` /
+`aq_write_authorized` (0112_assessments_pipeline.sql) already correctly
+scoped this to the real course's `instructor_id` or an org admin - this
+was purely a missing client layer, confirmed again by real use rather
+than assumed safe.
+
+Made this reachable by instructors, not just admins - added "My Courses"
+to the instructor nav, pointing at the exact same `ContentScreen`
+component admins use. Deliberately did not build a second, filtered
+version of this screen - the real enforcement (which course an instructor
+can actually save changes to) already lives correctly in the database, so
+duplicating that logic in a second screen would only add a second place
+for it to drift out of sync, not add real safety. Verified both the admin
+and instructor path with live screenshots: a real question with its
+correct answer marked, and a working "Add a question" form with radio
+buttons and clear "Correct" labels (an unlabeled radio dot in the first
+draft was a real usability gap, caught by looking at my own screenshot
+rather than just checking it rendered).
+
+Packaged and confirmed present before continuing to this: last round's
+instructor certificate access and the three new RBAC toggles
+(`issue_certificates`, `create_assessments`, `assign_resources`) were
+verified inside the actual zip file, not just described, before this
+round's work began on top of them.
+
+## Instructor certificate access, real RBAC toggles, and a bigger assessment-creation gap uncovered
+
+**"Where will instructor be able to upload and assign certificate also
+assessment"** - checked directly rather than assuming last round's work
+covered it. It didn't: `issue_certificate_directly()` only ever allowed
+`is_org_admin`/`is_super_admin` - an instructor was completely blocked,
+contradicting "Allow instructors to manage certificates where permitted
+by their role." Fixed by extending the database function to also allow an
+instructor when their organization has explicitly granted the new
+`issue_certificates` toggle - not unconditionally, gated by the same
+org-level RBAC system built two rounds ago. Built the actual "Give
+Certificate" button in the instructor's own "My Learners" screen,
+identical form to the admin version (title, real file upload), and
+verified it renders and opens correctly with a live screenshot.
+
+**A bigger discovery while checking assessments**: neither admin nor
+instructor could actually *create* an assessment anywhere - only grading
+of already-existing attempts existed. The database was already correctly
+set up for this (`assessments_write_authorized` / `aq_write_authorized`,
+0112_assessments_pipeline.sql, already scoped to `c.instructor_id =
+auth.uid()` for the real course owner) - this was purely a missing client
+layer, not a missing permission. Built the real creation functions
+(`createAssessmentForCourse`, `addAssessmentQuestion`,
+`deleteAssessmentQuestion`, using the actual `assessment_questions` table
+with its answer-hiding safe view, not the simpler unused jsonb column on
+`assessments`). The UI wiring these into ContentScreen.jsx and making it
+reachable by instructors is the next concrete step, not yet built in this
+round.
+
+**"Everything in the Learners page should have a control switch in admin
+and instructor"** - extended `ORG_RBAC_PERMISSIONS` with `issue_certificates`,
+`create_assessments`, and `assign_resources`, and built a real client-side
+permission check (`checkEffectiveOrgPermission()`, wrapping the
+`effective_org_permission()` database function) so instructor-facing UI
+can actually respect whatever an org admin has toggled, rather than being
+hardcoded either fully open or fully closed.
+
+**Caught two real bugs while building this, both by testing rather than
+reading code**: my own test fixture was missing a field the real
+component genuinely requires (`risk`), which crashed the screen outright
+in exactly the same "clean build, broken runtime" pattern this project
+has hit before - traced to the actual component code, not assumed away.
+And before trusting `selectedMentee.id` in the new certificate button, I
+verified against the real `fetchAllPlatformLearners()` mapping rather than
+copying an assumption from nearby code.
+
 ## The comprehensive Instructor Settings screen, built against a foundation that was completely locked
 
 Checked the schema before building anything, rather than assuming the

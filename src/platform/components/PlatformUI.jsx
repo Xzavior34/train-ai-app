@@ -260,6 +260,7 @@ const MENTOR_NAV = [
   { key: "dashboard", label: "Instructor Overview", icon: LayoutDashboard },
   { key: "schedule", label: "Availability & Sessions", icon: Calendar },
   { key: "cohorts", label: "My Cohorts", icon: Layers },
+  { key: "content", label: "My Courses", icon: BookOpen },
   { key: "studygroups", label: "My Study Groups", icon: Users },
   { key: "mentees", label: "My Learners", icon: Users },
   { key: "messages", label: "Direct Messages", icon: MessageSquare },

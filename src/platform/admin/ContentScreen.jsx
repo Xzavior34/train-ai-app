@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate } from "../../lib/api/platform.js";
+import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 
@@ -100,6 +100,21 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   // is allowed to see, so this is safe to load unconditionally per active course.
   const applicationsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseApplications(activeCourse.id) : []), [activeCourse?.id]);
   const assessmentAttemptsQuery = useSupabaseQuery(async () => (activeCourse ? fetchAssessmentAttemptsForCourse(activeCourse.id) : []), [activeCourse?.id]);
+  // Real assessment creation - a real, confirmed gap: only grading of
+  // already-existing attempts existed here before this; nothing anywhere
+  // let anyone actually create an assessment with real questions. The
+  // database (assessments_write_authorized / aq_write_authorized,
+  // 0112_assessments_pipeline.sql) already correctly scopes this to
+  // c.instructor_id = auth.uid() (the real course owner) or an org admin -
+  // real enforcement happens there, this UI doesn't need its own
+  // role-gating on top of it.
+  const assessmentQuery = useSupabaseQuery(async () => (activeCourse ? fetchAssessmentForCourseWithQuestions(activeCourse.id) : null), [activeCourse?.id]);
+  const [newQTitle, setNewQTitle] = useState("");
+  const [newQOptions, setNewQOptions] = useState(["", "", "", ""]);
+  const [newQCorrect, setNewQCorrect] = useState("");
+  const [creatingAssessment, setCreatingAssessment] = useState(false);
+  const [addingQuestion, setAddingQuestion] = useState(false);
+
   const certRequestsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCertificateRequestsForCourse(activeCourse.id) : []), [activeCourse?.id]);
   const certTemplateQuery = useSupabaseQuery(async () => (activeCourse ? fetchCertificateForCourse(activeCourse.id) : null), [activeCourse?.id]);
   const pendingCertCount = (certRequestsQuery.data || []).filter((r) => r.status === "pending").length;
@@ -607,6 +622,99 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
             {activeTab === "assessment" && (
               <div className="ta-card ta-col ta-gap16">
                 <div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Assessment Questions</div>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+                    Create the assessment learners take for this course. Backend enforcement is by the real course owner - only the instructor assigned to this course, or an org admin, can actually save changes here.
+                  </div>
+                </div>
+
+                {!assessmentQuery.loading && !assessmentQuery.data && (
+                  <div className="ta-row ta-gap8">
+                    <button
+                      className="ta-btn ta-btn-primary"
+                      disabled={creatingAssessment}
+                      onClick={async () => {
+                        setCreatingAssessment(true);
+                        try {
+                          await createAssessmentForCourse(activeCourse.id, `${activeCourse.title} Assessment`, currentUserId);
+                          assessmentQuery.refetch();
+                          showToast("Assessment created - add questions below.");
+                        } catch (e) {
+                          showToast(e.message || "Could not create assessment.");
+                        } finally {
+                          setCreatingAssessment(false);
+                        }
+                      }}
+                    >
+                      {creatingAssessment ? "Creating..." : "Create Assessment for this Course"}
+                    </button>
+                  </div>
+                )}
+
+                {assessmentQuery.data && (
+                  <>
+                    <div className="ta-col ta-gap10">
+                      {(assessmentQuery.data.questions || []).length === 0 && (
+                        <div className="ta-empty">No questions yet - add the first one below.</div>
+                      )}
+                      {(assessmentQuery.data.questions || []).map((q, i) => (
+                        <div key={q.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 13.5 }}>{i + 1}. {q.question}</div>
+                            <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 3 }}>
+                              {(q.options || []).map((opt, oi) => (
+                                <span key={oi} style={{ marginRight: 10, fontWeight: opt === q.correct_answer ? 700 : 400, color: opt === q.correct_answer ? "var(--success)" : undefined }}>
+                                  {opt}{opt === q.correct_answer ? " (correct)" : ""}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteAssessmentQuestion(q.id); assessmentQuery.refetch(); }}><Trash2 size={14} /></button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="ta-card" style={{ background: "var(--surface-2)" }}>
+                      <div style={{ fontWeight: 700, fontSize: 13.5 }}>Add a question</div>
+                      <input className="ta-input ta-mt10" placeholder="Question text" value={newQTitle} onChange={(e) => setNewQTitle(e.target.value)} />
+                      <div className="ta-col ta-gap8 ta-mt10">
+                        {newQOptions.map((opt, i) => (
+                          <div key={i} className="ta-row ta-gap8">
+                            <input className="ta-input" style={{ flex: 1 }} placeholder={`Option ${i + 1}`} value={opt} onChange={(e) => { const next = [...newQOptions]; next[i] = e.target.value; setNewQOptions(next); }} />
+                            <label className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-2)", whiteSpace: "nowrap" }}>
+                              <input type="radio" name="correctOption" checked={newQCorrect === opt && opt !== ""} onChange={() => setNewQCorrect(opt)} />
+                              Correct
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        className="ta-btn ta-btn-primary ta-mt12"
+                        disabled={addingQuestion || !newQTitle.trim() || !newQCorrect}
+                        onClick={async () => {
+                          setAddingQuestion(true);
+                          try {
+                            await addAssessmentQuestion(assessmentQuery.data.id, {
+                              question: newQTitle.trim(), options: newQOptions.filter((o) => o.trim()), correctAnswer: newQCorrect,
+                              orderIndex: (assessmentQuery.data.questions || []).length,
+                            });
+                            setNewQTitle(""); setNewQOptions(["", "", "", ""]); setNewQCorrect("");
+                            assessmentQuery.refetch();
+                            showToast("Question added.");
+                          } catch (e) {
+                            showToast(e.message || "Could not add question.");
+                          } finally {
+                            setAddingQuestion(false);
+                          }
+                        }}
+                      >
+                        {addingQuestion ? "Adding..." : "Add Question"}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16, marginTop: 4 }}>
                   <div style={{ fontWeight: 700, fontSize: 16 }}>Assessment Grading</div>
                   <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
                     Every submitted attempt for this course's assessment. Overriding replaces the score shown to the learner but keeps the original AI-graded score on record.

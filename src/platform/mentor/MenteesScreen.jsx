@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { TopBar, Avatar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
-import { BookOpen, Calendar, CheckCircle2, MessageSquare, X, Search, Filter, StickyNote } from "lucide-react";
+import { BookOpen, Calendar, CheckCircle2, MessageSquare, X, Search, Filter, StickyNote, Award } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchAllPlatformLearners, fetchNotesForLearner, addLearnerFeedbackNote } from "../../lib/api/platform.js";
+import { fetchAllPlatformLearners, fetchNotesForLearner, addLearnerFeedbackNote, issueCertificateDirectly, checkEffectiveOrgPermission } from "../../lib/api/platform.js";
+import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 
 // Instructor "Feedback for learners (Note section)" - PRD Section 8.1,
 // confirmed unbuilt before this. See 0121_feedback_notes.sql for the real
@@ -52,10 +53,23 @@ function LearnerNotesSection({ learnerId, orgId, authorId }) {
   );
 }
 
-export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLearnerForChat, orgId }) {
+export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLearnerForChat, orgId, currentUserId }) {
+  const showToast = useContext(ToastContext);
   const [selectedMentee, setSelectedMentee] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [riskFilter, setRiskFilter] = useState("all");
+  // Org-admin-controlled toggle - "everything in the Learners page should
+  // have a control switch in admin and instructor." An org admin can
+  // enable/disable this per organization from Role & Access Control
+  // (OrgRoleAccessScreen.jsx); the instructor's own UI here respects
+  // whatever's actually set, defaulting to hidden until explicitly
+  // granted, not assumed on.
+  const canIssueCertPermQuery = useSupabaseQuery(async () => (currentUserId ? checkEffectiveOrgPermission(currentUserId, "issue_certificates") : false), [currentUserId]);
+  const canIssueCertificates = !!canIssueCertPermQuery.data;
+  const [certModalUser, setCertModalUser] = useState(null);
+  const [certTitle, setCertTitle] = useState("");
+  const [certFileUrl, setCertFileUrl] = useState("");
+  const [issuingCert, setIssuingCert] = useState(false);
 
   const menteesQuery = useSupabaseQuery(async () => fetchAllPlatformLearners(), []);
   const allMentees = menteesQuery.data || [];
@@ -248,7 +262,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                   </div>
                 </div>
 
-                <div className="ta-row ta-gap10" style={{ marginTop: 16 }}>
+                <div className="ta-row ta-gap10" style={{ marginTop: 16, flexWrap: "wrap" }}>
                   <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => handleStartChat(selectedMentee)}>
                     <MessageSquare size={14} /> Send Direct Message
                   </button>
@@ -257,11 +271,57 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                       <Calendar size={14} /> Go to Schedule
                     </button>
                   )}
+                  {canIssueCertificates && (
+                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => { setCertModalUser(selectedMentee); setCertTitle(""); setCertFileUrl(""); }}>
+                      <Award size={14} /> Give Certificate
+                    </button>
+                  )}
                 </div>
 
                 <LearnerNotesSection learnerId={selectedMentee.id} orgId={orgId} authorId={mentorId} />
               </div>
             )}
+
+        {certModalUser && (
+          <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)", maxWidth: 480 }}>
+            <div className="ta-row ta-between">
+              <div className="ta-title">Give Certificate to {certModalUser.name || "this learner"}</div>
+              <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setCertModalUser(null)}><X size={14} /></button>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+              Issues a certificate directly - independent of the request/approve flow, doesn't require an existing course.
+            </div>
+            <div className="ta-label ta-mt16">Certificate title</div>
+            <input className="ta-input ta-mt6" placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} />
+            <div className="ta-label ta-mt16">Upload certificate file (optional)</div>
+            <FileUploadZone
+              bucket="uploads"
+              pathPrefix={`certificates/${certModalUser.id}`}
+              accept="application/pdf,image/*"
+              onUploaded={(url) => setCertFileUrl(url)}
+              label="Drag and drop a certificate PDF or image, or click to browse"
+            />
+            <div className="ta-row ta-gap8 ta-mt20">
+              <button
+                className="ta-btn ta-btn-primary"
+                disabled={issuingCert || !certTitle.trim()}
+                onClick={async () => {
+                  setIssuingCert(true);
+                  try {
+                    const result = await issueCertificateDirectly(certModalUser.id, orgId, certTitle.trim(), null, certFileUrl || null);
+                    if (!result.success) showToast(result.error);
+                    else { showToast(`Certificate issued to ${certModalUser.name}.`); setCertModalUser(null); }
+                  } finally {
+                    setIssuingCert(false);
+                  }
+                }}
+              >
+                {issuingCert ? "Issuing..." : "Issue Certificate"}
+              </button>
+              <button className="ta-btn ta-btn-outline" onClick={() => setCertModalUser(null)}>Cancel</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

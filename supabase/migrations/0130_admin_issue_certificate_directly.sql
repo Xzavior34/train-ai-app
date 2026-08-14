@@ -30,7 +30,7 @@ declare
   v_cert_id uuid;
   v_cert_number text;
 begin
-  if not (is_org_admin(auth.uid()) or is_super_admin(auth.uid())) then
+  if not (is_org_admin(auth.uid()) or is_super_admin(auth.uid()) or (has_role(auth.uid(), 'mentor'::platform_role) and effective_org_permission(auth.uid(), 'issue_certificates'))) then
     raise exception 'Not authorized to issue certificates';
   end if;
   if p_title is null or length(trim(p_title)) = 0 then

@@ -220,8 +220,9 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                     />
                   )}
                   {screen === "studygroups" && <MentorStudyGroupsScreen mentorId={session?.user?.id} orgSelector={orgSelector} />}
+                  {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "schedule" && <MentorScheduleScreen mentorId={mentorId} orgSelector={orgSelector} />}
-                  {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} />}
+                  {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
                   {screen === "messages" && <MentorMessagesScreen userId={session?.user?.id} mentorId={mentorId} orgSelector={orgSelector} selectedLearnerForChat={selectedLearnerForChat} setScreen={setScreen} />}
                   {screen === "discussions" && <DiscussionsScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} />}

@@ -2716,6 +2716,9 @@ const ORG_RBAC_PERMISSIONS = [
   { key: "manage_cohorts", label: "Manage cohorts" },
   { key: "manage_compliance", label: "Administrative sections (compliance)" },
   { key: "view_learner_data", label: "View other learners' data" },
+  { key: "issue_certificates", label: "Issue certificates directly to learners" },
+  { key: "create_assessments", label: "Create and manage assessments" },
+  { key: "assign_resources", label: "Assign resources to individual learners" },
 ];
 
 export async function fetchOrgRolePermissions(organizationId) {
@@ -2738,6 +2741,23 @@ export async function setOrgRolePermission(organizationId, role, permissionKey, 
     return { success: true };
   } catch (e) {
     return { success: false, error: e?.message || "Could not save this permission." };
+  }
+}
+
+// Client-side check for a specific user's effective org-level permission -
+// used to gate instructor-facing UI (e.g. "Give Certificate" in
+// MenteesScreen.jsx, assessment creation in ContentScreen.jsx) based on
+// whatever the org admin has actually toggled, rather than hardcoding
+// "instructors can never do this."
+export async function checkEffectiveOrgPermission(userId, permKey) {
+  if (!supabase || !userId) return false;
+  try {
+    const { data, error } = await supabase.rpc("effective_org_permission", { check_user_id: userId, perm_key: permKey });
+    if (error) throw error;
+    return !!data;
+  } catch (e) {
+    console.warn("Org permission check warning:", e);
+    return false;
   }
 }
 
@@ -2773,4 +2793,52 @@ export async function fetchAllIssuedCertificates(organizationId) {
     .order("issued_at", { ascending: false, nullsFirst: false });
   if (error) { console.warn("Issued certificates fetch warning:", error); return []; }
   return data || [];
+}
+
+// ============================================================================
+// Real assessment creation - a real, significant gap found while checking
+// this: nothing anywhere let anyone create an assessment with real
+// questions at all - only grading of already-existing attempts existed
+// (ContentScreen.jsx's "Assessment Grading" tab). The database RLS
+// already correctly allowed the actual course instructor to write here
+// (assessments_write_authorized / aq_write_authorized,
+// 0112_assessments_pipeline.sql - c.instructor_id = auth.uid()), so this
+// only needed the client functions and UI, not new database access.
+// ============================================================================
+export async function fetchAssessmentForCourseWithQuestions(courseId) {
+  if (!supabase || !courseId) return null;
+  const { data: assessment, error } = await supabase.from("assessments").select("*").eq("course_id", courseId).maybeSingle();
+  if (error) { console.warn("Assessment fetch warning:", error); return null; }
+  if (!assessment) return null;
+  // Real questions with correct_answer - for the creator/editor only, not
+  // the learner-facing safe_assessment_questions view (which strips
+  // correct_answer entirely). aq_select_none blocks direct reads of this
+  // table for everyone except the actual course instructor / admin (see
+  // RLS above) - a learner hitting this function gets nothing back.
+  const { data: questions } = await supabase.from("assessment_questions").select("*").eq("assessment_id", assessment.id).order("order_index");
+  return { ...assessment, questions: questions || [] };
+}
+
+export async function createAssessmentForCourse(courseId, title, createdBy) {
+  if (!supabase || !courseId) return null;
+  const { data, error } = await supabase.from("assessments").insert({ course_id: courseId, title, created_by: createdBy }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function addAssessmentQuestion(assessmentId, { question, questionType, options, correctAnswer, explanation, points, orderIndex }) {
+  if (!supabase || !assessmentId) return null;
+  const { data, error } = await supabase.from("assessment_questions").insert({
+    assessment_id: assessmentId, question, question_type: questionType || "multiple_choice",
+    options: options || [], correct_answer: correctAnswer, explanation: explanation || null,
+    points: points || 1, order_index: orderIndex || 0,
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteAssessmentQuestion(id) {
+  if (!supabase) return;
+  const { error } = await supabase.from("assessment_questions").delete().eq("id", id);
+  if (error) throw error;
 }
