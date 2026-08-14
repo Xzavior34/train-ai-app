@@ -1,8 +1,9 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { TopBar, ToastContext } from "../components/PlatformUI.jsx";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Trophy } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrgRolePermissions, setOrgRolePermission, ORG_RBAC_ROLES, ORG_RBAC_PERMISSIONS } from "../../lib/api/platform.js";
+import { fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings } from "../../lib/api/organizations.js";
 
 const ROLE_LABELS = { manager: "Manager", mentor: "Instructor", learner: "Learner" };
 
@@ -18,6 +19,35 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
   const showToast = useContext(ToastContext);
   const settingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgRolePermissions(orgId) : []), [orgId]);
   const settings = settingsQuery.data || [];
+
+  // Rank/Leaderboard visibility - confirmed directly: "in access control
+  // they can [turn] on whether to show rank or not." The underlying
+  // setting already existed (fetchOrgLeaderboardSettings /
+  // updateOrgLeaderboardSettings, built for Settings Hub several rounds
+  // ago) - this is the same real toggle, just surfaced here too since
+  // that's specifically where it was asked for. Not a duplicate setting;
+  // both places read and write the same organizations.settings->'leaderboard'
+  // value.
+  const leaderboardSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgLeaderboardSettings(orgId) : null), [orgId]);
+  const [leaderboardEnabled, setLeaderboardEnabled] = useState(true);
+  const [savingLeaderboard, setSavingLeaderboard] = useState(false);
+
+  useEffect(() => {
+    if (leaderboardSettingsQuery.data) setLeaderboardEnabled(leaderboardSettingsQuery.data.enabled !== false);
+  }, [leaderboardSettingsQuery.data]);
+
+  async function handleToggleLeaderboard() {
+    const next = !leaderboardEnabled;
+    setLeaderboardEnabled(next);
+    setSavingLeaderboard(true);
+    try {
+      const result = await updateOrgLeaderboardSettings(orgId, { enabled: next });
+      if (!result.success) { showToast(result.error); setLeaderboardEnabled(!next); }
+      else showToast(next ? "Rank/leaderboard is now visible to learners." : "Rank/leaderboard is now hidden from learners.");
+    } finally {
+      setSavingLeaderboard(false);
+    }
+  }
 
   function isAllowed(role, permKey) {
     const row = settings.find((s) => s.role === role && s.permission_key === permKey);
@@ -35,7 +65,19 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
     <div className="ta-fade">
       <TopBar title="Role & Access Control" sub="Control what Managers, Instructors, and Learners can do in your organization" orgSelector={orgSelector} />
       <div className="ta-content">
-        <div className="ta-card">
+        <div className="ta-card" style={{ maxWidth: 600 }}>
+          <div className="ta-row ta-between">
+            <div>
+              <div className="ta-row ta-gap8"><Trophy size={16} color="var(--primary)" /><div className="ta-title">Show Rank / Leaderboard</div></div>
+              <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+                Turn off to hide points-based rankings from every learner in your organization's Community view.
+              </div>
+            </div>
+            <input type="checkbox" checked={leaderboardEnabled} disabled={savingLeaderboard} onChange={handleToggleLeaderboard} />
+          </div>
+        </div>
+
+        <div className="ta-card ta-mt16">
           <div className="ta-row ta-gap8"><ShieldCheck size={16} color="var(--primary)" /><div className="ta-title">Permissions by role</div></div>
           <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
             Separate from the platform owner's global controls - these settings only affect your organization. Not yet toggled here means the platform default applies.

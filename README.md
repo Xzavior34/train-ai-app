@@ -548,6 +548,36 @@ editable description, and the member-removal control all working - not
 just a clean build, given the standing lesson that a clean build alone has
 already once hidden a genuine runtime crash in this project.
 
+## Rank/Leaderboard toggle in Access Control, and a real, persistent demo course
+
+**"In access control they can [turn] on whether to show rank or not"** -
+added a "Show Rank / Leaderboard" toggle directly to the Role & Access
+Control screen. This reuses the exact same setting already built for
+Settings Hub several rounds ago (`fetchOrgLeaderboardSettings` /
+`updateOrgLeaderboardSettings`) rather than creating a second, competing
+toggle that could drift out of sync with it - both places read and write
+the same value. Verified with a live screenshot: the toggle renders
+correctly, checked by default, sitting above the full Manager/Instructor/
+Learner permissions matrix.
+
+**"Build a mock data course so i can see how it is"** - every prior
+verification in this project used temporary Playwright fixtures that get
+reverted after each test; nobody has ever actually seen persistent example
+content in a real deployment of this app. Seeded a real, permanent demo
+course (`0132_seed_demo_course.sql`) - three real lessons and a real
+three-question assessment with correct answers marked, clearly labeled as
+a demo course in its own title rather than pretending to be a real one.
+Verified at the database level with actual Postgres queries confirming
+the course, all three lessons, and all three questions exist correctly,
+and confirmed the migration is safe to run twice (checks for its own
+marker, does not duplicate).
+
+Stated honestly rather than faked: demo mode (this sandbox's client
+testing environment) never touches a real database at all, so I cannot
+show a live screenshot of this seeded course inside the running app from
+here - that requires an actual connected Supabase project. What's
+verified is the seed itself, at the database level, with real queries.
+
 ## The assessment-creation gap, actually closed - real questions, real answers, reachable by both roles
 
 Finished what last round only flagged as a gap: nobody could create an
