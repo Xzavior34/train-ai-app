@@ -548,6 +548,93 @@ editable description, and the member-removal control all working - not
 just a clean build, given the standing lesson that a clean build alone has
 already once hidden a genuine runtime crash in this project.
 
+## The comprehensive Instructor Settings screen, built against a foundation that was completely locked
+
+Checked the schema before building anything, rather than assuming the
+elaborate screen shown would need new tables. It didn't - every table
+this needed already existed in the very first schema migration
+(`session_templates`, `cancellation_policies`, `mentorship_agreements`,
+`reminder_settings`, `video_integration_settings`, `mentor_resources`,
+`mentor_pricing_tiers`, even a real `profile_completion_percentage`
+field). This confirms that screen was genuinely designed against this
+database from the start - it was never fictional.
+
+**But nine of those ten tables had zero RLS policies at all** - a
+significant, previously undiscovered gap. In any real, connected
+deployment every one of them would have been completely inaccessible,
+including to the mentor who owns the data - masked in all earlier testing
+because demo mode never touches a real database. Built the correct
+ownership-based policies for all nine (`0131_mentor_settings_rls_gapfill.sql`)
+and verified with real tests: a mentor manages their own row, a different
+mentor is correctly blocked from touching it, a learner can read what's
+meant to build trust (credentials, portfolio, resources, pricing), and a
+learner is correctly blocked from a mentor's private back-office settings.
+
+Built the full tabbed UI on top of that now-solid foundation - Profile &
+Portfolio (with a real, honestly-computed completion tracker, not a
+fabricated percentage), Communications (notification preferences,
+automated reminders), Sessions (session preferences, session templates,
+cancellation policies, video platform settings), and Resources (resource
+library, mentorship agreements). Kept the "payouts suspended" honesty
+intact throughout - "Require Pre-Payment" is present exactly as shown, but
+its own label now says plainly that it has no real effect while Train AI
+remains the sole payment recipient, rather than implying it does something
+it doesn't.
+
+**Caught two real duplicate-declaration bugs while building this** - a
+mismatched foreign-key-constraint-name guess in one new function
+(replaced with the same safer separate-lookup pattern already used
+elsewhere), and a genuine duplicate of `fetchNotificationPreferences` that
+already existed under different sibling function names - both caught by
+the build actually failing, not by review, and both fixed before this was
+considered done.
+
+Also built, in the same round: direct admin-to-learner certificate
+issuance with real file upload support (a "Give Certificate" action on
+each learner in People & Access, independent of the existing request/
+approve flow, verified with a real test that a learner cannot self-issue),
+and a real `vercel.json` - proven necessary by running the actual
+production build through raw static hosting and confirming `/admin`
+genuinely 404s without it.
+
+Every tab of the new Instructor Settings screen was checked with an
+actual screenshot after building, not just a passing build - all four
+render correctly with zero console errors.
+
+## vercel.json - a real, confirmed gap that likely explains "the /admin fix doesn't work"
+
+**Confirmed there was no `vercel.json` in this project at all.** This
+matters specifically because of the `/admin` route added last round: a
+Single Page Application has no real file at `/admin` - React Router-style
+client-side routing only works once the app has already loaded and can
+read the URL itself. Without a rewrite rule telling Vercel's static
+hosting to serve `index.html` for every path, a direct visit to `/admin`
+(typing the URL, or refreshing while already on it) never reaches React
+at all - Vercel's server looks for an actual file at that path, finds
+none, and returns a 404 before the app gets a chance to run.
+
+**Proven directly, not just asserted from general Vercel knowledge**: ran
+the actual production build through a raw static file server with no SPA
+handling (the same behavior Vercel's hosting has by default, without this
+config) and confirmed `/admin` genuinely returns `404` while `/` correctly
+returns `200`. This also means something worth stating plainly: my
+earlier verification of the `/admin` route used `vite preview`, which has
+smart SPA fallback built into it by default - it does not accurately
+represent how raw static hosting behaves, so that earlier test gave a
+false sense of confidence for this exact class of problem. Added
+`vercel.json` with the standard rewrite (`"/(.*)" -> "/index.html"`),
+which is Vercel's own documented fix for exactly this scenario - every
+client-side route in this app (`/admin`, `?portal=owner`, and the
+learner/organisation app's own internal navigation) now depends on this
+file existing for a real Vercel deployment to work correctly at all, not
+just the newest route.
+
+I could not get fully authenticated confirmation from the real Vercel CLI
+in this sandbox (it requires real account credentials this environment
+doesn't have) - stated honestly rather than implied as fully verified.
+What is verified: the underlying problem is real, reproduced directly, and
+the fix applied is Vercel's own standard solution, not a guess.
+
 ## Seat-based payments - a completely new system, built and verified against the real payment integration
 
 Confirmed a total gap first - zero matches for "seat" anywhere in the
@@ -647,6 +734,7 @@ mismatch while doing this: the actual column is `specializations` (a text
 array), not a single `specialization` string as the field's plain-English
 name suggested - caught by checking the real table definition before
 shipping, not assumed.
+
 ## Every item from a detailed UI review - checked, fixed, and the ones that turned out to be real bugs, verified with real tests
 
 Went through nine specific, concrete points one at a time rather than as a

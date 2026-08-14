@@ -2,7 +2,9 @@ import React, { useState, useContext } from "react";
 import { TopBar, Avatar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { UserPlus, Search, Check, X, ShieldAlert, Download, Trash2, FileText, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchOrgMembers, fetchMentorApplications, fetchPendingInvitations, createInvitation, revokeInvitation, decideMentorApplication, updateOrgMemberStatus, fetchOrgLearnerProgressOverview } from "../../lib/api/platform.js";
+import { fetchOrgMembers, fetchMentorApplications, fetchPendingInvitations, createInvitation, revokeInvitation, decideMentorApplication, updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly } from "../../lib/api/platform.js";
+import FileUploadZone from "../../components/common/FileUploadZone.jsx";
+import { Award } from "lucide-react";
 import { fetchAllDSARRequests, updateDSARRequestStatus, exportUserData, deleteUserCascade } from "../../lib/api/gdprService.js";
 
 const PACE_META = {
@@ -31,6 +33,10 @@ async function downloadUserDataExport(userId, label) {
 export function PeopleScreen({ orgId, orgSelector, setScreen }) {
   const showToast = useContext(ToastContext);
   const [tab, setTab] = useState("all");
+  const [certModalUser, setCertModalUser] = useState(null);
+  const [certTitle, setCertTitle] = useState("");
+  const [certFileUrl, setCertFileUrl] = useState("");
+  const [issuingCert, setIssuingCert] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkEmails, setBulkEmails] = useState("");
@@ -170,6 +176,9 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                           }
                         }}>
                           <Download size={13} /> Export
+                        </button>
+                        <button className="ta-btn ta-btn-outline ta-btn-sm" title="Issue a certificate directly to this person" onClick={() => { setCertModalUser(m); setCertTitle(""); setCertFileUrl(""); }}>
+                          <Award size={13} /> Give Certificate
                         </button>
                       </div>
                     </td>
@@ -423,6 +432,47 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
           </div>
         )}
       </div>
+
+      {certModalUser && (
+        <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)", maxWidth: 480 }}>
+          <div className="ta-row ta-between">
+            <div className="ta-title">Give Certificate to {certModalUser.display_name || "this person"}</div>
+            <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setCertModalUser(null)}><X size={14} /></button>
+          </div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+            Issues a certificate directly - independent of the request/approve flow, doesn't require an existing course.
+          </div>
+          <div className="ta-label ta-mt16">Certificate title</div>
+          <input className="ta-input ta-mt6" placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} />
+          <div className="ta-label ta-mt16">Upload certificate file (optional)</div>
+          <FileUploadZone
+            bucket="uploads"
+            pathPrefix={`certificates/${certModalUser.user_id}`}
+            accept="application/pdf,image/*"
+            onUploaded={(url) => setCertFileUrl(url)}
+            label="Drag and drop a certificate PDF or image, or click to browse"
+          />
+          <div className="ta-row ta-gap8 ta-mt20">
+            <button
+              className="ta-btn ta-btn-primary"
+              disabled={issuingCert || !certTitle.trim()}
+              onClick={async () => {
+                setIssuingCert(true);
+                try {
+                  const result = await issueCertificateDirectly(certModalUser.user_id, orgId, certTitle.trim(), null, certFileUrl || null);
+                  if (!result.success) showToast(result.error);
+                  else { showToast(`Certificate issued to ${certModalUser.display_name}.`); setCertModalUser(null); }
+                } finally {
+                  setIssuingCert(false);
+                }
+              }}
+            >
+              {issuingCert ? "Issuing..." : "Issue Certificate"}
+            </button>
+            <button className="ta-btn ta-btn-outline" onClick={() => setCertModalUser(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

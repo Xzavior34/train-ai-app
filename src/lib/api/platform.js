@@ -2742,3 +2742,35 @@ export async function setOrgRolePermission(organizationId, role, permissionKey, 
 }
 
 export { ORG_RBAC_ROLES, ORG_RBAC_PERMISSIONS };
+
+// ============================================================================
+// Admin can directly issue/upload a certificate to a specific learner - a
+// real, confirmed gap: only the learner-requests -> admin-approves flow
+// existed before this (0120_certificates.sql). See
+// 0130_admin_issue_certificate_directly.sql - this does not require an
+// existing course/template, and supports an actual uploaded file, not
+// just an auto-generated certificate number.
+// ============================================================================
+export async function issueCertificateDirectly(userId, organizationId, title, courseId, fileUrl) {
+  if (!supabase) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { data, error } = await supabase.rpc("issue_certificate_directly", {
+      p_user_id: userId, p_organization_id: organizationId, p_title: title, p_course_id: courseId || null, p_file_url: fileUrl || null,
+    });
+    if (error) throw error;
+    return { success: true, certificateId: data };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not issue this certificate." };
+  }
+}
+
+export async function fetchAllIssuedCertificates(organizationId) {
+  if (!supabase || !organizationId) return [];
+  const { data, error } = await supabase
+    .from("certificates")
+    .select("*, user_profiles(display_name), courses(title)")
+    .eq("organization_id", organizationId)
+    .order("issued_at", { ascending: false, nullsFirst: false });
+  if (error) { console.warn("Issued certificates fetch warning:", error); return []; }
+  return data || [];
+}

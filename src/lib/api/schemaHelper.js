@@ -1284,3 +1284,143 @@ export async function updateStudyGroupDetails(groupId, patch) {
     return { success: false, error: e?.message || "Could not update this study group." };
   }
 }
+
+// ============================================================================
+// Full Instructor Settings - Communications, Sessions, Resources tabs.
+// Every table here already existed in the original schema
+// (0003_mentors_sessions_messaging.sql) but had zero RLS policies until
+// 0131_mentor_settings_rls_gapfill.sql, and no client functions or UI ever
+// surfaced any of it. Built to match the confirmed screen structure.
+// ============================================================================
+
+// --- Communications: Automated Reminders ---
+export async function fetchReminderSettings(mentorId) {
+  if (!supabase || !mentorId) return [];
+  const { data, error } = await supabase.from("reminder_settings").select("*").eq("mentor_id", mentorId);
+  if (error) { console.warn("Reminder settings fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function addReminderSetting(mentorId, { reminderType, hoursBefore, customMessage }) {
+  if (!supabase || !mentorId) return null;
+  const { data, error } = await supabase.from("reminder_settings").insert({
+    mentor_id: mentorId, reminder_type: reminderType, hours_before: hoursBefore, custom_message: customMessage || null,
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteReminderSetting(id) {
+  if (!supabase) return;
+  const { error } = await supabase.from("reminder_settings").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// --- Sessions: Session Templates ---
+export async function fetchSessionTemplates(mentorId) {
+  if (!supabase || !mentorId) return [];
+  const { data, error } = await supabase.from("session_templates").select("*").eq("mentor_id", mentorId);
+  if (error) { console.warn("Session templates fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function addSessionTemplate(mentorId, { title, description, agenda, suggestedDuration }) {
+  if (!supabase || !mentorId) return null;
+  const { data, error } = await supabase.from("session_templates").insert({
+    mentor_id: mentorId, title, description: description || null, agenda: agenda || null, suggested_duration: suggestedDuration || null,
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteSessionTemplate(id) {
+  if (!supabase) return;
+  const { error } = await supabase.from("session_templates").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// --- Sessions: Cancellation Policies ---
+export async function fetchCancellationPolicies(mentorId) {
+  if (!supabase || !mentorId) return [];
+  const { data, error } = await supabase.from("cancellation_policies").select("*").eq("mentor_id", mentorId);
+  if (error) { console.warn("Cancellation policies fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function addCancellationPolicy(mentorId, { hoursBefore, feePercentage, description }) {
+  if (!supabase || !mentorId) return null;
+  const { data, error } = await supabase.from("cancellation_policies").insert({
+    mentor_id: mentorId, hours_before: hoursBefore, fee_percentage: feePercentage, description: description || null,
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteCancellationPolicy(id) {
+  if (!supabase) return;
+  const { error } = await supabase.from("cancellation_policies").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// --- Sessions: Video Integration ---
+export async function fetchVideoIntegrationSettings(mentorId) {
+  if (!supabase || !mentorId) return { preferred_platform: "jitsi", auto_generate_url: true };
+  const { data, error } = await supabase.from("video_integration_settings").select("*").eq("mentor_id", mentorId).maybeSingle();
+  if (error) { console.warn("Video integration settings fetch warning:", error); return { preferred_platform: "jitsi", auto_generate_url: true }; }
+  return data || { preferred_platform: "jitsi", auto_generate_url: true };
+}
+
+export async function updateVideoIntegrationSettings(mentorId, patch) {
+  if (!supabase || !mentorId) return;
+  const { error } = await supabase.from("video_integration_settings").upsert({ mentor_id: mentorId, ...patch }, { onConflict: "mentor_id" });
+  if (error) throw error;
+}
+
+// --- Resources: Resource Library ---
+export async function fetchMentorResourceLibrary(mentorId) {
+  if (!supabase || !mentorId) return [];
+  const { data, error } = await supabase.from("mentor_resources").select("*").eq("mentor_id", mentorId);
+  if (error) { console.warn("Mentor resources fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function addMentorResource(mentorId, { title, description, resourceType, externalUrl }) {
+  if (!supabase || !mentorId) return null;
+  const { data, error } = await supabase.from("mentor_resources").insert({
+    mentor_id: mentorId, title, description: description || null, resource_type: resourceType || "link", external_url: externalUrl || null,
+  }).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteMentorResource(id) {
+  if (!supabase) return;
+  const { error } = await supabase.from("mentor_resources").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// --- Resources: Mentorship Agreements ---
+export async function fetchMentorshipAgreements(mentorId) {
+  if (!supabase || !mentorId) return [];
+  const { data, error } = await supabase.from("mentorship_agreements").select("*").eq("mentor_id", mentorId);
+  if (error) { console.warn("Mentorship agreements fetch warning:", error); return []; }
+  const rows = data || [];
+  // Fetches learner names separately rather than guessing at Supabase's
+  // auto-generated foreign key constraint name for an embedded join
+  // (mentorship_agreements_learner_id_fkey) - unverified guesses at
+  // constraint names are exactly the kind of thing that silently breaks
+  // in a real, connected project even though it looks fine here; this
+  // matches the same safer pattern already used in
+  // fetchStudyGroupMembers().
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.learner_id));
+  return rows.map((r) => ({ ...r, learner_name: profiles[r.learner_id]?.display_name || "Learner" }));
+}
+
+export async function createMentorshipAgreement(mentorId, { learnerId, agreementType, expectations, expiresAt }) {
+  if (!supabase || !mentorId || !learnerId) return null;
+  const { data, error } = await supabase.from("mentorship_agreements").insert({
+    mentor_id: mentorId, learner_id: learnerId, agreement_type: agreementType || "standard", expectations: expectations || null, expires_at: expiresAt || null, status: "pending",
+  }).select().single();
+  if (error) throw error;
+  return data;
+}

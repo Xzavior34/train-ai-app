@@ -1,19 +1,52 @@
 import React, { useState, useContext, useEffect } from "react";
 import { TopBar, ToastContext, Tag } from "../components/PlatformUI.jsx";
-import { Plus, Trash2, BadgeCheck, Link as LinkIcon } from "lucide-react";
+import { Plus, Trash2, BadgeCheck, Link as LinkIcon, Bell, Calendar, FolderOpen, User } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   updateMentorProfile,
   fetchMentorCredentials, addMentorCredential, deleteMentorCredential,
   fetchMentorPortfolioItems, addMentorPortfolioItem, deleteMentorPortfolioItem,
+  fetchNotificationPreferences, upsertNotificationPreferences,
+  fetchReminderSettings, addReminderSetting, deleteReminderSetting,
+  fetchSessionTemplates, addSessionTemplate, deleteSessionTemplate,
+  fetchCancellationPolicies, addCancellationPolicy, deleteCancellationPolicy,
+  fetchVideoIntegrationSettings, updateVideoIntegrationSettings,
+  fetchMentorResourceLibrary, addMentorResource, deleteMentorResource,
+  fetchMentorshipAgreements,
 } from "../../lib/api/schemaHelper.js";
 
 const CREDENTIAL_TYPES = ["certification", "degree", "license", "award", "other"];
 const PORTFOLIO_TYPES = ["project", "case_study", "publication", "link", "video"];
+const VIDEO_PLATFORMS = [
+  { key: "jitsi", label: "Jitsi Meet (Free, No Setup)" },
+  { key: "zoom", label: "Zoom" },
+  { key: "google_meet", label: "Google Meet" },
+  { key: "teams", label: "Microsoft Teams" },
+];
+
+// Real profile-completeness signal - counts fields that are actually
+// filled in, rather than a fabricated percentage. Matches the schema's
+// own `profile_completion_percentage` concept in spirit but computes it
+// honestly from what's actually on the record right now.
+const PROFILE_FIELDS = [
+  { key: "bio", label: "Biography" },
+  { key: "tagline", label: "Tagline" },
+  { key: "specializations", label: "Specializations", isArray: true },
+  { key: "years_of_experience", label: "Years of Experience" },
+  { key: "languages", label: "Languages", isArray: true },
+];
 
 export function MentorSettingsScreen({ mentorId, mentorProfileQuery }) {
   const showToast = useContext(ToastContext);
   const mentor = mentorProfileQuery?.data || null;
+  const [tab, setTab] = useState("profile");
+
+  const missingFields = PROFILE_FIELDS.filter((f) => {
+    const v = mentor?.[f.key];
+    return f.isArray ? !(v && v.length) : !v;
+  });
+  const completionPct = Math.round(((PROFILE_FIELDS.length - missingFields.length) / PROFILE_FIELDS.length) * 100);
+
 
   const [bio, setBio] = useState("");
   const [specialization, setSpecialization] = useState("");
@@ -110,11 +143,162 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery }) {
     }
   }
 
+  // --- Communications: Notification Preferences ---
+  const notifPrefsQuery = useSupabaseQuery(async () => (mentor?.user_id ? fetchNotificationPreferences(mentor.user_id) : null), [mentor?.user_id]);
+  const notifPrefs = notifPrefsQuery.data || {};
+  async function handleToggleNotifPref(key, current) {
+    if (!mentor?.user_id) return;
+    try {
+      await upsertNotificationPreferences(mentor.user_id, { [key]: !current });
+      notifPrefsQuery.refetch();
+    } catch (e) {
+      showToast(e.message || "Could not update notification preference.");
+    }
+  }
+
+  // --- Communications: Automated Reminders ---
+  const remindersQuery = useSupabaseQuery(async () => (mentorId ? fetchReminderSettings(mentorId) : []), [mentorId]);
+  const [reminderType, setReminderType] = useState("email");
+  const [hoursBefore, setHoursBefore] = useState(24);
+  const [reminderMsg, setReminderMsg] = useState("");
+  async function handleAddReminder() {
+    if (!mentorId) return;
+    try {
+      await addReminderSetting(mentorId, { reminderType, hoursBefore: Number(hoursBefore), customMessage: reminderMsg.trim() || null });
+      setReminderMsg("");
+      remindersQuery.refetch();
+      showToast("Reminder added.");
+    } catch (e) {
+      showToast(e.message || "Could not add reminder.");
+    }
+  }
+
+  // --- Sessions: Session Preferences (mentors table columns) ---
+  const [autoAccept, setAutoAccept] = useState(false);
+  const [requirePrePayment, setRequirePrePayment] = useState(false);
+  const [allowGroupSessions, setAllowGroupSessions] = useState(false);
+  useEffect(() => {
+    if (mentor) {
+      setAutoAccept(!!mentor.auto_accept_bookings);
+      setRequirePrePayment(!!mentor.require_pre_payment);
+      setAllowGroupSessions(!!mentor.allow_group_sessions);
+    }
+  }, [mentor]);
+  async function handleToggleSessionPref(key, value) {
+    if (!mentorId) return;
+    try {
+      await updateMentorProfile(mentorId, { [key]: value });
+      mentorProfileQuery?.refetch?.();
+    } catch (e) {
+      showToast(e.message || "Could not update session preference.");
+    }
+  }
+
+  // --- Sessions: Session Templates ---
+  const templatesQuery = useSupabaseQuery(async () => (mentorId ? fetchSessionTemplates(mentorId) : []), [mentorId]);
+  const [tplTitle, setTplTitle] = useState("");
+  async function handleAddTemplate() {
+    if (!mentorId || !tplTitle.trim()) return;
+    try {
+      await addSessionTemplate(mentorId, { title: tplTitle.trim() });
+      setTplTitle("");
+      templatesQuery.refetch();
+      showToast("Session template created.");
+    } catch (e) {
+      showToast(e.message || "Could not create template.");
+    }
+  }
+
+  // --- Sessions: Cancellation Policies ---
+  const policiesQuery = useSupabaseQuery(async () => (mentorId ? fetchCancellationPolicies(mentorId) : []), [mentorId]);
+  const [policyHours, setPolicyHours] = useState(24);
+  const [policyFee, setPolicyFee] = useState(50);
+  async function handleAddPolicy() {
+    if (!mentorId) return;
+    try {
+      await addCancellationPolicy(mentorId, { hoursBefore: Number(policyHours), feePercentage: Number(policyFee) });
+      policiesQuery.refetch();
+      showToast("Cancellation policy added.");
+    } catch (e) {
+      showToast(e.message || "Could not add policy.");
+    }
+  }
+
+  // --- Sessions: Video Integration ---
+  const videoSettingsQuery = useSupabaseQuery(async () => (mentorId ? fetchVideoIntegrationSettings(mentorId) : {}), [mentorId]);
+  const [videoPlatform, setVideoPlatform] = useState("jitsi");
+  const [meetingUrl, setMeetingUrl] = useState("");
+  useEffect(() => {
+    if (videoSettingsQuery.data) {
+      setVideoPlatform(videoSettingsQuery.data.preferred_platform || "jitsi");
+      setMeetingUrl(videoSettingsQuery.data.personal_meeting_url || "");
+    }
+  }, [videoSettingsQuery.data]);
+  async function handleSaveVideoSettings() {
+    if (!mentorId) return;
+    try {
+      await updateVideoIntegrationSettings(mentorId, { preferred_platform: videoPlatform, personal_meeting_url: meetingUrl.trim() || null });
+      videoSettingsQuery.refetch();
+      showToast("Video settings saved.");
+    } catch (e) {
+      showToast(e.message || "Could not save video settings.");
+    }
+  }
+
+  // --- Resources: Resource Library ---
+  const resourcesQuery = useSupabaseQuery(async () => (mentorId ? fetchMentorResourceLibrary(mentorId) : []), [mentorId]);
+  const [resTitle, setResTitle] = useState("");
+  const [resUrl, setResUrl] = useState("");
+  async function handleAddResource() {
+    if (!mentorId || !resTitle.trim()) return;
+    try {
+      await addMentorResource(mentorId, { title: resTitle.trim(), externalUrl: resUrl.trim() || null, resourceType: "link" });
+      setResTitle(""); setResUrl("");
+      resourcesQuery.refetch();
+      showToast("Resource added.");
+    } catch (e) {
+      showToast(e.message || "Could not add resource.");
+    }
+  }
+
+  // --- Resources: Mentorship Agreements ---
+  const agreementsQuery = useSupabaseQuery(async () => (mentorId ? fetchMentorshipAgreements(mentorId) : []), [mentorId]);
+
   return (
     <div className="ta-fade">
       <TopBar title="Instructor Settings" sub="Profile setup and management" />
       <div className="ta-content">
-        <div className="ta-card" style={{ maxWidth: 600 }}>
+        <div className="ta-card" style={{ maxWidth: 700 }}>
+          <div className="ta-row ta-between">
+            <div className="ta-title">Complete Your Profile</div>
+            <div style={{ fontWeight: 700, color: "var(--primary)" }}>{completionPct}% complete</div>
+          </div>
+          <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 4, marginTop: 8, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${completionPct}%`, background: "var(--primary)" }} />
+          </div>
+          {missingFields.length > 0 && (
+            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 8 }}>
+              Missing: {missingFields.map((f) => f.label).join(", ")}
+            </div>
+          )}
+        </div>
+
+        <div className="ta-row ta-gap8 ta-mt20" style={{ flexWrap: "wrap" }}>
+          {[
+            { k: "profile", label: "Profile & Portfolio", Icon: User },
+            { k: "communications", label: "Communications", Icon: Bell },
+            { k: "sessions", label: "Sessions", Icon: Calendar },
+            { k: "resources", label: "Resources", Icon: FolderOpen },
+          ].map(({ k, label, Icon }) => (
+            <div key={k} className={`ta-pill ${tab === k ? "ta-pill-active" : "ta-pill-inactive"}`} onClick={() => setTab(k)} style={{ cursor: "pointer" }}>
+              <Icon size={13} style={{ marginRight: 4 }} /> {label}
+            </div>
+          ))}
+        </div>
+
+        {tab === "profile" && (
+          <>
+        <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
           <div className="ta-title">Profile</div>
           <div className="ta-label ta-mt12">Specialization / Teaching Areas</div>
           <input className="ta-input ta-mt6" placeholder="e.g. AI Fundamentals, Data Science" value={specialization} onChange={e => setSpecialization(e.target.value)} />
@@ -189,6 +373,157 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery }) {
             <button className="ta-btn ta-btn-outline" disabled={!mentorId || savingPf} onClick={handleAddPortfolioItem}><Plus size={14} /> Add</button>
           </div>
         </div>
+          </>
+        )}
+
+        {tab === "communications" && (
+          <>
+            <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
+              <div className="ta-title">Notification Preferences</div>
+              {[
+                { key: "in_app_enabled", label: "In-App Notifications" },
+                { key: "email_enabled", label: "Email Notifications" },
+                { key: "push_enabled", label: "Push Notifications" },
+              ].map(({ key, label }) => (
+                <div key={key} className="ta-row ta-between ta-mt12">
+                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>{label}</div>
+                  <input type="checkbox" checked={notifPrefs[key] !== false} onChange={() => handleToggleNotifPref(key, notifPrefs[key] !== false)} />
+                </div>
+              ))}
+            </div>
+
+            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+              <div className="ta-title">Automated Reminders</div>
+              <div style={{ fontSize: 12, color: "var(--text-2)" }}>Configure automated session reminders for your learners.</div>
+              <div className="ta-col ta-gap8 ta-mt12">
+                {remindersQuery.loading && <div className="ta-empty">Loading reminders...</div>}
+                {!remindersQuery.loading && (remindersQuery.data || []).length === 0 && <div className="ta-empty">No reminders configured.</div>}
+                {(remindersQuery.data || []).map((r) => (
+                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                    <div style={{ fontSize: 13 }}>{r.reminder_type} - {r.hours_before}h before{r.custom_message ? `: "${r.custom_message}"` : ""}</div>
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteReminderSetting(r.id); remindersQuery.refetch(); }}><Trash2 size={14} /></button>
+                  </div>
+                ))}
+              </div>
+              <div className="ta-row ta-gap8 ta-mt16" style={{ flexWrap: "wrap" }}>
+                <select className="ta-input" value={reminderType} onChange={(e) => setReminderType(e.target.value)}>
+                  <option value="email">Email</option>
+                  <option value="in_app">In-App</option>
+                  <option value="sms">SMS</option>
+                </select>
+                <input className="ta-input" type="number" style={{ width: 100 }} value={hoursBefore} onChange={(e) => setHoursBefore(e.target.value)} placeholder="Hours before" />
+                <input className="ta-input" style={{ flex: "1 1 200px" }} placeholder="Custom message (optional)" value={reminderMsg} onChange={(e) => setReminderMsg(e.target.value)} />
+                <button className="ta-btn ta-btn-outline" onClick={handleAddReminder}><Plus size={14} /> Add Reminder</button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {tab === "sessions" && (
+          <>
+            <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
+              <div className="ta-title">Session Preferences</div>
+              {[
+                { key: "auto_accept_bookings", label: "Auto-Accept Bookings", sub: "Automatically approve session requests", state: autoAccept, setState: setAutoAccept },
+                { key: "require_pre_payment", label: "Require Pre-Payment", sub: "Payment required before sessions - currently has no effect while Train AI is the sole payment recipient and payouts are suspended", state: requirePrePayment, setState: setRequirePrePayment },
+                { key: "allow_group_sessions", label: "Allow Group Sessions", sub: "Enable multi-learner sessions", state: allowGroupSessions, setState: setAllowGroupSessions },
+              ].map(({ key, label, sub, state, setState }) => (
+                <div key={key} className="ta-row ta-between ta-mt12">
+                  <div>
+                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>{label}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>{sub}</div>
+                  </div>
+                  <input type="checkbox" checked={state} onChange={() => { const next = !state; setState(next); handleToggleSessionPref(key, next); }} />
+                </div>
+              ))}
+            </div>
+
+            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+              <div className="ta-title">Session Templates</div>
+              <div className="ta-col ta-gap8 ta-mt12">
+                {!templatesQuery.loading && (templatesQuery.data || []).length === 0 && <div className="ta-empty">No templates yet.</div>}
+                {(templatesQuery.data || []).map((t) => (
+                  <div key={t.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{t.title}</div>
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteSessionTemplate(t.id); templatesQuery.refetch(); }}><Trash2 size={14} /></button>
+                  </div>
+                ))}
+              </div>
+              <div className="ta-row ta-gap8 ta-mt16">
+                <input className="ta-input" style={{ flex: 1 }} placeholder="Template title" value={tplTitle} onChange={(e) => setTplTitle(e.target.value)} />
+                <button className="ta-btn ta-btn-outline" onClick={handleAddTemplate}><Plus size={14} /> Create Template</button>
+              </div>
+            </div>
+
+            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+              <div className="ta-title">Cancellation Policies</div>
+              <div className="ta-col ta-gap8 ta-mt12">
+                {!policiesQuery.loading && (policiesQuery.data || []).length === 0 && <div className="ta-empty">No cancellation policies set.</div>}
+                {(policiesQuery.data || []).map((p) => (
+                  <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                    <div style={{ fontSize: 13 }}>Cancel within {p.hours_before}h: {p.fee_percentage}% fee</div>
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteCancellationPolicy(p.id); policiesQuery.refetch(); }}><Trash2 size={14} /></button>
+                  </div>
+                ))}
+              </div>
+              <div className="ta-row ta-gap8 ta-mt16">
+                <input className="ta-input" type="number" style={{ width: 100 }} value={policyHours} onChange={(e) => setPolicyHours(e.target.value)} placeholder="Hours" />
+                <input className="ta-input" type="number" style={{ width: 100 }} value={policyFee} onChange={(e) => setPolicyFee(e.target.value)} placeholder="Fee %" />
+                <button className="ta-btn ta-btn-outline" onClick={handleAddPolicy}><Plus size={14} /> Add Policy</button>
+              </div>
+            </div>
+
+            <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
+              <div className="ta-title">Video Platform Settings</div>
+              <div className="ta-label ta-mt12">Preferred Platform</div>
+              <select className="ta-input ta-mt6" value={videoPlatform} onChange={(e) => setVideoPlatform(e.target.value)}>
+                {VIDEO_PLATFORMS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
+              </select>
+              <div className="ta-label ta-mt16">Personal Meeting Room URL (Optional)</div>
+              <input className="ta-input ta-mt6" placeholder="Leave empty to auto-generate" value={meetingUrl} onChange={(e) => setMeetingUrl(e.target.value)} />
+              <button className="ta-btn ta-btn-primary ta-mt16" onClick={handleSaveVideoSettings}>Save Video Settings</button>
+            </div>
+          </>
+        )}
+
+        {tab === "resources" && (
+          <>
+            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+              <div className="ta-title">Resource Library</div>
+              <div style={{ fontSize: 12, color: "var(--text-2)" }}>Share learning materials and resources with your learners.</div>
+              <div className="ta-col ta-gap8 ta-mt12">
+                {!resourcesQuery.loading && (resourcesQuery.data || []).length === 0 && <div className="ta-empty">No resources yet.</div>}
+                {(resourcesQuery.data || []).map((r) => (
+                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{r.title}</div>
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteMentorResource(r.id); resourcesQuery.refetch(); }}><Trash2 size={14} /></button>
+                  </div>
+                ))}
+              </div>
+              <div className="ta-row ta-gap8 ta-mt16">
+                <input className="ta-input" style={{ flex: 1 }} placeholder="Title" value={resTitle} onChange={(e) => setResTitle(e.target.value)} />
+                <input className="ta-input" style={{ flex: 1 }} placeholder="URL" value={resUrl} onChange={(e) => setResUrl(e.target.value)} />
+                <button className="ta-btn ta-btn-outline" onClick={handleAddResource}><Plus size={14} /> Add Resource</button>
+              </div>
+            </div>
+
+            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+              <div className="ta-title">Mentorship Agreements</div>
+              <div style={{ fontSize: 12, color: "var(--text-2)" }}>Manage contracts and expectations with your learners.</div>
+              <div className="ta-col ta-gap8 ta-mt12">
+                {!agreementsQuery.loading && (agreementsQuery.data || []).length === 0 && <div className="ta-empty">No agreements yet.</div>}
+                {(agreementsQuery.data || []).map((a) => (
+                  <div key={a.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                    <div style={{ fontSize: 13 }}>{a.learner_name} - <Tag tone={a.status === "signed" ? "success" : "warning"}>{a.status}</Tag></div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 10 }}>
+                Create a new agreement from a specific learner's profile in My Learners.
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
