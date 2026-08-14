@@ -29,7 +29,22 @@ export default function App() {
   const [ownerPortalAuthenticated, setOwnerPortalAuthenticated] = useState(false);
   const isOwnerPortalURL = (() => {
     try {
-      return new URLSearchParams(window.location.search).get("portal") === "owner";
+      // Two entry points into the exact same real login screen and role
+      // check below - neither weakens the other. "?portal=owner" is the
+      // permanent one. "/admin" is confirmed as a deliberately temporary
+      // second path - "let access super admin temporary by typing
+      // url/admin for now before database" - easier to remember for a
+      // one-off review than a query string, explicitly meant to be
+      // reconsidered once real database-driven access control is fully in
+      // place (Philip's task list: "Prepare the system for database-driven
+      // access controls once the database integration is complete" -
+      // this is the temporary bridge to that, not a replacement for it).
+      // It does not skip authentication or the super_admin check in
+      // PlatformOwnerLoginScreen.jsx - it only changes how someone finds
+      // their way to that same screen.
+      const path = window.location.pathname.replace(/\/+$/, "");
+      const isAdminPath = path === "/admin" || path.endsWith("/admin");
+      return new URLSearchParams(window.location.search).get("portal") === "owner" || isAdminPath;
     } catch {
       return false;
     }

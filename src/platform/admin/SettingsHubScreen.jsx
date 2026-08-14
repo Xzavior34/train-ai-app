@@ -3,7 +3,7 @@ import { TopBar, ToastContext, Switch, Tag } from "../components/PlatformUI.jsx"
 import { Lock } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment } from "../../lib/api/organizations.js";
 import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 
 // Previously seeded from `profileQuery.data?.organizations?.name`, which
@@ -20,6 +20,11 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
   const org = orgQuery.data;
   const [payingTier, setPayingTier] = useState(null);
+  const seatsSummaryQuery = useSupabaseQuery(async () => (orgId ? fetchOrgSeatsSummary(orgId) : { purchased: 0, used: 0, available: 0 }), [orgId]);
+  const seatsSummary = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
+  const [seatsToBuy, setSeatsToBuy] = useState("");
+  const [purchasingSeats, setPurchasingSeats] = useState(false);
+  const SEAT_PRICE_DISPLAY = 10;
   const ticketsQuery = useSupabaseQuery(async () => (orgId ? fetchMyOrgSupportTickets(orgId) : []), [orgId]);
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketDescription, setTicketDescription] = useState("");
@@ -273,6 +278,48 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             </div>
             <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 10 }}>
               Placeholder pricing for testing this flow. Not the final agreed rate. Payment runs through the real, already-live Paystack checkout; nothing here processes fake money.
+            </div>
+          </div>
+
+          <div className="ta-card ta-mt16" style={{ maxWidth: 600 }}>
+            <div className="ta-title">Seats</div>
+            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+              {org?.status === "active"
+                ? "Your organization must have available seats before new users can be invited - enforced when they accept, not just shown here."
+                : "Trial organizations aren't seat-limited yet - this applies once your plan is active."}
+            </div>
+            <div className="ta-row ta-gap16 ta-mt16" style={{ flexWrap: "wrap" }}>
+              <div><div style={{ fontSize: 22, fontWeight: 800 }}>{seatsSummary.purchased}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Purchased</div></div>
+              <div><div style={{ fontSize: 22, fontWeight: 800 }}>{seatsSummary.used}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Used</div></div>
+              <div><div style={{ fontSize: 22, fontWeight: 800, color: seatsSummary.available > 0 ? "var(--success)" : "var(--danger)" }}>{seatsSummary.available}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Available</div></div>
+            </div>
+            <div className="ta-row ta-gap8 ta-mt16" style={{ flexWrap: "wrap" }}>
+              <input className="ta-input" style={{ width: 100 }} type="number" min="1" placeholder="Seats" value={seatsToBuy} onChange={(e) => setSeatsToBuy(e.target.value)} />
+              <button
+                className="ta-btn ta-btn-primary"
+                disabled={purchasingSeats || !seatsToBuy || Number(seatsToBuy) <= 0}
+                onClick={async () => {
+                  setPurchasingSeats(true);
+                  try {
+                    // Real Paystack checkout, same live integration already
+                    // used for Billing & Plan above - purchase_seats()
+                    // itself only ever runs from OrgPaymentCallbackScreen.jsx
+                    // after a real payment verification succeeds, not here.
+                    const result = await startSeatPurchasePayment({ orgId, seats: Number(seatsToBuy), email: userEmail });
+                    if (!result.success) { showToast(result.error); setPurchasingSeats(false); }
+                    // On success this redirects the browser to checkout -
+                    // nothing after this line runs.
+                  } catch (e) {
+                    showToast(e?.message || "Could not start seat purchase.");
+                    setPurchasingSeats(false);
+                  }
+                }}
+              >
+                {purchasingSeats ? "Redirecting to checkout..." : `Purchase seats ($${SEAT_PRICE_DISPLAY}/seat)`}
+              </button>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 8 }}>
+              Placeholder per-seat pricing for testing this flow, not the final agreed rate - same flag as Billing above. Payment itself runs through the real, already-live Paystack checkout.
             </div>
           </div>
 

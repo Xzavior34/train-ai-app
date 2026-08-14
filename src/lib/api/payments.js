@@ -15,6 +15,13 @@ export const PAYMENT_CONTEXTS = {
   // server-side whenever this context is used - the client never writes to
   // that table directly, see lib/api/waitlist.js.
   WAITLIST_PREMIUM: "waitlist_premium",
+  // Same honest status as ORGANIZATION_SUBSCRIPTION below - not confirmed
+  // against a live edge function's server-side verification handling the
+  // way CREDITS/COURSE_ENROLLMENT/WAITLIST_PREMIUM are; tier/seat
+  // activation both happen via the client calling their respective real
+  // database functions after a generically-verified successful payment,
+  // matching the exact same established pattern.
+  SEAT_PURCHASE: "seat_purchase",
   // NOT confirmed against a live edge function the way the three above are
   // - see the header of 0114_organization_subscription_payment.sql for the
   // full explanation. The shared stripe-initialize/paystack-initialize

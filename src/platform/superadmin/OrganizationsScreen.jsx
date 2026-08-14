@@ -3,7 +3,7 @@ import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx"
 import { Plus, Building2, ExternalLink, ShieldCheck, Rocket, Settings, CreditCard, Lock, Unlock } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllOrganizationsWithUserCounts, createOrganization, setOrganizationStatus, fetchPlatformOrganizationPayments } from "../../lib/api/platform.js";
-import { fetchOrgFeatureFlagOverrides, setOrgFeatureFlag } from "../../lib/api/organizations.js";
+import { fetchOrgFeatureFlagOverrides, setOrgFeatureFlag, fetchOrgSeatsSummary } from "../../lib/api/organizations.js";
 
 // All feature keys this platform currently gates, per "Multi-Tenant
 // Database Architecture Reference" Section 3's baseline table plus the
@@ -30,6 +30,8 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
   const overridesQuery = useSupabaseQuery(async () => fetchOrgFeatureFlagOverrides(org.id), [org.id]);
   const overrides = overridesQuery.data || [];
   const overrideMap = Object.fromEntries(overrides.map((o) => [o.feature_key, o.enabled]));
+  const seatsSummaryQuery = useSupabaseQuery(async () => fetchOrgSeatsSummary(org.id), [org.id]);
+  const seats = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
 
   async function handleToggleStatus() {
     const next = org.status === "suspended" ? "active" : "suspended";
@@ -66,6 +68,18 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
           </button>
           <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={onClose}>Close</button>
         </div>
+      </div>
+
+      <div className="ta-mt16">
+        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>Seats</div>
+        <div className="ta-row ta-gap16">
+          <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.purchased}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Purchased</div></div>
+          <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.used}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Used</div></div>
+          <div><div style={{ fontSize: 16, fontWeight: 800, color: seats.available > 0 ? "var(--success)" : "var(--danger)" }}>{seats.available}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Available</div></div>
+        </div>
+        {org.status === "active" && seats.available <= 0 && (
+          <div style={{ fontSize: 11, color: "var(--danger)", marginTop: 4 }}>This organization cannot add new users until they purchase more seats.</div>
+        )}
       </div>
 
       <div className="ta-mt16">

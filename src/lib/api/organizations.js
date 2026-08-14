@@ -382,3 +382,82 @@ export async function fetchOrgFeatureFlagOverrides(orgId) {
   if (error) { console.warn("Feature flag overrides fetch warning:", error); return []; }
   return data || [];
 }
+
+// ============================================================================
+// Seat-based payments - PRD: "Implement the organization's seat-based
+// payment model... Require payment for seats before learners/users can be
+// added in the cloud version." See 0129_seat_based_payments.sql for the
+// real enforcement (checked server-side at both invite and accept time,
+// not just a UI counter) - trial organizations are unaffected, only
+// "active" (paid, cloud) organizations are actually gated.
+// ============================================================================
+export async function fetchOrgSeatsSummary(organizationId) {
+  if (!supabase || !organizationId) return { purchased: 0, used: 0, available: 0 };
+  try {
+    const { data, error } = await supabase.rpc("get_org_seats_summary", { check_org_id: organizationId });
+    if (error) throw error;
+    return data || { purchased: 0, used: 0, available: 0 };
+  } catch (e) {
+    console.warn("Seats summary fetch warning:", e);
+    return { purchased: 0, used: 0, available: 0 };
+  }
+}
+
+export async function fetchSeatPurchaseHistory(organizationId) {
+  if (!supabase || !organizationId) return [];
+  const { data, error } = await supabase
+    .from("seat_purchases")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .order("purchased_at", { ascending: false });
+  if (error) { console.warn("Seat purchase history fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function purchaseSeats(organizationId, seats, amount, paymentReference) {
+  if (!supabase || !organizationId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { data, error } = await supabase.rpc("purchase_seats", {
+      p_organization_id: organizationId, p_seats: seats, p_amount: amount, p_payment_reference: paymentReference,
+    });
+    if (error) throw error;
+    return { success: true, summary: data };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not complete seat purchase." };
+  }
+}
+
+// Real Paystack/Stripe checkout for seats, matching
+// startOrganizationSubscriptionPayment's exact pattern - a real charge is
+// started; purchase_seats() (the actual database write, requiring a real
+// payment reference) only ever runs from OrgPaymentCallbackScreen.jsx
+// after a real payment verification succeeds, not from this function
+// directly.
+const SEAT_PRICE_USD = 10;
+const SEAT_PRICE_NGN = 15000;
+
+export async function startSeatPurchasePayment({ orgId, seats, email, provider = "paystack" }) {
+  if (!orgId || !email) return { success: false, error: "Missing organization or email." };
+  const seatCount = Number(seats);
+  if (!seatCount || seatCount <= 0) return { success: false, error: "Enter a valid number of seats." };
+
+  try {
+    if (provider === "stripe") {
+      await startStripePayment({
+        email, amount: seatCount * SEAT_PRICE_USD, currency: "USD",
+        context: PAYMENT_CONTEXTS.SEAT_PURCHASE,
+        description: `Train AI: ${seatCount} seat${seatCount === 1 ? "" : "s"}`,
+        metadata: { org_id: orgId, seats: seatCount },
+      });
+    } else {
+      await startPaystackPayment({
+        email, amount: seatCount * SEAT_PRICE_NGN, currency: "NGN",
+        context: PAYMENT_CONTEXTS.SEAT_PURCHASE,
+        metadata: { org_id: orgId, seats: seatCount },
+      });
+    }
+    return { success: true }; // redirects the browser; nothing after this runs
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not start payment." };
+  }
+}

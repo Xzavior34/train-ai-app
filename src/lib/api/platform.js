@@ -2699,3 +2699,46 @@ export async function checkPlatformHealth() {
     return { ok: false, latencyMs: Math.round(performance.now() - start), checkedAt: new Date().toISOString(), error: e?.message };
   }
 }
+
+// ============================================================================
+// Organization-level RBAC for Manager/Instructor/Learner - PRD:
+// "Allow organization administrators to control permissions for:
+// Managers, Instructors, Learners... toggle specific permissions/features
+// on or off." See 0128_org_level_rbac.sql for the real gap this fixes
+// (the pre-existing role_permissions table was keyed by the wrong role
+// enum and completely disconnected from actual permission checks).
+// ============================================================================
+const ORG_RBAC_ROLES = ["manager", "mentor", "learner"];
+const ORG_RBAC_PERMISSIONS = [
+  { key: "moderate_content", label: "Moderate community content" },
+  { key: "send_communications", label: "Send communications/announcements" },
+  { key: "view_analytics", label: "View analytics" },
+  { key: "manage_cohorts", label: "Manage cohorts" },
+  { key: "manage_compliance", label: "Administrative sections (compliance)" },
+  { key: "view_learner_data", label: "View other learners' data" },
+];
+
+export async function fetchOrgRolePermissions(organizationId) {
+  if (!supabase || !organizationId) return [];
+  const { data, error } = await supabase
+    .from("org_role_permission_settings")
+    .select("*")
+    .eq("organization_id", organizationId);
+  if (error) { console.warn("Org role permissions fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function setOrgRolePermission(organizationId, role, permissionKey, allowed, updatedBy) {
+  if (!supabase || !organizationId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("org_role_permission_settings").upsert({
+      organization_id: organizationId, role, permission_key: permissionKey, allowed, updated_by: updatedBy, updated_at: new Date().toISOString(),
+    }, { onConflict: "organization_id,role,permission_key" });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save this permission." };
+  }
+}
+
+export { ORG_RBAC_ROLES, ORG_RBAC_PERMISSIONS };

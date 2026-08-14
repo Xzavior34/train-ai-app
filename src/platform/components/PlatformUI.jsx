@@ -251,6 +251,7 @@ const ADMIN_NAV = [
   { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
   { key: "studygroups", label: "Study Groups", icon: Users },
   { key: "compliance", label: "Compliance", icon: ShieldCheck },
+  { key: "roleaccess", label: "Role & Access Control", icon: ShieldCheck },
   { key: "integrations", label: "Integrations", icon: Plug },
   { key: "settings", label: "Settings Hub", icon: Settings },
 ];

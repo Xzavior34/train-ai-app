@@ -15,14 +15,17 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery }) {
   const showToast = useContext(ToastContext);
   const mentor = mentorProfileQuery?.data || null;
 
-  const [rate, setRate] = useState(75);
   const [bio, setBio] = useState("");
+  const [specialization, setSpecialization] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     if (mentor) {
-      setRate(mentor.hourly_rate ?? 75);
       setBio(mentor.bio || "");
+      // Real column is `specializations` (text[]), not a single string -
+      // caught by checking the actual schema before shipping this, not
+      // assumed from the field's plain-English name.
+      setSpecialization((mentor.specializations || []).join(", "));
     }
   }, [mentor]);
 
@@ -30,7 +33,8 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery }) {
     if (!mentorId) { showToast("Your instructor profile isn't linked to an instructor record yet."); return; }
     setSavingProfile(true);
     try {
-      await updateMentorProfile(mentorId, { hourly_rate: Number(rate) || 0, bio });
+      const specializations = specialization.split(",").map((s) => s.trim()).filter(Boolean);
+      await updateMentorProfile(mentorId, { bio, specializations });
       mentorProfileQuery?.refetch?.();
       showToast("Instructor profile updated!");
     } catch (e) {
@@ -108,18 +112,20 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery }) {
 
   return (
     <div className="ta-fade">
-      <TopBar title="Instructor Settings" sub="Hourly rate, bio, credentials & portfolio" />
+      <TopBar title="Instructor Settings" sub="Profile setup and management" />
       <div className="ta-content">
         <div className="ta-card" style={{ maxWidth: 600 }}>
-          <div className="ta-label">Hourly Rate ($)</div>
-          <input className="ta-input ta-mt6" type="number" value={rate} onChange={e => setRate(Number(e.target.value))} />
-          <div className="ta-label ta-mt16">Bio / Specialization</div>
-          <textarea className="ta-input ta-mt6" rows={3} value={bio} onChange={e => setBio(e.target.value)} />
-          <button className="ta-btn ta-btn-primary ta-mt16" disabled={savingProfile} onClick={handleSaveProfile}>Save settings</button>
+          <div className="ta-title">Profile</div>
+          <div className="ta-label ta-mt12">Specialization / Teaching Areas</div>
+          <input className="ta-input ta-mt6" placeholder="e.g. AI Fundamentals, Data Science" value={specialization} onChange={e => setSpecialization(e.target.value)} />
+          <div className="ta-label ta-mt16">Bio</div>
+          <textarea className="ta-input ta-mt6" rows={4} placeholder="Tell learners about yourself..." value={bio} onChange={e => setBio(e.target.value)} />
+          <button className="ta-btn ta-btn-primary ta-mt16" disabled={savingProfile} onClick={handleSaveProfile}>Save profile</button>
         </div>
 
         <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
           <div className="ta-title">Credentials & Certifications</div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Optional - helps learners know your background, not required to teach.</div>
           <div className="ta-col ta-gap8 ta-mt12">
             {credentialsQuery.loading && <div className="ta-empty">Loading credentials...</div>}
             {!credentialsQuery.loading && (credentialsQuery.data || []).length === 0 && <div className="ta-empty">No credentials added yet.</div>}

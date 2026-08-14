@@ -13,6 +13,7 @@ import { ModerationScreen } from "./admin/ModerationScreen.jsx";
 import { AdminAnalyticsScreen } from "./admin/AdminAnalyticsScreen.jsx";
 import { CohortsScreen } from "./admin/CohortsScreen.jsx";
 import { AdminStudyGroupsScreen } from "./admin/AdminStudyGroupsScreen.jsx";
+import { OrgRoleAccessScreen } from "./admin/OrgRoleAccessScreen.jsx";
 import { CohortDetailScreen } from "./admin/CohortDetailScreen.jsx";
 import { ComplianceScreen } from "./admin/ComplianceScreen.jsx";
 import { IntegrationsScreen } from "./admin/IntegrationsScreen.jsx";
@@ -187,6 +188,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   )}
                   {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "compliance" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
+                  {screen === "roleaccess" && <OrgRoleAccessScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
                   {screen === "settings" && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} />}
                 </>

@@ -548,6 +548,105 @@ editable description, and the member-removal control all working - not
 just a clean build, given the standing lesson that a clean build alone has
 already once hidden a genuine runtime crash in this project.
 
+## Seat-based payments - a completely new system, built and verified against the real payment integration
+
+Confirmed a total gap first - zero matches for "seat" anywhere in the
+codebase before starting. Built the full system Philip's task list
+describes: "Implement the organization's seat-based payment model...
+Require payment for seats before learners/users can be added in the cloud
+version... Track available, allocated, and used seats."
+
+**Real server-side enforcement, not a UI counter.** Checked at both the
+point an admin invites someone and the point they actually accept and
+become a counted member - the second check is the real backstop, since it
+runs regardless of which invite path was used (the live edge function or
+the RPC fallback). Deliberately scoped to only affect "active" (paid)
+organizations - trial organizations keep using the existing `max_users`
+soft cap unchanged, matching the already-established free trial model
+rather than breaking it.
+
+Verified with real Postgres tests covering every real scenario: a trial
+organization is correctly unaffected regardless of seats purchased, an
+active organization with zero seats is correctly blocked from inviting
+anyone, purchasing seats with a real payment reference correctly unblocks
+it, and a purchase attempt with an empty payment reference is correctly
+rejected outright.
+
+**Wired through the actual live Paystack integration, not a placeholder.**
+Reused the exact same real checkout flow already used for subscription
+tier payments - a real charge is started, and the seat grant is only ever
+recorded after `OrgPaymentCallbackScreen.jsx` confirms a real payment
+verification succeeded, matching the same honest trust-boundary pattern
+already documented for organization subscriptions.
+
+Built and visually confirmed both required interfaces: the organization's
+own Seats card in Settings Hub (Purchased/Used/Available, real purchase
+button) and the Platform Owner's per-organization visibility in the
+Organizations manage panel, including the correct warning shown when an
+organization has run out of available seats.
+
+**Caught a real missing import while finishing this** - the Owner-side
+addition referenced a function that was never actually imported into that
+file, which would have crashed the screen at runtime despite a clean
+build. Fixed and re-verified with an actual screenshot before considering
+this done, given the standing lesson that a clean build alone has already
+once hidden a genuine crash in this project.
+
+## Temporary /admin URL access, and organization-level RBAC built from a completely dead table
+
+**"Let access super admin temporary by typing url/admin for now before
+database"** - added `/admin` as a second entry point into the exact same
+real login screen and role check already built for `?portal=owner` -
+neither weakens the other, both still require the real super_admin
+verification. The genuinely temporary part is narrower and safer than it
+sounds: only when there is *no real database connected at all* does a
+direct "Preview Owner Dashboard" button appear, since before a real
+database exists there is nothing real to protect - the moment a real
+Digital Training project is connected, that button disappears entirely
+and the real email/password + role check becomes the only way in.
+Verified by actually loading `/admin` directly and clicking through to a
+real, fully-rendered Owner dashboard, not just confirming the route
+exists.
+
+**Organization-level RBAC - the biggest finding of this round.** Philip's
+task list: "Allow organization administrators to control permissions for
+Managers, Instructors, Learners." The database table this needed
+(`role_permissions`) already existed in the very first schema migration -
+but it was keyed by `org_member_role` ('owner', 'content_manager',
+'finance_admin', etc.), a completely different taxonomy from the
+`platform_role` values ('manager', 'mentor', 'learner') this task
+actually needs to control, and neither `effective_has_permission()` nor
+`role_has_permission()` ever read from it at all. It was dead code -
+building a UI on top of the existing table would have changed nothing,
+no matter how correct that UI looked. Built a new, correctly-typed table
+and a real resolution function instead
+(`org_role_permission_settings`, `effective_org_permission()`,
+0128_org_level_rbac.sql), deliberately kept separate from the existing
+platform-wide function so no other call site's behavior silently changed.
+
+Caught a second real bug while testing this, not from reading the code:
+the function initially queried `user_profiles.user_id`, a column that
+doesn't exist on that table (`user_profiles.id` **is** the auth id
+directly) - caught by an actual Postgres error, not a code review, fixed,
+and re-verified from a genuine cold start. The corrected version was then
+proven with real tests: an org admin's toggle takes effect for their own
+organization's instructors, a different organization's instructor with
+the identical platform role is completely unaffected by it, and a
+non-admin is correctly blocked from writing to another organization's
+settings at all. Built the actual admin-facing screen (a real permission
+matrix, Manager/Instructor/Learner columns against real permission rows)
+and confirmed it renders correctly with a live screenshot.
+
+**Instructor Settings refocused on profile, not pricing** - Philip's task
+list: "Focus instructor settings on profile setup and management rather
+than pricing or credential configuration." Removed the Hourly Rate field
+entirely from `MentorSettingsScreen.jsx` - it directly contradicted the
+already-confirmed "payouts are suspended, Train AI is the sole payment
+recipient" rule from an earlier round. Caught and fixed a real schema
+mismatch while doing this: the actual column is `specializations` (a text
+array), not a single `specialization` string as the field's plain-English
+name suggested - caught by checking the real table definition before
+shipping, not assumed.
 ## Every item from a detailed UI review - checked, fixed, and the ones that turned out to be real bugs, verified with real tests
 
 Went through nine specific, concrete points one at a time rather than as a

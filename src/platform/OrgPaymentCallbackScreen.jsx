@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { verifyPaystackPayment, verifyStripePayment, readPendingPayment, PAYMENT_CONTEXTS } from "../lib/api/payments.js";
-import { applyOrganizationSubscriptionPayment } from "../lib/api/organizations.js";
+import { applyOrganizationSubscriptionPayment, purchaseSeats } from "../lib/api/organizations.js";
 
 // Platform-app equivalent of learner/screens/PaymentCallbackScreen.jsx
 // that screen only ever handled the CREDITS/COURSE_ENROLLMENT contexts,
@@ -46,6 +46,17 @@ export function OrgPaymentCallbackScreen({ onDone }) {
           } else {
             setState("failed");
             setMessage(applyResult.error || "Payment succeeded but activating your plan failed. Contact support with this reference: " + (reference || sessionId));
+          }
+        } else if (result?.success && result?.status === "completed" && context === PAYMENT_CONTEXTS.SEAT_PURCHASE) {
+          const orgId = result?.metadata?.org_id || pending?.metadata?.org_id;
+          const seats = result?.metadata?.seats || pending?.metadata?.seats;
+          const applyResult = await purchaseSeats(orgId, seats, result?.amount, reference || sessionId);
+          if (applyResult.success) {
+            setState("success");
+            setMessage(`Payment confirmed. ${seats} seat${seats === 1 ? "" : "s"} added to your organization.`);
+          } else {
+            setState("failed");
+            setMessage(applyResult.error || "Payment succeeded but adding seats failed. Contact support with this reference: " + (reference || sessionId));
           }
         } else if (result?.success && result?.status === "completed") {
           // A real payment succeeded but wasn't for an organization

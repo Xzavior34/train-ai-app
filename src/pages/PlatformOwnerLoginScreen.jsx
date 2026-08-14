@@ -25,6 +25,16 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // "Let access super admin temporary by typing url/admin for now before
+  // database" - before a real database is connected, there's nothing real
+  // to authenticate against or protect, so a direct preview here is safe,
+  // not a security shortcut around real data. The moment a real Digital
+  // Training project is connected, this button disappears entirely and
+  // the real email/password + super_admin check below becomes the only
+  // way in - this is the deliberately temporary bridge Philip's task list
+  // describes, not a permanent alternate door.
+  const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.DIGITAL_TRAINING);
+
   async function handleSignIn(e) {
     e.preventDefault();
     setError("");
@@ -83,6 +93,18 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
         <button type="submit" disabled={loading} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, border: "none" }}>
           {loading ? "Signing in..." : "Sign in"}
         </button>
+        {!hasRealProject && (
+          <>
+            <div style={{ textAlign: "center", fontSize: 11, color: "#94A3B8", margin: "16px 0" }}>Temporary, before database is connected</div>
+            <button
+              type="button"
+              onClick={() => onAuthenticated(null)}
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#fff", color: "#0F172A", fontWeight: 700, border: "1px solid #0F172A" }}
+            >
+              Preview Owner Dashboard (no database yet)
+            </button>
+          </>
+        )}
       </form>
     </div>
   );
