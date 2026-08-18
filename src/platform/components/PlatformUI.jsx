@@ -284,6 +284,7 @@ export const SUPERADMIN_NAV = [
 
 const MANAGER_NAV = [
   { key: "dashboard", label: "Manager View", icon: Users },
+  { key: "workforce", label: "Workforce Intelligence", icon: Brain },
 ];
 
 const NAV_BY_WORKSPACE = { admin: ADMIN_NAV, mentor: MENTOR_NAV, manager: MANAGER_NAV, superadmin: SUPERADMIN_NAV };
