@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission } from "../../lib/api/platform.js";
+import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 
@@ -121,6 +121,10 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   const [certTitle, setCertTitle] = useState("Certificate of Completion");
   const [certPassingScore, setCertPassingScore] = useState("70");
   const [certRequiresApproval, setCertRequiresApproval] = useState(true);
+  const [assignLearnerId, setAssignLearnerId] = useState("");
+  const [assignCertTitle, setAssignCertTitle] = useState("");
+  const [assignCertFileUrl, setAssignCertFileUrl] = useState("");
+  const [issuingDirectCert, setIssuingDirectCert] = useState(false);
   useEffect(() => {
     if (certTemplateQuery.data) {
       setCertTitle(certTemplateQuery.data.title || "Certificate of Completion");
@@ -787,6 +791,52 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     }}
                   >
                     Save certificate settings
+                  </button>
+                </div>
+
+                <div className="ta-card">
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Give Certificate Directly</div>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+                    Upload and assign a certificate to a specific learner enrolled in this course - independent of the request/approve flow above.
+                  </div>
+                  <div className="ta-label ta-mt12">Learner</div>
+                  <select className="ta-input ta-mt6" value={assignLearnerId} onChange={(e) => setAssignLearnerId(e.target.value)}>
+                    <option value="">Select an enrolled learner...</option>
+                    {(enrolledLearnersQuery.data || []).map((l) => (
+                      <option key={l.userId} value={l.userId}>{l.name} - {l.progress}% complete</option>
+                    ))}
+                  </select>
+                  <div className="ta-label ta-mt12">Certificate title</div>
+                  <input className="ta-input ta-mt6" placeholder={`Certificate of ${activeCourse.title} Completion`} value={assignCertTitle} onChange={(e) => setAssignCertTitle(e.target.value)} />
+                  <div className="ta-label ta-mt12">Upload certificate file (optional)</div>
+                  <FileUploadZone
+                    bucket="uploads"
+                    pathPrefix={`certificates/${assignLearnerId || "pending"}`}
+                    accept="application/pdf,image/*"
+                    onUploaded={(url) => setAssignCertFileUrl(url)}
+                    label="Drag and drop a certificate PDF or image, or click to browse"
+                  />
+                  <button
+                    className="ta-btn ta-btn-primary ta-mt12"
+                    disabled={issuingDirectCert || !assignLearnerId}
+                    onClick={async () => {
+                      setIssuingDirectCert(true);
+                      try {
+                        const title = assignCertTitle.trim() || `Certificate of ${activeCourse.title} Completion`;
+                        const result = await issueCertificateDirectly(assignLearnerId, orgId, title, activeCourse.id, assignCertFileUrl || null);
+                        if (!result.success) showToast(result.error);
+                        else {
+                          const learnerName = (enrolledLearnersQuery.data || []).find((l) => l.userId === assignLearnerId)?.name || "learner";
+                          showToast(`Certificate given to ${learnerName}.`);
+                          setAssignLearnerId(""); setAssignCertTitle(""); setAssignCertFileUrl("");
+                          certRequestsQuery.refetch();
+                        }
+                      } finally {
+                        setIssuingDirectCert(false);
+                      }
+                    }}
+                  >
+                    {issuingDirectCert ? "Issuing..." : "Give Certificate"}
                   </button>
                 </div>
 
