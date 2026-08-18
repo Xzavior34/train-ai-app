@@ -232,6 +232,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
               {workspace === "manager" && (
                 <>
                   {screen === "dashboard" && <ManagerDashboardScreen userId={session?.user?.id} profileQuery={profileQuery} orgSelector={orgSelector} orgId={effectiveOrgId} />}
+                  {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                 </>
               )}
             </div>

@@ -733,7 +733,43 @@ export async function updateOrgMemberStatus(userId, organizationId, status) {
    ========================================================================= */
 
 export async function fetchCourses() {
-  if (!supabase) return [];
+  if (!supabase) {
+    // A real, confirmed gap: this is a completely separate function from
+    // fetchPublishedCourses() (the learner-facing catalog) - Content &
+    // Courses (admin) and My Courses (instructor) both call this one
+    // specifically, and it returned nothing at all in demo mode, meaning
+    // there was genuinely no course to click into and no way to reach
+    // the Assessment Grading / Certificates tabs underneath it.
+    //
+    // Uses the exact same three courses and IDs as
+    // fetchPublishedCourses() in lib/api/learner.js, rather than a
+    // separate, differently-IDed demo set - fetchCertificateForCourse()
+    // and the assessment demo data both specifically key off
+    // "demo-course-ai-fundamentals", so a mismatched ID here would have
+    // shown the course but left its Assessment/Certificate tabs empty
+    // again, just one click deeper.
+    const now = new Date().toISOString();
+    return [
+      {
+        id: "demo-course-ai-fundamentals", title: "AI Fundamentals", category: "AI", level: "beginner",
+        duration_hours: 4, is_published: true, course_source: "internal", instructor_id: "demo-instructor-1",
+        lessons: [{ id: "l1", title: "What is AI, really?", order_index: 0 }, { id: "l2", title: "AI in your daily workflow", order_index: 1 }],
+        enrollment_count: 8, created_at: now,
+      },
+      {
+        id: "demo-course-compliance-101", title: "Workplace Compliance 101", category: "Compliance", level: "beginner",
+        duration_hours: 2, is_published: true, course_source: "internal", instructor_id: "demo-instructor-1",
+        lessons: [{ id: "l3", title: "Key policies overview", order_index: 0 }],
+        enrollment_count: 4, created_at: now,
+      },
+      {
+        id: "demo-course-external-leadership", title: "Leadership Essentials", category: "Leadership", level: "intermediate",
+        duration_hours: 6, is_published: true, course_source: "external", instructor_id: null,
+        lessons: [{ id: "l4", title: "Leading without authority", order_index: 0 }],
+        enrollment_count: 3, created_at: now,
+      },
+    ];
+  }
   const { data, error } = await supabase
     .from("courses")
     .select("*, lessons(*)")
@@ -2489,7 +2525,14 @@ export async function upsertCertificateTemplate({ courseId, organizationId, titl
 }
 
 export async function fetchCertificateRequestsForCourse(courseId) {
-  if (!supabase || !courseId) return [];
+  if (!supabase) {
+    if (courseId !== "demo-course-ai-fundamentals") return [];
+    return [
+      { id: "demo-req-1", score_pct: 95, status: "issued", requested_at: new Date(Date.now() - 86400000).toISOString(), user_profiles: { display_name: "Amara Chen" } },
+      { id: "demo-req-2", score_pct: 62, status: "pending", requested_at: new Date().toISOString(), user_profiles: { display_name: "Priya Nair" } },
+    ];
+  }
+  if (!courseId) return [];
   const { data, error } = await supabase
     .from("certificates")
     .select("*, user_profiles(display_name)")
@@ -2619,7 +2662,14 @@ export async function fetchTeamSkillSnapshot(managerId) {
 // something more sophisticated at a bigger scope.
 // ============================================================================
 export async function fetchWorkforceIntelligence(organizationId) {
-  if (!supabase || !organizationId) return null;
+  if (!supabase) {
+    return {
+      readinessScore: 68, departmentBreakdown: [{ department: "Unspecified", avgProgress: 68, learnerCount: 8 }],
+      categoryBreakdown: [{ category: "AI", avgProgress: 78, learnerCount: 5 }, { category: "Leadership", avgProgress: 62, learnerCount: 3 }, { category: "Compliance", avgProgress: 100, learnerCount: 4 }],
+      aiUsageCount7d: 12, feedbackNotesCount30d: 0, avgAssessmentScore: 94, complianceRate: 50, avgCompletion: 68, learnerCount: 8,
+    };
+  }
+  if (!organizationId) return null;
 
   const { data: learners } = await supabase
     .from("user_profiles")
@@ -2968,7 +3018,17 @@ export async function fetchAllIssuedCertificates(organizationId) {
 // only needed the client functions and UI, not new database access.
 // ============================================================================
 export async function fetchAssessmentForCourseWithQuestions(courseId) {
-  if (!supabase || !courseId) return null;
+  if (!supabase) {
+    if (courseId !== "demo-course-ai-fundamentals") return null;
+    return {
+      id: "demo-assessment-ai", course_id: courseId, title: "AI Fundamentals Assessment",
+      questions: [
+        { id: "demo-q1", question: "Which of these is a common workplace use of AI?", options: ["Drafting emails", "Watering plants", "Painting walls"], correct_answer: "Drafting emails" },
+        { id: "demo-q2", question: "AI recommendations should always be...", options: ["Followed without review", "Reviewed by a person", "Ignored entirely"], correct_answer: "Reviewed by a person" },
+      ],
+    };
+  }
+  if (!courseId) return null;
   const { data: assessment, error } = await supabase.from("assessments").select("*").eq("course_id", courseId).maybeSingle();
   if (error) { console.warn("Assessment fetch warning:", error); return null; }
   if (!assessment) return null;

@@ -581,6 +581,41 @@ executed from this sandbox; that's the one honest gap between what's
 verified here and what happens the first time this script is actually
 run.
 
+## Content & Courses had no course to click into at all, Manager was missing Workforce Intelligence
+
+**"I don't see it on courses and content or my courses"** - confirmed
+directly and found the exact cause: `fetchCourses()`, the function
+backing Content & Courses (admin) and My Courses (instructor), is a
+completely separate function from the learner-facing catalog fixed
+earlier, and it still returned nothing in demo mode. There was genuinely
+no course to click into, so Assessment Grading and Certificates were
+unreachable - not a tab-visibility bug, an empty-list bug one level up.
+
+Found a second, related problem while fixing this: two different,
+inconsistent demo datasets existed with different course IDs for what
+was supposed to be the same three courses. Rather than add a third,
+aligned this one to the exact IDs the learner-facing catalog already
+uses (`demo-course-ai-fundamentals`, etc.), so a course an admin manages
+is the same course a learner sees - and so the certificate template and
+assessment demo data (which specifically key off those IDs) actually
+connect to it correctly.
+
+Fixed and verified with real screenshots: the course list, the
+Assessment Grading tab with two real questions and correct answers
+marked, and the Certificates tab with a pre-filled template plus one
+issued and one pending real certificate request.
+
+**"Managers only have Manager View, they should also have Workforce
+Intelligence"** - confirmed directly against the actual nav definition:
+`MANAGER_NAV` had exactly one entry. Added Workforce Intelligence,
+reusing the identical screen and routing already built for admin rather
+than a duplicate, and fixed its underlying data function
+(`fetchWorkforceIntelligence`) the same way as everything else this
+round - it was returning `null` in demo mode. Verified with a live
+screenshot showing the new nav entry in place.
+
+Both fixes checked with zero console errors before considering them done.
+
 ## Every remaining screen wired to demo data, checked one at a time with real screenshots
 
 Continued past last round's admin Dashboard and Analytics Hub fixes into
