@@ -241,7 +241,30 @@ export async function fetchCourseApplications(courseId) {
 // fetchAllPlatformLearners above - whichever query the caller's role is
 // actually allowed to see comes back with real rows, the other with none.
 export async function fetchCourseEnrolledLearners(courseId) {
-  if (!supabase || !courseId) return [];
+  if (!supabase) {
+    // Same real course IDs as fetchCourses() above - keeping these
+    // aligned matters here specifically because this function backs the
+    // "Give Certificate" learner picker; a mismatched ID would show an
+    // empty picker for a course that visibly has enrolled students.
+    const byCourse = {
+      "demo-course-ai-fundamentals": [
+        { userId: "demo-learner-1", name: "Amara Chen", progress: 100 }, { userId: "demo-learner-2", name: "David Osei", progress: 85 },
+        { userId: "demo-learner-3", name: "Priya Nair", progress: 60 }, { userId: "demo-learner-4", name: "Marcus Webb", progress: 100 },
+        { userId: "demo-learner-5", name: "Fatima Diallo", progress: 30 }, { userId: "demo-learner-6", name: "Liam Torres", progress: 15 },
+        { userId: "demo-learner-7", name: "Ngozi Adeyemi", progress: 100 }, { userId: "demo-learner-8", name: "Sofia Kim", progress: 45 },
+      ],
+      "demo-course-compliance-101": [
+        { userId: "demo-learner-1", name: "Amara Chen", progress: 100 }, { userId: "demo-learner-2", name: "David Osei", progress: 100 },
+        { userId: "demo-learner-3", name: "Priya Nair", progress: 100 }, { userId: "demo-learner-4", name: "Marcus Webb", progress: 100 },
+      ],
+      "demo-course-external-leadership": [
+        { userId: "demo-learner-1", name: "Amara Chen", progress: 100 }, { userId: "demo-learner-2", name: "David Osei", progress: 40 },
+        { userId: "demo-learner-7", name: "Ngozi Adeyemi", progress: 100 },
+      ],
+    };
+    return byCourse[courseId] || [];
+  }
+  if (!courseId) return [];
   const [{ data: direct }, { data: viaInstructorView }] = await Promise.all([
     supabase.from("course_enrollments").select("user_id, progress_percentage, enrolled_at, completed_at").eq("course_id", courseId),
     supabase.from("instructor_course_enrollments").select("user_id, progress_percentage, enrolled_at, completed_at").eq("course_id", courseId),

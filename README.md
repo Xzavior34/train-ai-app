@@ -581,6 +581,33 @@ executed from this sandbox; that's the one honest gap between what's
 verified here and what happens the first time this script is actually
 run.
 
+## Give Certificate Directly - upload and assign, right in the course's Certificates tab
+
+Confirmed directly against a real screenshot of the live deployed site
+(not just the local sandbox) - "they should be a button to upload a
+certificate to assign." Added a "Give Certificate Directly" card to the
+course-level Certificates tab, sitting between Certificate Settings and
+Certificate Requests: pick any learner actually enrolled in this specific
+course, optionally upload a real certificate file, and issue it - reusing
+the same `issueCertificateDirectly()` function already built and tested
+several rounds ago for People & Access and My Learners, not a new,
+parallel mechanism.
+
+Building this surfaced a real gap: the enrolled-learner picker's own data
+function (`fetchCourseEnrolledLearners`) still returned nothing in demo
+mode. Fixed it using the exact same course IDs already aligned in
+`fetchCourses()`, so the picker shows real people actually enrolled in
+whichever course is open, not a generic list.
+
+Verified end to end with a live test: the dropdown correctly lists all 8
+demo learners with their real progress, selecting one and clicking "Give
+Certificate" correctly triggers the write - and correctly shows "Not
+available in demo mode," the same honest response used everywhere else
+in this project for a real database write attempted with no database
+connected. That is the right behavior, not a bug - the form and the
+button both work; only a real deployment can actually persist the
+certificate.
+
 ## Content & Courses had no course to click into at all, Manager was missing Workforce Intelligence
 
 **"I don't see it on courses and content or my courses"** - confirmed
