@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
+import { DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
 
 // Admin-scoped queries. RLS (up_select_org_admin in 0006_rls_policies.sql)
 // restricts these to members of the caller's own organization automatically
@@ -7,7 +8,24 @@ import { fetchProfilesByUserIds } from "./schemaHelper.js";
 // which is the point of doing authorization at the database layer.
 
 export async function fetchCurrentUserProfile(userId) {
-  if (!supabase || !userId) return null;
+  if (!supabase || !userId) {
+    // No real database connected - "i dont see any mock data" is
+    // confirmed directly by this: every downstream `orgId ? fetchX(orgId)
+    // : []` guard across the entire app was taking its empty fallback
+    // path, because this returned null and organization_id is what
+    // resolves orgId everywhere. Returns a real, consistent demo profile
+    // instead so every screen actually attempts its real data fetch (each
+    // of which now has its own demo dataset to fall back to - see
+    // lib/api/demoData.js).
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem("trainai_active_session_v1") || "null"); } catch { /* ignore */ }
+    const role = saved?.user?.user_metadata?.role || saved?.role || "learner";
+    return {
+      id: userId, organization_id: "demo-org-id", role,
+      display_name: role === "admin" ? "Demo Admin" : role === "mentor" ? "Demo Instructor" : role === "manager" ? "Demo Manager" : "Demo Learner",
+      manager_id: role === "learner" ? "demo-manager-id" : null,
+    };
+  }
   // A genuinely critical, previously undiscovered bug: this comment
   // claimed the opposite of the real schema and was wrong. Confirmed
   // directly against the actual migration
@@ -113,7 +131,8 @@ export async function fetchMentorApplications(organizationId) {
 // existing instructors - every mentor in the org, active or not, with
 // real session/rating data, not a queue of pending applicants.
 export async function fetchOrgInstructorsMonitor(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) return DEMO_INSTRUCTORS.map((i) => ({ id: i.id, display_name: i.name, is_active: i.isActive, sessions_completed: i.sessionsCompleted, rating: i.rating }));
+  if (!organizationId) return [];
   const { data, error } = await supabase.from("mentors").select("*").eq("organization_id", organizationId);
   if (error) { console.warn("Instructor monitor fetch warning:", error); return []; }
   const rows = data || [];
@@ -343,7 +362,8 @@ export async function fetchPlatformSettings() {
 // org, so no separate access check is needed here beyond the query filter
 // itself.
 export async function fetchOrgAIUsageStats(organizationId) {
-  if (!supabase || !organizationId) return null;
+  if (!supabase) return { total: 12, last7d: 12, last30d: 12 };
+  if (!organizationId) return null;
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const [{ count: total }, { count: last7d }, { count: last30d }] = await Promise.all([
@@ -450,7 +470,11 @@ export async function upsertPlatformSetting({ key, value, type = "string", descr
    ========================================================================= */
 
 export async function fetchOrgDashboardStats(organizationId) {
-  if (!supabase || !organizationId) return null;
+  if (!supabase) {
+    const breakdown = demoTotalUsersBreakdown();
+    return { activeStudents: breakdown.learners, cohorts: 1, courses: DEMO_COURSES.length, mentors: breakdown.instructors, otherUsers: breakdown.other, completionRate: 68 };
+  }
+  if (!organizationId) return null;
   // course_enrollments has no FK to user_profiles, so `user_profiles!inner(...)`
   // can't be embedded - resolve the org's user ids first, then filter
   // enrollments by that id list instead. Use user_profiles.user_id (the real
@@ -486,7 +510,8 @@ export async function fetchOrgDashboardStats(organizationId) {
 }
 
 export async function fetchTodaysTasks(organizationId) {
-  if (!supabase || !organizationId) return { mentorApplications: 0, pendingInvitations: 0, moderationQueue: 0 };
+  if (!supabase) return { mentorApplications: 0, pendingInvitations: 2, moderationQueue: 0 };
+  if (!organizationId) return { mentorApplications: 0, pendingInvitations: 0, moderationQueue: 0 };
   const [{ count: mentorApplications }, { count: pendingInvitations }, { count: moderationQueue }] = await Promise.all([
     // No `is_approved` column on mentors in the shared schema - inactive
     // mentors is the closest available proxy for "pending applications".
@@ -502,7 +527,8 @@ export async function fetchTodaysTasks(organizationId) {
 }
 
 export async function fetchCohortProgressSummary(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) return [{ name: DEMO_COHORT.name, members: DEMO_COHORT.memberNames.length, progress: 71 }];
+  if (!organizationId) return [];
   const { data: cohorts, error } = await supabase.from("cohorts").select("id, name").eq("organization_id", organizationId);
   if (error) throw error;
   const rows = await Promise.all((cohorts || []).map(async (c) => {
@@ -522,7 +548,12 @@ export async function fetchCohortProgressSummary(organizationId) {
 }
 
 export async function fetchStudentRiskList(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) {
+    return DEMO_LEARNERS.filter((l) => l.risk === "danger").map((l, i) => ({
+      name: l.name, initials: l.initials, days: 8 + i, risk: "high",
+    }));
+  }
+  if (!organizationId) return [];
   const cutoff = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from("user_profiles")
@@ -546,7 +577,8 @@ export async function fetchStudentRiskList(organizationId) {
 }
 
 export async function fetchTopMentors(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) return DEMO_INSTRUCTORS.map((m) => ({ name: m.name, initials: m.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(), rating: m.rating, sessions: m.sessionsCompleted }));
+  if (!organizationId) return [];
   const { data, error } = await supabase
     .from("mentors")
     .select("id, user_id, rating, total_sessions")
@@ -569,7 +601,8 @@ export async function fetchTopMentors(organizationId) {
 }
 
 export async function fetchUpcomingOrgSessions(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) return [{ title: "AI Fundamentals Q&A", mentor: DEMO_INSTRUCTORS[0].name, time: new Date(Date.now() + 2 * 86400000).toLocaleString(), status: "upcoming" }];
+  if (!organizationId) return [];
   const { data: mentorRows } = await supabase.from("mentors").select("id, user_id").eq("organization_id", organizationId);
   const mentorIds = (mentorRows || []).map(m => m.id);
   if (!mentorIds.length) return [];
@@ -1034,7 +1067,14 @@ export async function fetchFeedbackQueue() {
 // filtered by that id list, then bucketed by month in JS - there is no
 // server-side date_trunc/group-by available through PostgREST here.
 export async function fetchEnrollmentTrend(organizationId, monthsBack = 6) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) {
+    const now = new Date();
+    return Array.from({ length: monthsBack }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1 - i), 1);
+      return { month: d.toLocaleString("default", { month: "short" }), enrollments: [3, 5, 4, 7, 6, 9][i % 6], completions: [1, 2, 2, 3, 3, 5][i % 6] };
+    });
+  }
+  if (!organizationId) return [];
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
   if (!orgUserIds.length) return [];
@@ -1104,7 +1144,8 @@ export async function fetchRetentionStats(organizationId) {
 // admin-facing version drops feature-usage percentages entirely in favor
 // of what an org admin actually cares about day to day.
 export async function fetchTopCourses(organizationId, limit = 5) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) return demoTopCourses().slice(0, limit);
+  if (!organizationId) return [];
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
   if (!orgUserIds.length) return [];
@@ -1126,7 +1167,8 @@ export async function fetchTopCourses(organizationId, limit = 5) {
 }
 
 export async function fetchMostActiveCohorts(organizationId, limit = 5) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) return [{ cohortId: DEMO_COHORT.id, name: DEMO_COHORT.name, posts: 14, members: DEMO_COHORT.memberNames.length }];
+  if (!organizationId) return [];
   const { data: cohorts } = await supabase.from("cohorts").select("id, name").eq("organization_id", organizationId);
   if (!cohorts?.length) return [];
   const cohortIds = cohorts.map((c) => c.id);
@@ -1152,7 +1194,8 @@ export async function fetchMostActiveCohorts(organizationId, limit = 5) {
 // real thing that exists: how many real AI Coach replies and Quiz
 // Generator calls actually happened, labeled honestly.
 export async function fetchOrgAIUsageByFeature(organizationId) {
-  if (!supabase || !organizationId) return { coach: 0, quiz: 0, total: 0 };
+  if (!supabase) return { coach: 8, quiz: 4, total: 12 };
+  if (!organizationId) return { coach: 0, quiz: 0, total: 0 };
   const { data, error } = await supabase.from("ai_usage_events").select("feature").eq("organization_id", organizationId);
   if (error) { console.warn("AI usage by feature fetch warning:", error); return { coach: 0, quiz: 0, total: 0 }; }
   const rows = data || [];
@@ -1856,7 +1899,17 @@ export async function upsertOrgBranding(organizationId, { logoUrl, primaryColor 
    ========================================================================= */
 
 export async function fetchAllPlatformLearners() {
-  if (!supabase) return [];
+  if (!supabase) {
+    return DEMO_LEARNERS.map((l) => {
+      const rows = DEMO_ENROLLMENTS.filter((e) => e.learnerId === l.id);
+      const avgProgress = rows.length ? Math.round(rows.reduce((a, r) => a + r.progress, 0) / rows.length) : 0;
+      return {
+        id: l.id, name: l.name, initials: l.initials, progress: avgProgress, quizAvg: rows.length ? 82 : null,
+        sessionsCompleted: rows.filter((r) => r.completed).length, courses: rows.map((r) => DEMO_COURSES.find((c) => c.id === r.courseId)?.title).filter(Boolean),
+        risk: l.risk,
+      };
+    });
+  }
   const { data: profiles, error } = await supabase
     .from("user_profiles")
     .select("id, display_name, avatar_url, role, school, department, created_at")
@@ -2194,7 +2247,17 @@ export async function sendMentorMessage(senderId, receiverId, content) {
    ========================================================================= */
 
 export async function fetchDirectReports(managerId) {
-  if (!supabase || !managerId) return [];
+  if (!supabase) {
+    return DEMO_LEARNERS.slice(0, 5).map((l, i) => {
+      const rows = DEMO_ENROLLMENTS.filter((e) => e.learnerId === l.id);
+      return {
+        userId: l.id, name: l.name, initials: l.initials,
+        enrolled: rows.length, completed: rows.filter((r) => r.completed).length,
+        overdue: l.risk === "danger" ? 1 : 0, lastActive: `${i + 1} day${i === 0 ? "" : "s"} ago`,
+      };
+    });
+  }
+  if (!managerId) return [];
   const { data: profiles, error } = await supabase
     .from("user_profiles")
     .select("id, display_name, last_active_at")
@@ -2241,7 +2304,8 @@ export async function fetchDirectReports(managerId) {
 // on purpose). "not started": assigned courses, zero progress on all of
 // them. "on pace": everything else.
 export async function fetchOrgLearnerProgressOverview(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) return demoLearnerProgressOverview();
+  if (!organizationId) return [];
 
   const { data: learners, error: learnersError } = await supabase
     .from("user_profiles")
@@ -2935,7 +2999,8 @@ export async function deleteAssessmentQuestion(id) {
 // implied admin managed learner-created study groups directly - not the
 // right model, per direct confirmation).
 export async function fetchOrgGeneralOverview(organizationId) {
-  if (!supabase || !organizationId) return { studyGroupCount: 0, certificatesIssued: 0, avgAssessmentScore: null };
+  if (!supabase) return { studyGroupCount: 1, certificatesIssued: DEMO_CERTIFICATES.length, avgAssessmentScore: 91 };
+  if (!organizationId) return { studyGroupCount: 0, certificatesIssued: 0, avgAssessmentScore: null };
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
   const [{ count: studyGroupCount }, { count: certificatesIssued }, attemptsResult] = await Promise.all([
@@ -3051,13 +3116,15 @@ async function computeSkillGapsForLearnerIds(learnerIds) {
 }
 
 export async function fetchOrgSkillGapsDetail(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) return demoSkillGapsDetail();
+  if (!organizationId) return [];
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId).eq("role", "learner");
   return computeSkillGapsForLearnerIds((orgUserRows || []).map((r) => r.id));
 }
 
 export async function fetchManagerSkillGapsDetail(managerId) {
-  if (!supabase || !managerId) return [];
+  if (!supabase) return demoSkillGapsDetail().slice(0, 5);
+  if (!managerId) return [];
   const { data: profiles } = await supabase.from("user_profiles").select("id").eq("manager_id", managerId);
   return computeSkillGapsForLearnerIds((profiles || []).map((p) => p.id));
 }

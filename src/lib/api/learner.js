@@ -47,7 +47,21 @@ export async function fetchPublishedCourses() {
 }
 
 export async function fetchMyEnrollments(userId) {
-  if (!supabase || !userId) return [];
+  if (!supabase) {
+    // A real, confirmed gap: fetchPublishedCourses() already had demo
+    // fixtures, but nothing enrolled the demo learner in any of them -
+    // meaning "enrolled" was always false and progress was always 0/hidden,
+    // regardless of the course catalog itself being populated. This is
+    // what actually backs the "Assigned to Me" course tab and the home
+    // page's "Courses in progress" list in demo mode.
+    const now = new Date().toISOString();
+    return [
+      { course_id: "demo-course-ai-fundamentals", user_id: userId, progress_percentage: 65, completed_at: null, enrolled_at: now },
+      { course_id: "demo-course-external-leadership", user_id: userId, progress_percentage: 100, completed_at: now, enrolled_at: now },
+      { course_id: "demo-course-compliance-101", user_id: userId, progress_percentage: 30, completed_at: null, enrolled_at: now },
+    ];
+  }
+  if (!userId) return [];
   const { data, error } = await supabase
     .from("course_enrollments")
     .select("*")
