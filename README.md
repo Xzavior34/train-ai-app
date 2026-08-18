@@ -581,6 +581,47 @@ executed from this sandbox; that's the one honest gap between what's
 verified here and what happens the first time this script is actually
 run.
 
+## Every remaining screen wired to demo data, checked one at a time with real screenshots
+
+Continued past last round's admin Dashboard and Analytics Hub fixes into
+every other screen still showing empty states, going through them one at
+a time rather than assuming the same pattern held everywhere.
+
+**Cohorts screen - the exact one flagged as "doesn't have anything there"**
+- now shows the real demo cohort with real member count and progress.
+
+**Instructor Overview** - active cohorts were already fixed last round,
+but the four KPI cards above them (Upcoming Sessions, Active Learners,
+Rating, Earnings) were still empty. Traced this to `fetchMentorProfile()`
+returning `null` in demo mode - the exact same root-cause pattern as
+`fetchCurrentUserProfile` from two rounds ago, blocking `mentorId` for
+every instructor-side screen the same way the earlier bug blocked
+`orgId` for admin screens. Fixed it, then fixed the session and earnings
+functions it unblocks.
+
+**Learner Progress (admin)** - leaderboard now ranks all 8 demo learners
+by real progress, "Learners behind" correctly shows the two lowest
+performers, Skill Gaps shows a real demonstrated-vs-gap breakdown for
+every learner.
+
+**Manager View** - Direct Reports now shows 5 real team members with real
+progress bars and an overdue flag, Team Skill Snapshot shows real
+category breakdowns, and the new Skill Gaps detail section matches.
+
+**Learner home page** - the new "Courses in progress" list (built two
+rounds ago) now actually shows real courses with real progress bars,
+confirmed with a live screenshot, not just the "Active Course" card that
+was already there.
+
+**AI credits** - checked and confirmed this was never actually broken;
+`useCredits()` reads from `localStorage` directly and was never tied to
+Supabase at all, so it needed no fix.
+
+Every fix in this round was verified with an actual screenshot before
+moving to the next screen - Cohorts, Learner Progress, Skill Gaps,
+Manager View, Instructor Overview, and the learner home page all
+confirmed with zero console errors and real, populated data.
+
 ## Comprehensive demo data - every screen's real numbers, not just empty states (superseded by the correction above)
 
 **"Show those that can't show due to no database - make a mock or demo

@@ -40,7 +40,16 @@ export async function fetchGamificationStatsByUserIds(userIds) {
 
 // Mentors & Availability
 export async function fetchMentorProfile(userId) {
-  if (!supabase) return null;
+  if (!supabase) {
+    // Blocks `mentorId` (and every "mentorId ? fetchX(mentorId) : []"
+    // guard across the entire instructor experience) the same way
+    // fetchCurrentUserProfile's demo-mode null blocked orgId everywhere -
+    // same root cause, same fix.
+    return {
+      id: "demo-mentor-id", user_id: userId, bio: "", specializations: [],
+      payouts_enabled: false, auto_accept_bookings: false, require_pre_payment: false, allow_group_sessions: false,
+    };
+  }
   const { data, error } = await supabase
     .from("mentors")
     .select("*")
@@ -63,7 +72,14 @@ export async function fetchMentorAvailability(mentorId) {
 }
 
 export async function fetchMentorSessions(mentorId) {
-  if (!supabase) return [];
+  if (!supabase) {
+    const now = Date.now();
+    return [
+      { id: "demo-sess-1", learner_id: "demo-learner-1", learner_name: "Amara Chen", status: "confirmed", scheduled_at: new Date(now + 2 * 86400000).toISOString(), rating: null },
+      { id: "demo-sess-2", learner_id: "demo-learner-4", learner_name: "Marcus Webb", status: "completed", scheduled_at: new Date(now - 3 * 86400000).toISOString(), rating: 5 },
+      { id: "demo-sess-3", learner_id: "demo-learner-7", learner_name: "Ngozi Adeyemi", status: "completed", scheduled_at: new Date(now - 6 * 86400000).toISOString(), rating: 4 },
+    ];
+  }
   const { data, error } = await supabase
     .from("mentorship_sessions")
     .select("*")
@@ -119,7 +135,16 @@ export async function bookMentorshipSession({ learnerId, mentorId, title, schedu
 }
 
 export async function fetchMentorEarnings(mentorId) {
-  if (!supabase) return [];
+  if (!supabase) {
+    // Earnings stay tracked even while payouts_enabled is false for this
+    // demo instructor - matching the existing honest "still tracked, not
+    // yet paid out" messaging built for the real suspended-payouts case.
+    const now = new Date().toISOString();
+    return [
+      { id: "demo-earn-1", mentor_id: mentorId, amount: 45, created_at: now, source: "session" },
+      { id: "demo-earn-2", mentor_id: mentorId, amount: 45, created_at: now, source: "session" },
+    ];
+  }
   const { data, error } = await supabase
     .from("mentor_earnings")
     .select("*")

@@ -1233,7 +1233,13 @@ export async function createCohort({ organizationId, name, startsAt, endsAt, cre
 }
 
 export async function fetchCohortsWithStats(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) {
+    return [{
+      id: DEMO_COHORT.id, name: DEMO_COHORT.name, start: "1 mo ago", end: "in 2 months",
+      endsAt: DEMO_COHORT.endsAt, members: DEMO_COHORT.memberNames.length, courses: 1, progress: 71,
+    }];
+  }
+  if (!organizationId) return [];
   const { data: cohorts, error } = await supabase
     .from("cohorts")
     .select("id, name, starts_at, ends_at")
@@ -2571,7 +2577,8 @@ export async function addDepartmentFeedbackNote(organizationId, department, auth
 // materially bigger, separate thing that would need real skill-to-course
 // tagging to be honest, which doesn't exist yet.
 export async function fetchTeamSkillSnapshot(managerId) {
-  if (!supabase || !managerId) return [];
+  if (!supabase) return [{ category: "Compliance", avgProgress: 100, learnerCount: 2 }, { category: "AI", avgProgress: 78, learnerCount: 5 }, { category: "Leadership", avgProgress: 62, learnerCount: 3 }];
+  if (!managerId) return [];
   const { data: profiles } = await supabase.from("user_profiles").select("id").eq("manager_id", managerId);
   const ids = (profiles || []).map((p) => p.id);
   if (!ids.length) return [];
@@ -2934,7 +2941,13 @@ export async function issueCertificateDirectly(userId, organizationId, title, co
 }
 
 export async function fetchAllIssuedCertificates(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) {
+    return DEMO_CERTIFICATES.map((c) => ({
+      id: c.id, certificate_number: c.certificateNumber, issued_at: c.issuedAt, status: "issued",
+      user_profiles: { display_name: c.learnerName }, courses: { title: c.courseTitle },
+    }));
+  }
+  if (!organizationId) return [];
   const { data, error } = await supabase
     .from("certificates")
     .select("*, user_profiles(display_name), courses(title)")
@@ -3022,7 +3035,8 @@ export async function fetchOrgGeneralOverview(organizationId) {
 // 0126/0127/CohortsScreen.jsx's createCohort auto-add) rather than a
 // separate, parallel concept of "the instructor's cohorts."
 export async function fetchMentorActiveCohorts(userId) {
-  if (!supabase || !userId) return [];
+  if (!supabase) return [{ id: DEMO_COHORT.id, name: DEMO_COHORT.name, ends_at: DEMO_COHORT.endsAt }];
+  if (!userId) return [];
   const { data: memberRows, error } = await supabase.from("cohort_members").select("cohort_id").eq("user_id", userId);
   if (error) { console.warn("Mentor cohorts fetch warning:", error); return []; }
   const cohortIds = (memberRows || []).map((r) => r.cohort_id);
