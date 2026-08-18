@@ -66,7 +66,13 @@ export async function updateUserDisplayName(userId, displayName) {
 }
 
 export async function fetchOrgMembers(organizationId) {
-  if (!supabase) return [];
+  if (!supabase) {
+    return [
+      ...DEMO_LEARNERS.map((l) => ({ id: l.id, display_name: l.name, role: "learner", status: "active", last_active_at: new Date().toISOString() })),
+      ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, display_name: i.name, role: "mentor", status: "active", last_active_at: new Date().toISOString() })),
+      { id: "demo-manager-id", display_name: "Demo Manager", role: "manager", status: "active", last_active_at: new Date().toISOString() },
+    ];
+  }
   let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
   // A plain org admin never sees other orgs' rows regardless of this filter
   // (RLS already scopes them) - this only matters for super_admins, whose
@@ -91,7 +97,10 @@ export async function fetchUsersInOrg(organizationId) {
 }
 
 export async function fetchOrgMembersWithStatus() {
-  if (!supabase) return [];
+  if (!supabase) {
+    const profiles = await fetchOrgMembers();
+    return profiles.map((p) => ({ ...p, member_status: "active" }));
+  }
   const profiles = await fetchOrgMembers();
   if (!profiles.length) return [];
   // profiles are raw user_profiles rows - user_profiles.id IS the real
@@ -166,7 +175,14 @@ export async function fetchCohorts(organizationId) {
 }
 
 export async function fetchComplianceAssignments(organizationId) {
-  if (!supabase) return [];
+  if (!supabase) {
+    const now = Date.now();
+    return [
+      { id: "demo-ca-1", user_id: "demo-learner-1", course_id: "demo-course-compliance-101", status: "completed", due_at: new Date(now - 5 * 86400000).toISOString(), completed_at: new Date(now - 6 * 86400000).toISOString(), courses: { title: "Workplace Compliance 101", category: "Compliance" }, user_profiles: { display_name: "Amara Chen" } },
+      { id: "demo-ca-2", user_id: "demo-learner-5", course_id: "demo-course-compliance-101", status: "overdue", due_at: new Date(now - 3 * 86400000).toISOString(), completed_at: null, courses: { title: "Workplace Compliance 101", category: "Compliance" }, user_profiles: { display_name: "Fatima Diallo" } },
+      { id: "demo-ca-3", user_id: "demo-learner-6", course_id: "demo-course-compliance-101", status: "overdue", due_at: new Date(now - 10 * 86400000).toISOString(), completed_at: null, courses: { title: "Workplace Compliance 101", category: "Compliance" }, user_profiles: { display_name: "Liam Torres" } },
+    ];
+  }
   // courses(title, category) has a real FK and embeds fine; user_profiles
   // does not, so it's attached via a manual lookup instead.
   const { data, error } = await supabase
@@ -223,7 +239,12 @@ export async function removeComplianceAssignment(id) {
 // super_admin - there is no client-side course-id filtering to get wrong
 // here, same pattern as the org-admin queries at the top of this file.
 export async function fetchCourseApplications(courseId) {
-  if (!supabase) return [];
+  if (!supabase) {
+    if (courseId && courseId !== "demo-course-ai-fundamentals") return [];
+    return [
+      { id: "demo-app-1", course_id: "demo-course-ai-fundamentals", user_id: "demo-learner-8", status: "pending", created_at: new Date().toISOString(), courses: { title: "AI Fundamentals" }, user_profiles: { display_name: "Sofia Kim" } },
+    ];
+  }
   let query = supabase.from("course_applications").select("*, courses(title)").order("created_at", { ascending: false });
   if (courseId) query = query.eq("course_id", courseId);
   const { data, error } = await query;
@@ -336,7 +357,9 @@ export async function fetchRecentOrganizations(limit = 4) {
 }
 
 export async function fetchAllOrganizationsWithUserCounts() {
-  if (!supabase) return [];
+  if (!supabase) {
+    return [{ id: "demo-org-id", name: "Demo Academy", slug: "demo-academy", status: "active", subscription_tier: "growth", created_at: new Date().toISOString(), user_count: 12 }];
+  }
   const orgs = await fetchAllOrganizations();
   return Promise.all(orgs.map(async (o) => {
     const { count } = await supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", o.id);
@@ -460,7 +483,12 @@ export async function fetchPlatformOverviewStats() {
 }
 
 export async function fetchRecentPlatformActivity(limit = 6) {
-  if (!supabase) return [];
+  if (!supabase) {
+    return [
+      { text: "issue certificate directly: Amara Chen", time: new Date(Date.now() - 86400000).toLocaleString() },
+      { text: "review certificate: Marcus Webb", time: new Date(Date.now() - 2 * 86400000).toLocaleString() },
+    ].slice(0, limit);
+  }
   const { data, error } = await supabase
     .from("safe_admin_audit_log")
     .select("*")
@@ -905,7 +933,14 @@ export async function replaceCourseLessons(courseId, lessons) {
 }
 
 export async function fetchLearningPathsAdmin() {
-  if (!supabase) return [];
+  if (!supabase) {
+    return [{
+      id: "demo-path-1", title: "New Hire Foundations", description: "The core courses every new hire completes in their first month.",
+      level: "beginner", isPublished: true,
+      courseIds: ["demo-course-ai-fundamentals", "demo-course-compliance-101"],
+      courseTitles: ["AI Fundamentals", "Workplace Compliance 101"],
+    }];
+  }
   const { data, error } = await supabase
     .from("learning_paths")
     .select("*, learning_path_courses(*, courses(id, title))")
@@ -978,7 +1013,13 @@ export async function togglePublishLearningPath(id, isPublished) {
 }
 
 export async function fetchModerationQueue() {
-  if (!supabase) return [];
+  if (!supabase) {
+    return [{
+      id: "demo-flag-1", contentType: "post", author: "Liam Torres",
+      excerpt: "Anyone have the answer key for the compliance quiz?",
+      score: 0.62, reason: "Flagged by AI moderation", createdAt: new Date().toISOString(),
+    }];
+  }
   // IMPORTANT: `moderation_logs` had `SELECT` (and later `INSERT`) revoked
   // from the `authenticated` Postgres role in a security-hardening pass on
   // the shared schema ("REVOKE SELECT ON public.moderation_logs FROM
@@ -1337,7 +1378,33 @@ export async function updateCohort(id, patch) {
 }
 
 export async function fetchCohortDetail(cohortId) {
-  if (!supabase || !cohortId) return null;
+  if (!supabase) {
+    if (cohortId !== DEMO_COHORT.id) return null;
+    const memberList = [
+      { userId: "demo-instructor-1", name: "Jordan Reyes", progress: 100 },
+      { userId: "demo-learner-1", name: "Amara Chen", progress: 100 },
+      { userId: "demo-learner-2", name: "David Osei", progress: 85 },
+      { userId: "demo-learner-3", name: "Priya Nair", progress: 60 },
+      { userId: "demo-learner-4", name: "Marcus Webb", progress: 100 },
+    ];
+    return {
+      cohort: { id: DEMO_COHORT.id, name: DEMO_COHORT.name, organization_id: "demo-org-id", starts_at: "2026-01-01", ends_at: DEMO_COHORT.endsAt, created_by: "demo-instructor-1" },
+      members: memberList.map((m) => ({ cohort_id: cohortId, user_id: m.userId, added_at: new Date().toISOString(), user_profiles: { display_name: m.name }, progress: m.progress })),
+      posts: [
+        { id: "demo-post-1", cohort_id: cohortId, author_id: "demo-instructor-1", content: "Welcome to the Q1 Onboarding Cohort! Please complete AI Fundamentals by the end of the month.", created_at: new Date(Date.now() - 5 * 86400000).toISOString(), user_profiles: { display_name: "Jordan Reyes" } },
+      ],
+      resources: [
+        { id: "demo-res-1", cohort_id: cohortId, title: "Onboarding Checklist (PDF)", external_url: "https://example.com/onboarding.pdf", created_at: new Date().toISOString() },
+      ],
+      sessions: [
+        { id: "demo-cohort-sess-1", cohort_id: cohortId, title: "Cohort Kickoff Call", starts_at: new Date(Date.now() + 3 * 86400000).toISOString() },
+      ],
+      learnerCourses: [
+        { cohort_id: cohortId, user_id: "demo-learner-1", course_id: "demo-course-ai-fundamentals", user_profiles: { display_name: "Amara Chen" }, courses: { id: "demo-course-ai-fundamentals", title: "AI Fundamentals" } },
+      ],
+    };
+  }
+  if (!cohortId) return null;
   // None of cohort_members/cohort_posts/cohort_learner_courses have a
   // declared FK to user_profiles (and cohort_learner_courses has none to
   // courses either), so those need manual lookups instead of embeds.
@@ -1828,7 +1895,7 @@ export async function fetchSaraEmails() {
 }
 
 export async function fetchSuperAdmins() {
-  if (!supabase) return [];
+  if (!supabase) return [{ userId: "demo-admin-id", name: "Demo Admin", initials: "DA" }];
   const { data, error } = await supabase
     .from("user_roles")
     .select("user_id")
@@ -1872,7 +1939,14 @@ export async function grantSuperAdminByUserId(userId) {
    ========================================================================= */
 
 export async function fetchGlobalPermissionMatrix() {
-  if (!supabase) return [];
+  if (!supabase) {
+    return [
+      { role: "admin", permission_key: "manage_users", allowed: true }, { role: "admin", permission_key: "manage_courses", allowed: true },
+      { role: "admin", permission_key: "manage_cohorts", allowed: true }, { role: "admin", permission_key: "manage_compliance", allowed: true },
+      { role: "admin", permission_key: "view_analytics", allowed: true }, { role: "mentor", permission_key: "manage_courses", allowed: true },
+      { role: "manager", permission_key: "view_analytics", allowed: true },
+    ];
+  }
   const { data, error } = await supabase.from("role_permissions_matrix").select("*");
   if (error) throw error;
   return data || [];
@@ -3231,7 +3305,7 @@ export async function fetchManagerSkillGapsDetail(managerId) {
 // Super-admin only, scoped by the caller's own super_admin RLS access
 // rather than any single organization.
 export async function fetchAllMentorsForPayoutControl() {
-  if (!supabase) return [];
+  if (!supabase) return DEMO_INSTRUCTORS.map((i) => ({ id: i.id, user_id: i.id, payouts_enabled: false, organization_id: "demo-org-id", name: i.name }));
   const { data, error } = await supabase.from("mentors").select("id, user_id, payouts_enabled, organization_id");
   if (error) { console.warn("Mentors fetch warning:", error); return []; }
   const rows = data || [];

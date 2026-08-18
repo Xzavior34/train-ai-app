@@ -131,19 +131,19 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
             </div>
             <div className="ta-table-wrap">
             <table className="ta-table">
-              <thead><tr><th style={{ width: 32 }}><input type="checkbox" checked={filteredMembers.length > 0 && selectedMemberIds.size === filteredMembers.length} onChange={(e) => setSelectedMemberIds(e.target.checked ? new Set(filteredMembers.map((m) => m.user_id)) : new Set())} /></th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th style={{ width: 32 }}><input type="checkbox" checked={filteredMembers.length > 0 && selectedMemberIds.size === filteredMembers.length} onChange={(e) => setSelectedMemberIds(e.target.checked ? new Set(filteredMembers.map((m) => m.id)) : new Set())} /></th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
                 {membersQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading members...</td></tr>}
                 {!membersQuery.loading && filteredMembers.length === 0 && <tr><td colSpan={5} className="ta-empty">No members found.</td></tr>}
                 {filteredMembers.map(m => (
-                  <tr key={m.user_id}>
+                  <tr key={m.id}>
                     <td>
                       <input
                         type="checkbox"
-                        checked={selectedMemberIds.has(m.user_id)}
+                        checked={selectedMemberIds.has(m.id)}
                         onChange={(e) => {
                           const next = new Set(selectedMemberIds);
-                          if (e.target.checked) next.add(m.user_id); else next.delete(m.user_id);
+                          if (e.target.checked) next.add(m.id); else next.delete(m.id);
                           setSelectedMemberIds(next);
                         }}
                       />
@@ -155,13 +155,14 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                       <div className="ta-row ta-gap6">
                         <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={async () => {
                           // m is a raw user_profiles row (fetchOrgMembers does a plain
-                          // select("*") on that table) - the real auth uid is its
-                          // `user_id` column (user_profiles.id is a separate internal
-                          // PK). organization_members.user_id (a different table's own
+                          // select("*") on that table) - user_profiles.id IS the real
+                          // auth uid directly (confirmed against the actual schema,
+                          // no separate user_id column exists on this specific table).
+                          // organization_members.user_id (a different table's own
                           // column) is what updateOrgMemberStatus filters by internally.
                           // Also pass orgId - updateOrgMemberStatus(userId, organizationId,
                           // status) was being called with the status in the organizationId slot.
-                          await updateOrgMemberStatus(m.user_id, orgId, m.status === "active" ? "suspended" : "active");
+                          await updateOrgMemberStatus(m.id, orgId, m.status === "active" ? "suspended" : "active");
                           membersQuery.refetch();
                           showToast(`Status updated for ${m.display_name}`);
                         }}>
@@ -169,7 +170,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                         </button>
                         <button className="ta-btn ta-btn-outline ta-btn-sm" title="Download this user's data as JSON" onClick={async () => {
                           try {
-                            await downloadUserDataExport(m.user_id, m.display_name || m.user_id);
+                            await downloadUserDataExport(m.id, m.display_name || m.id);
                             showToast(`Data export downloaded for ${m.display_name || "user"}`);
                           } catch (e) {
                             showToast(e?.message || "Could not export this user's data");

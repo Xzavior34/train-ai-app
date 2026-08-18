@@ -581,6 +581,89 @@ executed from this sandbox; that's the one honest gap between what's
 verified here and what happens the first time this script is actually
 run.
 
+## Continuing the sweep - eight more functions, all verified with real screenshots
+
+Picked up exactly where the last round left off, working through the
+named remaining list rather than a new pass:
+
+- **Compliance tab** (within Learner Progress) - real overall compliance
+  rate, assigned learner count, and two genuinely overdue trainings
+  showing in the table
+- **Learning Paths** - a real "New Hire Foundations" path with its actual
+  course sequence
+- **Platform Owner Organizations** - the demo organization now shows with
+  a real user count and tier
+- **Access Control's Instructor Payout Controls** - both demo instructors
+  now listed with working toggles (the screen this was originally built
+  for, two rounds ago, but never actually populated until now)
+- **Roles & Permissions Matrix** - real, distinct toggle states per role
+  rather than every switch showing off
+- **Super Admin roster**, **Recent Platform Activity**, and
+  **`fetchOrgMembersWithStatus`** (fixed to properly delegate through the
+  already-corrected `fetchOrgMembers()` rather than short-circuiting
+  separately)
+
+All eight checked against the real function's own return shape before
+being written - one Compliance Assignments demo object initially missed
+the `courses`/`user_profiles` embed shape the screen actually reads and
+was corrected before being trusted. Verified with four separate live
+screenshots (Compliance, Learning Paths, Organizations, Access Control),
+zero console errors.
+
+**Still not reached**: roughly a dozen functions remain, now entirely
+marketing/growth-adjacent and Platform-Owner-internal - UTM sources, feedback
+queue, forum categories, email campaigns, Sara's email drafts, learning
+tracks summary, organization payments list, campaign attribution, and
+the full support ticket queue. None of these have come up in anything
+tested together so far.
+
+## Demo cohort detail, and a comprehensive sweep for every remaining "no database = empty" gap
+
+**"Create a demo cohort"** - checked the cohort summary list (already
+fixed) versus actually clicking into it, and confirmed the gap: the
+cohort detail screen's own data function (`fetchCohortDetail`) still
+returned `null` in demo mode, meaning clicking into the one existing demo
+cohort showed nothing at all - members, resources, sessions, course
+assignments, all empty. Fixed it with a full matching dataset - 5 real
+members with real progress, a real cohort update post, a resource, a
+scheduled session, and a course assignment. Verified with a live
+screenshot: all four tabs (Members, Course assignments, Activity,
+Resources & sessions) show real counts and real content.
+
+**A comprehensive sweep for every other reachable empty state**, not just
+cohorts:
+
+- **People & Access Directory** - found and fixed a second, previously
+  undiscovered instance of the exact same `user_profiles.id` vs
+  `user_profiles.user_id` bug from several rounds ago, this time in the
+  UI itself rather than a fetch function: `PeopleScreen.jsx`'s Directory
+  table referenced `m.user_id` throughout - a field that has never
+  existed on the rows `fetchOrgMembers()` actually returns - meaning the
+  Suspend button has been calling `updateOrgMemberStatus` with `undefined`
+  as the user id in any real, connected deployment. Fixed every instance,
+  corrected a stale comment that repeated the same wrong claim, and added
+  real demo data so all 11 demo people now show correctly with working
+  actions.
+- **Content Moderation queue** - a real flagged post now shows with
+  author, excerpt, AI confidence score, and working Approve/Remove
+  actions.
+- **Course Applications** (the course-level tab, not the org-level
+  Instructor Monitor built earlier) - a real pending application.
+- **Super Admin roster** - a real entry.
+
+Every fix in this round was checked against the real return shape the
+consuming screen actually expects before being written, not assumed -
+one demo object was initially built to the wrong shape
+(`fetchModerationQueue`) and was corrected before being trusted, caught
+by re-reading the real function's own final return statement rather than
+by a screenshot catching it after the fact.
+
+This was not an exhaustive pass over every function in the codebase -
+roughly twenty more, mostly Platform-Owner-level and marketing-adjacent
+screens (UTM sources, email campaigns, forum categories, learning
+tracks, support tickets), still return empty in demo mode and were not
+reached this round.
+
 ## Give Certificate Directly - upload and assign, right in the course's Certificates tab
 
 Confirmed directly against a real screenshot of the live deployed site
