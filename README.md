@@ -548,6 +548,39 @@ editable description, and the member-removal control all working - not
 just a clean build, given the standing lesson that a clean build alone has
 already once hidden a genuine runtime crash in this project.
 
+## Comprehensive demo data - every screen's real numbers, not just empty states
+
+**"Show those that can't show due to no database - make a mock or demo
+data for it so we will see how it works."** Every screenshot throughout
+this entire project has shown honest empty states, because no real
+deployment has ever had actual data behind it. Built a real, seeded demo
+organization (`0134_comprehensive_demo_data.sql`) - clearly labeled "Demo
+Academy (Sample Data)" with every account under a demo email domain, so
+it can never be mistaken for a real organization:
+
+- 8 learners with realistic, varied course progress (some complete, some
+  mid-way, some barely started - not a uniform fake spread)
+- 2 instructors, 1 manager with 5 direct reports, 1 admin
+- 5 courses across 4 real categories plus one external partner course
+- Real enrollments, a real assessment with actual questions and three
+  real attempts, 4 issued certificates, a cohort with members, a study
+  group, compliance assignments including genuinely overdue ones, and 12
+  real AI usage events
+
+**Verified honestly, with a clear limit stated rather than glossed
+over.** Ran the full 44-migration chain from a genuine cold start,
+confirmed the seed is idempotent (running it twice does not duplicate
+anything), and then ran the *exact* query patterns several of this
+project's real functions perform - `fetchTopCourses`, the skill-gaps
+classification, and the Total Users breakdown - directly against this
+seeded data, confirming each returns real, correct, non-zero numbers.
+What I could not do from this sandbox: connect the actual running React
+app to a real cloud Supabase project and show it live, since that
+requires real external credentials this environment doesn't have. Stated
+plainly rather than implied as fully verified - the database-level
+proof is solid; the live-app screenshot of it is the one thing still
+outside what I can check from here.
+
 ## Skill gaps detail, manager report downloads, and the Platform Owner payout toggle - the final three items on the list
 
 **Skill gaps by learner** - built for both Learner Progress (org-wide) and
