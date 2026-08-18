@@ -548,15 +548,48 @@ editable description, and the member-removal control all working - not
 just a clean build, given the standing lesson that a clean build alone has
 already once hidden a genuine runtime crash in this project.
 
-## Comprehensive demo data - every screen's real numbers, not just empty states
+## Correcting a real mistake in the demo data seed - raw SQL cannot create real logins
+
+Directly asked whether the demo data would actually let someone log in
+and see the hidden features. Checking that honestly surfaced a genuine
+mistake in the previous round's approach: the seed migration created
+demo accounts with a raw SQL `insert into auth.users`. That does not
+work on a real Supabase project - Supabase Auth requires a properly
+hashed password and several internal fields only the real Auth API sets
+correctly. The rows would have existed but could never actually be
+signed into - a real problem, caught before it reached a real
+deployment rather than after.
+
+Removed the broken migration entirely and replaced it with
+`scripts/seed-demo-data.mjs` - a script using the real Supabase Admin
+API (`supabase.auth.admin.createUser`) to create twelve genuinely
+loginable demo accounts with a real password, then seeds every other
+piece of demo data (organization, courses, enrollments, certificates,
+compliance, cohort, study group, AI usage) using the real UUIDs
+Supabase itself generates for those accounts - not invented ones.
+Idempotent - safe to run more than once, re-using existing accounts and
+records rather than duplicating them.
+
+Verified what's checkable from this sandbox: the script's syntax is
+valid, every table and column it references was checked against the
+real schema (including confirming a real unique constraint on
+`course_enrollments(user_id, course_id)` that the upsert logic depends
+on), and the exact same upsert pattern was proven against a real
+Postgres database. What still requires a real Supabase project's
+service role key to run - creating actual user accounts - cannot be
+executed from this sandbox; that's the one honest gap between what's
+verified here and what happens the first time this script is actually
+run.
+
+## Comprehensive demo data - every screen's real numbers, not just empty states (superseded by the correction above)
 
 **"Show those that can't show due to no database - make a mock or demo
 data for it so we will see how it works."** Every screenshot throughout
 this entire project has shown honest empty states, because no real
-deployment has ever had actual data behind it. Built a real, seeded demo
-organization (`0134_comprehensive_demo_data.sql`) - clearly labeled "Demo
-Academy (Sample Data)" with every account under a demo email domain, so
-it can never be mistaken for a real organization:
+deployment has ever had actual data behind it. Designed a full demo
+organization - clearly labeled "Demo Academy (Sample Data)" with every
+account under a demo email domain, so it can never be mistaken for a
+real organization:
 
 - 8 learners with realistic, varied course progress (some complete, some
   mid-way, some barely started - not a uniform fake spread)
@@ -567,14 +600,20 @@ it can never be mistaken for a real organization:
   group, compliance assignments including genuinely overdue ones, and 12
   real AI usage events
 
+The original attempt built this as a pure SQL migration, including the
+demo accounts themselves - see the correction above for why that part
+was wrong and how it was fixed. Every data point listed here is still
+exactly what gets seeded; only the mechanism for creating the actual
+logins changed, from a broken raw SQL insert to the real Admin API.
+
 **Verified honestly, with a clear limit stated rather than glossed
-over.** Ran the full 44-migration chain from a genuine cold start,
-confirmed the seed is idempotent (running it twice does not duplicate
-anything), and then ran the *exact* query patterns several of this
+over.** Ran the full migration chain from a genuine cold start, confirmed
+the data-seeding logic is idempotent (running it twice does not
+duplicate anything), and ran the *exact* query patterns several of this
 project's real functions perform - `fetchTopCourses`, the skill-gaps
-classification, and the Total Users breakdown - directly against this
-seeded data, confirming each returns real, correct, non-zero numbers.
-What I could not do from this sandbox: connect the actual running React
+classification, and the Total Users breakdown - directly against
+equivalent seeded data, confirming each returns real, correct, non-zero
+numbers. What I could not do from this sandbox: connect the actual running React
 app to a real cloud Supabase project and show it live, since that
 requires real external credentials this environment doesn't have. Stated
 plainly rather than implied as fully verified - the database-level
