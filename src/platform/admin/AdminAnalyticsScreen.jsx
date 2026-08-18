@@ -5,9 +5,11 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchOrgDashboardStats,
   fetchEnrollmentTrend,
-  fetchRetentionStats,
-  fetchFeatureAdoption,
+  fetchTopCourses,
+  fetchMostActiveCohorts,
+  fetchOrgAIUsageByFeature,
   fetchOrgAIUsageStats,
+  fetchOrgGeneralOverview,
   fetchOrganizationById,
 } from "../../lib/api/platform.js";
 import { orgHasFeature, minTierLabelFor } from "../../lib/tierFeatures.js";
@@ -17,8 +19,10 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
   const showToast = useContext(ToastContext);
   const statsQuery = useSupabaseQuery(async () => orgId ? fetchOrgDashboardStats(orgId) : null, [orgId]);
   const trendQuery = useSupabaseQuery(async () => orgId ? fetchEnrollmentTrend(orgId, 6) : [], [orgId]);
-  const retentionQuery = useSupabaseQuery(async () => orgId ? fetchRetentionStats(orgId) : null, [orgId]);
-  const adoptionQuery = useSupabaseQuery(async () => orgId ? fetchFeatureAdoption(orgId) : null, [orgId]);
+  const topCoursesQuery = useSupabaseQuery(async () => orgId ? fetchTopCourses(orgId) : [], [orgId]);
+  const activeCohortsQuery = useSupabaseQuery(async () => orgId ? fetchMostActiveCohorts(orgId) : [], [orgId]);
+  const aiByFeatureQuery = useSupabaseQuery(async () => orgId ? fetchOrgAIUsageByFeature(orgId) : null, [orgId]);
+  const generalOverviewQuery = useSupabaseQuery(async () => orgId ? fetchOrgGeneralOverview(orgId) : null, [orgId]);
   const orgQuery = useSupabaseQuery(async () => orgId ? fetchOrganizationById(orgId) : null, [orgId]);
   // "Organization Tiers... Higher tiers unlock: more advanced admin
   // capabilities, richer analytics." Nothing previously checked
@@ -38,8 +42,8 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
 
   const trend = trendQuery.data || [];
   const maxEnrollments = Math.max(1, ...trend.map(t => t.enrollments));
-  const retention = retentionQuery.data;
-  const adoption = adoptionQuery.data;
+  const topCourses = topCoursesQuery.data || [];
+  const activeCohorts = activeCohortsQuery.data || [];
 
   function handleExport() {
     if (!canExport) {
@@ -58,7 +62,7 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
   return (
     <div className="ta-fade">
       <TopBar
-        title="Analytics Hub" sub="Enrollment growth, retention & feature adoption. Computed from live org data"
+        title="Analytics Hub" sub="Enrollment growth, top courses & community activity. Computed from live org data"
         orgSelector={orgSelector}
         onNavigate={setScreen}
         right={
@@ -71,21 +75,19 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
         <div className="ta-grid ta-grid-4">
           <div className="ta-card" style={{ background: "var(--surface-3)", textAlign: "center" }}>
             <div style={{ fontSize: 28, fontWeight: 800, color: "var(--primary)" }}>{statsQuery.data?.completionRate || 0}%</div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Overall completion rate</div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Overall readiness rate</div>
           </div>
           <div className="ta-card" style={{ background: "var(--surface-3)" }}>
             <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>Active learners</span><span style={{ fontWeight: 700 }}>{statsQuery.data?.activeStudents || 0}</span></div>
             <ProgressBar value={statsQuery.data?.completionRate || 0} />
           </div>
           <div className="ta-card" style={{ background: "var(--surface-3)" }}>
-            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>30-day retention</span><span style={{ fontWeight: 700 }}>{retention?.retention30Pct ?? 0}%</span></div>
-            <ProgressBar value={retention?.retention30Pct ?? 0} />
-            <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 4 }}>{retention?.active30 ?? 0} of {retention?.totalUsers ?? 0} users active in last 30 days</div>
+            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>AI Coach usage</span><span style={{ fontWeight: 700 }}>{aiByFeatureQuery.data?.coach ?? 0}</span></div>
+            <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 4 }}>Real AI Coach replies logged for your organization</div>
           </div>
           <div className="ta-card" style={{ background: "var(--surface-3)" }}>
-            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>7-day retention</span><span style={{ fontWeight: 700 }}>{retention?.retention7Pct ?? 0}%</span></div>
-            <ProgressBar value={retention?.retention7Pct ?? 0} />
-            <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 4 }}>{retention?.active7 ?? 0} of {retention?.totalUsers ?? 0} users active in last 7 days</div>
+            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>Quiz Generator usage</span><span style={{ fontWeight: 700 }}>{aiByFeatureQuery.data?.quiz ?? 0}</span></div>
+            <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 4 }}>Real AI-generated quizzes created - the honest proxy for credits used, since no separate credits-balance table exists</div>
           </div>
         </div>
 
@@ -124,36 +126,48 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
             )}
           </div>
           <div className="ta-card">
-            <div className="ta-label">Feature adoption</div>
-            <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Share of org users with at least one recorded interaction</div>
-            {adoptionQuery.loading && <div className="ta-empty">Loading adoption stats...</div>}
-            {!adoptionQuery.loading && (!adoption || adoption.totalUsers === 0) && <div className="ta-empty">No users in this organization yet.</div>}
-            {!adoptionQuery.loading && adoption && adoption.totalUsers > 0 && (
-              <div className="ta-col ta-gap12 ta-mt12">
-                <div>
-                  <div className="ta-row ta-between" style={{ fontSize: 12.5, marginBottom: 6 }}>
-                    <span>Gamification (points/streaks)</span>
-                    <span style={{ fontWeight: 700 }}>{adoption.gamificationPct}%</span>
+            <div className="ta-label">Top courses</div>
+            <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>By real enrollment count in your organization</div>
+            {topCoursesQuery.loading && <div className="ta-empty">Loading top courses...</div>}
+            {!topCoursesQuery.loading && topCourses.length === 0 && <div className="ta-empty">No enrollments yet.</div>}
+            {!topCoursesQuery.loading && topCourses.length > 0 && (
+              <div className="ta-col ta-gap10 ta-mt12">
+                {topCourses.map((c) => (
+                  <div key={c.courseId} className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                    <span style={{ fontWeight: 600 }}>{c.title}</span>
+                    <span>{c.enrolled} enrolled - {c.completed} completed</span>
                   </div>
-                  <ProgressBar value={adoption.gamificationPct} />
-                </div>
-                <div>
-                  <div className="ta-row ta-between" style={{ fontSize: 12.5, marginBottom: 6 }}>
-                    <span>Community posts</span>
-                    <span style={{ fontWeight: 700 }}>{adoption.communityPct}%</span>
-                  </div>
-                  <ProgressBar value={adoption.communityPct} />
-                </div>
-                <div>
-                  <div className="ta-row ta-between" style={{ fontSize: 12.5, marginBottom: 6 }}>
-                    <span>Booked an instructor session</span>
-                    <span style={{ fontWeight: 700 }}>{adoption.mentorSessionsPct}%</span>
-                  </div>
-                  <ProgressBar value={adoption.mentorSessionsPct} />
-                </div>
-                <Tag>{adoption.totalUsers} total users in organization</Tag>
+                ))}
               </div>
             )}
+          </div>
+          <div className="ta-card">
+            <div className="ta-label">Most active community</div>
+            <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Cohorts ranked by real posts and membership</div>
+            {activeCohortsQuery.loading && <div className="ta-empty">Loading community activity...</div>}
+            {!activeCohortsQuery.loading && activeCohorts.length === 0 && <div className="ta-empty">No cohort activity yet.</div>}
+            {!activeCohortsQuery.loading && activeCohorts.length > 0 && (
+              <div className="ta-col ta-gap10 ta-mt12">
+                {activeCohorts.map((c) => (
+                  <div key={c.cohortId} className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                    <span style={{ fontWeight: 600 }}>{c.name}</span>
+                    <span>{c.members} members - {c.posts} updates</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="ta-card ta-mt16">
+          <div className="ta-label">General overview - Learners &amp; Instructors</div>
+          <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>
+            A high-level pulse on how things are going, replacing a dedicated Study Groups management screen - admins don't manage learner-created study groups directly, this just shows how many exist.
+          </div>
+          <div className="ta-row ta-gap24 ta-mt12" style={{ flexWrap: "wrap" }}>
+            <div><div style={{ fontSize: 22, fontWeight: 800 }}>{generalOverviewQuery.data?.studyGroupCount ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Study groups</div></div>
+            <div><div style={{ fontSize: 22, fontWeight: 800 }}>{generalOverviewQuery.data?.certificatesIssued ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Certificates issued</div></div>
+            <div><div style={{ fontSize: 22, fontWeight: 800 }}>{generalOverviewQuery.data?.avgAssessmentScore ?? "N/A"}{generalOverviewQuery.data?.avgAssessmentScore != null ? "%" : ""}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Avg. assessment score</div></div>
           </div>
         </div>
 

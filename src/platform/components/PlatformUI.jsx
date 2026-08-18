@@ -226,6 +226,7 @@ export function StatCard({ stat }) {
           </div>
         )}
       </div>
+      {stat.sub && <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>{stat.sub}</div>}
     </div>
   );
 }
@@ -249,8 +250,7 @@ const ADMIN_NAV = [
   { key: "moderation", label: "Content Moderation", icon: Flag },
   { key: "analytics", label: "Analytics Hub", icon: BarChart3 },
   { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
-  { key: "studygroups", label: "Study Groups", icon: Users },
-  { key: "compliance", label: "Compliance", icon: ShieldCheck },
+  { key: "compliance", label: "Learner Progress", icon: ShieldCheck },
   { key: "roleaccess", label: "Role & Access Control", icon: ShieldCheck },
   { key: "integrations", label: "Integrations", icon: Plug },
   { key: "settings", label: "Settings Hub", icon: Settings },

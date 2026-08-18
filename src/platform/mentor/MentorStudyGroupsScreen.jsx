@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { Users, BookOpen, X, StickyNote } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchMyManagedStudyGroups, fetchStudyGroupMembers, removeStudyGroupMember, updateStudyGroupDetails } from "../../lib/api/schemaHelper.js";
+import { fetchMyManagedStudyGroups, fetchStudyGroupMembers, removeStudyGroupMember, updateStudyGroupDetails, createStudyGroup } from "../../lib/api/schemaHelper.js";
 
 // Instructor study group management - a real, direct question ("How will
 // instructor manage study group") with a real, confirmed answer of "there
@@ -12,8 +12,10 @@ import { fetchMyManagedStudyGroups, fetchStudyGroupMembers, removeStudyGroupMemb
 // caught and fixed a genuine infinite-recursion bug between study_groups'
 // and study_group_members' policies - found only by running a real UPDATE
 // against a real database, not from reading either policy alone).
-export function MentorStudyGroupsScreen({ mentorId, orgSelector }) {
+export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
   const showToast = useContext(ToastContext);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [creatingGroup, setCreatingGroup] = useState(false);
   const groupsQuery = useSupabaseQuery(async () => (mentorId ? fetchMyManagedStudyGroups(mentorId) : []), [mentorId]);
   const groups = groupsQuery.data || [];
   const [selectedGroupId, setSelectedGroupId] = useState(null);
@@ -34,7 +36,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgSelector }) {
             <div className="ta-col ta-gap8 ta-mt12">
               {groupsQuery.loading && <div className="ta-empty">Loading your study groups...</div>}
               {!groupsQuery.loading && groups.length === 0 && (
-                <div className="ta-empty">You're not a member of any study group yet - a learner adds you when they want an instructor to help facilitate theirs.</div>
+                <div className="ta-empty">You're not in any study group yet - create one below.</div>
               )}
               {groups.map((g) => (
                 <div
@@ -46,6 +48,28 @@ export function MentorStudyGroupsScreen({ mentorId, orgSelector }) {
                   {g.courses?.title && <div className="ta-row ta-gap6" style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 2 }}><BookOpen size={11} /><span>{g.courses.title}</span></div>}
                 </div>
               ))}
+            </div>
+            <div className="ta-row ta-gap8 ta-mt16" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+              <input className="ta-input" style={{ flex: 1 }} placeholder="New group name" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} />
+              <button
+                className="ta-btn ta-btn-primary"
+                disabled={creatingGroup || !newGroupName.trim() || !orgId}
+                onClick={async () => {
+                  setCreatingGroup(true);
+                  try {
+                    await createStudyGroup({ organizationId: orgId, name: newGroupName.trim(), createdBy: mentorId });
+                    setNewGroupName("");
+                    groupsQuery.refetch();
+                    showToast("Study group created.");
+                  } catch (e) {
+                    showToast(e.message || "Could not create study group.");
+                  } finally {
+                    setCreatingGroup(false);
+                  }
+                }}
+              >
+                Create
+              </button>
             </div>
           </div>
 

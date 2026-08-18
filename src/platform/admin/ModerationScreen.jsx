@@ -1,8 +1,9 @@
-import React, { useContext } from "react";
-import { TopBar, Avatar, Tag, ToastContext } from "../components/PlatformUI.jsx";
-import { Check, X, Flag } from "lucide-react";
+import React, { useContext, useState, useEffect } from "react";
+import { TopBar, Avatar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
+import { Check, X, Flag, Bot } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchModerationQueue, resolveModerationItem } from "../../lib/api/platform.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings } from "../../lib/api/organizations.js";
 
 // AI moderation score on `moderation_logs.ai_score` isn't a fixed 0-1 vs
 // 0-100 scale in the shared schema (nullable numeric, set by whatever ran
@@ -19,10 +20,42 @@ function scorePct(score) {
   return Math.round(Math.min(100, Math.max(0, pct)));
 }
 
-export function ModerationScreen({ orgSelector, setScreen }) {
+export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId }) {
   const showToast = useContext(ToastContext);
   const queueQuery = useSupabaseQuery(async () => fetchModerationQueue(), []);
   const queue = queueQuery.data || [];
+
+  // AI Manual Mode - confirmed directly: "under content moderation, they
+  // should also be able to turn off AI features for manual mode, where it
+  // won't work with AI and they can send their own message via the chat
+  // bot/assistant." Reuses the exact same settings already built for
+  // Settings Hub several rounds ago (fetchOrgAISettings/
+  // fetchOrgAIInsightsSettings) rather than a second, competing toggle -
+  // both places read and write the same underlying value, surfaced here
+  // too since Content Moderation is a more natural place to think about
+  // "should AI be making decisions here at all."
+  const aiSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgAISettings(orgId) : null), [orgId]);
+  const aiInsightsSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgAIInsightsSettings(orgId) : null), [orgId]);
+  const [coachManual, setCoachManual] = useState(false);
+  const [insightsManual, setInsightsManual] = useState(false);
+
+  useEffect(() => { if (aiSettingsQuery.data) setCoachManual(!!aiSettingsQuery.data.manual_mode); }, [aiSettingsQuery.data]);
+  useEffect(() => { if (aiInsightsSettingsQuery.data) setInsightsManual(!!aiInsightsSettingsQuery.data.manual_mode); }, [aiInsightsSettingsQuery.data]);
+
+  async function handleToggleCoachManual() {
+    const next = !coachManual;
+    setCoachManual(next);
+    const result = await updateOrgAISettings(orgId, { manual_mode: next });
+    if (!result.success) { showToast(result.error); setCoachManual(!next); }
+    else showToast(next ? "AI Coach is now in manual mode." : "AI Coach is back to automatic replies.");
+  }
+  async function handleToggleInsightsManual() {
+    const next = !insightsManual;
+    setInsightsManual(next);
+    const result = await updateOrgAIInsightsSettings(orgId, { manual_mode: next });
+    if (!result.success) { showToast(result.error); setInsightsManual(!next); }
+    else showToast(next ? "AI Insights is now in manual mode." : "AI Insights is back to automatic.");
+  }
 
   async function handleResolve(id, action) {
     try {
@@ -43,7 +76,22 @@ export function ModerationScreen({ orgSelector, setScreen }) {
         right={<Tag tone={queue.length ? "warning" : "success"}><Flag size={12} /> {queue.length} awaiting review</Tag>}
       />
       <div className="ta-content">
-        <div className="ta-card">
+        <div className="ta-card" style={{ maxWidth: 700 }}>
+          <div className="ta-row ta-gap8"><Bot size={16} color="var(--primary)" /><div className="ta-title">AI Manual Mode</div></div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+            Turn off AI so it doesn't reply automatically - your own message goes out through the chat bot/assistant instead. Community content itself lives inside a study group, a cohort, or a direct instructor conversation - there isn't much for AI to flag there beyond what's already covered below.
+          </div>
+          <div className="ta-row ta-between ta-mt16">
+            <div style={{ fontSize: 13.5, fontWeight: 600 }}>AI Coach - Manual Mode</div>
+            <Switch on={coachManual} onChange={handleToggleCoachManual} />
+          </div>
+          <div className="ta-row ta-between ta-mt12">
+            <div style={{ fontSize: 13.5, fontWeight: 600 }}>AI Insights - Manual Mode</div>
+            <Switch on={insightsManual} onChange={handleToggleInsightsManual} />
+          </div>
+        </div>
+
+        <div className="ta-card ta-mt16">
           {queueQuery.loading && <div className="ta-empty">Loading moderation queue...</div>}
           {!queueQuery.loading && queue.length === 0 && <div className="ta-empty">Nothing flagged right now. The queue is clear.</div>}
           {!queueQuery.loading && queue.length > 0 && (

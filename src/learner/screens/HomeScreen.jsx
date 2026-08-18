@@ -106,6 +106,25 @@ export function HomeScreen({
         </div>
       )}
 
+      {enrolledCourses.filter((c) => c.progress > 0 && c.progress < 100).length > 0 && (
+        <div className="tai-card tai-mt12">
+          <div style={{ fontWeight: 700, fontSize: 13.5 }}>Courses in progress</div>
+          <div className="tai-col tai-gap8 tai-mt10">
+            {enrolledCourses.filter((c) => c.progress > 0 && c.progress < 100).map((c) => (
+              <div key={c.id} onClick={() => push("courseDetail", { courseId: c.id })} style={{ cursor: "pointer" }}>
+                <div className="tai-row tai-between" style={{ fontSize: 12.5 }}>
+                  <span style={{ fontWeight: 600 }}>{c.title}</span>
+                  <span>{c.progress}%</span>
+                </div>
+                <div style={{ height: 5, background: "var(--surface-3)", borderRadius: 3, marginTop: 4, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${c.progress}%`, background: "var(--primary)" }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Cohort */}
       <div className="tai-card" style={{ cursor: cohort ? "pointer" : "default", padding: 16 }} onClick={() => { if (cohort) push("cohort"); }}>
         <div className="tai-row tai-between">

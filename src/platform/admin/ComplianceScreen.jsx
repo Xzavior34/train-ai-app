@@ -2,11 +2,19 @@ import React, { useContext, useState } from "react";
 import { TopBar, Tag, ToastContext, ProgressBar, StatCard, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { ShieldCheck, RefreshCw, Download, AlertTriangle, CheckCircle2, Clock, Plus, X, Search, Trash2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses } from "../../lib/api/platform.js";
+import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail } from "../../lib/api/platform.js";
 
 export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
   const [filter, setFilter] = useState("all");
+  const [mainTab, setMainTab] = useState("progress");
+  const progressOverviewQuery = useSupabaseQuery(async () => (orgId ? fetchOrgLearnerProgressOverview(orgId) : []), [orgId]);
+  const learnerProgress = progressOverviewQuery.data || [];
+  const leaderboard = [...learnerProgress].sort((a, b) => (b.avgProgress ?? 0) - (a.avgProgress ?? 0)).slice(0, 10);
+  const behindLearners = learnerProgress.filter((l) => l.pace === "behind");
+  const progressByCourseQuery = useSupabaseQuery(async () => (orgId ? fetchTopCourses(orgId, 20) : []), [orgId]);
+  const skillGapsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgSkillGapsDetail(orgId) : []), [orgId]);
+  const [expandedLearnerId, setExpandedLearnerId] = useState(null);
   const complianceQuery = useSupabaseQuery(async () => orgId ? fetchComplianceAssignments(orgId) : [], [orgId]);
   const orgUsersQuery = useSupabaseQuery(async () => (orgId ? fetchUsersInOrg(orgId) : []), [orgId]);
   const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
@@ -139,8 +147,8 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
   return (
     <div className="ta-fade">
       <TopBar
-        title="Compliance & Certification"
-        sub="Mandatory training tracking & policy audit management"
+        title="Learner Progress"
+        sub="Track progress across all learners, by course, and who's behind - plus compliance tracking"
         orgSelector={orgSelector}
         onNavigate={setScreen}
         right={
@@ -163,6 +171,96 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
         }
       />
       <div className="ta-content">
+        <div className="ta-row ta-gap8 ta-mt4" style={{ marginBottom: 16 }}>
+          {[{ k: "progress", label: "Progress Overview" }, { k: "skillgaps", label: "Skill Gaps" }, { k: "compliance", label: "Compliance" }].map((t) => (
+            <div key={t.k} className={`ta-pill ${mainTab === t.k ? "ta-pill-active" : "ta-pill-inactive"}`} style={{ cursor: "pointer" }} onClick={() => setMainTab(t.k)}>{t.label}</div>
+          ))}
+        </div>
+
+        {mainTab === "progress" && (
+          <div className="ta-col ta-gap16">
+            <div className="ta-card">
+              <div className="ta-label">Leaderboard - top performers</div>
+              <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Ranked by average course progress</div>
+              {progressOverviewQuery.loading && <div className="ta-empty">Loading leaderboard...</div>}
+              {!progressOverviewQuery.loading && leaderboard.length === 0 && <div className="ta-empty">No learners yet.</div>}
+              <div className="ta-col ta-gap8 ta-mt12">
+                {leaderboard.map((l, i) => (
+                  <div key={l.id} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "6px 0" }}>
+                    <span style={{ fontWeight: 600 }}>#{i + 1} {l.name}</span>
+                    <span>{l.avgProgress}% avg progress - {l.completedCount}/{l.assignedCount} completed</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ta-card">
+              <div className="ta-label">Learners behind ({behindLearners.length})</div>
+              <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Low progress or inactive for more than 6 days</div>
+              {!progressOverviewQuery.loading && behindLearners.length === 0 && <div className="ta-empty">No learners currently behind.</div>}
+              <div className="ta-col ta-gap8 ta-mt12">
+                {behindLearners.map((l) => (
+                  <div key={l.id} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "6px 0" }}>
+                    <span style={{ fontWeight: 600 }}>{l.name}</span>
+                    <span style={{ color: "var(--danger)" }}>{l.avgProgress}% avg progress{l.daysSinceActive != null ? ` - inactive ${l.daysSinceActive}d` : ""}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ta-card">
+              <div className="ta-label">Progress by course</div>
+              {progressByCourseQuery.loading && <div className="ta-empty">Loading...</div>}
+              {!progressByCourseQuery.loading && (progressByCourseQuery.data || []).length === 0 && <div className="ta-empty">No enrollments yet.</div>}
+              <div className="ta-col ta-gap8 ta-mt12">
+                {(progressByCourseQuery.data || []).map((c) => (
+                  <div key={c.courseId} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "6px 0" }}>
+                    <span style={{ fontWeight: 600 }}>{c.title}</span>
+                    <span>{c.enrolled} enrolled - {c.completed} completed</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {mainTab === "skillgaps" && (
+          <div className="ta-card">
+            <div className="ta-label">Skill gaps by learner</div>
+            <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>
+              Based on real course completion by category - a completed, high-progress category counts as a demonstrated skill; a low-progress or untouched category is a gap. Click a learner to expand.
+            </div>
+            {skillGapsQuery.loading && <div className="ta-empty">Loading skill gaps...</div>}
+            {!skillGapsQuery.loading && (skillGapsQuery.data || []).length === 0 && <div className="ta-empty">No learners yet.</div>}
+            <div className="ta-col ta-gap8 ta-mt12">
+              {(skillGapsQuery.data || []).map((l) => (
+                <div key={l.learnerId} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, cursor: "pointer" }} onClick={() => setExpandedLearnerId(expandedLearnerId === l.learnerId ? null : l.learnerId)}>
+                  <div className="ta-row ta-between">
+                    <span style={{ fontWeight: 600, fontSize: 13 }}>{l.name}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>{l.completedSkills.length} demonstrated - {l.gapSkills.length} gaps</span>
+                  </div>
+                  {expandedLearnerId === l.learnerId && (
+                    <div className="ta-row ta-gap16 ta-mt10" style={{ flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: 160 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--success)" }}>COMPLETED</div>
+                        {l.completedSkills.length === 0 && <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>None yet</div>}
+                        {l.completedSkills.map((s) => <div key={s.category} style={{ fontSize: 12 }}>{s.category} - {s.avgProgress}%</div>)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 160 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--danger)" }}>GAPS</div>
+                        {l.gapSkills.length === 0 && <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>None</div>}
+                        {l.gapSkills.map((s) => <div key={s.category} style={{ fontSize: 12 }}>{s.category} - {s.avgProgress}%</div>)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {mainTab === "compliance" && (
+          <>
         <div className="ta-grid ta-grid-4">
           <StatCard stat={{ label: "Overall Compliance", value: `${overallRate}%`, icon: ShieldCheck, delta: "Target 95%", up: overallRate >= 90 }} />
           <StatCard stat={{ label: "Total Assigned Learners", value: totalAssigned, icon: Clock }} />
@@ -274,7 +372,8 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           </table>
           </div>
         </div>
-      </div>
+      </>
+        )}
 
       {showAssignModal && (
         <div
@@ -360,6 +459,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

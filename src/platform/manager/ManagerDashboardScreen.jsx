@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { TopBar, StatCard, Avatar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
-import { Users, Target, AlertTriangle, Gauge, PieChart, StickyNote } from "lucide-react";
+import { TopBar, StatCard, Avatar, Tag, ProgressBar, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
+import { Users, Target, AlertTriangle, Gauge, PieChart, StickyNote, Download } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchDirectReports, fetchTeamSkillSnapshot, fetchNotesForDepartment, addDepartmentFeedbackNote } from "../../lib/api/platform.js";
+import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail, fetchNotesForDepartment, addDepartmentFeedbackNote } from "../../lib/api/platform.js";
 
 // "My Team" is scoped to this manager's real direct reports, not the whole
 // org - user_profiles.manager_id (added alongside the is_manager_of() RLS
@@ -16,6 +16,16 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
   const reportsQuery = useSupabaseQuery(async () => (userId ? fetchDirectReports(userId) : []), [userId]);
   const reports = reportsQuery.data || [];
   const skillSnapshotQuery = useSupabaseQuery(async () => (userId ? fetchTeamSkillSnapshot(userId) : []), [userId]);
+  const skillGapsDetailQuery = useSupabaseQuery(async () => (userId ? fetchManagerSkillGapsDetail(userId) : []), [userId]);
+  const [expandedReportId, setExpandedReportId] = useState(null);
+
+  function handleDownloadReport() {
+    const rows = (reportsQuery.data || []).map((r) => ({
+      name: r.name, enrolled: r.enrolled, completed: r.completed, overdue: r.overdue, lastActive: r.lastActive,
+    }));
+    if (!rows.length) return;
+    exportRowsAsCsv("team-progress-report.csv", rows);
+  }
   const department = profileQuery?.data?.department || null;
   const notesQuery = useSupabaseQuery(async () => (orgId && department ? fetchNotesForDepartment(orgId, department) : []), [orgId, department]);
   const [noteText, setNoteText] = useState("");
@@ -59,6 +69,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
       <TopBar
         title={`My Team${profileQuery?.data?.display_name ? `: ${profileQuery.data.display_name}` : ""}`}
         sub="Progress and compliance for your direct reports"
+        right={<button className="ta-btn ta-btn-outline" onClick={handleDownloadReport} disabled={reports.length === 0}><Download size={14} /> Download Report</button>}
       />
       <div className="ta-content">
         <div className="ta-grid ta-grid-4">
@@ -117,6 +128,39 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
                   <span>{s.avgProgress}% avg ({s.learnerCount} enrollments)</span>
                 </div>
                 <ProgressBar value={s.avgProgress} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ta-card ta-mt20">
+          <div className="ta-title">Skill gaps - detail by team member</div>
+          <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>
+            Based on real course completion by category - click a name to see their demonstrated skills and gaps.
+          </div>
+          {skillGapsDetailQuery.loading && <div className="ta-empty">Loading skill gaps...</div>}
+          {!skillGapsDetailQuery.loading && (skillGapsDetailQuery.data || []).length === 0 && <div className="ta-empty">No direct reports yet.</div>}
+          <div className="ta-col ta-gap8 ta-mt12">
+            {(skillGapsDetailQuery.data || []).map((l) => (
+              <div key={l.learnerId} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, cursor: "pointer" }} onClick={() => setExpandedReportId(expandedReportId === l.learnerId ? null : l.learnerId)}>
+                <div className="ta-row ta-between">
+                  <span style={{ fontWeight: 600, fontSize: 13 }}>{l.name}</span>
+                  <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>{l.completedSkills.length} demonstrated - {l.gapSkills.length} gaps</span>
+                </div>
+                {expandedReportId === l.learnerId && (
+                  <div className="ta-row ta-gap16 ta-mt10" style={{ flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--success)" }}>COMPLETED</div>
+                      {l.completedSkills.length === 0 && <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>None yet</div>}
+                      {l.completedSkills.map((s) => <div key={s.category} style={{ fontSize: 12 }}>{s.category} - {s.avgProgress}%</div>)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 160 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--danger)" }}>GAPS</div>
+                      {l.gapSkills.length === 0 && <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>None</div>}
+                      {l.gapSkills.map((s) => <div key={s.category} style={{ fontSize: 12 }}>{s.category} - {s.avgProgress}%</div>)}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

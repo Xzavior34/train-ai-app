@@ -138,8 +138,33 @@ export async function fetchMentorEarnings(mentorId) {
 // they've earned) - only the ability to request a payout is blocked,
 // matching "temporarily suspended" rather than removing earnings
 // visibility entirely.
+// Revised - payouts are no longer unconditionally blocked. A real,
+// confirmed decision: "some instructors won't be paid as they work for
+// an organisation, and some may be paid as they run like an academy."
+// This now actually attempts the real insert; the database itself
+// (mpr_insert_enabled_instructor_or_admin,
+// 0133_per_instructor_payouts_and_learner_payments.sql) is the real
+// enforcement - only an instructor the platform owner has explicitly
+// enabled can succeed. A disabled instructor gets a real, honest
+// rejection from the database, not a hardcoded blanket message that no
+// longer reflects reality.
 export async function submitMentorPayoutRequest(mentorId, amount, paymentMethod) {
-  return { success: false, error: "Payouts are temporarily suspended while Train AI is the sole payment recipient. Your earnings are still being tracked and will be available once payouts resume." };
+  if (!supabase) return { id: `payout_${Date.now()}`, mentor_id: mentorId, amount, status: "pending" };
+  const { data, error } = await supabase
+    .from("mentor_payout_requests")
+    .insert({
+      mentor_id: mentorId,
+      amount,
+      payment_method: paymentMethod,
+      status: "pending",
+      requested_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+  if (error) {
+    return { success: false, error: "Payouts aren't enabled for your account yet - contact Train AI if you expect to be paid directly." };
+  }
+  return { success: true, ...data };
 }
 
 // This mentor's own payout request history (real `mentor_payout_requests`

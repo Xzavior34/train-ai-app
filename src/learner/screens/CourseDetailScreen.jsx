@@ -105,7 +105,7 @@ export function CourseDetailScreen({
       )}
 
       <div className="tai-row tai-gap8 tai-mt16">
-        {["lessons", "notes", "discussion", "assessment"].map((t) => (
+        {["lessons", "assessment"].map((t) => (
           <div key={t} className={`tai-pill ${tab === t ? "tai-pill-active" : "tai-pill-inactive"}`} onClick={() => setTabLocal(t)}>
             {t[0].toUpperCase() + t.slice(1)}
           </div>
@@ -152,73 +152,6 @@ export function CourseDetailScreen({
               </div>
             </>
           )}
-        </div>
-      )}
-
-      {tab === "notes" && (
-        <div className="tai-mt16">
-          <textarea className="tai-input" rows={3} placeholder="Add a course note..." value={newNoteText} onChange={e => setNewNoteText(e.target.value)} />
-          <button
-            className="tai-btn tai-btn-primary tai-mt10"
-            disabled={!newNoteText.trim()}
-            onClick={async () => {
-              if (!newNoteText.trim() || !session?.user?.id) return;
-              await addCourseNote({ userId: session.user.id, courseId: course.id, content: newNoteText.trim() });
-              setNewNoteText("");
-              courseNotesQuery.refetch();
-              showToast("Note saved");
-            }}
-          ><Edit3 size={14} /> Save note</button>
-          {courseNotesQuery.loading && <div className="tai-empty">Loading notes...</div>}
-          {!courseNotesQuery.loading && (courseNotesQuery.data || []).length === 0 && (
-            <div className="tai-empty">Your saved notes for this course will appear here.</div>
-          )}
-          {(courseNotesQuery.data || []).map(n => (
-            <div key={n.id} className="tai-card tai-mt10">
-              <div className="tai-body-text">{n.content}</div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>{timeAgo(n.updated_at)}</div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === "discussion" && (
-        <div className="tai-mt16 tai-col tai-gap10">
-          {courseDiscussionQuery.loading && <div className="tai-empty">Loading discussion...</div>}
-          {!courseDiscussionQuery.loading && (courseDiscussionQuery.data?.messages || []).length === 0 && (
-            <div className="tai-empty">No questions yet. Be the first to ask.</div>
-          )}
-          {(courseDiscussionQuery.data?.messages || []).map((m) => (
-            <div key={m.id} className="tai-card anim-pop">
-              <div className="tai-row tai-gap10">
-                <Avatar initials={m.sender_id === session?.user?.id ? "YOU" : initialsOf(m.user_profiles?.display_name)} size={30} />
-                <div style={{ fontWeight: 700, fontSize: 13 }}>{m.sender_id === session?.user?.id ? "You" : (m.user_profiles?.display_name || "Learner")}</div>
-              </div>
-              <div className="tai-body-text tai-mt8">{m.content}</div>
-            </div>
-          ))}
-          <div className="tai-row tai-gap8">
-            <input
-              className="tai-input" placeholder="Ask a question about this course..." value={discussionInput}
-              onChange={e => setDiscussionInput(e.target.value)}
-              onKeyDown={async e => {
-                if (e.key === "Enter" && discussionInput.trim() && session?.user?.id && courseDiscussionQuery.data?.discussion) {
-                  await postCourseDiscussionMessage({ discussionId: courseDiscussionQuery.data.discussion.id, senderId: session.user.id, content: discussionInput.trim() });
-                  setDiscussionInput(""); showToast("Question posted");
-                  courseDiscussionQuery.refetch();
-                }
-              }}
-            />
-            <button
-              className="tai-iconbtn" style={{ background: "var(--primary)", color: "#fff" }}
-              onClick={async () => {
-                if (!discussionInput.trim() || !session?.user?.id || !courseDiscussionQuery.data?.discussion) return;
-                await postCourseDiscussionMessage({ discussionId: courseDiscussionQuery.data.discussion.id, senderId: session.user.id, content: discussionInput.trim() });
-                setDiscussionInput(""); showToast("Question posted");
-                courseDiscussionQuery.refetch();
-              }}
-            ><Send size={16} /></button>
-          </div>
         </div>
       )}
 

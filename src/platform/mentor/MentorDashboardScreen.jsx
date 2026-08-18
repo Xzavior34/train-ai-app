@@ -3,10 +3,13 @@ import { TopBar, StatCard, Tag } from "../components/PlatformUI.jsx";
 import { Calendar, Users, Star, DollarSign } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHelper.js";
+import { fetchMentorActiveCohorts } from "../../lib/api/platform.js";
 
-export function MentorDashboardScreen({ mentorId }) {
+export function MentorDashboardScreen({ mentorId, currentUserId }) {
   const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
   const earningsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorEarnings(mentorId) : [], [mentorId]);
+  const activeCohortsQuery = useSupabaseQuery(async () => currentUserId ? fetchMentorActiveCohorts(currentUserId) : [], [currentUserId]);
+  const activeCohorts = activeCohortsQuery.data || [];
 
   const upcomingSessions = (sessionsQuery.data || []).filter(s => s.status !== "completed" && s.status !== "cancelled");
   const menteeCount = new Set((sessionsQuery.data || []).map(s => s.learner_id).filter(Boolean)).size;
@@ -42,6 +45,20 @@ export function MentorDashboardScreen({ mentorId }) {
                   <div style={{ fontSize: 12, color: "var(--text-3)" }}>{new Date(s.scheduled_at).toLocaleString()}</div>
                 </div>
                 <Tag tone="success">{s.status}</Tag>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ta-card ta-mt20">
+          <div className="ta-title">Active Cohorts ({activeCohorts.length})</div>
+          <div className="ta-col ta-gap10 ta-mt14">
+            {activeCohortsQuery.loading && <div className="ta-empty">Loading your cohorts...</div>}
+            {!activeCohortsQuery.loading && activeCohorts.length === 0 && <div className="ta-empty">You're not assigned to any active cohort yet.</div>}
+            {activeCohorts.map((c) => (
+              <div key={c.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>{c.name}</div>
+                {c.ends_at && <Tag>Ends {new Date(c.ends_at).toLocaleDateString()}</Tag>}
               </div>
             ))}
           </div>

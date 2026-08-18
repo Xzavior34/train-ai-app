@@ -48,7 +48,16 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   }
 
 
+  const totalUsers = statsQuery.data ? (statsQuery.data.activeStudents + statsQuery.data.mentors + statsQuery.data.otherUsers) : 0;
   const orgStats = statsQuery.data ? [
+    {
+      label: "Total users", value: totalUsers, icon: Users,
+      // Real breakdown, not just a raw total - "total users, which has
+      // total learners, instructors and other users (managers/other
+      // admin)" - confirmed directly, built from the same real counts
+      // already used by the other cards below, not a separate estimate.
+      sub: `${statsQuery.data.activeStudents} learners - ${statsQuery.data.mentors} instructors - ${statsQuery.data.otherUsers} other`,
+    },
     { label: "Active students", value: statsQuery.data.activeStudents, icon: Users },
     { label: "Ongoing cohorts", value: statsQuery.data.cohorts, icon: Layers },
     { label: "Total courses", value: statsQuery.data.courses, icon: BookOpen },
@@ -161,7 +170,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             <div className="ta-card">
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
-                  <div className="ta-title">Batch progress</div>
+                  <div className="ta-title">Cohort progress</div>
                   <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Cohort milestone & completion tracking</div>
                 </div>
                 <span className="ta-body" style={{ fontSize: 12 }}>All cohorts</span>
@@ -190,7 +199,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             <div className="ta-card">
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
-                  <div className="ta-title">Student risk monitor</div>
+                  <div className="ta-title">Learner risk monitor</div>
                   <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Early warnings & drop-off alerts</div>
                 </div>
                 <AlertTriangle size={16} color="var(--warning)" />

@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { TopBar, Avatar, Tag, Switch, ToastContext } from "../components/PlatformUI.jsx";
 import { ShieldCheck, UserCheck, Eye, Search } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchSuperAdmins, grantSuperAdminByUserId, revokeSuperAdmin, fetchGlobalPermissionMatrix, setGlobalPermission, searchUsersForImpersonation, viewUserAsSuperAdmin, findUserIdByEmail } from "../../lib/api/platform.js";
+import { fetchSuperAdmins, grantSuperAdminByUserId, revokeSuperAdmin, fetchGlobalPermissionMatrix, setGlobalPermission, searchUsersForImpersonation, viewUserAsSuperAdmin, findUserIdByEmail, fetchAllMentorsForPayoutControl, setInstructorPayoutsEnabled } from "../../lib/api/platform.js";
 
 // Fixed role/permission universe for the RBAC matrix below. These match the
 // real `app_role` enum in the shared schema and the permission_key values
@@ -188,6 +188,14 @@ export function AccessControlScreen() {
   const showToast = useContext(ToastContext);
   const superAdminsQuery = useSupabaseQuery(async () => fetchSuperAdmins(), []);
   const superAdmins = superAdminsQuery.data || [];
+  const mentorsQuery = useSupabaseQuery(async () => fetchAllMentorsForPayoutControl(), []);
+  const mentors = mentorsQuery.data || [];
+
+  async function handleTogglePayouts(mentorId, current) {
+    const result = await setInstructorPayoutsEnabled(mentorId, !current);
+    if (!result.success) showToast(result.error);
+    else { showToast(!current ? "Payouts enabled for this instructor." : "Payouts disabled for this instructor."); mentorsQuery.refetch(); }
+  }
   const [grantEmail, setGrantEmail] = useState("");
   const [granting, setGranting] = useState(false);
 
@@ -259,6 +267,23 @@ export function AccessControlScreen() {
               ))}
             </tbody>
           </table>
+          </div>
+        </div>
+
+        <div className="ta-card ta-mt16">
+          <div className="ta-title">Instructor Payout Controls</div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+            Enable payouts only for instructors who run their own academy and get paid directly - most org-employed instructors should stay disabled. Only the platform owner can change this.
+          </div>
+          <div className="ta-col ta-gap8 ta-mt12">
+            {mentorsQuery.loading && <div className="ta-empty">Loading instructors...</div>}
+            {!mentorsQuery.loading && mentors.length === 0 && <div className="ta-empty">No instructors on the platform yet.</div>}
+            {mentors.map((m) => (
+              <div key={m.id} className="ta-row ta-between" style={{ padding: "8px 0" }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</span>
+                <Switch on={!!m.payouts_enabled} onChange={() => handleTogglePayouts(m.id, !!m.payouts_enabled)} />
+              </div>
+            ))}
           </div>
         </div>
 

@@ -92,7 +92,8 @@ export function CoursesScreen({
       if (!matchTitle && !matchCat) return false;
     }
     if (courseLevelFilter !== "all" && c.level !== courseLevelFilter) return false;
-    if (courseSourceTab !== "all" && c.source !== courseSourceTab) return false;
+    if (courseSourceTab !== "all" && courseSourceTab !== "assigned" && c.source !== courseSourceTab) return false;
+    if (courseSourceTab === "assigned" && !c.enrolled) return false;
     return true;
   }).sort((a, b) => {
     // Course UI brief: "Bookmarked courses appear first." Stable otherwise
@@ -131,14 +132,14 @@ export function CoursesScreen({
       </div>
 
       <div className="tai-scrollx tai-mt12">
-        {["all", "internal", "external"].map((src) => (
+        {["all", "internal", "external", "assigned"].map((src) => (
           <div
             key={src}
             className={`tai-pill ${courseSourceTab === src ? "tai-pill-active" : "tai-pill-inactive"}`}
             onClick={() => setCourseSourceTab(src)}
             style={{ textTransform: "capitalize" }}
           >
-            {src === "all" ? "All Courses" : src === "internal" ? "Internal" : "External Partners"}
+            {src === "all" ? "All Courses" : src === "internal" ? "Internal" : src === "external" ? "External Partners" : "Assigned to Me"}
           </div>
         ))}
       </div>

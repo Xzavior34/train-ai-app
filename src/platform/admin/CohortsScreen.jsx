@@ -59,14 +59,18 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
             <input className="ta-input ta-mt12" placeholder="Cohort name (e.g. Q3 AI Batch)..." value={name} onChange={e => setName(e.target.value)} />
             <div className="ta-row ta-gap8 ta-mt12">
               <button className="ta-btn ta-btn-primary" onClick={async () => {
-                if (!name.trim() || !orgId) return;
-                // createdBy matters specifically for an instructor creating
-                // their own cohort - without it, they'd never get
-                // auto-added as a cohort_members row (see createCohort()
-                // in lib/api/platform.js), and the resource/session
-                // management RLS scoped to "instructors assigned to this
-                // specific cohort" would lock them out of what they just
-                // created.
+                if (!name.trim()) { showToast("Enter a cohort name first."); return; }
+                if (!orgId) {
+                  // The real, reported bug: this used to silently return
+                  // here with zero feedback whenever orgId was missing -
+                  // which is always true for a demo-mode account with no
+                  // organization_id set, or a real account not yet linked
+                  // to an org. Clicking "Save cohort" did nothing
+                  // whatsoever, no error, no toast - looking exactly like
+                  // a broken button rather than a config/demo-mode state.
+                  showToast("You need to be part of an organization to create a cohort. This account isn't linked to one yet.");
+                  return;
+                }
                 await createCohort({ organizationId: orgId, name: name.trim(), createdBy: currentUserId });
                 setNewCohortOpen(false); setName("");
                 cohortsQuery.refetch();

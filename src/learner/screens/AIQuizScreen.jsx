@@ -141,6 +141,17 @@ export function AIQuizScreen({
   return (
     <div className="tai-fade-in">
       <TopBar title="AI Coach" sub="Chat, adaptive quizzes & insights" />
+      {typeof credits === "number" && (
+        <div className="tai-card tai-mt10" style={{ padding: "10px 14px" }}>
+          <div className="tai-row tai-between">
+            <span style={{ fontSize: 12.5, fontWeight: 600 }}>AI credits used today</span>
+            <span style={{ fontSize: 12.5, fontWeight: 700 }}>{Math.max(0, 10 - credits)} / 10</span>
+          </div>
+          <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 2 }}>
+            Resets daily. Not currently a per-learner allocation your admin configures - a flat daily allowance for every learner.
+          </div>
+        </div>
+      )}
       <div className="tai-row tai-gap8" style={{ flexWrap: "wrap" }}>
         {[
           { k: "coach", label: "Coach" },

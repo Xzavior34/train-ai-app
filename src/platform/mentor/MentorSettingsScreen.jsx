@@ -1,6 +1,8 @@
 import React, { useState, useContext, useEffect } from "react";
 import { TopBar, ToastContext, Tag } from "../components/PlatformUI.jsx";
 import { Plus, Trash2, BadgeCheck, Link as LinkIcon, Bell, Calendar, FolderOpen, User } from "lucide-react";
+import FileUploadZone from "../../components/common/FileUploadZone.jsx";
+import { updateUserAvatar, updateUserDisplayName } from "../../lib/api/platform.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   updateMentorProfile,
@@ -36,10 +38,15 @@ const PROFILE_FIELDS = [
   { key: "languages", label: "Languages", isArray: true },
 ];
 
-export function MentorSettingsScreen({ mentorId, mentorProfileQuery }) {
+export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUserId, userProfileQuery }) {
   const showToast = useContext(ToastContext);
   const mentor = mentorProfileQuery?.data || null;
+  const userProfile = userProfileQuery?.data || null;
   const [tab, setTab] = useState("profile");
+  const [displayName, setDisplayName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
+  useEffect(() => { if (userProfile) setDisplayName(userProfile.display_name || ""); }, [userProfile]);
 
   const missingFields = PROFILE_FIELDS.filter((f) => {
     const v = mentor?.[f.key];
@@ -300,7 +307,49 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery }) {
           <>
         <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
           <div className="ta-title">Profile</div>
-          <div className="ta-label ta-mt12">Specialization / Teaching Areas</div>
+          <div className="ta-row ta-gap16 ta-mt12" style={{ alignItems: "center" }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, overflow: "hidden" }}>
+              {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (displayName || "I").slice(0, 2).toUpperCase()}
+            </div>
+            <FileUploadZone
+              bucket="uploads"
+              pathPrefix={`avatars/${currentUserId}`}
+              accept="image/*"
+              onUploaded={async (url) => {
+                try {
+                  await updateUserAvatar(currentUserId, url);
+                  userProfileQuery?.refetch?.();
+                  showToast("Profile picture updated!");
+                } catch (e) {
+                  showToast(e.message || "Could not update picture.");
+                }
+              }}
+              label="Change photo"
+            />
+          </div>
+          <div className="ta-label ta-mt16">Display Name</div>
+          <div className="ta-row ta-gap8">
+            <input className="ta-input ta-mt6" style={{ flex: 1 }} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+            <button
+              className="ta-btn ta-btn-outline ta-mt6"
+              disabled={savingName || !displayName.trim()}
+              onClick={async () => {
+                setSavingName(true);
+                try {
+                  await updateUserDisplayName(currentUserId, displayName);
+                  userProfileQuery?.refetch?.();
+                  showToast("Name updated!");
+                } catch (e) {
+                  showToast(e.message || "Could not update name.");
+                } finally {
+                  setSavingName(false);
+                }
+              }}
+            >
+              Save name
+            </button>
+          </div>
+          <div className="ta-label ta-mt16">Specialization / Teaching Areas</div>
           <input className="ta-input ta-mt6" placeholder="e.g. AI Fundamentals, Data Science" value={specialization} onChange={e => setSpecialization(e.target.value)} />
           <div className="ta-label ta-mt16">Bio</div>
           <textarea className="ta-input ta-mt6" rows={4} placeholder="Tell learners about yourself..." value={bio} onChange={e => setBio(e.target.value)} />

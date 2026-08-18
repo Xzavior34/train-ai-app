@@ -14,7 +14,8 @@ const PAYOUT_METHODS = [
   { key: "mobile_money", label: "Mobile money" },
 ];
 
-export function AdministrativeScreen({ mentorId }) {
+export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUserId }) {
+  const payoutsEnabled = !!mentorProfileQuery?.data?.payouts_enabled;
   const showToast = useContext(ToastContext);
   const { session } = useAuth();
   const [tab, setTab] = useState("earnings");
@@ -121,25 +122,27 @@ export function AdministrativeScreen({ mentorId }) {
 
         {tab === "payouts" && (
           <>
-            <div className="ta-card ta-mt16" style={{ maxWidth: 560, borderColor: "var(--warning, #B45309)" }}>
-              <div style={{ fontSize: 12.5, color: "var(--warning, #B45309)", fontWeight: 600 }}>
-                Payouts are temporarily suspended - Train AI is currently the sole payment recipient. Your earnings below are still being tracked correctly and will be available once payouts resume.
+            {!payoutsEnabled && (
+              <div className="ta-card ta-mt16" style={{ maxWidth: 560, borderColor: "var(--warning, #B45309)" }}>
+                <div style={{ fontSize: 12.5, color: "var(--warning, #B45309)", fontWeight: 600 }}>
+                  Payouts aren't enabled for your account - this is normal if you work for an organization rather than running an independent academy. Your earnings below are still tracked correctly. Contact Train AI if you believe this should be enabled.
+                </div>
               </div>
-            </div>
-            <div className="ta-card ta-mt16" style={{ maxWidth: 560, opacity: 0.6 }}>
+            )}
+            <div className="ta-card ta-mt16" style={{ maxWidth: 560, opacity: payoutsEnabled ? 1 : 0.6 }}>
               <div className="ta-title">Request a withdrawal</div>
               <div className="ta-label ta-mt12">Amount ($)</div>
-              <input className="ta-input ta-mt6" type="number" min="0" step="0.01" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} placeholder={`Up to $${availableBalance.toFixed(2)}`} disabled />
+              <input className="ta-input ta-mt6" type="number" min="0" step="0.01" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} placeholder={`Up to $${availableBalance.toFixed(2)}`} disabled={!payoutsEnabled} />
               <div className="ta-label ta-mt12">Payout method</div>
-              <select className="ta-input ta-mt6" value={payoutMethod} onChange={e => setPayoutMethod(e.target.value)} disabled>
+              <select className="ta-input ta-mt6" value={payoutMethod} onChange={e => setPayoutMethod(e.target.value)} disabled={!payoutsEnabled}>
                 {PAYOUT_METHODS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
               </select>
               <div className="ta-label ta-mt12">Account details</div>
-              <input className="ta-input ta-mt6" value={payoutDetails} onChange={e => setPayoutDetails(e.target.value)} placeholder="Account number / email / phone" disabled />
-              <button className="ta-btn ta-btn-primary ta-mt16" disabled title="Payouts are temporarily suspended">
+              <input className="ta-input ta-mt6" value={payoutDetails} onChange={e => setPayoutDetails(e.target.value)} placeholder="Account number / email / phone" disabled={!payoutsEnabled} />
+              <button className="ta-btn ta-btn-primary ta-mt16" disabled={!payoutsEnabled || !mentorId || submitting || availableBalance <= 0} onClick={handleRequestPayout}>
                 <Send size={15} /> Request Payout
               </button>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>Disabled while payouts are suspended.</div>
+              {!payoutsEnabled && <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>Disabled - payouts aren't enabled for your account.</div>}
             </div>
 
             <div className="ta-card ta-mt16">

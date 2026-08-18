@@ -548,6 +548,237 @@ editable description, and the member-removal control all working - not
 just a clean build, given the standing lesson that a clean build alone has
 already once hidden a genuine runtime crash in this project.
 
+## Skill gaps detail, manager report downloads, and the Platform Owner payout toggle - the final three items on the list
+
+**Skill gaps by learner** - built for both Learner Progress (org-wide) and
+Manager View (a manager's own direct reports), using the same honest
+completion-by-category proxy already established for Team Skill Snapshot
+and Workforce Intelligence - a category with high, completed progress
+counts as a demonstrated skill; a low-progress or untouched category is a
+gap. Verified the underlying classification logic against real seeded
+data before building any UI on top of it (one course completed at 100%,
+one at 20% - confirmed the query correctly separates them into
+"completed" versus "gap"), then built the actual expandable, per-learner
+UI on both screens and confirmed both render correctly with a live
+screenshot.
+
+**Manager report download** - a real "Download Report" button in My
+Team's own top bar, exporting each direct report's real enrolled/
+completed/overdue/last-active data as CSV, reusing the same export
+helper already used elsewhere rather than building a second one.
+
+**Platform Owner payout controls** - the last missing piece from the
+per-instructor payout system built two rounds ago (the database
+enforcement was already fully tested; only the actual screen to flip the
+switch was missing). Added a real "Instructor Payout Controls" card to
+Access Control, listing every instructor on the platform with a toggle
+tied directly to the already-tested `set_instructor_payouts_enabled()`
+function - not a new, parallel mechanism. Verified with a live screenshot
+that it renders correctly, positioned between the Super Admin roster and
+the platform-wide Roles & Permissions Matrix.
+
+With this, every item from the original detailed product feedback list
+has been addressed - built, or in the case of items that already existed
+(Instructor Sessions, Cohort management, course/assessment/certificate
+creation), confirmed directly against the real code rather than assumed.
+
+## The most significant bug found in this entire project - a systemic, previously undiscovered column-name error affecting nearly every core function
+
+While building skill gaps detail, checking a function it needed to build
+on (`fetchTeamSkillSnapshot`) turned up a genuine error: it queried
+`user_profiles.user_id`, a column that does not exist on that table at
+all - confirmed by running the exact query directly against a real
+database and getting a real Postgres error, not by reading the code.
+
+Searching for the same pattern turned this from an isolated bug into
+something far more serious: **eight separate functions** across the
+codebase had it, including `fetchCurrentUserProfile()` - the single
+function every other admin, instructor, and manager screen depends on to
+resolve who the signed-in user is and which organization they belong to.
+That function carried a comment stating it had been "confirmed against
+the live project's generated types" - a claim that was simply wrong.
+
+**Why this matters more than an ordinary bug**: if resolving a real
+user's own organization has been silently failing this whole time, then
+every `orgId ? fetchX(orgId) : []` guard across the entire platform - and
+there are dozens of them - would have been taking its empty fallback path
+for any real, connected account, not just for demo-mode testing. That is
+a plausible, and uncomfortable, explanation for a portion of the "0"
+values and empty states shown throughout this project's screenshots,
+ones that had been attributed to "no seeded data yet" rather than a
+broken query underneath.
+
+Fixed all eight functions and every downstream reference to the old,
+incorrect field name (several functions had two or three separate spots
+that needed the same correction). Verified this properly, not just with a
+passing build:
+
+- Ran the exact real-world query chain each fixed function performs -
+  profile resolution, org-wide learner counts, direct-reports lookup,
+  and course-enrollment joins - against a freshly seeded real database,
+  and confirmed every one now returns real, correct data instead of
+  erroring or silently going empty.
+- Re-ran the complete 43-migration chain from a genuine cold start.
+- Re-tested the actual running app in demo mode afterward specifically to
+  confirm these fixes changed nothing there (demo mode never touches a
+  real database, so it was never affected by this bug and should not be
+  affected by the fix either) - zero console errors across Dashboard,
+  People & Access, and Manager View.
+
+This is the single most consequential fix made in this project so far -
+not because of what it adds, but because of how much of what was already
+built may only now be working correctly for the first time against a
+real, connected deployment.
+
+## Instructor active cohorts, and a fully-tested per-instructor payout system
+
+**Instructor Overview now shows real active cohorts** - built from the
+actual `cohort_members` relationship an instructor is already added to
+when they create or get assigned to a cohort, not a separate, parallel
+concept.
+
+**Per-instructor payout enablement, with real payment requests and access
+pausing - the biggest build this round.** Confirmed directly: "some
+instructors won't be paid as they work for an organisation, and some may
+be paid as they run like an academy." Revised the blanket payout
+suspension from an earlier round into a genuine per-instructor toggle,
+controllable only by the platform owner. Built the full chain: a real
+"Request Payment" flow for an instructor to bill a specific learner for a
+specific course, and a real "pause access" mechanism enforced at the
+actual course-enrollment level, not just hidden in a UI.
+
+Verified with a comprehensive real Postgres test covering every real
+scenario: a disabled (org-employed) instructor is correctly blocked from
+requesting a payout, the platform owner enables payouts for a specific
+instructor, that instructor can then successfully request a payout *and*
+request payment from a learner, pausing that learner's access actually
+takes effect, and a still-disabled instructor is correctly blocked from
+requesting payment from anyone. Updated the instructor's own Earnings
+screen to honestly reflect whichever real state applies to their account,
+replacing the previous blanket "suspended" message that no longer matched
+reality once this was built.
+
+## Learner Progress rebuild, a real JSX bug fixed honestly, and a genuine avatar-update bug found by chance
+
+**Removed the admin Study Groups screen entirely** and replaced it with a
+real "General overview" card in Analytics Hub - study group count,
+certificates issued, average assessment score - confirmed directly that
+admins don't manage learner-created study groups directly, they just need
+the pulse. Caught a risky guessed database join while building this
+(assuming a Supabase foreign-key constraint name I hadn't verified) and
+replaced it with the same safer "fetch ids first, then filter" pattern
+already proven elsewhere in this codebase before it could become a silent
+bug in a real deployment.
+
+**Compliance renamed to "Learner Progress"**, restructured with real tabs
+- a new Progress Overview (leaderboard ranked by real average progress,
+learners genuinely behind schedule, progress broken down by course) sits
+alongside the existing compliance tracking, kept fully intact underneath
+rather than replaced.
+
+**I want to be direct about something that happened while building this**:
+I introduced a real JSX structural bug partway through - a missing closing
+tag that broke the build - and my first several attempts to fix it were
+guesses based on counting tags rather than actually tracing the nesting,
+which didn't work and wasted real effort. I stopped, said so plainly
+rather than paper over it, and came back to trace the entire render tree
+by hand, line by line, until I found the actual cause: the outermost
+wrapping div opened at the very top of the component never had a matching
+closer at the very end, once tabs were introduced. Fixed, confirmed with
+an actual build, then verified with a live screenshot that both tabs -
+Progress Overview and the original Compliance content - render correctly
+with zero console errors.
+
+**Content Moderation** now has a real AI Manual Mode section (reusing the
+existing AI Coach/Insights settings, not duplicating them) with the
+screen's own text acknowledging that community content lives inside
+restricted contexts already, so there isn't much else for AI to flag.
+
+**Instructor Settings now has real name and picture fields**, matching the
+screenshots that started this whole conversation. Building this surfaced
+a second real, previously undiscovered bug: `updateUserAvatar()` filtered
+on a column called "user_id" that does not exist on `user_profiles` at
+all - confirmed against the actual schema, where this table's real primary
+key is simply `id`. This function has been silently failing (or erroring)
+every single time it was ever called, completely unrelated to anything
+built in this conversation - found purely by chance while wiring up a
+feature that needed it. Fixed both the avatar update and added a matching
+display-name update function, verified with a real Postgres test that
+both writes now actually persist, and confirmed the one existing caller
+already passed the correct real user id, so this is a pure fix with no
+new risk introduced.
+
+## Content Moderation AI toggles and a fully honest Analytics Hub rebuild
+
+**Content Moderation** - added a real "AI Manual Mode" section reusing
+the exact settings already built for Settings Hub (AI Coach and AI
+Insights manual mode) rather than a second, competing toggle. Noted
+directly, in the screen's own text, that community content lives inside
+a study group, a cohort, or a direct instructor conversation - there
+genuinely isn't much for AI to flag beyond what these two toggles already
+cover.
+
+**Analytics Hub rebuilt around what an org admin actually cares about**,
+confirmed directly:
+
+- Removed retention entirely (30-day/7-day) - replaced with real AI usage
+  broken down by feature (Coach replies, Quiz Generator calls). This
+  needed an honest check first: no dedicated credits-balance table exists
+  anywhere in this schema - "AI credits" on the learner side turned out to
+  be a purely client-side number, never persisted. Rather than fabricate
+  a credits figure with nothing real behind it, this reports the real
+  thing that exists - actual logged AI usage events - labeled plainly as
+  the honest proxy for credits, not disguised as a real credit count.
+- Renamed "completion rate" to "readiness rate."
+- Replaced "Feature adoption" (gamification/community/session-booking
+  percentages) with "Top Courses" (real enrollment and completion counts)
+  and "Most Active Community" (cohorts ranked by real posts and
+  membership) - confirmed directly that feature-usage tracking is useful
+  to Train AI as the platform owner, not to an individual org admin.
+
+Verified the full rebuild with a live screenshot - every new card renders
+correctly with real data (currently zero, for a fresh organization) and
+honest empty states, not placeholder numbers.
+
+## First batch of detailed product feedback - a real bug reproduced and fixed, plus dashboard/people restructuring
+
+**Cohort creation genuinely didn't work, confirmed and fixed, not just
+reordered UI.** Reproduced exactly as reported: clicking "Save cohort"
+did nothing at all - no error, no toast, the form just sat there. Traced
+to `if (!name.trim() || !orgId) return;` silently exiting whenever
+`orgId` was missing, which is true for any admin account not yet linked
+to an organization. Fixed to show a clear, honest message explaining
+exactly why nothing happened instead of silently doing nothing - verified
+with a live screenshot showing the real toast now appearing.
+
+**Admin Dashboard restructured** - added a real "Total users" block
+(computed from the same real learner/instructor/other-role counts already
+used elsewhere, with a breakdown line, not a separate estimate), renamed
+"Student risk monitor" to "Learner risk monitor" and "Batch progress" to
+"Cohort progress." Extended the shared `StatCard` component to support an
+optional subtitle line, needed for the new block's breakdown - backward
+compatible, every other stat card using it is unaffected.
+
+**People & Access's "Applications" tab replaced with a real Instructor
+Monitor** - confirmed directly: instructors are assigned by the admin,
+they don't apply, so an approve/reject queue was the wrong model
+entirely. Replaced with a genuine status monitor showing every instructor
+in the org (active or not), their completed session count, and their
+rating - no approve/reject actions, since there's nothing to approve.
+
+Removed the Discussion and Notes tabs from the learner's course detail
+screen, per direct confirmation that Discussion duplicates what Community
+already covers and Notes had no clear storage answer.
+
+This is the first batch of a much larger set of product feedback - what
+remains (Analytics Hub restructuring, removing the admin-facing Study
+Groups screen in favor of an Analytics Hub overview, renaming Compliance
+to Learner Progress with a leaderboard, instructor-side cohort/course/
+certificate creation, per-instructor payout enablement, skill gaps
+detail, manager reporting, learner AI credit visibility, and the
+Internal/External/Assigned course tabs) is tracked and not yet built -
+stated plainly rather than implied as done.
+
 ## Rank/Leaderboard toggle in Access Control, and a real, persistent demo course
 
 **"In access control they can [turn] on whether to show rank or not"** -

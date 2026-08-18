@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { TopBar, Avatar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { UserPlus, Search, Check, X, ShieldAlert, Download, Trash2, FileText, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchOrgMembers, fetchMentorApplications, fetchPendingInvitations, createInvitation, revokeInvitation, decideMentorApplication, updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly } from "../../lib/api/platform.js";
+import { fetchOrgMembers, fetchPendingInvitations, createInvitation, revokeInvitation, updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly, fetchOrgInstructorsMonitor } from "../../lib/api/platform.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { Award } from "lucide-react";
 import { fetchAllDSARRequests, updateDSARRequestStatus, exportUserData, deleteUserCascade } from "../../lib/api/gdprService.js";
@@ -49,7 +49,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
   const [progressSort, setProgressSort] = useState("pace"); // "pace" | "name"
 
   const membersQuery = useSupabaseQuery(async () => orgId ? fetchOrgMembers(orgId) : [], [orgId]);
-  const applicationsQuery = useSupabaseQuery(async () => orgId ? fetchMentorApplications(orgId) : [], [orgId]);
+  const instructorsQuery = useSupabaseQuery(async () => orgId ? fetchOrgInstructorsMonitor(orgId) : [], [orgId]);
   const invitationsQuery = useSupabaseQuery(async () => orgId ? fetchPendingInvitations(orgId) : [], [orgId]);
   const progressQuery = useSupabaseQuery(async () => orgId ? fetchOrgLearnerProgressOverview(orgId) : [], [orgId]);
   // DSAR requests have no org_id column in the schema - this queue is
@@ -57,7 +57,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
   const dsarQuery = useSupabaseQuery(async () => fetchAllDSARRequests(), []);
 
   const members = membersQuery.data || [];
-  const applications = applicationsQuery.data || [];
+  const instructors = instructorsQuery.data || [];
   const invitations = invitationsQuery.data || [];
   const dsarRequests = dsarQuery.data || [];
   const pendingDsarCount = dsarRequests.filter(r => r.status === "pending").length;
@@ -87,7 +87,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
       />
       <div className="ta-content">
         <div className="ta-tabs">
-          {[{ k: "all", label: "Directory" }, { k: "progress", label: `Progress${behindCount > 0 ? ` (${behindCount} behind)` : ""}` }, { k: "applications", label: `Applications (${applications.length})` }, { k: "invites", label: `Pending Invites (${invitations.length})` }, { k: "dsar", label: `Data Requests (${pendingDsarCount})` }].map(t => (
+          {[{ k: "all", label: "Directory" }, { k: "progress", label: `Progress${behindCount > 0 ? ` (${behindCount} behind)` : ""}` }, { k: "applications", label: `Instructor Monitor (${instructors.length})` }, { k: "invites", label: `Pending Invites (${invitations.length})` }, { k: "dsar", label: `Data Requests (${pendingDsarCount})` }].map(t => (
             <div key={t.k} className={`ta-tab ${tab === t.k ? "active" : ""}`} onClick={() => setTab(t.k)}>{t.label}</div>
           ))}
         </div>
@@ -231,29 +231,16 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
           <div className="ta-card ta-mt16">
             <div className="ta-table-wrap">
             <table className="ta-table">
-              <thead><tr><th>Applicant</th><th>Title</th><th>Hourly rate</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Instructor</th><th>Status</th><th>Sessions Completed</th><th>Rating</th></tr></thead>
               <tbody>
-                {applicationsQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading applications...</td></tr>}
-                {!applicationsQuery.loading && applications.length === 0 && <tr><td colSpan={4} className="ta-empty">No pending instructor applications.</td></tr>}
-                {applications.map(a => (
-                  <tr key={a.id}>
-                    <td><div className="ta-row ta-gap10"><Avatar initials={(a.display_name || "A").slice(0, 2).toUpperCase()} size={32} /><span style={{ fontWeight: 600 }}>{a.display_name}</span></div></td>
-                    <td>{a.title}</td>
-                    <td>${a.hourly_rate}/hr</td>
-                    <td>
-                      <div className="ta-row ta-gap6">
-                        <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={async () => {
-                          await decideMentorApplication(a.id, "approved");
-                          applicationsQuery.refetch();
-                          showToast("Application approved!");
-                        }}><Check size={14} /> Approve</button>
-                        <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={async () => {
-                          await decideMentorApplication(a.id, "rejected");
-                          applicationsQuery.refetch();
-                          showToast("Application rejected.");
-                        }}><X size={14} /> Reject</button>
-                      </div>
-                    </td>
+                {instructorsQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading instructors...</td></tr>}
+                {!instructorsQuery.loading && instructors.length === 0 && <tr><td colSpan={4} className="ta-empty">No instructors in this organization yet - assign one from Directory.</td></tr>}
+                {instructors.map(m => (
+                  <tr key={m.id}>
+                    <td><div className="ta-row ta-gap10"><Avatar initials={(m.display_name || "I").slice(0, 2).toUpperCase()} size={32} /><span style={{ fontWeight: 600 }}>{m.display_name}</span></div></td>
+                    <td><Tag tone={m.is_active ? "success" : "warning"}>{m.is_active ? "Active" : "Inactive"}</Tag></td>
+                    <td>{m.sessions_completed ?? 0}</td>
+                    <td>{m.rating ? `${m.rating}/5` : "No ratings yet"}</td>
                   </tr>
                 ))}
               </tbody>
