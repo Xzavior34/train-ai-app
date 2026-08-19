@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { TopBar, Avatar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { UserPlus, Search, Check, X, ShieldAlert, Download, Trash2, FileText, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchOrgMembers, fetchPendingInvitations, createInvitation, revokeInvitation, updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly, fetchOrgInstructorsMonitor } from "../../lib/api/platform.js";
+import { fetchOrgMembers, fetchPendingInvitations, createInvitation, revokeInvitation, updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly, fetchOrgInstructorsMonitor, bulkImportUsers, parseUserImportCsv } from "../../lib/api/platform.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { Award } from "lucide-react";
 import { fetchAllDSARRequests, updateDSARRequestStatus, exportUserData, deleteUserCascade } from "../../lib/api/gdprService.js";
@@ -414,6 +414,33 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                     {bulkSubmitting ? "Sending..." : `Send ${bulkEmails.split("\n").filter((e) => e.trim().includes("@")).length} invitations`}
                   </button>
                   <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
+                </div>
+
+                <div className="ta-mt16" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                  <div style={{ fontWeight: 700, fontSize: 12.5 }}>Or import a CSV file</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+                    Confirmed directly against the real 1.0 reference (BulkUserImportExport) - a CSV with "email" and optional "role" columns lets you mix learners and instructors in one file, unlike the uniform-role list above.
+                  </div>
+                  <input
+                    type="file" accept=".csv,text/csv" className="ta-mt8"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !orgId) return;
+                      const text = await file.text();
+                      const rows = parseUserImportCsv(text);
+                      if (!rows.length) { showToast("No valid rows found in this CSV."); return; }
+                      setBulkSubmitting(true);
+                      try {
+                        const result = await bulkImportUsers(rows, orgId, null);
+                        showToast(`${result.succeeded.length} invited${result.failed.length > 0 ? `, ${result.failed.length} failed (${result.failed.slice(0, 3).map((f) => f.email).join(", ")}${result.failed.length > 3 ? "..." : ""})` : ""}.`);
+                        invitationsQuery.refetch();
+                        setInviteOpen(false); setBulkMode(false);
+                      } finally {
+                        setBulkSubmitting(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
                 </div>
               </>
             )}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial } from "../../lib/api/platform.js";
+import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial, fetchCourseQualityReview, submitCourseQualityReview } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 
@@ -164,6 +164,11 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   const [materialTitle, setMaterialTitle] = useState("");
   const [materialUrl, setMaterialUrl] = useState("");
   const [addingMaterial, setAddingMaterial] = useState(false);
+  const qualityReviewQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseQualityReview(activeCourse.id) : null), [activeCourse?.id]);
+  const [reviewStatus, setReviewStatus] = useState("approved");
+  const [reviewScore, setReviewScore] = useState("");
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   async function handleDecideApplication(app, decision) {
     try {
@@ -500,6 +505,47 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       <input type="checkbox" checked={editRequiresApproval} onChange={(e) => setEditRequiresApproval(e.target.checked)} />
                       Require approval to join. Learners request to enroll and you approve/reject them (Applications tab)
                     </label>
+                  </div>
+
+                  <div className="ta-card" style={{ background: "var(--surface-2)", marginTop: 10 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>Quality Review</div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+                      An optional QA record for this course - separate from publishing it. Publishing and unpublishing above still work exactly as before, with or without a review on file.
+                    </div>
+                    {qualityReviewQuery.data && (
+                      <div className="ta-row ta-between ta-mt10" style={{ padding: 10, background: "var(--surface-3)", borderRadius: 10 }}>
+                        <div>
+                          <Tag tone={qualityReviewQuery.data.status === "approved" ? "success" : qualityReviewQuery.data.status === "rejected" ? "danger" : "warning"}>{qualityReviewQuery.data.status.replace("_", " ")}</Tag>
+                          {qualityReviewQuery.data.quality_score && <span style={{ fontSize: 12, marginLeft: 8 }}>Score: {qualityReviewQuery.data.quality_score}/10</span>}
+                          {qualityReviewQuery.data.review_notes && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>{qualityReviewQuery.data.review_notes}</div>}
+                        </div>
+                      </div>
+                    )}
+                    <div className="ta-row ta-gap8 ta-mt10" style={{ flexWrap: "wrap" }}>
+                      <select className="ta-input" style={{ width: 140 }} value={reviewStatus} onChange={(e) => setReviewStatus(e.target.value)}>
+                        <option value="approved">Approved</option>
+                        <option value="needs_changes">Needs changes</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                      <input className="ta-input" type="number" min="1" max="10" style={{ width: 90 }} placeholder="Score" value={reviewScore} onChange={(e) => setReviewScore(e.target.value)} />
+                      <input className="ta-input" style={{ flex: "1 1 200px" }} placeholder="Review notes (optional)" value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} />
+                      <button
+                        className="ta-btn ta-btn-outline"
+                        disabled={submittingReview}
+                        onClick={async () => {
+                          setSubmittingReview(true);
+                          try {
+                            const result = await submitCourseQualityReview(activeCourse.id, { status: reviewStatus, qualityScore: reviewScore ? Number(reviewScore) : null, reviewNotes, reviewerId: currentUserId });
+                            if (!result.success) showToast(result.error);
+                            else { showToast("Quality review submitted."); qualityReviewQuery.refetch(); setReviewNotes(""); }
+                          } finally {
+                            setSubmittingReview(false);
+                          }
+                        }}
+                      >
+                        Submit Review
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

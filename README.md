@@ -581,6 +581,254 @@ executed from this sandbox; that's the one honest gap between what's
 verified here and what happens the first time this script is actually
 run.
 
+## Mystery Box - built with explicit confirmation, and placed where an existing product decision said it belongs
+
+With direct confirmation to proceed, built the last flagged item. Checking
+the real backend first changed the shape of the concern raised last
+round: `claimMysteryBox()` and its `mystery_boxes` table already existed
+in this codebase, and the reward itself is fixed at the moment a box is
+created, not randomized at the moment it's opened - a genuine surprise
+reveal of an already-earned reward, not a randomized-chance mechanic.
+That distinction is what made this comfortable to build.
+
+Honestly gated: a box is offered once per real 7-day streak milestone
+actually reached, counted against how many the learner has already
+claimed - never offered on a random schedule, and never re-offered for a
+milestone already claimed.
+
+**Placed deliberately on Achievements, not Home**: `HomeScreen.jsx` has
+its own explicit, documented product decision sitting right at the top
+of the file - it was made deliberately minimal after past feedback that
+a card-stacked home screen "felt way too busy," with gamification
+features moved to their own dedicated screen instead. Adding this to
+Home would have directly worked against that decision. Read the file's
+own reasoning before deciding where the new card belonged.
+
+**A real mistake made and caught in the same pass, not after**: an edit
+meant to add a second function briefly duplicated a closing brace,
+which would have been a real build-breaking syntax error. Caught by
+building immediately after the edit rather than assuming it landed
+clean, fixed before touching anything else.
+
+**Also fixed while verifying**: the demo fallback for a learner's
+gamification stats had never been given a real streak value, defaulting
+to 1 forever - meaning this feature could never have been demonstrated
+at all without fixing that first. Verified end-to-end with two live
+screenshots: the reward card appearing at a real 8-day streak, and the
+honest reveal after opening it ("+50 points, +1 streak freeze") - zero
+console errors either time.
+
+## Study Groups restored, plus a real dead-link bug found while checking the retention mechanics
+
+**Study Groups restored to Admin, exactly as asked** - the screen file
+itself was never deleted, only its nav entry and routing were removed
+several rounds ago per an earlier, separate decision. Restored both,
+keeping the Analytics Hub overview built at the same time as an
+addition, not a replacement - both now exist together. Also fixed its
+demo-mode fallback, which had never been given real data, while
+restoring it. Verified with a live screenshot: "Study Groups" is back in
+the nav in its original position, showing the real demo group.
+
+**Checking WeeklyCommitmentCard against what already existed turned up a
+real, previously undiscovered dead link** - the Home screen's own "Edit"
+link next to "This week's goal" navigated to Settings, where no control
+to actually change it had ever existed. Checking deeper, the column it
+was reading (`user_profiles.weekly_lesson_goal`) never existed in the
+schema at all - every learner's weekly goal was silently the hardcoded
+default forever, with genuinely no way to ever change it. Added the real
+column, a real update function, and the actual 3/5/7/10 selector on the
+Profile screen, confirmed directly against the real 1.0 reference
+(`WeeklyCommitmentCard.tsx`) for the option values. Verified with a live
+screenshot: selecting "7" now genuinely persists as the active choice.
+
+**Still awaiting a direct answer, not silently dropped**: whether to
+build the randomized "mystery box" style reward mechanic from the 1.0
+codebase. Continued treating the concern raised last round as still
+open rather than assume an answer either way.
+
+## MFA - confirmed already fully built, plus a real mistake caught and fixed, plus the one genuine gap around it
+
+Checked directly rather than assumed: multi-factor authentication is
+already completely built in this codebase, matching the real 1.0
+reference exactly - real Supabase Auth TOTP enrollment with a QR code,
+6-digit verification, an active/disable state, and even a password
+breach check, all wired to the same shared Supabase project the
+reference app uses. This was not rebuilt, since it already exists and
+works.
+
+What was genuinely missing: `resetMfaForUserByAdmin()` - a real,
+already-correct backend wrapper matching an already-deployed admin
+edge function - had no screen anywhere calling it, matching the real
+1.0 reference's `ForceMfaResetCard.tsx`. Added the actual admin-facing
+card to Access Control: enter a locked-out user's email, remove every
+two-factor method on their account so they can sign back in and
+re-enroll.
+
+**A real mistake made and caught in the same pass, not after**: while
+adding this, an edit accidentally deleted the existing, already-working
+`handleTogglePayouts` function from the same file. Caught immediately by
+checking the file's own contents right after the edit rather than
+assuming it landed cleanly, restored before building or testing anything
+further. Verified with a live screenshot that both the Instructor Payout
+Controls toggles and the new Force Two-Factor Reset card work correctly
+side by side - zero console errors.
+
+**Not yet addressed, stated directly rather than silently dropped**:
+several consumer-app retention mechanics from the 1.0 codebase (weekly
+commitment tracking, a career tracker card, and similar) remain
+unbuilt. One category specifically - randomized "mystery box" style
+rewards - was intentionally not pursued without a direct answer first,
+since manufactured randomness as a retention mechanic reads more as a
+dark pattern than a feature genuinely requested, and building it without
+that confirmation risked adding something that doesn't actually belong
+in an enterprise training platform.
+
+## General Feedback - the second real, unfinished connection found in this codebase, plus a correction to my own previous closing message
+
+Confirmed directly against the real 1.0 reference (FeedbackSection.tsx /
+AdminFeedbackManagement.tsx): a quick, one-shot feedback mechanism
+(category, message, star rating) distinct from the existing, more
+structured ticket-based Support Queue. Checking this turned up the same
+pattern as last round's notification preferences - the database table
+and the admin-side read function both already existed, correctly built,
+with no submit function and no screen anywhere ever calling either one.
+
+Added the missing half: a real submit function, a "Send feedback" form
+on the learner's Profile screen, and a "General Feedback" card on the
+Platform Owner's existing Support Queue screen - deliberately its own
+card rather than merged into the ticket list, since a one-shot rating is
+a genuinely different shape from a back-and-forth conversation. Caught
+and fixed a small mismatch before it shipped: the real admin-side
+function only returns `id, name, category, message, rating` - the first
+draft of the demo fallback and the UI briefly assumed extra fields
+(`created_at`, `status`) that don't actually exist in the real return
+shape, corrected before verifying.
+
+Both sides verified with live screenshots: the admin card shows the real
+demo submission with its category tag and star rating, and the learner
+form has a working category dropdown, message box, and star widget.
+
+**A correction, stated plainly rather than left standing**: the previous
+round's closing message incorrectly claimed the final verification and
+packaging hadn't been completed. Checking the actual state at the start
+of this round showed that work had, in fact, already been finished and
+the zip already contained both features from that round - stated
+here directly so it isn't left as a standing inaccuracy in the record.
+
+## Two more real, additive gaps from the remaining 1.0 directories
+
+**CSV bulk user import** for admin - confirmed directly against the real
+1.0 reference (BulkUserImportExport.tsx). This codebase already had a
+"one email per line" bulk invite, but it applies a single role to the
+whole batch - a genuine, distinct gap remained: importing a CSV that
+mixes learners and instructors in one file, with a role per row. Added
+as a second option alongside the existing one, not a replacement -
+reuses the exact same real invitation function underneath, one row at a
+time, each succeeding or failing independently.
+
+**Learner notification type preferences** - the most interesting find
+this round: `notification_preferences` already existed as a real table
+with real, correct read/write functions in the codebase - confirmed no
+screen anywhere had ever called them. Not a bug, just an unfinished
+connection. Added the actual UI to the learner's Profile screen,
+alongside the existing (and genuinely different) browser-level push
+subscription toggle - Email, Push, and In-app, each independently
+switchable.
+
+Both verified with live screenshots: the CSV file picker sits correctly
+below the existing bulk-email option in People & Access, and the three
+new notification toggles appear correctly under the learner's existing
+Preferences section - zero console errors on either.
+
+## A full, systematic sweep of the 1.0 codebase's remaining 30+ component directories
+
+Confirmed directly: the 1.0 codebase has over 35 top-level component
+directories, and only a handful had been checked so far. Went through
+essentially all of the remaining ones this round -
+gamification/leaderboard/retention/community/mentorship/notifications/
+learning/profile/external/data-export/search/feedback - rather than
+stopping after a partial pass.
+
+**Genuinely added**: Lesson Feedback - a quick, optional confidence/
+helpful check shown right after completing a lesson, confirmed against
+the real 1.0 source. Purely additive - does not touch or gate the
+existing "mark lesson complete" flow in any way, and instructors/admins
+can read it as real signal without being able to write it for someone
+else.
+
+**Explicitly and correctly skipped as contradicting existing decisions**:
+most of the `community/` directory (forum creation, learner-to-learner
+post creation, learner-to-learner "start a conversation" cards) assumes
+rich peer-to-peer posting and messaging this project has already
+deliberately restricted to admin/instructor. Not touched.
+
+**Checked and confirmed already covered - several false alarms caught
+and corrected before being reported as gaps**: session booking with real
+available slots, learner profile/avatar editing, an achievements screen,
+and - most notably - both the admin and learner "universal search" bars.
+Both were briefly suspected of being decorative UI shells with no real
+search behind them; checking the actual implementation showed both are
+already fully real, live-data search across students, courses, cohorts,
+mentors, and community posts. Reporting a suspected gap without checking
+the real implementation first would have been a false claim - caught
+before it became one.
+
+**A worthwhile note, not a change made**: while checking lesson
+feedback, noticed `LessonScreen.jsx` still has a working personal
+lesson-notes feature that may be adjacent to the "remove notes" decision
+made for course-level tabs earlier in this project. Left it exactly as
+it was rather than unilaterally removing something without being certain
+that was the intent - flagging it for a direct answer rather than
+guessing.
+
+Given the genuine size of the 1.0 codebase, this sweep - while far more
+complete than any single previous round - still cannot be called
+exhaustive. The honest state is reported plainly in the chat response
+that accompanies this package, not glossed over here.
+
+## Verifying last round's unconfirmed work, plus two more real bugs found while doing it
+
+**Fixed the cross-tenant messaging gap** flagged (not fixed) at the end
+of the previous round - the rule now requires both parties to actually
+share an organization, using the same real helper function already
+proven elsewhere in this project for the same kind of fix.
+
+**Verified everything left unconfirmed last round, properly this time**:
+the two new instructor stat cards (Total Sessions Completed, Total
+Hours) and Course Quality Review both checked with real screenshots and
+zero console errors.
+
+**The cohort activity widget led to a real, confirmed gap**: it couldn't
+be verified last round because the demo learner account was never
+actually shown as belonging to any cohort at all -
+`fetchMyCohortMembership()` returned nothing in demo mode. This wasn't a
+bug in the widget itself, but a missing link that also meant the home
+screen's cohort card and the dedicated Cohort screen could never be
+properly demoed either. Fixed once, verified all three: Home now shows
+"Q1 Onboarding Cohort" instead of "Not part of a cohort yet," and the new
+widget genuinely renders "3 peers in your cohort studied today."
+
+**A second, real, previously undiscovered functional bug found while
+checking this - not the same as the earlier column-name bugs, a
+different mistake with the same real consequence**: `fetchCommunityPeople()`
+filtered on a column that doesn't exist, meaning its primary path has
+always failed in a real deployment and silently fell back to a second
+path that never excluded the caller's own profile at all - a real user
+has always seen themselves listed among "community people." Worse, the
+screen that renders this list (`CommunityScreen.jsx`) read the wrong
+field in seven separate places, including the button that starts a
+direct message - meaning clicking "Message" on an instructor's profile
+card would have opened a conversation with no real recipient at all in
+any live deployment. Fixed the source function, the two comments
+elsewhere in the codebase that repeated the same disproven claim, and
+every one of the seven broken references, then verified with a live
+screenshot: both demo instructors now appear correctly labeled with
+working Message buttons.
+
+Everything in this round was checked against a real screenshot or a
+direct schema check before being called done - nothing here was assumed
+working.
+
 ## Moving into mentor-specific tools - Fellow Instructors messaging added, a real bug caught in the demo data, and a pre-existing gap flagged rather than fixed
 
 Checked several mentor-facing candidates from the 1.0 codebase

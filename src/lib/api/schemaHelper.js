@@ -75,9 +75,9 @@ export async function fetchMentorSessions(mentorId) {
   if (!supabase) {
     const now = Date.now();
     return [
-      { id: "demo-sess-1", learner_id: "demo-learner-1", learner_name: "Amara Chen", status: "confirmed", scheduled_at: new Date(now + 2 * 86400000).toISOString(), rating: null },
-      { id: "demo-sess-2", learner_id: "demo-learner-4", learner_name: "Marcus Webb", status: "completed", scheduled_at: new Date(now - 3 * 86400000).toISOString(), rating: 5 },
-      { id: "demo-sess-3", learner_id: "demo-learner-7", learner_name: "Ngozi Adeyemi", status: "completed", scheduled_at: new Date(now - 6 * 86400000).toISOString(), rating: 4 },
+      { id: "demo-sess-1", learner_id: "demo-learner-1", learner_name: "Amara Chen", status: "confirmed", scheduled_at: new Date(now + 2 * 86400000).toISOString(), duration_minutes: 45, rating: null },
+      { id: "demo-sess-2", learner_id: "demo-learner-4", learner_name: "Marcus Webb", status: "completed", scheduled_at: new Date(now - 3 * 86400000).toISOString(), duration_minutes: 45, rating: 5 },
+      { id: "demo-sess-3", learner_id: "demo-learner-7", learner_name: "Ngozi Adeyemi", status: "completed", scheduled_at: new Date(now - 6 * 86400000).toISOString(), duration_minutes: 60, rating: 4 },
     ];
   }
   const { data, error } = await supabase
@@ -897,7 +897,18 @@ export async function voteForumPost(postId, direction = "up") {
 // columns elsewhere in this schema that need the manual
 // fetchProfilesByUserIds workaround), so the embed below works.
 export async function fetchMyCohortMembership(userId) {
-  if (!supabase || !userId) return null;
+  if (!supabase) {
+    // A real, confirmed gap: the demo learner was never actually shown
+    // as belonging to any cohort at all, which meant the cohort card on
+    // Home, the dedicated Cohort screen, and the new "cohort activity
+    // today" widget could never be verified with real demo data - not a
+    // bug in any of those three, but a missing link connecting them.
+    return {
+      membership: { user_id: userId, cohort_id: "demo-cohort-1", added_at: new Date().toISOString() },
+      cohort: { id: "demo-cohort-1", name: "Q1 Onboarding Cohort", description: "New hire onboarding cohort for the demo organization.", starts_at: "2026-01-01", ends_at: "2026-04-01", organization_id: "demo-org-id" },
+    };
+  }
+  if (!userId) return null;
   const { data, error } = await supabase
     .from("cohort_members")
     .select("*, cohorts(*)")
@@ -1011,16 +1022,32 @@ export async function fetchCohortSessions(cohortId) {
 
 // Community - suggested people to follow/connect with
 export async function fetchCommunityPeople(excludeUserId, limit = 20) {
-  if (!supabase) return [];
-  // user_profiles has its own internal `id` PK plus a separate `user_id`
-  // column that stores the real auth uid (see fetchProfilesByUserIds above)
-  // - filter on user_id so it actually matches the caller's own auth id.
+  if (!supabase) {
+    const now = new Date().toISOString();
+    return [
+      { id: "demo-instructor-1", display_name: "Jordan Reyes", avatar_url: null, role: "mentor", bio: "AI & Data Instructor.", department: null, school: null, last_active_at: now },
+      { id: "demo-instructor-2", display_name: "Wale Adebayo", avatar_url: null, role: "mentor", bio: "Leadership Instructor.", department: null, school: null, last_active_at: now },
+      { id: "demo-learner-2", display_name: "David Osei", avatar_url: null, role: "learner", bio: null, department: null, school: null, last_active_at: now },
+      { id: "demo-learner-3", display_name: "Priya Nair", avatar_url: null, role: "learner", bio: null, department: null, school: null, last_active_at: now },
+    ].filter((p) => p.id !== excludeUserId);
+  }
+  // A real, confirmed bug: user_profiles.id IS the real auth uid directly
+  // (no separate user_id column exists on this specific table - the
+  // comment previously here repeated a claim already disproven elsewhere
+  // in this codebase). The primary query below was filtering on a column
+  // that doesn't exist, meaning it silently errored on every real call
+  // and fell through to the fallback path every time - and that fallback
+  // never excluded the caller's own profile at all, meaning a real user
+  // has always seen themselves listed among "community people."
   let query = supabase.from("user_profiles").select("*").limit(limit);
-  if (excludeUserId) query = query.neq("user_id", excludeUserId);
+  if (excludeUserId) query = query.neq("id", excludeUserId);
   const { data, error } = await query;
   if (error) {
-    // Retry with public_user_profiles if user_profiles query fails
-    const { data: fallbackData } = await supabase.from("public_user_profiles").select("*").limit(limit);
+    // Retry with public_user_profiles if user_profiles query fails -
+    // this view's own real PK is also `id`, not `user_id`.
+    let fallbackQuery = supabase.from("public_user_profiles").select("*").limit(limit);
+    if (excludeUserId) fallbackQuery = fallbackQuery.neq("id", excludeUserId);
+    const { data: fallbackData } = await fallbackQuery;
     return fallbackData || [];
   }
   return data || [];
@@ -1181,7 +1208,7 @@ export async function upsertNotificationPreferences(userId, prefs) {
 // that dead feature.
 
 export async function claimMysteryBox(userId) {
-  if (!supabase) return { id: `box_${Date.now()}`, user_id: userId, is_opened: true };
+  if (!supabase) return { id: `box_${Date.now()}`, user_id: userId, is_opened: true, reward_value: { points: 50, streak_freeze: 1 } };
   const { data, error } = await supabase
     .from("mystery_boxes")
     .insert({
@@ -1196,6 +1223,20 @@ export async function claimMysteryBox(userId) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// Every real mystery box a learner has ever been given - confirmed
+// directly against the real 1.0 reference codebase (MysteryBoxCard.tsx /
+// useMysteryBox). Used only to count how many have already been claimed,
+// so a new one is offered honestly once per real 7-day streak milestone
+// reached - not on a random schedule, and never re-offered for a
+// milestone already claimed.
+export async function fetchMyMysteryBoxes(userId) {
+  if (!supabase) return [];
+  if (!userId) return [];
+  const { data, error } = await supabase.from("mystery_boxes").select("*").eq("user_id", userId).order("opened_at", { ascending: false });
+  if (error) { console.warn("Mystery boxes fetch warning:", error); return []; }
+  return data || [];
 }
 
 
@@ -1232,7 +1273,10 @@ export async function fetchCohortMembers(cohortId) {
 // cross-tenant leak was found and fixed here too, sg_select_all previously
 // used "using (true)" ignoring organization_id entirely).
 export async function fetchAllStudyGroupsForOrg(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) {
+    return [{ id: "demo-group-1", name: "AI Fundamentals Study Circle", organization_id: "demo-org-id", max_members: 12, is_private: false, courses: { title: "AI Fundamentals" }, study_group_members: [{ count: 3 }] }];
+  }
+  if (!organizationId) return [];
   const { data, error } = await supabase
     .from("study_groups")
     .select("*, courses(title), study_group_members(count)")

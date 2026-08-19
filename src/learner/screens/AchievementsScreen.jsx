@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { TopBar, StatTile, ProgressBar } from "../components/LearnerUI.jsx";
 import { ACHIEVEMENT_CATALOG, getAchievementProgress } from "../achievementCatalog.js";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
-import { Trophy, Flame, Snowflake, Award, BookOpen, Users, GraduationCap, CheckCircle2 } from "lucide-react";
+import { Trophy, Flame, Snowflake, Award, BookOpen, Users, GraduationCap, CheckCircle2, Gift } from "lucide-react";
+import { fetchMyMysteryBoxes, claimMysteryBox } from "../../lib/api/schemaHelper.js";
 
 function iconForCategory(category) {
   if (category === "streak") return Flame;
@@ -27,7 +28,45 @@ function formatDate(dateStr) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export function AchievementsScreen({ user = {}, achievements = [], streakActivity = [], back, session, credits, consumeCredit, onBuyCredits }) {
+export function AchievementsScreen({ user = {}, achievements = [], streakActivity = [], back, session, showToast, credits, consumeCredit, onBuyCredits }) {
+  const userId = session?.user?.id;
+  const [mysteryBoxes, setMysteryBoxes] = useState([]);
+  const [claimingBox, setClaimingBox] = useState(false);
+  const [revealedReward, setRevealedReward] = useState(null);
+
+  React.useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    fetchMyMysteryBoxes(userId).then((rows) => { if (!cancelled) setMysteryBoxes(rows); });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // Mystery Box - confirmed directly against the real 1.0 reference
+  // codebase (MysteryBoxCard.tsx), and confirmed the reward itself is
+  // fixed at creation time, not randomized at open time - a genuine
+  // surprise reveal of an already-earned reward, not a randomized-chance
+  // mechanic. Honestly gated on a real 7-day streak milestone, one box
+  // per milestone reached, using the exact same real claimMysteryBox()
+  // function that already existed in this codebase with no UI calling it.
+  const streakMilestonesEarned = Math.floor((user.streak || 0) / 7);
+  const boxesAlreadyClaimed = mysteryBoxes.length;
+  const milestoneBoxAvailable = streakMilestonesEarned > boxesAlreadyClaimed;
+
+  async function handleClaimBox() {
+    if (!userId) return;
+    setClaimingBox(true);
+    try {
+      const box = await claimMysteryBox(userId);
+      setMysteryBoxes((prev) => [box, ...prev]);
+      setRevealedReward(box.reward_value);
+      showToast?.(`You earned ${box.reward_value?.points || 0} points for your ${user.streak}-day streak!`);
+    } catch (e) {
+      showToast?.(e.message || "Could not claim your reward right now.");
+    } finally {
+      setClaimingBox(false);
+    }
+  }
+
   const { ceiling, percent } = levelProgress(user.level, user.totalPoints || 0);
   const earnedIds = new Set(achievements.map((a) => a.achievement_id));
   const locked = ACHIEVEMENT_CATALOG.filter((def) => !earnedIds.has(def.id));
@@ -75,6 +114,32 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           )}
         </div>
       </div>
+
+      {milestoneBoxAvailable && (
+        <div className="tai-card tai-mt12" style={{ borderColor: "var(--warning)", background: "linear-gradient(135deg, rgba(251,191,36,0.08), rgba(249,115,22,0.05))" }}>
+          <div className="tai-row tai-between">
+            <div className="tai-row tai-gap10">
+              <Gift size={22} color="var(--warning)" />
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 14.5 }}>Reward unlocked!</div>
+                <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Earned from your {user.streak}-day streak</div>
+              </div>
+            </div>
+            <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={claimingBox} onClick={handleClaimBox}>
+              {claimingBox ? "Opening..." : "Open"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {revealedReward && (
+        <div className="tai-card tai-mt12" style={{ borderColor: "var(--success)", textAlign: "center" }}>
+          <div style={{ fontWeight: 800, fontSize: 15 }}>+{revealedReward.points} points</div>
+          {revealedReward.streak_freeze > 0 && (
+            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>+{revealedReward.streak_freeze} streak freeze - protects your streak if you miss a day</div>
+          )}
+        </div>
+      )}
 
       <AIInsightsCard session={session} credits={credits} consumeCredit={consumeCredit} onBuyCredits={onBuyCredits} />
 

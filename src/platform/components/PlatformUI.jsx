@@ -248,6 +248,7 @@ const ADMIN_NAV = [
   { key: "content", label: "Content & Courses", icon: BookOpen },
   { key: "paths", label: "Learning Paths", icon: Map },
   { key: "moderation", label: "Content Moderation", icon: Flag },
+  { key: "studygroups", label: "Study Groups", icon: Users },
   { key: "analytics", label: "Analytics Hub", icon: BarChart3 },
   { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
   { key: "compliance", label: "Learner Progress", icon: ShieldCheck },

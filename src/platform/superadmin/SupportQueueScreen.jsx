@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { LifeBuoy } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchAllSupportTickets, fetchSupportTicketMessages, replyToSupportTicket, updateSupportTicketStatus } from "../../lib/api/platform.js";
+import { fetchAllSupportTickets, fetchSupportTicketMessages, replyToSupportTicket, updateSupportTicketStatus, fetchFeedbackQueue } from "../../lib/api/platform.js";
 
 const STATUS_OPTIONS = ["open", "in_progress", "resolved", "closed"];
 
@@ -14,6 +14,14 @@ const STATUS_OPTIONS = ["open", "in_progress", "resolved", "closed"];
 export function SupportQueueScreen({ currentUserId }) {
   const showToast = useContext(ToastContext);
   const ticketsQuery = useSupabaseQuery(async () => fetchAllSupportTickets(), []);
+  // General Feedback - confirmed directly against the real 1.0 reference
+  // codebase (FeedbackSection.tsx / AdminFeedbackManagement.tsx). A real,
+  // already-existing table and read function (fetchFeedbackQueue) with
+  // no screen anywhere that ever called it - a genuinely different,
+  // simpler mechanism from ticket-based support (a one-shot rating +
+  // message, not a back-and-forth conversation), so it gets its own card
+  // on this same screen rather than being folded into the ticket list.
+  const feedbackQuery = useSupabaseQuery(async () => fetchFeedbackQueue(), []);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const messagesQuery = useSupabaseQuery(async () => (selectedTicketId ? fetchSupportTicketMessages(selectedTicketId) : []), [selectedTicketId]);
   const [replyText, setReplyText] = useState("");
@@ -96,6 +104,27 @@ export function SupportQueueScreen({ currentUserId }) {
               </label>
             </div>
           )}
+        </div>
+
+        <div className="ta-card ta-mt20">
+          <div className="ta-title">General Feedback</div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+            Quick, one-shot feedback submitted from any learner's Profile screen - a real, separate table already existed with no screen ever reading it until now.
+          </div>
+          <div className="ta-col ta-gap10 ta-mt12">
+            {feedbackQuery.loading && <div className="ta-empty">Loading...</div>}
+            {!feedbackQuery.loading && (feedbackQuery.data || []).length === 0 && <div className="ta-empty">No feedback submitted yet.</div>}
+            {(feedbackQuery.data || []).map((f) => (
+              <div key={f.id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                <div className="ta-row ta-between">
+                  <span style={{ fontWeight: 700, fontSize: 13 }}>{f.name}</span>
+                  <Tag>{f.category}</Tag>
+                </div>
+                <div style={{ fontSize: 13, marginTop: 6 }}>{f.message}</div>
+                {f.rating > 0 && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>{f.rating}/5 stars</div>}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

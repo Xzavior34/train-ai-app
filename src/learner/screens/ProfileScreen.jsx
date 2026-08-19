@@ -1,14 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Sparkles, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Sparkles, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
+import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
+import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
 import AccessibilityPanel from "../../components/common/AccessibilityPanel.jsx";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { usePushNotifications } from "../hooks/usePushNotifications.js";
 
-export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpenDashboardSwitcher, credits, onBuyCredits, session, onAvatarUploaded, showToast, gamificationEnabled = true }) {
+export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpenDashboardSwitcher, credits, onBuyCredits, session, onAvatarUploaded, showToast, gamificationEnabled = true, weeklyGoal, setWeeklyGoal }) {
   const [showAccessibility, setShowAccessibility] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackCategory, setFeedbackCategory] = useState("General");
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [savingGoal, setSavingGoal] = useState(false);
+
+  async function handleSetWeeklyGoal(goal) {
+    setSavingGoal(true);
+    try {
+      const result = await updateWeeklyGoal(userId, goal);
+      if (!result.success) notify(result.error);
+      else { setWeeklyGoal?.(goal); notify(`Weekly goal set to ${goal} lessons.`); }
+    } finally {
+      setSavingGoal(false);
+    }
+  }
   const [showMfaSetup, setShowMfaSetup] = useState(false);
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -29,6 +48,26 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
     fetchUserDSARRequests(userId).then((rows) => { if (!cancelled) setDsarRequests(rows); });
     return () => { cancelled = true; };
   }, [userId]);
+
+  // Notification type preferences - a real, already-existing table
+  // (notification_preferences) with real read/write functions, confirmed
+  // to have no screen anywhere that ever called them - a genuine, bounded
+  // gap found while comparing against the real 1.0 reference codebase,
+  // not a new mechanism invented here.
+  useEffect(() => {
+    let cancelled = false;
+    if (!userId) return;
+    fetchNotificationPreferences(userId).then((prefs) => {
+      if (!cancelled) setNotifPrefs(prefs || { email_enabled: true, push_enabled: true, in_app_enabled: true });
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  async function handleToggleNotifPref(field) {
+    const next = { ...notifPrefs, [field]: !notifPrefs[field] };
+    setNotifPrefs(next);
+    await upsertNotificationPreferences(userId, next);
+  }
 
   const pendingErasureRequest = dsarRequests.find((r) => r.request_type === "erasure" && r.status === "pending");
 
@@ -221,6 +260,24 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
           <Switch on={dark} onChange={() => setDark(v => !v)} />
         </div>
 
+        <hr className="tai-divider" />
+        <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 8 }}>Weekly lesson goal</div>
+        <div style={{ fontSize: 11, color: "var(--text-2)", marginBottom: 8 }}>
+          How many lessons a week you're aiming for - shown on your Home screen.
+        </div>
+        <div className="tai-row tai-gap8" style={{ flexWrap: "wrap" }}>
+          {[3, 5, 7, 10].map((v) => (
+            <button
+              key={v}
+              className={`tai-btn tai-btn-sm ${weeklyGoal === v ? "tai-btn-primary" : "tai-btn-outline"}`}
+              disabled={savingGoal}
+              onClick={() => handleSetWeeklyGoal(v)}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+
         {session?.user?.id && (
           <>
             <hr className="tai-divider" />
@@ -259,6 +316,66 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
             )}
           </>
         )}
+
+        {notifPrefs && (
+          <>
+            <hr className="tai-divider" />
+            <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 8 }}>Notification types</div>
+            <div className="tai-row tai-between">
+              <span style={{ fontSize: 12.5 }}>Email</span>
+              <Switch on={notifPrefs.email_enabled} onChange={() => handleToggleNotifPref("email_enabled")} />
+            </div>
+            <div className="tai-row tai-between tai-mt10">
+              <span style={{ fontSize: 12.5 }}>Push</span>
+              <Switch on={notifPrefs.push_enabled} onChange={() => handleToggleNotifPref("push_enabled")} />
+            </div>
+            <div className="tai-row tai-between tai-mt10">
+              <span style={{ fontSize: 12.5 }}>In-app</span>
+              <Switch on={notifPrefs.in_app_enabled} onChange={() => handleToggleNotifPref("in_app_enabled")} />
+            </div>
+          </>
+        )}
+
+        <hr className="tai-divider" />
+        <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 8 }}>Send feedback</div>
+        <div style={{ fontSize: 11, color: "var(--text-2)", marginBottom: 10 }}>
+          A bug, a suggestion, anything - your admin can see this.
+        </div>
+        <select className="tai-input" value={feedbackCategory} onChange={(e) => setFeedbackCategory(e.target.value)}>
+          <option>General</option>
+          <option>Bug report</option>
+          <option>Feature request</option>
+          <option>Course content</option>
+        </select>
+        <textarea className="tai-input tai-mt8" rows={3} placeholder="Tell us what's on your mind..." value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} />
+        <div className="tai-row tai-gap4 tai-mt8">
+          {[1, 2, 3, 4, 5].map((v) => (
+            <Star
+              key={v}
+              size={18}
+              fill={v <= feedbackRating ? "var(--primary)" : "none"}
+              color={v <= feedbackRating ? "var(--primary)" : "var(--border)"}
+              style={{ cursor: "pointer" }}
+              onClick={() => setFeedbackRating(v)}
+            />
+          ))}
+        </div>
+        <button
+          className="tai-btn tai-btn-primary tai-mt10"
+          disabled={submittingFeedback || !feedbackText.trim()}
+          onClick={async () => {
+            setSubmittingFeedback(true);
+            try {
+              const result = await submitPlatformFeedback(userId, { category: feedbackCategory, message: feedbackText, rating: feedbackRating || null });
+              if (!result.success) notify(result.error);
+              else { setFeedbackText(""); setFeedbackRating(0); notify("Thanks - your feedback was sent."); }
+            } finally {
+              setSubmittingFeedback(false);
+            }
+          }}
+        >
+          Send feedback
+        </button>
 
         {onOpenDashboardSwitcher && (
           <>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, ToastContext, Switch, Tag } from "../components/PlatformUI.jsx";
-import { Lock } from "lucide-react";
+import { Lock, ShieldCheck } from "lucide-react";
+import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
 import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment } from "../../lib/api/organizations.js";
@@ -17,6 +18,7 @@ import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/pla
 // row directly via the org id already available on this screen.
 export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen, userEmail }) {
   const showToast = useContext(ToastContext);
+  const [showMfaSetup, setShowMfaSetup] = useState(false);
   const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
   const org = orgQuery.data;
   const [payingTier, setPayingTier] = useState(null);

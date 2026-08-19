@@ -65,6 +65,22 @@ export async function updateUserDisplayName(userId, displayName) {
   if (error) throw error;
 }
 
+// Weekly lesson goal - confirmed directly: the Home screen's "Edit" link
+// led to Settings, where no control existed to change this, and the
+// underlying column never existed at all. See
+// 0143_weekly_lesson_goal.sql.
+export async function updateWeeklyGoal(userId, goal) {
+  if (!supabase) return { success: true };
+  if (!userId || !goal || goal < 1) return { success: false, error: "Choose a valid weekly goal." };
+  try {
+    const { error } = await supabase.from("user_profiles").update({ weekly_lesson_goal: goal }).eq("id", userId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not update your weekly goal." };
+  }
+}
+
 export async function fetchOrgMembers(organizationId) {
   if (!supabase) {
     return [
@@ -1143,7 +1159,9 @@ export async function fetchUtmSources() {
 }
 
 export async function fetchFeedbackQueue() {
-  if (!supabase) return [];
+  if (!supabase) {
+    return [{ id: "demo-fb-1", name: "Sofia Kim", category: "Feature request", message: "Would love a dark mode toggle that syncs across devices.", rating: 4 }];
+  }
   const { data, error } = await supabase
     .from("feedback")
     .select("*")
@@ -3576,5 +3594,97 @@ export async function deleteCourseMaterial(id) {
     return { success: true };
   } catch (e) {
     return { success: false, error: e?.message || "Could not delete this material." };
+  }
+}
+
+// ============================================================================
+// Course Quality Review - confirmed directly against the real 1.0
+// reference codebase (CourseQualityReviewPanel.tsx). See
+// 0141_course_quality_reviews.sql - deliberately additive, does not
+// change or block the existing publish/unpublish/archive flow.
+// ============================================================================
+export async function fetchCourseQualityReview(courseId) {
+  if (!supabase) {
+    if (courseId !== "demo-course-ai-fundamentals") return null;
+    return { id: "demo-qr-1", course_id: courseId, status: "approved", quality_score: 8, review_notes: "Solid intro course, clear structure.", reviewed_at: new Date().toISOString() };
+  }
+  if (!courseId) return null;
+  const { data, error } = await supabase.from("course_quality_reviews").select("*").eq("course_id", courseId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (error) { console.warn("Course quality review fetch warning:", error); return null; }
+  return data;
+}
+
+export async function submitCourseQualityReview(courseId, { status, qualityScore, reviewNotes, reviewerId }) {
+  if (!supabase) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("course_quality_reviews").insert({
+      course_id: courseId, status, quality_score: qualityScore || null, review_notes: reviewNotes || null,
+      reviewer_id: reviewerId, reviewed_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not submit this review." };
+  }
+}
+
+// Bulk User Import - confirmed directly against the real 1.0 reference
+// codebase (BulkUserImportExport.tsx). Reuses the exact same
+// createInvitation() already used for a single invite, one row at a
+// time, rather than a new bulk-write path - each row succeeds or fails
+// independently and is reported back individually, matching the same
+// honest per-item reporting already used for bulkAddCohortMembersByEmail.
+export async function bulkImportUsers(rows, organizationId, invitedBy) {
+  const succeeded = [];
+  const failed = [];
+  for (const row of rows) {
+    const email = (row.email || "").trim();
+    const role = (row.role || "learner").trim().toLowerCase();
+    if (!email) { failed.push({ email: row.email || "(blank)", reason: "Missing email" }); continue; }
+    try {
+      await createInvitation({ email, role, organizationId, invitedBy });
+      succeeded.push(email);
+    } catch (e) {
+      failed.push({ email, reason: e?.message || "Could not invite this address" });
+    }
+  }
+  return { succeeded, failed };
+}
+
+// Parses a simple CSV with an "email" column and an optional "role"
+// column - not a general-purpose CSV parser, just enough for the one
+// real shape this import needs (deliberately simple rather than pulling
+// in a new dependency for something this small).
+export function parseUserImportCsv(csvText) {
+  const lines = csvText.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  const header = lines[0].toLowerCase().split(",").map((h) => h.trim());
+  const emailIdx = header.indexOf("email");
+  const roleIdx = header.indexOf("role");
+  const dataLines = emailIdx === -1 ? lines : lines.slice(1);
+  return dataLines.map((line) => {
+    const cols = line.split(",").map((c) => c.trim());
+    if (emailIdx === -1) return { email: cols[0], role: cols[1] || "learner" };
+    return { email: cols[emailIdx], role: roleIdx !== -1 ? cols[roleIdx] : "learner" };
+  }).filter((r) => r.email && r.email.toLowerCase() !== "email");
+}
+
+// Submit platform feedback - confirmed directly against the real 1.0
+// reference codebase (FeedbackSection.tsx). The feedback table and
+// fetchFeedbackQueue() (admin-side read) already existed with correct
+// RLS - confirmed no submit function and no screen anywhere ever called
+// either one.
+export async function submitPlatformFeedback(userId, { category, message, rating, email }) {
+  if (!supabase) return { success: true };
+  if (!message?.trim()) return { success: false, error: "Please enter a message." };
+  try {
+    const { error } = await supabase.from("feedback").insert({
+      user_id: userId || null, email: email || null, category: category || "General",
+      message: message.trim(), rating: rating || null,
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not submit your feedback." };
   }
 }

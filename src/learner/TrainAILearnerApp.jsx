@@ -580,7 +580,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                 <HomeScreen
                   user={user} courses={courses} coursesLoading={coursesLoading}
                   unreadNotifs={unreadNotifs} weeklyGoal={weeklyGoal}
-                  session={session}
+                  session={session} showToast={showToast}
                   push={push} goTab={goTab}
                   goToMyCourses={() => { setShowMyCoursesOnly(true); goTab("courses"); }}
                   cohort={cohortMembershipQuery.data?.cohort || null}
@@ -680,7 +680,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   user={user} session={session} showToast={showToast} postsQuery={postsQuery}
                   createCommunityPost={createCommunityPost} togglePostReaction={togglePostReaction} addPostComment={addPostComment}
                   joinStudyGroup={joinStudyGroup} leaveStudyGroup={leaveStudyGroup}
-                  fetchStudyGroupMessages={fetchStudyGroupMessages} fetchStudyGroupMembers={fetchStudyGroupMembers}
+                  fetchStudyGroupMembers={fetchStudyGroupMembers}
                   cohortMembershipQuery={cohortMembershipQuery} cohortPostsQuery={cohortPostsQuery}
                   leaderboardQuery={leaderboardQuery}
                   leaderboardEnabled={leaderboardEnabled}
@@ -740,6 +740,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   credits={credits} onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}
                   session={session} onAvatarUploaded={handleAvatarUploaded} showToast={showToast}
                   gamificationEnabled={gamificationEnabled}
+                  weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal}
                 />
               )}
               {screen === "achievements" && (
@@ -748,7 +749,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   achievements={achievementsQuery.data || []}
                   streakActivity={streakActivityQuery.data || []}
                   back={back}
-                  session={session}
+                  session={session} showToast={showToast}
                   credits={credits} consumeCredit={consumeCredit} onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}
                 />
               )}

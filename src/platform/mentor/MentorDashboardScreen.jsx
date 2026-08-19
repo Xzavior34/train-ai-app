@@ -1,7 +1,7 @@
 import React from "react";
 import { TopBar, StatCard, Tag } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
-import { Calendar, Users, Star, DollarSign } from "lucide-react";
+import { Calendar, Users, Star, DollarSign, CheckCircle2, Clock } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../../lib/api/platform.js";
@@ -22,6 +22,12 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
   // pre-aggregated {total, pending} object - sum them here instead.
   const earningsRows = earningsQuery.data || [];
   const totalEarnings = earningsRows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  // Total Sessions + Total Hours - confirmed directly against the real
+  // 1.0 reference codebase (RealMentorStats.tsx) as two stats not yet
+  // shown here, alongside the four already covered (Upcoming Sessions,
+  // Active Learners, Rating, Earnings).
+  const completedSessions = (sessionsQuery.data || []).filter((s) => s.status === "completed");
+  const totalHours = Math.round((completedSessions.reduce((sum, s) => sum + (s.duration_minutes || 0), 0) / 60) * 10) / 10;
 
   return (
     <div className="ta-fade">
@@ -32,6 +38,10 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <StatCard stat={{ label: "Active learners", value: menteeCount, icon: Users }} />
           <StatCard stat={{ label: "Instructor rating", value: avgRating, icon: Star }} />
           <StatCard stat={{ label: "Total earnings", value: `$${totalEarnings.toFixed(2)}`, icon: DollarSign }} />
+        </div>
+        <div className="ta-grid ta-grid-4 ta-mt16">
+          <StatCard stat={{ label: "Total sessions completed", value: completedSessions.length, icon: CheckCircle2 }} />
+          <StatCard stat={{ label: "Total hours", value: totalHours, icon: Clock }} />
         </div>
 
         <div className="ta-card ta-mt20">

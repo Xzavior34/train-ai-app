@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
-import { PlusCircle, Heart, MessageCircle, Send, FileText, Link2, Video, Calendar, ExternalLink } from "lucide-react";
+import { PlusCircle, Heart, MessageCircle, Send, FileText, Link2, Video, Calendar, ExternalLink, Flame } from "lucide-react";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { fetchCohortActivityToday } from "../../lib/api/learner.js";
 
 // Dedicated learner-facing cohort space - reached from the Home screen's
 // cohort card (and from Community's "Cohort Channels" teaser). Surfaces the
@@ -28,6 +30,8 @@ export function CohortScreen({
   const sessions = cohortSessionsQuery?.data || [];
   const now = Date.now();
   const upcomingSessions = sessions.filter(s => new Date(s.starts_at).getTime() >= now);
+  const activityTodayQuery = useSupabaseQuery(async () => (cohort?.id ? fetchCohortActivityToday(cohort.id) : 0), [cohort?.id]);
+  const activityToday = activityTodayQuery.data || 0;
   const pastSessions = sessions.filter(s => new Date(s.starts_at).getTime() < now);
   const instructorMembers = (cohortMembersQuery?.data || []).filter(
     m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin"
@@ -54,6 +58,17 @@ export function CohortScreen({
   return (
     <div>
       <TopBar title={cohort.name} sub={cohort.description || "Your cohort space"} onBack={back} />
+
+      {activityToday > 0 && (
+        <div className="tai-card tai-mt10" style={{ padding: 12 }}>
+          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+            <Flame size={16} color="var(--danger, #DC2626)" />
+            <span style={{ fontSize: 12.5 }}>
+              <strong>{activityToday}</strong> {activityToday === 1 ? "peer" : "peers"} in your cohort studied today. Don't fall behind.
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="tai-row tai-gap8 tai-mt10">
         {[

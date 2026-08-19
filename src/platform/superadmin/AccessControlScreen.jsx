@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
 import { TopBar, Avatar, Tag, Switch, ToastContext } from "../components/PlatformUI.jsx";
 import { ShieldCheck, UserCheck, Eye, Search } from "lucide-react";
+import { resetMfaForUserByAdmin } from "../../lib/api/mfa.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchSuperAdmins, grantSuperAdminByUserId, revokeSuperAdmin, fetchGlobalPermissionMatrix, setGlobalPermission, searchUsersForImpersonation, viewUserAsSuperAdmin, findUserIdByEmail, fetchAllMentorsForPayoutControl, setInstructorPayoutsEnabled } from "../../lib/api/platform.js";
 
@@ -190,12 +191,36 @@ export function AccessControlScreen() {
   const superAdmins = superAdminsQuery.data || [];
   const mentorsQuery = useSupabaseQuery(async () => fetchAllMentorsForPayoutControl(), []);
   const mentors = mentorsQuery.data || [];
+  const [mfaResetEmail, setMfaResetEmail] = useState("");
+  const [mfaResetting, setMfaResetting] = useState(false);
+  const [mfaResetResult, setMfaResetResult] = useState(null);
+
+  // Force MFA Reset - confirmed directly against the real 1.0 reference
+  // codebase (ForceMfaResetCard.tsx). The backend for this
+  // (resetMfaForUserByAdmin, lib/api/mfa.js) already existed, matching an
+  // already-deployed "admin-reset-mfa" edge function - confirmed no
+  // screen anywhere ever called it. Only the admin-facing UI was missing.
+  async function handleMfaReset() {
+    if (!mfaResetEmail.trim()) return;
+    setMfaResetting(true);
+    setMfaResetResult(null);
+    try {
+      const result = await resetMfaForUserByAdmin(mfaResetEmail.trim());
+      setMfaResetResult(result);
+      showToast(`Removed ${result.factorsRemoved} of ${result.totalFactors} two-factor method(s) for this user.`);
+    } catch (e) {
+      showToast(e.message || "Could not reset two-factor authentication for this user.");
+    } finally {
+      setMfaResetting(false);
+    }
+  }
 
   async function handleTogglePayouts(mentorId, current) {
     const result = await setInstructorPayoutsEnabled(mentorId, !current);
     if (!result.success) showToast(result.error);
     else { showToast(!current ? "Payouts enabled for this instructor." : "Payouts disabled for this instructor."); mentorsQuery.refetch(); }
   }
+
   const [grantEmail, setGrantEmail] = useState("");
   const [granting, setGranting] = useState(false);
 
@@ -285,6 +310,24 @@ export function AccessControlScreen() {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="ta-card ta-mt16">
+          <div className="ta-title">Force Two-Factor Reset</div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+            For a user genuinely locked out of their authenticator app - removes every two-factor method on their account so they can sign in and re-enroll. Calls the same real, already-deployed admin-reset-mfa function used by the 1.0 reference codebase.
+          </div>
+          <div className="ta-row ta-gap8 ta-mt12">
+            <input className="ta-input" style={{ flex: 1 }} placeholder="user@company.com" value={mfaResetEmail} onChange={(e) => setMfaResetEmail(e.target.value)} />
+            <button className="ta-btn ta-btn-danger" disabled={mfaResetting || !mfaResetEmail.trim()} onClick={handleMfaReset}>
+              {mfaResetting ? "Resetting..." : "Reset 2FA"}
+            </button>
+          </div>
+          {mfaResetResult && (
+            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 8 }}>
+              Removed {mfaResetResult.factorsRemoved} of {mfaResetResult.totalFactors} factor(s) for this user.
+            </div>
+          )}
         </div>
 
         <RolesPermissionsMatrix />

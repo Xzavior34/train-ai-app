@@ -254,10 +254,11 @@ export function useLearnerData(session, screen, params) {
 
   // Batched gamification stats (streak/level/points) for whoever is in the
   // Members directory, keyed the same way fetchProfilesByUserIds is
-  // avoids one query per learner row. communityPeopleQuery.data is a list of
-  // raw user_profiles rows (see fetchCommunityPeople) whose real auth user id
-  // lives in their `user_id` column (user_profiles.id is a separate internal PK).
-  const communityPeopleIdsKey = (communityPeopleQuery.data || []).map((p) => p.user_id).filter(Boolean).join(",");
+  // avoids one query per learner row. communityPeopleQuery.data is a list
+  // of raw user_profiles rows (see fetchCommunityPeople) whose real auth
+  // user id IS their own `id` column directly (confirmed against the
+  // actual schema - no separate user_id column exists on this table).
+  const communityPeopleIdsKey = (communityPeopleQuery.data || []).map((p) => p.id).filter(Boolean).join(",");
   const memberStatsQuery = useSupabaseQuery(async () => {
     if (!communityPeopleIdsKey) return {};
     return fetchGamificationStatsByUserIds(communityPeopleIdsKey.split(","));

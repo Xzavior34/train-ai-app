@@ -17,13 +17,8 @@ function StatPill({ label, value }) {
 
 // Study group chat - reads/writes the real `study_group_messages` table.
 // Complete Study Group Workspace - includes Discussion, Members list, and Shared Resources.
-function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMessages, fetchStudyGroupMembers, showToast, push, goTab }) {
-  const [activeTab, setActiveTab] = useState("discussion"); // "discussion" | "members" | "resources"
-
-  const messagesQuery = useSupabaseQuery(async () => {
-    if (!group?.id || !fetchStudyGroupMessages) return [];
-    return fetchStudyGroupMessages(group.id);
-  }, [group?.id]);
+function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMembers, showToast, push, goTab }) {
+  const [activeTab, setActiveTab] = useState("members"); // "members" | "resources"
 
   const membersQuery = useSupabaseQuery(async () => {
     if (!group?.id || !fetchStudyGroupMembers) return [];
@@ -31,8 +26,6 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
   }, [group?.id]);
   const groupMembers = membersQuery.data || [];
   const instructorGroupMembers = groupMembers.filter(m => m.platform_role === "mentor" || m.platform_role === "admin");
-
-  const messages = messagesQuery.data || [];
 
   // Real member count for this specific group: prefer the live members
   // fetch (membersQuery, below) and fall back to the embedded
@@ -64,15 +57,13 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
           </span>
         </div>
 
-        {/* Group Sub-Tabs */}
+        {/* Group Sub-Tabs - "Discussion Board" removed directly per
+            instruction ("remove chat from community"). It had no compose
+            box already (no learner-to-learner posting, per
+            0126_no_learner_to_learner_messaging.sql) and was empty for
+            the vast majority of groups in practice, since it only ever
+            showed content if an instructor happened to be a member. */}
         <div className="tai-row tai-gap8 tai-mt14">
-          <div
-            className={`tai-pill ${activeTab === "discussion" ? "tai-pill-active" : "tai-pill-inactive"}`}
-            onClick={() => setActiveTab("discussion")}
-            style={{ cursor: "pointer", fontSize: 12 }}
-          >
-            💬 Discussion Board
-          </div>
           <div
             className={`tai-pill ${activeTab === "members" ? "tai-pill-active" : "tai-pill-inactive"}`}
             onClick={() => setActiveTab("members")}
@@ -89,52 +80,6 @@ function StudyGroupWorkspace({ group, joined, session, onBack, fetchStudyGroupMe
           </div>
         </div>
       </div>
-
-      {/* Tab Content 1: Discussion Board */}
-      {activeTab === "discussion" && (
-        <div className="tai-col" style={{ flex: 1, justifyContent: "space-between", marginTop: 12 }}>
-          <div className="tai-col tai-gap10" style={{ maxHeight: 340, overflowY: "auto", paddingRight: 4 }}>
-            {messagesQuery.loading && messages.length === 0 && <div className="tai-empty">Loading group posts...</div>}
-            {!messagesQuery.loading && messages.length === 0 && (
-              <div className="tai-empty">No updates from your instructor in this group yet.</div>
-            )}
-            {messages.map(m => {
-              const isMe = m.sender_id === session?.user?.id || m.sender_id === "me";
-              const authorName = m.user_profiles?.display_name || (isMe ? "You" : "Group Member");
-              const initials = initialsOf(authorName);
-              return (
-                <div key={m.id} className="tai-card" style={{ background: "var(--surface-2)", padding: "12px 14px", width: "100%" }}>
-                  <div className="tai-row tai-between">
-                    <div className="tai-row tai-gap10">
-                      <Avatar initials={initials} size={32} src={m.user_profiles?.avatar_url} />
-                      <div>
-                        <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                          <span style={{ fontWeight: 700, fontSize: 13.5 }}>{authorName}</span>
-                          {isMe && <Tag tone="primary">You</Tag>}
-                          {m.user_profiles?.role && <Tag tone="neutral">{m.user_profiles.role}</Tag>}
-                        </div>
-                        <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{timeAgo(m.created_at)}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="tai-body-text tai-mt8" style={{ fontSize: 13, lineHeight: 1.45 }}>
-                    {m.message}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {/* No compose box here - confirmed directly: no
-              learner-to-learner communication of any kind, including a
-              study group's own discussion board. Enforced at the database
-              level too (0126_no_learner_to_learner_messaging.sql) - only
-              an instructor member of this specific group could post here,
-              which is why this is read-only rather than gated by role:
-              study groups are learner-created/joined in practice, so this
-              board realistically stays empty unless an instructor is
-              actually a member, which is honest rather than misleading. */}
-        </div>
-      )}
 
       {/* Tab Content 2: Group Members - real study_group_members rows for
           THIS group specifically, not a generic community-people slice. */}
@@ -225,7 +170,7 @@ export function CommunityScreen({
   user = {}, session = {}, showToast = () => {}, postsQuery = {},
   createCommunityPost = () => {}, togglePostReaction = () => {}, addPostComment = () => {},
   joinStudyGroup = () => {}, leaveStudyGroup = () => {},
-  fetchStudyGroupMessages, fetchStudyGroupMembers,
+  fetchStudyGroupMembers,
   cohortMembershipQuery = {}, cohortPostsQuery = {},
   leaderboardQuery = {},
   leaderboardEnabled = true,
@@ -479,7 +424,6 @@ export function CommunityScreen({
               session={session}
               showToast={showToast}
               onBack={() => setSelectedGroupId(null)}
-              fetchStudyGroupMessages={fetchStudyGroupMessages}
               fetchStudyGroupMembers={fetchStudyGroupMembers}
               push={push}
               goTab={goTab}
@@ -545,9 +489,9 @@ export function CommunityScreen({
           {instructorPeople.map(p => {
             const name = p.display_name || p.name || "Learner";
             const initials = initialsOf(name);
-            const stats = memberStats[p.user_id];
+            const stats = memberStats[p.id];
             return (
-              <div key={p.user_id} className="tai-card tai-row tai-between" style={{ cursor: "pointer" }} onClick={() => setSelectedMember(p)}>
+              <div key={p.id} className="tai-card tai-row tai-between" style={{ cursor: "pointer" }} onClick={() => setSelectedMember(p)}>
                 <div className="tai-row tai-gap10">
                   <Avatar initials={initials} src={p.avatar_url} size={36} />
                   <div>
@@ -567,7 +511,7 @@ export function CommunityScreen({
                   <div className="tai-row tai-gap8">
                     <button className="tai-btn tai-btn-primary tai-btn-sm" onClick={(e) => {
                       e.stopPropagation();
-                      if (push) push("messages", { recipientId: p.user_id, recipientName: name });
+                      if (push) push("messages", { recipientId: p.id, recipientName: name });
                       else if (goTab) goTab("messages");
                       showToast(`Opening chat with ${name}...`);
                     }}>
@@ -601,9 +545,9 @@ export function CommunityScreen({
             </div>
             {selectedMember.bio && <div className="tai-body-text tai-mt12">{selectedMember.bio}</div>}
             <div className="tai-row tai-gap8 tai-mt14">
-              <StatPill label="Level" value={memberStats[selectedMember.user_id]?.current_level ?? "N/A"} />
-              <StatPill label="Streak" value={memberStats[selectedMember.user_id]?.streak_days ? `${memberStats[selectedMember.user_id].streak_days}d` : "N/A"} />
-              <StatPill label="Points" value={memberStats[selectedMember.user_id]?.total_points ?? "N/A"} />
+              <StatPill label="Level" value={memberStats[selectedMember.id]?.current_level ?? "N/A"} />
+              <StatPill label="Streak" value={memberStats[selectedMember.id]?.streak_days ? `${memberStats[selectedMember.id].streak_days}d` : "N/A"} />
+              <StatPill label="Points" value={memberStats[selectedMember.id]?.total_points ?? "N/A"} />
             </div>
             {selectedMember.department && (
               <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 12 }}>Department: {selectedMember.department}</div>
@@ -616,7 +560,7 @@ export function CommunityScreen({
                 <button className="tai-btn tai-btn-primary" style={{ width: "100%" }} onClick={() => {
                   const name = selectedMember.display_name || selectedMember.name || "Learner";
                   setSelectedMember(null);
-                  if (push) push("messages", { recipientId: selectedMember.user_id, recipientName: name });
+                  if (push) push("messages", { recipientId: selectedMember.id, recipientName: name });
                   else if (goTab) goTab("messages");
                   showToast(`Opening chat with ${name}...`);
                 }}>
