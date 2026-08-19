@@ -5,7 +5,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchMentorSessions, fetchMentorAvailability, createAvailabilitySlot, deleteAvailabilitySlot,
 } from "../../lib/api/schemaHelper.js";
-import { updateSessionStatus } from "../../lib/api/platform.js";
+import { updateSessionStatus, completeMentorshipSession, rescheduleMentorshipSession } from "../../lib/api/platform.js";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -19,16 +19,20 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
   const [saving, setSaving] = useState(false);
 
   const [updatingSessionId, setUpdatingSessionId] = useState(null);
+  const [completingSessionId, setCompletingSessionId] = useState(null);
+  const [completionFeedback, setCompletionFeedback] = useState("");
+  const [reschedulingSessionId, setReschedulingSessionId] = useState(null);
+  const [rescheduleDateTime, setRescheduleDateTime] = useState("");
 
   const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
   const availabilityQuery = useSupabaseQuery(async () => mentorId ? fetchMentorAvailability(mentorId) : [], [mentorId]);
 
   const rawSessions = sessionsQuery.data || [];
 
-  const sessions = rawSessions.map(s => ({ ...s, status: s.status || "scheduled" }));
+  const sessions = rawSessions.map(s => ({ ...s, status: s.status || "confirmed" }));
 
   const filteredSessions = sessions.filter(s => {
-    if (sessionFilter === "upcoming") return s.status === "scheduled" || s.status === "pending";
+    if (sessionFilter === "upcoming") return s.status === "confirmed" || s.status === "requested";
     if (sessionFilter === "completed") return s.status === "completed";
     if (sessionFilter === "cancelled") return s.status === "cancelled";
     return true;
@@ -71,6 +75,34 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
       showToast(message);
     } catch (e) {
       showToast(e?.message || "Could not update this session.");
+    } finally {
+      setUpdatingSessionId(null);
+    }
+  }
+
+  async function handleCompleteSession(sessionId, feedback) {
+    setUpdatingSessionId(sessionId);
+    try {
+      const result = await completeMentorshipSession(sessionId, feedback);
+      if (!result.success) { showToast(result.error); return; }
+      await sessionsQuery.refetch();
+      setCompletingSessionId(null);
+      setCompletionFeedback("");
+      showToast("Session marked complete - earnings recorded.");
+    } finally {
+      setUpdatingSessionId(null);
+    }
+  }
+
+  async function handleReschedule(sessionId, newDateTime) {
+    if (!newDateTime) return;
+    setUpdatingSessionId(sessionId);
+    try {
+      const result = await rescheduleMentorshipSession(sessionId, new Date(newDateTime).toISOString());
+      if (!result.success) { showToast(result.error); return; }
+      await sessionsQuery.refetch();
+      setReschedulingSessionId(null);
+      showToast("Session rescheduled.");
     } finally {
       setUpdatingSessionId(null);
     }
@@ -129,20 +161,20 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                   </div>
 
                   <div className="ta-row ta-gap10">
-                    <Tag tone={s.status === "completed" ? "success" : s.status === "cancelled" ? "danger" : s.status === "pending" ? "warning" : "primary"}>
+                    <Tag tone={s.status === "completed" ? "success" : s.status === "cancelled" ? "danger" : s.status === "requested" ? "warning" : "primary"}>
                       {s.status.toUpperCase()}
                     </Tag>
 
-                    {s.status === "pending" && (
+                    {s.status === "requested" && (
                       <button
                         className="ta-btn ta-btn-primary ta-btn-sm"
-                        onClick={() => handleUpdateSessionStatus(s.id, "scheduled", "Session confirmed!")}
+                        onClick={() => handleUpdateSessionStatus(s.id, "confirmed", "Session confirmed!")}
                       >
                         <CheckCircle2 size={13} /> Confirm Request
                       </button>
                     )}
 
-                    {s.status === "scheduled" && (
+                    {s.status === "confirmed" && (
                       <>
                         {s.meeting_url ? (
                           <a
@@ -159,14 +191,47 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                         )}
                         <button
                           className="ta-btn ta-btn-outline ta-btn-sm"
-                          onClick={() => handleUpdateSessionStatus(s.id, "completed", "Marked session as completed!")}
+                          onClick={() => { setCompletingSessionId(s.id); setCompletionFeedback(""); }}
                         >
                           <CheckCircle2 size={13} /> Complete
+                        </button>
+                        <button
+                          className="ta-btn ta-btn-outline ta-btn-sm"
+                          onClick={() => { setReschedulingSessionId(s.id); setRescheduleDateTime(""); }}
+                        >
+                          <Clock size={13} /> Reschedule
                         </button>
                       </>
                     )}
 
-                    {(s.status === "scheduled" || s.status === "pending") && (
+                    {completingSessionId === s.id && (
+                      <div className="ta-col ta-gap8 ta-mt10" style={{ width: "100%" }}>
+                        <textarea
+                          className="ta-input" rows={2} placeholder="Optional feedback for this session..."
+                          value={completionFeedback} onChange={(e) => setCompletionFeedback(e.target.value)}
+                        />
+                        <div className="ta-row ta-gap8">
+                          <button className="ta-btn ta-btn-primary ta-btn-sm" disabled={updatingSessionId === s.id} onClick={() => handleCompleteSession(s.id, completionFeedback)}>
+                            {updatingSessionId === s.id ? "Saving..." : "Confirm Complete"}
+                          </button>
+                          <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setCompletingSessionId(null)}>Cancel</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {reschedulingSessionId === s.id && (
+                      <div className="ta-col ta-gap8 ta-mt10" style={{ width: "100%" }}>
+                        <input type="datetime-local" className="ta-input" value={rescheduleDateTime} onChange={(e) => setRescheduleDateTime(e.target.value)} />
+                        <div className="ta-row ta-gap8">
+                          <button className="ta-btn ta-btn-primary ta-btn-sm" disabled={updatingSessionId === s.id || !rescheduleDateTime} onClick={() => handleReschedule(s.id, rescheduleDateTime)}>
+                            {updatingSessionId === s.id ? "Saving..." : "Confirm Reschedule"}
+                          </button>
+                          <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setReschedulingSessionId(null)}>Cancel</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {(s.status === "confirmed" || s.status === "requested") && (
                       <button
                         className="ta-btn ta-btn-danger ta-btn-sm"
                         onClick={() => handleUpdateSessionStatus(s.id, "cancelled", "Session canceled.")}

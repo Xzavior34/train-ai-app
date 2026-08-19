@@ -194,7 +194,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
 
               {workspace === "mentor" && (
                 <>
-                  {screen === "dashboard" && <MentorDashboardScreen mentorId={mentorId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
+                  {screen === "dashboard" && <MentorDashboardScreen mentorId={mentorId} orgSelector={orgSelector} currentUserId={session?.user?.id} profileQuery={profileQuery} orgId={effectiveOrgId} />}
                   {screen === "cohorts" && (
                     <CohortsScreen
                       orgId={effectiveOrgId}
@@ -221,7 +221,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "schedule" && <MentorScheduleScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
-                  {screen === "messages" && <MentorMessagesScreen userId={session?.user?.id} mentorId={mentorId} orgSelector={orgSelector} selectedLearnerForChat={selectedLearnerForChat} setScreen={setScreen} />}
+                  {screen === "messages" && <MentorMessagesScreen userId={session?.user?.id} mentorId={mentorId} orgSelector={orgSelector} selectedLearnerForChat={selectedLearnerForChat} setScreen={setScreen} orgId={effectiveOrgId} />}
                   {screen === "discussions" && <DiscussionsScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} />}
                   {screen === "admin" && <AdministrativeScreen mentorId={mentorId} orgSelector={orgSelector} mentorProfileQuery={mentorProfileQuery} currentUserId={session?.user?.id} />}

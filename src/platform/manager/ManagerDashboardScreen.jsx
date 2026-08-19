@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { TopBar, StatCard, Avatar, Tag, ProgressBar, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
+import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { Users, Target, AlertTriangle, Gauge, PieChart, StickyNote, Download } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail, fetchNotesForDepartment, addDepartmentFeedbackNote } from "../../lib/api/platform.js";
+import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail, fetchNotesForDepartment, addDepartmentFeedbackNote, fetchManagerTeamCohorts, fetchManagerTeamCompliance } from "../../lib/api/platform.js";
 
 // "My Team" is scoped to this manager's real direct reports, not the whole
 // org - user_profiles.manager_id (added alongside the is_manager_of() RLS
@@ -17,6 +18,8 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
   const reports = reportsQuery.data || [];
   const skillSnapshotQuery = useSupabaseQuery(async () => (userId ? fetchTeamSkillSnapshot(userId) : []), [userId]);
   const skillGapsDetailQuery = useSupabaseQuery(async () => (userId ? fetchManagerSkillGapsDetail(userId) : []), [userId]);
+  const teamCohortsQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCohorts(userId) : []), [userId]);
+  const teamComplianceQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCompliance(userId) : []), [userId]);
   const [expandedReportId, setExpandedReportId] = useState(null);
 
   function handleDownloadReport() {
@@ -166,6 +169,51 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
           </div>
         </div>
 
+        <div className="ta-card ta-mt20">
+          <div className="ta-title">Team Cohorts</div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Cohorts your direct reports belong to.</div>
+          <div className="ta-col ta-gap10 ta-mt12">
+            {teamCohortsQuery.loading && <div className="ta-empty">Loading...</div>}
+            {!teamCohortsQuery.loading && (teamCohortsQuery.data || []).length === 0 && <div className="ta-empty">None of your team members are enrolled in a cohort yet.</div>}
+            {(teamCohortsQuery.data || []).map((c) => (
+              <div key={c.id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                <div className="ta-row ta-between">
+                  <span style={{ fontWeight: 700, fontSize: 13.5 }}>{c.name}</span>
+                  <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>
+                    {c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "No start date"}{c.ends_at ? ` - ${new Date(c.ends_at).toLocaleDateString()}` : ""}
+                  </span>
+                </div>
+                <div className="ta-row ta-gap6 ta-mt8" style={{ flexWrap: "wrap" }}>
+                  {(c.memberNames || []).map((n) => <Tag key={n}>{n}</Tag>)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ta-card ta-mt20">
+          <div className="ta-title">Team Compliance</div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Mandatory training standing for your direct reports specifically.</div>
+          <div className="ta-table-wrap ta-mt12">
+            <table className="ta-table">
+              <thead><tr><th>Learner</th><th>Course</th><th>Progress</th><th>Due</th><th>Status</th></tr></thead>
+              <tbody>
+                {teamComplianceQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading...</td></tr>}
+                {!teamComplianceQuery.loading && (teamComplianceQuery.data || []).length === 0 && <tr><td colSpan={5} className="ta-empty">No compliance training assigned to your team yet.</td></tr>}
+                {(teamComplianceQuery.data || []).map((r) => (
+                  <tr key={r.id}>
+                    <td>{r.user_name}</td>
+                    <td>{r.course_title}</td>
+                    <td><div className="ta-row ta-gap8" style={{ width: 120 }}><ProgressBar value={r.progress_percentage} /><span style={{ fontSize: 12 }}>{r.progress_percentage}%</span></div></td>
+                    <td>{r.due_at ? new Date(r.due_at).toLocaleDateString() : "N/A"}</td>
+                    <td><Tag tone={r.status === "completed" ? "success" : r.status === "overdue" ? "danger" : undefined}>{r.status?.replace("_", " ")}</Tag></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         {department && (
           <div className="ta-card ta-mt20">
             <div className="ta-row ta-gap8"><StickyNote size={16} color="var(--primary)" /><div className="ta-title">Feedback for {department}</div></div>
@@ -185,6 +233,8 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
             </div>
           </div>
         )}
+
+        <AnalysisNotesCard authorId={userId} organizationId={orgId} />
       </div>
     </div>
   );

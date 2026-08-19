@@ -1,12 +1,14 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, ToastContext } from "../components/PlatformUI.jsx";
 import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon } from "lucide-react";
+import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchCohortDetail, updateCohort, addCohortMember, removeCohortMember,
   createCohortPost, assignCohortLearnerCourse, removeCohortLearnerCourse,
   fetchUsersInOrg, fetchCourses,
   addCohortResource, deleteCohortResource, createCohortSession, deleteCohortSession,
+  bulkAddCohortMembersByEmail,
 } from "../../lib/api/platform.js";
 
 // Cohort detail/space - reached from CohortsScreen by clicking a cohort card.
@@ -69,6 +71,8 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
   // --- Members ---
   const [addUserId, setAddUserId] = useState("");
+  const [bulkEmails, setBulkEmails] = useState("");
+  const [bulkAdding, setBulkAdding] = useState(false);
   async function handleAddMember() {
     if (!addUserId || !cohortId) return;
     await addCohortMember({ cohortId, userId: addUserId, addedBy: currentUserId });
@@ -170,6 +174,21 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
         {editingSettings && (
           <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
             <div className="ta-title">Cohort settings</div>
+            <div className="ta-label ta-mt12">Cohort banner</div>
+            <div className="ta-row ta-gap12" style={{ alignItems: "center" }}>
+              {(cohort?.banner_url) && <img src={cohort.banner_url} alt="" style={{ width: 100, height: 56, objectFit: "cover", borderRadius: 8 }} />}
+              <FileUploadZone
+                bucket="uploads"
+                pathPrefix={`cohort-banners/${cohortId}`}
+                accept="image/*"
+                onUploaded={async (url) => {
+                  await updateCohort(cohortId, { banner_url: url });
+                  detailQuery.refetch();
+                  showToast("Cohort banner updated.");
+                }}
+                label="Upload a banner image"
+              />
+            </div>
             <div className="ta-grid ta-grid-2 ta-mt12">
               <div>
                 <div className="ta-label">Name</div>
@@ -201,6 +220,8 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
               {[
                 { k: "members", label: `Members (${members.length})` },
                 { k: "courses", label: `Course assignments (${learnerCourses.length})` },
+                { k: "assignedlearner", label: "Assigned to Learner" },
+                { k: "progressmatrix", label: "Progress Matrix" },
                 { k: "activity", label: `Activity (${posts.length})` },
                 { k: "resources", label: "Resources & sessions" },
               ].map((t) => (
@@ -216,6 +237,31 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                     {availableUsers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                   </select>
                   <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddMember} disabled={!addUserId}><Plus size={14} /> Add</button>
+                </div>
+                <div className="ta-mt12">
+                  <div className="ta-label">Bulk add by email</div>
+                  <textarea
+                    className="ta-input ta-mt6" style={{ width: "100%", minHeight: 60 }}
+                    placeholder="one@example.com, two@example.com"
+                    value={bulkEmails} onChange={(e) => setBulkEmails(e.target.value)}
+                  />
+                  <button
+                    className="ta-btn ta-btn-primary ta-mt8"
+                    disabled={bulkAdding || !bulkEmails.trim()}
+                    onClick={async () => {
+                      setBulkAdding(true);
+                      try {
+                        const result = await bulkAddCohortMembersByEmail(cohortId, bulkEmails, currentUserId);
+                        if (result.added.length) { showToast(`Added ${result.added.length} member${result.added.length === 1 ? "" : "s"}.`); detailQuery.refetch(); }
+                        if (result.failed.length) showToast(`Could not add: ${result.failed.map((f) => f.email).join(", ")}`);
+                        if (result.added.length) setBulkEmails("");
+                      } finally {
+                        setBulkAdding(false);
+                      }
+                    }}
+                  >
+                    {bulkAdding ? "Adding..." : "Add members"}
+                  </button>
                 </div>
                 <div className="ta-table-wrap">
                 <table className="ta-table ta-mt16">
@@ -268,6 +314,70 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                   </tbody>
                 </table>
                 </div>
+              </div>
+            )}
+
+            {tab === "assignedlearner" && (
+              <div className="ta-card ta-mt16">
+                <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 12 }}>
+                  Every course assignment, grouped by learner rather than by course.
+                </div>
+                {members.length === 0 && <div className="ta-empty">No members in this cohort yet.</div>}
+                <div className="ta-col ta-gap12">
+                  {members.map((m) => {
+                    const name = m.user_profiles?.display_name || "Unnamed user";
+                    const assignedToThisLearner = learnerCourses.filter((lc) => lc.user_id === m.user_id);
+                    return (
+                      <div key={m.user_id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13.5 }}>{name}</div>
+                        {assignedToThisLearner.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>No courses assigned yet.</div>}
+                        {assignedToThisLearner.map((lc) => (
+                          <div key={lc.id} className="ta-row ta-between" style={{ fontSize: 12.5, marginTop: 6 }}>
+                            <span>{lc.courses?.title || "Unknown course"}</span>
+                            <span style={{ color: "var(--text-2)" }}>{lc.assigned_at ? new Date(lc.assigned_at).toLocaleDateString() : "N/A"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {tab === "progressmatrix" && (
+              <div className="ta-card ta-mt16">
+                <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 12 }}>
+                  Each learner's progress across every course assigned to them in this cohort.
+                </div>
+                {members.length === 0 && <div className="ta-empty">No members in this cohort yet.</div>}
+                {members.length > 0 && (
+                  <div className="ta-table-wrap">
+                    <table className="ta-table">
+                      <thead>
+                        <tr>
+                          <th>Learner</th>
+                          {[...new Set(learnerCourses.map((lc) => lc.courses?.title).filter(Boolean))].map((title) => (
+                            <th key={title}>{title}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {members.map((m) => {
+                          const courseTitles = [...new Set(learnerCourses.map((lc) => lc.courses?.title).filter(Boolean))];
+                          return (
+                            <tr key={m.user_id}>
+                              <td>{m.user_profiles?.display_name || "Unnamed user"}</td>
+                              {courseTitles.map((title) => {
+                                const assignment = learnerCourses.find((lc) => lc.user_id === m.user_id && lc.courses?.title === title);
+                                return <td key={title}>{assignment ? `${assignment.progress ?? 0}%` : <span style={{ color: "var(--text-3)" }}>Not assigned</span>}</td>;
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 

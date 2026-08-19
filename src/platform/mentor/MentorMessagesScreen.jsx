@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { TopBar, Avatar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { Send, Search, BookOpen, CheckCheck, X, ChevronLeft } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchMentorMessageThreads, sendMentorMessage, fetchAllPlatformLearners } from "../../lib/api/platform.js";
+import { fetchMentorMessageThreads, sendMentorMessage, fetchAllPlatformLearners, fetchOrgInstructorsMonitor } from "../../lib/api/platform.js";
 import { fetchMentorMessageThread, markMentorMessagesRead } from "../../lib/api/schemaHelper.js";
 
 function useIsNarrow(breakpoint = 720) {
@@ -15,7 +15,7 @@ function useIsNarrow(breakpoint = 720) {
   return narrow;
 }
 
-export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLearnerForChat, setScreen }) {
+export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLearnerForChat, setScreen, orgId }) {
   const showToast = useContext(ToastContext);
   const isNarrow = useIsNarrow();
 
@@ -26,6 +26,18 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
   // All platform learners, so an instructor can search & message any learner
   const menteesQuery = useSupabaseQuery(async () => fetchAllPlatformLearners(), []);
   const mentees = menteesQuery.data || [];
+  // Fellow Instructors - confirmed directly against the real 1.0
+  // reference codebase (FellowMentors.tsx). The RLS on mentor_messages
+  // already permits this (mm_insert_sender, 0108_messaging_restriction.sql,
+  // requires only that EITHER party has the mentor role - an instructor
+  // sending to another instructor already satisfies it on its own) - this
+  // only needed the discovery UI, reusing the exact same generic
+  // messaging functions already used for mentor-learner chat, not a new
+  // messaging system.
+  const instructorsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgInstructorsMonitor(orgId) : []), [orgId]);
+  const fellowInstructors = (instructorsQuery.data || [])
+    .filter((m) => m.user_id && m.user_id !== userId)
+    .map((m) => ({ id: m.user_id, name: m.display_name, initials: (m.display_name || "I").slice(0, 2).toUpperCase() }));
 
   const threadIds = new Set(threads.map(t => t.id));
   const contacts = [
@@ -33,6 +45,9 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
     ...mentees
       .filter(m => !threadIds.has(m.id))
       .map(m => ({ id: m.id, name: m.name, initials: m.initials, last: null, time: null, unread: 0 })),
+    ...fellowInstructors
+      .filter(m => !threadIds.has(m.id))
+      .map(m => ({ id: m.id, name: `${m.name} (Instructor)`, initials: m.initials, last: null, time: null, unread: 0 })),
   ];
 
   const [searchLearner, setSearchLearner] = useState("");
@@ -116,7 +131,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
 
             {/* Learner List */}
             <div style={{ flex: 1, overflowY: "auto" }}>
-              {(threadsQuery.loading || menteesQuery.loading) && (
+              {(threadsQuery.loading || menteesQuery.loading || instructorsQuery.loading) && (
                 <div className="ta-empty" style={{ fontSize: 12.5, padding: 24 }}>Loading conversations...</div>
               )}
               {!threadsQuery.loading && !menteesQuery.loading && contacts.length === 0 && (
@@ -283,7 +298,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
             </div>
           ) : (
             <div className="ta-empty" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {(threadsQuery.loading || menteesQuery.loading) ? "Loading..." : "Search for a learner on the left to start a conversation."}
+              {(threadsQuery.loading || menteesQuery.loading || instructorsQuery.loading) ? "Loading..." : "Search for a learner on the left to start a conversation."}
             </div>
           ))}
 

@@ -140,7 +140,7 @@ export async function fetchMentorApplications(organizationId) {
 // existing instructors - every mentor in the org, active or not, with
 // real session/rating data, not a queue of pending applicants.
 export async function fetchOrgInstructorsMonitor(organizationId) {
-  if (!supabase) return DEMO_INSTRUCTORS.map((i) => ({ id: i.id, display_name: i.name, is_active: i.isActive, sessions_completed: i.sessionsCompleted, rating: i.rating }));
+  if (!supabase) return DEMO_INSTRUCTORS.map((i) => ({ id: i.id, user_id: i.id, display_name: i.name, is_active: i.isActive, sessions_completed: i.sessionsCompleted, rating: i.rating }));
   if (!organizationId) return [];
   const { data, error } = await supabase.from("mentors").select("*").eq("organization_id", organizationId);
   if (error) { console.warn("Instructor monitor fetch warning:", error); return []; }
@@ -385,7 +385,8 @@ export async function updateOrganization(orgId, patch) {
 }
 
 export async function fetchOrganizationById(orgId) {
-  if (!supabase || !orgId) return null;
+  if (!supabase) return { id: "demo-org-id", name: "Demo Academy", status: "active", subscription_tier: "growth", max_users: 50 };
+  if (!orgId) return null;
   const { data, error } = await supabase.from("organizations").select("*").eq("id", orgId).maybeSingle();
   if (error) throw error;
   return data;
@@ -1400,7 +1401,9 @@ export async function fetchCohortDetail(cohortId) {
         { id: "demo-cohort-sess-1", cohort_id: cohortId, title: "Cohort Kickoff Call", starts_at: new Date(Date.now() + 3 * 86400000).toISOString() },
       ],
       learnerCourses: [
-        { cohort_id: cohortId, user_id: "demo-learner-1", course_id: "demo-course-ai-fundamentals", user_profiles: { display_name: "Amara Chen" }, courses: { id: "demo-course-ai-fundamentals", title: "AI Fundamentals" } },
+        { cohort_id: cohortId, user_id: "demo-learner-1", course_id: "demo-course-ai-fundamentals", progress: 100, user_profiles: { display_name: "Amara Chen" }, courses: { id: "demo-course-ai-fundamentals", title: "AI Fundamentals" } },
+        { cohort_id: cohortId, user_id: "demo-learner-2", course_id: "demo-course-ai-fundamentals", progress: 85, user_profiles: { display_name: "David Osei" }, courses: { id: "demo-course-ai-fundamentals", title: "AI Fundamentals" } },
+        { cohort_id: cohortId, user_id: "demo-learner-3", course_id: "demo-course-ai-fundamentals", progress: 60, user_profiles: { display_name: "Priya Nair" }, courses: { id: "demo-course-ai-fundamentals", title: "AI Fundamentals" } },
       ],
     };
   }
@@ -1422,11 +1425,18 @@ export async function fetchCohortDetail(cohortId) {
   const memberProfiles = await fetchProfilesByUserIds(memberRowsList.map((m) => m.user_id));
   const memberIds = memberRowsList.map((m) => m.user_id);
   let progressByUser = {};
+  let progressByUserCourse = {};
   if (memberIds.length) {
-    const { data: enrollments } = await supabase.from("course_enrollments").select("user_id, progress_percentage").in("user_id", memberIds);
+    const { data: enrollments } = await supabase.from("course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", memberIds);
     for (const e of enrollments || []) {
       if (!progressByUser[e.user_id]) progressByUser[e.user_id] = [];
       progressByUser[e.user_id].push(e.progress_percentage || 0);
+      // Real per-course progress, not just each learner's overall average
+      // repeated across every column - needed for an honest Progress
+      // Matrix (each cell reflects that specific course, not a blended
+      // number that would be misleading in any column where the learner
+      // has more than one assignment).
+      progressByUserCourse[`${e.user_id}:${e.course_id}`] = Math.round(e.progress_percentage || 0);
     }
   }
   const membersOut = memberRowsList.map((m) => {
@@ -1450,6 +1460,7 @@ export async function fetchCohortDetail(cohortId) {
     ...l,
     user_profiles: lcProfiles[l.user_id] || null,
     courses: coursesById[l.course_id] || null,
+    progress: progressByUserCourse[`${l.user_id}:${l.course_id}`] ?? 0,
   }));
 
   return { cohort: cohort || null, members: membersOut, posts: postsOut, resources: resources || [], sessions: sessions || [], learnerCourses: learnerCoursesOut };
@@ -1467,6 +1478,30 @@ export async function addCohortMember({ cohortId, userId, addedBy }) {
     .single();
   if (error) throw error;
   return data;
+}
+
+// Bulk add by email - confirmed directly against the 1.0 reference
+// site's "Bulk add by email" control. Reuses the already-real
+// findUserIdByEmail() (backed by the find_user_id_by_email RPC) rather
+// than inventing a new lookup path - an email that doesn't match a real
+// account is reported back per-email rather than silently skipped, so
+// the caller can see exactly which ones failed and why.
+export async function bulkAddCohortMembersByEmail(cohortId, emails, addedBy) {
+  if (!supabase) return { success: false, error: "Not available in demo mode.", added: [], failed: [] };
+  const list = (emails || "").split(",").map((e) => e.trim()).filter(Boolean);
+  const added = [];
+  const failed = [];
+  for (const email of list) {
+    try {
+      const userId = await findUserIdByEmail(email);
+      if (!userId) { failed.push({ email, reason: "No account found with this email" }); continue; }
+      await addCohortMember({ cohortId, userId, addedBy });
+      added.push(email);
+    } catch (e) {
+      failed.push({ email, reason: e?.message || "Could not add this member" });
+    }
+  }
+  return { success: added.length > 0, added, failed };
 }
 
 export async function removeCohortMember(memberRowId) {
@@ -3311,4 +3346,235 @@ export async function fetchAllMentorsForPayoutControl() {
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
   return rows.map((r) => ({ ...r, name: profiles[r.user_id]?.display_name || "Instructor" }));
+}
+
+// ============================================================================
+// General analysis notes - "there should be a place where instructors,
+// admin or managers can add notes... relevant for their analysis." See
+// 0135_analysis_notes.sql - a standalone table, not tied to any specific
+// learner or department, for a person's own running notes.
+// ============================================================================
+export async function fetchMyAnalysisNotes(authorId) {
+  if (!supabase) {
+    return [
+      { id: "demo-note-1", note_text: "Fatima and Liam are both falling behind on AI Fundamentals - worth a check-in this week.", created_at: new Date(Date.now() - 86400000).toISOString() },
+    ];
+  }
+  if (!authorId) return [];
+  const { data, error } = await supabase.from("analysis_notes").select("*").eq("author_id", authorId).order("created_at", { ascending: false });
+  if (error) { console.warn("Analysis notes fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function addAnalysisNote(authorId, organizationId, noteText) {
+  if (!supabase) return { success: false, error: "Not available in demo mode." };
+  if (!noteText?.trim()) return { success: false, error: "Note can't be empty." };
+  try {
+    const { error } = await supabase.from("analysis_notes").insert({ author_id: authorId, organization_id: organizationId, note_text: noteText.trim() });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save this note." };
+  }
+}
+
+export async function deleteAnalysisNote(noteId) {
+  if (!supabase) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("analysis_notes").delete().eq("id", noteId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not delete this note." };
+  }
+}
+
+// ============================================================================
+// Manager Team Cohorts + Team Compliance - confirmed directly against the
+// real 1.0 reference codebase (ManagerCohortsTab.tsx, ManagerComplianceTab.tsx)
+// - Manager View had zero cohort or compliance visibility for their own
+// direct reports before this. Ported the same real behavior: which
+// cohorts a manager's team belongs to, and their team's compliance
+// standing specifically (not the whole org's).
+// ============================================================================
+export async function fetchManagerTeamCohorts(managerId) {
+  if (!supabase) {
+    return [{ id: DEMO_COHORT.id, name: DEMO_COHORT.name, starts_at: "2026-01-01", ends_at: DEMO_COHORT.endsAt, memberNames: ["Amara Chen", "David Osei", "Priya Nair"] }];
+  }
+  if (!managerId) return [];
+  const { data: reports } = await supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
+  const reportRows = reports || [];
+  const reportIds = reportRows.map((r) => r.id);
+  if (!reportIds.length) return [];
+  const nameById = Object.fromEntries(reportRows.map((r) => [r.id, r.display_name || "Team member"]));
+  const { data: memberRows } = await supabase.from("cohort_members").select("user_id, cohort_id").in("user_id", reportIds);
+  const cohortIds = [...new Set((memberRows || []).map((m) => m.cohort_id))];
+  if (!cohortIds.length) return [];
+  const { data: cohorts } = await supabase.from("cohorts").select("id, name, starts_at, ends_at").in("id", cohortIds);
+  const cohortById = Object.fromEntries((cohorts || []).map((c) => [c.id, c]));
+  const grouped = {};
+  for (const m of memberRows || []) {
+    if (!cohortById[m.cohort_id]) continue;
+    if (!grouped[m.cohort_id]) grouped[m.cohort_id] = { ...cohortById[m.cohort_id], memberNames: [] };
+    grouped[m.cohort_id].memberNames.push(nameById[m.user_id] || "Team member");
+  }
+  return Object.values(grouped);
+}
+
+export async function fetchManagerTeamCompliance(managerId) {
+  if (!supabase) {
+    return [
+      { id: "demo-mc-1", user_name: "Amara Chen", course_title: "Workplace Compliance 101", progress_percentage: 100, due_at: "2026-08-14", status: "completed" },
+      { id: "demo-mc-2", user_name: "Fatima Diallo", course_title: "Workplace Compliance 101", progress_percentage: 30, due_at: "2026-08-16", status: "overdue" },
+    ];
+  }
+  if (!managerId) return [];
+  const { data: reports } = await supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
+  const reportRows = reports || [];
+  const reportIds = reportRows.map((r) => r.id);
+  if (!reportIds.length) return [];
+  const nameById = Object.fromEntries(reportRows.map((r) => [r.id, r.display_name || "Team member"]));
+  const { data: assignments } = await supabase.from("compliance_assignments").select("*, courses(title)").in("user_id", reportIds);
+  const rows = assignments || [];
+  // compliance_assignments itself has no progress_percentage column -
+  // real progress comes from the matching course_enrollments row, same
+  // real relationship already used for fetchComplianceAssignments
+  // elsewhere in this file, not a column that doesn't exist.
+  const { data: enrollments } = reportIds.length
+    ? await supabase.from("course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", reportIds)
+    : { data: [] };
+  const progressByUserCourse = Object.fromEntries((enrollments || []).map((e) => [`${e.user_id}:${e.course_id}`, e.progress_percentage || 0]));
+  return rows.map((a) => ({
+    id: a.id, user_name: nameById[a.user_id] || "Team member", course_title: a.courses?.title || "Unknown course",
+    progress_percentage: progressByUserCourse[`${a.user_id}:${a.course_id}`] ?? 0, due_at: a.due_at, status: a.status,
+  }));
+}
+
+// Org-scoped Activity Log for regular admins - confirmed directly
+// against the real 1.0 reference codebase (AdminActivityLog.tsx). Only
+// buildable safely after fixing a real cross-tenant leak found while
+// checking this (see 0137_admin_audit_log_org_scope_fix.sql) - the
+// underlying RLS previously let any org admin read every organization's
+// audit log, not just their own.
+export async function fetchOrgActivityLog(organizationId, limit = 30) {
+  if (!supabase) {
+    return [
+      { id: "demo-log-1", text: "issue certificate directly: Amara Chen", time: new Date(Date.now() - 3600000).toLocaleString() },
+      { id: "demo-log-2", text: "assign compliance course: Fatima Diallo", time: new Date(Date.now() - 86400000).toLocaleString() },
+      { id: "demo-log-3", text: "review certificate: Priya Nair", time: new Date(Date.now() - 2 * 86400000).toLocaleString() },
+    ];
+  }
+  if (!organizationId) return [];
+  const { data, error } = await supabase
+    .from("safe_admin_audit_log")
+    .select("*")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) { console.warn("Org activity log fetch warning:", error); return []; }
+  return (data || []).map((a) => ({
+    id: a.id,
+    text: `${a.action_type.replace(/_/g, " ")}${a.target_identifier ? `: ${a.target_identifier}` : ""}`,
+    time: new Date(a.created_at).toLocaleString(),
+  }));
+}
+
+// ============================================================================
+// Real session completion with feedback and earnings - confirmed
+// directly against the real 1.0 reference codebase
+// (SessionCompletionDialog.tsx). Marking a session complete previously
+// just flipped its status - no feedback captured, and no corresponding
+// earnings record created at all. Uses the mentor's own real hourly_rate
+// where set (more accurate than 1.0's flat "$1/minute" placeholder),
+// falling back to a reasonable default rate only when none is set.
+// Earnings are always recorded regardless of payouts_enabled - tracking
+// what's owed and being allowed to withdraw it are two different things,
+// matching the existing "still tracked, not yet paid out" pattern this
+// project already established for suspended payouts.
+// ============================================================================
+export async function completeMentorshipSession(sessionId, feedback) {
+  if (!supabase) return { success: true };
+  try {
+    const { data: session, error: fetchError } = await supabase
+      .from("mentorship_sessions").select("mentor_id, duration_minutes").eq("id", sessionId).single();
+    if (fetchError) throw fetchError;
+
+    const { error: updateError } = await supabase
+      .from("mentorship_sessions")
+      .update({ status: "completed", mentor_feedback: feedback || null })
+      .eq("id", sessionId);
+    if (updateError) throw updateError;
+
+    const { data: mentor } = await supabase.from("mentors").select("hourly_rate").eq("id", session.mentor_id).maybeSingle();
+    const ratePerHour = mentor?.hourly_rate || 30;
+    const amount = Math.round((ratePerHour / 60) * (session.duration_minutes || 45) * 100) / 100;
+
+    const { error: earningsError } = await supabase
+      .from("mentor_earnings")
+      .insert({ mentor_id: session.mentor_id, session_id: sessionId, amount, earning_type: "session", status: "pending" });
+    if (earningsError) throw earningsError;
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not mark this session complete." };
+  }
+}
+
+// Reschedule - confirmed against the real 1.0 reference
+// (RescheduleSessionDialog.tsx). Just moves scheduled_at; status stays
+// whatever it already was (usually "scheduled"/"confirmed"), matching
+// the reference behavior rather than resetting to a "pending" state
+// that would force a second, unnecessary re-confirmation.
+export async function rescheduleMentorshipSession(sessionId, newScheduledAt) {
+  if (!supabase) return { success: true };
+  try {
+    const { error } = await supabase.from("mentorship_sessions").update({ scheduled_at: newScheduledAt }).eq("id", sessionId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not reschedule this session." };
+  }
+}
+
+// ============================================================================
+// Course materials - confirmed directly against the real 1.0 reference
+// codebase (CourseMaterialsManager.tsx). See 0138_course_materials.sql -
+// downloadable files/links attached to a course, distinct from lessons
+// and from a cohort's own resources.
+// ============================================================================
+export async function fetchCourseMaterials(courseId) {
+  if (!supabase) {
+    if (courseId !== "demo-course-ai-fundamentals") return [];
+    return [{ id: "demo-material-1", course_id: courseId, title: "AI Fundamentals - Slide Deck", material_type: "link", external_url: "https://example.com/slides.pdf", description: "Reference slides for this course." }];
+  }
+  if (!courseId) return [];
+  const { data, error } = await supabase.from("course_materials").select("*").eq("course_id", courseId).order("created_at", { ascending: false });
+  if (error) { console.warn("Course materials fetch warning:", error); return []; }
+  return data || [];
+}
+
+export async function addCourseMaterial(courseId, { title, materialType = "link", fileUrl, externalUrl, description, createdBy }) {
+  if (!supabase) return { success: false, error: "Not available in demo mode." };
+  if (!title?.trim()) return { success: false, error: "A title is required." };
+  try {
+    const { error } = await supabase.from("course_materials").insert({
+      course_id: courseId, title: title.trim(), material_type: materialType,
+      file_url: fileUrl || null, external_url: externalUrl || null, description: description || null, created_by: createdBy,
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not add this material." };
+  }
+}
+
+export async function deleteCourseMaterial(id) {
+  if (!supabase) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { error } = await supabase.from("course_materials").delete().eq("id", id);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not delete this material." };
+  }
 }

@@ -1,11 +1,12 @@
 import React from "react";
 import { TopBar, StatCard, Tag } from "../components/PlatformUI.jsx";
+import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { Calendar, Users, Star, DollarSign } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../../lib/api/platform.js";
 
-export function MentorDashboardScreen({ mentorId, currentUserId }) {
+export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId }) {
   const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
   const earningsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorEarnings(mentorId) : [], [mentorId]);
   const activeCohortsQuery = useSupabaseQuery(async () => currentUserId ? fetchMentorActiveCohorts(currentUserId) : [], [currentUserId]);
@@ -24,7 +25,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId }) {
 
   return (
     <div className="ta-fade">
-      <TopBar title="Instructor Overview" sub="Your upcoming instructor sessions & earnings" />
+      <TopBar title={profileQuery?.data?.display_name || "Instructor Overview"} sub="Your upcoming instructor sessions & earnings" />
       <div className="ta-content">
         <div className="ta-grid ta-grid-4">
           <StatCard stat={{ label: "Upcoming sessions", value: upcomingSessions.length, icon: Calendar }} />
@@ -63,6 +64,8 @@ export function MentorDashboardScreen({ mentorId, currentUserId }) {
             ))}
           </div>
         </div>
+
+        <AnalysisNotesCard authorId={currentUserId} organizationId={orgId} />
       </div>
     </div>
   );

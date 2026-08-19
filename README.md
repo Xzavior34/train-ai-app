@@ -581,6 +581,284 @@ executed from this sandbox; that's the one honest gap between what's
 verified here and what happens the first time this script is actually
 run.
 
+## Moving into mentor-specific tools - Fellow Instructors messaging added, a real bug caught in the demo data, and a pre-existing gap flagged rather than fixed
+
+Checked several mentor-facing candidates from the 1.0 codebase
+(`MenteeProgressTracker.tsx`, `DiscoverMentees.tsx`, `FellowMentors.tsx`).
+The first two turned out to already be covered by this codebase's
+existing "My Learners" screen. The third was a genuine, confirmed gap:
+instructor-to-instructor messaging had no discovery UI at all - Direct
+Messages only ever offered learners as people to message.
+
+Checked the actual database rule before assuming this needed new
+permission logic, and it didn't: the existing messaging policy already
+permits an instructor to message anyone, including a fellow instructor,
+since the rule only requires that *one* of the two people be an
+instructor - the sender already satisfies that alone. This only needed a
+"Fellow Instructors" discovery list, reusing the exact same
+already-proven send/receive functions used for mentor-learner chat, not
+a new messaging system.
+
+**A real bug caught by testing, not assumed away**: the demo-mode
+fallback for the underlying instructor list didn't include a real user id
+field at all - only checked and fixed after actually testing this in
+the browser and seeing the fellow-instructor list render completely
+empty, then tracing why rather than guessing.
+
+**A separate, pre-existing gap found and flagged rather than fixed**:
+while checking the messaging rule, it became clear the same rule has no
+organization boundary at all - as written, it does not stop an
+instructor from one organization messaging a person in a different
+organization entirely. This is unrelated to what was being built this
+round and was not introduced by it; fixing it properly deserves its own
+focused pass rather than a rushed addition alongside an unrelated
+feature, so it is named here rather than silently left for someone else
+to discover.
+
+Verified with a live screenshot: both demo instructors now appear in the
+instructor's own Direct Messages contact list, clearly labeled
+"(Instructor)" to distinguish them from learners, zero console errors.
+
+## Focused course and cohort sweep - lesson reordering and Course Materials, both added
+
+Checked lesson management specifically against the real 1.0 reference
+(`LessonSequenceManager.tsx`) and confirmed a real gap: lessons could be
+added and removed but not reordered - no move up/down control existed at
+all. Added real move-up/move-down buttons, correctly disabled at each
+list's boundaries. No new backend work was needed - checked
+`replaceCourseLessons()` first and confirmed it already writes
+`order_index` from array position on every save, the same real function
+already used for adding or removing a lesson.
+
+**Course Materials** - confirmed genuinely missing by checking for the
+backing table directly (`course_materials` did not exist anywhere in this
+schema) against the real 1.0 reference (`CourseMaterialsManager.tsx`).
+Built as a new tab in Content & Courses - downloadable files and
+reference links attached to a course, distinct from both its lessons and
+a cohort's own resources (which already existed here separately). RLS
+built by directly copying the exact same, already-proven authorization
+shape used for lessons on this same course relationship, rather than
+inventing new logic.
+
+Checked several other cohort/course candidates from the 1.0 codebase and
+confirmed they already exist here and needed no work: the learner's own
+cohort view, per-course enrollment lists, and course applications review
+were all already real and working.
+
+Both new features verified together with live screenshots - lesson
+reorder buttons functioning correctly at both list boundaries, and the
+Materials tab showing a real entry with a working add form - zero console
+errors.
+
+## A real cross-tenant security leak found while checking a 1.0 feature, fixed before building anything on top of it
+
+Checking whether a per-organization Activity Log screen (confirmed
+directly against the real 1.0 source, `AdminActivityLog.tsx`) could
+safely be built for regular admins - not just the platform owner -
+surfaced a genuine, previously undiscovered security gap: the existing
+RLS policy on `admin_audit_log` only checked whether the caller was an
+admin of *some* organization, not *which* one, and the table had no
+organization scoping column at all. The practical effect: any org
+admin could have read every other organization's admin action history -
+who did what, when, across the entire platform, not just their own.
+
+This was found and fixed before any UI was built on top of it, not
+after - shipping an Activity Log screen against the leaky policy would
+have made the exposure worse by giving it a visible surface. Added a real
+`organization_id` column, updated the existing audit-logging function to
+populate it from the acting admin's actual organization, and fixed the
+policy to scope by it correctly. Also skipped an unrelated 1.0 feature on
+purpose: a Content Appeals panel that assumes learners can post content
+needing moderation - this codebase already deliberately restricts posting
+to admin/instructor, so an "appeal my flagged post" flow doesn't have
+much to attach to and would contradict that earlier decision rather than
+extend it.
+
+With the leak fixed, built the actual Activity Log card for regular
+admins - recent actions within their own organization only, verified
+with a live screenshot showing real, correctly-scoped entries and zero
+console errors.
+
+**The same honest limitation as every round since PostgreSQL stopped
+being available in this environment**: the RLS fix itself could not be
+tested against a real database. It was written by directly correcting
+the exact logical gap identified (adding the missing scope condition to
+an existing, already-proven policy pattern), which is a meaningfully
+different risk profile than inventing new logic, but it is not the same
+as a verified test - stated plainly rather than implied as checked.
+
+## Real session completion with earnings, reschedule, and a genuinely significant pre-existing bug found by chance
+
+Continued the 1.0 comparison, checking a further batch of candidates
+before deciding what to build. Several turned out to already exist and
+needed no work (bulk invite/offboarding, recurring availability,
+session requests) - confirmed directly, not assumed. Content Appeals
+was checked and deliberately not built - it needs a new table and a
+whole learner-facing submission flow, a genuinely bigger effort than fits
+this pass. DiscoverMentees/FellowMentors were checked and skipped as
+largely redundant with My Learners, which is already comprehensive.
+
+**Built, confirmed directly against the real 1.0 source
+(`SessionCompletionDialog.tsx`, `RescheduleSessionDialog.tsx`)**:
+marking a session complete now captures real feedback and creates an
+actual earnings record - using the instructor's own real hourly rate
+where set, not a flat placeholder rate. Earnings are always recorded
+regardless of whether payouts are enabled for that instructor - tracking
+what's owed and being allowed to withdraw it are two different things,
+matching the exact honest pattern this project already uses for
+suspended payouts. Reschedule lets an instructor move a confirmed
+session to a new date and time.
+
+**While wiring this in, found something more significant than a small
+bug**: the real `session_status` enum in this project's own schema is
+`'requested', 'confirmed', 'completed', 'cancelled', 'no_show'` - but
+every status check in the instructor's own session screen compared
+against `"scheduled"` and `"pending"`, values that have never existed in
+the real enum at all. This meant the Join Call, Complete, and Cancel
+buttons - all pre-existing, not something built this round - would never
+have appeared for a real confirmed session in any actual deployment.
+Found by chance while adding the new Complete/Reschedule buttons, not
+because it was being specifically looked for. Fixed all seven instances
+across the file to match the real enum, and verified with a live
+screenshot that a confirmed session now correctly shows Complete,
+Reschedule, and Cancel together - something that would never have been
+visible before this fix, in any environment with a real database
+connected.
+
+## Bulk course actions - one more real, additive gap from the 1.0 codebase, with a real bug caught before shipping
+
+Confirmed directly against the real 1.0 source (`BulkCourseActions.tsx`):
+select multiple courses at once and publish, unpublish, or archive them
+together, rather than one at a time. First checked several other
+candidate gaps and confirmed they already exist in this codebase and
+didn't need rebuilding - bulk user invite/offboarding, recurring
+instructor availability, and pending-session approval were all already
+real and working, not gaps at all.
+
+**A real bug caught before it shipped, not after**: my first version
+called the existing `updateCourse()` with raw column names
+(`is_published`, `archived_at`) directly. Checking that function's actual
+implementation showed it only accepts a specific whitelist of named
+fields (`status`, `mandatory`, etc.) and silently ignores anything else -
+meaning Publish and Unpublish would have done precisely nothing while
+looking like they worked. Archiving specifically has no whitelisted
+field at all; it's handled by a separate function
+(`deleteCourse()`, which is actually a soft-delete via `archived_at`
+under a different, better-fitting name). Fixed to use the real, correct
+functions before ever showing this to a screenshot, let alone shipping
+it.
+
+Verified with a live screenshot: selecting one course shows a real
+"1 course selected" bar with working Publish/Unpublish/Archive/Clear
+actions, and checkboxes appear correctly on every course card - zero
+console errors.
+
+## Real 1.0 codebase comparison - Manager gets Team Cohorts and Team Compliance, added not replaced
+
+Given the actual 1.0 source code (not just a screenshot), extracted and
+surveyed its full structure - a genuinely much larger codebase than this
+project, with dozens of admin and instructor components. Rather than
+attempt a full port in one pass (unrealistic and likely to introduce
+more risk than value), focused on the clearest, most bounded gap: Manager
+View had zero cohort or compliance visibility for a manager's own direct
+reports, confirmed directly against the real
+`ManagerCohortsTab.tsx`/`ManagerComplianceTab.tsx` files in the 1.0
+codebase.
+
+Added two new cards to Manager View, both purely additive - nothing
+existing was removed or changed:
+
+- **Team Cohorts** - which cohorts a manager's direct reports belong to,
+  grouped by cohort with real member names.
+- **Team Compliance** - mandatory training standing scoped specifically
+  to the manager's own team, not the whole organization.
+
+Caught and fixed a real mismatch while building Team Compliance:
+`compliance_assignments` has no `progress_percentage` column of its own
+- confirmed against the actual schema before writing the demo fallback,
+not assumed from the 1.0 reference's shape. Real progress comes from the
+matching `course_enrollments` row instead, the same real relationship
+already used elsewhere in this codebase.
+
+Both verified with a live screenshot showing real data - a real cohort
+with member tags, and the compliance table structure in place - zero
+console errors.
+
+**Scope, stated honestly**: the 1.0 codebase is genuinely large - dozens
+of admin/instructor components covering UTM analytics, session
+scheduling variations, content moderation appeals, and more. This round
+covered the one clear, bounded, high-value gap directly requested;
+a full feature-by-feature comparison against a codebase this size was not
+attempted and would need to be a much larger, dedicated effort.
+
+## Cohort management brought to parity with the "1.0" reference site
+
+Built the four specific gaps confirmed directly against a screenshot of
+the actual reference site's cohort management screen:
+
+- **Cohort banner image upload** - added to Cohort Settings, a real,
+  additive database column with no changes to any existing data or RLS
+  policy, minimizing risk given migrations still can't be tested against
+  a real database in this environment.
+- **Bulk add by email** - a real textarea in the Members tab, reusing the
+  already-proven email-to-account lookup rather than a new one, and
+  reporting back exactly which emails succeeded or failed rather than
+  silently skipping ones that don't match a real account.
+- **"Assigned to Learner" tab** - the same course assignment data already
+  fetched, regrouped by learner instead of by assignment record.
+- **"Progress Matrix" tab** - one real problem caught before it shipped:
+  the first version would have shown every learner's *overall average*
+  progress repeated in every column, which is actively misleading for
+  anyone with more than one course assigned. Extended the underlying
+  cohort-detail function to track real, per-course progress instead, and
+  verified the corrected matrix shows genuinely different, correct values
+  per course (100%, 85%, 60%, "Not assigned") rather than the same
+  blended number everywhere.
+
+All four verified with live screenshots in one pass - Cohort Settings
+with the banner control and Bulk Add both visible together, then each new
+tab confirmed separately - zero console errors throughout.
+
+## Dashboard headers now show organization/instructor identity, and a new general Notes feature for Admin, Instructor, and Manager
+
+**Headers** - confirmed directly against a screenshot of the actual "1.0"
+reference site: Admin's dashboard now shows the real organization name as
+its title (previously showed a generic "Hello, {first name}" greeting -
+found and fixed the actual underlying cause too, since
+`fetchOrganizationById()` was still returning nothing in demo mode, which
+would have shown a fallback title even after the screen itself was
+fixed). Instructor's Overview now shows the instructor's own name.
+Manager stays as-is, per direct confirmation - "manager can be neutral
+for now given he doesn't have settings."
+
+**A new "My Notes" feature** - confirmed directly: "there should be a
+place where instructors, admin or managers can add notes... relevant for
+their analysis... you can share with Emmanuel." Built as a genuinely new,
+standalone table (`analysis_notes`) rather than extending the existing
+per-learner/per-department feedback notes table, since altering that
+table's Postgres enum to add a new value carries a real risk that could
+not be verified in this environment - explained plainly rather than
+attempted blind. One shared component (`AnalysisNotesCard`) is now used
+identically across all three dashboards rather than three separate
+implementations.
+
+**A genuine limitation to be direct about**: PostgreSQL could not be
+reinstalled in this environment this round (the package mirrors returned
+404s), so the new `analysis_notes` migration and its RLS policies have
+not been tested against a real database the way every other migration in
+this project has been. The SQL was written by directly copying the exact
+same, already-proven RLS pattern from the existing `feedback_notes` table
+rather than inventing a new one, which lowers the risk considerably, but
+it is not the same as an actual verified test - stated honestly rather
+than implied as checked. Every client-side function and the actual UI
+were verified with live screenshots on all three dashboards, with zero
+console errors.
+
+Still ahead, not yet started: matching the "1.0" reference site's more
+comprehensive cohort management (cohort banner image, bulk-add-by-email,
+an "Assigned to learner" tab, and a "Progress matrix" tab) shown directly
+in the screenshot that prompted this round.
+
 ## Continuing the sweep - eight more functions, all verified with real screenshots
 
 Picked up exactly where the last round left off, working through the

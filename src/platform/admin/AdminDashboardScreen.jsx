@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { TopBar, StatCard, ProgressBar, Tag } from "../components/PlatformUI.jsx";
+import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { Plus, Users, Layers, BookOpen, GraduationCap, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById } from "../../lib/api/platform.js";
+import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
 export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelector, isPlatformOwner }) {
   const [quickActionOpen, setQuickActionOpen] = useState(false);
@@ -10,6 +11,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   const statsQuery = useSupabaseQuery(async () => orgId ? fetchOrgDashboardStats(orgId) : null, [orgId]);
   const tasksQuery = useSupabaseQuery(async () => orgId ? fetchTodaysTasks(orgId) : null, [orgId]);
   const cohortProgressQuery = useSupabaseQuery(async () => orgId ? fetchCohortProgressSummary(orgId) : [], [orgId]);
+  const activityLogQuery = useSupabaseQuery(async () => orgId ? fetchOrgActivityLog(orgId) : [], [orgId]);
   const riskQuery = useSupabaseQuery(async () => orgId ? fetchStudentRiskList(orgId) : [], [orgId]);
   const mentorsQuery = useSupabaseQuery(async () => orgId ? fetchTopMentors(orgId) : [], [orgId]);
   const sessionsQuery = useSupabaseQuery(async () => orgId ? fetchUpcomingOrgSessions(orgId) : [], [orgId]);
@@ -74,8 +76,8 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   return (
     <div className="ta-fade">
       <TopBar
-        title={`Hello, ${profileQuery.data?.display_name?.split(" ")[0] || "there"}`}
-        sub="Your organization dashboard"
+        title={orgQuery.data?.name || "Dashboard"}
+        sub={`Admin workspace - ${profileQuery.data?.display_name || "Admin"}`}
         orgSelector={orgSelector}
         profileQuery={profileQuery}
         onNavigate={setScreen}
@@ -281,6 +283,23 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             </div>
           </div>
         </div>
+
+        <div className="ta-card ta-mt20">
+          <div className="ta-title">Activity Log</div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Recent admin actions within your own organization.</div>
+          <div className="ta-col ta-gap8 ta-mt12">
+            {activityLogQuery.loading && <div className="ta-empty">Loading...</div>}
+            {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && <div className="ta-empty">No recorded activity yet.</div>}
+            {(activityLogQuery.data || []).map((a) => (
+              <div key={a.id} className="ta-row ta-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ fontSize: 12.5 }}>{a.text}</span>
+                <span style={{ fontSize: 11, color: "var(--text-3)" }}>{a.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <AnalysisNotesCard authorId={profileQuery?.data?.id} organizationId={orgId} />
       </div>
     </div>
   );

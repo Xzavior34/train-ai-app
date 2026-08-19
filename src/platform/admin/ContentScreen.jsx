@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
-import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award } from "lucide-react";
+import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly } from "../../lib/api/platform.js";
+import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 
@@ -58,6 +58,32 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   }, [selectedCourseId]);
 
   const [newCourseOpen, setNewCourseOpen] = useState(false);
+  const [selectedCourseIds, setSelectedCourseIds] = useState(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // Bulk course actions - confirmed directly against the real 1.0
+  // reference codebase (BulkCourseActions.tsx) - publish/unpublish/
+  // archive several courses at once rather than one at a time. Uses the
+  // exact same updateCourse()/deleteCourse() functions already used for
+  // a single course, not a new, parallel write path.
+  async function handleBulkAction(action) {
+    if (selectedCourseIds.size === 0) return;
+    setBulkActionLoading(true);
+    try {
+      for (const id of selectedCourseIds) {
+        if (action === "publish") await updateCourse(id, { status: "published" });
+        else if (action === "unpublish") await updateCourse(id, { status: "draft" });
+        else if (action === "archive") await deleteCourse(id);
+      }
+      showToast(`${action === "publish" ? "Published" : action === "unpublish" ? "Unpublished" : "Archived"} ${selectedCourseIds.size} course${selectedCourseIds.size === 1 ? "" : "s"}.`);
+      setSelectedCourseIds(new Set());
+      coursesQuery.refetch();
+    } catch (e) {
+      showToast(e.message || "Could not complete this bulk action.");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  }
   const [newTitle, setNewTitle] = useState("");
   const [newCategory, setNewCategory] = useState("Data & AI");
   const [newCoverImageUrl, setNewCoverImageUrl] = useState("");
@@ -134,6 +160,10 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   }, [certTemplateQuery.data]);
   const pendingApplications = (applicationsQuery.data || []).filter(a => a.status === "pending");
   const enrolledLearnersQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseEnrolledLearners(activeCourse.id) : []), [activeCourse?.id]);
+  const materialsQuery = useSupabaseQuery(async () => (activeCourse ? fetchCourseMaterials(activeCourse.id) : []), [activeCourse?.id]);
+  const [materialTitle, setMaterialTitle] = useState("");
+  const [materialUrl, setMaterialUrl] = useState("");
+  const [addingMaterial, setAddingMaterial] = useState(false);
 
   async function handleDecideApplication(app, decision) {
     try {
@@ -207,6 +237,22 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
 
   const handleRemoveLesson = (idx) => {
     setEditLessons(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  // Lesson reordering - confirmed directly against the real 1.0 reference
+  // codebase (LessonSequenceManager.tsx). Reorders the in-memory list only;
+  // replaceCourseLessons() (already called on Save) submits the full list
+  // in its new order, and order_index is assigned from array position
+  // there - the same real save path already used for adding/removing a
+  // lesson, not a new write path.
+  const handleMoveLesson = (idx, direction) => {
+    setEditLessons(prev => {
+      const next = [...prev];
+      const target = idx + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      return next;
+    });
   };
 
   const handleCloseActiveCourse = () => {
@@ -305,6 +351,13 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   style={{ flexShrink: 0, whiteSpace: "nowrap" }}
                 >
                   <Layers size={14} /> Curriculum & Lessons ({editLessons.length})
+                </button>
+                <button
+                  className={`ta-btn ta-btn-sm ${activeTab === "materials" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                  onClick={() => setActiveTab("materials")}
+                  style={{ flexShrink: 0, whiteSpace: "nowrap" }}
+                >
+                  <FileText size={14} /> Materials ({(materialsQuery.data || []).length})
                 </button>
                 <button
                   className={`ta-btn ta-btn-sm ${activeTab === "learners" ? "ta-btn-primary" : "ta-btn-ghost"}`}
@@ -518,6 +571,14 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                           </div>
                         </div>
 
+                        <div className="ta-col ta-gap4">
+                          <button className="ta-btn ta-btn-ghost ta-btn-sm" disabled={idx === 0} onClick={() => handleMoveLesson(idx, -1)} title="Move up">
+                            <ChevronUp size={15} />
+                          </button>
+                          <button className="ta-btn ta-btn-ghost ta-btn-sm" disabled={idx === editLessons.length - 1} onClick={() => handleMoveLesson(idx, 1)} title="Move down">
+                            <ChevronDown size={15} />
+                          </button>
+                        </div>
                         <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ color: "var(--danger)" }} onClick={() => handleRemoveLesson(idx)} title="Remove Lesson">
                           <Trash2 size={15} />
                         </button>
@@ -529,6 +590,52 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
             )}
 
             {/* TAB 3: ENROLLED STUDENTS & STATS */}
+            {activeTab === "materials" && (
+              <div className="ta-card ta-col ta-gap16">
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>Course Materials</div>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+                    Downloadable files and reference links for this course, separate from its lessons.
+                  </div>
+                </div>
+                <div className="ta-col ta-gap10">
+                  {materialsQuery.loading && <div className="ta-empty">Loading materials...</div>}
+                  {!materialsQuery.loading && (materialsQuery.data || []).length === 0 && <div className="ta-empty">No materials added yet.</div>}
+                  {(materialsQuery.data || []).map((m) => (
+                    <div key={m.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.title}</div>
+                        {m.description && <div style={{ fontSize: 12, color: "var(--text-2)" }}>{m.description}</div>}
+                        {m.external_url && <a href={m.external_url} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>{m.external_url}</a>}
+                      </div>
+                      <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteCourseMaterial(m.id); materialsQuery.refetch(); }}><Trash2 size={14} /></button>
+                    </div>
+                  ))}
+                </div>
+                <div className="ta-card" style={{ background: "var(--surface-2)" }}>
+                  <div style={{ fontWeight: 700, fontSize: 13.5 }}>Add a material</div>
+                  <input className="ta-input ta-mt10" placeholder="Title" value={materialTitle} onChange={(e) => setMaterialTitle(e.target.value)} />
+                  <input className="ta-input ta-mt10" placeholder="Link URL (e.g. slides, PDF, video)" value={materialUrl} onChange={(e) => setMaterialUrl(e.target.value)} />
+                  <button
+                    className="ta-btn ta-btn-primary ta-mt12"
+                    disabled={addingMaterial || !materialTitle.trim()}
+                    onClick={async () => {
+                      setAddingMaterial(true);
+                      try {
+                        const result = await addCourseMaterial(activeCourse.id, { title: materialTitle, materialType: "link", externalUrl: materialUrl, createdBy: currentUserId });
+                        if (!result.success) showToast(result.error);
+                        else { setMaterialTitle(""); setMaterialUrl(""); materialsQuery.refetch(); showToast("Material added."); }
+                      } finally {
+                        setAddingMaterial(false);
+                      }
+                    }}
+                  >
+                    {addingMaterial ? "Adding..." : "Add Material"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             {activeTab === "learners" && (
               <div className="ta-card ta-col ta-gap16">
                 <div style={{ fontWeight: 700, fontSize: 16 }}>Enrolled Learners & Engagement</div>
@@ -886,12 +993,33 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
           /* DEFAULT: ALL COURSES GRID VIEW                                     */
           /* ================================================================= */
           <>
+            {selectedCourseIds.size > 0 && (
+              <div className="ta-card ta-row ta-between" style={{ marginBottom: 12, borderColor: "var(--primary)" }}>
+                <span style={{ fontSize: 13, fontWeight: 600 }}>{selectedCourseIds.size} course{selectedCourseIds.size === 1 ? "" : "s"} selected</span>
+                <div className="ta-row ta-gap8">
+                  <button className="ta-btn ta-btn-outline ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("publish")}>Publish</button>
+                  <button className="ta-btn ta-btn-outline ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("unpublish")}>Unpublish</button>
+                  <button className="ta-btn ta-btn-danger ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("archive")}>Archive</button>
+                  <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setSelectedCourseIds(new Set())}>Clear</button>
+                </div>
+              </div>
+            )}
             <div className="ta-grid ta-grid-3">
               {coursesQuery.loading && <div className="ta-empty">Loading courses...</div>}
               {!coursesQuery.loading && courses.length === 0 && <div className="ta-empty">No courses created yet.</div>}
               {courses.map(c => (
                 <div key={c.id} className="ta-card ta-col ta-between" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
                   <div>
+                    <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
+                      <input
+                        type="checkbox" checked={selectedCourseIds.has(c.id)}
+                        onChange={(e) => {
+                          const next = new Set(selectedCourseIds);
+                          if (e.target.checked) next.add(c.id); else next.delete(c.id);
+                          setSelectedCourseIds(next);
+                        }}
+                      />
+                    </div>
                     {c.cover_image_url ? (
                       <img
                         src={c.cover_image_url}
