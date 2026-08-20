@@ -1,5 +1,6 @@
 import { supabase } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
+import { ACHIEVEMENT_CATALOG } from "../../learner/achievementCatalog.js";
 
 export async function fetchPublishedCourses() {
   if (!supabase) {
@@ -800,5 +801,38 @@ export async function submitLessonFeedback(userId, lessonId, courseId, { confide
     return { success: true };
   } catch (e) {
     return { success: false, error: e?.message || "Could not save your feedback." };
+  }
+}
+
+// Checks real, current stats against every threshold in
+// ACHIEVEMENT_CATALOG and awards any newly-met one not already earned -
+// the missing half of a completely non-functional achievement system.
+// award_achievement_by_slug() (security definer) silently no-ops for an
+// already-earned achievement (real unique constraint on
+// user_achievements(user_id, achievement_id)) so calling this repeatedly
+// is always safe, not just on first-time completion.
+export async function checkAndAwardAchievements(userId, stats) {
+  if (!supabase || !userId || !stats) return;
+  const statsForCatalog = {
+    lessonsCompleted: stats.lessons_completed || 0,
+    coursesCompleted: stats.courses_completed || 0,
+    sessionsCompleted: stats.sessions_completed || 0,
+    streak: stats.streak_days || 0,
+    totalPoints: stats.total_points || 0,
+    level: stats.current_level || 1,
+  };
+  for (const def of ACHIEVEMENT_CATALOG) {
+    let current = 0;
+    if (def.category === "completion") current = def.id.includes("course") ? statsForCatalog.coursesCompleted : statsForCatalog.lessonsCompleted;
+    else if (def.category === "streak") current = statsForCatalog.streak;
+    else if (def.category === "mastery") current = def.id.includes("points") ? statsForCatalog.totalPoints : statsForCatalog.level;
+    else if (def.category === "social") current = statsForCatalog.sessionsCompleted;
+    if (current >= def.threshold) {
+      try {
+        await supabase.rpc("award_achievement_by_slug", { p_user_id: userId, p_slug: def.id });
+      } catch (e) {
+        console.warn(`Could not award achievement ${def.id}:`, e);
+      }
+    }
   }
 }

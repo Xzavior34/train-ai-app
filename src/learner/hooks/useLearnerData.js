@@ -10,7 +10,7 @@ import {
   fetchOrCreateCourseDiscussion, fetchCourseDiscussionMessages, fetchLessonNotes,
   fetchLessonsForCourse, fetchMyLessonProgress,
   fetchPublishedLearningPaths, fetchMyLearningPathEnrollments,
-  fetchMyBookmarks, toggleCourseBookmark
+  fetchMyBookmarks, toggleCourseBookmark, checkAndAwardAchievements
 } from "../../lib/api/learner.js";
 import { fetchCurrentUserProfile } from "../../lib/api/platform.js";
 import { fetchMyPersonalization } from "../../services/authService.js";
@@ -43,6 +43,21 @@ export function useLearnerData(session, screen, params) {
     if (!session?.user?.id) return [];
     return fetchMyAchievements(session.user.id);
   }, [session?.user?.id]);
+
+  // The other half of a previously completely non-functional achievement
+  // system - award_achievement() existed and was correct, but nothing in
+  // the client ever called it, and the achievements table itself had
+  // never been seeded. Runs every time real stats load (including after
+  // any refetch triggered by completing a lesson, course, or session
+  // elsewhere in the app) and re-checks every threshold - safe to call
+  // repeatedly since already-earned achievements are silently no-op'd by
+  // a real unique constraint, not by this check.
+  useEffect(() => {
+    if (!session?.user?.id || !gamificationStatsQuery.data) return;
+    checkAndAwardAchievements(session.user.id, gamificationStatsQuery.data).then(() => {
+      achievementsQuery.refetch();
+    });
+  }, [session?.user?.id, gamificationStatsQuery.data]);
 
   // Only needed on the achievements screen - gated like the other
   // screen-specific queries (courseLessonsQuery, courseNotesQuery, etc.)

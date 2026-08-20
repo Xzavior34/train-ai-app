@@ -6,7 +6,6 @@ import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 export function AIQuizScreen({
   orgId,
   aiTab, setAiTab,
-  quizSourceMode, setQuizSourceMode,
   quizTopic, setQuizTopic,
   quizGenTopic, setQuizGenTopic, quizGenDifficulty, setQuizGenDifficulty,
   quizGenQuestionCount, setQuizGenQuestionCount, quizGenerating, setQuizGenerating, quizGenError, setQuizGenError,
@@ -27,15 +26,6 @@ export function AIQuizScreen({
   // "active" quiz-taking UI further down doesn't need two versions.
   const questions = activeQuizSource === "ai" ? (aiQuiz?.questions || []) : (selectedQuizQuestionsQuery?.data || []);
   const currentQuestion = questions[quizIndex] || questions[0];
-
-  function startBankQuiz() {
-    if (!quizTopic) return;
-    setActiveQuizSource("bank");
-    setQuizStage("active");
-    setQuizIndex(0);
-    setQuizAnswers({});
-    setQuizResult(null);
-  }
 
   async function handleGenerateQuiz() {
     if (!quizGenTopic || !quizGenTopic.trim()) {
@@ -156,7 +146,7 @@ export function AIQuizScreen({
         {[
           { k: "coach", label: "Coach" },
           { k: "quiz", label: "Quiz" },
-          { k: "history", label: "History" },
+          { k: "history", label: "Chat History" },
           { k: "insights", label: "Insights" },
         ].map(t => (
           <div key={t.k} className={`tai-pill ${aiTab === t.k ? "tai-pill-active" : "tai-pill-inactive"}`} onClick={() => setAiTab(t.k)}>
@@ -221,80 +211,54 @@ export function AIQuizScreen({
         <div className="tai-mt16">
           {quizStage === "setup" && (
             <div>
-              <div className="tai-row tai-gap8">
-                <div className={`tai-pill ${quizSourceMode === "bank" ? "tai-pill-active" : "tai-pill-inactive"}`} onClick={() => setQuizSourceMode("bank")}>
-                  Practice Bank
-                </div>
-                <div className={`tai-pill ${quizSourceMode === "generate" ? "tai-pill-active" : "tai-pill-inactive"}`} onClick={() => setQuizSourceMode("generate")}>
-                  Generate New Quiz
-                </div>
-              </div>
 
-              {quizSourceMode === "bank" && (
-                <div className="tai-card tai-mt12">
-                  <div className="tai-label">Select topic</div>
-                  {(quizzesQuery.data || []).length > 0 ? (
-                    <select className="tai-input tai-mt8" value={quizTopic || ""} onChange={e => setQuizTopic(e.target.value)}>
-                      {(quizzesQuery.data || []).map(q => <option key={q.id} value={q.id}>{q.title}</option>)}
-                    </select>
-                  ) : (
-                    <div className="tai-empty tai-mt8">No pre-authored quizzes are published yet. Try "Generate New Quiz" instead.</div>
-                  )}
-                  <button className="tai-btn tai-btn-primary tai-mt16" style={{ width: "100%" }} disabled={!quizTopic} onClick={startBankQuiz}>
-                    <Zap size={16} /> Start practice session
+              <div className="tai-card tai-mt12">
+                <div className="tai-label">Topic</div>
+                <input
+                  className="tai-input tai-mt8"
+                  placeholder="e.g. React hooks, negotiation tactics, SQL joins..."
+                  value={quizGenTopic}
+                  onChange={e => setQuizGenTopic(e.target.value)}
+                  disabled={quizGenerating}
+                />
+
+                <div className="tai-label tai-mt16">Difficulty</div>
+                <select className="tai-input tai-mt8" value={quizGenDifficulty} onChange={e => setQuizGenDifficulty(e.target.value)} disabled={quizGenerating}>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+
+                <div className="tai-label tai-mt16">Number of questions</div>
+                <select className="tai-input tai-mt8" value={quizGenQuestionCount} onChange={e => setQuizGenQuestionCount(Number(e.target.value))} disabled={quizGenerating}>
+                  {[3, 5, 8, 10].map(n => <option key={n} value={n}>{n} questions</option>)}
+                </select>
+
+                {quizGenError && (
+                  <div className="tai-body-text tai-mt12" style={{ color: "var(--danger)" }}>{quizGenError}</div>
+                )}
+
+                {typeof credits === "number" && (
+                  <div className="tai-body-text tai-mt8" style={{ color: "var(--text-2)", fontSize: 12 }}>
+                    {credits} AI credit{credits === 1 ? "" : "s"} left today
+                  </div>
+                )}
+
+                {typeof credits === "number" && credits <= 0 ? (
+                  <button className="tai-btn tai-btn-primary tai-mt16" style={{ width: "100%" }} onClick={onBuyCredits}>
+                    Buy more AI credits
                   </button>
-                </div>
-              )}
-
-              {quizSourceMode === "generate" && (
-                <div className="tai-card tai-mt12">
-                  <div className="tai-label">Topic</div>
-                  <input
-                    className="tai-input tai-mt8"
-                    placeholder="e.g. React hooks, negotiation tactics, SQL joins..."
-                    value={quizGenTopic}
-                    onChange={e => setQuizGenTopic(e.target.value)}
-                    disabled={quizGenerating}
-                  />
-
-                  <div className="tai-label tai-mt16">Difficulty</div>
-                  <select className="tai-input tai-mt8" value={quizGenDifficulty} onChange={e => setQuizGenDifficulty(e.target.value)} disabled={quizGenerating}>
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
-
-                  <div className="tai-label tai-mt16">Number of questions</div>
-                  <select className="tai-input tai-mt8" value={quizGenQuestionCount} onChange={e => setQuizGenQuestionCount(Number(e.target.value))} disabled={quizGenerating}>
-                    {[3, 5, 8, 10].map(n => <option key={n} value={n}>{n} questions</option>)}
-                  </select>
-
-                  {quizGenError && (
-                    <div className="tai-body-text tai-mt12" style={{ color: "var(--danger)" }}>{quizGenError}</div>
-                  )}
-
-                  {typeof credits === "number" && (
-                    <div className="tai-body-text tai-mt8" style={{ color: "var(--text-2)", fontSize: 12 }}>
-                      {credits} AI credit{credits === 1 ? "" : "s"} left today
-                    </div>
-                  )}
-
-                  {typeof credits === "number" && credits <= 0 ? (
-                    <button className="tai-btn tai-btn-primary tai-mt16" style={{ width: "100%" }} onClick={onBuyCredits}>
-                      Buy more AI credits
-                    </button>
-                  ) : (
-                    <button
-                      className="tai-btn tai-btn-primary tai-mt16"
-                      style={{ width: "100%" }}
-                      disabled={quizGenerating || !quizGenTopic.trim()}
-                      onClick={handleGenerateQuiz}
-                    >
-                      {quizGenerating ? "Generating your quiz..." : (<><Sparkles size={16} /> Generate quiz</>)}
-                    </button>
-                  )}
-                </div>
-              )}
+                ) : (
+                  <button
+                    className="tai-btn tai-btn-primary tai-mt16"
+                    style={{ width: "100%" }}
+                    disabled={quizGenerating || !quizGenTopic.trim()}
+                    onClick={handleGenerateQuiz}
+                  >
+                    {quizGenerating ? "Generating your quiz..." : (<><Sparkles size={16} /> Generate quiz</>)}
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -379,14 +343,16 @@ export function AIQuizScreen({
 
       {aiTab === "history" && (
         <div className="tai-mt16 tai-col tai-gap10">
-          {quizHistory.length === 0 && <div className="tai-empty">No quiz attempts recorded yet.</div>}
-          {quizHistory.map((h, i) => (
-            <div key={i} className="tai-card tai-row tai-between">
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>{h.topic}</div>
-                <div style={{ fontSize: 12, color: "var(--text-2)" }}>{h.date}</div>
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: "var(--primary)" }}>{h.score}%</div>
+          {coachMessagesLoading && coachMessages.length === 0 && (
+            <div className="tai-empty">Loading your AI coach conversation...</div>
+          )}
+          {!coachMessagesLoading && coachMessages.length === 0 && (
+            <div className="tai-empty">No AI Coach conversation yet - ask something in the Coach tab.</div>
+          )}
+          {coachMessages.map((m, i) => (
+            <div key={i} className={`tai-card ${m.role === "user" ? "" : ""}`} style={{ alignSelf: m.role === "user" ? "flex-end" : "flex-start" }}>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>{m.role === "user" ? "You" : "AI Coach"}{m.created_at ? ` - ${new Date(m.created_at).toLocaleString()}` : ""}</div>
+              <div style={{ fontSize: 13.5 }}>{m.content}</div>
             </div>
           ))}
         </div>

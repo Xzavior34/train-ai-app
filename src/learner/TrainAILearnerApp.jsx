@@ -271,14 +271,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     }
   }
 
-  // Which quiz source is currently selected/being taken: the real
-  // pre-authored `quizzes` bank ("bank"), or an in-memory AI-generated quiz
-  // ("ai") that has no row in the DB at all. quizSourceMode drives the
-  // setup-stage toggle; activeQuizSource is fixed the moment a quiz is
-  // actually started (so switching the toggle mid-attempt doesn't yank the
-  // questions out from under an in-progress quiz).
-  const [quizSourceMode, setQuizSourceMode] = useState("bank");
-  const [activeQuizSource, setActiveQuizSource] = useState("bank");
+  // Which quiz source is currently active: only AI-generated quizzes now
+  // exist ("ai") - the pre-authored "bank" mode ("Practice Bank") was
+  // removed entirely per direct confirmation. activeQuizSource is kept
+  // (rather than removed) since the "active quiz" view still branches on
+  // it for its title, and removing it outright would have meant touching
+  // that render logic too for no real benefit.
+  const [activeQuizSource, setActiveQuizSource] = useState("ai");
   const [quizGenTopic, setQuizGenTopic] = useState("");
   const [quizGenDifficulty, setQuizGenDifficulty] = useState("medium");
   const [quizGenQuestionCount, setQuizGenQuestionCount] = useState(5);
@@ -642,7 +641,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                 <AIQuizScreen
                   orgId={orgId}
                   aiTab={aiTab} setAiTab={setAiTab}
-                  quizSourceMode={quizSourceMode} setQuizSourceMode={setQuizSourceMode}
                   activeQuizSource={activeQuizSource} setActiveQuizSource={setActiveQuizSource}
                   quizGenTopic={quizGenTopic} setQuizGenTopic={setQuizGenTopic}
                   quizGenDifficulty={quizGenDifficulty} setQuizGenDifficulty={setQuizGenDifficulty}

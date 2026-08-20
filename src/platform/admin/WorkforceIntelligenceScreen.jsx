@@ -39,8 +39,13 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <StatCard stat={{ label: "Real AI Coach uses (7d)", value: wi.aiUsageCount7d, icon: Bot }} />
               <StatCard stat={{ label: "Instructor/Manager notes (30d)", value: wi.feedbackNotesCount30d, icon: Sparkles }} />
             </div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: -8, marginBottom: 8 }}>
-              Readiness score = average of course completion ({wi.avgCompletion}%){wi.complianceRate !== null ? `, compliance rate (${wi.complianceRate}%)` : ""}{wi.avgAssessmentScore !== null ? `, and average assessment score (${wi.avgAssessmentScore}%)` : ""} across {wi.learnerCount} learners. Instructor and manager feedback notes ({wi.feedbackNotesCount30d} in the last 30 days) and real AI Coach usage are tracked as additional context alongside the score, not blended into it numerically - they're qualitative signals, not scores. Not predictive - a live summary of what's directly measurable today.
+            <div className="ta-card ta-mt12" style={{ borderColor: "var(--primary)", background: "var(--surface-2)" }}>
+              <div className="ta-row ta-gap8" style={{ alignItems: "flex-start" }}>
+                <Brain size={16} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.6 }}>
+                  Readiness score = average of course completion ({wi.avgCompletion}%){wi.complianceRate !== null ? `, compliance rate (${wi.complianceRate}%)` : ""}{wi.avgAssessmentScore !== null ? `, and average assessment score (${wi.avgAssessmentScore}%)` : ""} across {wi.learnerCount} learners. Instructor and manager feedback notes ({wi.feedbackNotesCount30d} in the last 30 days) and real AI Coach usage are tracked as additional context alongside the score, not blended into it numerically - they're qualitative signals, not scores. Not predictive - a live summary of what's directly measurable today.
+                </div>
+              </div>
             </div>
 
             <div className="ta-card ta-mt16">

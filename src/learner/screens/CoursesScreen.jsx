@@ -132,7 +132,7 @@ export function CoursesScreen({
       </div>
 
       <div className="tai-scrollx tai-mt12">
-        {["all", "internal", "external", "assigned"].map((src) => (
+        {["all", "assigned", "internal", "external"].map((src) => (
           <div
             key={src}
             className={`tai-pill ${courseSourceTab === src ? "tai-pill-active" : "tai-pill-inactive"}`}
@@ -144,17 +144,19 @@ export function CoursesScreen({
         ))}
       </div>
 
-      <div className="tai-scrollx tai-mt8">
-        {["all", "beginner", "intermediate", "advanced"].map((lvl) => (
-          <div
-            key={lvl}
-            className={`tai-pill ${courseLevelFilter === lvl ? "tai-pill-active" : "tai-pill-inactive"}`}
-            onClick={() => setCourseLevelFilter(lvl)}
-            style={{ textTransform: "capitalize" }}
-          >
-            {lvl === "all" ? "All Levels" : lvl}
-          </div>
-        ))}
+      <div className="tai-mt8">
+        <select
+          className="tai-input"
+          value={courseLevelFilter}
+          onChange={(e) => setCourseLevelFilter(e.target.value)}
+          style={{ textTransform: "capitalize" }}
+        >
+          {["all", "beginner", "intermediate", "advanced"].map((lvl) => (
+            <option key={lvl} value={lvl} style={{ textTransform: "capitalize" }}>
+              {lvl === "all" ? "All Levels" : lvl.charAt(0).toUpperCase() + lvl.slice(1)}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="tai-row tai-between tai-mt14" style={{ fontSize: 12.5, color: "var(--text-2)" }}>

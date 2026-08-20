@@ -581,6 +581,118 @@ executed from this sandbox; that's the one honest gap between what's
 verified here and what happens the first time this script is actually
 run.
 
+## A small cleanup pass before packaging
+
+Finishing the packaging for the previous round's six fixes turned up one
+loose end: removing "Practice Bank" had left an unused prop
+(`quizSourceMode`) still being declared and passed down from the parent
+component, with no real usage left anywhere - harmless, but confusing to
+leave in place implying a toggle that no longer exists. Removed it
+cleanly on both sides, and corrected `activeQuizSource`'s default value
+(it was still defaulting to `"bank"`, a mode that no longer exists).
+Rebuilt clean, and re-verified the full quiz generation flow still works
+correctly end to end with a live screenshot - zero console errors.
+
+## Achievements link added to Home, matching the Community card exactly
+
+Added a real "Achievements" card to the learner Home screen, right after
+Community, using the identical card pattern - same size, icon treatment,
+label/description layout, and chevron. Reuses the exact same navigation
+already used from Profile to reach this screen, not a new route.
+
+Verified with two live screenshots: the card renders correctly styled
+alongside Community, and clicking it genuinely navigates to the real
+Achievements screen (level, streak, earned/locked badges) - zero console
+errors either time.
+
+## The Achievements page - a genuinely major, previously undiscovered gap: nothing has ever actually been awarded to anyone
+
+Asked directly to check the Achievements page. A full-page screenshot
+showed something wrong immediately: "First Steps - 1/1", "Dedicated
+Learner - 5/5", "Knowledge Seeker - 10/10" - every progress bar shown
+completely full, thresholds fully met - yet all still listed under
+"Locked (18)" instead of "Earned." "Earned (0)" despite the same account
+already showing 12 completed lessons and 1 completed course elsewhere on
+the same page.
+
+Traced this rather than patched the symptom. The real award function,
+`award_achievement()`, already existed in the database and was written
+correctly - but a full search of the entire client codebase found not
+one single place that ever called it. Checked deeper and found the
+achievements table itself had never been seeded with a single row
+either - so even if something had called the function, there was nothing
+real to award. Two separate, compounding gaps, not one - this is not a
+demo-data issue; it means no real learner, in any real deployment, has
+ever actually earned an achievement through this system.
+
+Fixed both halves: seeded all 18 real achievement rows matching the
+existing client-side catalog exactly, added a `slug` column as the real
+bridge between the client's string ids and the database's uuid keys, and
+wired a genuine check-and-award function that runs whenever a learner's
+real stats load - checked every threshold, awards anything newly met,
+and is safe to call repeatedly since an already-earned achievement is
+silently blocked by a real unique constraint, not by this new check
+itself.
+
+**Verified as rigorously as this environment allows, stated plainly
+rather than overclaimed**: this specific fix could not be demonstrated
+with a screenshot, because the entire mechanism is correctly gated
+behind having a real database connection - there is nothing to award in
+demo mode, and there shouldn't be. Instead, verified it the way the
+situation demands: cross-checked, programmatically, that all 18 catalog
+ids match the 18 seeded slugs exactly in both directions, and confirmed
+every function-call parameter name lines up exactly between the client
+call and each SQL function's real signature. That is a different kind of
+verification than a screenshot - real, but worth naming precisely rather
+than implying the same confidence as something visually confirmed.
+
+## Six direct product notes, all addressed - including finally finding the real "question bank"
+
+**Courses tab order** - "Assigned to Me" now sits right after "All
+Courses," before Internal/External, matching the priority described
+directly.
+
+**"Question bank" - actually found and removed this time.** Every
+earlier search for this exact phrase came back empty because it was
+never called that in the code - it existed as "Practice Bank," a
+pre-authored quiz picker sitting alongside "Generate New Quiz" in the AI
+section. Removed the toggle and the entire bank-mode block, leaving only
+AI-generated quizzes, and removed the now-dead `startBankQuiz` function
+along with it.
+
+**Rank/leaderboard gating - checked and already correct.** The learner
+Community screen's leaderboard card is already wired to the real,
+admin-configured "Show Rank / Leaderboard" org setting, not a hardcoded
+default. Nothing needed fixing here - confirmed rather than assumed.
+
+**AI section's "History" tab now genuinely shows chat history** - it
+previously showed quiz attempt scores, not conversation history.
+Replaced its content with the real, already-persisted AI Coach
+conversation and renamed the tab "Chat History" so what's labeled
+matches what's shown.
+
+**Course level filter is now a dropdown** instead of four separate
+buttons, matching the direct UX request.
+
+**Workforce Intelligence's readiness-score explanation is now a real,
+bordered standalone box**, not text floating under the stat grid -
+confirmed directly against the screenshot that flagged it.
+
+**A new "quick situation report" added to the learner's Home screen**,
+positioned directly after Active Course as requested - one honest
+sentence using real, already-available data (enrolled course count,
+average progress, weekly goal standing, cohort membership), styled to
+match the tone of the Workforce Intelligence box that inspired it.
+Checked this specifically against `HomeScreen.jsx`'s own documented
+decision to stay minimal after past feedback that it "felt way too
+busy" - added one considered box, not a return to the old card stack
+that decision was about.
+
+All six verified together with live screenshots across Home, Courses,
+the AI section (both the Quiz tab with the bank removed and the
+renamed Chat History tab), and Workforce Intelligence - zero console
+errors on any of them.
+
 ## Mystery Box - built with explicit confirmation, and placed where an existing product decision said it belongs
 
 With direct confirmation to proceed, built the last flagged item. Checking

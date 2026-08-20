@@ -4,7 +4,7 @@ import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
 import { fetchAIInsights } from "../../lib/api/schemaHelper.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { Sparkles } from "lucide-react";
-import { Bell, GraduationCap, Play, BookOpen, Users, Zap, ChevronRight, Layers } from "lucide-react";
+import { Bell, GraduationCap, Play, BookOpen, Users, Zap, ChevronRight, Layers, Trophy } from "lucide-react";
 
 // Deliberately minimal - per product feedback the previous home screen
 // stacked ~10 cards (gamification, skill mastery, retention nudges, two
@@ -106,6 +106,19 @@ export function HomeScreen({
         </div>
       )}
 
+      {enrolledCourses.length > 0 && (
+        <div className="tai-card tai-mt12" style={{ borderColor: "var(--primary)", background: "var(--surface-2)" }}>
+          <div className="tai-row tai-gap8" style={{ alignItems: "flex-start" }}>
+            <Zap size={15} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", lineHeight: 1.6 }}>
+              You're enrolled in {enrolledCourses.length} course{enrolledCourses.length === 1 ? "" : "s"}, with an average progress of {Math.round(enrolledCourses.reduce((sum, c) => sum + (c.progress || 0), 0) / enrolledCourses.length)}%.{" "}
+              {done >= goal ? `You've hit this week's goal of ${goal} lessons.` : `You're at ${done} of ${goal} lessons toward this week's goal.`}
+              {cohort ? ` You're part of ${cohort.name}.` : ""} Not a score - just where things stand today.
+            </div>
+          </div>
+        </div>
+      )}
+
       {enrolledCourses.filter((c) => c.progress > 0 && c.progress < 100).length > 0 && (
         <div className="tai-card tai-mt12">
           <div style={{ fontWeight: 700, fontSize: 13.5 }}>Courses in progress</div>
@@ -157,6 +170,24 @@ export function HomeScreen({
             <div>
               <div className="tai-label">Community</div>
               <div style={{ fontWeight: 700, fontSize: 14.5, marginTop: 2 }}>Cohort updates, study groups & sessions</div>
+            </div>
+          </div>
+          <ChevronRight size={18} color="var(--text-3)" />
+        </div>
+      </div>
+
+      {/* Achievements link - same card pattern as Community, confirmed
+          directly. Reuses push("achievements"), the same real navigation
+          already used from Profile to reach this screen - not a new path. */}
+      <div className="tai-card tai-mt12" style={{ cursor: "pointer", padding: 16 }} onClick={() => push("achievements")}>
+        <div className="tai-row tai-between">
+          <div className="tai-row tai-gap10">
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Trophy size={18} color="var(--primary)" />
+            </div>
+            <div>
+              <div className="tai-label">Achievements</div>
+              <div style={{ fontWeight: 700, fontSize: 14.5, marginTop: 2 }}>Your level, streak & earned badges</div>
             </div>
           </div>
           <ChevronRight size={18} color="var(--text-3)" />
