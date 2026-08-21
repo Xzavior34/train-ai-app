@@ -184,29 +184,31 @@ export function HomeScreen({
                 <span className="tai-link" style={{ fontSize: 12 }} onClick={() => goTab("courses")}>My courses</span>
               </div>
 
-              <div style={{ padding: 18, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ padding: "16px 18px", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
                 <img 
                   src={continueCourse.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
                   alt={continueCourse.title}
-                  style={{ width: 100, height: 75, borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
+                  style={{ width: 72, height: 56, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
                 />
-                <div style={{ flex: 1, minWidth: 200 }}>
-                  <Tag tone="primary">{continueCourse.category || "Technology"}</Tag>
-                  <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", marginTop: 6 }}>
+                <div style={{ flex: 1, minWidth: 160 }}>
+                  <div className="tai-row tai-between">
+                    <Tag tone="primary">{continueCourse.category || "Technology"}</Tag>
+                    <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>12 hrs</span>
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", marginTop: 4 }}>
                     {continueCourse.title}
                   </div>
-                  <div className="tai-row tai-gap8 tai-mt6" style={{ fontSize: 11.5, color: "var(--text-3)" }}>
-                    <span>{continueCourse.progress || 50}% completed</span>
-                    <span>•</span>
-                    <span>12 hours</span>
-                  </div>
-                  <div className="tai-mt8">
-                    <ProgressBar value={continueCourse.progress || 50} height={6} />
+                  <div className="tai-mt6">
+                    <div className="tai-row tai-between" style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>
+                      <span>Progress</span>
+                      <span style={{ fontWeight: 700, color: "var(--primary)" }}>{continueCourse.progress || 50}%</span>
+                    </div>
+                    <ProgressBar value={continueCourse.progress || 50} height={5} />
                   </div>
                 </div>
                 <button 
                   className="tai-btn tai-btn-primary tai-btn-sm"
-                  style={{ padding: "8px 18px", alignSelf: "center" }}
+                  style={{ padding: "7px 14px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
                   onClick={() => push("courseDetail", { id: continueCourse.id })}
                 >
                   Continue →
@@ -217,26 +219,26 @@ export function HomeScreen({
 
           {/* Q1 Onboarding Cohort Banner */}
           <div className="tai-card" style={{
-            padding: "16px 20px",
+            padding: "16px 18px",
             borderRadius: 16,
             background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%)",
             border: "1.5px solid rgba(99, 102, 241, 0.35)",
             position: "relative",
             overflow: "hidden"
           }}>
-            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
-              <div className="tai-row tai-gap10">
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(99, 102, 241, 0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Users size={20} color="var(--primary)" />
+            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+              <div className="tai-row tai-gap10" style={{ minWidth: 180, flex: 1 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(99, 102, 241, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Users size={18} color="var(--primary)" />
                 </div>
-                <div>
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                    <span style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>
                       {cohort?.name || "Q1 Onboarding Cohort"}
                     </span>
                     <Tag tone="primary">Sprint 5 of 12</Tag>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
                     68 enrolled peers • Next Live Session: Tomorrow 10:00 AM
                   </div>
                 </div>
@@ -244,15 +246,15 @@ export function HomeScreen({
 
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700 }}
+                style={{ padding: "7px 14px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
                 onClick={() => push("cohort")}
               >
                 Enter Cohort Space →
               </button>
             </div>
 
-            <div style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 12, border: "1px solid var(--border)" }}>
-              <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6 }}>
+            <div style={{ background: "var(--surface-3)", padding: "8px 12px", borderRadius: 10, border: "1px solid var(--border)" }}>
+              <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
                 <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
                 <span style={{ color: "var(--primary)" }}>42% Completed</span>
               </div>
