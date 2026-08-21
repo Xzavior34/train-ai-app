@@ -40,25 +40,44 @@ export async function fetchGamificationStatsByUserIds(userIds) {
 
 // Mentors & Availability
 export async function fetchMentorProfile(userId) {
-  if (!supabase) {
-    // Blocks `mentorId` (and every "mentorId ? fetchX(mentorId) : []"
-    // guard across the entire instructor experience) the same way
-    // fetchCurrentUserProfile's demo-mode null blocked orgId everywhere -
-    // same root cause, same fix.
-    return {
-      id: "demo-mentor-id", user_id: userId, bio: "", specializations: [],
-      payouts_enabled: false, auto_accept_bookings: false, require_pre_payment: false, allow_group_sessions: false,
-    };
-  }
+  if (!supabase || !userId) return null;
   const { data, error } = await supabase
     .from("mentors")
     .select("*")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) { console.warn("Mentor profile fetch warning:", error); return null; }
-  if (!data) return null;
-  const profiles = await fetchProfilesByUserIds([userId]);
-  return { ...data, user_profiles: profiles[userId] || null };
+  if (data) {
+    const profiles = await fetchProfilesByUserIds([userId]);
+    return { ...data, user_profiles: profiles[userId] || null };
+  }
+
+  // Auto-provision mentor row for user so Instructor screens function seamlessly
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (profile) {
+    const { data: newMentor, error: createErr } = await supabase
+      .from("mentors")
+      .insert([{
+        user_id: userId,
+        organization_id: profile.organization_id,
+        title: "Instructor",
+        bio: profile.bio || "Instructor",
+        is_active: true,
+        is_approved: true
+      }])
+      .select()
+      .maybeSingle();
+
+    if (!createErr && newMentor) {
+      return { ...newMentor, user_profiles: profile };
+    }
+  }
+  return null;
 }
 
 export async function fetchMentorAvailability(mentorId) {

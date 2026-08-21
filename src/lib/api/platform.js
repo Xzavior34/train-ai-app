@@ -3362,11 +3362,25 @@ export async function fetchOrgGeneralOverview(organizationId) {
 export async function fetchMentorActiveCohorts(userId) {
   if (!supabase) return [{ id: DEMO_COHORT.id, name: DEMO_COHORT.name, ends_at: DEMO_COHORT.endsAt }];
   if (!userId) return [];
-  const { data: memberRows, error } = await supabase.from("cohort_members").select("cohort_id").eq("user_id", userId);
+  const { data: profile } = await supabase.from("user_profiles").select("organization_id").eq("id", userId).maybeSingle();
+  const orgId = profile?.organization_id;
+
+  const { data: memberRows } = await supabase.from("cohort_members").select("cohort_id").eq("user_id", userId);
+  const explicitCohortIds = (memberRows || []).map((r) => r.cohort_id);
+
+  let query = supabase.from("cohorts").select("id, name, description, starts_at, ends_at");
+  if (orgId && explicitCohortIds.length > 0) {
+    query = query.or(`organization_id.eq.${orgId},id.in.(${explicitCohortIds.join(",")})`);
+  } else if (orgId) {
+    query = query.eq("organization_id", orgId);
+  } else if (explicitCohortIds.length > 0) {
+    query = query.in("id", explicitCohortIds);
+  } else {
+    return [];
+  }
+
+  const { data: cohorts, error } = await query;
   if (error) { console.warn("Mentor cohorts fetch warning:", error); return []; }
-  const cohortIds = (memberRows || []).map((r) => r.cohort_id);
-  if (!cohortIds.length) return [];
-  const { data: cohorts } = await supabase.from("cohorts").select("id, name, starts_at, ends_at").in("id", cohortIds);
   const now = Date.now();
   return (cohorts || []).filter((c) => !c.ends_at || new Date(c.ends_at).getTime() >= now);
 }
