@@ -161,32 +161,6 @@ export const TOKENS = `
     box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.35); display: flex; align-items: center; gap: 10px; max-width: 90%;
     animation: slideUp .22s cubic-bezier(.16,1,.3,1) both; border: 1px solid rgba(255,255,255,0.1);
   }
-  @media (min-width: 900px) {
-    .tai-toast { bottom: 32px; }
-    .tai-navbar { display: none !important; }
-    .tai-body { padding: 24px 32px 60px; }
-  }
-  @media (max-width: 899px) {
-    .tai-header-search { display: none; }
-    .tai-desktop-only { display: none !important; }
-    .tai-global-header { padding: 0 16px; height: 60px; width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-header-brand img { height: 44px !important; }
-    .tai-body { padding: 16px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-streak-pill, .tai-credits-pill { padding: 6px 10px; font-size: 12px; gap: 5px; }
-    .tai-header-right { gap: 8px; }
-    .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-card { padding: 18px 16px; border-radius: 16px; width: 100%; box-sizing: border-box; }
-  }
-  @media (max-width: 480px) {
-    .tai-global-header { padding: 0 12px; height: 56px; width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-header-brand img { height: 38px !important; }
-    .tai-body { padding: 12px 12px calc(86px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-card { padding: 14px 12px; border-radius: 14px; width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-iconbtn { width: 34px; height: 34px; border-radius: 10px; }
-    .tai-topbar { padding: 4px 0 12px; }
-    .tai-h1 { font-size: 19px; }
-    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; max-width: 100% !important; }
-  }
   .tai-topbar { display:flex; justify-content:space-between; align-items:center; padding: 8px 0 18px; }
   .tai-h1 { font-size: clamp(20px, 4vw, 24px); font-weight: 800; letter-spacing: -0.025em; margin:0; color: var(--text); }
   .tai-sub { font-size: 13px; color: var(--text-2); margin: 3px 0 0; font-weight: 500; }
@@ -361,8 +335,36 @@ export const TOKENS = `
   .tai-link { color: var(--primary); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:3px; transition: all .16s ease; }
   .tai-link:hover { transform: translateX(2px); }
   .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 20px; align-items: start; width: 100%; max-width: 100%; box-sizing: border-box; }
+
+  /* =========================================================================
+     RESPONSIVE MEDIA QUERIES (AT END OF STYLESHEET TO GUARANTEE CASCADE)
+     ========================================================================= */
+  @media (min-width: 900px) {
+    .tai-toast { bottom: 32px; }
+    .tai-navbar { display: none !important; }
+    .tai-body { padding: 24px 32px 60px; }
+  }
   @media (max-width: 899px) {
+    .tai-header-search { display: none; }
+    .tai-desktop-only { display: none !important; }
+    .tai-global-header { padding: 0 16px; height: 60px; width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-header-brand img { height: 44px !important; }
+    .tai-body { padding: 16px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-streak-pill, .tai-credits-pill { padding: 6px 10px; font-size: 12px; gap: 5px; }
+    .tai-header-right { gap: 8px; }
     .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-card { padding: 16px 14px !important; border-radius: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+  }
+  @media (max-width: 480px) {
+    .tai-global-header { padding: 0 12px; height: 56px; width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-header-brand img { height: 38px !important; }
+    .tai-body { padding: 12px 12px calc(86px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-card { padding: 14px 12px !important; border-radius: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-iconbtn { width: 34px; height: 34px; border-radius: 10px; }
+    .tai-topbar { padding: 4px 0 12px; }
+    .tai-h1 { font-size: 19px; }
+    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
   }
 `;
 
