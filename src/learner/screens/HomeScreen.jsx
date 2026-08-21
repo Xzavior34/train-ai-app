@@ -274,90 +274,8 @@ export function HomeScreen({
             </div>
           </div>
 
-          {/* Achievements: Your Level, Streak & Badges Spotlight Card */}
-          <div className="tai-card tai-card-hover" style={{
-            padding: 16, borderRadius: 16,
-            background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%)",
-            border: "1.5px solid rgba(99, 102, 241, 0.35)",
-            boxShadow: "0 8px 24px -4px rgba(79, 70, 229, 0.12)",
-            width: "100%", boxSizing: "border-box"
-          }}>
-            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 12 }}>
-              <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)", flexShrink: 0 }}>
-                  <Award size={20} color="#FFFFFF" />
-                </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                    <span style={{ fontWeight: 900, fontSize: 15, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      Achievements
-                    </span>
-                    <Tag tone="warning">Level {user?.level || 2}</Tag>
-                  </div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>
-                    Senior Specialist • {(user?.totalPoints || 4520).toLocaleString()} XP
-                  </div>
-                </div>
-              </div>
-
-              <button
-                className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ padding: "7px 14px", fontSize: 12, fontWeight: 800, flexShrink: 0 }}
-                onClick={() => push("achievements")}
-              >
-                View All →
-              </button>
-            </div>
-
-            {/* Level & XP Meter */}
-            <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", marginBottom: 12 }}>
-              <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 800, marginBottom: 5 }}>
-                <span style={{ color: "var(--text)" }}>Level {user?.level || 2} Progression</span>
-                <span style={{ color: "var(--primary)" }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
-              </div>
-              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
-                <div style={{ width: "90%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
-              </div>
-            </div>
-
-            {/* Streak & Badges Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
-              <div style={{ padding: "8px 10px", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)" }}>
-                <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#EA580C", marginBottom: 2 }}>
-                  <Flame size={13} color="#EA580C" />
-                  <span>{user?.streak || 8}-Day Streak</span>
-                </div>
-                <div style={{ fontSize: 10, color: "var(--text-3)" }}>Active learner pace</div>
-              </div>
-
-              <div style={{ padding: "8px 10px", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)" }}>
-                <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#6366F1", marginBottom: 2 }}>
-                  <Palette size={13} color="#6366F1" />
-                  <span>Figma Master</span>
-                </div>
-                <div style={{ fontSize: 10, color: "var(--text-3)" }}>Unlocked sprint 4</div>
-              </div>
-
-              <div style={{ padding: "8px 10px", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)" }}>
-                <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#10B981", marginBottom: 2 }}>
-                  <Zap size={13} color="#10B981" />
-                  <span>Prompt Pro</span>
-                </div>
-                <div style={{ fontSize: 10, color: "var(--text-3)" }}>AI Quiz 100% score</div>
-              </div>
-
-              <div style={{ padding: "8px 10px", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)" }}>
-                <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#D97706", marginBottom: 2 }}>
-                  <Trophy size={13} color="#D97706" />
-                  <span>#4 Leaderboard</span>
-                </div>
-                <div style={{ fontSize: 10, color: "var(--text-3)" }}>Top 5% of cohort</div>
-              </div>
-            </div>
-          </div>
-
           {/* Career Path & Skill Growth Progression */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.25)" }}>
+          <div className="tai-card" style={{ padding: 18, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.25)" }}>
             <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 8 }}>
               <div>
                 <div className="tai-row tai-gap8" style={{ fontWeight: 800, fontSize: 14.5, color: "var(--primary)" }}>
@@ -748,35 +666,6 @@ export function HomeScreen({
                   <span style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)" }}>{s.xp}</span>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Recent Badges & Achievements Milestone */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-              <div className="tai-row tai-gap6" style={{ fontWeight: 700, fontSize: 13.5 }}>
-                <Award size={16} color="#8B5CF6" />
-                <span>Earned Badges</span>
-              </div>
-              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => push("achievements")}>All</span>
-            </div>
-
-            <div className="tai-row tai-between anim-stagger" style={{ gap: 8 }}>
-              {[
-                { name: "Figma Master", icon: Palette, color: "#6366F1", bg: "#EEF2FF" },
-                { name: "Prompt Pro", icon: Zap, color: "#10B981", bg: "#ECFDF5" },
-                { name: "7-Day Streak", icon: Flame, color: "#F59E0B", bg: "#FFFBEB" }
-              ].map((b, idx) => {
-                const BadgeIcon = b.icon;
-                return (
-                  <div key={idx} style={{ flex: 1, padding: "10px 6px", background: "var(--surface-3)", borderRadius: 10, textAlign: "center", border: "1px solid var(--border)", transition: "transform .15s ease" }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: b.bg, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 4 }}>
-                      <BadgeIcon size={16} color={b.color} />
-                    </div>
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text)" }}>{b.name}</div>
-                  </div>
-                );
-              })}
             </div>
           </div>
 
