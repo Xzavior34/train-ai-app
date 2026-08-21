@@ -237,7 +237,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
           borderRadius: 20,
           background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
           color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
+          padding: "clamp(18px, 3vw, 26px)",
           boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
           border: "1px solid rgba(99, 102, 241, 0.4)",
           position: "relative",
@@ -257,13 +257,13 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             zIndex: 0
           }} />
 
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
-                Settings Hub &amp; Institutional Preferences
+              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Settings Hub &amp; Preferences
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
-                Configure organization branding, purchase student seat licenses, toggle AI automation policies, and manage gamification.
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+                Manage organization profile, seat licenses, AI policies, and gamification.
               </p>
             </div>
           </div>

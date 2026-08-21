@@ -178,7 +178,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           borderRadius: 20,
           background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
           color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
+          padding: "clamp(18px, 3vw, 26px)",
           boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
           border: "1px solid rgba(99, 102, 241, 0.4)",
           position: "relative",
@@ -198,31 +198,13 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             zIndex: 0
           }} />
 
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <ShieldCheck size={13} color="#A5B4FC" /> AUDIT TRAIL &amp; PACING
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-                }}>
-                  {overallRate}% AUDIT COMPLIANCE
-                </span>
-              </div>
-
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
-                Learner Progress, Skill Gaps &amp; Compliance Hub
+              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Progress &amp; Compliance Hub
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
-                Monitor individual student pace, surface institutional skill gaps, audit mandatory course completions, and assign certifications.
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+                Track student progress, mandatory certifications, and audit reports.
               </p>
             </div>
           </div>
