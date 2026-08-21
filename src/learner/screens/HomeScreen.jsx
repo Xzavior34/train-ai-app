@@ -262,6 +262,87 @@ export function HomeScreen({
             </div>
           </div>
 
+          {/* Achievements: Your Level, Streak & Badges Spotlight Card */}
+          <div className="tai-card tai-card-hover" style={{
+            padding: 20, borderRadius: 16,
+            background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%)",
+            border: "1.5px solid rgba(99, 102, 241, 0.35)",
+            boxShadow: "0 8px 24px -4px rgba(79, 70, 229, 0.12)"
+          }}>
+            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
+              <div className="tai-row tai-gap10">
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)" }}>
+                  <Award size={22} color="#FFFFFF" />
+                </div>
+                <div>
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                    <span style={{ fontWeight: 900, fontSize: 16, color: "var(--text)" }}>
+                      Achievements &amp; Skill Mastery
+                    </span>
+                    <Tag tone="warning">Level {user?.level || 2}</Tag>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+                    Senior Specialist • {(user?.totalPoints || 4520).toLocaleString()} XP earned
+                  </div>
+                </div>
+              </div>
+
+              <button
+                className="tai-btn tai-btn-primary tai-btn-sm"
+                style={{ padding: "8px 16px", fontSize: 12.5, fontWeight: 800 }}
+                onClick={() => push("achievements")}
+              >
+                View Full Achievements →
+              </button>
+            </div>
+
+            {/* Level & XP Meter */}
+            <div style={{ background: "var(--surface)", padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border)", marginBottom: 14 }}>
+              <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 800, marginBottom: 6 }}>
+                <span style={{ color: "var(--text)" }}>Level {user?.level || 2} Progression</span>
+                <span style={{ color: "var(--primary)" }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP (480 XP to Level 3)</span>
+              </div>
+              <div style={{ height: 8, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden", border: "1px solid var(--border)" }}>
+                <div style={{ width: "90%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
+              </div>
+            </div>
+
+            {/* Streak & Badges Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10 }}>
+              <div style={{ padding: "10px 12px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#EA580C", marginBottom: 2 }}>
+                  <Flame size={14} color="#EA580C" />
+                  <span>{user?.streak || 8}-Day Streak</span>
+                </div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Active learner pace</div>
+              </div>
+
+              <div style={{ padding: "10px 12px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#6366F1", marginBottom: 2 }}>
+                  <Palette size={14} color="#6366F1" />
+                  <span>Figma Master</span>
+                </div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Unlocked sprint 4</div>
+              </div>
+
+              <div style={{ padding: "10px 12px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#10B981", marginBottom: 2 }}>
+                  <Zap size={14} color="#10B981" />
+                  <span>Prompt Pro</span>
+                </div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>AI Quiz 100% score</div>
+              </div>
+
+              <div style={{ padding: "10px 12px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#D97706", marginBottom: 2 }}>
+                  <Trophy size={14} color="#D97706" />
+                  <span>#4 Leaderboard</span>
+                </div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Top 5% of cohort</div>
+              </div>
+            </div>
+          </div>
+
           {/* Career Path & Skill Growth Progression */}
           <div className="tai-card" style={{ padding: 20, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.25)" }}>
             <div className="tai-row tai-between">
