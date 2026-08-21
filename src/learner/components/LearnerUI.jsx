@@ -77,10 +77,10 @@ export const TOKENS = `
   .tai-header-search { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 7px 14px; width: clamp(180px, 22vw, 320px); font-size: 13px; color: var(--text-2); }
   .tai-header-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 13px; font-family: inherit; color: var(--text); }
   
-  .tai-header-right { display: flex; align-items: center; gap: 12px; }
-  .tai-streak-pill { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-  .tai-credits-pill { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-  .tai-workspace-pill { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .14s ease; }
+  .tai-header-right { display: flex; align-items: center; gap: 10px; }
+  .tai-streak-pill { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-credits-pill { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-workspace-pill { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; transition: all .14s ease; flex-shrink: 0; }
   .tai-workspace-pill:hover { background: var(--surface-2); border-color: #CBD5E1; }
   
   .tai-desktop-shell { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; align-items: stretch; min-height: calc(100vh - 72px); }
@@ -170,13 +170,24 @@ export const TOKENS = `
   @media (max-width: 899px) {
     .tai-header-search { display: none; }
     .tai-workspace-pill span { display: none; }
-    .tai-global-header { padding: 0 14px; height: 58px; }
-    .tai-body { padding: 16px 16px calc(86px + env(safe-area-inset-bottom)); }
+    .tai-global-header { padding: 0 12px; height: 56px; }
+    .tai-header-brand img { height: 38px !important; }
+    .tai-body { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); }
+    .tai-streak-pill, .tai-credits-pill { padding: 5px 8px; font-size: 11.5px; gap: 4px; }
+    .tai-header-right { gap: 6px; }
+  }
+  @media (max-width: 480px) {
+    .tai-streak-pill span.tai-pill-unit,
+    .tai-credits-pill span.tai-pill-unit { display: none; }
+    .tai-global-header { padding: 0 8px; }
+    .tai-header-brand img { height: 34px !important; }
+    .tai-body { padding: 10px 10px calc(84px + env(safe-area-inset-bottom)); }
+    .tai-card { padding: 16px; border-radius: 14px; }
   }
   .tai-topbar { display:flex; justify-content:space-between; align-items:center; padding: 8px 0 18px; }
-  .tai-h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.025em; margin:0; color: var(--text); }
-  .tai-sub { font-size: 13.5px; color: var(--text-2); margin: 3px 0 0; font-weight: 500; }
-  .tai-iconbtn { width:40px; height:40px; border-radius:12px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border:1px solid var(--border);
+  .tai-h1 { font-size: clamp(20px, 4vw, 24px); font-weight: 800; letter-spacing: -0.025em; margin:0; color: var(--text); }
+  .tai-sub { font-size: 13px; color: var(--text-2); margin: 3px 0 0; font-weight: 500; }
+  .tai-iconbtn { width:38px; height:38px; border-radius:12px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border:1px solid var(--border);
     box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
     display:flex; align-items:center; justify-content:center; color: var(--text); flex-shrink:0; cursor:pointer;
     transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -513,14 +524,14 @@ export function LearnerHeader({
       <div className="tai-header-right">
         {/* Streak Pill */}
         <div className="tai-streak-pill" onClick={() => go?.("achievements")}>
-          <Flame size={15} color="#EA580C" />
-          <span>{user?.streak || 10} days</span>
+          <Flame size={14} color="#EA580C" />
+          <span>{user?.streak || 10} <span className="tai-pill-unit">days</span></span>
         </div>
 
         {/* AI Credits Pill */}
         <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))}>
-          <Sparkles size={14} color="#4F46E5" />
-          <span>{typeof credits === "number" ? credits : 10} credits</span>
+          <Sparkles size={13} color="#4F46E5" />
+          <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
         </div>
 
         {/* Workspace Switcher Button */}

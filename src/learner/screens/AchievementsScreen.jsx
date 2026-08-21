@@ -161,7 +161,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
         borderRadius: 20,
         background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
         color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
+        padding: "clamp(18px, 3vw, 26px)",
         boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
         border: "1px solid rgba(99, 102, 241, 0.4)",
         position: "relative",
@@ -182,30 +182,30 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           zIndex: 0
         }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
-              Level {user.level || 2} • Senior Design &amp; AI Specialist
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+              Level {user.level || 2} • Senior Specialist
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
               {(user.totalPoints || 4520).toLocaleString()} XP earned • {ceiling - (user.totalPoints || 450)} XP to Level {(user.level || 2) + 1}
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: "#FBBF24" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Total Credential Points</div>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#FBBF24" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
+            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Total Points</div>
           </div>
         </div>
 
         {/* Level Progress Meter (High-Contrast Glass Track) */}
         <div style={{
-          marginTop: 20,
+          marginTop: 16,
           position: "relative",
           zIndex: 1,
           background: "rgba(15, 23, 42, 0.55)",
           backdropFilter: "blur(10px)",
-          padding: "14px 18px",
+          padding: "12px 16px",
           borderRadius: 14,
           border: "1px solid rgba(255, 255, 255, 0.2)"
         }}>

@@ -78,10 +78,10 @@ export function HomeScreen({
           HERO BANNER: Visually Consistent Learner Command Center
           ========================================================================= */}
       <div style={{
-        borderRadius: 22,
+        borderRadius: 20,
         background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
         color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
+        padding: "clamp(18px, 3vw, 26px)",
         boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
         border: "1px solid rgba(99, 102, 241, 0.4)",
         position: "relative",
@@ -102,34 +102,26 @@ export function HomeScreen({
           zIndex: 0
         }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
-              Welcome back, {userFirstName || "Learner"}
-            </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
-              You have {done} of {goal} lessons completed this week. Continue your roadmap in <strong style={{ color: "#A5B4FC" }}>{continueCourse?.title || "AI & Product Design"}</strong>.
-            </p>
-          </div>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+                Welcome back, {userFirstName || "Learner"}
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+                {done} of {goal} weekly lessons done. Continue in <strong style={{ color: "#A5B4FC" }}>{continueCourse?.title || "AI Fundamentals"}</strong>.
+              </p>
+            </div>
 
-          {/* Right Action Glass Pill */}
-          <div style={{
-            display: "flex", flexDirection: "column", gap: 8, flexShrink: 0,
-            background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 16,
-            backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.22)",
-            textAlign: "right"
-          }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "#FFFFFF" }}>{done} / {goal} Lessons Done</div>
-            <div style={{ fontSize: 12, color: "#34D399", fontWeight: 700 }}>Weekly Target: {goalPercent}% Met</div>
             {continueCourse && (
               <button
                 className="tai-btn"
                 style={{
                   background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
-                  padding: "8px 16px", borderRadius: 10, border: "none", fontSize: 12.5,
+                  padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", fontSize: 13,
                   boxShadow: "0 4px 14px rgba(79, 70, 229, 0.4)",
                   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  cursor: "pointer", marginTop: 4
+                  cursor: "pointer", flexShrink: 0
                 }}
                 onClick={() => push("courseDetail", { id: continueCourse.id })}
               >
@@ -137,43 +129,40 @@ export function HomeScreen({
               </button>
             )}
           </div>
-        </div>
 
-        {/* Milestone Progress Bar */}
-        <div style={{
-          marginTop: 20,
-          position: "relative",
-          zIndex: 1,
-          background: "rgba(15, 23, 42, 0.55)",
-          backdropFilter: "blur(10px)",
-          padding: "12px 18px",
-          borderRadius: 14,
-          border: "1px solid rgba(255, 255, 255, 0.2)"
-        }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 800, marginBottom: 8, color: "#FFFFFF" }}>
-            <span className="tai-row tai-gap6">
-              <Target size={13} color="#818CF8" />
-              <span>Weekly Learning Sprint Pace</span>
-            </span>
-            <span style={{ color: "#34D399", fontWeight: 800 }}>{goalPercent}% Completed</span>
-          </div>
-
+          {/* Milestone Progress Bar */}
           <div style={{
-            height: 10,
-            borderRadius: 99,
-            background: "rgba(255, 255, 255, 0.18)",
-            overflow: "hidden",
-            padding: 2,
-            border: "1px solid rgba(255, 255, 255, 0.2)"
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(10px)",
+            padding: "10px 14px",
+            borderRadius: 12,
+            border: "1px solid rgba(255, 255, 255, 0.15)"
           }}>
+            <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, color: "#FFFFFF" }}>
+              <span className="tai-row tai-gap6">
+                <Target size={13} color="#818CF8" />
+                <span>Weekly Sprint Goal ({done}/{goal})</span>
+              </span>
+              <span style={{ color: "#34D399", fontWeight: 800 }}>{goalPercent}% Completed</span>
+            </div>
+
             <div style={{
-              width: `${goalPercent}%`,
-              height: "100%",
-              background: "linear-gradient(90deg, #10B981 0%, #34D399 50%, #6366F1 100%)",
+              height: 8,
               borderRadius: 99,
-              boxShadow: "0 0 10px rgba(16, 185, 129, 0.7)",
-              transition: "width 0.4s ease"
-            }} />
+              background: "rgba(255, 255, 255, 0.18)",
+              overflow: "hidden",
+              padding: 1,
+              border: "1px solid rgba(255, 255, 255, 0.15)"
+            }}>
+              <div style={{
+                width: `${goalPercent}%`,
+                height: "100%",
+                background: "linear-gradient(90deg, #10B981 0%, #34D399 50%, #6366F1 100%)",
+                borderRadius: 99,
+                boxShadow: "0 0 10px rgba(16, 185, 129, 0.7)",
+                transition: "width 0.4s ease"
+              }} />
+            </div>
           </div>
         </div>
       </div>

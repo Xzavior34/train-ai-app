@@ -405,12 +405,12 @@ export function CoursesScreen({
         onMouseLeave={() => setIsCarouselPaused(false)}
         style={{
           position: "relative",
-          borderRadius: 22,
+          borderRadius: 20,
           overflow: "hidden",
           background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)",
           color: "#FFFFFF",
-          padding: "clamp(26px, 4vw, 36px)",
-          boxShadow: "0 18px 40px -8px rgba(15, 23, 42, 0.45)",
+          padding: "clamp(18px, 3vw, 26px)",
+          boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
           border: "1px solid rgba(99, 102, 241, 0.35)",
           transition: "all 0.3s ease"
         }}
@@ -424,13 +424,13 @@ export function CoursesScreen({
           pointerEvents: "none"
         }} />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 28, alignItems: "center", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, alignItems: "center", position: "relative", zIndex: 1 }}>
           
           {/* Left Column: Course details */}
           <div>
-            <div className="tai-row tai-between" style={{ marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+            <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
               <div className="tai-row tai-gap8">
-                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>
+                <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>
                   {currentSpotlight.cohortTag} • {currentSpotlight.badge}
                 </span>
               </div>
@@ -441,92 +441,92 @@ export function CoursesScreen({
                   aria-label="Previous Slide"
                   onClick={() => setActiveSlide(prev => (prev - 1 + SPOTLIGHT_SLIDES.length) % SPOTLIGHT_SLIDES.length)}
                   style={{
-                    width: 32, height: 32, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)",
+                    width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.25)",
                     background: "rgba(255,255,255,0.1)", color: "#fff", display: "flex", alignItems: "center",
-                    justifyContent: "center", cursor: "pointer", backdropFilter: "blur(6px)", transition: "all 0.15s ease"
+                    justifyContent: "center", cursor: "pointer", backdropFilter: "blur(6px)"
                   }}
                 >
-                  <ChevronLeft size={16} />
+                  <ChevronLeft size={15} />
                 </button>
                 <button
                   aria-label="Next Slide"
                   onClick={() => setActiveSlide(prev => (prev + 1) % SPOTLIGHT_SLIDES.length)}
                   style={{
-                    width: 32, height: 32, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)",
+                    width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.25)",
                     background: "rgba(255,255,255,0.1)", color: "#fff", display: "flex", alignItems: "center",
-                    justifyContent: "center", cursor: "pointer", backdropFilter: "blur(6px)", transition: "all 0.15s ease"
+                    justifyContent: "center", cursor: "pointer", backdropFilter: "blur(6px)"
                   }}
                 >
-                  <ChevronRight size={16} />
+                  <ChevronRight size={15} />
                 </button>
               </div>
             </div>
 
-            <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in" style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 10px", lineHeight: 1.25 }}>
+            <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in" style={{ fontSize: "clamp(18px, 2.4vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", lineHeight: 1.25 }}>
               {currentSpotlight.title}
             </h1>
 
-            <p key={currentSpotlight.id + "-desc"} className="tai-fade-in" style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: "0 0 16px", lineHeight: 1.5, maxWidth: 540 }}>
+            <p key={currentSpotlight.id + "-desc"} className="tai-fade-in" style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", margin: "0 0 14px", lineHeight: 1.45, maxWidth: 540 }}>
               {currentSpotlight.description}
             </p>
 
             {/* In-Progress Track Bar if user is enrolled */}
             {currentSpotlight.progress > 0 && (
-              <div style={{ background: "rgba(0,0,0,0.3)", padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)", marginBottom: 16 }}>
-                <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, color: "#E0E7FF" }}>
-                  <span>Simultaneous Learning: Active Track</span>
-                  <span style={{ color: "#34D399", fontWeight: 800 }}>{currentSpotlight.progress}% Done ({currentSpotlight.lessonsRemaining})</span>
+              <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", marginBottom: 14 }}>
+                <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 5, color: "#E0E7FF" }}>
+                  <span>Active Sprint Pace</span>
+                  <span style={{ color: "#34D399", fontWeight: 800 }}>{currentSpotlight.progress}% ({currentSpotlight.lessonsRemaining})</span>
                 </div>
-                <div style={{ height: 7, borderRadius: 99, background: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
+                <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
                   <div style={{ width: `${currentSpotlight.progress}%`, height: "100%", background: "linear-gradient(90deg, #10B981, #6366F1)", borderRadius: 99 }} />
                 </div>
               </div>
             )}
 
-            <div className="tai-row tai-gap14" style={{ flexWrap: "wrap", marginBottom: 20, fontSize: 12.5 }}>
-              <div className="tai-row tai-gap6">
-                <Star size={14} fill="#F59E0B" color="#F59E0B" />
+            <div className="tai-row tai-gap12" style={{ flexWrap: "wrap", marginBottom: 16, fontSize: 12 }}>
+              <div className="tai-row tai-gap4">
+                <Star size={13} fill="#F59E0B" color="#F59E0B" />
                 <span style={{ fontWeight: 800 }}>{currentSpotlight.rating}</span>
                 <span style={{ opacity: 0.75 }}>({currentSpotlight.reviews})</span>
               </div>
               <span>•</span>
-              <div className="tai-row tai-gap6">
-                <Users size={14} color="#818CF8" />
+              <div className="tai-row tai-gap4">
+                <Users size={13} color="#818CF8" />
                 <span style={{ fontWeight: 700 }}>{currentSpotlight.enrolled}</span>
               </div>
               <span>•</span>
-              <div className="tai-row tai-gap6">
-                <ShieldCheck size={14} color="#34D399" />
-                <span style={{ fontWeight: 700 }}>Certified Credential</span>
+              <div className="tai-row tai-gap4">
+                <ShieldCheck size={13} color="#34D399" />
+                <span style={{ fontWeight: 700 }}>Certificate</span>
               </div>
             </div>
 
-            <div className="tai-row tai-gap12" style={{ flexWrap: "wrap" }}>
+            <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
               <button
                 className="tai-btn"
                 style={{
                   background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
-                  padding: "12px 24px", borderRadius: 12, border: "none",
+                  padding: "10px 18px", borderRadius: 10, border: "none", fontSize: 13,
                   boxShadow: "0 6px 20px rgba(79, 70, 229, 0.4)",
-                  display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer"
+                  display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer"
                 }}
                 onClick={() => push("courseDetail", { id: currentSpotlight.id })}
               >
                 <span>{currentSpotlight.cta}</span>
-                <ArrowRight size={16} />
+                <ArrowRight size={15} />
               </button>
 
               <button
                 className="tai-btn"
                 style={{
                   background: "rgba(255,255,255,0.1)", color: "#FFFFFF", fontWeight: 700,
-                  padding: "12px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)",
-                  display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer",
+                  padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.2)", fontSize: 13,
+                  display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer",
                   backdropFilter: "blur(8px)"
                 }}
                 onClick={() => setActiveRecording(RECENT_RECORDINGS[0])}
               >
-                <Play size={15} fill="#fff" />
+                <Play size={14} fill="#fff" />
                 <span>Watch Trailer</span>
               </button>
             </div>

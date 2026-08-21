@@ -381,7 +381,7 @@ export const chartColors = {
         borderRadius: 20,
         background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
         color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
+        padding: "clamp(18px, 3vw, 26px)",
         boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
         border: "1px solid rgba(99, 102, 241, 0.4)",
         position: "relative",
@@ -402,13 +402,13 @@ export const chartColors = {
           zIndex: 0
         }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
               Train AI Community Hub
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
-              Collaborate with fellow peers, get real-time critique from staff instructors, showcase sprint projects, and join accountability study circles.
+            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+              Share projects, ask questions, and collaborate with peers and mentors.
             </p>
           </div>
 
@@ -416,8 +416,8 @@ export const chartColors = {
             className="tai-btn"
             onClick={() => setPostComposerOpen(true)}
             style={{
-              background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13.5,
-              padding: "12px 22px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
+              background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13,
+              padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
               boxShadow: "0 6px 20px rgba(79, 70, 229, 0.45)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0
             }}
           >

@@ -146,10 +146,10 @@ export function AIQuizScreen({
           HERO COACH BANNER: Clean & Optimized AI Learning Co-Pilot
           ========================================================================= */}
       <div style={{
-        borderRadius: 22,
+        borderRadius: 20,
         background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
         color: "#FFFFFF",
-        padding: "clamp(22px, 3.5vw, 28px) clamp(20px, 3.5vw, 30px)",
+        padding: "clamp(18px, 3vw, 26px)",
         boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
         border: "1px solid rgba(99, 102, 241, 0.35)",
         position: "relative",
@@ -170,24 +170,24 @@ export function AIQuizScreen({
           zIndex: 0
         }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(20px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
               AI Learning Coach
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 580, lineHeight: 1.45, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
-              Ask questions, clarify syllabus concepts, debug code, or generate adaptive practice quizzes.
+            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 580, lineHeight: 1.4 }}>
+              Ask questions, debug code, and take interactive practice quizzes.
             </p>
           </div>
 
-          <div className="tai-row tai-gap10" style={{ flexShrink: 0, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
             {typeof credits === "number" && (
               <div style={{
                 background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.2)", padding: "8px 14px", borderRadius: 12, textAlign: "right"
+                border: "1px solid rgba(255,255,255,0.2)", padding: "7px 12px", borderRadius: 10, textAlign: "right"
               }}>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", fontWeight: 700, textTransform: "uppercase" }}>AI Credits</div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: "#fff" }}>{credits} Available</div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: "#fff" }}>{credits} Available</div>
               </div>
             )}
 
@@ -197,7 +197,7 @@ export function AIQuizScreen({
               style={{
                 background: "linear-gradient(135deg, #F59E0B, #EF4444)",
                 color: "#FFFFFF", border: "none", fontWeight: 800, fontSize: 12.5,
-                padding: "9px 16px", borderRadius: 12, cursor: "pointer",
+                padding: "9px 15px", borderRadius: 10, cursor: "pointer",
                 boxShadow: "0 4px 14px rgba(245, 158, 11, 0.35)",
                 display: "inline-flex", alignItems: "center", gap: 6
               }}

@@ -96,7 +96,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
         borderRadius: 20,
         background: "linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 27, 75, 0.85) 100%)",
         color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
+        padding: "clamp(18px, 3vw, 26px)",
         boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
         border: "1px solid rgba(99, 102, 241, 0.4)",
         position: "relative",
@@ -117,27 +117,27 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           zIndex: 0
         }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
-              My Learning Progress &amp; Syllabus
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+              My Learning Progress
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
-              16.6 total study hours logged this week across {inProgressCount} active courses. You're 3 lessons away from this week's sprint target.
+            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+              16.6 study hours logged across {inProgressCount} active courses this week.
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 20, fontWeight: 900, color: "#FFFFFF" }}>17 / 20 Lessons Done</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Weekly Target: 85% Met</div>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>17 / 20 Lessons Done</div>
+            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>85% Sprint Met</div>
           </div>
         </div>
 
         {/* Weekly Goal Progress Bar (High-Contrast Hero Feature) */}
         <div style={{
-          position: "relative", zIndex: 1, marginTop: 22,
+          position: "relative", zIndex: 1, marginTop: 16,
           background: "rgba(255,255,255,0.12)", backdropFilter: "blur(10px)",
-          padding: "14px 18px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.22)"
+          padding: "12px 16px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.22)"
         }}>
           <div className="tai-row tai-between" style={{ fontSize: 13, fontWeight: 800, marginBottom: 8, color: "#FFFFFF" }}>
             <span>
