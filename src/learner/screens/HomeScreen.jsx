@@ -168,10 +168,10 @@ export function HomeScreen({
       </div>
 
       {/* 2-Column Responsive Layout (Main LMS Track vs Right Side Info Hub) */}
-      <div className="tai-dashboard-grid">
+      <div className="tai-dashboard-grid" style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
         
         {/* LEFT COLUMN: Continue Learning, Career Track, Recommendations, Chart, Assignments, Study Rooms */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           
           {/* Continue Learning Banner */}
           {continueCourse && (
@@ -479,7 +479,7 @@ export function HomeScreen({
         </div>
 
         {/* RIGHT COLUMN: Streak Days, Today's Schedule, Leaderboard, Mentor 1:1, Badges */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           
           {/* Achievements: Your Level, Streak & Badges */}
           <div className="tai-card" style={{ padding: 20, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.3)" }}>

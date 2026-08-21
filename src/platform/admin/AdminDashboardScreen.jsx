@@ -132,24 +132,24 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             zIndex: 0
           }} />
 
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 14, alignItems: "center" }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+              <h1 style={{ fontSize: "clamp(18px, 4vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
                 Welcome back, {profileQuery.data?.display_name || "Admin"}
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 540, lineHeight: 1.45 }}>
                 Monitor active learner cohorts, completion rates, and curriculum deployments.
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", flexShrink: 0 }}>
               <button
                 className="ta-btn"
                 onClick={() => setScreen("content")}
                 style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13,
-                  padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
-                  boxShadow: "0 4px 16px rgba(79, 70, 229, 0.4)"
+                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 12.5,
+                  padding: "8px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
+                  boxShadow: "0 4px 14px rgba(79, 70, 229, 0.4)"
                 }}
               >
                 + Create Masterclass

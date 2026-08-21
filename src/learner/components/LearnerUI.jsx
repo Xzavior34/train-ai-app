@@ -347,8 +347,8 @@ export const TOKENS = `
   @media (max-width: 899px) {
     .tai-header-search { display: none; }
     .tai-desktop-only { display: none !important; }
-    .tai-global-header { padding: 0 16px; height: 58px; width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-header-brand img { height: 26px !important; }
+    .tai-global-header { padding: 0 16px; height: 56px; width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-header-brand img, .tai-header-logo { height: 20px !important; }
     .tai-body { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
     .tai-streak-pill, .tai-credits-pill { padding: 6px 10px; font-size: 12px; gap: 5px; }
     .tai-header-right { gap: 8px; }
@@ -357,8 +357,8 @@ export const TOKENS = `
     .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
   }
   @media (max-width: 480px) {
-    .tai-global-header { padding: 0 14px; height: 56px; width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-header-brand img { height: 24px !important; }
+    .tai-global-header { padding: 0 14px; height: 54px; width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-header-brand img, .tai-header-logo { height: 19px !important; }
     .tai-body { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
     .tai-card { padding: 14px 14px !important; border-radius: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .tai-iconbtn { width: 34px; height: 34px; border-radius: 10px; }
@@ -526,7 +526,7 @@ export function LearnerHeader({
             src={brandLogoUrl || defaultLogo}
             alt="Train AI"
             className="tai-header-logo"
-            style={{ height: 28, width: "auto", maxWidth: 120, objectFit: "contain", display: "block" }}
+            style={{ height: 22, width: "auto", maxWidth: 100, objectFit: "contain", display: "block" }}
           />
         </div>
         {searchComponent}

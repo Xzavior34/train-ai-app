@@ -435,7 +435,7 @@ const NAV_BY_WORKSPACE = { admin: ADMIN_NAV, mentor: MENTOR_NAV, manager: MANAGE
 // such sub-workspaces to switch between - it is one dashboard, which is
 // the entire point of pulling it out of that shared component in the first
 // place rather than passing it an empty workspace list.
-export function BrandLogo({ height = 26, isMinimized = false, style = {} }) {
+export function BrandLogo({ height = 22, isMinimized = false, style = {} }) {
   const isDark = typeof document !== "undefined" && (document.documentElement.classList.contains("dark") || localStorage.getItem("trainai_theme_dark") === "true");
   const src = isDark ? "/logo-dark.png" : "/train-ai-logo.png";
   return (
@@ -470,7 +470,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
       <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
         <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
-            <BrandLogo height={26} isMinimized={isMinimized} />
+            <BrandLogo height={22} isMinimized={isMinimized} />
             {!isMinimized && (
               <span className="ta-brand-tag" style={{ marginLeft: "auto", background: "linear-gradient(135deg, #F59E0B, #EF4444)", color: "#FFFFFF" }}>OWNER</span>
             )}
@@ -545,7 +545,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
       <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
         <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
-            <BrandLogo height={26} isMinimized={isMinimized} />
+            <BrandLogo height={22} isMinimized={isMinimized} />
             {!isMinimized && <span className="ta-brand-tag" style={{ marginLeft: "auto" }}>PRO</span>}
           </div>
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
