@@ -130,7 +130,9 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
         .invite-spin { animation: inviteSpin .8s linear infinite; }
         .invite-input:focus { outline: none; border-color: #818CF8 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
         .invite-submit:hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
-        .invite-link:hover { text-decoration: underline; }
+        .invite-submit:active { transform: scale(.98); }
+        .invite-link { transition: color .15s ease; }
+        .invite-link:hover { text-decoration: underline; color: #4F46E5; }
       `}</style>
 
       <div style={styles.glowTop} />

@@ -119,6 +119,7 @@ export default function MfaSetupScreen({ onClose }) {
       aria-modal="true"
       aria-label="Two-factor authentication"
       onClick={busy ? undefined : onClose}
+      className="mfa2-overlay"
       style={{
         position: "fixed", inset: 0, zIndex: 10000, background: "rgba(16,20,42,.45)",
         display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 12,
@@ -126,6 +127,7 @@ export default function MfaSetupScreen({ onClose }) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
+        className="mfa2-card"
         style={{
           width: "100%", maxWidth: 440, background: "#FFFFFF", borderRadius: 20,
           boxShadow: "0 20px 60px -15px rgba(16,20,42,.4)", padding: 20,
@@ -135,6 +137,20 @@ export default function MfaSetupScreen({ onClose }) {
         <style>{`
           @keyframes taiMfaSpin { to { transform: rotate(360deg); } }
           .tai-spin { animation: taiMfaSpin .8s linear infinite; }
+          @keyframes mfa2FadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes mfa2SlideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+          .mfa2-overlay { animation: mfa2FadeIn .18s ease both; }
+          .mfa2-card { animation: mfa2SlideUp .25s cubic-bezier(.16,1,.3,1) both; }
+          .mfa2-close-btn { transition: background .15s ease, color .15s ease; }
+          .mfa2-close-btn:hover { background: #F1F5F9; color: #10142A; }
+          .mfa2-primary-btn { transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease; }
+          .mfa2-primary-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(79,70,229,.5); }
+          .mfa2-primary-btn:not(:disabled):active { transform: scale(.98); }
+          .mfa2-outline-btn { transition: background .15s ease, border-color .15s ease; }
+          .mfa2-outline-btn:not(:disabled):hover { background: #F8FAFC; border-color: #C7D2FE; }
+          .mfa2-danger-btn { transition: background .15s ease, transform .15s ease; }
+          .mfa2-danger-btn:not(:disabled):hover { background: #FEF2F2; }
+          .mfa2-danger-btn:not(:disabled):active { transform: scale(.98); }
         `}</style>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -150,6 +166,7 @@ export default function MfaSetupScreen({ onClose }) {
             onClick={onClose}
             disabled={busy}
             aria-label="Close"
+            className="mfa2-close-btn"
             style={{
               width: 32, height: 32, borderRadius: 10, border: "1px solid #E6E9F5", background: "#FFFFFF",
               display: "flex", alignItems: "center", justifyContent: "center", cursor: busy ? "default" : "pointer", color: "#656C86",
@@ -175,6 +192,7 @@ export default function MfaSetupScreen({ onClose }) {
               type="button"
               onClick={startEnroll}
               disabled={busy}
+              className="mfa2-primary-btn"
               style={{
                 width: "100%", border: "none", cursor: busy ? "default" : "pointer", borderRadius: 14,
                 fontWeight: 700, fontSize: 14, padding: "13px 18px", color: "#fff", opacity: busy ? 0.75 : 1,
@@ -259,6 +277,7 @@ export default function MfaSetupScreen({ onClose }) {
                 type="button"
                 onClick={() => cancelPending(view.factorId)}
                 disabled={busy}
+                className="mfa2-outline-btn"
                 style={{
                   flex: 1, padding: "12px 14px", borderRadius: 13, border: "1.5px solid #E6E9F5", background: "#fff",
                   color: "#656C86", fontWeight: 700, fontSize: 13.5, cursor: busy ? "default" : "pointer",
@@ -269,6 +288,7 @@ export default function MfaSetupScreen({ onClose }) {
               <button
                 type="submit"
                 disabled={busy || code.length !== 6}
+                className="mfa2-primary-btn"
                 style={{
                   flex: 1.4, border: "none", cursor: busy || code.length !== 6 ? "default" : "pointer", borderRadius: 13,
                   fontWeight: 700, fontSize: 13.5, padding: "12px 14px", color: "#fff",
@@ -311,6 +331,7 @@ export default function MfaSetupScreen({ onClose }) {
               type="button"
               onClick={() => disable(view.factorId)}
               disabled={busy}
+              className="mfa2-danger-btn"
               style={{
                 width: "100%", padding: "12px 14px", borderRadius: 13, border: "1.5px solid #FCA5A5", background: "#fff",
                 color: "#EF4444", fontWeight: 700, fontSize: 13.5, cursor: busy ? "default" : "pointer",

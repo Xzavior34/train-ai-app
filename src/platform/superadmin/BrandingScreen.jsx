@@ -96,13 +96,14 @@ export function BrandingScreen() {
                     height: 32,
                     borderRadius: "50%",
                     background: p.color,
-                    border: primaryColor === p.color ? "3px solid #fff" : "2px solid transparent",
-                    boxShadow: primaryColor === p.color ? `0 0 0 2px ${p.color}` : "none",
+                    border: primaryColor === p.color ? "3px solid var(--surface)" : "2px solid transparent",
+                    boxShadow: primaryColor === p.color ? `0 0 0 2px var(--text)` : "none",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#fff"
+                    color: "#fff",
+                    transition: "all .15s ease"
                   }}
                   title={p.name}
                 >

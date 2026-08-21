@@ -241,7 +241,7 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
       {logoUrl && (
         <img src={logoUrl} alt="Logo preview" style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", marginTop: 10, border: "1px solid var(--border)" }} />
       )}
-      <div className="ta-mt10">
+      <div style={{ marginTop: 10 }}>
         <FileUploadZone
           bucket="uploads"
           pathPrefix={`branding/${org?.id || "pending"}`}
@@ -253,7 +253,7 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
       </div>
 
       <div className="ta-title ta-mt20" style={{ fontSize: 13.5 }}>Primary brand color</div>
-      <div className="ta-row ta-gap10 ta-mt10">
+      <div className="ta-row ta-gap10" style={{ marginTop: 10 }}>
         <input
           type="color"
           value={/^#[0-9a-fA-F]{6}$/.test(primaryColor) ? primaryColor : "#4F46E5"}
@@ -345,7 +345,7 @@ function InviteStep({ org, invites, onInviteSent, onDone, onBack }) {
       {invites.length > 0 && (
         <div className="ta-mt20">
           <div className="ta-label">Sent this session ({invites.length})</div>
-          <div className="ta-col ta-gap8 ta-mt10">
+          <div className="ta-col ta-gap8 anim-stagger" style={{ marginTop: 10 }}>
             {invites.map((inv) => (
               <div key={inv.id} className="ta-row ta-between" style={{ padding: "8px 12px", background: "var(--surface-2)", borderRadius: 10, fontSize: 13 }}>
                 <span>{inv.email}</span>

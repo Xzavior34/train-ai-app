@@ -139,7 +139,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
               </div>
             </div>
 
-            <div className="ta-col ta-gap12 ta-mt16">
+            <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
               {!mentorId && <div className="ta-empty">Your instructor profile isn't linked to an instructor record yet.</div>}
               {mentorId && sessionsQuery.loading && <div className="ta-empty">Loading sessions...</div>}
               {mentorId && !sessionsQuery.loading && sessions.length === 0 && <div className="ta-empty">No sessions yet. Booked and requested sessions with your mentees will show up here.</div>}
@@ -266,7 +266,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
 
             <div className="ta-card ta-mt16">
               <div className="ta-title">Weekly Availability Roster</div>
-              <div className="ta-col ta-gap10 ta-mt12">
+              <div className="ta-col ta-gap10 ta-mt12 anim-stagger">
                 {availabilityQuery.loading && <div className="ta-empty">Loading availability...</div>}
                 {!availabilityQuery.loading && availability.length === 0 && <div className="ta-empty">No recurring availability set yet. Learners can't see open slots until you add some.</div>}
                 {availability.map(a => (

@@ -62,7 +62,7 @@ export function CourseDetailScreen({
 
       {/* Progress or Enrollment CTA */}
       {isEnrolled ? (
-        <div className="tai-card tai-card-hover" style={{ padding: 18 }}>
+        <div className="tai-card" style={{ padding: 18 }}>
           <div className="tai-row tai-between" style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>
             <span>Your Learning Progress</span>
             <span style={{ color: "var(--primary)", fontWeight: 800 }}>{course.progress}%</span>

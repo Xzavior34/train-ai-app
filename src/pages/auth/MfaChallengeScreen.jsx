@@ -75,7 +75,9 @@ export default function MfaChallengeScreen({ onVerified, onSignOut }) {
         .mfa-spin { animation: mfaSpin .8s linear infinite; }
         .mfa-input:focus { outline: none; border-color: #818CF8 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
         .mfa-submit:hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
-        .mfa-signout:hover { text-decoration: underline; }
+        .mfa-submit:active { transform: scale(.98); }
+        .mfa-signout { transition: color .15s ease; }
+        .mfa-signout:hover { text-decoration: underline; color: #4F46E5; }
       `}</style>
 
       <div style={styles.glowTop} />

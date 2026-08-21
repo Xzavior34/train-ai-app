@@ -54,7 +54,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
   }
 
   return (
-    <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
+    <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
       <div className="ta-row ta-between">
         <div>
           <div className="ta-title">{org.name}</div>
@@ -71,7 +71,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
       </div>
 
       <div className="ta-mt16">
-        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>Seats</div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>Seats</div>
         <div className="ta-row ta-gap16">
           <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.purchased}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Purchased</div></div>
           <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.used}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Used</div></div>
@@ -83,7 +83,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
       </div>
 
       <div className="ta-mt16">
-        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>Feature flags</div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>Feature flags</div>
         <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 10 }}>
           Tier defaults shown unless explicitly overridden below. Overriding a flag here applies to this organization only, independent of its tier.
         </div>
@@ -114,12 +114,12 @@ function PlatformBillingPanel() {
   const paymentsQuery = useSupabaseQuery(async () => fetchPlatformOrganizationPayments(50), []);
   const payments = paymentsQuery.data || [];
   return (
-    <div className="ta-card ta-mt16">
+    <div className="ta-card ta-mt16 ta-fade">
       <div className="ta-row ta-gap8">
         <CreditCard size={16} color="var(--primary)" />
         <div className="ta-title" style={{ fontSize: 15 }}>Organization payments</div>
       </div>
-      <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4, marginBottom: 10 }}>
+      <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 6, marginBottom: 10 }}>
         Every organization subscription activation across the platform, from the audit log.
       </div>
       <div className="ta-table-wrap">
@@ -273,7 +273,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
             {!orgsQuery.loading && orgs.length === 0 && <div className="ta-empty">No organizations created yet.</div>}
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18 }} className="anim-stagger">
               {orgs.map(o => (
                 <div
                   key={o.id}
@@ -435,7 +435,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
         )}
 
         {newOrgOpen && (
-          <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
+          <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
             <div className="ta-title">Create New Organization</div>
             <input className="ta-input ta-mt12" placeholder="Organization name..." value={name} onChange={e => setName(e.target.value)} />
             <div className="ta-row ta-gap8 ta-mt12">

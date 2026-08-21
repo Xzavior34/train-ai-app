@@ -174,7 +174,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalOrgs}
           </div>
-          <div className="ta-row ta-between ta-mt10" style={{ fontSize: 12 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10 }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> +20% QoQ
             </span>
@@ -193,7 +193,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalUsers.toLocaleString()}
           </div>
-          <div className="ta-row ta-between ta-mt10" style={{ fontSize: 12 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10 }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> +14.2% MoM
             </span>
@@ -212,7 +212,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalCourses}
           </div>
-          <div className="ta-row ta-between ta-mt10" style={{ fontSize: 12 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10 }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--primary)", fontWeight: 700 }}>
               <CheckCircle2 size={14} /> 100% Accredited
             </span>
@@ -231,7 +231,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveActiveInWeek.toLocaleString()}
           </div>
-          <div className="ta-row ta-between ta-mt10" style={{ fontSize: 12 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10 }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> 69.8% Engagement
             </span>
@@ -309,7 +309,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             <Tag tone="primary"><Activity size={12} /> {aiUsage?.total || "18,450"} Total Calls</Tag>
           </div>
 
-          <div className="ta-col ta-gap16 ta-mt18">
+          <div className="ta-col ta-gap16 anim-stagger" style={{ marginTop: 18 }}>
             {AI_MODEL_BREAKDOWN.map(b => (
               <div key={b.feature}>
                 <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 6 }}>
@@ -327,7 +327,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 <span style={{ color: "var(--text-2)", fontWeight: 600 }}>Average Prompt Response Latency:</span>
                 <span style={{ color: "var(--success)", fontWeight: 800 }}>340 ms</span>
               </div>
-              <div className="ta-row ta-between ta-mt6" style={{ fontSize: 12.5 }}>
+              <div className="ta-row ta-between" style={{ fontSize: 12.5, marginTop: 6 }}>
                 <span style={{ color: "var(--text-2)", fontWeight: 600 }}>Inference Error Rate:</span>
                 <span style={{ color: "var(--text)", fontWeight: 800 }}>&lt; 0.01%</span>
               </div>
@@ -409,7 +409,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             <Tag tone="success">Streaming</Tag>
           </div>
 
-          <div className="ta-col ta-gap12 ta-mt14 anim-stagger">
+          <div className="ta-col ta-gap12 anim-stagger" style={{ marginTop: 14 }}>
             {(activity.length > 0 ? activity : [
               { text: "Sara Foundation provisioned 45 new learner seats for AI Sprint", time: "3m ago" },
               { text: "Digital Training Org published module 'Spatial UI & VisionOS Tokens'", time: "14m ago" },

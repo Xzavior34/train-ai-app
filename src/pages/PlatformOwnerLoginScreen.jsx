@@ -72,7 +72,19 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0F172A" }}>
-      <form onSubmit={handleSignIn} style={{ maxWidth: 360, width: "100%", padding: 32, background: "#fff", borderRadius: 16, margin: 16 }}>
+      <style>{`
+        @keyframes ownerFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .owner-card { animation: ownerFadeUp .3s ease; }
+        .owner-input { transition: border-color .12s ease, box-shadow .12s ease; }
+        .owner-input:focus { outline: none; border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+        .owner-submit { transition: transform .12s ease, opacity .12s ease; }
+        .owner-submit:not(:disabled):hover { opacity: .92; }
+        .owner-submit:not(:disabled):active { transform: scale(.98); }
+        .owner-preview-btn { transition: background .15s ease, transform .12s ease; }
+        .owner-preview-btn:hover { background: #F8FAFC; }
+        .owner-preview-btn:active { transform: scale(.98); }
+      `}</style>
+      <form onSubmit={handleSignIn} className="owner-card" style={{ maxWidth: 360, width: "100%", padding: 32, background: "#fff", borderRadius: 16, margin: 16 }}>
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#EF4444", textTransform: "uppercase" }}>Train AI Internal</div>
         <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4 }}>Platform Owner Access</div>
         <div style={{ fontSize: 12.5, color: "#656C86", marginTop: 6, marginBottom: 20 }}>
@@ -82,15 +94,17 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
         <input
           type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
           placeholder="you@trainailtd.com"
-          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 12, borderRadius: 8, border: "1px solid #E5E7EB" }}
+          className="owner-input"
+          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 12, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box" }}
         />
         <label style={{ fontSize: 12, fontWeight: 600 }}>Password</label>
         <input
           type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 16, borderRadius: 8, border: "1px solid #E5E7EB" }}
+          className="owner-input"
+          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 16, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box" }}
         />
         {error && <div style={{ fontSize: 12.5, color: "#DC2626", marginBottom: 12 }}>{error}</div>}
-        <button type="submit" disabled={loading} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, border: "none" }}>
+        <button type="submit" disabled={loading} className="owner-submit" style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, border: "none", cursor: loading ? "default" : "pointer" }}>
           {loading ? "Signing in..." : "Sign in"}
         </button>
         {!hasRealProject && (
@@ -99,7 +113,8 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
             <button
               type="button"
               onClick={() => onAuthenticated(null)}
-              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#fff", color: "#0F172A", fontWeight: 700, border: "1px solid #0F172A" }}
+              className="owner-preview-btn"
+              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#fff", color: "#0F172A", fontWeight: 700, border: "1px solid #0F172A", cursor: "pointer" }}
             >
               Preview Owner Dashboard (no database yet)
             </button>

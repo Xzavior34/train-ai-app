@@ -95,7 +95,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         </div>
 
         {/* Top 4 KPI Metrics */}
-        <div className="ta-grid ta-grid-4">
+        <div className="ta-grid ta-grid-4 anim-stagger">
           <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
@@ -174,7 +174,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <Tag tone="primary">Track: Product Design & AI</Tag>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 20 }}>
+          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 20 }}>
             {careerSteps.map((step, idx) => (
               <div 
                 key={step.title} 
@@ -198,7 +198,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                 </div>
 
                 <div className="ta-mt12">
-                  <ProgressBar progress={step.progress} />
+                  <ProgressBar value={step.progress} />
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6, textAlign: "right" }}>
                   {step.progress}% met
@@ -297,7 +297,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               </div>
 
               {assignSuccess && (
-                <div className="ta-card ta-mt12" style={{ background: "rgba(16, 185, 129, 0.1)", borderColor: "#10B981", padding: 10 }}>
+                <div className="ta-card ta-mt12 anim-pop" style={{ background: "rgba(16, 185, 129, 0.1)", borderColor: "#10B981", padding: 10 }}>
                   <div className="ta-row ta-gap8" style={{ color: "#10B981", fontSize: 12.5, fontWeight: 600 }}>
                     <CheckCircle2 size={15} /> Assigned "UX Research Practical Case Study" to {currentLearner.name}'s path!
                   </div>

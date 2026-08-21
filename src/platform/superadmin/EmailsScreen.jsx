@@ -155,7 +155,7 @@ export function EmailsScreen() {
           )}
         </div>
 
-        <div className="ta-card ta-mt16">
+        <div className="ta-card ta-mt16 anim-stagger">
           <div className="ta-row ta-between">
             <div className="ta-row ta-gap8">
               <Mail size={16} color="var(--primary)" />
@@ -170,10 +170,17 @@ export function EmailsScreen() {
           {!campaignsQuery.loading && campaigns.length === 0 && (
             <div className="ta-mt12" style={{ fontSize: 12.5, color: "var(--text-2)" }}>No broadcasts sent yet.</div>
           )}
-          {campaigns.map((c) => {
+          {campaigns.map((c, idx) => {
             const colors = statusColor(c.status);
             return (
-              <div key={c.id} className="ta-row ta-between ta-mt12" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 12, flexWrap: "wrap", gap: 8 }}>
+              <div
+                key={c.id}
+                className="ta-row ta-between ta-mt12"
+                style={{
+                  borderBottom: idx === campaigns.length - 1 ? "none" : "1px solid var(--border)",
+                  paddingBottom: 12, flexWrap: "wrap", gap: 8
+                }}
+              >
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>{c.subject}</div>
                   <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 2 }}>

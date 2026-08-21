@@ -277,14 +277,14 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
           <div className="ta-grid ta-grid-2" style={{ gap: 20 }}>
 
             {/* Left Column: Organization, Billing & Seats */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div className="anim-stagger" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div className="ta-card">
                 <div className="ta-title">Organization Profile</div>
                 <div className="ta-label ta-mt16">Organization Name</div>
                 <input className="ta-input ta-mt6" style={{ width: "100%" }} value={orgName} onChange={(e) => setOrgName(e.target.value)} />
                 <div className="ta-label ta-mt16">Domain (optional)</div>
                 <input className="ta-input ta-mt6" style={{ width: "100%" }} value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="e.g. yourcompany.com" />
-                <div className="ta-row ta-gap10 ta-mt16" style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+                <div className="ta-row ta-gap10 ta-mt16" style={{ fontSize: 12.5, color: "var(--text-2)", flexWrap: "wrap" }}>
                   <span>Plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier || "free"}</strong></span>
                   <span>Status: <strong style={{ color: "var(--text-1)" }}>{org?.status || "trial"}</strong></span>
                   <span>Max users: <strong style={{ color: "var(--text-1)" }}>{org?.max_users ?? "N/A"}</strong></span>
@@ -384,7 +384,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             </div>
 
             {/* Right Column: AI Automation, Gamification & Leaderboard */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div className="anim-stagger" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div className="ta-card">
                 <div className="ta-title">AI Neural Coach</div>
                 <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>

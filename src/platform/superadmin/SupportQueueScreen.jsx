@@ -58,7 +58,7 @@ export function SupportQueueScreen({ currentUserId }) {
                 <div
                   key={t.id}
                   onClick={() => setSelectedTicketId(t.id)}
-                  style={{ cursor: "pointer", padding: "10px 12px", borderRadius: 8, background: selectedTicketId === t.id ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)" }}
+                  style={{ cursor: "pointer", padding: "10px 12px", borderRadius: 8, background: selectedTicketId === t.id ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)", transition: "background .15s ease" }}
                 >
                   <div className="ta-row ta-between">
                     <span style={{ fontSize: 13, fontWeight: 600 }}>{t.subject}</span>
@@ -71,7 +71,7 @@ export function SupportQueueScreen({ currentUserId }) {
           </div>
 
           {selectedTicket && (
-            <div className="ta-card" style={{ flex: 1, minWidth: 340 }}>
+            <div className="ta-card ta-fade" style={{ flex: 1, minWidth: 340 }}>
               <div className="ta-row ta-between">
                 <div>
                   <div style={{ fontWeight: 700 }}>{selectedTicket.subject}</div>
@@ -83,7 +83,7 @@ export function SupportQueueScreen({ currentUserId }) {
               </div>
               <div style={{ fontSize: 12.5, marginTop: 10, padding: 10, background: "var(--surface-2)", borderRadius: 8 }}>{selectedTicket.description}</div>
 
-              <div className="ta-col ta-gap8 ta-mt12">
+              <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {(messagesQuery.data || []).map((m) => (
                   <div key={m.id} style={{ padding: "8px 10px", borderRadius: 8, background: m.is_internal_note ? "#FEF3C7" : "var(--surface-2)" }}>
                     <div style={{ fontSize: 12 }}>{m.message}</div>
@@ -108,10 +108,10 @@ export function SupportQueueScreen({ currentUserId }) {
 
         <div className="ta-card ta-mt20">
           <div className="ta-title">General Feedback</div>
-          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>
             Quick, one-shot feedback submitted from any learner's Profile screen - a real, separate table already existed with no screen ever reading it until now.
           </div>
-          <div className="ta-col ta-gap10 ta-mt12">
+          <div className="ta-col ta-gap10 ta-mt12 anim-stagger">
             {feedbackQuery.loading && <div className="ta-empty">Loading...</div>}
             {!feedbackQuery.loading && (feedbackQuery.data || []).length === 0 && <div className="ta-empty">No feedback submitted yet.</div>}
             {(feedbackQuery.data || []).map((f) => (

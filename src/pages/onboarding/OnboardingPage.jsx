@@ -40,8 +40,10 @@ export default function OnboardingPage({ onComplete }) {
         @keyframes obFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         .ob-card { animation: obFadeUp .3s ease; }
         .ob-option { transition: border-color .12s ease, background-color .12s ease, transform .12s ease; }
-        .ob-option:hover { transform: translateY(-1px); }
+        .ob-option:hover { transform: translateY(-1px); border-color: #C7D2FE; }
+        .ob-option:active { transform: scale(.99); }
         .ob-continue:not(:disabled):hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
+        .ob-continue:not(:disabled):active { transform: scale(.98); }
       `}</style>
 
       <div style={styles.glow} />

@@ -24,7 +24,7 @@ export function TracksScreen() {
           <div className="ta-empty">No learning tracks yet. Tracks are derived from course categories, so publish a course with a category to see one here.</div>
         )}
 
-        <div className="ta-grid ta-grid-3">
+        <div className="ta-grid ta-grid-3 anim-stagger">
           {tracks.map((t) => {
             const isOpen = expanded === t.id;
             return (
@@ -41,7 +41,7 @@ export function TracksScreen() {
                   <Users size={13} /> {t.learners || 0} enrollment{t.learners === 1 ? "" : "s"}
                 </div>
                 {isOpen && (
-                  <div className="ta-col ta-gap6 ta-mt12" style={{ borderTop: "1px solid var(--border)", paddingTop: 10 }}>
+                  <div className="ta-col ta-gap6 ta-mt12 anim-slide-down" style={{ borderTop: "1px solid var(--border)", paddingTop: 10 }}>
                     {(t.courseTitles || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-2)" }}>No course titles available.</div>}
                     {(t.courseTitles || []).map((title, i) => (
                       <div key={i} style={{ fontSize: 12.5 }}>• {title}</div>

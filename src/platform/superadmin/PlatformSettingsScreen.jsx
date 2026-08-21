@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { TopBar, ToastContext } from "../components/PlatformUI.jsx";
+import { TopBar, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Plus } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchPlatformSettings, upsertPlatformSetting } from "../../lib/api/platform.js";
@@ -95,7 +95,7 @@ export function PlatformSettingsScreen() {
               <div className="ta-title">Global Feature Flags</div>
               <div className="ta-row ta-between ta-mt16">
                 <span>Allow self-registration</span>
-                <input type="checkbox" checked={allowRegistration} onChange={(e) => setAllowRegistration(e.target.checked)} />
+                <Switch on={allowRegistration} onChange={() => setAllowRegistration((v) => !v)} />
               </div>
               <button className="ta-btn ta-btn-primary ta-mt16" onClick={handleSaveRegistrationFlag} disabled={saving}>
                 {saving ? "Saving..." : "Save global settings"}
@@ -111,7 +111,7 @@ export function PlatformSettingsScreen() {
               </div>
 
               {formOpen && (
-                <div className="ta-col ta-gap10 ta-mt16">
+                <div className="ta-col ta-gap10 ta-mt16 anim-slide-down">
                   <input className="ta-input" placeholder="Setting key (e.g. max_upload_size_mb)" value={newKey} onChange={(e) => setNewKey(e.target.value)} />
                   <input className="ta-input" placeholder="Value" value={newValue} onChange={(e) => setNewValue(e.target.value)} />
                   <input className="ta-input" placeholder="Description (optional)" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
@@ -124,15 +124,15 @@ export function PlatformSettingsScreen() {
                 </div>
               )}
 
-              <div className="ta-col ta-gap10 ta-mt16">
+              <div className="ta-col ta-gap10 ta-mt16 anim-stagger">
                 {otherSettings.length === 0 && !formOpen && (
                   <div className="ta-empty">No other platform settings configured yet.</div>
                 )}
                 {otherSettings.map((row) => (
                   <div key={row.setting_key} className="ta-row ta-between ta-gap10" style={{ flexWrap: "wrap" }}>
-                    <div style={{ minWidth: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontWeight: 600, fontSize: 13 }}>{row.setting_key}</div>
-                      {row.description && <div style={{ fontSize: 12, color: "var(--text-2)" }}>{row.description}</div>}
+                      {row.description && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>{row.description}</div>}
                     </div>
                     <input
                       className="ta-input"

@@ -241,7 +241,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                 <div className="ta-mt12">
                   <div className="ta-label">Bulk add by email</div>
                   <textarea
-                    className="ta-input ta-mt6" style={{ width: "100%", minHeight: 60 }}
+                    className="ta-input ta-mt8" style={{ width: "100%", minHeight: 60 }}
                     placeholder="one@example.com, two@example.com"
                     value={bulkEmails} onChange={(e) => setBulkEmails(e.target.value)}
                   />

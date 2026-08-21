@@ -175,7 +175,10 @@ export const TOKENS = `
   @media (max-width: 899px) {
     .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
-    .ta-topbar { padding: 0 16px; height: 58px; min-height: 58px; }
+    .ta-topbar {
+      padding: 10px 16px; height: auto; min-height: 58px;
+      flex-wrap: wrap; row-gap: 8px;
+    }
     .ta-content { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
       position: fixed; top: 0; left: 0; z-index: 100;
@@ -189,7 +192,20 @@ export const TOKENS = `
     }
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
     .ta-topbar-left { flex: 1 1 auto; min-width: 0; }
-    .ta-topbar-right { gap: 8px; flex-shrink: 0; }
+    .ta-topbar-right { gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
+    /* Named "desktop-only" but was never actually hidden on mobile (the
+       class didn't exist as CSS) - screens rely on this being the ONLY way
+       to trigger their primary action (e.g. "Create cohort"), so keep it
+       visible rather than hiding it now and silently removing that
+       function on mobile. Just give it a size that fits the header
+       instead of the full desktop button. */
+    .ta-desktop-only .ta-btn { padding: 7px 12px; font-size: 12.5px; gap: 6px; }
+    /* The header Sign Out button (the only sign-out entry point in this app)
+       carries ta-desktop-only directly rather than via a wrapper - collapse
+       it to an icon-only square on mobile instead of hiding it outright. */
+    button.ta-desktop-only.ta-btn { width: 36px; height: 36px; padding: 0; border-radius: 10px; gap: 0; }
+    button.ta-desktop-only.ta-btn span { display: none; }
+    .ta-profile-pill-name { max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
     .ta-h1 { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ta-table-wrap .ta-table { min-width: 460px; }
@@ -216,11 +232,11 @@ export const TOKENS = `
   .ta-btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 10px; }
   .ta-btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
   
-  /* Modern Glass Cards for Platform */
+  /* Card surface for Platform - no backdrop-filter: this app is dense with
+     stacked/nested cards and tables, and a blur costs real scroll/render
+     performance for near-zero visible benefit on flat backgrounds. */
   .ta-card {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.96);
     border: 1px solid rgba(226, 232, 240, 0.85);
     border-radius: var(--radius);
     padding: 22px;
@@ -267,8 +283,8 @@ export const TOKENS = `
   .ta-row { display: flex; align-items: center; }
   .ta-between { justify-content: space-between; }
   .ta-col { display: flex; flex-direction: column; }
-  .ta-gap6 { gap: 6px; } .ta-gap8 { gap: 8px; } .ta-gap10 { gap: 10px; } .ta-gap12 { gap: 12px; } .ta-gap14 { gap: 14px; } .ta-gap16 { gap: 16px; }
-  .ta-mt8 { margin-top: 8px; } .ta-mt12 { margin-top: 12px; } .ta-mt16 { margin-top: 16px; } .ta-mt20 { margin-top: 20px; } .ta-mt24 { margin-top: 24px; } .ta-mt28 { margin-top: 28px; }
+  .ta-gap4 { gap: 4px; } .ta-gap6 { gap: 6px; } .ta-gap8 { gap: 8px; } .ta-gap10 { gap: 10px; } .ta-gap12 { gap: 12px; } .ta-gap14 { gap: 14px; } .ta-gap16 { gap: 16px; } .ta-gap20 { gap: 20px; } .ta-gap24 { gap: 24px; }
+  .ta-mt4 { margin-top: 4px; } .ta-mt6 { margin-top: 6px; } .ta-mt8 { margin-top: 8px; } .ta-mt10 { margin-top: 10px; } .ta-mt12 { margin-top: 12px; } .ta-mt14 { margin-top: 14px; } .ta-mt16 { margin-top: 16px; } .ta-mt18 { margin-top: 18px; } .ta-mt20 { margin-top: 20px; } .ta-mt24 { margin-top: 24px; } .ta-mt28 { margin-top: 28px; }
   .ta-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
   .ta-title { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
   .ta-body { font-size: 13.5px; color: var(--text-2); line-height: 1.5; }
@@ -295,7 +311,7 @@ export const TOKENS = `
   .ta-switch.on { background: var(--primary); border-color: var(--primary); }
   .ta-switch-knob { width: 18px; height: 18px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left .15s ease; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
   .ta-switch.on .ta-switch-knob { left: 20px; }
-  .ta-input { border-radius: 12px; border: 1px solid var(--border); background: var(--surface); padding: 11px 14px; font-size: 13.5px; color: var(--text); font-family: var(--font); transition: all .15s ease; }
+  .ta-input { width: 100%; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); padding: 11px 14px; font-size: 13.5px; color: var(--text); font-family: var(--font); transition: all .15s ease; }
   .ta-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
   .ta-empty { text-align: center; padding: 36px 18px; color: var(--text-2); font-size: 13.5px; }
   .ta-fade { animation: fadeInScale .2s ease both; }
@@ -999,7 +1015,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
             a real unread count (that only exists on the learner app side), so
             this deliberately has no fake unread dot or click affordance
             rather than pretending there's something behind it. */}
-        <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+        <div style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
           <Bell size={17} color="var(--text-2)" />
         </div>
 
@@ -1016,8 +1032,8 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
         >
           <Avatar initials={userInitials} size={32} />
           <div className="ta-col" style={{ lineHeight: 1.2, paddingRight: 4 }}>
-            <span style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
-            <span style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
+            <span className="ta-profile-pill-name" style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
+            <span className="ta-profile-pill-name" style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
           </div>
         </div>
 
@@ -1026,6 +1042,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           className="ta-btn ta-btn-ghost ta-btn-sm ta-desktop-only"
           onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
           title="Sign Out"
+          aria-label="Sign out"
           style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
         >
           <LogOut size={15} />

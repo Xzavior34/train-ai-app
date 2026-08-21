@@ -169,7 +169,11 @@ export const TOKENS = `
   }
   @media (max-width: 899px) {
     .tai-header-search { display: none; }
-    .tai-workspace-pill span { display: none; }
+    /* Both carry a "(Desktop only)" comment at their call sites and are
+       fully reachable another way on mobile - ProfileScreen has its own
+       "Switch workspace" row and its own "Sign Out" button - so hiding
+       them here is restoring the original intent, not losing a feature. */
+    .tai-desktop-only { display: none !important; }
     .tai-global-header { padding: 0 16px; height: 60px; width: 100%; box-sizing: border-box; }
     .tai-header-brand img { height: 46px !important; }
     .tai-body { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; overflow-x: hidden; }
@@ -197,11 +201,13 @@ export const TOKENS = `
   .tai-iconbtn:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-2px) scale(1.04); box-shadow: 0 6px 16px -2px rgba(79, 70, 229, 0.18); }
   .tai-iconbtn:active { transform: scale(0.94); }
   
-  /* Modern Glass Cards with Specular Highlight and Dynamic Micro-animations */
+  /* Card surface with a subtle specular highlight - no backdrop-filter on
+     cards: this screen stacks many of them per page, and blurring flat
+     background colors costs real scroll/render performance for no visible
+     benefit. (.tai-iconbtn and .tai-navbar keep their blur - those are single,
+     small, fixed elements, not repeated per-card.) */
   .tai-card {
-    background: rgba(255, 255, 255, 0.82);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.96);
     border-radius: 18px;
     padding: 22px;
     border: 1px solid rgba(226, 232, 240, 0.85);
@@ -247,9 +253,9 @@ export const TOKENS = `
 
   .tai-row { display:flex; align-items:center; }
   .tai-between { justify-content:space-between; }
-  .tai-gap6 { gap:6px; } .tai-gap8 { gap:8px; } .tai-gap10 { gap:10px; } .tai-gap12 { gap:12px; } .tai-gap16 { gap:16px; } .tai-gap20 { gap:20px; }
+  .tai-gap4 { gap:4px; } .tai-gap6 { gap:6px; } .tai-gap8 { gap:8px; } .tai-gap10 { gap:10px; } .tai-gap12 { gap:12px; } .tai-gap14 { gap:14px; } .tai-gap16 { gap:16px; } .tai-gap18 { gap:18px; } .tai-gap20 { gap:20px; }
   .tai-col { display:flex; flex-direction:column; }
-  .tai-mt8 { margin-top:8px; } .tai-mt10 { margin-top:10px; } .tai-mt12 { margin-top:12px; } .tai-mt14 { margin-top:14px; } .tai-mt16 { margin-top:16px; } .tai-mt20 { margin-top:20px; } .tai-mt24 { margin-top:24px; }
+  .tai-mt4 { margin-top:4px; } .tai-mt6 { margin-top:6px; } .tai-mt8 { margin-top:8px; } .tai-mt10 { margin-top:10px; } .tai-mt12 { margin-top:12px; } .tai-mt14 { margin-top:14px; } .tai-mt16 { margin-top:16px; } .tai-mt20 { margin-top:20px; } .tai-mt24 { margin-top:24px; }
   .tai-label { font-size:11.5px; font-weight:700; color: var(--text-3); text-transform:uppercase; letter-spacing:.06em; }
   .tai-title-sm { font-size:16px; font-weight:800; letter-spacing: -0.01em; color: var(--text); }
   .tai-body-text { font-size: 13.5px; color: var(--text-2); line-height:1.5; }

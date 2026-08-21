@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   ArrowRight, BookOpen, GraduationCap, Cpu, ShieldCheck, CheckCircle2, Globe, X,
-  Brain, Layers, ChevronDown, ChevronUp, HelpCircle, ClipboardList, UserPlus, Rocket,
+  Brain, Layers, ChevronDown, HelpCircle, ClipboardList, UserPlus, Rocket,
   Building2, Users, Target, TrendingUp, AlertTriangle, Eye, Lock, Compass, BarChart3,
   GitCompare, Table, School, Handshake, Briefcase, Zap, Sparkles, Flame
 } from "lucide-react";
@@ -315,6 +315,8 @@ export default function LandingPage({ onNavigate }) {
         .lp-faq-answer { animation: heroPop .22s ease both; }
         .lp-question-pill { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
         .lp-question-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 16px -6px rgba(15,23,42,.1); border-color: #C7D2FE; }
+        .lp-demo-form input, .lp-demo-form select, .lp-demo-form textarea { transition: border-color .15s ease, box-shadow .15s ease; }
+        .lp-demo-form input:focus, .lp-demo-form select:focus, .lp-demo-form textarea:focus { border-color: #4F46E5 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
 
         .lp-stagger > * { opacity: 0; animation: heroPop .4s ease both; }
         .lp-stagger > *:nth-child(1) { animation-delay: .03s; }
@@ -586,7 +588,7 @@ export default function LandingPage({ onNavigate }) {
             completion problem that starts on day one and shows up months later as a delivery problem.
           </div>
 
-          <div style={styles.featuresGrid}>
+          <div className="lp-stagger" style={styles.featuresGrid}>
             {PROBLEM_POINTS.map((p) => {
               const Icon = p.icon;
               return (
@@ -610,7 +612,7 @@ export default function LandingPage({ onNavigate }) {
             learns how your workforce grows.
           </p>
 
-          <div style={styles.featuresGrid}>
+          <div className="lp-stagger" style={styles.featuresGrid}>
             {INTELLIGENCE_LAYERS.map((l) => {
               const Icon = l.icon;
               return (
@@ -630,7 +632,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={styles.sectionTag}><ClipboardList size={13} color="#4F46E5" /> How it works</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>From onboarding to outcome, in four steps.</h2>
 
-          <div style={styles.stepsRow}>
+          <div className="lp-stagger" style={styles.stepsRow}>
             {HOW_IT_WORKS.map((step, i) => {
               const Icon = step.icon;
               return (
@@ -651,7 +653,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={styles.sectionTag}><Target size={13} color="#4F46E5" /> Solutions</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Built around your organization's specific need.</h2>
 
-          <div style={styles.featuresGrid}>
+          <div className="lp-stagger" style={styles.featuresGrid}>
             {SOLUTIONS.map((s) => {
               const Icon = s.icon;
               return (
@@ -673,14 +675,14 @@ export default function LandingPage({ onNavigate }) {
           <h2 className="lp-section-h2" style={styles.sectionH2}>Not Another LMS. Built to Answer the Questions Yours Can't.</h2>
           <p style={styles.sectionSub}>Train AI is built to answer questions a standard learning platform cannot:</p>
 
-          <div style={styles.questionGrid}>
+          <div className="lp-stagger" style={styles.questionGrid}>
             {WHY_QUESTIONS.map((q) => (
               <div key={q} className="lp-question-pill" style={styles.questionPill}>{q}</div>
             ))}
           </div>
 
           <h3 style={{ ...styles.sectionH2, fontSize: 20, marginTop: 48, marginBottom: 24 }}>The features that answer them</h3>
-          <div style={styles.featuresGrid}>
+          <div className="lp-stagger" style={styles.featuresGrid}>
             {WHY_FEATURES.map((f) => {
               const Icon = f.icon;
               return (
@@ -723,7 +725,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={styles.sectionTag}><Building2 size={13} color="#4F46E5" /> Built for organizations</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Everything Your L&amp;D and HR Team Needs, in One Platform.</h2>
 
-          <div style={styles.featuresGrid}>
+          <div className="lp-stagger" style={styles.featuresGrid}>
             {ORG_FEATURES.map((f) => {
               const Icon = f.icon;
               return (
@@ -756,7 +758,7 @@ export default function LandingPage({ onNavigate }) {
             and a community of peers, all in one place.
           </p>
 
-          <div style={styles.featuresGrid}>
+          <div className="lp-stagger" style={styles.featuresGrid}>
             {INDIVIDUAL_FEATURES.map((f) => {
               const Icon = f.icon;
               return (
@@ -780,7 +782,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={styles.sectionTag}><Lock size={13} color="#4F46E5" /> Enterprise readiness</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Built for Procurement, Not Just for Pilots.</h2>
 
-          <div style={styles.featuresGrid}>
+          <div className="lp-stagger" style={styles.featuresGrid}>
             <div className="lp-card" style={styles.card}>
               <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Lock size={20} color="#4F46E5" /></div>
               <h3 style={styles.cardTitle}>Data ownership</h3>
@@ -806,7 +808,7 @@ export default function LandingPage({ onNavigate }) {
           <h2 className="lp-section-h2" style={styles.sectionH2}>Simple Tiers That Grow With Your Team.</h2>
           <p style={styles.sectionSub}>Pricing is framed around value and scale, not just seats.</p>
 
-          <div style={styles.pricingGrid}>
+          <div className="lp-stagger" style={styles.pricingGrid}>
             {PRICING_TIERS.map((tier) => (
               <div key={tier.name} className="lp-card" style={tier.highlighted ? { ...styles.pricingCard, ...styles.pricingCardHighlighted } : styles.pricingCard}>
                 {tier.highlighted && <div style={styles.pricingBadge}>Most popular</div>}
@@ -854,9 +856,14 @@ export default function LandingPage({ onNavigate }) {
                     aria-expanded={isOpen}
                   >
                     <span>{item.q}</span>
-                    {isOpen ? <ChevronUp size={18} color="#656C86" /> : <ChevronDown size={18} color="#656C86" />}
+                    <ChevronDown
+                      className="lp-faq-chevron"
+                      size={18}
+                      color="#656C86"
+                      style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                    />
                   </button>
-                  {isOpen && <p style={styles.faqAnswer}>{item.a}</p>}
+                  {isOpen && <p className="lp-faq-answer" style={styles.faqAnswer}>{item.a}</p>}
                 </div>
               );
             })}
@@ -878,6 +885,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={styles.contactModeToggle}>
             <button
               type="button"
+              className="lp-contact-toggle-btn"
               style={contactMode === "demo" ? styles.contactModeBtnActive : styles.contactModeBtn}
               onClick={() => setContactMode("demo")}
             >
@@ -885,6 +893,7 @@ export default function LandingPage({ onNavigate }) {
             </button>
             <button
               type="button"
+              className="lp-contact-toggle-btn"
               style={contactMode === "inquiry" ? styles.contactModeBtnActive : styles.contactModeBtn}
               onClick={() => setContactMode("inquiry")}
             >

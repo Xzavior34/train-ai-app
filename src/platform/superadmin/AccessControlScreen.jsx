@@ -56,7 +56,7 @@ function RolesPermissionsMatrix() {
   return (
     <div className="ta-card ta-mt16">
       <div className="ta-title">Roles & Permissions Matrix</div>
-      <div className="ta-body ta-mt6">Backed by role_permissions_matrix. Applies platform-wide, across every organization.</div>
+      <div className="ta-body" style={{ marginTop: 6 }}>Backed by role_permissions_matrix. Applies platform-wide, across every organization.</div>
       <div style={{ overflowX: "auto" }}>
         <table className="ta-table ta-mt12">
           <thead>
@@ -133,7 +133,7 @@ function ImpersonationPanel() {
         <div className="ta-title">Impersonation / View As</div>
         <Tag tone="warning"><Eye size={12} /> Every view is logged</Tag>
       </div>
-      <div className="ta-body ta-mt6">
+      <div className="ta-body" style={{ marginTop: 6 }}>
         Read-only snapshot of a user's profile, enrollments, and AI Coach conversations. For troubleshooting, not for taking action as them. Every call writes an audit log entry first, unconditionally.
       </div>
 
@@ -159,17 +159,17 @@ function ImpersonationPanel() {
       ) : (
         <div className="ta-mt12 ta-fade">
           <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => { setViewing(null); setReason(""); }}>← Back to search</button>
-          <div className="ta-card ta-mt10">
+          <div className="ta-card" style={{ marginTop: 10 }}>
             <div style={{ fontWeight: 700 }}>{viewing.profile?.display_name}</div>
             <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>{viewing.profile?.role} · last active {viewing.profile?.last_active_at ? new Date(viewing.profile.last_active_at).toLocaleDateString() : "N/A"}</div>
           </div>
-          <div className="ta-card ta-mt10">
+          <div className="ta-card" style={{ marginTop: 10 }}>
             <div style={{ fontWeight: 700, fontSize: 13 }}>Enrollments ({(viewing.enrollments || []).length})</div>
             {(viewing.enrollments || []).map((e, i) => (
               <div key={i} style={{ fontSize: 12, marginTop: 6 }}>{e.course_id}: {e.progress_percentage ?? 0}%</div>
             ))}
           </div>
-          <div className="ta-card ta-mt10">
+          <div className="ta-card" style={{ marginTop: 10 }}>
             <div style={{ fontWeight: 700, fontSize: 13 }}>AI Coach conversations ({(viewing.ai_conversations || []).length})</div>
             {(viewing.ai_conversations || []).map((c) => (
               <div key={c.conversation_id} className="ta-col ta-mt8" style={{ gap: 4, borderTop: "1px solid var(--border)", paddingTop: 8 }}>

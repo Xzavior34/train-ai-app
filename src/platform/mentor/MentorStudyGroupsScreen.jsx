@@ -33,7 +33,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
         <div className="ta-row ta-gap16" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
           <div className="ta-card" style={{ flex: 1, minWidth: 300 }}>
             <div className="ta-title">Your groups ({groups.length})</div>
-            <div className="ta-col ta-gap8 ta-mt12">
+            <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
               {groupsQuery.loading && <div className="ta-empty">Loading your study groups...</div>}
               {!groupsQuery.loading && groups.length === 0 && (
                 <div className="ta-empty">You're not in any study group yet - create one below.</div>
@@ -41,8 +41,9 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
               {groups.map((g) => (
                 <div
                   key={g.id}
+                  className="ta-card-hover"
                   onClick={() => { setSelectedGroupId(g.id); setDescription(g.description || ""); }}
-                  style={{ cursor: "pointer", padding: "10px 12px", borderRadius: 8, background: selectedGroupId === g.id ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)" }}
+                  style={{ cursor: "pointer", padding: "10px 12px", borderRadius: 8, background: selectedGroupId === g.id ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)", transition: "all .2s ease" }}
                 >
                   <div className="ta-row ta-gap8"><Users size={14} color="var(--primary)" /><span style={{ fontWeight: 600, fontSize: 13.5 }}>{g.name}</span></div>
                   {g.courses?.title && <div className="ta-row ta-gap6" style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 2 }}><BookOpen size={11} /><span>{g.courses.title}</span></div>}
@@ -79,7 +80,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
 
               <div className="ta-label ta-mt12">Description</div>
               <textarea
-                className="ta-input ta-mt6" rows={3} value={description} onChange={(e) => setDescription(e.target.value)}
+                className="ta-input ta-mt6" style={{ width: "100%", resize: "vertical" }} rows={3} value={description} onChange={(e) => setDescription(e.target.value)}
                 onBlur={async () => {
                   const result = await updateStudyGroupDetails(selectedGroup.id, { description });
                   if (!result.success) showToast(result.error);
@@ -89,7 +90,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
               <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>Saves automatically when you click away.</div>
 
               <div className="ta-row ta-gap8" style={{ marginTop: 16 }}><StickyNote size={14} color="var(--primary)" /><div style={{ fontWeight: 700, fontSize: 13.5 }}>Members ({members.length})</div></div>
-              <div className="ta-col ta-gap8 ta-mt10">
+              <div className="ta-col ta-gap8 ta-mt10 anim-stagger">
                 {membersQuery.loading && <div className="ta-empty">Loading members...</div>}
                 {!membersQuery.loading && members.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No members yet.</div>}
                 {members.map((m) => (

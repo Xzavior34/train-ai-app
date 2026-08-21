@@ -295,7 +295,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
         {/* ADMIN WORKSPACE: DETAILED COURSE MANAGEMENT VIEW                   */}
         {/* ================================================================= */}
         {activeCourse ? (
-          <div className="ta-col ta-gap24">
+          <div className="ta-col" style={{ gap: 24 }}>
             {/* Header banner card */}
             <div className="ta-card" style={{ background: "var(--surface)", position: "relative" }}>
               <div className="ta-row ta-between ta-gap16" style={{ flexWrap: "wrap" }}>
@@ -397,11 +397,11 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
 
             {/* TAB 1: OVERVIEW & SETTINGS */}
             {activeTab === "overview" && (
-              <div className="ta-grid ta-grid-2 ta-gap24">
+              <div className="ta-grid ta-grid-2" style={{ gap: 24 }}>
                 <div className="ta-card ta-col ta-gap16">
                   <div style={{ fontWeight: 700, fontSize: 16 }}>Basic Information</div>
 
-                  <div className="ta-col ta-gap4">
+                  <div className="ta-col" style={{ gap: 4 }}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Course Title</label>
                     <input
                       className="ta-input"
@@ -413,7 +413,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
 
                   <div className="ta-grid ta-grid-2 ta-gap12">
-                    <div className="ta-col ta-gap4">
+                    <div className="ta-col" style={{ gap: 4 }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Category</label>
                       <input
                         className="ta-input"
@@ -423,7 +423,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%" }}
                       />
                     </div>
-                    <div className="ta-col ta-gap4">
+                    <div className="ta-col" style={{ gap: 4 }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Difficulty Level</label>
                       <select
                         className="ta-input"
@@ -439,7 +439,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
 
                   <div className="ta-grid ta-grid-2 ta-gap12">
-                    <div className="ta-col ta-gap4">
+                    <div className="ta-col" style={{ gap: 4 }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Duration (Hours)</label>
                       <input
                         type="number"
@@ -449,7 +449,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%" }}
                       />
                     </div>
-                    <div className="ta-col ta-gap4">
+                    <div className="ta-col" style={{ gap: 4 }}>
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Price ($)</label>
                       <input
                         type="number"
@@ -461,7 +461,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     </div>
                   </div>
 
-                  <div className="ta-col ta-gap4">
+                  <div className="ta-col" style={{ gap: 4 }}>
                     <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Course Description</label>
                     <textarea
                       rows={5}
@@ -619,7 +619,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         </div>
 
                         <div className="ta-grid ta-grid-3 ta-gap12" style={{ flex: 1, minWidth: 0 }}>
-                          <div className="ta-col ta-gap4">
+                          <div className="ta-col" style={{ gap: 4 }}>
                             <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Lesson Title</label>
                             <input
                               className="ta-input"
@@ -630,7 +630,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                             />
                           </div>
 
-                          <div className="ta-col ta-gap4">
+                          <div className="ta-col" style={{ gap: 4 }}>
                             <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Duration (Mins)</label>
                             <input
                               type="number"
@@ -641,7 +641,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                             />
                           </div>
 
-                          <div className="ta-col ta-gap4">
+                          <div className="ta-col" style={{ gap: 4 }}>
                             <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Video / Resource URL</label>
                             <input
                               className="ta-input"
@@ -653,7 +653,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                           </div>
                         </div>
 
-                        <div className="ta-col ta-gap4">
+                        <div className="ta-col" style={{ gap: 4 }}>
                           <button className="ta-btn ta-btn-ghost ta-btn-sm" disabled={idx === 0} onClick={() => handleMoveLesson(idx, -1)} title="Move up">
                             <ChevronUp size={15} />
                           </button>
@@ -954,15 +954,15 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   <div className="ta-row ta-gap12 ta-mt12" style={{ flexWrap: "wrap" }}>
                     <div>
                       <div className="ta-label">Title</div>
-                      <input className="ta-input ta-mt6" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} placeholder="Certificate of Completion" />
+                      <input className="ta-input ta-mt8" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} placeholder="Certificate of Completion" />
                     </div>
                     <div>
                       <div className="ta-label">Passing score (%)</div>
-                      <input className="ta-input ta-mt6" style={{ width: 90 }} type="number" min={0} max={100} value={certPassingScore} onChange={(e) => setCertPassingScore(e.target.value)} />
+                      <input className="ta-input ta-mt8" style={{ width: 90 }} type="number" min={0} max={100} value={certPassingScore} onChange={(e) => setCertPassingScore(e.target.value)} />
                     </div>
                     <div>
                       <div className="ta-label">Approval</div>
-                      <div className="ta-row ta-gap8 ta-mt6">
+                      <div className="ta-row ta-gap8 ta-mt8">
                         <Switch on={certRequiresApproval} onChange={() => setCertRequiresApproval((v) => !v)} />
                         <span style={{ fontSize: 12 }}>{certRequiresApproval ? "Requires admin approval" : "Issued instantly on passing"}</span>
                       </div>
@@ -989,14 +989,14 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     Upload and assign a certificate to a specific learner enrolled in this course - independent of the request/approve flow above.
                   </div>
                   <div className="ta-label ta-mt12">Learner</div>
-                  <select className="ta-input ta-mt6" value={assignLearnerId} onChange={(e) => setAssignLearnerId(e.target.value)}>
+                  <select className="ta-input ta-mt8" value={assignLearnerId} onChange={(e) => setAssignLearnerId(e.target.value)}>
                     <option value="">Select an enrolled learner...</option>
                     {(enrolledLearnersQuery.data || []).map((l) => (
                       <option key={l.userId} value={l.userId}>{l.name} - {l.progress}% complete</option>
                     ))}
                   </select>
                   <div className="ta-label ta-mt12">Certificate title</div>
-                  <input className="ta-input ta-mt6" placeholder={`Certificate of ${activeCourse.title} Completion`} value={assignCertTitle} onChange={(e) => setAssignCertTitle(e.target.value)} />
+                  <input className="ta-input ta-mt8" placeholder={`Certificate of ${activeCourse.title} Completion`} value={assignCertTitle} onChange={(e) => setAssignCertTitle(e.target.value)} />
                   <div className="ta-label ta-mt12">Upload certificate file (optional)</div>
                   <FileUploadZone
                     bucket="uploads"

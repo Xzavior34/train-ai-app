@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { SUPABASE_PROJECTS, activeProject, getSupabaseClientForProject, setActiveSupabaseProject } from "../services/supabaseClient.js";
@@ -171,7 +172,11 @@ export default function PlatformOwnerApp({ onSwitchDashboard, userRoles: userRol
               </div>
             </div>
 
-            {toast && <div className="ta-toast">{toast}</div>}
+            {toast && (
+              <div className="anim-pop" style={{ position: "fixed", bottom: 24, right: 24, zIndex: 999, background: "var(--text)", color: "#fff", padding: "10px 16px", borderRadius: 12, display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600 }}>
+                <CheckCircle2 size={16} /> {toast}
+              </div>
+            )}
 
             {switcherOpen && (
               <DashboardSwitcher

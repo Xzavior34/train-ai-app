@@ -112,8 +112,11 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
         .auth-input:focus { outline: none; border-color: #818CF8 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
         .auth-submit:hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
         .auth-switch:hover { text-decoration: underline; }
-        .role-picker-card { transition: border-color .15s ease, background-color .15s ease; }
+        .role-picker-card { transition: border-color .15s ease, background-color .15s ease, transform .15s ease; }
+        .role-picker-card:hover { border-color: #C7D2FE; }
+        .role-picker-card:active { transform: scale(.98); }
         .role-picker-card.active { border-color: #4F46E5 !important; background: #EEF2FF !important; }
+        .auth-submit:active { transform: scale(.98); }
       `}</style>
 
       <div style={styles.glowTop} />
@@ -162,7 +165,7 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
               className={`role-picker-card ${accountType === "learner" ? "active" : ""}`}
               onClick={() => setAccountType("learner")}
               style={{
-                marginTop: 8, padding: "12px 10px", borderRadius: 13, border: "1.5px solid #E6E9F5", background: "#fff",
+                marginTop: 8, padding: "14px 12px", borderRadius: 13, border: "1.5px solid #E6E9F5", background: "#fff",
                 cursor: "pointer", display: "flex", flexDirection: "column", gap: 6
               }}
             >

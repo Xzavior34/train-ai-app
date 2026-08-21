@@ -211,8 +211,8 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
         </div>
 
         {/* Top 4 KPI Metric Cards */}
-        <div className="ta-grid ta-grid-4">
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="ta-grid ta-grid-4 anim-stagger">
+          <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Enrolled Learners</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
               {learnerProgress.length || 68}
@@ -220,7 +220,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4, fontWeight: 600 }}>Active across tracks</div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Cohort Avg Progress</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
               {learnerProgress.length ? Math.round(learnerProgress.reduce((sum, r) => sum + (r.avgProgress || 0), 0) / learnerProgress.length) : 74}%
@@ -228,7 +228,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4, fontWeight: 600 }}>On track pace</div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Overdue Compliance</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: totalOverdue > 0 ? "var(--danger)" : "var(--text)", marginTop: 4 }}>
               {totalOverdue}
@@ -238,7 +238,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>At-Risk Learners</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: behindLearners.length > 0 ? "#F59E0B" : "var(--text)", marginTop: 4 }}>
               {behindLearners.length}
@@ -249,7 +249,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           </div>
         </div>
 
-        <div className="ta-row ta-gap8 ta-mt4" style={{ marginBottom: 8 }}>
+        <div className="ta-row ta-gap8" style={{ marginBottom: 8 }}>
           {[{ k: "progress", label: "Progress Overview" }, { k: "skillgaps", label: "Skill Gaps" }, { k: "compliance", label: "Compliance" }].map((t) => (
             <div key={t.k} className={`ta-pill ${mainTab === t.k ? "ta-pill-active" : "ta-pill-inactive"}`} style={{ cursor: "pointer" }} onClick={() => setMainTab(t.k)}>{t.label}</div>
           ))}
@@ -257,7 +257,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
 
         {mainTab === "progress" && (
           <div className="ta-col ta-gap16">
-            <div className="ta-grid ta-grid-2" style={{ gap: 20 }}>
+            <div className="ta-grid ta-grid-2">
               <div className="ta-card">
                 <div className="ta-label">Leaderboard • Top Performers</div>
                 <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Ranked by average course progress</div>
@@ -341,7 +341,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
 
         {mainTab === "compliance" && (
           <>
-        <div className="ta-grid ta-grid-4">
+        <div className="ta-grid ta-grid-4 anim-stagger">
           <StatCard stat={{ label: "Overall Compliance", value: `${overallRate}%`, icon: ShieldCheck, delta: "Target 95%", up: overallRate >= 90 }} />
           <StatCard stat={{ label: "Total Assigned Learners", value: totalAssigned, icon: Clock }} />
           <StatCard stat={{ label: "Compliant Learners", value: totalCompleted, icon: CheckCircle2, delta: `${totalCompleted} verified`, up: true }} />
@@ -399,7 +399,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
                       <td><span style={{ fontWeight: 600 }}>{a.title}</span></td>
                       <td style={{ fontSize: 12.5, color: "var(--text-2)" }}>{a.department}</td>
                       <td>
-                        <div className="ta-col ta-gap4" style={{ width: 140 }}>
+                        <div className="ta-col" style={{ width: 140, gap: 4 }}>
                           <div className="ta-row ta-between" style={{ fontSize: 11 }}>
                             <span>{a.completedCount} of {a.assignedCount}</span>
                             <span style={{ fontWeight: 700 }}>{pct}%</span>

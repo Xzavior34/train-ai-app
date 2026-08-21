@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { TopBar, ToastContext, Tag } from "../components/PlatformUI.jsx";
+import { TopBar, ToastContext, Tag, Switch } from "../components/PlatformUI.jsx";
 import { Plus, Trash2, BadgeCheck, Link as LinkIcon, Bell, Calendar, FolderOpen, User } from "lucide-react";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { updateUserAvatar, updateUserDisplayName } from "../../lib/api/platform.js";
@@ -398,16 +398,16 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             </button>
           </div>
           <div className="ta-label ta-mt16">Specialization / Teaching Areas</div>
-          <input className="ta-input ta-mt6" placeholder="e.g. AI Fundamentals, Data Science" value={specialization} onChange={e => setSpecialization(e.target.value)} />
+          <input className="ta-input ta-mt6" style={{ width: "100%" }} placeholder="e.g. AI Fundamentals, Data Science" value={specialization} onChange={e => setSpecialization(e.target.value)} />
           <div className="ta-label ta-mt16">Bio</div>
-          <textarea className="ta-input ta-mt6" rows={4} placeholder="Tell learners about yourself..." value={bio} onChange={e => setBio(e.target.value)} />
+          <textarea className="ta-input ta-mt6" style={{ width: "100%", resize: "vertical" }} rows={4} placeholder="Tell learners about yourself..." value={bio} onChange={e => setBio(e.target.value)} />
           <button className="ta-btn ta-btn-primary ta-mt16" disabled={savingProfile} onClick={handleSaveProfile}>Save profile</button>
         </div>
 
         <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
           <div className="ta-title">Credentials & Certifications</div>
           <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Optional - helps learners know your background, not required to teach.</div>
-          <div className="ta-col ta-gap8 ta-mt12">
+          <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
             {credentialsQuery.loading && <div className="ta-empty">Loading credentials...</div>}
             {!credentialsQuery.loading && (credentialsQuery.data || []).length === 0 && <div className="ta-empty">No credentials added yet.</div>}
             {(credentialsQuery.data || []).map(c => (
@@ -428,7 +428,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
           </div>
           <div className="ta-row ta-gap8 ta-mt16" style={{ flexWrap: "wrap" }}>
             <input className="ta-input" style={{ flex: "1 1 160px" }} placeholder="Title (e.g. AWS ML Specialty)" value={credTitle} onChange={e => setCredTitle(e.target.value)} />
-            <select className="ta-input" value={credType} onChange={e => setCredType(e.target.value)}>
+            <select className="ta-input" style={{ flex: "1 1 160px" }} value={credType} onChange={e => setCredType(e.target.value)}>
               {CREDENTIAL_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
             </select>
             <input className="ta-input" style={{ flex: "1 1 160px" }} placeholder="Issuing organization" value={credOrg} onChange={e => setCredOrg(e.target.value)} />
@@ -439,7 +439,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
 
         <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
           <div className="ta-title">Portfolio</div>
-          <div className="ta-col ta-gap8 ta-mt12">
+          <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
             {portfolioQuery.loading && <div className="ta-empty">Loading portfolio...</div>}
             {!portfolioQuery.loading && (portfolioQuery.data || []).length === 0 && <div className="ta-empty">No portfolio items added yet.</div>}
             {(portfolioQuery.data || []).map(p => (
@@ -462,7 +462,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
           </div>
           <div className="ta-row ta-gap8 ta-mt16" style={{ flexWrap: "wrap" }}>
             <input className="ta-input" style={{ flex: "1 1 160px" }} placeholder="Title" value={pfTitle} onChange={e => setPfTitle(e.target.value)} />
-            <select className="ta-input" value={pfType} onChange={e => setPfType(e.target.value)}>
+            <select className="ta-input" style={{ flex: "1 1 160px" }} value={pfType} onChange={e => setPfType(e.target.value)}>
               {PORTFOLIO_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
             </select>
             <input className="ta-input" style={{ flex: "1 1 160px" }} placeholder="Description (optional)" value={pfDescription} onChange={e => setPfDescription(e.target.value)} />
@@ -484,7 +484,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               ].map(({ key, label }) => (
                 <div key={key} className="ta-row ta-between ta-mt12">
                   <div style={{ fontSize: 13.5, fontWeight: 600 }}>{label}</div>
-                  <input type="checkbox" checked={notifPrefs[key] !== false} onChange={() => handleToggleNotifPref(key, notifPrefs[key] !== false)} />
+                  <Switch on={notifPrefs[key] !== false} onChange={() => handleToggleNotifPref(key, notifPrefs[key] !== false)} />
                 </div>
               ))}
             </div>
@@ -492,7 +492,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             <div className="ta-card ta-mt20">
               <div className="ta-title">Automated Reminders</div>
               <div style={{ fontSize: 12, color: "var(--text-2)" }}>Configure automated session reminders for your learners.</div>
-              <div className="ta-col ta-gap8 ta-mt12">
+              <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {remindersQuery.loading && <div className="ta-empty">Loading reminders...</div>}
                 {!remindersQuery.loading && (remindersQuery.data || []).length === 0 && <div className="ta-empty">No reminders configured.</div>}
                 {(remindersQuery.data || []).map((r) => (
@@ -503,7 +503,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
                 ))}
               </div>
               <div className="ta-row ta-gap8 ta-mt16" style={{ flexWrap: "wrap" }}>
-                <select className="ta-input" value={reminderType} onChange={(e) => setReminderType(e.target.value)}>
+                <select className="ta-input" style={{ flex: "0 1 140px" }} value={reminderType} onChange={(e) => setReminderType(e.target.value)}>
                   <option value="email">Email</option>
                   <option value="in_app">In-App</option>
                   <option value="sms">SMS</option>
@@ -530,14 +530,14 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
                     <div style={{ fontSize: 13.5, fontWeight: 600 }}>{label}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>{sub}</div>
                   </div>
-                  <input type="checkbox" checked={state} onChange={() => { const next = !state; setState(next); handleToggleSessionPref(key, next); }} />
+                  <Switch on={state} onChange={() => { const next = !state; setState(next); handleToggleSessionPref(key, next); }} />
                 </div>
               ))}
             </div>
 
             <div className="ta-card ta-mt20">
               <div className="ta-title">Session Templates</div>
-              <div className="ta-col ta-gap8 ta-mt12">
+              <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!templatesQuery.loading && (templatesQuery.data || []).length === 0 && <div className="ta-empty">No templates yet.</div>}
                 {(templatesQuery.data || []).map((t) => (
                   <div key={t.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
@@ -554,7 +554,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
 
             <div className="ta-card ta-mt20">
               <div className="ta-title">Cancellation Policies</div>
-              <div className="ta-col ta-gap8 ta-mt12">
+              <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!policiesQuery.loading && (policiesQuery.data || []).length === 0 && <div className="ta-empty">No cancellation policies set.</div>}
                 {(policiesQuery.data || []).map((p) => (
                   <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
@@ -573,11 +573,11 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             <div className="ta-card ta-mt20">
               <div className="ta-title">Video Platform Settings</div>
               <div className="ta-label ta-mt12">Preferred Platform</div>
-              <select className="ta-input ta-mt6" value={videoPlatform} onChange={(e) => setVideoPlatform(e.target.value)}>
+              <select className="ta-input ta-mt6" style={{ width: "100%" }} value={videoPlatform} onChange={(e) => setVideoPlatform(e.target.value)}>
                 {VIDEO_PLATFORMS.map((p) => <option key={p.key} value={p.key}>{p.label}</option>)}
               </select>
               <div className="ta-label ta-mt16">Personal Meeting Room URL (Optional)</div>
-              <input className="ta-input ta-mt6" placeholder="Leave empty to auto-generate" value={meetingUrl} onChange={(e) => setMeetingUrl(e.target.value)} />
+              <input className="ta-input ta-mt6" style={{ width: "100%" }} placeholder="Leave empty to auto-generate" value={meetingUrl} onChange={(e) => setMeetingUrl(e.target.value)} />
               <button className="ta-btn ta-btn-primary ta-mt16" onClick={handleSaveVideoSettings}>Save Video Settings</button>
             </div>
           </>
@@ -588,7 +588,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             <div className="ta-card ta-mt20">
               <div className="ta-title">Resource Library</div>
               <div style={{ fontSize: 12, color: "var(--text-2)" }}>Share learning materials and resources with your learners.</div>
-              <div className="ta-col ta-gap8 ta-mt12">
+              <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!resourcesQuery.loading && (resourcesQuery.data || []).length === 0 && <div className="ta-empty">No resources yet.</div>}
                 {(resourcesQuery.data || []).map((r) => (
                   <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>

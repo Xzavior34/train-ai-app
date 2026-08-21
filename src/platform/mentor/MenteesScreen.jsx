@@ -361,7 +361,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
               Issues a certificate directly - independent of the request/approve flow, doesn't require an existing course.
             </div>
             <div className="ta-label ta-mt16">Certificate title</div>
-            <input className="ta-input ta-mt6" placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} />
+            <input className="ta-input ta-mt6" style={{ width: "100%" }} placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} />
             <div className="ta-label ta-mt16">Upload certificate file (optional)</div>
             <FileUploadZone
               bucket="uploads"

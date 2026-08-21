@@ -132,13 +132,13 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
             <div className="ta-card ta-mt16" style={{ maxWidth: 560, opacity: payoutsEnabled ? 1 : 0.6 }}>
               <div className="ta-title">Request a withdrawal</div>
               <div className="ta-label ta-mt12">Amount ($)</div>
-              <input className="ta-input ta-mt6" type="number" min="0" step="0.01" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} placeholder={`Up to $${availableBalance.toFixed(2)}`} disabled={!payoutsEnabled} />
+              <input className="ta-input ta-mt6" style={{ width: "100%" }} type="number" min="0" step="0.01" value={payoutAmount} onChange={e => setPayoutAmount(e.target.value)} placeholder={`Up to $${availableBalance.toFixed(2)}`} disabled={!payoutsEnabled} />
               <div className="ta-label ta-mt12">Payout method</div>
-              <select className="ta-input ta-mt6" value={payoutMethod} onChange={e => setPayoutMethod(e.target.value)} disabled={!payoutsEnabled}>
+              <select className="ta-input ta-mt6" style={{ width: "100%" }} value={payoutMethod} onChange={e => setPayoutMethod(e.target.value)} disabled={!payoutsEnabled}>
                 {PAYOUT_METHODS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
               </select>
               <div className="ta-label ta-mt12">Account details</div>
-              <input className="ta-input ta-mt6" value={payoutDetails} onChange={e => setPayoutDetails(e.target.value)} placeholder="Account number / email / phone" disabled={!payoutsEnabled} />
+              <input className="ta-input ta-mt6" style={{ width: "100%" }} value={payoutDetails} onChange={e => setPayoutDetails(e.target.value)} placeholder="Account number / email / phone" disabled={!payoutsEnabled} />
               <button className="ta-btn ta-btn-primary ta-mt16" disabled={!payoutsEnabled || !mentorId || submitting || availableBalance <= 0} onClick={handleRequestPayout}>
                 <Send size={15} /> Request Payout
               </button>
