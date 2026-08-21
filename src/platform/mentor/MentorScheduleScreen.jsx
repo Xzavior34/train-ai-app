@@ -110,7 +110,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
 
   return (
     <div className="ta-fade">
-      <TopBar title="Instructor Schedule & Sessions" sub="Manage 1:1 sessions, student requests & recurring availability" orgSelector={orgSelector} />
+      <TopBar title="Schedule &amp; Sessions" sub="Manage 1:1 sessions, student requests &amp; recurring availability" orgSelector={orgSelector} />
       <div className="ta-content">
         <div className="ta-tabs">
           {[{ k: "sessions", label: "Sessions & Bookings" }, { k: "availability", label: "Weekly Availability" }].map(t => (
@@ -120,21 +120,34 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
 
         {tab === "sessions" && (
           <>
-            <div className="ta-card ta-mt16">
-              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
-                <div className="ta-row ta-gap8">
+            <div className="ta-card ta-mt16" style={{ padding: "12px 14px" }}>
+              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+                <div style={{
+                  display: "flex",
+                  gap: 6,
+                  overflowX: "auto",
+                  WebkitOverflowScrolling: "touch",
+                  maxWidth: "100%",
+                  paddingBottom: 2
+                }}>
                   {["all", "upcoming", "completed", "cancelled"].map(f => (
                     <div
                       key={f}
                       className={`ta-pill ${sessionFilter === f ? "active" : ""}`}
                       onClick={() => setSessionFilter(f)}
+                      style={{
+                        flexShrink: 0,
+                        padding: "5px 10px",
+                        fontSize: 11,
+                        cursor: "pointer"
+                      }}
                     >
                       {f.toUpperCase()}
                     </div>
                   ))}
                 </div>
-                <div style={{ fontSize: 12.5, color: "var(--text-2)", fontWeight: 600 }}>
-                  {filteredSessions.length} sessions listed
+                <div style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600, flexShrink: 0 }}>
+                  {filteredSessions.length} session{filteredSessions.length === 1 ? "" : "s"} listed
                 </div>
               </div>
             </div>

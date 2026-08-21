@@ -103,7 +103,7 @@ export function HomeScreen({
         }} />
 
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 }}>
+          <div className="tai-hero-row">
             <div style={{ minWidth: 0, flex: 1 }}>
               <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
                 Welcome back, {userFirstName || "Learner"}
@@ -115,13 +115,13 @@ export function HomeScreen({
 
             {continueCourse && (
               <button
-                className="tai-btn"
+                className="tai-btn tai-hero-btn"
                 style={{
                   background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
                   padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", fontSize: 13,
                   boxShadow: "0 4px 14px rgba(79, 70, 229, 0.4)",
                   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  cursor: "pointer", flexShrink: 0
+                  cursor: "pointer"
                 }}
                 onClick={() => push("courseDetail", { id: continueCourse.id })}
               >
@@ -289,7 +289,7 @@ export function HomeScreen({
               <Tag tone="primary">Level 2 of 4</Tag>
             </div>
 
-            <div className="tai-row tai-between tai-mt14" style={{ gap: 8, overflowX: "auto" }}>
+            <div className="tai-roadmap-grid tai-mt14">
               {[
                 { title: "Junior UI", status: "Completed", icon: CheckCircle2, active: true, tone: "var(--success)" },
                 { title: "Design Tokens", status: "In Progress", icon: Zap, active: true, tone: "var(--primary)" },
@@ -298,12 +298,12 @@ export function HomeScreen({
               ].map((step, idx) => {
                 const StepIcon = step.icon;
                 return (
-                  <div key={idx} style={{ flex: 1, minWidth: 80, padding: "8px 10px", background: step.active ? "var(--surface)" : "var(--surface-3)", borderRadius: 10, border: "1px solid var(--border)", textAlign: "center" }}>
+                  <div key={idx} className="tai-roadmap-item" style={{ background: step.active ? "var(--surface)" : "var(--surface-3)" }}>
                     <div style={{ display: "flex", justifyContent: "center", marginBottom: 2 }}>
-                      <StepIcon size={16} color={step.tone} />
+                      <StepIcon size={14} color={step.tone} />
                     </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{step.title}</div>
-                    <div style={{ fontSize: 9.5, color: "var(--text-3)", marginTop: 2 }}>{step.status}</div>
+                    <div className="tai-roadmap-item-title">{step.title}</div>
+                    <div className="tai-roadmap-item-status">{step.status}</div>
                   </div>
                 );
               })}

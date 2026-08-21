@@ -336,6 +336,18 @@ export const TOKENS = `
   .tai-link:hover { transform: translateX(2px); }
   .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 20px; align-items: start; width: 100%; max-width: 100%; box-sizing: border-box; }
 
+  /* Learner Hero & Career Roadmap responsive classes */
+  .tai-hero-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+  .tai-hero-btn { flex-shrink: 0; }
+  .tai-roadmap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; box-sizing: border-box; }
+  .tai-roadmap-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 6px; border-radius: 10px; border: 1px solid var(--border);
+    text-align: center; box-sizing: border-box; min-width: 0;
+  }
+  .tai-roadmap-item-title { font-size: 11px; font-weight: 700; margin-top: 4px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+  .tai-roadmap-item-status { font-size: 9.5px; color: var(--text-3); margin-top: 2px; white-space: nowrap; }
+
   /* =========================================================================
      RESPONSIVE MEDIA QUERIES (AT END OF STYLESHEET TO GUARANTEE CASCADE)
      ========================================================================= */
@@ -355,6 +367,12 @@ export const TOKENS = `
     .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .tai-card { padding: 16px 14px !important; border-radius: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-hero-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+    .tai-hero-btn { width: 100% !important; justify-content: center !important; padding: 10px 16px !important; font-size: 13px !important; }
+    .tai-roadmap-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
+    .tai-roadmap-item { padding: 7px 4px !important; }
+    .tai-roadmap-item-title { font-size: 10px !important; }
+    .tai-roadmap-item-status { font-size: 8.5px !important; }
   }
   @media (max-width: 480px) {
     .tai-global-header { padding: 0 14px; height: 54px; width: 100%; max-width: 100%; box-sizing: border-box; }
@@ -365,6 +383,10 @@ export const TOKENS = `
     .tai-topbar { padding: 4px 0 12px; }
     .tai-h1 { font-size: 19px; }
     .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-roadmap-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 4px !important; }
+    .tai-roadmap-item { padding: 6px 2px !important; border-radius: 8px !important; }
+    .tai-roadmap-item-title { font-size: 9.5px !important; }
+    .tai-roadmap-item-status { font-size: 8px !important; }
   }
 `;
 
