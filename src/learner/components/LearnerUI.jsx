@@ -804,6 +804,14 @@ export function DesktopSidebar({
           {(!isMinimized ? accountOpen : false) && (
             <div className="tai-sub-items">
               <div
+                className={`tai-sub-item ${activeScreen === "achievements" ? "active" : ""}`}
+                onClick={() => go("achievements")}
+                title="Achievements & Badges"
+              >
+                <Award size={15} />
+                <span>Achievements</span>
+              </div>
+              <div
                 className={`tai-sub-item ${activeScreen === "settings" ? "active" : ""}`}
                 onClick={() => onProfile ? onProfile() : go("settings")}
                 title="Settings"
