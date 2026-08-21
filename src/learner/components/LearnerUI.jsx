@@ -293,51 +293,59 @@ export const TOKENS = `
   .tai-avatar { border-radius:50%; background: var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; box-shadow: 0 2px 8px rgba(79,70,229,0.25); }
   .tai-divider { height:1px; background: var(--border); border:none; margin: 14px 0; }
   
-  /* Full-width attached bottom navigation on mobile */
+  /* Full-width attached bottom navigation on mobile with dynamic glowing pill motion */
   .tai-navbar {
-    position: fixed; left: 0; right: 0; bottom: 0; width: 100%; max-width: 100%;
-    background: rgba(255, 255, 255, 0.95);
+    position: fixed; left: 0; right: 0; bottom: 0; width: 100vw; max-width: 100%;
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(226, 232, 240, 0.9);
-    display: grid; grid-template-columns: repeat(4, 1fr); align-items: center;
-    padding: 6px 8px max(8px, env(safe-area-inset-bottom)); z-index: 100;
-    box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.05);
+    border-top: 1px solid rgba(226, 232, 240, 0.85);
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 8px 14px max(12px, env(safe-area-inset-bottom)); z-index: 100;
+    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
   .tai.dark .tai-navbar {
-    background: rgba(13, 18, 34, 0.96);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.5);
+    background: rgba(13, 18, 34, 0.94);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   }
   .tai-navitem {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer; color: #64748B; padding: 4px 6px; border-radius: 12px;
-    background: transparent; border: none; outline: none; gap: 3px;
-    transition: all 0.18s ease;
-    user-select: none;
-    -webkit-user-select: none;
+    display: flex; flex-direction: row; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-3); padding: 8px 14px; border-radius: 999px;
+    background: transparent; border: none; outline: none;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .tai-navitem:active {
-    transform: scale(0.92);
+  .tai-navitem:hover {
+    color: var(--text);
   }
   .tai-navitem-icon-wrap {
     display: flex; align-items: center; justify-content: center;
-    width: 32px; height: 26px; border-radius: 999px;
-    transition: all 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
   }
   .tai-navitem-label {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
-    color: #64748B; transition: color 0.18s ease;
+    max-width: 0; opacity: 0; transform: scale(0.7);
+    overflow: hidden; white-space: nowrap; margin-left: 0;
+    font-size: 12.5px; font-weight: 800; letter-spacing: 0.02em;
+    transition: max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   }
+  /* Active dynamic glowing pill state */
   .tai-navitem.active {
-    color: var(--primary);
+    background: var(--grad); color: #FFFFFF;
+    padding: 8px 18px;
+    box-shadow: 0 4px 18px rgba(79, 70, 229, 0.45);
+    transform: translateY(-2px);
   }
   .tai-navitem.active .tai-navitem-icon-wrap {
-    background: var(--primary-tint);
-    color: var(--primary);
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
   }
   .tai-navitem.active .tai-navitem-label {
-    color: var(--primary);
-    font-weight: 800;
+    max-width: 90px; opacity: 1; transform: scale(1);
+    margin-left: 7px; color: #FFFFFF;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
   .tai-input { width:100%; border-radius:12px; border:1px solid var(--border); background: var(--surface); padding: 12px 16px;
     font-size:13.5px; color: var(--text); font-family: var(--font); transition: all .18s ease; }
