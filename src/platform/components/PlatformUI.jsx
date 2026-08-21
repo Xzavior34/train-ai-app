@@ -195,6 +195,7 @@ export const TOKENS = `
     .ta-org-selector select { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-h1 { font-size: 19px; }
     .ta-table-wrap .ta-table { min-width: 460px; }
+  }
   .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
   .ta-btn:active { transform: scale(.96); }
   .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32); }
