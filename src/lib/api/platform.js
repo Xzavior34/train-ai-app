@@ -77,8 +77,20 @@ export async function updateWeeklyGoal(userId, goal) {
     if (error) throw error;
     return { success: true };
   } catch (e) {
-    return { success: false, error: e?.message || "Could not update your weekly goal." };
+// Chunking helper to prevent HTTP query string length limits when querying large org user ID arrays
+export async function safeInQuery(tableName, selectFields, idColumn, ids) {
+  if (!supabase || !ids || !ids.length) return [];
+  if (ids.length <= 100) {
+    const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, ids);
+    return data || [];
   }
+  const results = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    const chunk = ids.slice(i, i + 100);
+    const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, chunk);
+    if (data) results.push(...data);
+  }
+  return results;
 }
 
 export async function fetchOrgMembers(organizationId) {
@@ -607,23 +619,16 @@ export async function fetchOrgDashboardStats(organizationId) {
   // auth uid), not the separate internal id PK.
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
-  const [{ count: activeStudents }, { count: cohortCount }, { count: courseCount }, { count: mentorCount }, { count: otherUserCount }, enrollmentAgg] = await Promise.all([
+  const [{ count: activeStudents }, { count: cohortCount }, { count: courseCount }, { count: mentorCount }, { count: otherUserCount }, enrollments] = await Promise.all([
     supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("role", "learner"),
     supabase.from("cohorts").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
     supabase.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true),
-    // No `is_approved` column on mentors in the shared schema - is_active is
-    // the closest available proxy.
     supabase.from("mentors").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("is_active", true),
-    // "Other users" for the Total Users block - managers and other admins,
-    // i.e. everyone in this org who is neither a learner nor a mentor.
     supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).not("role", "in", "(learner,mentor)"),
-    orgUserIds.length
-      ? supabase.from("course_enrollments").select("progress_percentage, completed_at").in("user_id", orgUserIds)
-      : Promise.resolve({ data: [] }),
+    safeInQuery("course_enrollments", "progress_percentage, completed_at", "user_id", orgUserIds),
   ]);
-  const enrollments = enrollmentAgg?.data || [];
   const completionRate = enrollments.length
-    ? Math.round((enrollments.filter(e => e.completed_at).length / enrollments.length) * 100)
+    ? Math.round((enrollments.filter(e => e.completed_at || (e.progress_percentage || 0) >= 100).length / enrollments.length) * 100)
     : 0;
   return {
     activeStudents: activeStudents || 0,
@@ -2622,11 +2627,7 @@ export async function fetchOrgLearnerProgressOverview(organizationId) {
   if (!learners || learners.length === 0) return [];
 
   const learnerIds = learners.map(l => l.id);
-  const { data: enrollments, error: enrollError } = await supabase
-    .from("course_enrollments")
-    .select("user_id, progress_percentage, completed_at")
-    .in("user_id", learnerIds);
-  if (enrollError) throw enrollError;
+  const enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", learnerIds);
 
   const byUser = new Map();
   for (const e of (enrollments || [])) {
