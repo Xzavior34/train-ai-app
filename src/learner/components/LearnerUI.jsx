@@ -355,14 +355,14 @@ export const TOKENS = `
   .tai-switch-knob { width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition: left .18s cubic-bezier(.16,1,.3,1); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
   .tai-switch.on .tai-switch-knob { left:20px; }
   .tai-empty { text-align:center; padding: 42px 18px; color: var(--text-2); }
-  .tai-grid2 { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }
-  .tai-grid3 { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; }
-  .tai-grid4 { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px; }
+  .tai-grid2 { display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap:16px; width:100%; box-sizing:border-box; }
+  .tai-grid3 { display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap:16px; width:100%; box-sizing:border-box; }
+  .tai-grid4 { display:grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); gap:14px; width:100%; box-sizing:border-box; }
   .tai-link { color: var(--primary); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:3px; transition: all .16s ease; }
   .tai-link:hover { transform: translateX(2px); }
-  .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
-  @media (max-width: 980px) {
-    .tai-dashboard-grid { grid-template-columns: 1fr; }
+  .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 20px; align-items: start; width: 100%; max-width: 100%; box-sizing: border-box; }
+  @media (max-width: 899px) {
+    .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
   }
 `;
 
