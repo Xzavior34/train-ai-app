@@ -60,7 +60,7 @@ begin
   if v_slug = '' then
     v_slug := 'org';
   end if;
-  v_slug := v_slug || '-' || substr(encode(gen_random_bytes(4), 'hex'), 1, 6);
+  v_slug := v_slug || '-' || substr(encode(extensions.gen_random_bytes(4), 'hex'), 1, 6);
 
   insert into organizations (name, slug, status, subscription_tier, created_by)
   values (trim(p_org_name), v_slug, 'trial', 'starter', v_user_id)

@@ -57,7 +57,7 @@ create table course_certificates (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references user_profiles(id) on delete cascade,
   course_id uuid not null references courses(id) on delete cascade,
-  certificate_number text unique not null default encode(gen_random_bytes(8), 'hex'),
+  certificate_number text unique not null default encode(extensions.gen_random_bytes(8), 'hex'),
   issued_at timestamptz not null default now()
 );
 
