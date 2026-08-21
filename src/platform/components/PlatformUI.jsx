@@ -172,6 +172,54 @@ export const TOKENS = `
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
   }
+  .ta-hero-banner {
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%);
+    color: #FFFFFF;
+    padding: 22px 24px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .ta-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .ta-hero-text {
+    min-width: 0;
+    flex: 1;
+  }
+  .ta-hero-title {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    margin: 0 0 6px;
+    color: #FFFFFF;
+    line-height: 1.25;
+  }
+  .ta-hero-desc {
+    font-size: 13.5px;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0;
+    max-width: 620px;
+    line-height: 1.45;
+  }
+  .ta-hero-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
   @media (max-width: 899px) {
     .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
@@ -197,16 +245,62 @@ export const TOKENS = `
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
-    .ta-h1 { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ta-h1 { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ta-sub { display: none; }
     .ta-table-wrap .ta-table { min-width: 460px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+    /* Clean mobile scrolling for tabs and filter pills */
+    .ta-tabs, .ta-pills-row {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+      flex-wrap: nowrap !important;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .ta-tabs::-webkit-scrollbar, .ta-pills-row::-webkit-scrollbar { display: none; }
+    .ta-tab, .ta-pill { flex-shrink: 0 !important; white-space: nowrap !important; }
+
+    /* Responsive hero layout for all dashboards */
+    .ta-hero-banner {
+      padding: 16px 14px !important;
+      border-radius: 16px !important;
+    }
+    .ta-hero-inner {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 12px !important;
+    }
+    .ta-hero-text {
+      width: 100% !important;
+      flex: none !important;
+    }
+    .ta-hero-title {
+      font-size: 18px !important;
+      line-height: 1.3 !important;
+      margin-bottom: 5px !important;
+    }
+    .ta-hero-desc {
+      font-size: 12.5px !important;
+      line-height: 1.45 !important;
+      max-width: 100% !important;
+    }
+    .ta-hero-actions {
+      width: 100% !important;
+      flex-wrap: wrap !important;
+      gap: 8px !important;
+    }
+    .ta-hero-actions .ta-btn, .ta-hero-actions button {
+      padding: 8px 16px !important;
+      font-size: 12.5px !important;
+      border-radius: 10px !important;
+    }
   }
   @media (max-width: 480px) {
     .ta-topbar { padding: 0 14px; height: 56px; min-height: 56px; }
     .ta-content { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-card { padding: 16px 14px; border-radius: 16px; width: 100%; box-sizing: border-box; }
-    .ta-h1 { font-size: 15px; }
+    .ta-h1 { font-size: 14.5px; }
     .ta-btn { padding: 8px 14px; font-size: 12.5px; border-radius: 10px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
     .ta-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; }

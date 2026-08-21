@@ -91,16 +91,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       {/* =========================================================================
           EXECUTIVE HERO TELEMETRY BANNER
           ========================================================================= */}
-      <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.92) 100%)",
-        color: "#FFFFFF",
-        padding: "clamp(22px, 3.5vw, 28px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      <div className="ta-hero-banner">
         {/* Background Network Tech Photo with Overlay */}
         <img
           src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1400&auto=format&fit=crop&q=85"
@@ -116,9 +107,9 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           zIndex: 0
         }} />
 
-        <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+        <div className="ta-hero-inner">
+          <div className="ta-hero-text">
+            <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
               <span style={{
                 background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
                 border: "1px solid rgba(165, 180, 252, 0.5)",
@@ -137,22 +128,22 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               </span>
             </div>
 
-            <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+            <h1 className="ta-hero-title">
               Train AI Platform Overview
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+            <p className="ta-hero-desc">
               Active orchestration across {effectiveTotalOrgs} tenant institutions, powering {effectiveTotalUsers.toLocaleString()} enrolled learners with real-time AI tutor inference.
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>AI Inference Speed</div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: "#34D399" }}>18ms avg</div>
+          <div className="ta-hero-actions">
+            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+              <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>AI Speed</div>
+              <div style={{ fontSize: 15, fontWeight: 900, color: "#34D399" }}>18ms avg</div>
             </div>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active WebSockets</div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: "#FBBF24" }}>428 Live</div>
+            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+              <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>WebSockets</div>
+              <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24" }}>428 Live</div>
             </div>
           </div>
         </div>

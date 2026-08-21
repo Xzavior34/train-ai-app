@@ -86,16 +86,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
         {/* =========================================================================
             INSTRUCTOR WORKSPACE HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
+        <div className="ta-hero-banner">
           <img
             src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1400&auto=format&fit=crop&q=85"
             alt=""
@@ -110,9 +101,9 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             zIndex: 0
           }} />
 
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
                 <span style={{
                   background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
                   border: "1px solid rgba(165, 180, 252, 0.5)",
@@ -130,22 +121,21 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 </span>
               </div>
 
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+              <h1 className="ta-hero-title">
                 Instructor Live Studio &amp; Pacing
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+              <p className="ta-hero-desc">
                 Review student submissions, host office hours, launch interactive clarification sessions, and message struggling learners.
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
+            <div className="ta-hero-actions">
               <button
-                className="ta-btn"
+                className="ta-btn ta-btn-primary"
                 onClick={handleRunAiSession}
                 disabled={aiActionRunning}
                 style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13,
-                  padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
+                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
                   boxShadow: "0 4px 16px rgba(79, 70, 229, 0.4)", display: "flex", alignItems: "center", gap: 8
                 }}
               >

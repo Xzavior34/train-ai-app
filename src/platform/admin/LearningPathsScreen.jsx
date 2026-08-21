@@ -193,16 +193,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
         {/* =========================================================================
             LEARNING PATHS HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(18px, 3vw, 26px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
+        <div className="ta-hero-banner">
           <img
             src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
             alt=""
@@ -217,17 +208,17 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
             zIndex: 0
           }} />
 
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
                 Curriculum Tracks &amp; Learning Paths
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+              <p className="ta-hero-desc">
                 Design progressive career roadmaps and module sequence flows.
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
+            <div className="ta-hero-actions">
               <button className="ta-btn ta-btn-primary" onClick={openCreate} style={{ background: "#4F46E5", border: "none" }}>
                 <Plus size={15} /> New Learning Path
               </button>

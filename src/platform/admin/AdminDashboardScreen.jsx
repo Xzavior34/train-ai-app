@@ -107,16 +107,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
         {/* =========================================================================
             ADMIN DASHBOARD HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(18px, 3vw, 26px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
+        <div className="ta-hero-banner">
           {/* Background Stock Photo with Overlay */}
           <img
             src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
@@ -132,23 +123,22 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             zIndex: 0
           }} />
 
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 14, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(18px, 4vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
                 Welcome back, {profileQuery.data?.display_name || "Admin"}
               </h1>
-              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 540, lineHeight: 1.45 }}>
+              <p className="ta-hero-desc">
                 Monitor active learner cohorts, completion rates, and curriculum deployments.
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", flexShrink: 0 }}>
+            <div className="ta-hero-actions">
               <button
-                className="ta-btn"
+                className="ta-btn ta-btn-primary"
                 onClick={() => setScreen("content")}
                 style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 12.5,
-                  padding: "8px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
+                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
                   boxShadow: "0 4px 14px rgba(79, 70, 229, 0.4)"
                 }}
               >

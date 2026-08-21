@@ -1076,17 +1076,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
           /* ================================================================= */
           <>
             {/* Masterclasses & Content Hero Banner */}
-            <div style={{
-              borderRadius: 20,
-              background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-              color: "#FFFFFF",
-              padding: "clamp(18px, 3vw, 26px)",
-              boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-              border: "1px solid rgba(99, 102, 241, 0.4)",
-              position: "relative",
-              overflow: "hidden",
-              marginBottom: 20
-            }}>
+            <div className="ta-hero-banner" style={{ marginBottom: 20 }}>
               <img
                 src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
                 alt=""
@@ -1101,12 +1091,12 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 zIndex: 0
               }} />
 
-              <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+              <div className="ta-hero-inner">
+                <div className="ta-hero-text">
+                  <h1 className="ta-hero-title">
                     Curriculum &amp; Masterclasses
                   </h1>
-                  <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+                  <p className="ta-hero-desc">
                     Author interactive courses, manage lesson syllabi, and publish learning modules.
                   </p>
                 </div>

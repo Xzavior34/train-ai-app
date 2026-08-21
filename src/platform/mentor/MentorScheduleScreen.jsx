@@ -143,24 +143,29 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
               {!mentorId && <div className="ta-empty">Your instructor profile isn't linked to an instructor record yet.</div>}
               {mentorId && sessionsQuery.loading && <div className="ta-empty">Loading sessions...</div>}
               {mentorId && !sessionsQuery.loading && sessions.length === 0 && <div className="ta-empty">No sessions yet. Booked and requested sessions with your mentees will show up here.</div>}
-              {mentorId && !sessionsQuery.loading && sessions.length > 0 && filteredSessions.length === 0 && <div className="ta-empty">No sessions matching filter.</div>}
               {filteredSessions.map(s => (
-                <div key={s.id} className="ta-card ta-row ta-between" style={{ flexWrap: "wrap", gap: 16 }}>
-                  <div className="ta-row ta-gap14">
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Calendar size={20} color="var(--primary)" />
+                <div key={s.id} className="ta-card ta-row ta-between" style={{ flexWrap: "wrap", gap: 14, alignItems: "center" }}>
+                  <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 240px" }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Calendar size={18} color="var(--primary)" />
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: 15 }}>{s.title || "Instructor Session"}</div>
-                      <div className="ta-row ta-gap12 ta-mt4" style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{s.title || "Instructor Session"}</div>
+                      <div className="ta-row ta-gap8 ta-mt4" style={{ fontSize: 12, color: "var(--text-2)", flexWrap: "wrap" }}>
                         <span>Learner: <strong>{s.learner_name || "Learner"}</strong></span>
-                        <span>·</span>
-                        <span className="ta-row ta-gap4"><Clock size={13} />{new Date(s.scheduled_at).toLocaleString()} ({s.duration_minutes || 30} min)</span>
+                        <span>•</span>
+                        <span className="ta-row ta-gap4">
+                          <Clock size={12} />
+                          {(() => {
+                            const d = new Date(s.scheduled_at);
+                            return `${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} · ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })} (${s.duration_minutes || 30}m)`;
+                          })()}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="ta-row ta-gap10">
+                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center" }}>
                     <Tag tone={s.status === "completed" ? "success" : s.status === "cancelled" ? "danger" : s.status === "requested" ? "warning" : "primary"}>
                       {s.status.toUpperCase()}
                     </Tag>
@@ -187,7 +192,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                             <Video size={14} /> Join Call
                           </a>
                         ) : (
-                          <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>No meeting link set</span>
+                          <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>No link set</span>
                         )}
                         <button
                           className="ta-btn ta-btn-outline ta-btn-sm"
