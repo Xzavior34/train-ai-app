@@ -176,43 +176,48 @@ export function HomeScreen({
           {/* Continue Learning Banner */}
           {continueCourse && (
             <div className="tai-card tai-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
-              <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 14 }}>
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 13.5 }}>
                   <BookOpen size={16} color="var(--primary)" />
                   <span>Continue learning</span>
                 </div>
-                <span className="tai-link" style={{ fontSize: 12 }} onClick={() => goTab("courses")}>My courses</span>
+                <span className="tai-link" style={{ fontSize: 12, fontWeight: 700 }} onClick={() => goTab("courses")}>My courses</span>
               </div>
 
-              <div style={{ padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", boxSizing: "border-box", width: "100%" }}>
-                <img 
-                  src={continueCourse.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
-                  alt={continueCourse.title}
-                  style={{ width: 56, height: 56, borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
-                />
-                <div style={{ flex: "1 1 180px", minWidth: 0 }}>
-                  <div className="tai-row tai-between" style={{ marginBottom: 2 }}>
-                    <Tag tone="primary">{continueCourse.category || "Technology"}</Tag>
-                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>12 hrs</span>
+              <div style={{ padding: "14px 16px", boxSizing: "border-box", width: "100%" }}>
+                <div className="tai-row tai-gap12" style={{ alignItems: "center", marginBottom: 12 }}>
+                  <img 
+                    src={continueCourse.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
+                    alt={continueCourse.title}
+                    style={{ width: 52, height: 52, borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="tai-row tai-between" style={{ marginBottom: 3 }}>
+                      <Tag tone="primary">{continueCourse.category || "Technology"}</Tag>
+                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>12 hrs</span>
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {continueCourse.title}
+                    </div>
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {continueCourse.title}
-                  </div>
-                  <div className="tai-mt6">
+                </div>
+
+                <div className="tai-row tai-between tai-gap12" style={{ alignItems: "center" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="tai-row tai-between" style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>
                       <span>Progress</span>
                       <span style={{ fontWeight: 700, color: "var(--primary)" }}>{continueCourse.progress || 50}%</span>
                     </div>
-                    <ProgressBar value={continueCourse.progress || 50} height={5} />
+                    <ProgressBar value={continueCourse.progress || 50} height={6} />
                   </div>
+                  <button 
+                    className="tai-btn tai-btn-primary tai-btn-sm"
+                    style={{ padding: "8px 18px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
+                    onClick={() => push("courseDetail", { id: continueCourse.id })}
+                  >
+                    Continue →
+                  </button>
                 </div>
-                <button 
-                  className="tai-btn tai-btn-primary tai-btn-sm"
-                  style={{ padding: "8px 16px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
-                  onClick={() => push("courseDetail", { id: continueCourse.id })}
-                >
-                  Continue →
-                </button>
               </div>
             </div>
           )}
@@ -228,121 +233,125 @@ export function HomeScreen({
             width: "100%",
             boxSizing: "border-box"
           }}>
-            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
-              <div className="tai-row tai-gap10" style={{ flex: "1 1 180px", minWidth: 0 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(99, 102, 241, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Users size={18} color="var(--primary)" />
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 12 }}>
+              <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(99, 102, 241, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Users size={17} color="var(--primary)" />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>
-                      {cohort?.name || "Q1 Onboarding Cohort"}
-                    </span>
-                    <Tag tone="primary">Sprint 5 of 12</Tag>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {cohort?.name || "Q1 Onboarding Cohort"}
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>
-                    68 enrolled peers • Next: Tomorrow 10:00 AM
+                  <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>
+                    Sprint 5 of 12
                   </div>
                 </div>
               </div>
+              <Tag tone="primary">Sprint 5</Tag>
+            </div>
 
+            <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", marginBottom: 12 }}>
+              <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
+                <span style={{ color: "var(--primary)" }}>42% Completed</span>
+              </div>
+              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ width: "42%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
+              </div>
+            </div>
+
+            <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                68 enrolled peers • Next: Tomorrow 10:00 AM
+              </div>
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ padding: "7px 14px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
+                style={{ padding: "7px 16px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
                 onClick={() => push("cohort")}
               >
                 Enter Cohort Space →
               </button>
             </div>
-
-            <div style={{ background: "var(--surface-3)", padding: "8px 12px", borderRadius: 10, border: "1px solid var(--border)" }}>
-              <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
-                <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
-                <span style={{ color: "var(--primary)" }}>42% Completed</span>
-              </div>
-              <div style={{ height: 6, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
-                <div style={{ width: "42%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
-              </div>
-            </div>
           </div>
 
           {/* Achievements: Your Level, Streak & Badges Spotlight Card */}
           <div className="tai-card tai-card-hover" style={{
-            padding: 20, borderRadius: 16,
+            padding: 16, borderRadius: 16,
             background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%)",
             border: "1.5px solid rgba(99, 102, 241, 0.35)",
-            boxShadow: "0 8px 24px -4px rgba(79, 70, 229, 0.12)"
+            boxShadow: "0 8px 24px -4px rgba(79, 70, 229, 0.12)",
+            width: "100%", boxSizing: "border-box"
           }}>
-            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
-              <div className="tai-row tai-gap10" style={{ flex: "1 1 200px", minWidth: 0 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)", flexShrink: 0 }}>
-                  <Award size={22} color="#FFFFFF" />
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 12 }}>
+              <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)", flexShrink: 0 }}>
+                  <Award size={20} color="#FFFFFF" />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 900, fontSize: 16, color: "var(--text)" }}>
-                      Achievements &amp; Skill Mastery
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                    <span style={{ fontWeight: 900, fontSize: 15, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      Achievements
                     </span>
                     <Tag tone="warning">Level {user?.level || 2}</Tag>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>
-                    Senior Specialist • {(user?.totalPoints || 4520).toLocaleString()} XP earned
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>
+                    Senior Specialist • {(user?.totalPoints || 4520).toLocaleString()} XP
                   </div>
                 </div>
               </div>
 
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ padding: "8px 16px", fontSize: 12.5, fontWeight: 800, flexShrink: 0 }}
+                style={{ padding: "7px 14px", fontSize: 12, fontWeight: 800, flexShrink: 0 }}
                 onClick={() => push("achievements")}
               >
-                View Full Achievements →
+                View All →
               </button>
             </div>
 
             {/* Level & XP Meter */}
-            <div style={{ background: "var(--surface)", padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border)", marginBottom: 14 }}>
-              <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 800, marginBottom: 6, flexWrap: "wrap", gap: 4 }}>
+            <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", marginBottom: 12 }}>
+              <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 800, marginBottom: 5 }}>
                 <span style={{ color: "var(--text)" }}>Level {user?.level || 2} Progression</span>
                 <span style={{ color: "var(--primary)" }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
               </div>
-              <div style={{ height: 8, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden", border: "1px solid var(--border)" }}>
+              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
                 <div style={{ width: "90%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
               </div>
             </div>
 
             {/* Streak & Badges Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10 }}>
-              <div style={{ padding: "10px 12px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+              <div style={{ padding: "8px 10px", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)" }}>
                 <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#EA580C", marginBottom: 2 }}>
-                  <Flame size={14} color="#EA580C" />
+                  <Flame size={13} color="#EA580C" />
                   <span>{user?.streak || 8}-Day Streak</span>
                 </div>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Active learner pace</div>
+                <div style={{ fontSize: 10, color: "var(--text-3)" }}>Active learner pace</div>
               </div>
 
-              <div style={{ padding: "10px 12px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+              <div style={{ padding: "8px 10px", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)" }}>
                 <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#6366F1", marginBottom: 2 }}>
-                  <Palette size={14} color="#6366F1" />
+                  <Palette size={13} color="#6366F1" />
                   <span>Figma Master</span>
                 </div>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Unlocked sprint 4</div>
+                <div style={{ fontSize: 10, color: "var(--text-3)" }}>Unlocked sprint 4</div>
               </div>
 
-              <div style={{ padding: "10px 12px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+              <div style={{ padding: "8px 10px", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)" }}>
                 <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#10B981", marginBottom: 2 }}>
-                  <Zap size={14} color="#10B981" />
+                  <Zap size={13} color="#10B981" />
                   <span>Prompt Pro</span>
                 </div>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>AI Quiz 100% score</div>
+                <div style={{ fontSize: 10, color: "var(--text-3)" }}>AI Quiz 100% score</div>
               </div>
 
-              <div style={{ padding: "10px 12px", background: "var(--surface)", borderRadius: 12, border: "1px solid var(--border)" }}>
+              <div style={{ padding: "8px 10px", background: "var(--surface)", borderRadius: 10, border: "1px solid var(--border)" }}>
                 <div className="tai-row tai-gap6" style={{ fontSize: 11, fontWeight: 700, color: "#D97706", marginBottom: 2 }}>
-                  <Trophy size={14} color="#D97706" />
+                  <Trophy size={13} color="#D97706" />
                   <span>#4 Leaderboard</span>
                 </div>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Top 5% of cohort</div>
+                <div style={{ fontSize: 10, color: "var(--text-3)" }}>Top 5% of cohort</div>
               </div>
             </div>
           </div>
