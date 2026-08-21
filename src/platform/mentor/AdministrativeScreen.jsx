@@ -82,18 +82,18 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
         {tab === "earnings" && (
           <>
             <div className="ta-card ta-mt16">
-              <div className="ta-row ta-between">
+              <div className="ta-row" style={{ flexWrap: "wrap", gap: 32 }}>
                 <div>
                   <div className="ta-label">Available balance</div>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: "var(--primary)" }}>${availableBalance.toFixed(2)}</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: "var(--primary)", marginTop: 4 }}>${availableBalance.toFixed(2)}</div>
                 </div>
                 <div>
                   <div className="ta-label">Lifetime earnings</div>
-                  <div style={{ fontSize: 18, fontWeight: 700 }}>${totalEarnings.toFixed(2)}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>${totalEarnings.toFixed(2)}</div>
                 </div>
                 <div>
                   <div className="ta-label">Pending</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: "var(--warning)" }}>${pendingEarnings.toFixed(2)}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "var(--warning)", marginTop: 6 }}>${pendingEarnings.toFixed(2)}</div>
                 </div>
               </div>
             </div>
@@ -171,7 +171,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
         {tab === "refunds" && (
           <div className="ta-card ta-mt16">
             <div className="ta-title">Refund & dispute requests</div>
-            <div className="ta-col ta-gap12 ta-mt12">
+            <div className="ta-col ta-gap12 ta-mt12 anim-stagger">
               {refundsQuery.loading && <div className="ta-empty">Loading requests...</div>}
               {!refundsQuery.loading && (refundsQuery.data || []).length === 0 && <div className="ta-empty">No refund or dispute requests.</div>}
               {(refundsQuery.data || []).map(r => (

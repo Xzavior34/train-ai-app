@@ -108,12 +108,27 @@ export default function PlatformOwnerApp({ onSwitchDashboard, userRoles: userRol
   }
 
   const availableDashboards = getAvailableDashboards(userRoles);
+  const [isDark, setIsDark] = useState(() => {
+    try {
+      return localStorage.getItem("trainai_theme_dark") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(localStorage.getItem("trainai_theme_dark") === "true" || document.documentElement.classList.contains("dark"));
+    };
+    window.addEventListener("storage", checkDark);
+    return () => window.removeEventListener("storage", checkDark);
+  }, []);
 
   return (
     <NavigationContext.Provider value={(target) => setScreen(target)}>
       <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
         <ToastContext.Provider value={showToast}>
-          <div className="ta">
+          <div className={`ta ${isDark ? "dark" : ""}`}>
             <style>{TOKENS}</style>
             <div className="ta-shell">
               <OwnerSidebar

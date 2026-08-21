@@ -107,9 +107,11 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
         onBack={back}
       />
 
+      <div style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
+
       {!isCourseMode && (
         <>
-          <div className="tai-scrollx tai-mt10">
+          <div className="tai-scrollx tai-mt16">
             {CREDITS_CURRENCIES.map((c) => (
               <div
                 key={c}
@@ -127,7 +129,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
               return (
                 <div
                   key={p.id}
-                  className="tai-card"
+                  className="tai-card tai-card-hover"
                   style={{
                     cursor: "pointer",
                     borderColor: isSelected ? "var(--primary)" : "var(--border)",
@@ -153,7 +155,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
       )}
 
       {isCourseMode && (
-        <div className="tai-card tai-mt12">
+        <div className="tai-card tai-mt16">
           <div style={{ fontWeight: 700, fontSize: 15 }}>{params?.courseTitle || "Course"}</div>
           <div className="tai-body-text tai-mt8">One-time enrollment fee</div>
           <div style={{ fontSize: 22, fontWeight: 800, marginTop: 8 }}>{formatAmount(amount, currency)}</div>
@@ -185,7 +187,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
         <div className="tai-label tai-mt16">Payment provider</div>
         <div className="tai-grid2 tai-mt8">
           <div
-            className="tai-card"
+            className={`tai-card${paystackAllowed ? " tai-card-hover" : ""}`}
             style={{
               cursor: paystackAllowed ? "pointer" : "not-allowed",
               opacity: paystackAllowed ? 1 : 0.4,
@@ -197,7 +199,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
             <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>NGN & USD · Africa-friendly</div>
           </div>
           <div
-            className="tai-card"
+            className={`tai-card${stripeAllowed ? " tai-card-hover" : ""}`}
             style={{
               cursor: stripeAllowed ? "pointer" : "not-allowed",
               opacity: stripeAllowed ? 1 : 0.4,
@@ -217,7 +219,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
         <button className="tai-btn tai-btn-primary tai-mt16" style={{ width: "100%" }} disabled={loading} onClick={handlePay}>
           {loading ? (
             <>
-              <Loader2 size={16} />
+              <Loader2 size={16} className="tai-spin" />
               Redirecting to {provider === "stripe" ? "Stripe" : "Paystack"}...
             </>
           ) : (
@@ -232,6 +234,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
           <ShieldCheck size={14} />
           Secure hosted checkout. We never see your card details.
         </div>
+      </div>
       </div>
     </div>
   );

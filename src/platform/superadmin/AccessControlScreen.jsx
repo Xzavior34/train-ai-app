@@ -146,10 +146,10 @@ function ImpersonationPanel() {
           <input className="ta-input ta-mt8" style={{ width: "100%" }} placeholder="Reason for viewing (required, logged)" value={reason} onChange={(e) => setReason(e.target.value)} />
 
           {results.length > 0 && (
-            <div className="ta-col ta-gap6 ta-mt12">
+            <div className="ta-col ta-gap6 ta-mt12 anim-stagger">
               {results.map((u) => (
                 <div key={u.id} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{u.display_name || "Unnamed user"} <Tag>{u.role}</Tag></span>
+                  <span className="ta-row ta-gap8" style={{ fontSize: 13, fontWeight: 600 }}>{u.display_name || "Unnamed user"} <Tag>{u.role}</Tag></span>
                   <button className="ta-btn ta-btn-ghost ta-btn-sm" disabled={loadingView} onClick={() => handleView(u)}>View</button>
                 </div>
               ))}
@@ -157,7 +157,7 @@ function ImpersonationPanel() {
           )}
         </>
       ) : (
-        <div className="ta-mt12">
+        <div className="ta-mt12 ta-fade">
           <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => { setViewing(null); setReason(""); }}>← Back to search</button>
           <div className="ta-card ta-mt10">
             <div style={{ fontWeight: 700 }}>{viewing.profile?.display_name}</div>
@@ -172,7 +172,7 @@ function ImpersonationPanel() {
           <div className="ta-card ta-mt10">
             <div style={{ fontWeight: 700, fontSize: 13 }}>AI Coach conversations ({(viewing.ai_conversations || []).length})</div>
             {(viewing.ai_conversations || []).map((c) => (
-              <div key={c.conversation_id} className="ta-col ta-gap4 ta-mt8" style={{ borderTop: "1px solid var(--border)", paddingTop: 8 }}>
+              <div key={c.conversation_id} className="ta-col ta-mt8" style={{ gap: 4, borderTop: "1px solid var(--border)", paddingTop: 8 }}>
                 {(c.messages || []).map((m, i) => (
                   <div key={i} style={{ fontSize: 12 }}><b>{m.role}:</b> {m.content}</div>
                 ))}
@@ -256,7 +256,7 @@ export function AccessControlScreen() {
           <div className="ta-row ta-between">
             <div className="ta-title">Super Admin Roster</div>
           </div>
-          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 6 }}>
             Super Admin can only be granted to a real, existing @trainailtd.com account - enforced by the database itself, not just this form.
           </div>
           <div className="ta-row ta-gap8 ta-mt12">
@@ -297,14 +297,14 @@ export function AccessControlScreen() {
 
         <div className="ta-card ta-mt16">
           <div className="ta-title">Instructor Payout Controls</div>
-          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>
             Enable payouts only for instructors who run their own academy and get paid directly - most org-employed instructors should stay disabled. Only the platform owner can change this.
           </div>
-          <div className="ta-col ta-gap8 ta-mt12">
+          <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
             {mentorsQuery.loading && <div className="ta-empty">Loading instructors...</div>}
             {!mentorsQuery.loading && mentors.length === 0 && <div className="ta-empty">No instructors on the platform yet.</div>}
             {mentors.map((m) => (
-              <div key={m.id} className="ta-row ta-between" style={{ padding: "8px 0" }}>
+              <div key={m.id} className="ta-row ta-between" style={{ padding: "9px 10px", background: "var(--surface-2)", borderRadius: 10 }}>
                 <span style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</span>
                 <Switch on={!!m.payouts_enabled} onChange={() => handleTogglePayouts(m.id, !!m.payouts_enabled)} />
               </div>
@@ -314,7 +314,7 @@ export function AccessControlScreen() {
 
         <div className="ta-card ta-mt16">
           <div className="ta-title">Force Two-Factor Reset</div>
-          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>
             For a user genuinely locked out of their authenticator app - removes every two-factor method on their account so they can sign in and re-enroll. Calls the same real, already-deployed admin-reset-mfa function used by the 1.0 reference codebase.
           </div>
           <div className="ta-row ta-gap8 ta-mt12">

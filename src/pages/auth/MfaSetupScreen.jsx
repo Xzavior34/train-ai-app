@@ -141,7 +141,7 @@ export default function MfaSetupScreen({ onClose }) {
             {view.kind === "active" ? (
               <ShieldCheck size={18} color="#16A34A" />
             ) : (
-              <ShieldAlert size={18} color="#2563EB" />
+              <ShieldAlert size={18} color="#4F46E5" />
             )}
             <div style={{ fontWeight: 800, fontSize: 15.5, color: "#10142A" }}>Two-factor authentication</div>
           </div>
@@ -178,7 +178,7 @@ export default function MfaSetupScreen({ onClose }) {
               style={{
                 width: "100%", border: "none", cursor: busy ? "default" : "pointer", borderRadius: 14,
                 fontWeight: 700, fontSize: 14, padding: "13px 18px", color: "#fff", opacity: busy ? 0.75 : 1,
-                background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)",
+                background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}
             >
@@ -273,7 +273,7 @@ export default function MfaSetupScreen({ onClose }) {
                   flex: 1.4, border: "none", cursor: busy || code.length !== 6 ? "default" : "pointer", borderRadius: 13,
                   fontWeight: 700, fontSize: 13.5, padding: "12px 14px", color: "#fff",
                   opacity: busy || code.length !== 6 ? 0.6 : 1,
-                  background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)",
+                  background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 }}
               >

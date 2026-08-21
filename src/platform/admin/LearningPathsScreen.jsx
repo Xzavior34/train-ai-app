@@ -169,7 +169,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
                 <div className="ta-empty">{courses.length === 0 ? "No courses exist yet. Create one in Content & Courses first." : "Every course is already in this path."}</div>
               )}
               {courses.filter((c) => !selectedCourseIds.includes(c.id)).map((c) => (
-                <div key={c.id} className="ta-row ta-between" style={{ padding: "6px 10px", cursor: "pointer" }} onClick={() => toggleCourseSelected(c.id)}>
+                <div key={c.id} className="ta-row ta-between ta-dropdown-item" style={{ padding: "6px 10px" }} onClick={() => toggleCourseSelected(c.id)}>
                   <span style={{ fontSize: 12.5 }}>{c.title}</span>
                   <Plus size={14} color="var(--primary)" />
                 </div>
@@ -189,10 +189,71 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
   return (
     <div className="ta-fade">
       <TopBar title="Learning Paths" sub="Guided, ordered course journeys you assign to learners" orgSelector={orgSelector} onNavigate={setScreen} />
-      <div className="ta-content">
-        <button className="ta-btn ta-btn-primary" onClick={openCreate}><Plus size={15} /> New Learning Path</button>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            LEARNING PATHS HERO BANNER
+            ========================================================================= */}
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(22px, 3.5vw, 28px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
 
-        <div className="ta-col ta-gap12 ta-mt16">
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+                <span style={{
+                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                  border: "1px solid rgba(165, 180, 252, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <MapIcon size={13} color="#A5B4FC" /> CURATED JOURNEYS &amp; SYLLABUS
+                </span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                  border: "1px solid rgba(16, 185, 129, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                }}>
+                  {paths.length || 6} STRUCTURED TRACKS
+                </span>
+              </div>
+
+              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Learning Journeys &amp; Curriculum Tracks
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                Sequence multi-course curricula, map prerequisite dependencies, publish guided specialization tracks, and assign batches.
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
+              <button className="ta-btn ta-btn-primary" onClick={openCreate} style={{ background: "#4F46E5", border: "none" }}>
+                <Plus size={15} /> New Learning Path
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="ta-col ta-gap12">
           {pathsQuery.loading && <div className="ta-empty">Loading learning paths...</div>}
           {!pathsQuery.loading && paths.length === 0 && (
             <div className="ta-empty">
@@ -200,28 +261,52 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
               <div>No learning paths yet. Create one to guide learners through an ordered set of courses.</div>
             </div>
           )}
-          {paths.map((p) => (
-            <div key={p.id} className="ta-card">
-              <div className="ta-row ta-between">
-                <div>
-                  <div className="ta-row ta-gap8">
-                    <div className="ta-title" style={{ fontSize: 15 }}>{p.title}</div>
+          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
+          {paths.map((p, idx) => {
+            const pathImages = [
+              "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",
+              "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
+              "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&auto=format&fit=crop&q=80",
+              "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=80"
+            ];
+            const img = pathImages[idx % pathImages.length];
+
+            return (
+              <div key={p.id} className="ta-card ta-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 16, display: "flex", flexDirection: "column", background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <div style={{ position: "relative", width: "100%", height: 100, overflow: "hidden" }}>
+                  <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(15,23,42,0.2) 0%, rgba(15,23,42,0.7) 100%)" }} />
+                  <div style={{ position: "absolute", top: 10, right: 10 }}>
                     <Tag tone={p.isPublished ? "success" : "default"}>{p.isPublished ? "Published" : "Draft"}</Tag>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>{p.description || "No description"}</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 6, textTransform: "capitalize" }}>
-                    {p.level} · {p.courseIds.length} course{p.courseIds.length === 1 ? "" : "s"}
-                    {p.courseTitles.length > 0 && `: ${p.courseTitles.join(" → ")}`}
+                  <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 15, textShadow: "0 2px 4px rgba(0,0,0,0.5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {p.title}
                   </div>
                 </div>
-                <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
-                  <Switch on={p.isPublished} onChange={() => handleTogglePublish(p)} />
-                  <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => openEdit(p)}>Edit</button>
-                  <button className="ta-iconbtn" onClick={() => handleDelete(p)} aria-label="Delete"><Trash2 size={15} color="var(--danger)" /></button>
+
+                <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.description || "Guided multi-course milestone journey."}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 8, textTransform: "capitalize", fontWeight: 600 }}>
+                      {p.level} • {p.courseIds.length} course{p.courseIds.length === 1 ? "" : "s"}
+                    </div>
+                  </div>
+
+                  <div className="ta-row ta-between" style={{ marginTop: 14, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+                    <div className="ta-row ta-gap8">
+                      <Switch on={p.isPublished} onChange={() => handleTogglePublish(p)} />
+                      <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{p.isPublished ? "Live" : "Draft"}</span>
+                    </div>
+                    <div className="ta-row ta-gap6">
+                      <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => openEdit(p)}>Edit Track</button>
+                      <button className="ta-iconbtn" onClick={() => handleDelete(p)} aria-label="Delete"><Trash2 size={15} color="var(--danger)" /></button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+          </div>
         </div>
       </div>
     </div>

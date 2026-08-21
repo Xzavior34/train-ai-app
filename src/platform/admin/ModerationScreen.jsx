@@ -75,8 +75,65 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
         onNavigate={setScreen}
         right={<Tag tone={queue.length ? "warning" : "success"}><Flag size={12} /> {queue.length} awaiting review</Tag>}
       />
-      <div className="ta-content">
-        <div className="ta-card" style={{ maxWidth: 700 }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            CONTENT MODERATION HERO BANNER
+            ========================================================================= */}
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(22px, 3.5vw, 28px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
+
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+                <span style={{
+                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                  border: "1px solid rgba(165, 180, 252, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <Flag size={13} color="#A5B4FC" /> AI SAFETY &amp; COMMUNITY MODERATION
+                </span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                  border: "1px solid rgba(16, 185, 129, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                }}>
+                  {queue.length} AWAITING HUMAN DECISION
+                </span>
+              </div>
+
+              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                AI Community Moderation &amp; Safety Queue
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                Review AI-flagged discussions, toggle automatic versus manual coach response modes, and protect community integrity.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="ta-card" style={{ maxWidth: "100%" }}>
           <div className="ta-row ta-gap8"><Bot size={16} color="var(--primary)" /><div className="ta-title">AI Manual Mode</div></div>
           <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
             Turn off AI so it doesn't reply automatically - your own message goes out through the chat bot/assistant instead. Community content itself lives inside a study group, a cohort, or a direct instructor conversation - there isn't much for AI to flag there beyond what's already covered below.
@@ -91,7 +148,7 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
           </div>
         </div>
 
-        <div className="ta-card ta-mt16">
+        <div className="ta-card">
           {queueQuery.loading && <div className="ta-empty">Loading moderation queue...</div>}
           {!queueQuery.loading && queue.length === 0 && <div className="ta-empty">Nothing flagged right now. The queue is clear.</div>}
           {!queueQuery.loading && queue.length > 0 && (

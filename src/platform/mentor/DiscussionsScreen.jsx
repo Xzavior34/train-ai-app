@@ -32,7 +32,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
         {!mentorId && !discussionsQuery.loading && (
           <div className="ta-empty">No instructor profile found for your account yet.</div>
         )}
-        <div className="ta-col ta-gap12">
+        <div className="ta-col ta-gap12 anim-stagger">
           {discussionsQuery.loading && <div className="ta-card"><div className="ta-empty">Loading discussions...</div></div>}
           {discussionsQuery.error && <div className="ta-card"><div className="ta-empty">Couldn't load discussions: {discussionsQuery.error}</div></div>}
           {!discussionsQuery.loading && !discussionsQuery.error && discussions.length === 0 && (

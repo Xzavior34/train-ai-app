@@ -3,7 +3,7 @@ import {
   ArrowRight, BookOpen, GraduationCap, Cpu, ShieldCheck, CheckCircle2, Globe, X,
   Brain, Layers, ChevronDown, ChevronUp, HelpCircle, ClipboardList, UserPlus, Rocket,
   Building2, Users, Target, TrendingUp, AlertTriangle, Eye, Lock, Compass, BarChart3,
-  GitCompare, Table, School, Handshake, Briefcase
+  GitCompare, Table, School, Handshake, Briefcase, Zap, Sparkles, Flame
 } from "lucide-react";
 import { submitDemoRequest, submitOrganizationInquiry, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 
@@ -296,7 +296,33 @@ export default function LandingPage({ onNavigate }) {
       <style>{`
         @keyframes heroPop { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
         .hero-anim { animation: heroPop .4s ease both; }
-        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px -6px rgba(37,99,235,.5); }
+        .action-btn { transition: transform .15s ease, box-shadow .15s ease; }
+        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -4px rgba(79, 70, 229, 0.45); }
+        .action-btn:active { transform: scale(.97); }
+
+        .lp-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+        .lp-card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px -10px rgba(15,23,42,.12); border-color: #C7D2FE; }
+
+        .lp-nav-link { transition: color .15s ease; }
+        .lp-nav-link:hover { color: #4F46E5 !important; }
+        .lp-footer-link { transition: color .15s ease; }
+        .lp-footer-link:hover { color: #4F46E5 !important; }
+        .lp-contact-toggle-btn { transition: all .15s ease; }
+        .lp-outline-btn { transition: background .15s ease, transform .15s ease; }
+        .lp-outline-btn:hover { background: #F8FAFC; }
+        .lp-outline-btn:active { transform: scale(.97); }
+        .lp-faq-chevron { transition: transform .2s ease; }
+        .lp-faq-answer { animation: heroPop .22s ease both; }
+        .lp-question-pill { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+        .lp-question-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 16px -6px rgba(15,23,42,.1); border-color: #C7D2FE; }
+
+        .lp-stagger > * { opacity: 0; animation: heroPop .4s ease both; }
+        .lp-stagger > *:nth-child(1) { animation-delay: .03s; }
+        .lp-stagger > *:nth-child(2) { animation-delay: .08s; }
+        .lp-stagger > *:nth-child(3) { animation-delay: .13s; }
+        .lp-stagger > *:nth-child(4) { animation-delay: .18s; }
+        .lp-stagger > *:nth-child(5) { animation-delay: .23s; }
+        .lp-stagger > *:nth-child(n+6) { animation-delay: .28s; }
 
         @media (max-width: 760px) {
           .lp-nav-links { display: none; }
@@ -307,11 +333,11 @@ export default function LandingPage({ onNavigate }) {
           .lp-comparison-table { font-size: 11.5px !important; }
         }
         @media (max-width: 560px) {
-          .lp-hero-section { padding: 32px 16px 48px !important; }
-          .lp-hero-h1 { font-size: 26px !important; }
-          .lp-hero-sub { font-size: 14px !important; }
+          .lp-hero-section { padding: 36px 16px 48px !important; }
+          .lp-hero-h1 { font-size: 28px !important; }
+          .lp-hero-sub { font-size: 14.5px !important; }
           .lp-section { padding: 44px 16px !important; }
-          .lp-section-h2 { font-size: 21px !important; }
+          .lp-section-h2 { font-size: 22px !important; }
           .lp-demo-form-row { flex-direction: column; }
           .lp-footer-inner { flex-direction: column; gap: 20px; align-items: flex-start !important; text-align: left; }
         }
@@ -322,64 +348,205 @@ export default function LandingPage({ onNavigate }) {
 
       <header style={styles.header}>
         <div className="lp-header-inner" style={styles.headerInner}>
-          <div style={styles.brandRow}>
-            <img src="/brand/train-ai-logo.png" alt="Train AI" style={{ width: 34, height: 34, objectFit: "contain", flexShrink: 0 }} />
-            <div>
-              <div style={styles.brandName}>Train AI</div>
-              <div className="lp-brand-sub" style={styles.brandSub}>AI Workforce Intelligence Platform</div>
-            </div>
+          <div style={{ ...styles.brandRow, cursor: "pointer" }} onClick={() => handleNav("home")}>
+            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 48, width: "auto", objectFit: "contain", display: "block" }} />
           </div>
 
           <nav className="lp-nav-links" style={styles.navLinks}>
-            <span style={styles.navLink} onClick={() => handleNav("platform")}>Platform</span>
-            <span style={styles.navLink} onClick={() => handleNav("solutions")}>Solutions</span>
-            <span style={styles.navLink} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
-            <span style={styles.navLink} onClick={() => handleNav("pricing")}>Pricing</span>
-            <span style={styles.navLinkQuiet} onClick={() => handleNav("individuals")}>For Individuals</span>
+            <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("platform")}>Platform</span>
+            <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("solutions")}>Solutions</span>
+            <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
+            <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("pricing")}>Pricing</span>
+            <span className="lp-nav-link" style={styles.navLinkQuiet} onClick={() => handleNav("individuals")}>For Individuals</span>
           </nav>
 
           <div className="lp-header-actions" style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-            <button style={styles.signInBtn} onClick={() => handleNav("signin")}>Sign In</button>
+            <button className="lp-outline-btn" style={styles.signInBtn} onClick={() => handleNav("signin")}>Sign In</button>
             <button className="action-btn" style={styles.getStartedBtn} onClick={() => handleNav("book-demo")}>Book a Demo</button>
           </div>
         </div>
       </header>
 
       <main className="hero-anim lp-hero-section" style={styles.heroSection}>
-        <h1 className="lp-hero-h1" style={styles.heroH1}>Workforce Intelligence Starts Here.</h1>
-        <p className="lp-hero-sub" style={styles.heroSub}>
-          Train AI gives every manager and executive a live map of who's ready, who's stuck, and where your
-          next skill gap is, before it becomes a delivery problem.
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 99,
+          background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)", border: "1px solid #E0E7FF",
+          color: "#4F46E5", fontSize: 12.5, fontWeight: 800, marginBottom: 20
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} /> AI WORKFORCE INTELLIGENCE PLATFORM
+        </div>
+
+        <h1 className="lp-hero-h1" style={{ ...styles.heroH1, fontSize: 46, maxWidth: 840, margin: "0 auto 18px" }}>
+          Measure readiness,<br /><span style={{ background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>not completion.</span>
+        </h1>
+        <p className="lp-hero-sub" style={{ ...styles.heroSub, fontSize: 17, maxWidth: 760, margin: "0 auto 30px" }}>
+          Train AI turns learning activity into decision-ready intelligence about workforce readiness, skill coverage and team capability — so you know who is ready, who is stuck, and where the gaps are.
         </p>
-        <p style={styles.heroSubBold}>Stop measuring course completion. Start measuring workforce readiness.</p>
 
         <div className="lp-hero-cta-row" style={styles.heroCtaRow}>
           <button className="action-btn" style={styles.getStartedBtn} onClick={() => handleNav("book-demo")}>
-            Book a Demo <ArrowRight size={16} />
+            Start with your organisation<ArrowRight size={16} />
           </button>
-          <button style={styles.heroSecondaryBtn} onClick={() => handleNav("platform")}>Explore the Platform</button>
+          <button className="lp-outline-btn" style={styles.heroSecondaryBtn} onClick={() => handleNav("book-demo")}>Request a demo</button>
         </div>
+
+        {/* 3 Pill Metric Cards under CTAs matching Screenshot 3 */}
+        <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 14, marginTop: 24 }}>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "10px 18px", borderRadius: 14, textAlign: "left", boxShadow: "0 2px 8px rgba(15,23,42,0.03)" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 6 }}>
+              <Layers size={14} color="#4F46E5" /> Skill Graph
+            </div>
+            <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>Held • developing • missing</div>
+          </div>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "10px 18px", borderRadius: 14, textAlign: "left", boxShadow: "0 2px 8px rgba(15,23,42,0.03)" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 6 }}>
+              <TrendingUp size={14} color="#4F46E5" /> Readiness Score
+            </div>
+            <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>Team • function • org</div>
+          </div>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "10px 18px", borderRadius: 14, textAlign: "left", boxShadow: "0 2px 8px rgba(15,23,42,0.03)" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 6 }}>
+              <Zap size={14} color="#4F46E5" /> Live Signals
+            </div>
+            <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>Assessments • progress</div>
+          </div>
+        </div>
+
+        {/* Hero Interactive UI Preview Mockup matching Screenshot 3 */}
+        <div style={{
+          marginTop: 48, position: "relative", borderRadius: 24, overflow: "hidden",
+          border: "1px solid #E2E8F0", background: "#FFFFFF",
+          boxShadow: "0 24px 60px -12px rgba(79, 70, 229, 0.18), 0 8px 24px -4px rgba(15, 23, 42, 0.06)",
+          textAlign: "left"
+        }}>
+          {/* Mockup Top Header */}
+          <div style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginLeft: 8 }}>app.trainailtd.com/workforce-intelligence</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "3px 10px", borderRadius: 8 }}>⚡ Live Intelligence Signal</span>
+            </div>
+          </div>
+
+          {/* Mockup Dashboard Content Grid */}
+          <div style={{ padding: 24, background: "#F8FAFC", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+            {/* Workforce Intelligence Readiness by Team Card matching Screenshot 3 */}
+            <div style={{
+              background: "#FFFFFF", borderRadius: 18, border: "1px solid #E2E8F0", padding: 22,
+              boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", textTransform: "uppercase" }}>WORKFORCE INTELLIGENCE</div>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: "#0F172A", marginTop: 2 }}>Readiness by team</div>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", background: "#EEF2FF", padding: "2px 8px", borderRadius: 6 }}>Live</span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "#0F172A" }}>71</span>
+                <span style={{ fontSize: 13, color: "#64748B" }}>Organisation readiness</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981" }}>+4 this month</span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    <span style={{ color: "#334155" }}>Engineering</span>
+                    <span style={{ color: "#4F46E5" }}>82 (+6)</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                    <div style={{ width: "82%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
+                  </div>
+                </div>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    <span style={{ color: "#334155" }}>Operations</span>
+                    <span style={{ color: "#4F46E5" }}>74 (+3)</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                    <div style={{ width: "74%", height: "100%", background: "#6366F1", borderRadius: 99 }} />
+                  </div>
+                </div>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    <span style={{ color: "#334155" }}>Compliance</span>
+                    <span style={{ color: "#4F46E5" }}>61 (-2)</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                    <div style={{ width: "61%", height: "100%", background: "#818CF8", borderRadius: 99 }} />
+                  </div>
+                </div>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    <span style={{ color: "#334155" }}>Sales</span>
+                    <span style={{ color: "#4F46E5" }}>55 (+9)</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                    <div style={{ width: "55%", height: "100%", background: "#A5B4FC", borderRadius: 99 }} />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 18, paddingTop: 14, borderTop: "1px solid #E2E8F0" }}>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#0F172A" }}>12</div>
+                  <div style={{ fontSize: 11, color: "#64748B" }}>Skill gaps</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#0F172A" }}>38</div>
+                  <div style={{ fontSize: 11, color: "#64748B" }}>Compliance due</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#0F172A" }}>6</div>
+                  <div style={{ fontSize: 11, color: "#64748B" }}>Cohorts active</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side Team Stock Image Card */}
+            <div style={{
+              borderRadius: 18, overflow: "hidden", position: "relative",
+              border: "1px solid #E2E8F0", minHeight: 280,
+              backgroundImage: "url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80')",
+              backgroundSize: "cover", backgroundPosition: "center",
+              display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 20
+            }}>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.2) 60%, transparent 100%)" }} />
+              <div style={{ position: "relative", color: "#FFFFFF", zIndex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#818CF8", textTransform: "uppercase", letterSpacing: ".05em" }}>ENTERPRISE LEARNING</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>Empower your workforce with AI-driven skill maps</div>
+                <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4 }}>Real-time team readiness tracking across 18+ industries</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div style={styles.heroNote}>
-          Learning on your own? <span style={{ color: "#2563EB", fontWeight: 700, cursor: "pointer" }} onClick={() => handleNav("individuals")}>Get your own AI coach and dashboard here →</span>
+          Learning on your own? <span style={{ color: "#4F46E5", fontWeight: 700, cursor: "pointer" }} onClick={() => handleNav("individuals")}>Get your own AI coach and dashboard here →</span>
         </div>
 
         <div style={styles.grid}>
-          <div style={styles.card}>
-            <div style={{ ...styles.cardIcon, background: "rgba(37,99,235,.1)" }}><BarChart3 size={20} color="#2563EB" /></div>
+          <div className="lp-card" style={styles.card}>
+            <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><BarChart3 size={20} color="#4F46E5" /></div>
             <h3 style={styles.cardTitle}>Executive Dashboard</h3>
             <p style={styles.cardDesc}>Org-wide readiness scores and skill gaps, department by department, built for decision-makers.</p>
           </div>
-          <div style={styles.card}>
-            <div style={{ ...styles.cardIcon, background: "rgba(109,40,217,.1)" }}><Brain size={20} color="#6D28D9" /></div>
+          <div className="lp-card" style={styles.card}>
+            <div style={{ ...styles.cardIcon, background: "rgba(99,102,241,.1)" }}><Brain size={20} color="#6366F1" /></div>
             <h3 style={styles.cardTitle}>AI Coach in Action</h3>
             <p style={styles.cardDesc}>Every learner gets a 24/7 AI coach, personalised to their role and the gaps that matter.</p>
           </div>
-          <div style={styles.card}>
+          <div className="lp-card" style={styles.card}>
             <div style={{ ...styles.cardIcon, background: "rgba(23,166,115,.1)" }}><Compass size={20} color="#17A673" /></div>
             <h3 style={styles.cardTitle}>Live Skill Graph</h3>
             <p style={styles.cardDesc}>A live map of every skill in your organization: who has it, who's building it, where the gaps are.</p>
           </div>
-          <div style={styles.card}>
+          <div className="lp-card" style={styles.card}>
             <div style={{ ...styles.cardIcon, background: "rgba(245,165,36,.1)" }}><ShieldCheck size={20} color="#F5A524" /></div>
             <h3 style={styles.cardTitle}>Enterprise Compliance</h3>
             <p style={styles.cardDesc}>Append-only audit logging, DSAR data export, and multi-tenant organisation isolation.</p>
@@ -389,7 +556,7 @@ export default function LandingPage({ onNavigate }) {
 
       <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
         <div style={{ ...styles.sectionInner, maxWidth: 780 }}>
-          <div style={styles.sectionTag}><Globe size={13} color="#2563EB" /> Who we are</div>
+          <div style={styles.sectionTag}><Globe size={13} color="#4F46E5" /> Who we are</div>
           <p style={styles.bodyLarge}>
             Train AI is the AI learning infrastructure for organizations that never stop learning. We combine
             AI-personalised learning paths, live skills data, and real human mentorship into one platform, so
@@ -406,7 +573,7 @@ export default function LandingPage({ onNavigate }) {
 
       <section className="lp-section" style={styles.section}>
         <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><AlertTriangle size={13} color="#2563EB" /> The problem</div>
+          <div style={styles.sectionTag}><AlertTriangle size={13} color="#4F46E5" /> The problem</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Your teams are training. You still can't see what's working.</h2>
           <p style={styles.sectionSub}>
             Learning is happening somewhere in your organization. It just isn't happening anywhere leadership
@@ -423,7 +590,7 @@ export default function LandingPage({ onNavigate }) {
             {PROBLEM_POINTS.map((p) => {
               const Icon = p.icon;
               return (
-                <div key={p.title} style={styles.card}>
+                <div key={p.title} className="lp-card" style={styles.card}>
                   <div style={{ ...styles.cardIcon, background: "rgba(239,68,68,.1)" }}><Icon size={20} color="#EF4444" /></div>
                   <h3 style={styles.cardTitle}>{p.title}</h3>
                   <p style={styles.cardDesc}>{p.desc}</p>
@@ -436,7 +603,7 @@ export default function LandingPage({ onNavigate }) {
 
       <section id="platform" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
         <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><Layers size={13} color="#2563EB" /> The platform</div>
+          <div style={styles.sectionTag}><Layers size={13} color="#4F46E5" /> The platform</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>One Platform. Five Intelligence Layers.</h2>
           <p style={styles.sectionSub}>
             Train AI replaces scattered courses, spreadsheets, and status meetings with a single system that
@@ -447,8 +614,8 @@ export default function LandingPage({ onNavigate }) {
             {INTELLIGENCE_LAYERS.map((l) => {
               const Icon = l.icon;
               return (
-                <div key={l.letter} style={styles.card}>
-                  <div style={{ ...styles.cardIcon, background: "rgba(37,99,235,.1)" }}><Icon size={20} color="#2563EB" /></div>
+                <div key={l.letter} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
                   <h3 style={styles.cardTitle}>{l.letter}</h3>
                   <p style={styles.cardDesc}>{l.desc}</p>
                 </div>
@@ -460,16 +627,16 @@ export default function LandingPage({ onNavigate }) {
 
       <section id="how-it-works" className="lp-section" style={styles.section}>
         <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><ClipboardList size={13} color="#2563EB" /> How it works</div>
+          <div style={styles.sectionTag}><ClipboardList size={13} color="#4F46E5" /> How it works</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>From onboarding to outcome, in four steps.</h2>
 
           <div style={styles.stepsRow}>
             {HOW_IT_WORKS.map((step, i) => {
               const Icon = step.icon;
               return (
-                <div key={step.title} style={styles.stepCard}>
+                <div key={step.title} className="lp-card" style={styles.stepCard}>
                   <div style={styles.stepNumber}>{i + 1}</div>
-                  <div style={styles.stepIcon}><Icon size={20} color="#2563EB" /></div>
+                  <div style={styles.stepIcon}><Icon size={20} color="#4F46E5" /></div>
                   <h3 style={styles.cardTitle}>{step.title}</h3>
                   <p style={styles.cardDesc}>{step.desc}</p>
                 </div>
@@ -481,15 +648,15 @@ export default function LandingPage({ onNavigate }) {
 
       <section id="solutions" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
         <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><Target size={13} color="#2563EB" /> Solutions</div>
+          <div style={styles.sectionTag}><Target size={13} color="#4F46E5" /> Solutions</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Built around your organization's specific need.</h2>
 
           <div style={styles.featuresGrid}>
             {SOLUTIONS.map((s) => {
               const Icon = s.icon;
               return (
-                <div key={s.title} style={styles.card}>
-                  <div style={{ ...styles.cardIcon, background: "rgba(37,99,235,.1)" }}><Icon size={20} color="#2563EB" /></div>
+                <div key={s.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
                   <h3 style={styles.cardTitle}>{s.title}</h3>
                   <p style={styles.cardDesc}>{s.desc}</p>
                   <div style={styles.inlineLink} onClick={() => handleNav("book-demo")}>Book a demo <ArrowRight size={13} /></div>
@@ -502,13 +669,13 @@ export default function LandingPage({ onNavigate }) {
 
       <section id="why-train-ai" className="lp-section" style={styles.section}>
         <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><HelpCircle size={13} color="#2563EB" /> Why Train AI</div>
+          <div style={styles.sectionTag}><HelpCircle size={13} color="#4F46E5" /> Why Train AI</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Not Another LMS. Built to Answer the Questions Yours Can't.</h2>
           <p style={styles.sectionSub}>Train AI is built to answer questions a standard learning platform cannot:</p>
 
           <div style={styles.questionGrid}>
             {WHY_QUESTIONS.map((q) => (
-              <div key={q} style={styles.questionPill}>{q}</div>
+              <div key={q} className="lp-question-pill" style={styles.questionPill}>{q}</div>
             ))}
           </div>
 
@@ -517,8 +684,8 @@ export default function LandingPage({ onNavigate }) {
             {WHY_FEATURES.map((f) => {
               const Icon = f.icon;
               return (
-                <div key={f.title} style={styles.card}>
-                  <div style={{ ...styles.cardIcon, background: "rgba(37,99,235,.1)" }}><Icon size={20} color="#2563EB" /></div>
+                <div key={f.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
                   <h3 style={styles.cardTitle}>{f.title}</h3>
                   <p style={styles.cardDesc}>{f.desc}</p>
                   {f.answers && <p style={styles.answersLine}>Answers: {f.answers}</p>}
@@ -534,7 +701,7 @@ export default function LandingPage({ onNavigate }) {
                 <tr>
                   <th style={styles.comparisonHeaderCell}>Dimension</th>
                   <th style={styles.comparisonHeaderCell}>Traditional LMS</th>
-                  <th style={{ ...styles.comparisonHeaderCell, color: "#2563EB" }}>Train AI</th>
+                  <th style={{ ...styles.comparisonHeaderCell, color: "#4F46E5" }}>Train AI</th>
                 </tr>
               </thead>
               <tbody>
@@ -553,15 +720,15 @@ export default function LandingPage({ onNavigate }) {
 
       <section id="organizations" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
         <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><Building2 size={13} color="#2563EB" /> Built for organizations</div>
+          <div style={styles.sectionTag}><Building2 size={13} color="#4F46E5" /> Built for organizations</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Everything Your L&amp;D and HR Team Needs, in One Platform.</h2>
 
           <div style={styles.featuresGrid}>
             {ORG_FEATURES.map((f) => {
               const Icon = f.icon;
               return (
-                <div key={f.title} style={styles.card}>
-                  <div style={{ ...styles.cardIcon, background: "rgba(37,99,235,.1)" }}><Icon size={20} color="#2563EB" /></div>
+                <div key={f.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
                   <h3 style={styles.cardTitle}>{f.title}</h3>
                   <p style={styles.cardDesc}>{f.desc}</p>
                 </div>
@@ -575,14 +742,14 @@ export default function LandingPage({ onNavigate }) {
           </p>
           <p style={{ fontSize: 12.5, color: "#9AA1B9" }}>
             Don't have an organization behind you? You can still get your own dashboard and AI coach.{" "}
-            <span style={{ color: "#2563EB", fontWeight: 700, cursor: "pointer" }} onClick={() => handleNav("individuals")}>Visit For Individuals to get started.</span>
+            <span style={{ color: "#4F46E5", fontWeight: 700, cursor: "pointer" }} onClick={() => handleNav("individuals")}>Visit For Individuals to get started.</span>
           </p>
         </div>
       </section>
 
       <section id="individuals" className="lp-section" style={styles.section}>
         <div style={{ ...styles.sectionInner, maxWidth: 720 }}>
-          <div style={styles.sectionTag}><Users size={13} color="#2563EB" /> For individuals</div>
+          <div style={styles.sectionTag}><Users size={13} color="#4F46E5" /> For individuals</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Your Own AI-Powered Path to a Tech Career.</h2>
           <p style={styles.sectionSub}>
             No organization behind you? You don't need one. Get a personalised learning path, an AI coach,
@@ -593,8 +760,8 @@ export default function LandingPage({ onNavigate }) {
             {INDIVIDUAL_FEATURES.map((f) => {
               const Icon = f.icon;
               return (
-                <div key={f.title} style={styles.card}>
-                  <div style={{ ...styles.cardIcon, background: "rgba(37,99,235,.1)" }}><Icon size={20} color="#2563EB" /></div>
+                <div key={f.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
                   <h3 style={styles.cardTitle}>{f.title}</h3>
                   <p style={styles.cardDesc}>{f.desc}</p>
                 </div>
@@ -603,28 +770,28 @@ export default function LandingPage({ onNavigate }) {
           </div>
 
           <button className="action-btn" style={{ ...styles.getStartedBtn, marginTop: 32 }} onClick={() => handleNav("signup")}>
-            Create your free account <ArrowRight size={16} />
+            Create your free account<ArrowRight size={16} />
           </button>
         </div>
       </section>
 
       <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
         <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><Lock size={13} color="#2563EB" /> Enterprise readiness</div>
+          <div style={styles.sectionTag}><Lock size={13} color="#4F46E5" /> Enterprise readiness</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Built for Procurement, Not Just for Pilots.</h2>
 
           <div style={styles.featuresGrid}>
-            <div style={styles.card}>
-              <div style={{ ...styles.cardIcon, background: "rgba(37,99,235,.1)" }}><Lock size={20} color="#2563EB" /></div>
+            <div className="lp-card" style={styles.card}>
+              <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Lock size={20} color="#4F46E5" /></div>
               <h3 style={styles.cardTitle}>Data ownership</h3>
               <p style={styles.cardDesc}>Your data is yours. We don't sell it, and we don't use it to train models outside your organization's own account.</p>
             </div>
-            <div style={styles.card}>
+            <div className="lp-card" style={styles.card}>
               <div style={{ ...styles.cardIcon, background: "rgba(23,166,115,.1)" }}><ShieldCheck size={20} color="#17A673" /></div>
               <h3 style={styles.cardTitle}>Privacy</h3>
               <p style={styles.cardDesc}>Built with EU and Africa data protection standards in mind, so your compliance team isn't left guessing.</p>
             </div>
-            <div style={styles.card}>
+            <div className="lp-card" style={styles.card}>
               <div style={{ ...styles.cardIcon, background: "rgba(245,165,36,.1)" }}><Globe size={20} color="#F5A524" /></div>
               <h3 style={styles.cardTitle}>SSO &amp; integrations</h3>
               <p style={styles.cardDesc}>Enterprise SSO and API integrations to support your teams, on our roadmap. We'll tell you exactly where things stand when we talk, no surprises in a live demo.</p>
@@ -635,13 +802,13 @@ export default function LandingPage({ onNavigate }) {
 
       <section id="pricing" className="lp-section" style={styles.section}>
         <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><ShieldCheck size={13} color="#2563EB" /> Pricing</div>
+          <div style={styles.sectionTag}><ShieldCheck size={13} color="#4F46E5" /> Pricing</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Simple Tiers That Grow With Your Team.</h2>
           <p style={styles.sectionSub}>Pricing is framed around value and scale, not just seats.</p>
 
           <div style={styles.pricingGrid}>
             {PRICING_TIERS.map((tier) => (
-              <div key={tier.name} style={tier.highlighted ? { ...styles.pricingCard, ...styles.pricingCardHighlighted } : styles.pricingCard}>
+              <div key={tier.name} className="lp-card" style={tier.highlighted ? { ...styles.pricingCard, ...styles.pricingCardHighlighted } : styles.pricingCard}>
                 {tier.highlighted && <div style={styles.pricingBadge}>Most popular</div>}
                 <h3 style={styles.pricingName}>{tier.name}</h3>
                 <p style={styles.pricingTagline}>{tier.tagline}</p>
@@ -658,11 +825,11 @@ export default function LandingPage({ onNavigate }) {
                   ))}
                 </ul>
                 <button
-                  className="action-btn"
+                  className={tier.highlighted ? "action-btn" : "action-btn lp-outline-btn"}
                   style={tier.highlighted ? styles.getStartedBtn : styles.pricingOutlineBtn}
                   onClick={() => handleNav("book-demo")}
                 >
-                  Speak with us today <ArrowRight size={15} />
+                  Speak with us today<ArrowRight size={15} />
                 </button>
               </div>
             ))}
@@ -672,7 +839,7 @@ export default function LandingPage({ onNavigate }) {
 
       <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
         <div style={{ ...styles.sectionInner, maxWidth: 720 }}>
-          <div style={styles.sectionTag}><HelpCircle size={13} color="#2563EB" /> FAQ</div>
+          <div style={styles.sectionTag}><HelpCircle size={13} color="#4F46E5" /> FAQ</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Frequently asked questions</h2>
 
           <div style={styles.faqList}>
@@ -846,25 +1013,25 @@ export default function LandingPage({ onNavigate }) {
       <footer style={styles.footer}>
         <div className="lp-footer-inner" style={styles.footerInner}>
           <div style={{ minWidth: 180 }}>
-            <div style={{ fontWeight: 800, fontSize: 14, color: "#10142A" }}>Train AI</div>
+            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 38, width: "auto", objectFit: "contain", display: "block", marginBottom: 8 }} />
             <div style={{ fontSize: 12, color: "#656C86", marginTop: 4 }}>Train AI Limited · Lagos · London</div>
             <div style={{ fontSize: 12, color: "#656C86", marginTop: 8 }}>info@trainailtd.com</div>
             <div style={{ fontSize: 12, color: "#656C86" }}>+44 7435126104 · +234 9076664049</div>
           </div>
           <div style={styles.footerSitemap}>
-            <span style={styles.footerLink} onClick={() => handleNav("about")}>About</span>
-            <span style={styles.footerLink} onClick={() => handleNav("platform")}>Platform</span>
-            <span style={styles.footerLink} onClick={() => handleNav("solutions")}>Solutions</span>
-            <span style={styles.footerLink} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
-            <span style={styles.footerLink} onClick={() => handleNav("pricing")}>Pricing</span>
-            <span style={styles.footerLink} onClick={() => handleNav("organizations")}>For Organisations</span>
-            <span style={styles.footerLink} onClick={() => handleNav("individuals")}>For Individuals</span>
-            <span style={styles.footerLink} onClick={() => handleNav("book-demo")}>Contact</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("about")}>About</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("platform")}>Platform</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("solutions")}>Solutions</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("pricing")}>Pricing</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("organizations")}>For Organisations</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("individuals")}>For Individuals</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("book-demo")}>Contact</span>
           </div>
           <div style={{ display: "flex", gap: 16, fontSize: 12.5, color: "#656C86" }}>
-            <span style={{ cursor: "pointer" }} onClick={() => handleNav("privacy")}>Privacy Policy</span>
-            <span style={{ cursor: "pointer" }} onClick={() => handleNav("terms")}>Terms of Service</span>
-            <span style={{ cursor: "pointer" }} onClick={() => handleNav("cookie")}>Cookie Policy</span>
+            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("privacy")}>Privacy Policy</span>
+            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("terms")}>Terms of Service</span>
+            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("cookie")}>Cookie Policy</span>
           </div>
         </div>
       </footer>
@@ -892,105 +1059,105 @@ const styles = {
   headerInner: { maxWidth: 1140, margin: "0 auto", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" },
   brandRow: { display: "flex", alignItems: "center", gap: 10 },
   brandName: { fontWeight: 800, fontSize: 16, color: "#10142A", lineHeight: 1.1 },
-  brandSub: { fontSize: 10.5, fontWeight: 700, color: "#2563EB", textTransform: "uppercase", letterSpacing: ".06em" },
+  brandSub: { fontSize: 10.5, fontWeight: 700, color: "#4F46E5", textTransform: "uppercase", letterSpacing: ".06em" },
   navLinks: { display: "flex", gap: 24, alignItems: "center" },
   navLink: { fontSize: 13.5, fontWeight: 600, color: "#656C86", cursor: "pointer" },
   navLinkQuiet: { fontSize: 12.5, fontWeight: 500, color: "#9AA1B9", cursor: "pointer" },
-  signInBtn: { border: "1.5px solid #E6E9F5", background: "transparent", padding: "8px 16px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer" },
-  getStartedBtn: { border: "none", background: "linear-gradient(135deg, #1D4ED8, #60A5FA)", color: "#fff", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer" },
-  heroSection: { maxWidth: 900, margin: "0 auto", padding: "60px 20px 80px", textAlign: "center" },
-  heroH1: { fontSize: 38, fontWeight: 900, letterSpacing: "-0.03em", color: "#10142A", margin: "0 0 16px", lineHeight: 1.15 },
-  heroSub: { fontSize: 16, color: "#656C86", maxWidth: 680, margin: "0 auto 10px", lineHeight: 1.5 },
-  heroSubBold: { fontSize: 15, color: "#10142A", fontWeight: 700, maxWidth: 680, margin: "0 auto 30px", lineHeight: 1.5 },
+  signInBtn: { border: "1.5px solid #E2E8F0", background: "transparent", padding: "8px 16px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" },
+  getStartedBtn: { border: "none", background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", color: "#fff", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 14px rgba(79,70,229,0.3)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 },
+  heroSection: { maxWidth: 1080, margin: "0 auto", padding: "60px 20px 80px", textAlign: "center" },
+  heroH1: { fontSize: 42, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 16px", lineHeight: 1.15 },
+  heroSub: { fontSize: 16.5, color: "#475569", maxWidth: 700, margin: "0 auto 10px", lineHeight: 1.5 },
+  heroSubBold: { fontSize: 15, color: "#0F172A", fontWeight: 700, maxWidth: 680, margin: "0 auto 30px", lineHeight: 1.5 },
   heroCtaRow: { display: "flex", gap: 12, justifyContent: "center", marginBottom: 14 },
-  heroSecondaryBtn: { border: "1.5px solid #E6E9F5", background: "#fff", color: "#10142A", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer" },
-  heroNote: { fontSize: 12.5, color: "#656C86", fontWeight: 600, marginBottom: 36 },
-  waitlistCard: { maxWidth: 560, margin: "0 auto", background: "#fff", padding: 20, borderRadius: 16, border: "1px solid #E6E9F5", boxShadow: "0 20px 40px -16px rgba(16,20,42,.12)" },
+  heroSecondaryBtn: { border: "1.5px solid #E2E8F0", background: "#fff", color: "#0F172A", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" },
+  heroNote: { fontSize: 12.5, color: "#64748B", fontWeight: 600, marginBottom: 36 },
+  waitlistCard: { maxWidth: 560, margin: "0 auto", background: "#fff", padding: 20, borderRadius: 16, border: "1px solid #E2E8F0", boxShadow: "0 20px 40px -16px rgba(15,23,42,.08)" },
   demoForm: { display: "flex", flexDirection: "column", gap: 10 },
   demoFormRow: { display: "flex", gap: 10 },
   demoInputWrap: { position: "relative", flex: 1 },
   demoInputIcon: { position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" },
   demoInput: {
-    width: "100%", border: "1.5px solid #E6E9F5", padding: "11px 13px 11px 34px", fontSize: 13.5,
-    borderRadius: 11, outline: "none", boxSizing: "border-box", color: "#10142A", background: "#fff",
+    width: "100%", border: "1.5px solid #E2E8F0", padding: "11px 13px 11px 34px", fontSize: 13.5,
+    borderRadius: 11, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#fff",
   },
   demoTextarea: {
-    width: "100%", border: "1.5px solid #E6E9F5", padding: "11px 13px", fontSize: 13.5,
-    borderRadius: 11, outline: "none", boxSizing: "border-box", color: "#10142A", resize: "vertical", fontFamily: "inherit",
+    width: "100%", border: "1.5px solid #E2E8F0", padding: "11px 13px", fontSize: 13.5,
+    borderRadius: 11, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit",
   },
-  waitlistBtn: { border: "none", background: "linear-gradient(135deg, #1D4ED8, #60A5FA)", color: "#fff", padding: "12px 20px", borderRadius: 11, fontWeight: 700, fontSize: 13.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" },
+  waitlistBtn: { border: "none", background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", color: "#fff", padding: "12px 20px", borderRadius: 11, fontWeight: 700, fontSize: 13.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", boxShadow: "0 4px 14px rgba(79,70,229,0.3)" },
   waitlistErrorText: { padding: "0 2px", fontSize: 12, color: "#EF4444", fontWeight: 600, textAlign: "left" },
-  successBox: { display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", fontSize: 13.5, fontWeight: 600, color: "#17A673" },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20, textAlign: "left" },
-  card: { background: "#fff", padding: 22, borderRadius: 18, border: "1px solid #E6E9F5" },
+  successBox: { display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", fontSize: 13.5, fontWeight: 600, color: "#10B981" },
+  grid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
+  card: { flex: "1 1 220px", maxWidth: 340, background: "#fff", padding: 22, borderRadius: 18, border: "1px solid #E2E8F0" },
   cardIcon: { width: 42, height: 42, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 },
-  cardTitle: { fontSize: 15, fontWeight: 800, margin: "0 0 6px", color: "#10142A" },
-  cardDesc: { fontSize: 12.5, color: "#656C86", margin: 0, lineHeight: 1.45 },
-  inlineLink: { fontSize: 12, fontWeight: 700, color: "#2563EB", marginTop: 12, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" },
-  bodyLarge: { fontSize: 15.5, color: "#333A52", lineHeight: 1.65, marginBottom: 18 },
-  answersLine: { fontSize: 11.5, color: "#9AA1B9", fontStyle: "italic", marginTop: 10 },
+  cardTitle: { fontSize: 15, fontWeight: 800, margin: "0 0 6px", color: "#0F172A" },
+  cardDesc: { fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.45 },
+  inlineLink: { fontSize: 12, fontWeight: 700, color: "#4F46E5", marginTop: 12, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" },
+  bodyLarge: { fontSize: 15.5, color: "#334155", lineHeight: 1.65, marginBottom: 18 },
+  answersLine: { fontSize: 11.5, color: "#94A3B8", fontStyle: "italic", marginTop: 10 },
 
   section: { padding: "72px 20px" },
   sectionInner: { maxWidth: 1100, margin: "0 auto", textAlign: "center" },
-  sectionTag: { display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 99, background: "#EEF2FF", color: "#2563EB", fontSize: 12, fontWeight: 700, marginBottom: 16 },
-  sectionH2: { fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", color: "#10142A", margin: "0 0 10px", lineHeight: 1.2 },
-  sectionSub: { fontSize: 14.5, color: "#656C86", maxWidth: 640, margin: "0 auto 40px", lineHeight: 1.55 },
+  sectionTag: { display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 99, background: "#EEF2FF", color: "#4F46E5", fontSize: 12, fontWeight: 700, marginBottom: 16 },
+  sectionH2: { fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", color: "#0F172A", margin: "0 0 10px", lineHeight: 1.2 },
+  sectionSub: { fontSize: 14.5, color: "#64748B", maxWidth: 640, margin: "0 auto 40px", lineHeight: 1.55 },
 
   statBanner: { maxWidth: 680, margin: "0 auto 40px", padding: "18px 24px", background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 14, fontSize: 14, color: "#991B1B", lineHeight: 1.5 },
 
-  stepsRow: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 20, textAlign: "left" },
-  stepCard: { position: "relative", background: "#fff", padding: "26px 22px 22px", borderRadius: 18, border: "1px solid #E6E9F5" },
+  stepsRow: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
+  stepCard: { flex: "1 1 240px", maxWidth: 320, position: "relative", background: "#fff", padding: "26px 22px 22px", borderRadius: 18, border: "1px solid #E2E8F0" },
   stepNumber: { position: "absolute", top: 16, right: 18, fontSize: 12, fontWeight: 800, color: "#C7D2FE" },
   stepIcon: { width: 42, height: 42, borderRadius: 12, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 },
 
-  featuresGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, textAlign: "left" },
+  featuresGrid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
 
   questionGrid: { display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginTop: 20 },
-  questionPill: { background: "#fff", border: "1px solid #E6E9F5", borderRadius: 99, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "#10142A" },
+  questionPill: { background: "#fff", border: "1px solid #E2E8F0", borderRadius: 99, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "#0F172A" },
 
   comparisonWrap: { overflowX: "auto", marginTop: 8 },
-  comparisonTable: { width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 14, overflow: "hidden", border: "1px solid #E6E9F5" },
-  comparisonHeaderCell: { textAlign: "left", padding: "12px 18px", fontSize: 12.5, fontWeight: 800, color: "#656C86", borderBottom: "1px solid #E6E9F5", background: "#F4F6FC" },
-  comparisonCellLabel: { textAlign: "left", padding: "12px 18px", fontSize: 13, fontWeight: 700, color: "#10142A", borderBottom: "1px solid #E6E9F5" },
-  comparisonCell: { textAlign: "left", padding: "12px 18px", fontSize: 13, color: "#656C86", borderBottom: "1px solid #E6E9F5" },
+  comparisonTable: { width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 14, overflow: "hidden", border: "1px solid #E2E8F0" },
+  comparisonHeaderCell: { textAlign: "left", padding: "12px 18px", fontSize: 12.5, fontWeight: 800, color: "#64748B", borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" },
+  comparisonCellLabel: { textAlign: "left", padding: "12px 18px", fontSize: 13, fontWeight: 700, color: "#0F172A", borderBottom: "1px solid #E2E8F0" },
+  comparisonCell: { textAlign: "left", padding: "12px 18px", fontSize: 13, color: "#64748B", borderBottom: "1px solid #E2E8F0" },
 
-  pricingGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20, textAlign: "left", marginTop: 12 },
-  pricingCard: { position: "relative", background: "#fff", padding: 26, borderRadius: 18, border: "1px solid #E6E9F5", display: "flex", flexDirection: "column" },
-  pricingCardHighlighted: { border: "2px solid #2563EB", boxShadow: "0 20px 40px -16px rgba(37,99,235,.35)" },
-  pricingBadge: { position: "absolute", top: -12, left: 24, background: "linear-gradient(135deg, #1D4ED8, #60A5FA)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 99 },
-  pricingName: { fontSize: 18, fontWeight: 800, margin: "6px 0 4px", color: "#10142A" },
-  pricingTagline: { fontSize: 12.5, color: "#656C86", margin: "0 0 16px", lineHeight: 1.4, minHeight: 54 },
+  pricingGrid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left", marginTop: 12 },
+  pricingCard: { flex: "1 1 280px", maxWidth: 360, position: "relative", background: "#fff", padding: 26, borderRadius: 18, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" },
+  pricingCardHighlighted: { border: "2px solid #4F46E5", boxShadow: "0 20px 40px -16px rgba(79,70,229,.25)" },
+  pricingBadge: { position: "absolute", top: -12, left: 24, background: "linear-gradient(135deg, #4338CA, #6366F1)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 99 },
+  pricingName: { fontSize: 18, fontWeight: 800, margin: "6px 0 4px", color: "#0F172A" },
+  pricingTagline: { fontSize: 12.5, color: "#64748B", margin: "0 0 16px", lineHeight: 1.4, minHeight: 54 },
   pricingPriceRow: { display: "flex", alignItems: "baseline", gap: 6 },
-  pricingPrice: { fontSize: 26, fontWeight: 800, color: "#10142A" },
-  pricingNote: { fontSize: 11.5, color: "#9AA1B9", margin: "2px 0 18px" },
+  pricingPrice: { fontSize: 26, fontWeight: 800, color: "#0F172A" },
+  pricingNote: { fontSize: 11.5, color: "#94A3B8", margin: "2px 0 18px" },
   pricingFeatureList: { listStyle: "none", padding: 0, margin: "0 0 22px", display: "flex", flexDirection: "column", gap: 10, flex: 1 },
-  pricingFeatureItem: { display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "#333A52", lineHeight: 1.4 },
-  pricingOutlineBtn: { border: "1.5px solid #2563EB", background: "#fff", color: "#2563EB", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 },
+  pricingFeatureItem: { display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "#334155", lineHeight: 1.4 },
+  pricingOutlineBtn: { border: "1.5px solid #4F46E5", background: "#fff", color: "#4F46E5", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 },
 
   contactModeToggle: { display: "inline-flex", background: "rgba(255,255,255,.12)", borderRadius: 12, padding: 4, gap: 4, marginBottom: 20 },
   contactModeBtn: { border: "none", background: "transparent", color: "rgba(255,255,255,.75)", padding: "8px 16px", borderRadius: 9, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
-  contactModeBtnActive: { border: "none", background: "#fff", color: "#10142A", padding: "8px 16px", borderRadius: 9, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+  contactModeBtnActive: { border: "none", background: "#fff", color: "#0F172A", padding: "8px 16px", borderRadius: 9, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
 
   faqList: { display: "flex", flexDirection: "column", gap: 10, textAlign: "left" },
-  faqItem: { background: "#F4F6FC", border: "1px solid #E6E9F5", borderRadius: 14, padding: "4px 18px" },
+  faqItem: { background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 14, padding: "4px 18px" },
   faqQuestion: {
     width: "100%", border: "none", background: "transparent", cursor: "pointer", padding: "14px 0",
     display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-    fontSize: 14, fontWeight: 700, color: "#10142A", textAlign: "left"
+    fontSize: 14, fontWeight: 700, color: "#0F172A", textAlign: "left"
   },
-  faqAnswer: { margin: "0 0 16px", fontSize: 13, color: "#656C86", lineHeight: 1.55 },
+  faqAnswer: { margin: "0 0 16px", fontSize: 13, color: "#64748B", lineHeight: 1.55 },
 
-  ctaSection: { padding: "72px 20px", background: "linear-gradient(135deg, #10142A, #1D4ED8)" },
+  ctaSection: { padding: "72px 20px", background: "linear-gradient(135deg, #0F172A 0%, #312E81 50%, #4338CA 100%)" },
 
-  footer: { borderTop: "1px solid #E6E9F5", background: "#fff", padding: "32px 20px" },
+  footer: { borderTop: "1px solid #E2E8F0", background: "#fff", padding: "32px 20px" },
   footerInner: { maxWidth: 1140, margin: "0 auto", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 24 },
   footerSitemap: { display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5 },
-  footerLink: { color: "#656C86", cursor: "pointer" },
+  footerLink: { color: "#64748B", cursor: "pointer" },
 
-  modalOverlay: { position: "fixed", inset: 0, background: "rgba(16,20,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100 },
-  modalCard: { background: "#fff", borderRadius: 18, padding: 24, maxWidth: 460, width: "100%", boxShadow: "0 30px 60px -24px rgba(16,20,42,.35)" },
+  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100 },
+  modalCard: { background: "#fff", borderRadius: 18, padding: 24, maxWidth: 460, width: "100%", boxShadow: "0 30px 60px -24px rgba(15,23,42,.35)" },
   modalHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  modalTitle: { fontSize: 17, fontWeight: 800, color: "#10142A", margin: 0 },
-  modalClose: { border: "none", background: "#F4F6FC", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex" },
-  modalBody: { fontSize: 13.5, color: "#656C86", lineHeight: 1.55, margin: 0 }
+  modalTitle: { fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 },
+  modalClose: { border: "none", background: "#F8FAFC", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex" },
+  modalBody: { fontSize: 13.5, color: "#64748B", lineHeight: 1.55, margin: 0 }
 };

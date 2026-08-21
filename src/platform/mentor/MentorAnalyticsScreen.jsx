@@ -31,7 +31,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
         {!mentorId && !mentorProfileQuery?.loading && (
           <div className="ta-empty">No instructor profile found for your account yet.</div>
         )}
-        <div className="ta-grid ta-grid-4">
+        <div className="ta-grid ta-grid-4 anim-stagger">
           <StatCard stat={{ label: "Instructor rating", value: loading ? "N/A" : (mentor?.rating != null ? Number(mentor.rating).toFixed(1) : "0.0"), icon: Star }} />
           <StatCard stat={{ label: "Total sessions", value: loading ? "N/A" : (mentor?.total_sessions ?? 0), icon: Calendar }} />
           <StatCard stat={{ label: "Learners helped", value: loading ? "N/A" : menteesHelped, icon: Users }} />

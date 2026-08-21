@@ -335,6 +335,7 @@ export default function App() {
           onSwitchToPlatform={hasPlatformRole ? () => setViewMode("platform") : undefined}
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
+          onSignOut={signOut}
         />
       </div>
       <div style={{ display: viewMode === "platform" ? "block" : "none" }}>
@@ -345,6 +346,7 @@ export default function App() {
           userRoles={userRoles}
           superAdminSelectedOrgId={superAdminSelectedOrgId}
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
+          onSignOut={signOut}
         />
       </div>
       <div style={{ display: viewMode === "owner" ? "block" : "none" }}>
@@ -353,6 +355,7 @@ export default function App() {
           userRoles={userRoles}
           superAdminSelectedOrgId={superAdminSelectedOrgId}
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
+          onSignOut={signOut}
         />
       </div>
       <ConsentBanner session={session} />

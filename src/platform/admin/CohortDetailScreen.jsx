@@ -155,14 +155,14 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
   return (
     <div className="ta-fade">
-      <div style={{ padding: "16px 28px 0" }}>
+      <div className="ta-content" style={{ paddingBottom: 0 }}>
         <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={onBack}>
           <ArrowLeft size={14} /> Back to cohorts
         </button>
       </div>
       <TopBar
         title={cohort?.name || "Cohort"}
-        sub={cohort ? `${cohort.starts_at ? new Date(cohort.starts_at).toLocaleDateString() : "TBD"} – ${cohort.ends_at ? new Date(cohort.ends_at).toLocaleDateString() : "TBD"}` : "Loading..."}
+        sub={cohort ? `${cohort.starts_at ? new Date(cohort.starts_at).toLocaleDateString() : "TBD"} to ${cohort.ends_at ? new Date(cohort.ends_at).toLocaleDateString() : "TBD"}` : "Loading..."}
         orgSelector={orgSelector}
         onNavigate={setScreen}
         right={cohort && <button className="ta-btn ta-btn-outline" onClick={openSettings}><SettingsIcon size={15} /> Settings</button>}
@@ -231,8 +231,8 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
             {tab === "members" && (
               <div className="ta-card ta-mt16">
-                <div className="ta-row ta-gap8">
-                  <select className="ta-input" style={{ flex: 1 }} value={addUserId} onChange={(e) => setAddUserId(e.target.value)}>
+                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                  <select className="ta-input" style={{ flex: 1, minWidth: 200 }} value={addUserId} onChange={(e) => setAddUserId(e.target.value)}>
                     <option value="">Add a member from org...</option>
                     {availableUsers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
                   </select>
@@ -287,12 +287,12 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
             {tab === "courses" && (
               <div className="ta-card ta-mt16">
-                <div className="ta-row ta-gap8">
-                  <select className="ta-input" style={{ flex: 1 }} value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
+                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                  <select className="ta-input" style={{ flex: 1, minWidth: 180 }} value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
                     <option value="">Select member...</option>
                     {members.map((m) => <option key={m.user_id} value={m.user_id}>{m.user_profiles?.display_name || m.user_id}</option>)}
                   </select>
-                  <select className="ta-input" style={{ flex: 1 }} value={assignCourseId} onChange={(e) => setAssignCourseId(e.target.value)}>
+                  <select className="ta-input" style={{ flex: 1, minWidth: 180 }} value={assignCourseId} onChange={(e) => setAssignCourseId(e.target.value)}>
                     <option value="">Select course...</option>
                     {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                   </select>
@@ -419,9 +419,9 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
               <div className="ta-grid ta-grid-2 ta-mt16">
                 <div className="ta-card">
                   <div className="ta-title">Resources</div>
-                  <div className="ta-row ta-gap8 ta-mt12">
-                    <input className="ta-input" style={{ flex: 1 }} placeholder="Resource title" value={resourceTitle} onChange={(e) => setResourceTitle(e.target.value)} />
-                    <input className="ta-input" style={{ flex: 1 }} placeholder="URL (optional)" value={resourceUrl} onChange={(e) => setResourceUrl(e.target.value)} />
+                  <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
+                    <input className="ta-input" style={{ flex: 1, minWidth: 140 }} placeholder="Resource title" value={resourceTitle} onChange={(e) => setResourceTitle(e.target.value)} />
+                    <input className="ta-input" style={{ flex: 1, minWidth: 140 }} placeholder="URL (optional)" value={resourceUrl} onChange={(e) => setResourceUrl(e.target.value)} />
                     <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddResource} disabled={!resourceTitle.trim()}><Plus size={14} /> Add</button>
                   </div>
                   {resources.length === 0 && <div className="ta-empty ta-mt12">No resources shared yet.</div>}
@@ -437,9 +437,9 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                 </div>
                 <div className="ta-card">
                   <div className="ta-title">Sessions</div>
-                  <div className="ta-row ta-gap8 ta-mt12">
-                    <input className="ta-input" style={{ flex: 1 }} placeholder="Session title" value={sessionTitle} onChange={(e) => setSessionTitle(e.target.value)} />
-                    <input type="datetime-local" className="ta-input" style={{ flex: 1 }} value={sessionStartsAt} onChange={(e) => setSessionStartsAt(e.target.value)} />
+                  <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
+                    <input className="ta-input" style={{ flex: 1, minWidth: 140 }} placeholder="Session title" value={sessionTitle} onChange={(e) => setSessionTitle(e.target.value)} />
+                    <input type="datetime-local" className="ta-input" style={{ flex: 1, minWidth: 160 }} value={sessionStartsAt} onChange={(e) => setSessionStartsAt(e.target.value)} />
                     <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleScheduleSession} disabled={!sessionTitle.trim() || !sessionStartsAt}><Plus size={14} /> Schedule</button>
                   </div>
                   {sessions.length === 0 && <div className="ta-empty ta-mt12">No sessions scheduled.</div>}

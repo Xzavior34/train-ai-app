@@ -28,7 +28,7 @@ export function TracksScreen() {
           {tracks.map((t) => {
             const isOpen = expanded === t.id;
             return (
-              <div key={t.id} className="ta-card" style={{ cursor: "pointer" }} onClick={() => setExpanded(isOpen ? null : t.id)}>
+              <div key={t.id} className="ta-card ta-card-hover" style={{ cursor: "pointer" }} onClick={() => setExpanded(isOpen ? null : t.id)}>
                 <div className="ta-row ta-between">
                   <div className="ta-row ta-gap10">
                     <Map size={20} color="var(--primary)" />

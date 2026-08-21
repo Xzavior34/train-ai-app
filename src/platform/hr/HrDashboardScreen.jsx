@@ -45,7 +45,7 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
           <div className="ta-empty">No organization on your profile yet. Join an organization to see live stats.</div>
         )}
 
-        <div className="ta-grid ta-grid-4">
+        <div className="ta-grid ta-grid-4 anim-stagger">
           {kpis.map((k) => <StatCard key={k.label} stat={k} />)}
         </div>
 
@@ -59,9 +59,9 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
               )}
               {!complianceQuery.loading && orgAssignments.length > 0 && (
                 <>
-                  <div className="ta-row ta-between"><span style={{ fontSize: 13.5 }}>Completed</span><Tag tone="success">{completedCount}</Tag></div>
-                  <div className="ta-row ta-between"><span style={{ fontSize: 13.5 }}>Pending / in progress</span><Tag tone="warning">{pendingCount}</Tag></div>
-                  <div className="ta-row ta-between"><span style={{ fontSize: 13.5 }}>Overdue</span><Tag tone="danger">{overdueCount}</Tag></div>
+                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Completed</span><Tag tone="success">{completedCount}</Tag></div>
+                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Pending / in progress</span><Tag tone="warning">{pendingCount}</Tag></div>
+                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Overdue</span><Tag tone="danger">{overdueCount}</Tag></div>
                 </>
               )}
             </div>
@@ -72,7 +72,7 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
             <div className="ta-body ta-mt8" style={{ fontSize: 12.5 }}>
               {usersQuery.loading ? "Loading..." : `${orgUsers.length} people in this organization.`}
             </div>
-            <div className="ta-col ta-gap10 ta-mt16">
+            <div className="ta-col ta-gap10 ta-mt16 anim-stagger">
               {!usersQuery.loading && orgUsers.length === 0 && <div className="ta-empty">No org members found.</div>}
               {orgUsers.slice(0, 8).map((u) => (
                 <div key={u.id} className="ta-row ta-gap10">

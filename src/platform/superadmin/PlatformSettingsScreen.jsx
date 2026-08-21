@@ -85,13 +85,13 @@ export function PlatformSettingsScreen() {
   return (
     <div className="ta-fade">
       <TopBar title="Platform Settings" sub="Global system configuration" />
-      <div className="ta-content">
+      <div className="ta-content" style={{ maxWidth: 760, margin: "0 auto" }}>
         {settingsQuery.loading && <div className="ta-empty">Loading platform settings...</div>}
         {settingsQuery.error && <div className="ta-empty">Couldn't load platform settings: {settingsQuery.error}</div>}
 
         {!settingsQuery.loading && (
           <>
-            <div className="ta-card" style={{ maxWidth: 600 }}>
+            <div className="ta-card">
               <div className="ta-title">Global Feature Flags</div>
               <div className="ta-row ta-between ta-mt16">
                 <span>Allow self-registration</span>
@@ -102,7 +102,7 @@ export function PlatformSettingsScreen() {
               </button>
             </div>
 
-            <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-row ta-between">
                 <div className="ta-title">Other settings</div>
                 <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setFormOpen((v) => !v)}>
@@ -129,14 +129,14 @@ export function PlatformSettingsScreen() {
                   <div className="ta-empty">No other platform settings configured yet.</div>
                 )}
                 {otherSettings.map((row) => (
-                  <div key={row.setting_key} className="ta-row ta-between ta-gap10">
-                    <div>
+                  <div key={row.setting_key} className="ta-row ta-between ta-gap10" style={{ flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: 13 }}>{row.setting_key}</div>
                       {row.description && <div style={{ fontSize: 12, color: "var(--text-2)" }}>{row.description}</div>}
                     </div>
                     <input
                       className="ta-input"
-                      style={{ width: 160 }}
+                      style={{ width: 160, flexShrink: 0 }}
                       defaultValue={row.setting_value || ""}
                       onBlur={(e) => { if (e.target.value !== (row.setting_value || "")) handleUpdateSettingValue(row, e.target.value); }}
                     />

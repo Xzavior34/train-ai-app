@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import { TopBar, ToastContext } from "../components/PlatformUI.jsx";
+import { TopBar, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { ShieldCheck, Trophy } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrgRolePermissions, setOrgRolePermission, ORG_RBAC_ROLES, ORG_RBAC_PERMISSIONS } from "../../lib/api/platform.js";
@@ -64,8 +64,65 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
   return (
     <div className="ta-fade">
       <TopBar title="Role & Access Control" sub="Control what Managers, Instructors, and Learners can do in your organization" orgSelector={orgSelector} />
-      <div className="ta-content">
-        <div className="ta-card" style={{ maxWidth: 600 }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            ROLE & ACCESS CONTROL HERO BANNER
+            ========================================================================= */}
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(22px, 3.5vw, 28px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
+
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+                <span style={{
+                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                  border: "1px solid rgba(165, 180, 252, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <ShieldCheck size={13} color="#A5B4FC" /> RBAC &amp; GRANULAR PERMISSIONS
+                </span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                  border: "1px solid rgba(16, 185, 129, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                }}>
+                  ENTERPRISE GOVERNANCE
+                </span>
+              </div>
+
+              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Role &amp; Access Governance
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                Configure granular permissions across Managers, Instructors, and Learners for your institutional workspace.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="ta-card">
           <div className="ta-row ta-between">
             <div>
               <div className="ta-row ta-gap8"><Trophy size={16} color="var(--primary)" /><div className="ta-title">Show Rank / Leaderboard</div></div>
@@ -73,11 +130,11 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
                 Turn off to hide points-based rankings from every learner in your organization's Community view.
               </div>
             </div>
-            <input type="checkbox" checked={leaderboardEnabled} disabled={savingLeaderboard} onChange={handleToggleLeaderboard} />
+            <Switch on={leaderboardEnabled} onChange={savingLeaderboard ? undefined : handleToggleLeaderboard} />
           </div>
         </div>
 
-        <div className="ta-card ta-mt16">
+        <div className="ta-card">
           <div className="ta-row ta-gap8"><ShieldCheck size={16} color="var(--primary)" /><div className="ta-title">Permissions by role</div></div>
           <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
             Separate from the platform owner's global controls - these settings only affect your organization. Not yet toggled here means the platform default applies.
@@ -99,13 +156,9 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
                       const current = isAllowed(role, perm.key);
                       return (
                         <td key={role} style={{ textAlign: "center" }}>
-                          <label style={{ display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
-                            <input
-                              type="checkbox"
-                              checked={current === true}
-                              onChange={() => handleToggle(role, perm.key, current)}
-                            />
-                          </label>
+                          <div style={{ display: "inline-flex", alignItems: "center" }}>
+                            <Switch on={current === true} onChange={() => handleToggle(role, perm.key, current)} />
+                          </div>
                           {current === null && <div style={{ fontSize: 9.5, color: "var(--text-3)" }}>default</div>}
                         </td>
                       );

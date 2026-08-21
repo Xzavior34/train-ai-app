@@ -27,7 +27,7 @@ export default class ErrorBoundary extends React.Component {
               localStorage.clear();
               window.location.reload();
             }}
-            style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "#2563EB", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+            style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "#4F46E5", color: "#fff", fontWeight: 700, cursor: "pointer" }}
           >
             Reset Session &amp; Reload
           </button>

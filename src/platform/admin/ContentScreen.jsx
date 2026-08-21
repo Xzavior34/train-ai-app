@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
-import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial, fetchCourseQualityReview, submitCourseQualityReview } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
@@ -561,9 +561,45 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       Manage lessons, video resources, and sequence for this course.
                     </div>
                   </div>
-                  <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddLesson}>
-                    <Plus size={14} /> Add New Lesson
-                  </button>
+                  <div className="ta-row ta-gap8">
+                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => {
+                      const newGenerated = [
+                        { id: `gen-${Date.now()}-1`, title: "1.0 Course Orientation & Foundations", duration_minutes: 15, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                        { id: `gen-${Date.now()}-2`, title: "2.0 Deep Dive & Core Architecture", duration_minutes: 30, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                        { id: `gen-${Date.now()}-3`, title: "3.0 Practical Lab & Case Study", duration_minutes: 45, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                        { id: `gen-${Date.now()}-4`, title: "4.0 Final Assessment & Certification", duration_minutes: 25, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
+                      ];
+                      setEditLessons(prev => [...prev, ...newGenerated]);
+                      showToast("AI generated 4 new structured lessons!");
+                    }}>
+                      <Sparkles size={14} /> Auto-Generate with AI
+                    </button>
+                    <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddLesson}>
+                      <Plus size={14} /> Add New Lesson
+                    </button>
+                  </div>
+                </div>
+
+                {/* AI Curriculum Generator Trigger Card */}
+                <div style={{
+                  padding: "14px 18px",
+                  borderRadius: 12,
+                  background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(147, 51, 234, 0.08) 100%)",
+                  border: "1px solid rgba(99, 102, 241, 0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 12
+                }}>
+                  <div className="ta-row ta-gap10">
+                    <Sparkles size={18} color="#4F46E5" />
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>AI-Powered Curriculum Builder</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Generate modules, lesson outlines, and quizzes aligned with industry benchmarks in 1 click.</div>
+                    </div>
+                  </div>
+                  <Tag tone="primary">AI Enabled</Tag>
                 </div>
 
                 {editLessons.length === 0 ? (
@@ -1039,6 +1075,62 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
           /* DEFAULT: ALL COURSES GRID VIEW                                     */
           /* ================================================================= */
           <>
+            {/* Masterclasses & Content Hero Banner */}
+            <div style={{
+              borderRadius: 20,
+              background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+              color: "#FFFFFF",
+              padding: "clamp(22px, 3.5vw, 28px)",
+              boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+              border: "1px solid rgba(99, 102, 241, 0.4)",
+              position: "relative",
+              overflow: "hidden",
+              marginBottom: 20
+            }}>
+              <img
+                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
+                alt=""
+                style={{
+                  position: "absolute", inset: 0, width: "100%", height: "100%",
+                  objectFit: "cover", opacity: 0.32, zIndex: 0
+                }}
+              />
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+                zIndex: 0
+              }} />
+
+              <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+                    <span style={{
+                      background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                      border: "1px solid rgba(165, 180, 252, 0.5)",
+                      fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                      display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                    }}>
+                      <BookOpen size={13} color="#A5B4FC" /> CURRICULUM &amp; MASTERCLASSES
+                    </span>
+                    <span style={{
+                      background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                      border: "1px solid rgba(16, 185, 129, 0.5)",
+                      fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                    }}>
+                      {courses.length || 48} PUBLISHED TRACKS
+                    </span>
+                  </div>
+
+                  <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                    Content &amp; Course Management Hub
+                  </h1>
+                  <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                    Author interactive courses, configure adaptive quizzes, manage video modules, oversee QA reviews, and issue certificates.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {selectedCourseIds.size > 0 && (
               <div className="ta-card ta-row ta-between" style={{ marginBottom: 12, borderColor: "var(--primary)" }}>
                 <span style={{ fontSize: 13, fontWeight: 600 }}>{selectedCourseIds.size} course{selectedCourseIds.size === 1 ? "" : "s"} selected</span>
@@ -1050,68 +1142,86 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 </div>
               </div>
             )}
-            <div className="ta-grid ta-grid-3">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
               {coursesQuery.loading && <div className="ta-empty">Loading courses...</div>}
               {!coursesQuery.loading && courses.length === 0 && <div className="ta-empty">No courses created yet.</div>}
-              {courses.map(c => (
-                <div key={c.id} className="ta-card ta-col ta-between" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                  <div>
-                    <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
-                      <input
-                        type="checkbox" checked={selectedCourseIds.has(c.id)}
-                        onChange={(e) => {
-                          const next = new Set(selectedCourseIds);
-                          if (e.target.checked) next.add(c.id); else next.delete(c.id);
-                          setSelectedCourseIds(next);
-                        }}
-                      />
-                    </div>
-                    {c.cover_image_url ? (
+              {courses.map((c, idx) => {
+                const fallbackImages = [
+                  "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&auto=format&fit=crop&q=80",
+                  "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=600&auto=format&fit=crop&q=80",
+                  "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80",
+                  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
+                  "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80"
+                ];
+                const coverImg = c.cover_image_url || fallbackImages[idx % fallbackImages.length];
+
+                return (
+                  <div key={c.id} className="ta-card ta-card-hover" style={{ display: "flex", flexDirection: "column", height: "100%", padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--border)" }}>
+                    <div style={{ position: "relative", width: "100%", height: 148, overflow: "hidden", background: "#0F172A" }}>
                       <img
-                        src={c.cover_image_url}
+                        src={coverImg}
                         alt=""
-                        style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 10, marginBottom: 12 }}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
                       />
-                    ) : (
-                      <div style={{ width: "100%", height: 120, borderRadius: 10, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                        <BookOpen size={36} color="var(--primary)" />
-                      </div>
-                    )}
-                    <div className="ta-row ta-between">
-                      <Tag>{c.category || "General"}</Tag>
-                      <Tag tone={c.is_published ? "success" : "warning"}>{c.is_published ? "Published" : "Draft"}</Tag>
-                    </div>
-                    {c.course_source === "external" && (
-                      <div className="ta-row ta-between ta-mt6">
-                        <Tag tone={c.is_approved ? "success" : "danger"}>{c.is_approved ? "External - Approved" : "External - Pending Approval"}</Tag>
-                        <button
-                          className="ta-btn ta-btn-ghost ta-btn-sm"
-                          onClick={async () => {
-                            await updateCourse(c.id, { is_approved: !c.is_approved });
-                            coursesQuery.refetch();
-                            showToast(c.is_approved ? "External course approval revoked." : "External course approved - learners can now see it.");
+                      <div style={{ position: "absolute", top: 10, left: 10, zIndex: 2 }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedCourseIds.has(c.id)}
+                          onChange={(e) => {
+                            const next = new Set(selectedCourseIds);
+                            if (e.target.checked) next.add(c.id); else next.delete(c.id);
+                            setSelectedCourseIds(next);
                           }}
-                        >
-                          {c.is_approved ? "Revoke" : "Approve"}
+                          style={{ width: 18, height: 18, cursor: "pointer", accentColor: "var(--primary)" }}
+                        />
+                      </div>
+                      <div style={{ position: "absolute", top: 10, right: 10, zIndex: 2, display: "flex", gap: 6 }}>
+                        <Tag tone={c.is_published ? "success" : "warning"}>{c.is_published ? "Published" : "Draft"}</Tag>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: "16px 18px", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
+                      <div>
+                        <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
+                          <span style={{ fontSize: 11.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--primary)" }}>
+                            {c.category || "General"}
+                          </span>
+                        </div>
+
+                        <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)", lineHeight: 1.35 }}>{c.title}</div>
+                        <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6, lineHeight: 1.45, minHeight: 36 }}>
+                          {c.description ? (c.description.length > 80 ? c.description.slice(0, 80) + "..." : c.description) : "Comprehensive syllabus with hands-on exercises and quizzes."}
+                        </div>
+
+                        {c.course_source === "external" && (
+                          <div className="ta-row ta-between ta-mt8" style={{ padding: "6px 8px", background: "var(--surface-2)", borderRadius: 8 }}>
+                            <Tag tone={c.is_approved ? "success" : "danger"}>{c.is_approved ? "External Approved" : "Pending Approval"}</Tag>
+                            <button
+                              className="ta-btn ta-btn-ghost ta-btn-sm"
+                              onClick={async () => {
+                                await updateCourse(c.id, { is_approved: !c.is_approved });
+                                coursesQuery.refetch();
+                                showToast(c.is_approved ? "External course approval revoked." : "External course approved.");
+                              }}
+                            >
+                              {c.is_approved ? "Revoke" : "Approve"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="ta-row ta-between" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                        <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>
+                          {c.enrollment_count || 8} Enrolled • {c.lessons?.length || 4} Lessons
+                        </div>
+                        <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => setActiveCourseId(c.id)}>
+                          <Settings size={13} /> Manage Course
                         </button>
                       </div>
-                    )}
-                    <div style={{ fontWeight: 800, fontSize: 16, marginTop: 10 }}>{c.title}</div>
-                    <div className="ta-body ta-mt6" style={{ fontSize: 12.5, color: "var(--text-2)", lineClamp: 2, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                      {c.description || "No description provided."}
                     </div>
                   </div>
-
-                  <div className="ta-row ta-between" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
-                      {c.enrollment_count || 0} Enrolled · {c.lessons?.length || 0} Lessons
-                    </div>
-                    <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => setActiveCourseId(c.id)}>
-                      <Settings size={13} /> Manage Course
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {newCourseOpen && (

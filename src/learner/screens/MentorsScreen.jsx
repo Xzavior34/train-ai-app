@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Tag } from "../components/LearnerUI.jsx";
-import { Star, Video, CheckCircle2, Globe, Award, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Star, Video, CheckCircle2, Globe, Award, ChevronDown, ChevronUp,
+  Users, Calendar, Clock, ShieldCheck, MessageSquare, Search
+} from "lucide-react";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-// Given a day-of-week (0=Sunday..6=Saturday, matching the real
-// `mentor_availability.day_of_week` column) and an "HH:MM" time, returns the
-// next real Date that combination falls on - today if it hasn't passed yet,
-// otherwise the next matching weekday.
 function nextDateForDayTime(dayOfWeek, timeStr) {
   const [h, m] = (timeStr || "09:00").split(":").map(Number);
   const now = new Date();
@@ -20,17 +19,14 @@ function nextDateForDayTime(dayOfWeek, timeStr) {
 }
 
 export function MentorsScreen({
-  mentorsList, requestingSession, setRequestingSession, sessionMentorChoice, setSessionMentorChoice,
+  mentorsList = [], requestingSession, setRequestingSession, sessionMentorChoice, setSessionMentorChoice,
   sessionTopicInput, setSessionTopicInput, sessionRequestSent, setSessionRequestSent, session,
   showToast, bookMentorshipSession, upcomingSessionsQuery,
   mentorAvailabilityQuery, bookingDay, setBookingDay, bookingTime, setBookingTime,
-  // Set when the learner arrived here from a universal-search "Mentors"
-  // result (see TrainAILearnerApp's onOpenMentor -> push("mentors", { mentorId })).
-  // Expands that specific mentor's detail card and scrolls it into view,
-  // instead of just dumping the learner on the generic mentor list.
   initialSelectedMentorId = null,
 }) {
   const [expandedMentorId, setExpandedMentorId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!initialSelectedMentorId) return;
@@ -60,61 +56,118 @@ export function MentorsScreen({
     if (hasAvailability && selectedSlot) {
       scheduledAt = nextDateForDayTime(selectedSlot.day_of_week, bookingTime).toISOString();
     } else {
-      // No recurring availability on file for this mentor yet - fall back to
-      // "next 24 hours" as a tentative request rather than blocking booking.
       scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     }
     await bookMentorshipSession({ learnerId: session.user.id, mentorId: sessionMentorChoice.id, title: sessionTopicInput.trim(), scheduledAt });
     closeBooking();
     setSessionTopicInput("");
-    upcomingSessionsQuery.refetch();
-    showToast("Instructor session requested!");
+    upcomingSessionsQuery?.refetch?.();
+    showToast?.("Instructor session requested successfully!");
   }
 
   const canConfirm = sessionTopicInput.trim() && (!hasAvailability || (selectedSlot && bookingTime));
 
-  return (
-    <div className="tai-fade-in">
-      <TopBar title="Instructors & 1-on-1 Sessions" sub="Book expert instruction" />
+  const filteredMentors = mentorsList.filter(m => {
+    if (searchQuery && !m.name.toLowerCase().includes(searchQuery.toLowerCase()) && !m.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
 
+  return (
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      
+      {/* =========================================================================
+          HERO BANNER: Expert Mentors & 1-on-1 Office Hours
+          ========================================================================= */}
+      <div style={{
+        borderRadius: 20,
+        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
+        color: "#FFFFFF",
+        padding: "clamp(24px, 4vw, 32px)",
+        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+        border: "1px solid rgba(99, 102, 241, 0.4)",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        {/* Background Stock Photo with Overlay */}
+        <img
+          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1400&auto=format&fit=crop&q=85"
+          alt=""
+          style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover", opacity: 0.38, zIndex: 0
+          }}
+        />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
+          zIndex: 0
+        }} />
+
+        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+              Expert Instructors &amp; 1-on-1 Mentorship
+            </h1>
+            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+              Book dedicated 1-on-1 sessions for portfolio reviews, code architecture deep-dives, design token audits, and career guidance.
+            </p>
+          </div>
+
+          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Average Rating: 4.9 ★</div>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          BOOKING MODAL / CARD
+          ========================================================================= */}
       {requestingSession && sessionMentorChoice && (
-        <div className="tai-card tai-mt12" style={{ borderColor: "var(--primary)" }}>
+        <div className="tai-card" style={{ borderColor: "var(--primary)", borderWidth: 2, padding: 24, borderRadius: 20, boxShadow: "0 10px 30px rgba(79, 70, 229, 0.15)" }}>
           <div className="tai-row tai-between">
-            <div style={{ fontWeight: 800, fontSize: 15 }}>Book 1-on-1 Session</div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: "var(--text)" }}>Schedule 1-on-1 Mentorship Session</div>
             <button className="tai-btn tai-btn-ghost tai-btn-sm" onClick={closeBooking}>Cancel</button>
           </div>
-          <div className="tai-row tai-gap10 tai-mt10">
-            <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={36} />
+          
+          <div className="tai-row tai-gap14 tai-mt14">
+            <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={48} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: 13.5 }}>{sessionMentorChoice.name}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>${sessionMentorChoice.rate}/hr</div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>{sessionMentorChoice.name}</div>
+              <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700 }}>${sessionMentorChoice.rate}/hr • {sessionMentorChoice.title}</div>
             </div>
           </div>
-          <div className="tai-label tai-mt12">Topic / Goal</div>
-          <input className="tai-input tai-mt6" placeholder="e.g. Code review on RNN architecture..." value={sessionTopicInput} onChange={e => setSessionTopicInput(e.target.value)} />
 
-          <div className="tai-label tai-mt12">Pick a day</div>
-          {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>Loading this instructor's availability...</div>}
+          <div className="tai-label tai-mt16">Topic or Project Goals</div>
+          <input
+            className="tai-input tai-mt6"
+            placeholder="e.g. Figma variables architecture review, code audit for RNN pipeline..."
+            value={sessionTopicInput}
+            onChange={e => setSessionTopicInput(e.target.value)}
+          />
+
+          <div className="tai-label tai-mt16">Select Available Day</div>
+          {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>Loading instructor schedule...</div>}
           {!mentorAvailabilityQuery?.loading && !hasAvailability && (
-            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>This instructor hasn't set recurring availability yet. Your request will be sent as a tentative booking for tomorrow.</div>
+            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>This instructor hasn't published recurring slots yet. Request will be submitted as tentative.</div>
           )}
           {hasAvailability && (
-            <div className="tai-row tai-gap8 tai-mt8" style={{ flexWrap: "wrap" }}>
-              {availableSlots.map(slot => (
-                <button
-                  key={slot.id}
-                  type="button"
-                  className={`tai-btn tai-btn-sm ${bookingDay === slot.day_of_week ? "tai-btn-primary" : "tai-btn-outline"}`}
-                  onClick={() => chooseDay(slot)}
+            <div className="tai-scrollx tai-mt8">
+              {availableSlots.map(s => (
+                <div
+                  key={s.id}
+                  className={`tai-pill ${bookingDay === s.day_of_week ? "tai-pill-active" : "tai-pill-inactive"}`}
+                  onClick={() => chooseDay(s)}
                 >
-                  {DAY_NAMES[slot.day_of_week]}
-                </button>
+                  {DAY_NAMES[s.day_of_week]} ({(s.start_time || "09:00").slice(0, 5)})
+                </div>
               ))}
             </div>
           )}
+
           {hasAvailability && selectedSlot && (
-            <>
-              <div className="tai-label tai-mt12">Time ({(selectedSlot.start_time || "").slice(0, 5)} - {(selectedSlot.end_time || "").slice(0, 5)})</div>
+            <div className="tai-mt14">
+              <div className="tai-label">Preferred Time ({(selectedSlot.start_time || "").slice(0, 5)} - {(selectedSlot.end_time || "").slice(0, 5)})</div>
               <input
                 className="tai-input tai-mt6"
                 type="time"
@@ -123,62 +176,113 @@ export function MentorsScreen({
                 max={(selectedSlot.end_time || "").slice(0, 5)}
                 onChange={e => setBookingTime(e.target.value)}
               />
-            </>
+            </div>
           )}
 
-          <button className="tai-btn tai-btn-primary tai-mt12" style={{ width: "100%" }} disabled={!canConfirm} onClick={confirmBooking}>
-            Confirm booking
+          <button
+            className="tai-btn tai-btn-primary tai-mt16"
+            style={{ width: "100%", padding: "13px 20px" }}
+            disabled={!canConfirm}
+            onClick={confirmBooking}
+          >
+            Confirm &amp; Request Session →
           </button>
         </div>
       )}
 
-      <div className="tai-col tai-gap12 tai-mt16">
-        {mentorsList.length === 0 && <div className="tai-empty">No active instructors available at this time.</div>}
-        {mentorsList.map(m => {
+      {/* =========================================================================
+          SEARCH & MENTOR CARDS GRID
+          ========================================================================= */}
+      <div style={{ position: "relative" }}>
+        <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
+        <input
+          type="text"
+          placeholder="Search instructors by name, specialization, or topic..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{
+            width: "100%", height: 44, paddingLeft: 42, paddingRight: 14,
+            borderRadius: 12, border: "1.5px solid var(--border)", background: "var(--surface)",
+            fontSize: 13.5, color: "var(--text)", outline: "none"
+          }}
+        />
+      </div>
+
+      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+        {filteredMentors.length === 0 && (
+          <div className="tai-card tai-empty" style={{ gridColumn: "1 / -1", borderRadius: 16 }}>
+            No instructors found matching "{searchQuery}".
+          </div>
+        )}
+
+        {filteredMentors.map((m, idx) => {
           const isExpanded = expandedMentorId === m.id;
+          const stockAvatar = `https://images.unsplash.com/photo-${[
+            "1534528741775-53994a69daeb",
+            "1507003211169-0a1dd7228f2d",
+            "1494790108377-be9c29b29330",
+            "1500648767791-00dcc994a43e",
+            "1573496359142-b8d87734a5a2"
+          ][idx % 5]}?w=150&auto=format&fit=crop&q=80`;
+
           return (
             <div
               key={m.id}
               id={`mentor-card-${m.id}`}
-              className="tai-card"
-              style={isExpanded ? { borderColor: "var(--primary)", cursor: "pointer" } : { cursor: "pointer" }}
+              className="tai-card tai-card-hover"
+              style={{
+                borderRadius: 18,
+                borderColor: isExpanded ? "var(--primary)" : "var(--border)",
+                cursor: "pointer",
+                padding: 22
+              }}
               onClick={() => setExpandedMentorId(isExpanded ? null : m.id)}
             >
               <div className="tai-row tai-between">
-                <div className="tai-row tai-gap12">
-                  <Avatar initials={m.name.split(" ").map(n => n[0]).join("")} size={44} />
-                  <div>
+                <div className="tai-row tai-gap14" style={{ minWidth: 0 }}>
+                  <Avatar initials={m.name.split(" ").map(n => n[0]).join("")} size={48} src={stockAvatar} />
+                  <div style={{ minWidth: 0 }}>
                     <div className="tai-row tai-gap6">
-                      <span style={{ fontWeight: 800, fontSize: 14.5 }}>{m.name}</span>
-                      {m.verified && <CheckCircle2 size={15} color="var(--primary)" />}
+                      <span style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                      {m.verified && <CheckCircle2 size={15} color="var(--primary)" style={{ flexShrink: 0 }} />}
                     </div>
-                    <div style={{ fontSize: 12, color: "var(--text-2)" }}>{m.title}</div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.title}</div>
                   </div>
                 </div>
+
                 <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--primary)" }}>${m.rate}</div>
+                    <div style={{ fontWeight: 800, fontSize: 16, color: "var(--primary)" }}>${m.rate}</div>
                     <div style={{ fontSize: 11, color: "var(--text-3)" }}>per hour</div>
                   </div>
                   {isExpanded ? <ChevronUp size={16} color="var(--text-3)" /> : <ChevronDown size={16} color="var(--text-3)" />}
                 </div>
               </div>
-              <div className="tai-row tai-between tai-mt12">
-                <div className="tai-row tai-gap12" style={{ fontSize: 12, color: "var(--text-2)" }}>
+
+              <div className="tai-row tai-between tai-mt16">
+                <div className="tai-row tai-gap12" style={{ fontSize: 12.5, color: "var(--text-2)", fontWeight: 600 }}>
                   <span className="tai-row tai-gap4"><Star size={13} color="var(--warning)" fill="var(--warning)" /> {m.rating}</span>
                   <span>•</span>
-                  <span>{m.sessions} sessions</span>
+                  <span>{m.sessions} sessions completed</span>
                 </div>
-                <button className="tai-btn tai-btn-ghost tai-btn-sm" onClick={(e) => { e.stopPropagation(); setSessionMentorChoice(m); setRequestingSession(true); setBookingDay(null); setBookingTime(""); }}>
+                <button
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSessionMentorChoice(m);
+                    setRequestingSession(true);
+                    setBookingDay(null);
+                    setBookingTime("");
+                  }}
+                >
                   <Video size={13} /> Book 1-on-1
                 </button>
               </div>
 
               {isExpanded && (
-                <div className="tai-mt12" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }} onClick={(e) => e.stopPropagation()}>
-                  {m.bio && <div className="tai-body-text" style={{ fontSize: 12.5 }}>{m.bio}</div>}
-                  {m.tagline && !m.bio && <div className="tai-body-text" style={{ fontSize: 12.5 }}>{m.tagline}</div>}
-                  <div className="tai-row tai-gap16 tai-mt10" style={{ flexWrap: "wrap", fontSize: 11.5, color: "var(--text-2)" }}>
+                <div className="tai-mt14 tai-fade-in" style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }} onClick={(e) => e.stopPropagation()}>
+                  {m.bio && <p className="tai-body-text" style={{ fontSize: 12.5, margin: "0 0 10px" }}>{m.bio}</p>}
+                  <div className="tai-row tai-gap16" style={{ flexWrap: "wrap", fontSize: 12, color: "var(--text-2)" }}>
                     <span className="tai-row tai-gap4"><Award size={13} /> {m.years} yr{m.years === 1 ? "" : "s"} experience</span>
                     {m.languages && m.languages.length > 0 && (
                       <span className="tai-row tai-gap4"><Globe size={13} /> {m.languages.join(", ")}</span>

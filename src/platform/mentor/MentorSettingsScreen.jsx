@@ -38,8 +38,19 @@ const PROFILE_FIELDS = [
   { key: "languages", label: "Languages", isArray: true },
 ];
 
+function useIsNarrow(breakpoint = 900) {
+  const [narrow, setNarrow] = useState(typeof window !== "undefined" && window.innerWidth < breakpoint);
+  useEffect(() => {
+    const onResize = () => setNarrow(window.innerWidth < breakpoint);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [breakpoint]);
+  return narrow;
+}
+
 export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUserId, userProfileQuery }) {
   const showToast = useContext(ToastContext);
+  const isNarrow = useIsNarrow();
   const mentor = mentorProfileQuery?.data || null;
   const userProfile = userProfileQuery?.data || null;
   const [tab, setTab] = useState("profile");
@@ -273,60 +284,97 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
 
   return (
     <div className="ta-fade">
-      <TopBar title="Instructor Settings" sub="Profile setup and management" />
-      <div className="ta-content">
-        <div className="ta-card" style={{ maxWidth: 700 }}>
-          <div className="ta-row ta-between">
-            <div className="ta-title">Complete Your Profile</div>
-            <div style={{ fontWeight: 700, color: "var(--primary)" }}>{completionPct}% complete</div>
-          </div>
-          <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 4, marginTop: 8, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${completionPct}%`, background: "var(--primary)" }} />
-          </div>
-          {missingFields.length > 0 && (
-            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 8 }}>
-              Missing: {missingFields.map((f) => f.label).join(", ")}
-            </div>
-          )}
-        </div>
+      <TopBar title="Instructor Settings" sub="Profile setup, communications, session preferences, and teaching resources" />
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        
+        {/* Main Settings 2-Column Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "minmax(260px, 300px) minmax(0, 1fr)", gap: 24, alignItems: "start" }}>
 
-        <div className="ta-row ta-gap8 ta-mt20" style={{ flexWrap: "wrap" }}>
-          {[
-            { k: "profile", label: "Profile & Portfolio", Icon: User },
-            { k: "communications", label: "Communications", Icon: Bell },
-            { k: "sessions", label: "Sessions", Icon: Calendar },
-            { k: "resources", label: "Resources", Icon: FolderOpen },
-          ].map(({ k, label, Icon }) => (
-            <div key={k} className={`ta-pill ${tab === k ? "ta-pill-active" : "ta-pill-inactive"}`} onClick={() => setTab(k)} style={{ cursor: "pointer" }}>
-              <Icon size={13} style={{ marginRight: 4 }} /> {label}
+          {/* Left Navigation Sidebar & Profile Meter */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
+            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
+              <div className="ta-row ta-between">
+                <div className="ta-title" style={{ fontSize: 15 }}>Profile Readiness</div>
+                <div style={{ fontWeight: 800, color: "var(--primary)", fontSize: 14 }}>{completionPct}%</div>
+              </div>
+              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 4, marginTop: 10, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${completionPct}%`, background: "var(--primary)", borderRadius: 4 }} />
+              </div>
+              {missingFields.length > 0 ? (
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 10, lineHeight: 1.4 }}>
+                  Incomplete: {missingFields.map((f) => f.label).join(", ")}
+                </div>
+              ) : (
+                <div style={{ fontSize: 12, color: "var(--success)", marginTop: 10, fontWeight: 600 }}>
+                  Profile fully complete and verified
+                </div>
+              )}
             </div>
-          ))}
-        </div>
 
-        {tab === "profile" && (
-          <>
-        <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
-          <div className="ta-title">Profile</div>
-          <div className="ta-row ta-gap16 ta-mt12" style={{ alignItems: "center" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, overflow: "hidden" }}>
-              {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (displayName || "I").slice(0, 2).toUpperCase()}
+            {/* Vertical Settings Tabs */}
+            <div className="ta-card" style={{ padding: 10, borderRadius: 16, display: "flex", flexDirection: "column", gap: 4 }}>
+              {[
+                { k: "profile", label: "Profile & Portfolio", Icon: User, desc: "Bio, photo, credentials" },
+                { k: "communications", label: "Communications", Icon: Bell, desc: "Notifications and alerts" },
+                { k: "sessions", label: "Sessions & Video", Icon: Calendar, desc: "Room URLs, policies" },
+                { k: "resources", label: "Resources & Agreements", Icon: FolderOpen, desc: "Documents and guides" },
+              ].map(({ k, label, Icon, desc }) => {
+                const isActive = tab === k;
+                return (
+                  <div
+                    key={k}
+                    onClick={() => setTab(k)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      cursor: "pointer",
+                      background: isActive ? "var(--surface-2)" : "transparent",
+                      borderLeft: isActive ? "3px solid var(--primary)" : "3px solid transparent",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    <Icon size={18} color={isActive ? "var(--primary)" : "var(--text-3)"} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: isActive ? 700 : 600, color: isActive ? "var(--text)" : "var(--text-2)" }}>{label}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)" }}>{desc}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <FileUploadZone
-              bucket="uploads"
-              pathPrefix={`avatars/${currentUserId}`}
-              accept="image/*"
-              onUploaded={async (url) => {
-                try {
-                  await updateUserAvatar(currentUserId, url);
-                  userProfileQuery?.refetch?.();
-                  showToast("Profile picture updated!");
-                } catch (e) {
-                  showToast(e.message || "Could not update picture.");
-                }
-              }}
-              label="Change photo"
-            />
           </div>
+
+          {/* Right Content Column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+            {tab === "profile" && (
+              <>
+                <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+                  <div className="ta-title" style={{ fontSize: 16 }}>Instructor Public Profile</div>
+                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>This information is visible to enrolled learners and co-instructors.</div>
+                  
+                  <div className="ta-row ta-gap16 ta-mt16" style={{ alignItems: "center" }}>
+                    <div style={{ width: 68, height: 68, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800, overflow: "hidden", border: "2px solid var(--border)" }}>
+                      {userProfile?.avatar_url ? <img src={userProfile.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (displayName || "I").slice(0, 2).toUpperCase()}
+                    </div>
+                    <FileUploadZone
+                      bucket="uploads"
+                      pathPrefix={`avatars/${currentUserId}`}
+                      accept="image/*"
+                      onUploaded={async (url) => {
+                        try {
+                          await updateUserAvatar(currentUserId, url);
+                          userProfileQuery?.refetch?.();
+                          showToast("Profile picture updated!");
+                        } catch (e) {
+                          showToast(e.message || "Could not update picture.");
+                        }
+                      }}
+                      label="Change photo"
+                    />
+                  </div>
           <div className="ta-label ta-mt16">Display Name</div>
           <div className="ta-row ta-gap8">
             <input className="ta-input ta-mt6" style={{ flex: 1 }} value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
@@ -427,7 +475,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
 
         {tab === "communications" && (
           <>
-            <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-title">Notification Preferences</div>
               {[
                 { key: "in_app_enabled", label: "In-App Notifications" },
@@ -441,7 +489,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               ))}
             </div>
 
-            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-title">Automated Reminders</div>
               <div style={{ fontSize: 12, color: "var(--text-2)" }}>Configure automated session reminders for your learners.</div>
               <div className="ta-col ta-gap8 ta-mt12">
@@ -449,7 +497,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
                 {!remindersQuery.loading && (remindersQuery.data || []).length === 0 && <div className="ta-empty">No reminders configured.</div>}
                 {(remindersQuery.data || []).map((r) => (
                   <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                    <div style={{ fontSize: 13 }}>{r.reminder_type} - {r.hours_before}h before{r.custom_message ? `: "${r.custom_message}"` : ""}</div>
+                    <div style={{ fontSize: 13 }}>{r.reminder_type} • {r.hours_before}h before{r.custom_message ? `: "${r.custom_message}"` : ""}</div>
                     <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteReminderSetting(r.id); remindersQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
                 ))}
@@ -470,11 +518,11 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
 
         {tab === "sessions" && (
           <>
-            <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-title">Session Preferences</div>
               {[
                 { key: "auto_accept_bookings", label: "Auto-Accept Bookings", sub: "Automatically approve session requests", state: autoAccept, setState: setAutoAccept },
-                { key: "require_pre_payment", label: "Require Pre-Payment", sub: "Payment required before sessions - currently has no effect while Train AI is the sole payment recipient and payouts are suspended", state: requirePrePayment, setState: setRequirePrePayment },
+                { key: "require_pre_payment", label: "Require Pre-Payment", sub: "Payment required before sessions", state: requirePrePayment, setState: setRequirePrePayment },
                 { key: "allow_group_sessions", label: "Allow Group Sessions", sub: "Enable multi-learner sessions", state: allowGroupSessions, setState: setAllowGroupSessions },
               ].map(({ key, label, sub, state, setState }) => (
                 <div key={key} className="ta-row ta-between ta-mt12">
@@ -487,7 +535,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               ))}
             </div>
 
-            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-title">Session Templates</div>
               <div className="ta-col ta-gap8 ta-mt12">
                 {!templatesQuery.loading && (templatesQuery.data || []).length === 0 && <div className="ta-empty">No templates yet.</div>}
@@ -504,7 +552,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               </div>
             </div>
 
-            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-title">Cancellation Policies</div>
               <div className="ta-col ta-gap8 ta-mt12">
                 {!policiesQuery.loading && (policiesQuery.data || []).length === 0 && <div className="ta-empty">No cancellation policies set.</div>}
@@ -522,7 +570,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               </div>
             </div>
 
-            <div className="ta-card ta-mt20" style={{ maxWidth: 600 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-title">Video Platform Settings</div>
               <div className="ta-label ta-mt12">Preferred Platform</div>
               <select className="ta-input ta-mt6" value={videoPlatform} onChange={(e) => setVideoPlatform(e.target.value)}>
@@ -537,7 +585,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
 
         {tab === "resources" && (
           <>
-            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-title">Resource Library</div>
               <div style={{ fontSize: 12, color: "var(--text-2)" }}>Share learning materials and resources with your learners.</div>
               <div className="ta-col ta-gap8 ta-mt12">
@@ -556,14 +604,14 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               </div>
             </div>
 
-            <div className="ta-card ta-mt20" style={{ maxWidth: 700 }}>
+            <div className="ta-card ta-mt20">
               <div className="ta-title">Mentorship Agreements</div>
               <div style={{ fontSize: 12, color: "var(--text-2)" }}>Manage contracts and expectations with your learners.</div>
               <div className="ta-col ta-gap8 ta-mt12">
                 {!agreementsQuery.loading && (agreementsQuery.data || []).length === 0 && <div className="ta-empty">No agreements yet.</div>}
                 {(agreementsQuery.data || []).map((a) => (
                   <div key={a.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                    <div style={{ fontSize: 13 }}>{a.learner_name} - <Tag tone={a.status === "signed" ? "success" : "warning"}>{a.status}</Tag></div>
+                    <div style={{ fontSize: 13 }}>{a.learner_name} • <Tag tone={a.status === "signed" ? "success" : "warning"}>{a.status}</Tag></div>
                   </div>
                 ))}
               </div>
@@ -573,6 +621,8 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             </div>
           </>
         )}
+          </div>
+        </div>
       </div>
     </div>
   );

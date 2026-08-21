@@ -6,7 +6,7 @@ export function Avatar({ initials = "U", size = 36, style = {} }) {
     <div
       style={{
         width: size, height: size, borderRadius: "50%",
-        background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)",
+        background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
         color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
         fontWeight: 700, fontSize: size * 0.36, flexShrink: 0, ...style
       }}
@@ -23,7 +23,7 @@ export function ProgressBar({ value = 0, height = 7 }) {
       <div
         style={{
           width: `${safeVal}%`, height, borderRadius: 99,
-          background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)",
+          background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
           transition: "width .4s ease"
         }}
       />
@@ -33,7 +33,7 @@ export function ProgressBar({ value = 0, height = 7 }) {
 
 export function Tag({ children, tone, icon: Icon }) {
   const bg = tone === "success" ? "#E7F8F1" : tone === "warning" ? "#FEF3E0" : tone === "danger" ? "#FDECEC" : "#EEF2FF";
-  const color = tone === "success" ? "#17A673" : tone === "warning" ? "#F5A524" : tone === "danger" ? "#EF4444" : "#2563EB";
+  const color = tone === "success" ? "#17A673" : tone === "warning" ? "#F5A524" : tone === "danger" ? "#EF4444" : "#4F46E5";
   return (
     <span style={{ padding: "4px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, background: bg, color, display: "inline-flex", alignItems: "center", gap: 4 }}>
       {Icon && <Icon size={11} />}
@@ -49,7 +49,7 @@ export function Switch({ on, onChange }) {
       role="switch"
       aria-checked={on}
       style={{
-        width: 38, height: 22, borderRadius: 99, background: on ? "#2563EB" : "#EEF2FF",
+        width: 38, height: 22, borderRadius: 99, background: on ? "#4F46E5" : "#EEF2FF",
         position: "relative", cursor: "pointer", flexShrink: 0, transition: "background .15s"
       }}
     >
@@ -69,7 +69,7 @@ export function StatCard({ stat }) {
     <div style={{ background: "#fff", border: "1px solid #E6E9F5", borderRadius: 16, padding: 18, boxShadow: "0 1px 2px rgba(16,20,42,.03)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ width: 34, height: 34, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          {Icon && <Icon size={16} color="#2563EB" />}
+          {Icon && <Icon size={16} color="#4F46E5" />}
         </div>
         {stat.delta && (
           <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: stat.up ? "#17A673" : "#EF4444" }}>

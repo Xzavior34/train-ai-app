@@ -130,7 +130,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
             </div>
 
             {/* Learner List */}
-            <div style={{ flex: 1, overflowY: "auto" }}>
+            <div style={{ flex: 1, overflowY: "auto" }} className="anim-stagger">
               {(threadsQuery.loading || menteesQuery.loading || instructorsQuery.loading) && (
                 <div className="ta-empty" style={{ fontSize: 12.5, padding: 24 }}>Loading conversations...</div>
               )}

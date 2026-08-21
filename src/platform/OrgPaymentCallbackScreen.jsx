@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { verifyPaystackPayment, verifyStripePayment, readPendingPayment, PAYMENT_CONTEXTS } from "../lib/api/payments.js";
 import { applyOrganizationSubscriptionPayment, purchaseSeats } from "../lib/api/organizations.js";
+import { TOKENS } from "./components/PlatformUI.jsx";
 
 // Platform-app equivalent of learner/screens/PaymentCallbackScreen.jsx
 // that screen only ever handled the CREDITS/COURSE_ENROLLMENT contexts,
@@ -82,9 +83,10 @@ export function OrgPaymentCallbackScreen({ onDone }) {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-1, #F5F6FA)" }}>
-      <div style={{ maxWidth: 420, textAlign: "center", padding: 32, background: "#fff", borderRadius: 16, boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
-        {state === "verifying" && <Loader2 size={32} className="ta-spin" color="#2563EB" />}
+    <div className="ta" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-1, #F5F6FA)", padding: 20 }}>
+      <style>{TOKENS}</style>
+      <div className="ta-fade" style={{ width: "100%", maxWidth: 420, textAlign: "center", padding: 32, background: "#fff", borderRadius: 16, boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
+        {state === "verifying" && <Loader2 size={32} className="ta-spin" color="#4F46E5" />}
         {state === "success" && <CheckCircle2 size={32} color="#17A673" />}
         {state === "failed" && <XCircle size={32} color="#E5484D" />}
         <div style={{ fontWeight: 700, fontSize: 16, marginTop: 16 }}>

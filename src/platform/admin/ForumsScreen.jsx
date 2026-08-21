@@ -79,7 +79,7 @@ export function ForumsScreen({ orgSelector, setScreen }) {
   return (
     <div className="ta-fade">
       {selectedForum && (
-        <div style={{ padding: "16px 28px 0" }}>
+        <div style={{ padding: "16px 32px 0" }}>
           <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setSelectedForumId(null)}>
             <ArrowLeft size={14} /> Back to categories
           </button>
@@ -122,21 +122,21 @@ export function ForumsScreen({ orgSelector, setScreen }) {
               </div>
             )}
 
-            <div className="ta-grid ta-grid-3 ta-mt16">
+            <div className="ta-grid ta-grid-3 ta-mt16 anim-stagger">
               {categoriesQuery.loading && <div className="ta-empty">Loading forum categories...</div>}
               {!categoriesQuery.loading && categories.length === 0 && <div className="ta-empty">No forum categories yet. Create one to get started.</div>}
               {categories.map((cat) => (
-                <div key={cat.id} className="ta-card">
+                <div key={cat.id} className="ta-card ta-card-hover" style={{ cursor: "pointer" }} onClick={() => setSelectedForumId(cat.id)}>
                   <div className="ta-row ta-between">
                     <Tag tone={cat.is_general ? undefined : "success"}>{cat.is_general ? "General" : (cat.courses?.title || "Course")}</Tag>
                     <span style={{ fontSize: 12, color: "var(--text-2)" }}>{cat.thread_count} thread{cat.thread_count === 1 ? "" : "s"}</span>
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: 16, marginTop: 10, cursor: "pointer" }} onClick={() => setSelectedForumId(cat.id)}>{cat.title}</div>
-                  {cat.description && <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6 }}>{cat.description}</div>}
+                  <div style={{ fontWeight: 800, fontSize: 16, marginTop: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cat.title}</div>
+                  {cat.description && <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{cat.description}</div>}
                   <div className="ta-row ta-gap8 ta-mt12">
-                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setSelectedForumId(cat.id)}><MessageSquare size={13} /> View threads</button>
-                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => openEdit(cat)}><Pencil size={13} /></button>
-                    <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleDeleteCategory(cat.id, cat.title)}><Trash2 size={13} /></button>
+                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={(e) => { e.stopPropagation(); setSelectedForumId(cat.id); }}><MessageSquare size={13} /> View threads</button>
+                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={(e) => { e.stopPropagation(); openEdit(cat); }}><Pencil size={13} /></button>
+                    <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id, cat.title); }}><Trash2 size={13} /></button>
                   </div>
                 </div>
               ))}

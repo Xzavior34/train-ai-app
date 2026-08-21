@@ -92,8 +92,8 @@ export function EmailsScreen() {
   return (
     <div className="ta-fade">
       <TopBar title="Platform Emails" sub="System notifications & email broadcasts" />
-      <div className="ta-content">
-        <div className="ta-card" style={{ maxWidth: 640 }}>
+      <div className="ta-content" style={{ maxWidth: 760, margin: "0 auto" }}>
+        <div className="ta-card">
           <div className="ta-title">Send Broadcast Email</div>
           <input className="ta-input ta-mt12" placeholder="Email subject line..." value={subject} onChange={(e) => setSubject(e.target.value)} />
           <textarea className="ta-input ta-mt12" rows={5} placeholder="Email content body..." value={body} onChange={(e) => setBody(e.target.value)} />
@@ -173,8 +173,8 @@ export function EmailsScreen() {
           {campaigns.map((c) => {
             const colors = statusColor(c.status);
             return (
-              <div key={c.id} className="ta-row ta-between ta-mt12" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
-                <div>
+              <div key={c.id} className="ta-row ta-between ta-mt12" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 12, flexWrap: "wrap", gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>{c.subject}</div>
                   <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 2 }}>
                     {c.recipient_group} · {c.sent_count ?? 0}/{c.recipient_count ?? 0} sent · {c.open_count ?? 0} opened

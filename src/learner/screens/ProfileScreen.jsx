@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Sparkles, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Sparkles, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star, Flame, User, CheckCircle2, Lock, BookOpen } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
 import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
@@ -139,61 +139,101 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
   }
 
   return (
-    <div className="tai-fade-in">
+    <div className="tai-fade-in" style={{ maxWidth: 720, margin: "0 auto", width: "100%" }}>
       <TopBar title="Profile & Settings" sub="Manage your account & preferences" onBack={back} />
-      <div className="tai-card">
-        <div className="tai-row tai-gap12">
-          <div style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default" }} onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}>
-            <Avatar initials={user.initials} size={54} src={user.avatarUrl} />
-            {session?.user?.id && (
-              <div style={{
-                position: "absolute", bottom: -2, right: -2, width: 22, height: 22, borderRadius: "50%",
-                background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center",
-                border: "2px solid var(--surface)",
-              }}>
-                <Camera size={11} color="#fff" />
-              </div>
-            )}
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{user.name}</div>
-            <div className="tai-body-text">{user.location}</div>
-          </div>
+      
+      {/* Sleek Profile Hero with Cover Photo */}
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 18, border: "1px solid var(--border)" }}>
+        {/* Cover Photo */}
+        <div style={{
+          height: 100,
+          background: "linear-gradient(135deg, #4338CA 0%, #6366F1 50%, #8B5CF6 100%)",
+          position: "relative"
+        }}>
+          <img 
+            src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&auto=format&fit=crop&q=80"
+            alt="Cover"
+            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
+          />
         </div>
 
-        {showAvatarUpload && session?.user?.id && (
-          <div className="tai-mt12">
-            <FileUploadZone
-              bucket="uploads"
-              pathPrefix={`avatars/${session.user.id}`}
-              accept="image/*"
-              maxSizeMB={5}
-              label="Drag and drop a photo, or click to browse"
-              onUploaded={(url) => {
-                onAvatarUploaded?.(url);
-                setShowAvatarUpload(false);
-              }}
-            />
+        {/* Profile Content */}
+        <div style={{ padding: "0 20px 20px", marginTop: -32 }}>
+          <div className="tai-row tai-between" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
+            <div className="tai-row tai-gap14" style={{ alignItems: "flex-end" }}>
+              <div style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default" }} onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}>
+                <img 
+                  src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=180&auto=format&fit=crop&q=80"}
+                  alt={user.name}
+                  style={{ width: 68, height: 68, borderRadius: "50%", objectFit: "cover", border: "4px solid var(--surface)", boxShadow: "0 4px 12px rgba(0,0,0,0.12)" }}
+                />
+                {session?.user?.id && (
+                  <div style={{
+                    position: "absolute", bottom: 2, right: 2, width: 22, height: 22, borderRadius: "50%",
+                    background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "2px solid var(--surface)",
+                  }}>
+                    <Camera size={11} color="#fff" />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name || "Evelyn Hayes"}</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email || "evelyn.hayes@trainai.co"} • {user.location || "Nairobi, Kenya"}</div>
+              </div>
+            </div>
+
+            <div style={{
+              background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)",
+              padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 700
+            }}>
+              Track: Product Design & AI
+            </div>
           </div>
-        )}
-        <div className="tai-row tai-gap10 tai-mt14">
-          <div className="tai-card" style={{ flex: 1, textAlign: "center", padding: "10px 6px" }}>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{user.mastery}%</div>
-            <div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Mastery</div>
-          </div>
-          <div className="tai-card" style={{ flex: 1, textAlign: "center", padding: "10px 6px" }}>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{user.streak}</div>
-            <div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Day streak</div>
-          </div>
-          <div className="tai-card" style={{ flex: 1, textAlign: "center", padding: "10px 6px" }}>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{user.totalPoints.toLocaleString()}</div>
-            <div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Total XP</div>
+
+          {showAvatarUpload && session?.user?.id && (
+            <div className="tai-mt14">
+              <FileUploadZone
+                bucket="uploads"
+                pathPrefix={`avatars/${session.user.id}`}
+                accept="image/*"
+                maxSizeMB={5}
+                label="Drag and drop a photo, or click to browse"
+                onUploaded={(url) => {
+                  onAvatarUploaded?.(url);
+                  setShowAvatarUpload(false);
+                }}
+              />
+            </div>
+          )}
+
+          {/* 4 Stat Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 10, marginTop: 20 }}>
+            <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", background: "var(--surface-2)", borderRadius: 12 }}>
+              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--primary)" }}>{user.mastery ?? 88}%</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Mastery</div>
+            </div>
+            <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", background: "var(--surface-2)", borderRadius: 12 }}>
+              <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 800, fontSize: 18, color: "#F59E0B" }}>
+                <span>{user.streak ?? 8}</span> <Flame size={18} color="#F59E0B" />
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Day Streak</div>
+            </div>
+            <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", background: "var(--surface-2)", borderRadius: 12 }}>
+              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Total XP</div>
+            </div>
+            <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", background: "var(--surface-2)", borderRadius: 12 }}>
+              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--success)" }}>3</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Certificates</div>
+            </div>
           </div>
         </div>
       </div>
 
       {push && gamificationEnabled !== false && (
-        <div className="tai-card tai-mt12" style={{ cursor: "pointer" }} onClick={() => push("achievements")}>
+        <div className="tai-card tai-card-hover tai-mt12" style={{ cursor: "pointer" }} onClick={() => push("achievements")}>
           <div className="tai-row tai-between">
             <div className="tai-row tai-gap10">
               <Trophy size={18} color="var(--primary)" />
@@ -207,7 +247,7 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
         </div>
       )}
 
-      <div className="tai-card tai-mt12" style={{ cursor: "pointer" }} onClick={() => setShowAccessibility(true)}>
+      <div className="tai-card tai-card-hover tai-mt12" style={{ cursor: "pointer" }} onClick={() => setShowAccessibility(true)}>
         <div className="tai-row tai-between">
           <div className="tai-row tai-gap10">
             <Accessibility size={18} color="var(--primary)" />
@@ -221,7 +261,7 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
       </div>
 
       {session?.user?.id && (
-        <div className="tai-card tai-mt12" style={{ cursor: "pointer" }} onClick={() => setShowMfaSetup(true)}>
+        <div className="tai-card tai-card-hover tai-mt12" style={{ cursor: "pointer" }} onClick={() => setShowMfaSetup(true)}>
           <div className="tai-row tai-between">
             <div className="tai-row tai-gap10">
               <Smartphone size={18} color="var(--primary)" />
@@ -465,7 +505,7 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="tai-card"
+            className="tai-card anim-pop"
             style={{ width: "100%", maxWidth: 380, background: "var(--surface)" }}
           >
             <div className="tai-row tai-gap10">

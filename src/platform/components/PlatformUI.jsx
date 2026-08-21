@@ -2,7 +2,8 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail,
-  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy
+  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy,
+  PanelLeftClose, PanelLeftOpen, Check, CheckCircle2
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { DASHBOARD_META } from "../../lib/roleRouting.js";
@@ -20,27 +21,71 @@ export const TOKENS = `
     --surface: #FFFFFF;
     --surface-2: #F1F5F9;
     --surface-3: #F8FAFC;
-    --primary: #2563EB;
-    --primary-dark: #1D4ED8;
-    --primary-light: #60A5FA;
-    --grad: linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%);
+    --primary: #4F46E5;
+    --primary-dark: #4338CA;
+    --primary-light: #6366F1;
+    --primary-tint: #EEF2FF;
+    --grad: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+    --grad-subtle: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
     --text: #0F172A;
     --text-2: #475569;
     --text-3: #94A3B8;
     --border: #E2E8F0;
+    --border-subtle: #F1F5F9;
     --success: #10B981;
     --success-bg: #ECFDF5;
+    --success-border: #A7F3D0;
     --warning: #F59E0B;
     --warning-bg: #FFFBEB;
+    --warning-border: #FDE68A;
     --danger: #EF4444;
     --danger-bg: #FEF2F2;
-    --sidebar-w: 256px;
-    --radius: 16px;
-    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --danger-border: #FECACA;
+    --sidebar-w: 260px;
+    --radius: 18px;
+    --radius-sm: 12px;
+    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
+    --shadow-hover: 0 8px 24px -4px rgba(79, 70, 229, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --shadow-btn: 0 4px 14px -2px rgba(79, 70, 229, 0.32);
+    --font: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-family: var(--font);
     color: var(--text);
     background: var(--bg);
     min-height: 100vh; min-height: 100dvh;
+    transition: background .25s ease, color .25s ease;
+  }
+  .ta.dark, html.dark .ta {
+    --bg: #090D1A;
+    --surface: #121829;
+    --surface-2: #1B243B;
+    --surface-3: #161D31;
+    --text: #F8FAFC;
+    --text-2: #94A3B8;
+    --text-3: #64748B;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-subtle: rgba(255, 255, 255, 0.06);
+    --success-bg: #064E3B;
+    --warning-bg: #451A03;
+    --danger-bg: #450A0A;
+  }
+  .ta.dark .ta-sidebar, html.dark .ta-sidebar {
+    background: #0D1222;
+    border-right-color: rgba(255, 255, 255, 0.08);
+  }
+  .ta.dark .ta-topbar, html.dark .ta-topbar {
+    background: #0D1222;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+  .ta.dark .ta-table-wrap, html.dark .ta-table-wrap {
+    background: #121829;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .ta.dark .ta-search, html.dark .ta-search {
+    background: #161D31;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .ta.dark .ta-search:focus-within, html.dark .ta-search:focus-within {
+    background: #121829;
   }
   .ta-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
   .ta-sidebar {
@@ -48,64 +93,90 @@ export const TOKENS = `
     background: #FFFFFF;
     border-right: 1px solid var(--border);
     display: flex; flex-direction: column; padding: 20px 14px; position: sticky; top: 0; height: 100vh; height: 100dvh;
-    color: var(--text); box-shadow: 2px 0 16px -8px rgba(15,23,42,0.06);
+    color: var(--text); box-shadow: 2px 0 16px -8px rgba(15,23,42,0.04);
+    transition: width .2s ease, padding .2s ease;
   }
-  .ta-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; }
+  .ta-sidebar.ta-sidebar-minimized {
+    width: 76px; padding: 20px 8px;
+  }
+  .ta-sidebar.ta-sidebar-minimized .ta-brand-name,
+  .ta-sidebar.ta-sidebar-minimized .ta-brand-tag,
+  .ta-sidebar.ta-sidebar-minimized .ta-nav-section-title,
+  .ta-sidebar.ta-sidebar-minimized .ta-nav-item span,
+  .ta-sidebar.ta-sidebar-minimized .ta-ws-item span,
+  .ta-sidebar.ta-sidebar-minimized .ta-nav-item svg:last-child {
+    display: none;
+  }
+  .ta-sidebar.ta-sidebar-minimized .ta-nav-item,
+  .ta-sidebar.ta-sidebar-minimized .ta-ws-item {
+    justify-content: center; padding: 10px 0; gap: 0;
+  }
+  .ta-sidebar.ta-sidebar-minimized .ta-brand {
+    justify-content: center; padding: 0 0 16px;
+  }
+  .ta-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 16px; }
   .ta-brand-mark {
-    width: 34px; height: 34px; border-radius: 10px; background: var(--grad);
+    width: 36px; height: 36px; border-radius: 10px; background: var(--grad);
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    box-shadow: 0 4px 12px rgba(79,70,229,0.3);
   }
   .ta-brand-name { font-weight: 800; font-size: 17px; letter-spacing: -0.02em; color: var(--text); }
-  .ta-brand-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; background: var(--surface-2); color: var(--primary); padding: 2px 7px; border-radius: 6px; }
+  .ta-brand-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; background: var(--primary-tint); color: var(--primary); padding: 3px 8px; border-radius: 6px; }
   .ta-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y:auto; padding-right: 2px; }
   .ta-nav::-webkit-scrollbar { width: 4px; }
   .ta-nav::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
   .ta-nav-section-title {
-    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3);
-    padding: 12px 10px 4px; margin-top: 4px;
+    font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3);
+    padding: 14px 10px 6px; margin-top: 4px;
   }
   .ta-nav-item {
-    display: flex; align-items: center; gap: 11px; padding: 9.5px 12px; border-radius: 11px; cursor: pointer;
-    font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .16s cubic-bezier(.34,1.56,.64,1);
+    display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; cursor: pointer;
+    font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .16s ease;
   }
-  .ta-nav-item:hover { background: var(--surface-2); color: var(--text); transform: translateX(3px); }
+  .ta-nav-item:hover { background: var(--surface-2); color: var(--text); transform: translateX(2px); }
   .ta-nav-item.active {
     background: var(--surface-2);
     color: var(--primary); font-weight: 700; border-left: 3px solid var(--primary); padding-left: 9px;
   }
   .ta-nav-divider { height: 1px; background: var(--border); margin: 10px 4px; }
   .ta-workspace-card {
-    background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 6px;
+    background: var(--surface-3); border: 1px solid var(--border); border-radius: 14px; padding: 6px;
     margin-bottom: 12px; display: flex; flex-direction: column; gap: 3px;
   }
   .ta-ws-item {
-    display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; cursor: pointer;
-    font-size: 12.5px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
   }
   .ta-ws-item:hover { background: var(--surface-2); color: var(--text); }
-  .ta-ws-item.active { background: var(--grad); color: #FFFFFF; font-weight: 700; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
-  .ta-nav-footer { display:flex; flex-direction:column; gap:4px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+  .ta-ws-item.active { background: var(--grad); color: #FFFFFF; font-weight: 700; box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
+  .ta-nav-footer { display:flex; flex-direction:column; gap:4px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); }
+  .ta-toggle-btn {
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer;
+    transition: all .15s ease; margin-bottom: 10px;
+  }
+  .ta-toggle-btn:hover { background: var(--surface-3); color: var(--primary); border-color: var(--primary-light); }
   .ta-main { flex: 1; min-width: 0; }
   .ta-topbar {
     height: 72px; border-bottom: 1px solid var(--border); background: var(--surface);
     display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top:0; z-index: 20;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   }
   .ta-topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; padding-right: 16px; }
   .ta-topbar-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-  .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 11px; padding: 9px 14px; width: clamp(180px, 20vw, 320px); color: var(--text-3); font-size: 13px; }
-  .ta-content { padding: 28px; max-width: 1320px; }
-  .ta-h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .ta-sub { font-size: 13.5px; color: var(--text-2); margin: 4px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 9px 14px; width: clamp(200px, 24vw, 360px); color: var(--text-3); font-size: 13px; transition: all .15s ease; }
+  .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); background: #fff; }
+  .ta-content { padding: 32px; max-width: 1400px; margin: 0 auto; }
+  .ta-h1 { font-size: 23px; font-weight: 800; letter-spacing: -0.025em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; color: var(--text); }
+  .ta-sub { font-size: 13.5px; color: var(--text-2); margin: 4px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-weight: 500; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
   }
   @media (max-width: 899px) {
-    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 11px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
+    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
     .ta-topbar { padding: 0 16px; }
-    .ta-content { padding: 16px; }
+    .ta-content { padding: 18px; }
     .ta-sidebar {
       position: fixed; top: 0; left: 0; z-index: 100;
       transform: translateX(-100%); transition: transform .22s ease;
@@ -114,30 +185,31 @@ export const TOKENS = `
     .ta-sidebar.mobile-open { transform: translateX(0); }
     .ta-sidebar-close {
       display: flex !important; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
+      width: 34px; height: 34px; border-radius: 8px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
     }
-    .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: taFade .15s ease; }
-    .ta-topbar { height: auto; min-height: 68px; flex-wrap: wrap; row-gap: 8px; padding: 10px 16px; }
+    .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
+    .ta-topbar { height: auto; min-height: 68px; flex-wrap: wrap; row-gap: 8px; padding: 12px 16px; }
     .ta-topbar-left { flex: 1 1 100%; }
     .ta-topbar-right { gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1 1 100%; }
     .ta-org-selector { max-width: 130px; }
     .ta-org-selector select { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .ta-h1 { font-size: 18px; }
+    .ta-h1 { font-size: 19px; }
     .ta-table-wrap .ta-table { min-width: 460px; }
   }
-  .ta-btn { border: none; cursor: pointer; border-radius: 11px; font-weight: 700; font-size: 13.5px; padding: 10px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease; }
+  .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .14s ease; font-family: var(--font); }
   .ta-btn:active { transform: scale(.97); }
-  .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: 0 10px 18px -8px rgba(37,99,235,.45); }
-  .ta-btn-primary:hover { box-shadow: 0 12px 22px -6px rgba(37,99,235,.55); transform: translateY(-1px); }
-  .ta-btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-  .ta-btn-outline:hover { background: var(--surface-3); border-color: var(--primary-light); }
-  .ta-btn-ghost { background: var(--surface-2); color: var(--primary); }
-  .ta-btn-ghost:hover { background: #E2E8F0; }
-  .ta-btn-sm { padding: 7px 12px; font-size: 12px; border-radius: 9px; }
-  .ta-btn-danger { background: var(--danger-bg); color: var(--danger); }
-  .ta-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px;
-    box-shadow: 0 1px 2px rgba(15,23,42,.03), 0 6px 18px -10px rgba(15,23,42,.08); }
-  .ta-grid { display: grid; gap: 16px; }
+  .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: var(--shadow-btn); }
+  .ta-btn-primary:hover { box-shadow: 0 8px 20px -4px rgba(79,70,229,0.45); transform: translateY(-1px); }
+  .ta-btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); }
+  .ta-btn-outline:hover { background: var(--surface-2); border-color: #CBD5E1; }
+  .ta-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
+  .ta-btn-ghost:hover { background: #E0E7FF; }
+  .ta-btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 10px; }
+  .ta-btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
+  .ta-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
+    box-shadow: var(--shadow-card); transition: all .2s ease; }
+  .ta-card-hover:hover { box-shadow: var(--shadow-hover); border-color: #CBD5E1; transform: translateY(-2px); }
+  .ta-grid { display: grid; gap: 18px; }
   .ta-grid-5 { grid-template-columns: repeat(5, 1fr); }
   .ta-grid-4 { grid-template-columns: repeat(4, 1fr); }
   .ta-grid-3 { grid-template-columns: repeat(3, 1fr); }
@@ -148,38 +220,60 @@ export const TOKENS = `
   @media (max-width: 599px) {
     .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr; }
   }
+  /* Main content + sidebar layout: keeps the main column dominant instead of
+     splitting 50/50 once both tracks clear an auto-fit minmax threshold */
+  .ta-sidebar-layout { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
+  @media (min-width: 900px) {
+    .ta-sidebar-layout { grid-template-columns: minmax(0, 2fr) minmax(300px, 360px); }
+  }
   .ta-row { display: flex; align-items: center; }
   .ta-between { justify-content: space-between; }
   .ta-col { display: flex; flex-direction: column; }
   .ta-gap6 { gap: 6px; } .ta-gap8 { gap: 8px; } .ta-gap10 { gap: 10px; } .ta-gap12 { gap: 12px; } .ta-gap14 { gap: 14px; } .ta-gap16 { gap: 16px; }
   .ta-mt8 { margin-top: 8px; } .ta-mt12 { margin-top: 12px; } .ta-mt16 { margin-top: 16px; } .ta-mt20 { margin-top: 20px; } .ta-mt24 { margin-top: 24px; } .ta-mt28 { margin-top: 28px; }
-  .ta-label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .06em; }
-  .ta-title { font-size: 15.5px; font-weight: 800; }
+  .ta-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+  .ta-title { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
   .ta-body { font-size: 13.5px; color: var(--text-2); line-height: 1.5; }
-  .ta-avatar { border-radius: 50%; background: var(--grad); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
-  .ta-tag { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; background: var(--surface-2); color: var(--primary); display:inline-flex; align-items:center; gap:4px; }
-  .ta-divider { height: 1px; background: var(--border); border: none; margin: 14px 0; }
+  .ta-avatar { border-radius: 50%; background: var(--grad); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; box-shadow: 0 2px 6px rgba(79,70,229,0.25); }
+  .ta-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700; background: var(--surface-2); color: var(--primary); display:inline-flex; align-items:center; gap:4px; }
+  .ta-divider { height: 1px; background: var(--border); border: none; margin: 16px 0; }
   .ta-table { width: 100%; border-collapse: collapse; }
-  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border); background: #fff; }
   .ta-table-wrap .ta-table { min-width: 560px; }
-  .ta-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); font-weight: 700; padding: 0 12px 10px; border-bottom: 1px solid var(--border); }
-  .ta-table td { padding: 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .ta-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 700; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-3); }
+  .ta-table td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); }
   .ta-table tr:last-child td { border-bottom: none; }
+  .ta-table tr:hover td { background: var(--surface-3); }
   .ta-progress-track { width: 100%; height: 7px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
-  .ta-progress-fill { height: 100%; border-radius: 99px; background: var(--grad); }
-  .ta-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-  .ta-tab { padding: 10px 4px; margin-right: 18px; font-size: 13.5px; font-weight: 700; color: var(--text-2); cursor: pointer; border-bottom: 2.5px solid transparent; white-space: nowrap; flex-shrink: 0; }
+  .ta-progress-fill { height: 100%; border-radius: 99px; background: var(--grad); transition: width .3s ease; }
+  .ta-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; margin-bottom: 20px; }
+  .ta-tab { padding: 11px 8px; margin-right: 14px; font-size: 14px; font-weight: 700; color: var(--text-2); cursor: pointer; border-bottom: 2.5px solid transparent; white-space: nowrap; flex-shrink: 0; transition: all .15s ease; }
+  .ta-tab:hover { color: var(--text); }
   .ta-tab.active { color: var(--primary); border-color: var(--primary); }
-  .ta-pill { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); color: var(--text-2); }
-  .ta-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  .ta-switch { width: 38px; height: 22px; border-radius: 99px; background: var(--surface-2); position: relative; cursor: pointer; flex-shrink: 0; transition: background .15s; }
-  .ta-switch.on { background: var(--primary); }
-  .ta-switch-knob { width: 16px; height: 16px; border-radius: 50%; background: #fff; position: absolute; top: 3px; left: 3px; transition: left .15s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
-  .ta-switch.on .ta-switch-knob { left: 19px; }
-  .ta-input { border-radius: 11px; border: 1px solid var(--border); background: var(--surface); padding: 10px 13px; font-size: 13.5px; color: var(--text); font-family: var(--font); }
-  .ta-empty { text-align: center; padding: 30px 16px; color: var(--text-2); font-size: 13.5px; }
-  .ta-fade { animation: taFade .2s ease; }
-  @keyframes taFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .ta-pill { padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700; cursor: pointer; border: 1px solid var(--border); color: var(--text-2); background: var(--surface); transition: all .14s ease; }
+  .ta-pill:hover { background: var(--surface-2); color: var(--text); }
+  .ta-pill.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
+  .ta-switch { width: 42px; height: 24px; border-radius: 99px; background: var(--surface-2); position: relative; cursor: pointer; flex-shrink: 0; transition: background .15s ease; border: 1px solid var(--border); }
+  .ta-switch.on { background: var(--primary); border-color: var(--primary); }
+  .ta-switch-knob { width: 18px; height: 18px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left .15s ease; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .ta-switch.on .ta-switch-knob { left: 20px; }
+  .ta-input { border-radius: 12px; border: 1px solid var(--border); background: var(--surface); padding: 11px 14px; font-size: 13.5px; color: var(--text); font-family: var(--font); transition: all .15s ease; }
+  .ta-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+  .ta-empty { text-align: center; padding: 36px 18px; color: var(--text-2); font-size: 13.5px; }
+  .ta-fade { animation: fadeInScale .2s ease both; }
+  @keyframes taDropdownIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-slide-down { animation: taDropdownIn .16s ease both; transform-origin: top; }
+  .ta-dropdown-item { padding: 9px 12px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; transition: all .14s ease; }
+  .ta-dropdown-item:hover { background: var(--surface-2); color: var(--text); }
+  @keyframes taStaggerIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-stagger > * { opacity: 0; animation: taStaggerIn .3s ease both; }
+  .anim-stagger > *:nth-child(1) { animation-delay: .02s; }
+  .anim-stagger > *:nth-child(2) { animation-delay: .06s; }
+  .anim-stagger > *:nth-child(3) { animation-delay: .10s; }
+  .anim-stagger > *:nth-child(4) { animation-delay: .14s; }
+  .anim-stagger > *:nth-child(5) { animation-delay: .18s; }
+  .anim-stagger > *:nth-child(6) { animation-delay: .22s; }
+  .anim-stagger > *:nth-child(n+7) { animation-delay: .26s; }
 `;
 
 export function Avatar({ initials, size = 36, style = {} }) {
@@ -191,10 +285,11 @@ export function ProgressBar({ value, height = 7 }) {
 }
 
 export function Tag({ children, tone, icon: Icon }) {
-  const bg = tone === "success" ? "var(--success-bg)" : tone === "warning" ? "var(--warning-bg)" : tone === "danger" ? "var(--danger-bg)" : "var(--surface-2)";
+  const bg = tone === "success" ? "var(--success-bg)" : tone === "warning" ? "var(--warning-bg)" : tone === "danger" ? "var(--danger-bg)" : "var(--primary-tint)";
   const color = tone === "success" ? "var(--success)" : tone === "warning" ? "var(--warning)" : tone === "danger" ? "var(--danger)" : "var(--primary)";
+  const border = tone === "success" ? "var(--success-border)" : tone === "warning" ? "var(--warning-border)" : tone === "danger" ? "var(--danger-border)" : "transparent";
   return (
-    <span className="ta-tag" style={{ background: bg, color }}>
+    <span className="ta-tag" style={{ background: bg, color, border: `1px solid ${border}` }}>
       {Icon && <Icon size={12} />}
       {children}
     </span>
@@ -212,21 +307,21 @@ export function Switch({ on, onChange }) {
 export function StatCard({ stat }) {
   const Icon = stat.icon;
   return (
-    <div className="ta-card">
+    <div className="ta-card ta-card-hover">
       <div className="ta-row ta-between">
         <span className="ta-label">{stat.label}</span>
-        {Icon && <div style={{ width: 32, height: 32, borderRadius: 10, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon size={16} color="var(--primary)" /></div>}
+        {Icon && <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon size={17} color="var(--primary)" /></div>}
       </div>
       <div className="ta-row ta-between ta-mt12">
-        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em" }}>{stat.value}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", color: "var(--text)" }}>{stat.value}</div>
         {stat.delta && (
-          <div className="ta-row ta-gap4" style={{ fontSize: 12, fontWeight: 700, color: stat.up ? "var(--success)" : "var(--danger)" }}>
+          <div className="ta-row ta-gap4" style={{ fontSize: 12, fontWeight: 700, color: stat.up ? "var(--success)" : "var(--danger)", background: stat.up ? "var(--success-bg)" : "var(--danger-bg)", padding: "2px 7px", borderRadius: 6 }}>
             {stat.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
             {stat.delta}
           </div>
         )}
       </div>
-      {stat.sub && <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>{stat.sub}</div>}
+      {stat.sub && <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 5, fontWeight: 500 }}>{stat.sub}</div>}
     </div>
   );
 }
@@ -296,23 +391,60 @@ const NAV_BY_WORKSPACE = { admin: ADMIN_NAV, mentor: MENTOR_NAV, manager: MANAGE
 // such sub-workspaces to switch between - it is one dashboard, which is
 // the entire point of pulling it out of that shared component in the first
 // place rather than passing it an empty workspace list.
+export function BrandLogo({ height = 50, isMinimized = false, style = {} }) {
+  const isDark = typeof document !== "undefined" && (document.documentElement.classList.contains("dark") || localStorage.getItem("trainai_theme_dark") === "true");
+  const src = isDark ? "/logo-dark.png" : "/train-ai-logo.png";
+  return (
+    <img
+      src={src}
+      alt="Train AI"
+      style={{
+        height: isMinimized ? Math.round(height * 0.72) : height,
+        width: "auto",
+        objectFit: "contain",
+        display: "block",
+        ...style
+      }}
+    />
+  );
+}
+
 export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher }) {
+  const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_owner_sidebar_minimized") === "true");
+
+  const toggleMinimized = () => {
+    setIsMinimized(prev => {
+      const next = !prev;
+      localStorage.setItem("ta_owner_sidebar_minimized", String(next));
+      return next;
+    });
+  };
+
   return (
     <>
       {mobileOpen && <div className="ta-scrim ta-scrim-sidebar" onClick={onClose} />}
-      <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""}`}>
-        <div className="ta-row ta-between">
-          <div className="ta-brand">
-            <img src="/brand/train-ai-logo.png" alt="Train AI" style={{ width: 32, height: 32, objectFit: "contain", flexShrink: 0 }} />
-            <div>
-              <div className="ta-brand-name">Train AI</div>
-            </div>
-            <span className="ta-brand-tag" style={{ background: "linear-gradient(90deg,#F59E0B,#EF4444)" }}>OWNER</span>
+      <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
+        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
+          <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
+            <BrandLogo height={50} isMinimized={isMinimized} />
+            {!isMinimized && (
+              <span className="ta-brand-tag" style={{ marginLeft: "auto", background: "linear-gradient(135deg, #F59E0B, #EF4444)", color: "#FFFFFF" }}>OWNER</span>
+            )}
           </div>
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
         </div>
 
-        <div className="ta-nav-section-title">Platform Owner</div>
+        {/* Minimize / Expand Toggle */}
+        <button
+          className="ta-toggle-btn"
+          onClick={toggleMinimized}
+          title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+          aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+        >
+          {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+        </button>
+
+        {!isMinimized && <div className="ta-nav-section-title">Platform Owner</div>}
         <div className="ta-nav">
           {SUPERADMIN_NAV.map(s => {
             const Icon = s.icon;
@@ -322,6 +454,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
                 key={s.key}
                 className={`ta-nav-item ${isActive ? "active" : ""}`}
                 onClick={() => { setScreen(s.key); onClose(); }}
+                title={s.label}
               >
                 <Icon size={17} />
                 <span style={{ flex: 1 }}>{s.label}</span>
@@ -334,12 +467,13 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           {onOpenDashboardSwitcher && (
             <div
               className="ta-nav-item"
-              style={{ background: "rgba(59,130,246,0.12)", color: "#60A5FA", border: "1px solid rgba(59,130,246,0.25)" }}
+              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid #E0E7FF", fontWeight: 700 }}
               onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
+              title="Switch Dashboard"
             >
               <Repeat size={16} />
               <span>Switch Dashboard</span>
-              <ChevronRight size={14} style={{ marginLeft: "auto" }} />
+              {!isMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
             </div>
           )}
         </div>
@@ -349,25 +483,41 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
 }
 
 export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, userRoles = ["admin", "mentor", "super_admin"] }) {
+  const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_sidebar_minimized") === "true");
   const allowedWorkspaces = WORKSPACES.filter(w => w.roles.some(r => userRoles.includes(r)));
   const navItems = NAV_BY_WORKSPACE[workspace] || MENTOR_NAV;
+
+  const toggleMinimized = () => {
+    setIsMinimized(prev => {
+      const next = !prev;
+      localStorage.setItem("ta_sidebar_minimized", String(next));
+      return next;
+    });
+  };
 
   return (
     <>
       {mobileOpen && <div className="ta-scrim ta-scrim-sidebar" onClick={onClose} />}
-      <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""}`}>
-        <div className="ta-row ta-between">
-          <div className="ta-brand">
-            <img src="/brand/train-ai-logo.png" alt="Train AI" style={{ width: 32, height: 32, objectFit: "contain", flexShrink: 0 }} />
-            <div>
-              <div className="ta-brand-name">Train AI</div>
-            </div>
-            <span className="ta-brand-tag">PRO</span>
+      <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
+        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
+          <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
+            <BrandLogo height={50} isMinimized={isMinimized} />
+            {!isMinimized && <span className="ta-brand-tag" style={{ marginLeft: "auto" }}>PRO</span>}
           </div>
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
         </div>
 
-        <div className="ta-nav-section-title">Workspaces</div>
+        {/* Minimize / Expand Toggle */}
+        <button
+          className="ta-toggle-btn"
+          onClick={toggleMinimized}
+          title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+          aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+        >
+          {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+        </button>
+
+        {!isMinimized && <div className="ta-nav-section-title">Workspaces</div>}
         <div className="ta-workspace-card">
           {allowedWorkspaces.map(w => {
             const Icon = w.icon;
@@ -377,18 +527,18 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
                 key={w.key}
                 className={`ta-ws-item ${isActive ? "active" : ""}`}
                 onClick={() => { setWorkspace(w.key); onClose(); }}
+                title={w.label}
               >
                 <Icon size={16} />
                 <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, flex: 1, minWidth: 0 }}>
                   <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.label}</span>
                 </div>
-                {isActive && <Sparkles size={13} />}
               </div>
             );
           })}
         </div>
 
-        <div className="ta-nav-section-title">Navigation</div>
+        {!isMinimized && <div className="ta-nav-section-title">Navigation</div>}
         <div className="ta-nav">
           {navItems.map(s => {
             const Icon = s.icon;
@@ -398,6 +548,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
                 key={s.key}
                 className={`ta-nav-item ${isActive ? "active" : ""}`}
                 onClick={() => { setScreen(s.key); onClose(); }}
+                title={s.label}
               >
                 <Icon size={17} />
                 <span style={{ flex: 1 }}>{s.label}</span>
@@ -410,12 +561,13 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           {onOpenDashboardSwitcher && (
             <div
               className="ta-nav-item"
-              style={{ background: "rgba(59,130,246,0.12)", color: "#60A5FA", border: "1px solid rgba(59,130,246,0.25)" }}
+              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid #E0E7FF", fontWeight: 700 }}
               onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
+              title="Switch Dashboard"
             >
               <Repeat size={16} />
               <span>Switch Dashboard</span>
-              <ChevronRight size={14} style={{ marginLeft: "auto" }} />
+              {!isMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
             </div>
           )}
         </div>
@@ -479,7 +631,7 @@ export function DashboardSwitcher({ currentDashboard, availableDashboards, roleL
                   <span style={{ fontWeight: 700, fontSize: 14 }}>{meta.label}</span>
                   <span style={{ fontSize: 11.5, opacity: 0.8 }}>{meta.subtitle}</span>
                 </div>
-                {isActive && <Sparkles size={15} />}
+                {isActive && <Check size={16} />}
               </div>
             );
           })}
@@ -538,7 +690,7 @@ function SearchResultRow({ icon: Icon, name, detail, type, onClick }) {
   );
 }
 
-export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigate }) {
+export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigate, onSignOut }) {
   const openMenu = useContext(MobileMenuContext);
   const navFromContext = useContext(NavigationContext);
   const handleNavigate = onNavigate || navFromContext;
@@ -816,10 +968,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
         {/* Primary Header Quick Action */}
         {right}
 
-        {/* User Profile Pill - opens the real Settings Hub (org name/domain,
-            same screen reachable from the sidebar) so this isn't just a
-            static display; role label pulled from the real user_profiles.role
-            column instead of the hardcoded "Admin" it used to always show. */}
+        {/* User Profile Pill - opens the real Settings Hub */}
         <div
           className="ta-row ta-gap8"
           style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default" }}
@@ -831,6 +980,17 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
             <span style={{ fontSize: 10.5, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
           </div>
         </div>
+
+        {/* Sign Out Action matching Screenshot 4 */}
+        <button
+          className="ta-btn ta-btn-ghost ta-btn-sm"
+          onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
+          title="Sign Out"
+          style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
+        >
+          <LogOut size={15} />
+          <span>Sign Out</span>
+        </button>
       </div>
     </div>
   );

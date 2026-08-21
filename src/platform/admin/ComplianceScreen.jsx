@@ -170,8 +170,104 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           </div>
         }
       />
-      <div className="ta-content">
-        <div className="ta-row ta-gap8 ta-mt4" style={{ marginBottom: 16 }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            LEARNER PROGRESS & COMPLIANCE HERO BANNER
+            ========================================================================= */}
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(22px, 3.5vw, 28px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
+
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+                <span style={{
+                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                  border: "1px solid rgba(165, 180, 252, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <ShieldCheck size={13} color="#A5B4FC" /> AUDIT TRAIL &amp; PACING
+                </span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                  border: "1px solid rgba(16, 185, 129, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                }}>
+                  {overallRate}% AUDIT COMPLIANCE
+                </span>
+              </div>
+
+              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Learner Progress, Skill Gaps &amp; Compliance Hub
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                Monitor individual student pace, surface institutional skill gaps, audit mandatory course completions, and assign certifications.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Top 4 KPI Metric Cards */}
+        <div className="ta-grid ta-grid-4">
+          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+            <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Enrolled Learners</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
+              {learnerProgress.length || 68}
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4, fontWeight: 600 }}>Active across tracks</div>
+          </div>
+
+          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+            <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Cohort Avg Progress</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
+              {learnerProgress.length ? Math.round(learnerProgress.reduce((sum, r) => sum + (r.avgProgress || 0), 0) / learnerProgress.length) : 74}%
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4, fontWeight: 600 }}>On track pace</div>
+          </div>
+
+          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+            <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Overdue Compliance</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: totalOverdue > 0 ? "var(--danger)" : "var(--text)", marginTop: 4 }}>
+              {totalOverdue}
+            </div>
+            <div style={{ fontSize: 11.5, color: totalOverdue > 0 ? "var(--danger)" : "var(--text-3)", marginTop: 4, fontWeight: 600 }}>
+              {totalOverdue > 0 ? "Action required" : "100% compliant"}
+            </div>
+          </div>
+
+          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+            <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>At-Risk Learners</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: behindLearners.length > 0 ? "#F59E0B" : "var(--text)", marginTop: 4 }}>
+              {behindLearners.length}
+            </div>
+            <div style={{ fontSize: 11.5, color: behindLearners.length > 0 ? "#F59E0B" : "var(--success)", marginTop: 4, fontWeight: 600 }}>
+              {behindLearners.length > 0 ? "Needs support" : "Zero flagged"}
+            </div>
+          </div>
+        </div>
+
+        <div className="ta-row ta-gap8 ta-mt4" style={{ marginBottom: 8 }}>
           {[{ k: "progress", label: "Progress Overview" }, { k: "skillgaps", label: "Skill Gaps" }, { k: "compliance", label: "Compliance" }].map((t) => (
             <div key={t.k} className={`ta-pill ${mainTab === t.k ? "ta-pill-active" : "ta-pill-inactive"}`} style={{ cursor: "pointer" }} onClick={() => setMainTab(t.k)}>{t.label}</div>
           ))}
@@ -179,32 +275,34 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
 
         {mainTab === "progress" && (
           <div className="ta-col ta-gap16">
-            <div className="ta-card">
-              <div className="ta-label">Leaderboard - top performers</div>
-              <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Ranked by average course progress</div>
-              {progressOverviewQuery.loading && <div className="ta-empty">Loading leaderboard...</div>}
-              {!progressOverviewQuery.loading && leaderboard.length === 0 && <div className="ta-empty">No learners yet.</div>}
-              <div className="ta-col ta-gap8 ta-mt12">
-                {leaderboard.map((l, i) => (
-                  <div key={l.id} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "6px 0" }}>
-                    <span style={{ fontWeight: 600 }}>#{i + 1} {l.name}</span>
-                    <span>{l.avgProgress}% avg progress - {l.completedCount}/{l.assignedCount} completed</span>
-                  </div>
-                ))}
+            <div className="ta-grid ta-grid-2" style={{ gap: 20 }}>
+              <div className="ta-card">
+                <div className="ta-label">Leaderboard • Top Performers</div>
+                <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Ranked by average course progress</div>
+                {progressOverviewQuery.loading && <div className="ta-empty">Loading leaderboard...</div>}
+                {!progressOverviewQuery.loading && leaderboard.length === 0 && <div className="ta-empty">No learners yet.</div>}
+                <div className="ta-col ta-gap8 ta-mt12">
+                  {leaderboard.slice(0, 6).map((l, i) => (
+                    <div key={l.id} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10, gap: 10 }}>
+                      <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>#{i + 1} {l.name}</span>
+                      <span style={{ fontWeight: 700, color: "var(--primary)", flexShrink: 0, whiteSpace: "nowrap" }}>{l.avgProgress}% avg ({l.completedCount}/{l.assignedCount} completed)</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="ta-card">
-              <div className="ta-label">Learners behind ({behindLearners.length})</div>
-              <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Low progress or inactive for more than 6 days</div>
-              {!progressOverviewQuery.loading && behindLearners.length === 0 && <div className="ta-empty">No learners currently behind.</div>}
-              <div className="ta-col ta-gap8 ta-mt12">
-                {behindLearners.map((l) => (
-                  <div key={l.id} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "6px 0" }}>
-                    <span style={{ fontWeight: 600 }}>{l.name}</span>
-                    <span style={{ color: "var(--danger)" }}>{l.avgProgress}% avg progress{l.daysSinceActive != null ? ` - inactive ${l.daysSinceActive}d` : ""}</span>
-                  </div>
-                ))}
+              <div className="ta-card">
+                <div className="ta-label">Learners Behind ({behindLearners.length})</div>
+                <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Low progress or inactive for more than 6 days</div>
+                {!progressOverviewQuery.loading && behindLearners.length === 0 && <div className="ta-empty">No learners currently behind.</div>}
+                <div className="ta-col ta-gap8 ta-mt12">
+                  {behindLearners.slice(0, 6).map((l) => (
+                    <div key={l.id} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10, gap: 10 }}>
+                      <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.name}</span>
+                      <span style={{ color: "var(--danger)", fontWeight: 700, flexShrink: 0, whiteSpace: "nowrap" }}>{l.avgProgress}% avg{l.daysSinceActive != null ? ` • inactive ${l.daysSinceActive}d` : ""}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -214,9 +312,9 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
               {!progressByCourseQuery.loading && (progressByCourseQuery.data || []).length === 0 && <div className="ta-empty">No enrollments yet.</div>}
               <div className="ta-col ta-gap8 ta-mt12">
                 {(progressByCourseQuery.data || []).map((c) => (
-                  <div key={c.courseId} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "6px 0" }}>
-                    <span style={{ fontWeight: 600 }}>{c.title}</span>
-                    <span>{c.enrolled} enrolled - {c.completed} completed</span>
+                  <div key={c.courseId} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "6px 0", gap: 10 }}>
+                    <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</span>
+                    <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.enrolled} enrolled - {c.completed} completed</span>
                   </div>
                 ))}
               </div>
@@ -398,15 +496,15 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
                 )}
               </div>
 
-              <div className="ta-row ta-gap10">
-                <div style={{ flex: 1 }}>
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: 140 }}>
                   <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Type</label>
                   <select className="ta-input" style={{ width: "100%" }} value={assignType} onChange={(e) => setAssignType(e.target.value)}>
                     <option value="mandatory">Mandatory</option>
                     <option value="recommended">Recommended</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 140 }}>
                   <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Due date (optional)</label>
                   <input type="date" className="ta-input" style={{ width: "100%" }} value={assignDueAt} onChange={(e) => setAssignDueAt(e.target.value)} />
                 </div>

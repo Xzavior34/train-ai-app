@@ -48,7 +48,7 @@ function MiniSwitch({ on, onChange }) {
       role="switch"
       aria-checked={on}
       style={{
-        width: 38, height: 22, borderRadius: 99, background: on ? "#2563EB" : "#EEF2FF",
+        width: 38, height: 22, borderRadius: 99, background: on ? "#4F46E5" : "#EEF2FF",
         position: "relative", cursor: "pointer", flexShrink: 0, transition: "background .15s"
       }}
     >
@@ -103,7 +103,7 @@ export default function AccessibilityPanel({ onClose }) {
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Accessibility size={18} color="#2563EB" />
+            <Accessibility size={18} color="#4F46E5" />
             <div style={{ fontWeight: 800, fontSize: 15.5, color: "#10142A" }}>Accessibility</div>
           </div>
           <button
@@ -136,8 +136,8 @@ export default function AccessibilityPanel({ onClose }) {
                   onClick={() => update({ fontSize: key })}
                   style={{
                     flex: 1, padding: "9px 10px", borderRadius: 12, fontSize: 12.5, fontWeight: 700,
-                    cursor: "pointer", border: active ? "1.5px solid #2563EB" : "1.5px solid #E6E9F5",
-                    background: active ? "#EEF2FF" : "#FFFFFF", color: active ? "#2563EB" : "#10142A"
+                    cursor: "pointer", border: active ? "1.5px solid #4F46E5" : "1.5px solid #E6E9F5",
+                    background: active ? "#EEF2FF" : "#FFFFFF", color: active ? "#4F46E5" : "#10142A"
                   }}
                 >
                   {label}
@@ -150,7 +150,7 @@ export default function AccessibilityPanel({ onClose }) {
         <div style={{ marginTop: 18, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, color: "#10142A" }}>
-              <Eye size={14} color="#2563EB" /> High contrast
+              <Eye size={14} color="#4F46E5" /> High contrast
             </div>
             <div style={{ fontSize: 11.5, color: "#9AA1B9", marginTop: 2 }}>Stronger colour contrast for readability</div>
           </div>
@@ -160,7 +160,7 @@ export default function AccessibilityPanel({ onClose }) {
         <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, color: "#10142A" }}>
-              <Zap size={14} color="#2563EB" /> Reduce motion
+              <Zap size={14} color="#4F46E5" /> Reduce motion
             </div>
             <div style={{ fontSize: 11.5, color: "#9AA1B9", marginTop: 2 }}>Minimise animations and transitions</div>
           </div>
@@ -173,7 +173,7 @@ export default function AccessibilityPanel({ onClose }) {
           style={{
             marginTop: 22, width: "100%", border: "none", cursor: "pointer", borderRadius: 14, fontWeight: 700,
             fontSize: 14, padding: "13px 18px", color: "#fff",
-            background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)"
+            background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)"
           }}
         >
           Done

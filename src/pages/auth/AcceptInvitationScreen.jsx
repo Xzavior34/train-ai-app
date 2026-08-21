@@ -128,8 +128,8 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
         @keyframes inviteSpin { to { transform: rotate(360deg); } }
         .invite-card { animation: inviteFadeUp .35s ease; }
         .invite-spin { animation: inviteSpin .8s linear infinite; }
-        .invite-input:focus { outline: none; border-color: #60A5FA !important; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
-        .invite-submit:hover { box-shadow: 0 14px 28px -8px rgba(37,99,235,.55); transform: translateY(-1px); }
+        .invite-input:focus { outline: none; border-color: #818CF8 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+        .invite-submit:hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
         .invite-link:hover { text-decoration: underline; }
       `}</style>
 
@@ -283,8 +283,8 @@ const styles = {
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 },
   brandMark: {
     width: 34, height: 34, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-    background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)",
-    boxShadow: "0 8px 16px -6px rgba(37,99,235,.5)",
+    background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
+    boxShadow: "0 8px 16px -6px rgba(79,70,229,.5)",
   },
   brandName: { fontWeight: 800, fontSize: 15.5, letterSpacing: "-0.01em", color: "#10142A" },
   h1: { fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: "#10142A", letterSpacing: "-0.01em" },
@@ -307,7 +307,7 @@ const styles = {
   submit: {
     width: "100%", marginTop: 20, border: "none", borderRadius: 13, padding: "12px 16px", fontWeight: 700, fontSize: 14,
     color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-    background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)",
-    boxShadow: "0 10px 22px -8px rgba(37,99,235,.5)", transition: "transform .12s ease, box-shadow .12s ease",
+    background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
+    boxShadow: "0 10px 22px -8px rgba(79,70,229,.5)", transition: "transform .12s ease, box-shadow .12s ease",
   },
 };

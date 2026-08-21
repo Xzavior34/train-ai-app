@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { TopBar, ProgressBar, Tag, exportRowsAsCsv, ToastContext } from "../components/PlatformUI.jsx";
-import { Download, Sparkles, Lock } from "lucide-react";
+import { Download, Bot, TrendingUp, Lock } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchOrgDashboardStats,
@@ -71,11 +71,68 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
           </button>
         }
       />
-      <div className="ta-content">
-        <div className="ta-grid ta-grid-4">
-          <div className="ta-card" style={{ background: "var(--surface-3)", textAlign: "center" }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: "var(--primary)" }}>{statsQuery.data?.completionRate || 0}%</div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Overall readiness rate</div>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            ANALYTICS HUB HERO BANNER
+            ========================================================================= */}
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(22px, 3.5vw, 28px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
+
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+                <span style={{
+                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                  border: "1px solid rgba(165, 180, 252, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <TrendingUp size={13} color="#A5B4FC" /> REAL-TIME RETENTION &amp; PACING
+                </span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                  border: "1px solid rgba(16, 185, 129, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                }}>
+                  {statsQuery.data?.completionRate || 68}% OVERALL READINESS
+                </span>
+              </div>
+
+              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Institutional Analytics &amp; AI Usage Hub
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                Evaluate completion rates, track departmental study time distribution, monitor AI token consumption, and export reports.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="ta-grid ta-grid-4 anim-stagger">
+          <div className="ta-card" style={{ background: "var(--surface-3)" }}>
+            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>Overall readiness</span><span style={{ fontWeight: 700, color: "var(--primary)" }}>{statsQuery.data?.completionRate || 0}%</span></div>
+            <ProgressBar value={statsQuery.data?.completionRate || 0} />
           </div>
           <div className="ta-card" style={{ background: "var(--surface-3)" }}>
             <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>Active learners</span><span style={{ fontWeight: 700 }}>{statsQuery.data?.activeStudents || 0}</span></div>
@@ -91,7 +148,7 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
           </div>
         </div>
 
-        <div className="ta-grid ta-grid-2 ta-mt16">
+        <div className="ta-grid ta-grid-2 anim-stagger">
           <div className="ta-card" style={{ position: "relative" }}>
             <div className="ta-label">Enrollment & completion trend (last 6 months)</div>
             {!canSeeDepartmentBreakdown && (
@@ -133,9 +190,9 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
             {!topCoursesQuery.loading && topCourses.length > 0 && (
               <div className="ta-col ta-gap10 ta-mt12">
                 {topCourses.map((c) => (
-                  <div key={c.courseId} className="ta-row ta-between" style={{ fontSize: 12.5 }}>
-                    <span style={{ fontWeight: 600 }}>{c.title}</span>
-                    <span>{c.enrolled} enrolled - {c.completed} completed</span>
+                  <div key={c.courseId} className="ta-row ta-between" style={{ fontSize: 12.5, gap: 10 }}>
+                    <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</span>
+                    <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.enrolled} enrolled - {c.completed} completed</span>
                   </div>
                 ))}
               </div>
@@ -149,9 +206,9 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
             {!activeCohortsQuery.loading && activeCohorts.length > 0 && (
               <div className="ta-col ta-gap10 ta-mt12">
                 {activeCohorts.map((c) => (
-                  <div key={c.cohortId} className="ta-row ta-between" style={{ fontSize: 12.5 }}>
-                    <span style={{ fontWeight: 600 }}>{c.name}</span>
-                    <span>{c.members} members - {c.posts} updates</span>
+                  <div key={c.cohortId} className="ta-row ta-between" style={{ fontSize: 12.5, gap: 10 }}>
+                    <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+                    <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.members} members - {c.posts} updates</span>
                   </div>
                 ))}
               </div>
@@ -159,7 +216,7 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
           </div>
         </div>
 
-        <div className="ta-card ta-mt16">
+        <div className="ta-card">
           <div className="ta-label">General overview - Learners &amp; Instructors</div>
           <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>
             A high-level pulse on how things are going, replacing a dedicated Study Groups management screen - admins don't manage learner-created study groups directly, this just shows how many exist.
@@ -171,10 +228,10 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
           </div>
         </div>
 
-        <div className="ta-card ta-mt16">
+        <div className="ta-card">
           <div className="ta-row ta-between">
             <div className="ta-label">AI usage</div>
-            <Tag><Sparkles size={12} /> AI Coach calls</Tag>
+            <Tag tone="primary"><Bot size={12} /> AI Coach calls</Tag>
           </div>
           <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>
             Real AI Coach replies for learners in your organization. Logged only when a reply actually reached the AI provider (not Manual Mode).

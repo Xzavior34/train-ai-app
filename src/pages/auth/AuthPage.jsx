@@ -109,20 +109,19 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
       <style>{`
         @keyframes authFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         .auth-card { animation: authFadeUp .35s ease; }
-        .auth-input:focus { outline: none; border-color: #60A5FA !important; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
-        .auth-submit:hover { box-shadow: 0 14px 28px -8px rgba(37,99,235,.55); transform: translateY(-1px); }
+        .auth-input:focus { outline: none; border-color: #818CF8 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
+        .auth-submit:hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
         .auth-switch:hover { text-decoration: underline; }
         .role-picker-card { transition: border-color .15s ease, background-color .15s ease; }
-        .role-picker-card.active { border-color: #2563EB !important; background: #EEF2FF !important; }
+        .role-picker-card.active { border-color: #4F46E5 !important; background: #EEF2FF !important; }
       `}</style>
 
       <div style={styles.glowTop} />
       <div style={styles.glowBottom} />
 
       <form onSubmit={handleSubmit} className="auth-card" style={styles.card}>
-        <div style={styles.brandRow}>
-          <img src="/brand/train-ai-logo.png" alt="Train AI" style={{ width: 34, height: 34, objectFit: "contain", borderRadius: 0, flexShrink: 0 }} />
-          <div style={styles.brandName}>Train AI</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 48, width: "auto", objectFit: "contain", display: "block" }} />
         </div>
 
         <h1 style={styles.h1}>{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
@@ -142,9 +141,9 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <Building2 size={16} color={accountType === "organization" ? "#2563EB" : "#656C86"} />
+                <Building2 size={16} color={accountType === "organization" ? "#4F46E5" : "#656C86"} />
                 <span style={{ fontSize: 13.5, fontWeight: 700, color: "#10142A" }}>Organization</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EEF2FF", padding: "2px 7px", borderRadius: 999, marginLeft: "auto" }}>RECOMMENDED</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "2px 7px", borderRadius: 999, marginLeft: "auto" }}>RECOMMENDED</span>
               </div>
               <span style={{ fontSize: 11, color: "#656C86", lineHeight: 1.3 }}>
                 Bring your team onto Train AI: workforce readiness, cohorts, and org-wide reporting. You become the organization's admin.
@@ -168,7 +167,7 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <User size={15} color={accountType === "learner" ? "#2563EB" : "#656C86"} />
+                <User size={15} color={accountType === "learner" ? "#4F46E5" : "#656C86"} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: "#10142A" }}>Individual learner</span>
               </div>
               <span style={{ fontSize: 11, color: "#656C86", lineHeight: 1.3 }}>Access courses, AI quizzes, community. On your own, not tied to a company account</span>
@@ -247,51 +246,51 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
 const styles = {
   outer: {
     position: "relative", overflow: "hidden", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#F4F6FC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: 20,
+    background: "#F8FAFC", fontFamily: "var(--font-sans)", padding: 20,
   },
   glowTop: {
     position: "absolute", top: -180, left: "50%", transform: "translateX(-50%)", width: 560, height: 360, borderRadius: "50%",
-    background: "radial-gradient(closest-side, rgba(91,127,255,.22), transparent)", pointerEvents: "none",
+    background: "radial-gradient(closest-side, rgba(99,102,241,.18), transparent)", pointerEvents: "none",
   },
   glowBottom: {
     position: "absolute", bottom: -200, right: -120, width: 480, height: 380, borderRadius: "50%",
-    background: "radial-gradient(closest-side, rgba(44,70,214,.14), transparent)", pointerEvents: "none",
+    background: "radial-gradient(closest-side, rgba(79,70,229,.15), transparent)", pointerEvents: "none",
   },
   card: {
-    position: "relative", width: "100%", maxWidth: 400, background: "#fff", borderRadius: 22, padding: 32,
-    border: "1px solid #E6E9F5", boxShadow: "0 1px 2px rgba(16,20,42,.04), 0 30px 60px -24px rgba(16,20,42,.18)",
+    position: "relative", width: "100%", maxWidth: 420, background: "#FFFFFF", borderRadius: 20, padding: 36,
+    border: "1px solid #E2E8F0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05), 0 20px 35px -10px rgba(79,70,229,0.08)",
   },
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 },
   brandMark: {
-    width: 34, height: 34, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
-    background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)",
-    boxShadow: "0 8px 16px -6px rgba(37,99,235,.5)",
+    width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center",
+    background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)",
+    boxShadow: "0 6px 14px -4px rgba(79,70,229,0.4)",
   },
-  brandName: { fontWeight: 800, fontSize: 15.5, letterSpacing: "-0.01em", color: "#10142A" },
-  h1: { fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: "#10142A", letterSpacing: "-0.01em" },
-  sub: { fontSize: 12.5, color: "#656C86", margin: "0 0 20px", lineHeight: 1.45 },
-  label: { fontSize: 11, fontWeight: 700, color: "#656C86", textTransform: "uppercase", letterSpacing: ".06em" },
+  brandName: { fontWeight: 800, fontSize: 16, letterSpacing: "-0.01em", color: "#0F172A" },
+  h1: { fontSize: 22, fontWeight: 800, margin: "0 0 6px", color: "#0F172A", letterSpacing: "-0.02em" },
+  sub: { fontSize: 13, color: "#64748B", margin: "0 0 22px", lineHeight: 1.5 },
+  label: { fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".06em" },
   inputWrap: { position: "relative", marginTop: 6 },
-  inputIcon: { position: "absolute", left: 13, top: 13 },
+  inputIcon: { position: "absolute", left: 13, top: 14 },
   input: {
-    width: "100%", padding: "11px 13px 11px 36px", borderRadius: 12, border: "1.5px solid #E6E9F5",
-    fontSize: 13.5, color: "#10142A", boxSizing: "border-box", transition: "border-color .12s ease, box-shadow .12s ease",
+    width: "100%", padding: "12px 14px 12px 38px", borderRadius: 12, border: "1.5px solid #E2E8F0",
+    fontSize: 14, color: "#0F172A", boxSizing: "border-box", transition: "border-color .15s ease, box-shadow .15s ease",
   },
   errorBox: {
-    background: "#FDECEC", color: "#EF4444", fontSize: 12.5, padding: "10px 12px", borderRadius: 11,
-    marginTop: 14, lineHeight: 1.4, fontWeight: 500,
+    background: "#FEF2F2", color: "#EF4444", fontSize: 12.5, padding: "11px 14px", borderRadius: 12,
+    marginTop: 14, lineHeight: 1.4, fontWeight: 600, border: "1px solid #FECACA",
   },
-  breachChecking: { fontSize: 11, color: "#9AA1B9", marginTop: 8 },
+  breachChecking: { fontSize: 11.5, color: "#94A3B8", marginTop: 8 },
   breachBox: {
-    display: "flex", gap: 8, background: "#FFF7E6", color: "#B45309", fontSize: 12,
-    padding: "10px 12px", borderRadius: 11, marginTop: 8, lineHeight: 1.4, fontWeight: 500,
+    display: "flex", gap: 8, background: "#FFFBEB", color: "#B45309", fontSize: 12,
+    padding: "10px 12px", borderRadius: 12, marginTop: 8, lineHeight: 1.4, fontWeight: 500, border: "1px solid #FDE68A",
   },
   submit: {
-    width: "100%", marginTop: 20, border: "none", borderRadius: 13, padding: "12px 16px", fontWeight: 700, fontSize: 14,
+    width: "100%", marginTop: 22, border: "none", borderRadius: 12, padding: "13px 18px", fontWeight: 700, fontSize: 14.5,
     color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-    background: "linear-gradient(135deg, #1D4ED8 0%, #2563EB 55%, #60A5FA 100%)",
-    boxShadow: "0 10px 22px -8px rgba(37,99,235,.5)", transition: "transform .12s ease, box-shadow .12s ease",
+    background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)",
+    boxShadow: "0 10px 20px -6px rgba(79,70,229,0.45)", transition: "transform .15s ease, box-shadow .15s ease",
   },
-  switchRow: { textAlign: "center", marginTop: 18, fontSize: 13, color: "#656C86" },
-  switchLink: { color: "#2563EB", fontWeight: 700, cursor: "pointer" },
+  switchRow: { textAlign: "center", marginTop: 18, fontSize: 13, color: "#64748B" },
+  switchLink: { color: "#4F46E5", fontWeight: 700, cursor: "pointer" },
 };

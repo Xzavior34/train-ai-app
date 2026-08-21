@@ -114,6 +114,22 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  const [isDark, setIsDark] = useState(() => {
+    try {
+      return localStorage.getItem("trainai_theme_dark") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(localStorage.getItem("trainai_theme_dark") === "true" || document.documentElement.classList.contains("dark"));
+    };
+    window.addEventListener("storage", checkDark);
+    return () => window.removeEventListener("storage", checkDark);
+  }, []);
+
   function showToast(msg) {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
@@ -140,7 +156,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
     <NavigationContext.Provider value={navigateToScreen}>
       <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
         <ToastContext.Provider value={showToast}>
-          <div className="ta">
+          <div className={`ta ${isDark ? "dark" : ""}`}>
             <style>{TOKENS}</style>
             <div className="ta-shell">
               <Sidebar

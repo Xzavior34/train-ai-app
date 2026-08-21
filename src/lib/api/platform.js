@@ -1,6 +1,6 @@
-import { supabase } from "../supabaseClient.js";
+import { supabase, activeProject } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
-import { DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
+import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
 
 // Admin-scoped queries. RLS (up_select_org_admin in 0006_rls_policies.sql)
 // restricts these to members of the caller's own organization automatically
@@ -98,7 +98,25 @@ export async function fetchOrgMembers(organizationId) {
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  const profiles = data || [];
+  if (!profiles.length) return profiles;
+
+  // cohort_members has no FK to user_profiles or cohorts (same manual-lookup
+  // limitation as everywhere else this table is read - see
+  // fetchManagerTeamCohorts), so PeopleScreen's Directory "Cohort / Track"
+  // column previously had nothing real to show and used a fake idx%2
+  // placeholder. Attach the member's real cohort name here instead.
+  const { data: memberRows } = await supabase.from("cohort_members").select("user_id, cohort_id").in("user_id", profiles.map((p) => p.id));
+  const cohortIds = [...new Set((memberRows || []).map((m) => m.cohort_id))];
+  let cohortNameById = {};
+  if (cohortIds.length) {
+    const { data: cohorts } = await supabase.from("cohorts").select("id, name").in("id", cohortIds);
+    cohortNameById = Object.fromEntries((cohorts || []).map((c) => [c.id, c.name]));
+  }
+  const cohortNameByUserId = Object.fromEntries(
+    (memberRows || []).map((m) => [m.user_id, cohortNameById[m.cohort_id] || null])
+  );
+  return profiles.map((p) => ({ ...p, cohort_name: cohortNameByUserId[p.id] || null }));
 }
 
 export async function fetchUsersInOrg(organizationId) {
@@ -343,7 +361,10 @@ export async function decideCourseApplication({ applicationId, userId, courseId,
 // only returns every row here if is_super_admin(auth.uid()) is true; a
 // non-super-admin calling this gets back just their own organization's row.
 export async function fetchAllOrganizations() {
-  if (!supabase) return [];
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.orgs;
+  }
   const { data, error } = await supabase
     .from("organizations")
     .select("*")
@@ -353,7 +374,16 @@ export async function fetchAllOrganizations() {
 }
 
 export async function fetchRecentOrganizations(limit = 4) {
-  if (!supabase) return [];
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.orgs.slice(0, limit).map(o => ({
+      name: o.name,
+      tier: o.subscription_tier,
+      users: o.user_count || 0,
+      status: o.status,
+      created: new Date(o.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" }),
+    }));
+  }
   const { data, error } = await supabase
     .from("organizations")
     .select("id, name, subscription_tier, status, created_at")
@@ -374,7 +404,8 @@ export async function fetchRecentOrganizations(limit = 4) {
 
 export async function fetchAllOrganizationsWithUserCounts() {
   if (!supabase) {
-    return [{ id: "demo-org-id", name: "Demo Academy", slug: "demo-academy", status: "active", subscription_tier: "growth", created_at: new Date().toISOString(), user_count: 12 }];
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.orgs;
   }
   const orgs = await fetchAllOrganizations();
   return Promise.all(orgs.map(async (o) => {
@@ -401,7 +432,12 @@ export async function updateOrganization(orgId, patch) {
 }
 
 export async function fetchOrganizationById(orgId) {
-  if (!supabase) return { id: "demo-org-id", name: "Demo Academy", status: "active", subscription_tier: "growth", max_users: 50 };
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    const found = projData.orgs.find(o => o.id === orgId);
+    if (found) return found;
+    return projData.orgs[0] || { id: "demo-org-id", name: "Demo Academy", status: "active", subscription_tier: "growth", max_users: 50 };
+  }
   if (!orgId) return null;
   const { data, error } = await supabase.from("organizations").select("*").eq("id", orgId).maybeSingle();
   if (error) throw error;
@@ -425,7 +461,10 @@ export async function fetchPlatformSettings() {
 // org, so no separate access check is needed here beyond the query filter
 // itself.
 export async function fetchOrgAIUsageStats(organizationId) {
-  if (!supabase) return { total: 12, last7d: 12, last30d: 12 };
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.aiUsage || { total: 12, last7d: 12, last30d: 12 };
+  }
   if (!organizationId) return null;
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -438,7 +477,10 @@ export async function fetchOrgAIUsageStats(organizationId) {
 }
 
 export async function fetchAIUsageStats() {
-  if (!supabase) return null;
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.aiUsage;
+  }
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const [{ count: total }, { count: last7d }, { count: last30d }] = await Promise.all([
@@ -455,7 +497,10 @@ export async function fetchAIUsageStats() {
 // Organisation Inquiry), just never surfaced anywhere at the platform
 // level. No new table; this aggregates what already exists.
 export async function fetchWebsitePerformanceStats() {
-  if (!supabase) return null;
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.websiteStats;
+  }
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const [
     { count: demoRequestsTotal }, { count: demoRequestsNew }, { count: demoRequestsRecent },
@@ -479,7 +524,10 @@ export async function fetchWebsitePerformanceStats() {
 }
 
 export async function fetchPlatformOverviewStats() {
-  if (!supabase) return null;
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.stats;
+  }
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const [{ count: orgs }, { count: users }, { count: activeUsers }, { count: courses }, { count: enrollments }, { count: pendingInvites }] = await Promise.all([
     supabase.from("organizations").select("id", { count: "exact", head: true }),
@@ -501,10 +549,8 @@ export async function fetchPlatformOverviewStats() {
 
 export async function fetchRecentPlatformActivity(limit = 6) {
   if (!supabase) {
-    return [
-      { text: "issue certificate directly: Amara Chen", time: new Date(Date.now() - 86400000).toLocaleString() },
-      { text: "review certificate: Marcus Webb", time: new Date(Date.now() - 2 * 86400000).toLocaleString() },
-    ].slice(0, limit);
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.activity.slice(0, limit);
   }
   const { data, error } = await supabase
     .from("safe_admin_audit_log")
@@ -539,8 +585,20 @@ export async function upsertPlatformSetting({ key, value, type = "string", descr
 
 export async function fetchOrgDashboardStats(organizationId) {
   if (!supabase) {
-    const breakdown = demoTotalUsersBreakdown();
-    return { activeStudents: breakdown.learners, cohorts: 1, courses: DEMO_COURSES.length, mentors: breakdown.instructors, otherUsers: breakdown.other, completionRate: 68 };
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    const org = projData.orgs.find(o => o.id === organizationId) || projData.orgs[0];
+    const totalUsers = org ? org.user_count : 1420;
+    const activeStudents = Math.round(totalUsers * 0.82);
+    const mentors = Math.max(4, Math.round(totalUsers * 0.08));
+    const otherUsers = Math.max(2, Math.round(totalUsers * 0.10));
+    return {
+      activeStudents,
+      cohorts: projData.tracks ? projData.tracks.length + 2 : 4,
+      courses: projData.stats ? projData.stats.totalCourses : 24,
+      mentors,
+      otherUsers,
+      completionRate: 78,
+    };
   }
   if (!organizationId) return null;
   // course_enrollments has no FK to user_profiles, so `user_profiles!inner(...)`
@@ -595,7 +653,26 @@ export async function fetchTodaysTasks(organizationId) {
 }
 
 export async function fetchCohortProgressSummary(organizationId) {
-  if (!supabase) return [{ name: DEMO_COHORT.name, members: DEMO_COHORT.memberNames.length, progress: 71 }];
+  if (!supabase) {
+    if (activeProject === "sara_foundation") {
+      return [
+        { name: "Nairobi AI Fellowship Batch 4", members: 120, progress: 84 },
+        { name: "Lagos Tech Scholars Cohort 2", members: 95, progress: 68 },
+        { name: "Accra Digital Women Track", members: 80, progress: 76 }
+      ];
+    } else if (activeProject === "b2b") {
+      return [
+        { name: "Acme AI Engineering Bootcamp", members: 45, progress: 92 },
+        { name: "Starlight FinTech Leadership", members: 60, progress: 74 },
+        { name: "Nexus Compliance Onboarding", members: 35, progress: 88 }
+      ];
+    }
+    return [
+      { name: "Q3 AI & Product Design Batch", members: 68, progress: 82 },
+      { name: "Cloud Engineering Accelerator", members: 54, progress: 70 },
+      { name: "Executive AI Governance Cohort", members: 32, progress: 90 }
+    ];
+  }
   if (!organizationId) return [];
   const { data: cohorts, error } = await supabase.from("cohorts").select("id, name").eq("organization_id", organizationId);
   if (error) throw error;
@@ -617,9 +694,14 @@ export async function fetchCohortProgressSummary(organizationId) {
 
 export async function fetchStudentRiskList(organizationId) {
   if (!supabase) {
-    return DEMO_LEARNERS.filter((l) => l.risk === "danger").map((l, i) => ({
-      name: l.name, initials: l.initials, days: 8 + i, risk: "high",
-    }));
+    return [
+      { name: "Fatima Diallo", initials: "FD", days: 12, risk: "high", status: "High Risk", course: "AI Fundamentals", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" },
+      { name: "Liam Torres", initials: "LT", days: 8, risk: "high", status: "Needs Attention", course: "Leadership Essentials", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
+      { name: "Priya Nair", initials: "PN", days: 4, risk: "medium", status: "Needs Attention", course: "Full-Stack Web & Cloud", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80" },
+      { name: "Sofia Kim", initials: "SK", days: 5, risk: "medium", status: "Needs Attention", course: "Prompt Design Basics", avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80" },
+      { name: "Amara Chen", initials: "AC", days: 0, risk: "low", status: "On Track", course: "AI Foundations for Africa", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
+      { name: "Marcus Webb", initials: "MW", days: 1, risk: "low", status: "On Track", course: "Generative AI Systems", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" }
+    ];
   }
   if (!organizationId) return [];
   const cutoff = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
@@ -645,7 +727,14 @@ export async function fetchStudentRiskList(organizationId) {
 }
 
 export async function fetchTopMentors(organizationId) {
-  if (!supabase) return DEMO_INSTRUCTORS.map((m) => ({ name: m.name, initials: m.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(), rating: m.rating, sessions: m.sessionsCompleted }));
+  if (!supabase) {
+    return [
+      { name: "Astrid Larsson", initials: "AL", specialization: "Lead AI Engineer", rating: 4.9, sessions: 48, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
+      { name: "Alex Rivera", initials: "AR", specialization: "Principal Product Designer", rating: 4.8, sessions: 36, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
+      { name: "Marcus Vance", initials: "MV", specialization: "Cloud & Systems Architect", rating: 4.9, sessions: 52, avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" },
+      { name: "Jordan Reyes", initials: "JR", specialization: "Data Science Lead", rating: 4.7, sessions: 29, avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
+    ];
+  }
   if (!organizationId) return [];
   const { data, error } = await supabase
     .from("mentors")
@@ -669,7 +758,13 @@ export async function fetchTopMentors(organizationId) {
 }
 
 export async function fetchUpcomingOrgSessions(organizationId) {
-  if (!supabase) return [{ title: "AI Fundamentals Q&A", mentor: DEMO_INSTRUCTORS[0].name, time: new Date(Date.now() + 2 * 86400000).toLocaleString(), status: "upcoming" }];
+  if (!supabase) {
+    return [
+      { id: "demo-sess-1", title: "Live AI Portfolio Review & Critique", mentor_name: "Astrid Larsson", scheduled_at: new Date(Date.now() + 3600000).toISOString(), room_url: "https://meet.google.com/demo-room-ai", duration: 60, status: "live_now" },
+      { id: "demo-sess-2", title: "Cloud Architecture Masterclass", mentor_name: "Marcus Vance", scheduled_at: new Date(Date.now() + 86400000).toISOString(), room_url: "https://meet.google.com/demo-cloud", duration: 45, status: "upcoming" },
+      { id: "demo-sess-3", title: "Generative AI Prompts Workshop", mentor_name: "Alex Rivera", scheduled_at: new Date(Date.now() + 2 * 86400000).toISOString(), room_url: "https://meet.google.com/demo-genai", duration: 90, status: "upcoming" }
+    ];
+  }
   if (!organizationId) return [];
   const { data: mentorRows } = await supabase.from("mentors").select("id, user_id").eq("organization_id", organizationId);
   const mentorIds = (mentorRows || []).map(m => m.id);
@@ -1851,7 +1946,12 @@ export async function fetchGJPApplicants(organizationId) {
    ========================================================================= */
 
 export async function fetchEmailCampaigns(senderId) {
-  if (!supabase) return [];
+  if (!supabase) {
+    return [
+      { id: "demo-camp-1", subject: "Welcome to Train AI Platform Q3", recipient_group: "all", sent_count: 1420, open_count: 980, click_count: 420, status: "sent", sent_at: new Date(Date.now() - 86400000).toISOString() },
+      { id: "demo-camp-2", subject: "New AI Certification Paths Available", recipient_group: "active_users", sent_count: 850, open_count: 610, click_count: 310, status: "sent", sent_at: new Date(Date.now() - 3 * 86400000).toISOString() }
+    ];
+  }
   let query = supabase.from("email_campaigns").select("*").order("sent_at", { ascending: false, nullsFirst: false }).limit(20);
   const { data, error } = await query;
   if (error) throw error;
@@ -1871,7 +1971,14 @@ export async function fetchEmailCampaigns(senderId) {
 // exact columns confirmed against the shared schema) - there is no separate
 // client-side insert to keep in sync with it.
 export async function previewBroadcastRecipientCount({ recipientGroup, specificEmail }) {
-  if (!supabase) return 0;
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    if (recipientGroup === "specific_email") return specificEmail ? 1 : 0;
+    if (recipientGroup === "all") return projData.stats.totalUsers;
+    if (recipientGroup === "active_users") return projData.stats.activeInWeek;
+    if (recipientGroup === "organizations") return projData.stats.organizations;
+    return Math.round(projData.stats.totalUsers * 0.4);
+  }
   const { data, error } = await supabase.functions.invoke("advanced-broadcast-email", {
     body: {
       action: "count",
@@ -1884,7 +1991,11 @@ export async function previewBroadcastRecipientCount({ recipientGroup, specificE
 }
 
 export async function sendBroadcastEmail({ recipientGroup, specificEmail, subject, htmlContent, channels, senderEmail, templateUsed }) {
-  if (!supabase) return null;
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    const total = recipientGroup === "specific_email" ? 1 : projData.stats.activeInWeek;
+    return { success: true, email_sent: total, total_recipients: total };
+  }
   const { data, error } = await supabase.functions.invoke("advanced-broadcast-email", {
     body: {
       action: "send",
@@ -1909,7 +2020,10 @@ export async function sendBroadcastEmail({ recipientGroup, specificEmail, subjec
    ========================================================================= */
 
 export async function fetchLearningTracksSummary() {
-  if (!supabase) return [];
+  if (!supabase) {
+    const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
+    return projData.tracks;
+  }
   const { data: courses, error } = await supabase.from("courses").select("id, title, category").not("category", "is", null);
   if (error) throw error;
   const byCategory = {};

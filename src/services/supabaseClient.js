@@ -36,14 +36,35 @@ export const SUPABASE_PROJECTS = {
   B2B: "b2b", // every business-organization tenant, isolated internally by organization_id + RLS
 };
 
+function isValidHttpUrl(string) {
+  try {
+    const parsed = new URL(string);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+}
+
 function buildClient(urlEnvKey, anonKeyEnvKey) {
-  const url = import.meta.env[urlEnvKey];
-  const anonKey = import.meta.env[anonKeyEnvKey];
-  const configured =
-    !!url && !!anonKey &&
-    !url.includes("your-project-ref") &&
-    !anonKey.includes("your-anon-public-key");
-  return { configured, client: configured ? createClient(url, anonKey) : null };
+  const url = (import.meta.env[urlEnvKey] || "").trim();
+  const anonKey = (import.meta.env[anonKeyEnvKey] || "").trim();
+  const isValidUrl = isValidHttpUrl(url);
+  const isPlaceholderKey =
+    !anonKey ||
+    anonKey.toLowerCase().includes("your-") ||
+    anonKey.toLowerCase().includes("anon-public-key") ||
+    anonKey.length < 10;
+  const configured = isValidUrl && !isPlaceholderKey;
+  let client = null;
+  if (configured) {
+    try {
+      client = createClient(url, anonKey);
+    } catch (e) {
+      console.warn(`Failed to initialize Supabase client for ${urlEnvKey}:`, e);
+      client = null;
+    }
+  }
+  return { configured: !!client, client };
 }
 
 // Sara Foundation - the project already in .env.example (previously

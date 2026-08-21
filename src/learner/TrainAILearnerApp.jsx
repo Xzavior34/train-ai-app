@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../lib/useAuth.js";
 import { useLearnerData } from "./hooks/useLearnerData.js";
-import { TOKENS, BottomNav, DesktopSidebar, timeAgo, NotificationBellContext } from "./components/LearnerUI.jsx";
+import { TOKENS, BottomNav, DesktopSidebar, LearnerHeader, LearningPathsView, ScheduleView, timeAgo, NotificationBellContext } from "./components/LearnerUI.jsx";
 import { SearchBar } from "./components/SearchBar.jsx";
 import { fetchOrgAISettings, fetchOrgLeaderboardSettings, fetchOrgGamificationSettings } from "../lib/api/organizations.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
@@ -16,6 +16,8 @@ import { MessagesScreen } from "./screens/MessagesScreen.jsx";
 import { NotificationsScreen } from "./screens/NotificationsScreen.jsx";
 import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { AchievementsScreen } from "./screens/AchievementsScreen.jsx";
+import { BookmarksScreen } from "./screens/BookmarksScreen.jsx";
+import { MyProgressScreen } from "./screens/MyProgressScreen.jsx";
 import { CreditsCheckoutScreen } from "./screens/CreditsCheckoutScreen.jsx";
 import { PaymentCallbackScreen } from "./screens/PaymentCallbackScreen.jsx";
 import { useCredits } from "./hooks/useCredits.js";
@@ -32,7 +34,7 @@ import {
   fetchOrCreateAIConversation, fetchAIChatMessages, sendAIChatMessage, requestAIReply
 } from "../lib/api/schemaHelper.js";
 import { updateUserAvatar, fetchOrgBranding } from "../lib/api/platform.js";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Search } from "lucide-react";
 
 // Paystack/Stripe redirect the browser back to this same page (no router in
 // this app) with either ?reference=/?trxref= (Paystack) or ?session_id=
@@ -54,16 +56,42 @@ function initialScreenFromLocation() {
 import { DashboardSwitcher } from "../platform/components/PlatformUI.jsx";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 
-export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform, onSwitchDashboard, userRoles = [] } = {}) {
+export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform, onSwitchDashboard, userRoles = [], onSignOut } = {}) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const { session, signOut } = useAuth();
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => {
+    try {
+      return localStorage.getItem("trainai_theme_dark") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("trainai_theme_dark", dark ? "true" : "false");
+      if (dark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    } catch {}
+  }, [dark]);
+
   const [toast, setToast] = useState(null);
   const toastTimerRef = useRef(null);
   function showToast(message) {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast(message);
     toastTimerRef.current = setTimeout(() => setToast(null), 2200);
+  }
+
+  async function handleSignOut() {
+    try {
+      if (onSignOut) await onSignOut();
+      else if (signOut) await signOut();
+    } catch {}
+    localStorage.removeItem("trainai_active_session_v1");
   }
 
   const [screen, setScreen] = useState(initialScreenFromLocation);
@@ -87,6 +115,46 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     setStack([]);
     setScreen(tabKey);
     setParams({});
+  }
+
+  function handleSidebarNav(key) {
+    if (key === "home") {
+      goTab("home");
+    } else if (key === "courses") {
+      setShowMyCoursesOnly(false);
+      setCourseSourceTab("all");
+      goTab("courses");
+    } else if (key === "learningPaths") {
+      push("learningPaths");
+    } else if (key === "bookmarks") {
+      push("bookmarks");
+    } else if (key === "myCourses" || key === "myProgress") {
+      push("myProgress");
+    } else if (key === "ai") {
+      goTab("ai");
+    } else if (key === "communityFeed") {
+      setCommunityTab("posts");
+      goTab("community");
+    } else if (key === "cohort") {
+      goTab("cohort");
+    } else if (key === "leaderboard") {
+      setCommunityTab("leaderboard");
+      goTab("community");
+    } else if (key === "messages") {
+      push("messages");
+    } else if (key === "schedule") {
+      push("schedule");
+    } else if (key === "mentors") {
+      push("mentors");
+    } else if (key === "notifications") {
+      push("notifications");
+    } else if (key === "settings" || key === "notificationSettings" || key === "feedbackSupport") {
+      push("settings");
+    } else if (key === "achievements") {
+      push("achievements");
+    } else if (key === "creditsCheckout") {
+      push("creditsCheckout", { mode: "credits" });
+    }
   }
 
   const isActiveRef = useRef(isActive);
@@ -553,28 +621,62 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     <div className={`tai ${dark ? "dark" : ""}`} style={brandPrimaryColor ? { "--primary": brandPrimaryColor } : undefined}>
       <style>{TOKENS}</style>
       <div className="tai-app-outer">
+        {/* Global Top Header matching Screenshot 1 & 2 */}
+        <LearnerHeader
+          user={user}
+          credits={credits}
+          onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}
+          onOpenNotifications={() => push("notifications")}
+          unreadNotifs={unreadNotifs}
+          onOpenDashboardSwitcher={
+            (onSwitchToPlatform || (userRoles && userRoles.length > 0))
+              ? () => setSwitcherOpen(true)
+              : undefined
+          }
+          hasPlatformRole={!!onSwitchToPlatform}
+          onProfile={() => push("settings")}
+          onSignOut={handleSignOut}
+          brandLogoUrl={brandLogoUrl}
+          dark={dark}
+          go={handleSidebarNav}
+          active={screen}
+          searchComponent={
+            <div className="tai-header-search">
+              <Search size={15} color="var(--text-3)" />
+              <input
+                placeholder="Search..."
+                value={courseSearch}
+                onChange={(e) => {
+                  setCourseSearch(e.target.value);
+                  if (screen !== "courses") {
+                    setShowMyCoursesOnly(false);
+                    goTab("courses");
+                  }
+                }}
+              />
+            </div>
+          }
+        />
+
         <div className="tai-desktop-shell">
           <DesktopSidebar
-            active={activeTabKey}
-            go={goTab}
+            activeScreen={screen}
+            currentTab={showMyCoursesOnly ? "myCourses" : communityTab}
+            go={handleSidebarNav}
             onProfile={() => push("settings")}
-            profileActive={screen === "settings"}
-            onOpenDashboardSwitcher={() => setSwitcherOpen(true)}
+            onOpenDashboardSwitcher={
+              (onSwitchToPlatform || (userRoles && userRoles.length > 0))
+                ? () => setSwitcherOpen(true)
+                : undefined
+            }
+            onSignOut={handleSignOut}
             brandLogoUrl={brandLogoUrl}
+            user={user}
+            unreadNotifs={unreadNotifs}
           />
 
           <div className="tai-app">
             <div className="tai-body">
-              {!["lesson", "creditsCheckout", "paymentCallback"].includes(screen) && (
-                <SearchBar
-                  courses={courses}
-                  mentors={mentorsList}
-                  posts={posts}
-                  onOpenCourse={(courseId) => push("courseDetail", { id: courseId })}
-                  onOpenMentor={(mentorId) => push("mentors", { mentorId })}
-                  onOpenPost={(postId) => { setCommunityTab("posts"); push("community", { postId }); }}
-                />
-              )}
               {screen === "home" && (
                 <HomeScreen
                   user={user} courses={courses} coursesLoading={coursesLoading}
@@ -733,7 +835,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "settings" && (
                 <ProfileScreen
-                  user={user} dark={dark} setDark={setDark} signOut={signOut} back={back} push={push}
+                  user={user} dark={dark} setDark={setDark} signOut={handleSignOut} back={back} push={push}
                   onOpenDashboardSwitcher={() => setSwitcherOpen(true)}
                   credits={credits} onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}
                   session={session} onAvatarUploaded={handleAvatarUploaded} showToast={showToast}
@@ -761,11 +863,18 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   addCredits={addCredits} enrollmentsQuery={enrollmentsQuery} goTab={goTab} showToast={showToast}
                 />
               )}
-              {/* Learner-facing Learning Paths page removed per the product
-                  brief: "Learning Paths are primarily an Admin feature, not
-                  a learner feature... The learner Learning Path page is
-                  removed for now." Admins still organize tracks/cohorts/
-                  assigned journeys on the platform side. */}
+              {screen === "bookmarks" && (
+                <BookmarksScreen push={push} back={back} showToast={showToast} session={session} />
+              )}
+              {screen === "myProgress" && (
+                <MyProgressScreen user={user} courses={courses} push={push} back={back} session={session} showToast={showToast} />
+              )}
+              {screen === "learningPaths" && (
+                <LearningPathsView push={push} back={back} />
+              )}
+              {screen === "schedule" && (
+                <ScheduleView push={push} back={back} />
+              )}
             </div>
 
             <BottomNav active={activeTabKey} go={goTab} />
