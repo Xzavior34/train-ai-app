@@ -467,7 +467,6 @@ export const NAV_ITEMS = [
   { key: "courses", label: "Courses", icon: BookOpen },
   { key: "ai", label: "AI Coach", icon: Zap },
   { key: "community", label: "Community", icon: Users },
-  { key: "leaderboard", label: "Rank", icon: Trophy },
 ];
 
 export function BottomNav({ active, go }) {
