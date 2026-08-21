@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Sparkles, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star, Flame, User, CheckCircle2, Lock, BookOpen } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star, Flame, User, CheckCircle2, Lock, BookOpen, Sparkles, Mail, Sliders, Shield, MessageSquare, Send, Check } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
 import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
@@ -9,25 +9,32 @@ import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { usePushNotifications } from "../hooks/usePushNotifications.js";
 
-export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpenDashboardSwitcher, credits, onBuyCredits, session, onAvatarUploaded, showToast, gamificationEnabled = true, weeklyGoal, setWeeklyGoal }) {
+export function ProfileScreen({
+  user,
+  dark,
+  setDark,
+  signOut,
+  back,
+  push,
+  onOpenDashboardSwitcher,
+  credits,
+  onBuyCredits,
+  session,
+  onAvatarUploaded,
+  showToast,
+  gamificationEnabled = true,
+  weeklyGoal = 5,
+  setWeeklyGoal
+}) {
+  const [activeTab, setActiveTab] = useState("profile");
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [notifPrefs, setNotifPrefs] = useState(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackCategory, setFeedbackCategory] = useState("General");
-  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackRating, setFeedbackRating] = useState(5);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [savingGoal, setSavingGoal] = useState(false);
 
-  async function handleSetWeeklyGoal(goal) {
-    setSavingGoal(true);
-    try {
-      const result = await updateWeeklyGoal(userId, goal);
-      if (!result.success) notify(result.error);
-      else { setWeeklyGoal?.(goal); notify(`Weekly goal set to ${goal} lessons.`); }
-    } finally {
-      setSavingGoal(false);
-    }
-  }
   const [showMfaSetup, setShowMfaSetup] = useState(false);
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -39,21 +46,29 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
   const notify = showToast || (() => {});
   const pushNotifications = usePushNotifications(userId);
 
-  // Load this learner's own DSAR request history so a pending deletion
-  // request (already submitted) is visible instead of letting them submit
-  // duplicates with no feedback.
+  async function handleSetWeeklyGoal(goal) {
+    setSavingGoal(true);
+    try {
+      const result = await updateWeeklyGoal(userId, goal);
+      if (!result.success) notify(result.error);
+      else {
+        setWeeklyGoal?.(goal);
+        notify(`Weekly goal set to ${goal} lessons.`);
+      }
+    } finally {
+      setSavingGoal(false);
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     if (!userId) return;
-    fetchUserDSARRequests(userId).then((rows) => { if (!cancelled) setDsarRequests(rows); });
+    fetchUserDSARRequests(userId).then((rows) => {
+      if (!cancelled) setDsarRequests(rows);
+    });
     return () => { cancelled = true; };
   }, [userId]);
 
-  // Notification type preferences - a real, already-existing table
-  // (notification_preferences) with real read/write functions, confirmed
-  // to have no screen anywhere that ever called them - a genuine, bounded
-  // gap found while comparing against the real 1.0 reference codebase,
-  // not a new mechanism invented here.
   useEffect(() => {
     let cancelled = false;
     if (!userId) return;
@@ -67,6 +82,7 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
     const next = { ...notifPrefs, [field]: !notifPrefs[field] };
     setNotifPrefs(next);
     await upsertNotificationPreferences(userId, next);
+    notify("Notification preferences updated.");
   }
 
   const pendingErasureRequest = dsarRequests.find((r) => r.request_type === "erasure" && r.status === "pending");
@@ -85,8 +101,6 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      // Log the export for the admin audit trail too - best-effort, the
-      // download itself already happened above regardless of this outcome.
       submitDSARRequest({ userId, email: session?.user?.email || "", requestType: "export" }).catch(() => {});
       notify("Your data export has downloaded.");
     } catch (e) {
@@ -138,68 +152,97 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
     }
   }
 
+  const TABS = [
+    { key: "profile", label: "Profile & Overview", icon: User },
+    { key: "preferences", label: "Preferences & Habits", icon: Sliders },
+    { key: "notifications", label: "Notifications", icon: Bell },
+    { key: "security", label: "Security & Access", icon: Shield },
+    { key: "privacy", label: "Privacy & Data", icon: Download },
+    { key: "feedback", label: "Support & Feedback", icon: MessageSquare },
+  ];
+
   return (
-    <div className="tai-fade-in" style={{ maxWidth: 720, margin: "0 auto", width: "100%" }}>
-      <TopBar title="Profile & Settings" sub="Manage your account & preferences" onBack={back} />
-      
-      {/* Sleek Profile Hero with Cover Photo */}
-      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 18, border: "1px solid var(--border)" }}>
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24, width: "100%", maxWidth: 1040, margin: "0 auto" }}>
+      <TopBar title="Profile & Settings" sub="Manage your personal identity, learning pace, security, and app preferences" onBack={back} />
+
+      {/* =========================================================================
+          HERO PROFILE COVER & IDENTITY CARD
+          ========================================================================= */}
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 22, border: "1px solid var(--border)" }}>
         {/* Cover Photo */}
         <div style={{
-          height: 100,
-          background: "linear-gradient(135deg, #4338CA 0%, #6366F1 50%, #8B5CF6 100%)",
+          height: 120,
+          background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 60%, #312E81 100%)",
           position: "relative"
         }}>
-          <img 
-            src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&auto=format&fit=crop&q=80"
+          <img
+            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
             alt="Cover"
-            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.35 }}
           />
         </div>
 
         {/* Profile Content */}
-        <div style={{ padding: "0 20px 20px", marginTop: -32 }}>
-          <div className="tai-row tai-between" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: 12 }}>
-            <div className="tai-row tai-gap14" style={{ alignItems: "flex-end" }}>
-              <div style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default" }} onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}>
-                <img 
+        <div style={{ padding: "0 clamp(16px, 3.5vw, 28px) 24px", marginTop: -40 }}>
+          <div className="tai-row tai-between" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
+            <div className="tai-row tai-gap16" style={{ alignItems: "flex-end", flexWrap: "wrap" }}>
+              <div
+                style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default" }}
+                onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}
+                title="Change profile photo"
+              >
+                <img
                   src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=180&auto=format&fit=crop&q=80"}
                   alt={user.name}
-                  style={{ width: 68, height: 68, borderRadius: "50%", objectFit: "cover", border: "4px solid var(--surface)", boxShadow: "0 4px 12px rgba(0,0,0,0.12)" }}
+                  style={{
+                    width: 80, height: 80, borderRadius: "50%", objectFit: "cover",
+                    border: "4px solid var(--surface)", boxShadow: "0 6px 16px rgba(0,0,0,0.18)"
+                  }}
                 />
                 {session?.user?.id && (
                   <div style={{
-                    position: "absolute", bottom: 2, right: 2, width: 22, height: 22, borderRadius: "50%",
+                    position: "absolute", bottom: 2, right: 2, width: 24, height: 24, borderRadius: "50%",
                     background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "2px solid var(--surface)",
+                    border: "2px solid var(--surface)", color: "#fff"
                   }}>
-                    <Camera size={11} color="#fff" />
+                    <Camera size={12} />
                   </div>
                 )}
               </div>
 
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name || "Evelyn Hayes"}</div>
-                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email || "evelyn.hayes@trainai.co"} • {user.location || "Nairobi, Kenya"}</div>
+              <div style={{ minWidth: 0, paddingBottom: 4 }}>
+                <div style={{ fontWeight: 900, fontSize: 22, color: "var(--text)", letterSpacing: "-0.02em" }}>
+                  {user.name || "Evelyn Hayes"}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <span>{user.email || "evelyn.hayes@trainai.co"}</span>
+                  <span>•</span>
+                  <span>{user.location || "San Francisco, CA"}</span>
+                </div>
               </div>
             </div>
 
-            <div style={{
-              background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)",
-              padding: "5px 12px", borderRadius: 99, fontSize: 12, fontWeight: 700
-            }}>
-              Track: Product Design & AI
+            <div className="tai-row tai-gap10" style={{ paddingBottom: 4, flexWrap: "wrap" }}>
+              <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)", fontWeight: 700 }}>
+                {user.track || "Full-Stack AI & Design"}
+              </span>
+              {user.role && (
+                <span className="tai-tag" style={{ background: "var(--surface-3)", color: "var(--text-2)" }}>
+                  {user.role.toUpperCase()}
+                </span>
+              )}
             </div>
           </div>
 
+          {/* Upload Zone Drawer */}
           {showAvatarUpload && session?.user?.id && (
-            <div className="tai-mt14">
+            <div className="tai-mt16" style={{ background: "var(--surface-2)", padding: 16, borderRadius: 16, border: "1px solid var(--border)" }}>
               <FileUploadZone
                 bucket="uploads"
                 pathPrefix={`avatars/${session.user.id}`}
                 accept="image/*"
                 maxSizeMB={5}
-                label="Drag and drop a photo, or click to browse"
+                label="Drag and drop a new profile photo, or click to browse"
                 onUploaded={(url) => {
                   onAvatarUploaded?.(url);
                   setShowAvatarUpload(false);
@@ -209,289 +252,490 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
           )}
 
           {/* 4 Stat Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 10, marginTop: 20 }}>
-            <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", background: "var(--surface-2)", borderRadius: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--primary)" }}>{user.mastery ?? 88}%</div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Mastery</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginTop: 20 }}>
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--primary)" }}>{user.mastery ?? 88}%</div>
+              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Curriculum Mastery</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", background: "var(--surface-2)", borderRadius: 12 }}>
-              <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 800, fontSize: 18, color: "#F59E0B" }}>
-                <span>{user.streak ?? 8}</span> <Flame size={18} color="#F59E0B" />
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+              <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: 20, color: "#F59E0B" }}>
+                <span>{user.streak ?? 8}</span> <Flame size={18} color="#F59E0B" fill="#F59E0B" />
               </div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Day Streak</div>
+              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Active Day Streak</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", background: "var(--surface-2)", borderRadius: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Total XP</div>
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--text)" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
+              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Credential Points</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", background: "var(--surface-2)", borderRadius: 12 }}>
-              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--success)" }}>3</div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Certificates</div>
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--success)" }}>3 Issued</div>
+              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Course Certificates</div>
             </div>
           </div>
         </div>
       </div>
 
-      {push && gamificationEnabled !== false && (
-        <div className="tai-card tai-card-hover tai-mt12" style={{ cursor: "pointer" }} onClick={() => push("achievements")}>
-          <div className="tai-row tai-between">
-            <div className="tai-row tai-gap10">
-              <Trophy size={18} color="var(--primary)" />
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700 }}>Achievements & levels</div>
-                <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Level {user.level || 1} • {(user.totalPoints || 0).toLocaleString()} XP</div>
-              </div>
-            </div>
-            <ChevronRight size={16} color="var(--text-3)" />
-          </div>
-        </div>
-      )}
-
-      <div className="tai-card tai-card-hover tai-mt12" style={{ cursor: "pointer" }} onClick={() => setShowAccessibility(true)}>
-        <div className="tai-row tai-between">
-          <div className="tai-row tai-gap10">
-            <Accessibility size={18} color="var(--primary)" />
-            <div>
-              <div style={{ fontSize: 13.5, fontWeight: 700 }}>Accessibility</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Font size, contrast & motion</div>
-            </div>
-          </div>
-          <ChevronRight size={16} color="var(--text-3)" />
-        </div>
-      </div>
-
-      {session?.user?.id && (
-        <div className="tai-card tai-card-hover tai-mt12" style={{ cursor: "pointer" }} onClick={() => setShowMfaSetup(true)}>
-          <div className="tai-row tai-between">
-            <div className="tai-row tai-gap10">
-              <Smartphone size={18} color="var(--primary)" />
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700 }}>Two-factor authentication</div>
-                <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secure sign-in with an authenticator app</div>
-              </div>
-            </div>
-            <ChevronRight size={16} color="var(--text-3)" />
-          </div>
-        </div>
-      )}
-
-      {onBuyCredits && (
-        <div className="tai-card tai-mt12">
-          <div className="tai-row tai-between">
-            <div className="tai-row tai-gap10">
-              <Sparkles size={18} color="var(--primary)" />
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700 }}>AI Credits</div>
-                <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>{credits ?? 0} credits available today</div>
-              </div>
-            </div>
-            <button className="tai-btn tai-btn-ghost tai-btn-sm" onClick={onBuyCredits}>Buy more</button>
-          </div>
-        </div>
-      )}
-
-      <div className="tai-card tai-mt12">
-        <div className="tai-title-sm">Preferences</div>
-        <div className="tai-row tai-between tai-mt12">
-          <div className="tai-row tai-gap10">
-            <Moon size={18} color="var(--primary)" />
-            <span style={{ fontSize: 13.5, fontWeight: 600 }}>Dark mode</span>
-          </div>
-          <Switch on={dark} onChange={() => setDark(v => !v)} />
-        </div>
-
-        <hr className="tai-divider" />
-        <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 8 }}>Weekly lesson goal</div>
-        <div style={{ fontSize: 11, color: "var(--text-2)", marginBottom: 8 }}>
-          How many lessons a week you're aiming for - shown on your Home screen.
-        </div>
-        <div className="tai-row tai-gap8" style={{ flexWrap: "wrap" }}>
-          {[3, 5, 7, 10].map((v) => (
+      {/* =========================================================================
+          TAB NAVIGATION (Responsive Horizontal Scroll on Mobile, Sticky Strip on Desktop)
+          ========================================================================= */}
+      <div className="tai-scrollx" style={{ gap: 8, paddingBottom: 4 }}>
+        {TABS.map(t => {
+          const Icon = t.icon;
+          const isActive = activeTab === t.key;
+          return (
             <button
-              key={v}
-              className={`tai-btn tai-btn-sm ${weeklyGoal === v ? "tai-btn-primary" : "tai-btn-outline"}`}
-              disabled={savingGoal}
-              onClick={() => handleSetWeeklyGoal(v)}
+              key={t.key}
+              type="button"
+              className={`tai-btn tai-btn-sm ${isActive ? "tai-btn-primary" : "tai-btn-outline"}`}
+              style={{
+                borderRadius: 999, padding: "8px 18px", fontSize: 13, fontWeight: 700,
+                display: "inline-flex", alignItems: "center", gap: 8, whiteSpace: "nowrap"
+              }}
+              onClick={() => setActiveTab(t.key)}
             >
-              {v}
+              <Icon size={15} />
+              <span>{t.label}</span>
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        {session?.user?.id && (
-          <>
-            <hr className="tai-divider" />
-            <div className="tai-row tai-between">
-              <div className="tai-row tai-gap10">
-                <Bell size={18} color="var(--primary)" />
-                <div>
-                  <span style={{ fontSize: 13.5, fontWeight: 600 }}>Push notifications</span>
-                  <div style={{ fontSize: 11, color: "var(--text-2)" }}>
-                    {!pushNotifications.supported
-                      ? "Not supported in this browser"
-                      : pushNotifications.permission === "denied"
-                        ? "Blocked. Enable in browser settings"
-                        : pushNotifications.subscribed
-                          ? "Reminders & updates enabled on this device"
-                          : "Get reminders even when the tab isn't focused"}
+      {/* =========================================================================
+          TAB 1: PROFILE & OVERVIEW
+          ========================================================================= */}
+      {activeTab === "profile" && (
+        <div className="tai-col tai-gap16 anim-stagger">
+          <div className="tai-card">
+            <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Learner Information</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+              <div>
+                <label className="tai-label">Full Name</label>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.name || "Evelyn Hayes"}</div>
+              </div>
+              <div>
+                <label className="tai-label">Email Address</label>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.email || "evelyn.hayes@trainai.co"}</div>
+              </div>
+              <div>
+                <label className="tai-label">Current Organization</label>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.organization || "Train AI Academy"}</div>
+              </div>
+              <div>
+                <label className="tai-label">Enrolled Batch</label>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>Cohort 04 • Sprint 5</div>
+              </div>
+            </div>
+          </div>
+
+          {push && gamificationEnabled !== false && (
+            <div
+              className="tai-card tai-card-hover"
+              style={{ cursor: "pointer", background: "var(--surface)" }}
+              onClick={() => push("achievements")}
+            >
+              <div className="tai-row tai-between">
+                <div className="tai-row tai-gap14">
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Trophy size={20} color="var(--primary)" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>View Achievements, XP & Rank</div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Level {user.level || 2} • {(user.totalPoints || 4520).toLocaleString()} XP earned across 8 badges</div>
                   </div>
                 </div>
-              </div>
-              <Switch on={pushNotifications.subscribed} onChange={() => { if (!pushNotifications.loading && !pushNotifications.busy) handleTogglePush(); }} />
-            </div>
-            {pushNotifications.subscribed && (
-              <div className="tai-row tai-between tai-mt10">
-                <div style={{ fontSize: 11, color: "var(--text-2)" }}>Want to check it's working?</div>
-                <button
-                  className="tai-btn tai-btn-ghost tai-btn-sm"
-                  disabled={pushNotifications.busy}
-                  onClick={async () => {
-                    const res = await pushNotifications.sendTestPush();
-                    notify(res.ok ? "Test push sent. Check your notifications." : (res.error || "Could not send a test push."));
-                  }}
-                >
-                  Send test push
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {notifPrefs && (
-          <>
-            <hr className="tai-divider" />
-            <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 8 }}>Notification types</div>
-            <div className="tai-row tai-between">
-              <span style={{ fontSize: 12.5 }}>Email</span>
-              <Switch on={notifPrefs.email_enabled} onChange={() => handleToggleNotifPref("email_enabled")} />
-            </div>
-            <div className="tai-row tai-between tai-mt10">
-              <span style={{ fontSize: 12.5 }}>Push</span>
-              <Switch on={notifPrefs.push_enabled} onChange={() => handleToggleNotifPref("push_enabled")} />
-            </div>
-            <div className="tai-row tai-between tai-mt10">
-              <span style={{ fontSize: 12.5 }}>In-app</span>
-              <Switch on={notifPrefs.in_app_enabled} onChange={() => handleToggleNotifPref("in_app_enabled")} />
-            </div>
-          </>
-        )}
-
-        <hr className="tai-divider" />
-        <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 8 }}>Send feedback</div>
-        <div style={{ fontSize: 11, color: "var(--text-2)", marginBottom: 10 }}>
-          A bug, a suggestion, anything - your admin can see this.
-        </div>
-        <select className="tai-input" value={feedbackCategory} onChange={(e) => setFeedbackCategory(e.target.value)}>
-          <option>General</option>
-          <option>Bug report</option>
-          <option>Feature request</option>
-          <option>Course content</option>
-        </select>
-        <textarea className="tai-input tai-mt8" rows={3} placeholder="Tell us what's on your mind..." value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} />
-        <div className="tai-row tai-gap4 tai-mt8">
-          {[1, 2, 3, 4, 5].map((v) => (
-            <Star
-              key={v}
-              size={18}
-              fill={v <= feedbackRating ? "var(--primary)" : "none"}
-              color={v <= feedbackRating ? "var(--primary)" : "var(--border)"}
-              style={{ cursor: "pointer" }}
-              onClick={() => setFeedbackRating(v)}
-            />
-          ))}
-        </div>
-        <button
-          className="tai-btn tai-btn-primary tai-mt10"
-          disabled={submittingFeedback || !feedbackText.trim()}
-          onClick={async () => {
-            setSubmittingFeedback(true);
-            try {
-              const result = await submitPlatformFeedback(userId, { category: feedbackCategory, message: feedbackText, rating: feedbackRating || null });
-              if (!result.success) notify(result.error);
-              else { setFeedbackText(""); setFeedbackRating(0); notify("Thanks - your feedback was sent."); }
-            } finally {
-              setSubmittingFeedback(false);
-            }
-          }}
-        >
-          Send feedback
-        </button>
-
-        {onOpenDashboardSwitcher && (
-          <>
-            <hr className="tai-divider" />
-            <div className="tai-row tai-between" style={{ cursor: "pointer" }} onClick={onOpenDashboardSwitcher}>
-              <div className="tai-row tai-gap10">
-                <ShieldCheck size={18} color="var(--primary)" />
-                <span style={{ fontSize: 13.5, fontWeight: 600 }}>Switch Dashboard</span>
-              </div>
-              <ChevronRight size={16} color="var(--text-3)" />
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="tai-card tai-mt12">
-        <div className="tai-title-sm">Privacy & Data (GDPR)</div>
-        <div className="tai-col tai-gap10 tai-mt10">
-          <div
-            className="tai-row tai-between"
-            style={{ padding: "6px 0", cursor: exporting ? "default" : "pointer", opacity: exporting ? 0.6 : 1 }}
-            onClick={exporting ? undefined : handleDownloadData}
-          >
-            <div className="tai-row tai-gap10">
-              <Download size={17} color="var(--primary)" />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{exporting ? "Preparing your export..." : "Download my data (JSON)"}</div>
-                <div style={{ fontSize: 11, color: "var(--text-2)" }}>Everything we hold about you: profile, enrollments, progress & more</div>
+                <ChevronRight size={18} color="var(--text-3)" />
               </div>
             </div>
-            <ChevronRight size={16} color="var(--text-3)" />
-          </div>
+          )}
 
-          <hr className="tai-divider" />
-
-          {pendingErasureRequest ? (
-            <div className="tai-row tai-gap10" style={{ padding: "6px 0" }}>
-              <Clock size={17} color="var(--text-2)" />
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Deletion request pending review</div>
-                <div style={{ fontSize: 11, color: "var(--text-2)" }}>
-                  Submitted {pendingErasureRequest.requested_at ? new Date(pendingErasureRequest.requested_at).toLocaleDateString() : "recently"}: our team will contact you by email
-                </div>
-              </div>
-            </div>
-          ) : (
+          {onOpenDashboardSwitcher && (
             <div
-              className="tai-row tai-between"
-              style={{ padding: "6px 0", cursor: "pointer" }}
-              onClick={() => setShowDeleteConfirm(true)}
+              className="tai-card tai-card-hover"
+              style={{ cursor: "pointer", background: "var(--surface)" }}
+              onClick={onOpenDashboardSwitcher}
             >
-              <div className="tai-row tai-gap10">
-                <Trash2 size={17} color="var(--danger)" />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--danger)" }}>Request account deletion</div>
-                  <div style={{ fontSize: 11, color: "var(--text-2)" }}>Submits a request for our team to review and erase your data</div>
+              <div className="tai-row tai-between">
+                <div className="tai-row tai-gap14">
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <ShieldCheck size={20} color="#10B981" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>Switch Workspace Dashboard</div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Switch to Admin, Instructor, or Manager workspaces</div>
+                  </div>
                 </div>
+                <ChevronRight size={18} color="var(--text-3)" />
               </div>
-              <ChevronRight size={16} color="var(--text-3)" />
             </div>
           )}
         </div>
-      </div>
-
-      {signOut && (
-        <button className="tai-btn tai-btn-ghost tai-mt16" style={{ width: "100%", color: "var(--danger)" }} onClick={signOut}>
-          <LogOut size={16} /> Sign out
-        </button>
       )}
 
-      {showAccessibility && <AccessibilityPanel onClose={() => setShowAccessibility(false)} />}
+      {/* =========================================================================
+          TAB 2: PREFERENCES & HABITS
+          ========================================================================= */}
+      {activeTab === "preferences" && (
+        <div className="tai-col tai-gap16 anim-stagger">
+          <div className="tai-card">
+            <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Display & Theme</h2>
+            <div className="tai-row tai-between">
+              <div className="tai-row tai-gap12">
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Moon size={18} color="var(--primary)" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Dark Mode Theme</div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>High-contrast deep slate palette for comfortable night studying</div>
+                </div>
+              </div>
+              <Switch on={dark} onChange={() => setDark(v => !v)} />
+            </div>
+          </div>
 
+          <div className="tai-card">
+            <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Weekly Lesson Target</h2>
+            <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 14px" }}>
+              Choose your target number of lessons to complete each week. Tracked automatically on your home dashboard.
+            </p>
+            <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
+              {[3, 5, 7, 10, 14].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={`tai-btn tai-btn-sm ${weeklyGoal === v ? "tai-btn-primary" : "tai-btn-outline"}`}
+                  style={{ minWidth: 64, fontWeight: 800 }}
+                  disabled={savingGoal}
+                  onClick={() => handleSetWeeklyGoal(v)}
+                >
+                  {v} Lessons
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {onBuyCredits && (
+            <div className="tai-card">
+              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+                <div className="tai-row tai-gap12">
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Sparkles size={18} color="var(--primary)" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>AI Neural Credits</div>
+                    <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{typeof credits === "number" ? credits : 10} credits available for code debugging & quiz generator</div>
+                  </div>
+                </div>
+                <button className="tai-btn tai-btn-primary tai-btn-sm" onClick={onBuyCredits}>
+                  + Get More Credits
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 3: NOTIFICATIONS
+          ========================================================================= */}
+      {activeTab === "notifications" && (
+        <div className="tai-col tai-gap16 anim-stagger">
+          {session?.user?.id && (
+            <div className="tai-card">
+              <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Push Notifications</h2>
+              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+                <div className="tai-row tai-gap12">
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Bell size={18} color="#F59E0B" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Browser Push Notifications</div>
+                    <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+                      {!pushNotifications.supported
+                        ? "Not supported in this browser"
+                        : pushNotifications.permission === "denied"
+                          ? "Blocked in browser settings. Enable in URL bar."
+                          : pushNotifications.subscribed
+                            ? "Active • Reminders and live session alerts enabled"
+                            : "Receive alerts for live workshops even when the tab is closed"}
+                    </div>
+                  </div>
+                </div>
+                <Switch on={pushNotifications.subscribed} onChange={() => { if (!pushNotifications.loading && !pushNotifications.busy) handleTogglePush(); }} />
+              </div>
+
+              {pushNotifications.subscribed && (
+                <div className="tai-row tai-between tai-mt14" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: 12, color: "var(--text-2)" }}>Verify push delivery to your device</span>
+                  <button
+                    type="button"
+                    className="tai-btn tai-btn-ghost tai-btn-sm"
+                    disabled={pushNotifications.busy}
+                    onClick={async () => {
+                      const res = await pushNotifications.sendTestPush();
+                      notify(res.ok ? "Test push notification sent!" : (res.error || "Could not send test push."));
+                    }}
+                  >
+                    Send Test Push
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {notifPrefs && (
+            <div className="tai-card">
+              <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Notification Channels</h2>
+              <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
+                Select where you would like to receive course assignments, critique notices, and peer messages.
+              </p>
+              <div className="tai-col tai-gap14">
+                <div className="tai-row tai-between">
+                  <div className="tai-row tai-gap10">
+                    <Mail size={16} color="var(--text-2)" />
+                    <div>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>Email Summaries</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Weekly progress digests &amp; major syllabus announcements</div>
+                    </div>
+                  </div>
+                  <Switch on={notifPrefs.email_enabled} onChange={() => handleToggleNotifPref("email_enabled")} />
+                </div>
+
+                <div className="tai-row tai-between">
+                  <div className="tai-row tai-gap10">
+                    <Smartphone size={16} color="var(--text-2)" />
+                    <div>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>Device Push Alerts</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Live critique room reminders 15 minutes before start</div>
+                    </div>
+                  </div>
+                  <Switch on={notifPrefs.push_enabled} onChange={() => handleToggleNotifPref("push_enabled")} />
+                </div>
+
+                <div className="tai-row tai-between">
+                  <div className="tai-row tai-gap10">
+                    <Bell size={16} color="var(--text-2)" />
+                    <div>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--text)" }}>In-App Toast &amp; Activity Bell</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Real-time reactions, mentions, and assignment grading notices</div>
+                    </div>
+                  </div>
+                  <Switch on={notifPrefs.in_app_enabled} onChange={() => handleToggleNotifPref("in_app_enabled")} />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 4: SECURITY & ACCESS
+          ========================================================================= */}
+      {activeTab === "security" && (
+        <div className="tai-col tai-gap16 anim-stagger">
+          <div
+            className="tai-card tai-card-hover"
+            style={{ cursor: "pointer" }}
+            onClick={() => setShowAccessibility(true)}
+          >
+            <div className="tai-row tai-between">
+              <div className="tai-row tai-gap14">
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(99, 102, 241, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Accessibility size={20} color="var(--primary)" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>Accessibility &amp; Motion Controls</div>
+                  <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>High-contrast mode, dyslexia font, font scaling, and reduced motion</div>
+                </div>
+              </div>
+              <ChevronRight size={18} color="var(--text-3)" />
+            </div>
+          </div>
+
+          {session?.user?.id && (
+            <div
+              className="tai-card tai-card-hover"
+              style={{ cursor: "pointer" }}
+              onClick={() => setShowMfaSetup(true)}
+            >
+              <div className="tai-row tai-between">
+                <div className="tai-row tai-gap14">
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Smartphone size={20} color="#10B981" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>Two-Factor Authentication (MFA)</div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Protect your account with Google Authenticator or 1Password TOTP</div>
+                  </div>
+                </div>
+                <ChevronRight size={18} color="var(--text-3)" />
+              </div>
+            </div>
+          )}
+
+          <div className="tai-card">
+            <h2 className="tai-title-sm" style={{ margin: "0 0 12px" }}>Active Session Information</h2>
+            <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
+              Signed in as <strong>{session?.user?.email || user.email || "Learner"}</strong>. Your session is securely encrypted via Supabase Auth with JWT token refresh.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 5: PRIVACY & DATA (GDPR)
+          ========================================================================= */}
+      {activeTab === "privacy" && (
+        <div className="tai-col tai-gap16 anim-stagger">
+          <div className="tai-card">
+            <h2 className="tai-title-sm" style={{ margin: "0 0 6px" }}>GDPR Data Portability &amp; Export</h2>
+            <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
+              Download a complete machine-readable JSON copy of all personal records, course enrollments, quiz results, and community discussions.
+            </p>
+
+            <button
+              type="button"
+              className="tai-btn tai-btn-outline"
+              style={{ width: "100%", justifyContent: "center", padding: "12px 18px", fontWeight: 700 }}
+              disabled={exporting}
+              onClick={handleDownloadData}
+            >
+              <Download size={16} /> {exporting ? "Generating Export..." : "Download Full Data Export (JSON)"}
+            </button>
+          </div>
+
+          <div className="tai-card" style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}>
+            <h2 className="tai-title-sm" style={{ margin: "0 0 6px", color: "var(--danger)" }}>Account Deletion &amp; Erasure</h2>
+            <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
+              Permanently delete your profile, earned certificates, study records, and personal identifier tokens under GDPR Right to be Forgotten.
+            </p>
+
+            {pendingErasureRequest ? (
+              <div className="tai-row tai-gap10" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 12 }}>
+                <Clock size={18} color="var(--warning)" />
+                <div style={{ fontSize: 13, color: "var(--text)" }}>
+                  <strong>Deletion request pending review:</strong> Submitted {pendingErasureRequest.requested_at ? new Date(pendingErasureRequest.requested_at).toLocaleDateString() : "recently"}.
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="tai-btn"
+                style={{ background: "rgba(239, 68, 68, 0.12)", color: "var(--danger)", border: "1px solid rgba(239, 68, 68, 0.3)", width: "100%", fontWeight: 700 }}
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 size={16} /> Request Permanent Account Deletion
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          TAB 6: SUPPORT & FEEDBACK
+          ========================================================================= */}
+      {activeTab === "feedback" && (
+        <div className="tai-col tai-gap16 anim-stagger">
+          <div className="tai-card">
+            <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Send Product Feedback &amp; Suggestions</h2>
+            <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
+              Have an idea for a new course track, or found a UI bug? Your feedback goes directly to our curriculum and engineering teams.
+            </p>
+
+            <div className="tai-col tai-gap12">
+              <div>
+                <label className="tai-label">Category</label>
+                <select
+                  className="tai-input tai-mt6"
+                  value={feedbackCategory}
+                  onChange={(e) => setFeedbackCategory(e.target.value)}
+                >
+                  <option>General Suggestion</option>
+                  <option>Bug Report</option>
+                  <option>Course Syllabus Request</option>
+                  <option>UI &amp; Accessibility</option>
+                  <option>Instructor Feedback</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="tai-label">Experience Rating</label>
+                <div className="tai-row tai-gap6 tai-mt6">
+                  {[1, 2, 3, 4, 5].map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      aria-label={`Rate ${v} star`}
+                      onClick={() => setFeedbackRating(v)}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+                    >
+                      <Star
+                        size={22}
+                        fill={v <= feedbackRating ? "#F59E0B" : "none"}
+                        color={v <= feedbackRating ? "#F59E0B" : "var(--border)"}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="tai-label">Message</label>
+                <textarea
+                  className="tai-input tai-mt6"
+                  rows={4}
+                  placeholder="Share details, steps to reproduce a bug, or features you'd like to see..."
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="tai-btn tai-btn-primary tai-mt8"
+                disabled={submittingFeedback || !feedbackText.trim()}
+                onClick={async () => {
+                  setSubmittingFeedback(true);
+                  try {
+                    const result = await submitPlatformFeedback(userId, { category: feedbackCategory, message: feedbackText, rating: feedbackRating || null });
+                    if (!result.success) notify(result.error);
+                    else {
+                      setFeedbackText("");
+                      notify("Thank you! Your feedback has been delivered.");
+                    }
+                  } finally {
+                    setSubmittingFeedback(false);
+                  }
+                }}
+              >
+                <Send size={15} /> {submittingFeedback ? "Delivering..." : "Submit Feedback"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sign Out CTA */}
+      {signOut && (
+        <div style={{ paddingTop: 8 }}>
+          <button
+            type="button"
+            className="tai-btn"
+            style={{
+              width: "100%", background: "var(--surface)", border: "1px solid var(--border)",
+              color: "var(--danger)", fontWeight: 700, padding: "12px 20px"
+            }}
+            onClick={signOut}
+          >
+            <LogOut size={16} /> Sign Out of Train AI
+          </button>
+        </div>
+      )}
+
+      {/* Sub-modals */}
+      {showAccessibility && <AccessibilityPanel onClose={() => setShowAccessibility(false)} />}
       {showMfaSetup && session?.user?.id && <MfaSetupScreen onClose={() => setShowMfaSetup(false)} />}
 
-
-
+      {/* Account Deletion Modal */}
       {showDeleteConfirm && (
         <div
           role="dialog"
@@ -499,26 +743,26 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
           aria-label="Confirm account deletion request"
           onClick={() => !submittingDeletion && setShowDeleteConfirm(false)}
           style={{
-            position: "fixed", inset: 0, zIndex: 10000, background: "rgba(16,20,42,.45)",
-            display: "flex", alignItems: "center", justifyContent: "center", padding: 16
+            position: "fixed", inset: 0, zIndex: 10000, background: "rgba(16,20,42,.65)",
+            backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16
           }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
             className="tai-card anim-pop"
-            style={{ width: "100%", maxWidth: 380, background: "var(--surface)" }}
+            style={{ width: "100%", maxWidth: 440, background: "var(--surface)" }}
           >
             <div className="tai-row tai-gap10">
-              <AlertTriangle size={20} color="var(--danger)" />
-              <div style={{ fontWeight: 800, fontSize: 15 }}>Request account deletion?</div>
+              <AlertTriangle size={22} color="var(--danger)" />
+              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Request Account Deletion?</div>
             </div>
-            <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.5, marginTop: 10 }}>
-              This submits a request for our team to permanently erase your profile, course progress,
-              community activity and other personal data. It is not undone automatically. An admin
-              reviews every request before anything is deleted. You'll be contacted by email once it's processed.
+            <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, marginTop: 12 }}>
+              This submits a formal GDPR erasure request to permanently delete your student records, course progress,
+              and community activity. An administrator reviews every request before permanent purging.
             </p>
-            <div className="tai-row tai-gap10 tai-mt16">
+            <div className="tai-row tai-gap10 tai-mt20">
               <button
+                type="button"
                 className="tai-btn tai-btn-ghost"
                 style={{ flex: 1 }}
                 disabled={submittingDeletion}
@@ -527,12 +771,13 @@ export function ProfileScreen({ user, dark, setDark, signOut, back, push, onOpen
                 Cancel
               </button>
               <button
+                type="button"
                 className="tai-btn"
-                style={{ flex: 1, background: "var(--danger)", color: "#fff", opacity: submittingDeletion ? 0.7 : 1 }}
+                style={{ flex: 1, background: "var(--danger)", color: "#fff", opacity: submittingDeletion ? 0.7 : 1, fontWeight: 800 }}
                 disabled={submittingDeletion}
                 onClick={handleConfirmDeletionRequest}
               >
-                {submittingDeletion ? "Submitting..." : "Yes, submit request"}
+                {submittingDeletion ? "Submitting..." : "Yes, Submit Request"}
               </button>
             </div>
           </div>
