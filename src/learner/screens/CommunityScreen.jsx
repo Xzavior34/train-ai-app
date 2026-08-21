@@ -6,7 +6,7 @@ import {
   Search, Bookmark, ExternalLink, Calendar, CheckCircle2, Megaphone, Radio,
   Filter, Pin, ThumbsUp, Code2, Award, ChevronRight, Layers, Play, Clock,
   ArrowUpRight, MoreHorizontal, Check, X, HelpCircle, Image as ImageIcon,
-  Palette, Zap, Target, MessageSquare
+  Palette, Zap, Target, MessageSquare, GraduationCap, Video, BookOpen
 } from "lucide-react";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
 
@@ -452,6 +452,7 @@ export const chartColors = {
           <div className="tai-row tai-gap6" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
             {[
               { k: "feed", label: "Community Feed", icon: MessageCircle },
+              { k: "instructors", label: "Instructors & Faculty", icon: GraduationCap },
               { k: "events", label: "Live Events & AMAs", icon: Calendar },
               { k: "circles", label: "Study Circles", icon: Users },
               { k: "leaderboard", label: "Leaderboard", icon: Award },
@@ -1063,6 +1064,161 @@ export const chartColors = {
       )}
 
       {/* =========================================================================
+          VIEW: INSTRUCTORS & FACULTY
+          ========================================================================= */}
+      {activeTab === "instructors" && (
+        <div className="tai-col tai-gap20">
+          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 900, color: "var(--text)", margin: "0 0 2px" }}>
+                Course Instructors &amp; Faculty Leads
+              </h2>
+              <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0 }}>
+                Directly connect with course authors, join weekly office hours, or schedule 1:1 mentorship sessions.
+              </p>
+            </div>
+
+            <button
+              className="tai-btn tai-btn-primary tai-btn-sm"
+              onClick={() => push("mentors")}
+            >
+              <GraduationCap size={14} /> View All Mentors &amp; Booking
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+            {[
+              {
+                id: "inst-1",
+                name: "Astrid Larsson",
+                role: "Lead AI Design & Spatial Systems Instructor",
+                org: "Ex-Spotify • Lead UX Architect",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80",
+                badge: "FACULTY LEAD",
+                coursesCount: 3,
+                hours: "Today at 4:00 PM EST",
+                rating: 4.98,
+                bio: "Specializes in design token variable architectures, spatial visionOS interfaces, and generative AI design pipelines."
+              },
+              {
+                id: "inst-2",
+                name: "Alex Rivera",
+                role: "Principal AI Engineer & Full-Stack Lead",
+                org: "AI Infrastructure Specialist",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
+                badge: "STAFF INSTRUCTOR",
+                coursesCount: 4,
+                hours: "Tomorrow at 2:00 PM EST",
+                rating: 4.95,
+                bio: "Author of Full-Stack AI Engineering. Expert in LangChain, vector databases, multi-agent orchestration, and prompt caching."
+              },
+              {
+                id: "inst-3",
+                name: "Dr. Elena Vance",
+                role: "Academic Director & Machine Learning Lead",
+                org: "PhD Stanford AI Lab",
+                avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=160&auto=format&fit=crop&q=80",
+                badge: "ACADEMIC DIRECTOR",
+                coursesCount: 2,
+                hours: "Thursday at 11:00 AM EST",
+                rating: 5.0,
+                bio: "Leads syllabus rigor, peer review standards, and capstone evaluations across all AI certification batches."
+              },
+              {
+                id: "inst-4",
+                name: "Wale Adebayo",
+                role: "Senior Engineering Lead & Systems Architect",
+                org: "Cloud Architecture Lead",
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80",
+                badge: "SENIOR INSTRUCTOR",
+                coursesCount: 3,
+                hours: "Friday at 3:30 PM EST",
+                rating: 4.92,
+                bio: "Teaches microservices, real-time distributed architecture, and secure enterprise AI application deployment."
+              }
+            ].map(inst => (
+              <div
+                key={inst.id}
+                className="tai-card"
+                style={{
+                  padding: 22,
+                  borderRadius: 18,
+                  background: "var(--surface)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  border: "1px solid var(--border)",
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.03)"
+                }}
+              >
+                <div>
+                  <div className="tai-row tai-gap14" style={{ marginBottom: 14 }}>
+                    <img
+                      src={inst.avatar}
+                      alt={inst.name}
+                      style={{
+                        width: 56, height: 56, borderRadius: 16, objectFit: "cover",
+                        border: "2px solid var(--primary-light)", flexShrink: 0
+                      }}
+                    />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 6 }}>
+                        <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: 0 }}>
+                          {inst.name}
+                        </h3>
+                        <Tag tone="primary">{inst.badge}</Tag>
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--primary)", marginTop: 2 }}>
+                        {inst.role}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>
+                        {inst.org}
+                      </div>
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.45, margin: "0 0 14px" }}>
+                    {inst.bio}
+                  </p>
+
+                  <div style={{
+                    background: "var(--surface-3)", padding: "10px 12px", borderRadius: 12,
+                    border: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-2)",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16
+                  }}>
+                    <span className="tai-row tai-gap6">
+                      <Clock size={13} color="var(--primary)" />
+                      <span><strong>Next Live Session:</strong> {inst.hours}</span>
+                    </span>
+                    <span className="tai-row tai-gap4" style={{ fontWeight: 800, color: "#F59E0B" }}>
+                      ★ {inst.rating}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="tai-row tai-gap10">
+                  <button
+                    className="tai-btn tai-btn-outline tai-btn-sm"
+                    style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 700 }}
+                    onClick={() => push("messages", { recipientId: inst.id, recipientName: inst.name })}
+                  >
+                    <MessageSquare size={13} /> Message
+                  </button>
+                  <button
+                    className="tai-btn tai-btn-primary tai-btn-sm"
+                    style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 700 }}
+                    onClick={() => push("mentors", { mentorId: inst.id })}
+                  >
+                    <Video size={13} /> Book 1:1 Office Hours
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
           VIEW 4: LEADERBOARD
           ========================================================================= */}
       {activeTab === "leaderboard" && (
@@ -1076,6 +1232,13 @@ export const chartColors = {
                 Earn XP points and league status by completing lessons, submitting assignments, and helping peers.
               </p>
             </div>
+
+            <button
+              className="tai-btn tai-btn-primary tai-btn-sm"
+              onClick={() => push("leaderboard")}
+            >
+              <Award size={14} /> Full Leaderboard &amp; Podium →
+            </button>
           </div>
 
           <WeeklyLeagueCard rows={leaderboardQuery.data || []} loading={leaderboardQuery.loading} />

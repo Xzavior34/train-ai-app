@@ -171,7 +171,7 @@ export function HomeScreen({
       <div className="tai-dashboard-grid">
         
         {/* LEFT COLUMN: Continue Learning, Career Track, Recommendations, Chart, Assignments, Study Rooms */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
           
           {/* Continue Learning Banner */}
           {continueCourse && (
@@ -214,6 +214,53 @@ export function HomeScreen({
               </div>
             </div>
           )}
+
+          {/* Q1 Onboarding Cohort Banner */}
+          <div className="tai-card" style={{
+            padding: "16px 20px",
+            borderRadius: 16,
+            background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%)",
+            border: "1.5px solid rgba(99, 102, 241, 0.35)",
+            position: "relative",
+            overflow: "hidden"
+          }}>
+            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+              <div className="tai-row tai-gap10">
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(99, 102, 241, 0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Users size={20} color="var(--primary)" />
+                </div>
+                <div>
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                    <span style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>
+                      {cohort?.name || "Q1 Onboarding Cohort"}
+                    </span>
+                    <Tag tone="primary">Sprint 5 of 12</Tag>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+                    68 enrolled peers • Next Live Session: Tomorrow 10:00 AM
+                  </div>
+                </div>
+              </div>
+
+              <button
+                className="tai-btn tai-btn-primary tai-btn-sm"
+                style={{ padding: "8px 14px", fontSize: 12, fontWeight: 700 }}
+                onClick={() => push("cohort")}
+              >
+                Enter Cohort Space →
+              </button>
+            </div>
+
+            <div style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 12, border: "1px solid var(--border)" }}>
+              <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6 }}>
+                <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
+                <span style={{ color: "var(--primary)" }}>42% Completed</span>
+              </div>
+              <div style={{ height: 6, background: "var(--border)", borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ width: "42%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
+              </div>
+            </div>
+          </div>
 
           {/* Career Path & Skill Growth Progression */}
           <div className="tai-card" style={{ padding: 20, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.25)" }}>
@@ -419,34 +466,77 @@ export function HomeScreen({
         </div>
 
         {/* RIGHT COLUMN: Streak Days, Today's Schedule, Leaderboard, Mentor 1:1, Badges */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
           
-          {/* Streak Days Card */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+          {/* Achievements: Your Level, Streak & Badges */}
+          <div className="tai-card" style={{ padding: 20, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.3)" }}>
             <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-              <div className="tai-row tai-gap6" style={{ fontWeight: 700, fontSize: 13.5 }}>
-                <Flame size={18} color="#F59E0B" />
-                <span>Streak Tracker</span>
+              <div className="tai-row tai-gap6" style={{ fontWeight: 800, fontSize: 14 }}>
+                <Award size={18} color="var(--primary)" />
+                <span>Your Level &amp; Badges</span>
               </div>
-              <Tag tone="warning">{user?.streakDays || 3} Days</Tag>
+              <span className="tai-link" style={{ fontSize: 12, fontWeight: 700 }} onClick={() => push("achievements")}>
+                View All →
+              </span>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
-              {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => {
-                const isActive = idx < 3;
+            {/* Level & XP Meter */}
+            <div style={{ background: "var(--surface)", padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border)", marginBottom: 12 }}>
+              <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 800, marginBottom: 6 }}>
+                <span style={{ color: "var(--text)" }}>Level {user?.level || 2} • Senior Specialist</span>
+                <span style={{ color: "var(--primary)" }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
+              </div>
+              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ width: "90%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
+              </div>
+            </div>
+
+            {/* Streak Tracker */}
+            <div style={{ marginBottom: 14 }}>
+              <div className="tai-row tai-between" style={{ marginBottom: 8 }}>
+                <div className="tai-row tai-gap6" style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
+                  <Flame size={15} color="#F59E0B" />
+                  <span>{user?.streak || 8} Day Learning Streak</span>
+                </div>
+                <Tag tone="warning">Active</Tag>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
+                {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => {
+                  const isActive = idx < 5;
+                  return (
+                    <div 
+                      key={idx}
+                      style={{
+                        width: 28, height: 28, borderRadius: "50%",
+                        background: isActive ? "#F59E0B" : "var(--surface-3)",
+                        color: isActive ? "#fff" : "var(--text-3)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontWeight: 800, fontSize: 11,
+                        boxShadow: isActive ? "0 2px 6px rgba(245, 158, 11, 0.3)" : "none"
+                      }}
+                    >
+                      {day}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Earned Badges Row */}
+            <div className="tai-row tai-between" style={{ gap: 6 }}>
+              {[
+                { name: "Figma Master", icon: Palette, color: "#6366F1", bg: "#EEF2FF" },
+                { name: "Prompt Pro", icon: Zap, color: "#10B981", bg: "#ECFDF5" },
+                { name: "7-Day Streak", icon: Flame, color: "#F59E0B", bg: "#FFFBEB" }
+              ].map((b, idx) => {
+                const BadgeIcon = b.icon;
                 return (
-                  <div 
-                    key={idx}
-                    style={{
-                      width: 34, height: 34, borderRadius: "50%",
-                      background: isActive ? "#F59E0B" : "var(--surface-3)",
-                      color: isActive ? "#fff" : "var(--text-3)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontWeight: 800, fontSize: 12,
-                      boxShadow: isActive ? "0 2px 8px rgba(245, 158, 11, 0.35)" : "none"
-                    }}
-                  >
-                    {day}
+                  <div key={idx} style={{ flex: 1, padding: "8px 4px", background: "var(--surface)", borderRadius: 10, textAlign: "center", border: "1px solid var(--border)" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: b.bg, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 2 }}>
+                      <BadgeIcon size={14} color={b.color} />
+                    </div>
+                    <div style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text)" }}>{b.name}</div>
                   </div>
                 );
               })}
@@ -545,7 +635,7 @@ export function HomeScreen({
                 <Trophy size={16} color="#F59E0B" />
                 <span>Leaderboard</span>
               </div>
-              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => push("achievements")}>View All</span>
+              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => push("leaderboard")}>View All</span>
             </div>
 
             <div className="tai-col tai-gap8">

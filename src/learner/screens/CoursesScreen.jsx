@@ -145,6 +145,9 @@ export function CoursesScreen({
       isBestseller: true,
       hasCertificate: true,
       enrolled: true,
+      assigned: true,
+      source: "assigned",
+      partner: "Figma Official",
       progress: 72,
       coverImageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"
     },
@@ -166,6 +169,9 @@ export function CoursesScreen({
       isBestseller: true,
       hasCertificate: true,
       enrolled: false,
+      assigned: false,
+      source: "internal",
+      isInternal: true,
       progress: 0,
       coverImageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
     },
@@ -187,6 +193,9 @@ export function CoursesScreen({
       isTrending: true,
       hasCertificate: true,
       enrolled: true,
+      assigned: true,
+      source: "assigned",
+      partner: "Anthropic / OpenAI",
       progress: 100,
       coverImageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80"
     },
@@ -207,6 +216,9 @@ export function CoursesScreen({
       projectsCount: 5,
       hasCertificate: true,
       enrolled: false,
+      assigned: false,
+      source: "partner",
+      partner: "Google Cloud",
       progress: 0,
       coverImageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80"
     },
@@ -228,6 +240,9 @@ export function CoursesScreen({
       isTrending: true,
       hasCertificate: true,
       enrolled: false,
+      assigned: false,
+      source: "partner",
+      partner: "Apple VisionOS",
       progress: 0,
       coverImageUrl: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80"
     },
@@ -248,6 +263,9 @@ export function CoursesScreen({
       projectsCount: 4,
       hasCertificate: true,
       enrolled: false,
+      assigned: false,
+      source: "internal",
+      isInternal: true,
       progress: 0,
       coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80"
     }
@@ -274,6 +292,15 @@ export function CoursesScreen({
 
   const filteredCatalog = allAvailableCourses.filter(c => {
     if (showMyCoursesOnly && !c.enrolled) return false;
+    if (courseSourceTab === "assigned") {
+      if (!c.assigned && !c.enrolled && c.source !== "assigned") return false;
+    }
+    if (courseSourceTab === "internal") {
+      if (!c.isInternal && c.source !== "internal") return false;
+    }
+    if (courseSourceTab === "partners") {
+      if (!c.partner && c.source !== "partner") return false;
+    }
     if (courseSourceTab === "bookmarks" && !bookmarkedIds[c.id]) return false;
     if (courseSearch && courseSearch.trim()) {
       const q = courseSearch.toLowerCase();
@@ -281,7 +308,8 @@ export function CoursesScreen({
       const matchDesc = c.description?.toLowerCase().includes(q);
       const matchCat = c.category?.toLowerCase().includes(q);
       const matchInst = c.instructor?.toLowerCase().includes(q);
-      if (!matchTitle && !matchDesc && !matchCat && !matchInst) return false;
+      const matchPartner = c.partner?.toLowerCase().includes(q);
+      if (!matchTitle && !matchDesc && !matchCat && !matchInst && !matchPartner) return false;
     }
     if (courseLevelFilter !== "all" && c.level?.toLowerCase() !== courseLevelFilter.toLowerCase()) return false;
     if (selectedCategory !== "all") {
@@ -711,29 +739,51 @@ export function CoursesScreen({
             <span
               onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("all"); }}
               style={{
-                fontSize: 14, fontWeight: 800, cursor: "pointer", paddingBottom: 8,
+                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
                 color: (!showMyCoursesOnly && courseSourceTab === "all") ? "var(--primary)" : "var(--text-3)",
                 borderBottom: (!showMyCoursesOnly && courseSourceTab === "all") ? "2.5px solid var(--primary)" : "none"
               }}
             >
-              All Courses ({filteredCatalog.length})
+              All Courses ({allAvailableCourses.length})
             </span>
 
             <span
-              onClick={() => { setShowMyCoursesOnly(true); setCourseSourceTab("assigned"); }}
+              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("assigned"); }}
               style={{
-                fontSize: 14, fontWeight: 800, cursor: "pointer", paddingBottom: 8,
-                color: showMyCoursesOnly ? "var(--primary)" : "var(--text-3)",
-                borderBottom: showMyCoursesOnly ? "2.5px solid var(--primary)" : "none"
+                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
+                color: courseSourceTab === "assigned" ? "var(--primary)" : "var(--text-3)",
+                borderBottom: courseSourceTab === "assigned" ? "2.5px solid var(--primary)" : "none"
               }}
             >
-              My Learning ({enrolledList.length})
+              Assigned to Me ({allAvailableCourses.filter(c => c.assigned || c.enrolled).length})
+            </span>
+
+            <span
+              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("internal"); }}
+              style={{
+                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
+                color: courseSourceTab === "internal" ? "var(--primary)" : "var(--text-3)",
+                borderBottom: courseSourceTab === "internal" ? "2.5px solid var(--primary)" : "none"
+              }}
+            >
+              Internal Courses ({allAvailableCourses.filter(c => c.isInternal || c.source === "internal").length})
+            </span>
+
+            <span
+              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("partners"); }}
+              style={{
+                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
+                color: courseSourceTab === "partners" ? "var(--primary)" : "var(--text-3)",
+                borderBottom: courseSourceTab === "partners" ? "2.5px solid var(--primary)" : "none"
+              }}
+            >
+              External Partners ({allAvailableCourses.filter(c => c.partner || c.source === "partner").length})
             </span>
 
             <span
               onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("bookmarks"); }}
               style={{
-                fontSize: 14, fontWeight: 800, cursor: "pointer", paddingBottom: 8,
+                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
                 color: courseSourceTab === "bookmarks" ? "var(--primary)" : "var(--text-3)",
                 borderBottom: courseSourceTab === "bookmarks" ? "2.5px solid var(--primary)" : "none"
               }}

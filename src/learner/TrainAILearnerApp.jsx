@@ -16,6 +16,7 @@ import { MessagesScreen } from "./screens/MessagesScreen.jsx";
 import { NotificationsScreen } from "./screens/NotificationsScreen.jsx";
 import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { AchievementsScreen } from "./screens/AchievementsScreen.jsx";
+import { LeaderboardScreen } from "./screens/LeaderboardScreen.jsx";
 import { BookmarksScreen } from "./screens/BookmarksScreen.jsx";
 import { MyProgressScreen } from "./screens/MyProgressScreen.jsx";
 import { CreditsCheckoutScreen } from "./screens/CreditsCheckoutScreen.jsx";
@@ -851,6 +852,16 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   back={back}
                   session={session} showToast={showToast}
                   credits={credits} consumeCredit={consumeCredit} onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}
+                  push={push}
+                />
+              )}
+              {screen === "leaderboard" && (
+                <LeaderboardScreen
+                  back={back}
+                  user={user}
+                  leaderboardQuery={leaderboardQuery}
+                  session={session}
+                  push={push}
                 />
               )}
               {screen === "creditsCheckout" && (

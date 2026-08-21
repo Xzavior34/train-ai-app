@@ -3,7 +3,8 @@ import { TopBar, StatTile, Avatar, optionLabel, optionValue, initialsOf, Tag, Pr
 import {
   Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight,
   GraduationCap, Sparkles, Send, Bot, MessageSquare, BookOpen, Lightbulb,
-  Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck
+  Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck,
+  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp
 } from "lucide-react";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 
@@ -30,6 +31,15 @@ export function AIQuizScreen({
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
 }) {
   const [copiedMessageId, setCopiedMessageId] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [activeThreadId, setActiveThreadId] = useState("thread-1");
+  const [chatThreads, setChatThreads] = useState([
+    { id: "thread-1", title: "Design Tokens & Variable Governance", date: "Today, 02:40 PM", messagesCount: 6, snippet: "Can you explain how design tokens and variables work in Figma and code..." },
+    { id: "thread-2", title: "RAG Pipeline vs Fine-Tuning Architectures", date: "Yesterday", messagesCount: 12, snippet: "What are the tradeoffs of using vector embeddings vs fine-tuning a base model..." },
+    { id: "thread-3", title: "Spatial UI Gaze Padding in VisionOS", date: "Aug 18", messagesCount: 8, snippet: "Explain minimum 60pt gaze target bounding boxes in spatial computing..." },
+    { id: "thread-4", title: "Prompt Caching & Multi-Modal API Cost Optimization", date: "Aug 15", messagesCount: 4, snippet: "How does prefix caching reduce latency in large context windows..." }
+  ]);
+
   const currentQuiz = (quizzesQuery.data || []).find(q => q.id === quizTopic) || quizzesQuery.data?.[0];
   const questions = activeQuizSource === "ai" ? (aiQuiz?.questions || []) : (selectedQuizQuestionsQuery?.data || []);
   const currentQuestion = questions[quizIndex] || questions[0];
@@ -39,6 +49,26 @@ export function AIQuizScreen({
     setCopiedMessageId(id);
     setTimeout(() => setCopiedMessageId(null), 2000);
     showToast?.("Copied to clipboard!");
+  }
+
+  function handleStartNewChat() {
+    const newThread = {
+      id: `thread-${Date.now()}`,
+      title: "New AI Learning Session",
+      date: "Just now",
+      messagesCount: 0,
+      snippet: "New inquiry started..."
+    };
+    setChatThreads(prev => [newThread, ...prev]);
+    setActiveThreadId(newThread.id);
+    if (setCoachInput) setCoachInput("");
+    showToast?.("Started new chat session");
+  }
+
+  function handleSelectThread(t) {
+    setActiveThreadId(t.id);
+    setShowHistory(false);
+    showToast?.(`Loaded: ${t.title}`);
   }
 
   function handleQuickPromptClick(promptText) {
@@ -254,7 +284,98 @@ export function AIQuizScreen({
           ========================================================================= */}
       {aiTab === "coach" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          
+
+          {/* Chat History Toolbar & New Thread CTA */}
+          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
+            <button
+              onClick={() => setShowHistory(prev => !prev)}
+              style={{
+                background: showHistory ? "var(--primary-tint)" : "var(--surface)",
+                border: showHistory ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                color: showHistory ? "var(--primary)" : "var(--text)",
+                padding: "7px 14px",
+                borderRadius: 10,
+                fontSize: 12.5,
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                cursor: "pointer",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <History size={14} color={showHistory ? "var(--primary)" : "var(--text-3)"} />
+              <span>Chat History ({chatThreads.length})</span>
+              {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            <button
+              onClick={handleStartNewChat}
+              style={{
+                background: "var(--primary)",
+                border: "none",
+                color: "#FFFFFF",
+                padding: "7px 14px",
+                borderRadius: 10,
+                fontSize: 12.5,
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(79, 70, 229, 0.3)",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <MessageSquarePlus size={14} />
+              <span>New Conversation</span>
+            </button>
+          </div>
+
+          {/* Expandable Chat History Drawer */}
+          {showHistory && (
+            <div className="tai-card tai-fade-in" style={{ padding: 16, borderRadius: 14, background: "var(--surface-3)", border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
+                Recent AI Learning Sessions
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
+                {chatThreads.map(thread => {
+                  const isSelected = activeThreadId === thread.id;
+                  return (
+                    <div
+                      key={thread.id}
+                      onClick={() => handleSelectThread(thread)}
+                      style={{
+                        padding: "12px 14px",
+                        borderRadius: 12,
+                        background: isSelected ? "var(--surface)" : "var(--surface-2)",
+                        border: isSelected ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                        cursor: "pointer",
+                        boxShadow: isSelected ? "0 4px 12px rgba(79, 70, 229, 0.12)" : "none",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      <div className="tai-row tai-between" style={{ marginBottom: 4 }}>
+                        <div style={{ fontWeight: 800, fontSize: 13, color: isSelected ? "var(--primary)" : "var(--text)" }}>
+                          {thread.title}
+                        </div>
+                        <span style={{ fontSize: 11, color: "var(--text-3)" }}>{thread.date}</span>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {thread.snippet}
+                      </div>
+                      <div className="tai-row tai-between" style={{ marginTop: 6, fontSize: 11, color: "var(--text-3)" }}>
+                        <span>{thread.messagesCount} messages</span>
+                        {isSelected && <Tag tone="primary">Active Thread</Tag>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Quick Prompt Starters Strip */}
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>
