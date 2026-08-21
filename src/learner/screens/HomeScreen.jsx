@@ -274,18 +274,18 @@ export function HomeScreen({
             boxShadow: "0 8px 24px -4px rgba(79, 70, 229, 0.12)"
           }}>
             <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
-              <div className="tai-row tai-gap10">
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)" }}>
+              <div className="tai-row tai-gap10" style={{ flex: "1 1 200px", minWidth: 0 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)", flexShrink: 0 }}>
                   <Award size={22} color="#FFFFFF" />
                 </div>
-                <div>
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 900, fontSize: 16, color: "var(--text)" }}>
                       Achievements &amp; Skill Mastery
                     </span>
                     <Tag tone="warning">Level {user?.level || 2}</Tag>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>
                     Senior Specialist • {(user?.totalPoints || 4520).toLocaleString()} XP earned
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export function HomeScreen({
 
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ padding: "8px 16px", fontSize: 12.5, fontWeight: 800 }}
+                style={{ padding: "8px 16px", fontSize: 12.5, fontWeight: 800, flexShrink: 0 }}
                 onClick={() => push("achievements")}
               >
                 View Full Achievements →
@@ -302,9 +302,9 @@ export function HomeScreen({
 
             {/* Level & XP Meter */}
             <div style={{ background: "var(--surface)", padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border)", marginBottom: 14 }}>
-              <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 800, marginBottom: 6 }}>
+              <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 800, marginBottom: 6, flexWrap: "wrap", gap: 4 }}>
                 <span style={{ color: "var(--text)" }}>Level {user?.level || 2} Progression</span>
-                <span style={{ color: "var(--primary)" }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP (480 XP to Level 3)</span>
+                <span style={{ color: "var(--primary)" }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
               </div>
               <div style={{ height: 8, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden", border: "1px solid var(--border)" }}>
                 <div style={{ width: "90%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
@@ -349,7 +349,7 @@ export function HomeScreen({
 
           {/* Career Path & Skill Growth Progression */}
           <div className="tai-card" style={{ padding: 20, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.25)" }}>
-            <div className="tai-row tai-between">
+            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 8 }}>
               <div>
                 <div className="tai-row tai-gap8" style={{ fontWeight: 800, fontSize: 14.5, color: "var(--primary)" }}>
                   <TrendingUp size={16} />
@@ -393,7 +393,7 @@ export function HomeScreen({
               <span className="tai-link" style={{ fontSize: 12 }} onClick={() => goTab("courses")}>View Catalog</span>
             </div>
 
-            <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+            <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
               {STOCK_COURSES.map((sc) => (
                 <div
                   key={sc.id}
@@ -490,21 +490,22 @@ export function HomeScreen({
                   className="tai-row tai-between"
                   style={{
                     padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12,
-                    border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease"
+                    border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease",
+                    flexWrap: "wrap", gap: 8
                   }}
                   onClick={() => goToMyCourses()}
                 >
-                  <div className="tai-row tai-gap12">
+                  <div className="tai-row tai-gap12" style={{ flex: "1 1 180px", minWidth: 0 }}>
                     <div style={{
                       width: 34, height: 34, borderRadius: 10,
                       background: a.tone === "danger" ? "var(--danger-bg)" : a.tone === "warning" ? "var(--warning-bg)" : "var(--success-bg)",
-                      display: "flex", alignItems: "center", justifyContent: "center"
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
                     }}>
                       <BookOpen size={16} color={a.tone === "danger" ? "var(--danger)" : a.tone === "warning" ? "var(--warning)" : "var(--success)"} />
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{a.title}</div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>{a.module} • {a.due}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis" }}>{a.title}</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>{a.module} • {a.due}</div>
                     </div>
                   </div>
 
@@ -529,10 +530,10 @@ export function HomeScreen({
                 { name: "Figma UI Critique Room", peers: 6, topic: "Design Systems", active: true },
                 { name: "Full-Stack AI Engineering Lab", peers: 4, topic: "LangChain & APIs", active: true }
               ].map((grp, idx) => (
-                <div key={idx} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{grp.name}</div>
-                    <div className="tai-row tai-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                <div key={idx} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ flex: "1 1 160px", minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis" }}>{grp.name}</div>
+                    <div className="tai-row tai-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, flexWrap: "wrap" }}>
                       <span>{grp.topic}</span>
                       <span>•</span>
                       <span className="tai-row tai-gap4" style={{ color: "var(--success)", fontWeight: 700 }}>
@@ -540,7 +541,7 @@ export function HomeScreen({
                       </span>
                     </div>
                   </div>
-                  <button className="tai-btn tai-btn-primary tai-btn-sm" style={{ padding: "6px 12px", fontSize: 11.5 }} onClick={() => goTab("community")}>
+                  <button className="tai-btn tai-btn-primary tai-btn-sm" style={{ padding: "6px 12px", fontSize: 11.5, flexShrink: 0 }} onClick={() => goTab("community")}>
                     Join Room
                   </button>
                 </div>
