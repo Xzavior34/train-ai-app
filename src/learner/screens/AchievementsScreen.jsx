@@ -289,7 +289,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {/* =========================================================================
           TAB NAVIGATION STRIP
           ========================================================================= */}
-      <div className="tai-row tai-gap10" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box" }}>
         {[
           { k: "overview", label: "Progress Analytics", icon: BarChart3 },
           { k: "certificates", label: `Certificates (${CERTIFICATES.length})`, icon: GraduationCap },
@@ -303,24 +303,25 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               key={t.k}
               onClick={() => setActiveProgressTab(t.k)}
               style={{
-                padding: "8px 18px",
+                padding: "8px 16px",
                 borderRadius: 12,
                 border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                 background: isActive ? "var(--primary-tint)" : "var(--surface)",
                 color: isActive ? "var(--primary)" : "var(--text-2)",
                 fontWeight: isActive ? 800 : 600,
-                fontSize: 13,
+                fontSize: 12.5,
                 cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
+                gap: 6,
                 flexShrink: 0,
+                whiteSpace: "nowrap",
                 transition: "all 0.15s ease"
               }}
               onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--text)"; } }}
               onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)"; } }}
             >
-              <Icon size={16} />
+              <Icon size={15} />
               <span>{t.label}</span>
             </button>
           );

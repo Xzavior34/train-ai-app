@@ -600,7 +600,7 @@ export function CoursesScreen({
             </div>
 
             {/* Interactive Multi-Course Quick Switcher Tabs */}
-            <div className="tai-row tai-gap8" style={{ overflowX: "auto", paddingBottom: 2 }}>
+            <div className="tai-scrollx tai-gap8" style={{ paddingBottom: 2, width: "100%", boxSizing: "border-box" }}>
               {SPOTLIGHT_SLIDES.map((slide, idx) => {
                 const isSelected = idx === activeSlide;
                 return (
@@ -712,7 +712,7 @@ export function CoursesScreen({
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
+        <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
           {CATEGORIES.map(cat => {
             const isActive = selectedCategory === cat.id;
             return (
@@ -743,7 +743,7 @@ export function CoursesScreen({
         </div>
 
         <div className="tai-row tai-between" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, marginTop: 4, flexWrap: "wrap", gap: 10 }}>
-          <div className="tai-row tai-gap14" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <div className="tai-scrollx tai-gap14" style={{ width: "100%", boxSizing: "border-box" }}>
             <span
               onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("all"); }}
               style={{
