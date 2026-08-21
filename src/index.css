@@ -24,12 +24,17 @@
 html, body, #root {
   min-height: 100%;
   width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+  box-sizing: border-box;
   background-color: var(--bg-app);
 }
 
 html {
   -webkit-text-size-adjust: 100%;
   font-family: var(--font-sans);
+  overflow-x: hidden;
 }
 
 body {
@@ -39,6 +44,9 @@ body {
   color: #0F172A;
   background: var(--bg-app);
   overscroll-behavior-y: none;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 /* Modern smooth scrollbars (hidden on touch/mobile) */

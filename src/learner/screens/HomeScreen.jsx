@@ -175,8 +175,8 @@ export function HomeScreen({
           
           {/* Continue Learning Banner */}
           {continueCourse && (
-            <div className="tai-card tai-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--border)" }}>
-              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div className="tai-card tai-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
+              <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 14 }}>
                   <BookOpen size={16} color="var(--primary)" />
                   <span>Continue learning</span>
@@ -184,18 +184,18 @@ export function HomeScreen({
                 <span className="tai-link" style={{ fontSize: 12 }} onClick={() => goTab("courses")}>My courses</span>
               </div>
 
-              <div style={{ padding: "16px 18px", display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ padding: "14px 16px", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", boxSizing: "border-box", width: "100%" }}>
                 <img 
                   src={continueCourse.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
                   alt={continueCourse.title}
-                  style={{ width: 72, height: 56, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+                  style={{ width: 64, height: 50, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
                 />
-                <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ flex: "1 1 140px", minWidth: 0 }}>
                   <div className="tai-row tai-between">
                     <Tag tone="primary">{continueCourse.category || "Technology"}</Tag>
-                    <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>12 hrs</span>
+                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>12 hrs</span>
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", marginTop: 4 }}>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {continueCourse.title}
                   </div>
                   <div className="tai-mt6">
@@ -219,27 +219,29 @@ export function HomeScreen({
 
           {/* Q1 Onboarding Cohort Banner */}
           <div className="tai-card" style={{
-            padding: "16px 18px",
+            padding: "16px",
             borderRadius: 16,
             background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%)",
             border: "1.5px solid rgba(99, 102, 241, 0.35)",
             position: "relative",
-            overflow: "hidden"
+            overflow: "hidden",
+            width: "100%",
+            boxSizing: "border-box"
           }}>
             <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
-              <div className="tai-row tai-gap10" style={{ minWidth: 180, flex: 1 }}>
+              <div className="tai-row tai-gap10" style={{ flex: "1 1 180px", minWidth: 0 }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(99, 102, 241, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Users size={18} color="var(--primary)" />
                 </div>
-                <div style={{ minWidth: 0 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
                   <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>
+                    <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>
                       {cohort?.name || "Q1 Onboarding Cohort"}
                     </span>
                     <Tag tone="primary">Sprint 5 of 12</Tag>
                   </div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
-                    68 enrolled peers • Next Live Session: Tomorrow 10:00 AM
+                  <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>
+                    68 enrolled peers • Next: Tomorrow 10:00 AM
                   </div>
                 </div>
               </div>
