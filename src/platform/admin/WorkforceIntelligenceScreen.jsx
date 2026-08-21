@@ -166,7 +166,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
 
         {/* 4-Tier Career Path Progression Visual */}
         <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Career Path Progression</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Target competency roadmap and promotion track</div>

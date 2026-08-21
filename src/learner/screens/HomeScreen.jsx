@@ -565,9 +565,9 @@ export function HomeScreen({
 
             {/* Level & XP Meter */}
             <div style={{ background: "var(--surface)", padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border)", marginBottom: 12 }}>
-              <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 800, marginBottom: 6 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, fontSize: 12, fontWeight: 800, marginBottom: 6 }}>
                 <span style={{ color: "var(--text)" }}>Level {user?.level || 2} • Senior Specialist</span>
-                <span style={{ color: "var(--primary)" }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
+                <span style={{ color: "var(--primary)", flexShrink: 0 }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
               </div>
               <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
                 <div style={{ width: "90%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />

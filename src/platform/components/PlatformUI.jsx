@@ -1004,24 +1004,26 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
         </div>
 
         {/* Primary Header Quick Action */}
-        {right}
+        <div className="ta-desktop-only">
+          {right}
+        </div>
 
         {/* User Profile Pill - opens the real Settings Hub */}
         <div
           className="ta-row ta-gap8"
-          style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default" }}
+          style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0 }}
           onClick={() => canOpenOwnSettings && onNavigate("settings")}
         >
-          <Avatar initials={userInitials} size={34} />
+          <Avatar initials={userInitials} size={32} />
           <div className="ta-col" style={{ lineHeight: 1.2, paddingRight: 4 }}>
-            <span style={{ fontSize: 12.5, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
-            <span style={{ fontSize: 10.5, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
+            <span style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
+            <span style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
           </div>
         </div>
 
-        {/* Sign Out Action matching Screenshot 4 */}
+        {/* Sign Out Action */}
         <button
-          className="ta-btn ta-btn-ghost ta-btn-sm"
+          className="ta-btn ta-btn-ghost ta-btn-sm ta-desktop-only"
           onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
           title="Sign Out"
           style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
