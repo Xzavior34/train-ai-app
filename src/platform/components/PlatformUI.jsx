@@ -173,12 +173,16 @@ export const TOKENS = `
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
   }
   @media (max-width: 899px) {
-    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
+    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
+    .ta-desktop-only { display: none !important; }
     .ta-topbar {
-      padding: 10px 16px; height: auto; min-height: 58px;
-      flex-wrap: wrap; row-gap: 8px;
+      padding: 0 16px; height: 58px; min-height: 58px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: nowrap; box-sizing: border-box; width: 100%;
     }
+    .ta-topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .ta-content { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
       position: fixed; top: 0; left: 0; z-index: 100;
@@ -191,32 +195,18 @@ export const TOKENS = `
       width: 34px; height: 34px; border-radius: 8px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
     }
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
-    .ta-topbar-left { flex: 1 1 auto; min-width: 0; }
-    .ta-topbar-right { gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
-    /* Named "desktop-only" but was never actually hidden on mobile (the
-       class didn't exist as CSS) - screens rely on this being the ONLY way
-       to trigger their primary action (e.g. "Create cohort"), so keep it
-       visible rather than hiding it now and silently removing that
-       function on mobile. Just give it a size that fits the header
-       instead of the full desktop button. */
-    .ta-desktop-only .ta-btn { padding: 7px 12px; font-size: 12.5px; gap: 6px; }
-    /* The header Sign Out button (the only sign-out entry point in this app)
-       carries ta-desktop-only directly rather than via a wrapper - collapse
-       it to an icon-only square on mobile instead of hiding it outright. */
-    button.ta-desktop-only.ta-btn { width: 36px; height: 36px; padding: 0; border-radius: 10px; gap: 0; }
-    button.ta-desktop-only.ta-btn span { display: none; }
-    .ta-profile-pill-name { max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
-    .ta-h1 { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ta-h1 { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ta-sub { display: none; }
     .ta-table-wrap .ta-table { min-width: 460px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   }
   @media (max-width: 480px) {
     .ta-topbar { padding: 0 14px; height: 56px; min-height: 56px; }
-    .ta-content { padding: 14px 14px 80px; }
-    .ta-card { padding: 18px 16px; border-radius: 16px; }
-    .ta-h1 { font-size: 17px; }
-    .ta-sub { display: none; }
+    .ta-content { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
+    .ta-card { padding: 16px 14px; border-radius: 16px; width: 100%; box-sizing: border-box; }
+    .ta-h1 { font-size: 15px; }
     .ta-btn { padding: 8px 14px; font-size: 12.5px; border-radius: 10px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
     .ta-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; }
@@ -445,7 +435,7 @@ const NAV_BY_WORKSPACE = { admin: ADMIN_NAV, mentor: MENTOR_NAV, manager: MANAGE
 // such sub-workspaces to switch between - it is one dashboard, which is
 // the entire point of pulling it out of that shared component in the first
 // place rather than passing it an empty workspace list.
-export function BrandLogo({ height = 50, isMinimized = false, style = {} }) {
+export function BrandLogo({ height = 26, isMinimized = false, style = {} }) {
   const isDark = typeof document !== "undefined" && (document.documentElement.classList.contains("dark") || localStorage.getItem("trainai_theme_dark") === "true");
   const src = isDark ? "/logo-dark.png" : "/train-ai-logo.png";
   return (
@@ -480,7 +470,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
       <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
         <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
-            <BrandLogo height={50} isMinimized={isMinimized} />
+            <BrandLogo height={26} isMinimized={isMinimized} />
             {!isMinimized && (
               <span className="ta-brand-tag" style={{ marginLeft: "auto", background: "linear-gradient(135deg, #F59E0B, #EF4444)", color: "#FFFFFF" }}>OWNER</span>
             )}
@@ -555,7 +545,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
       <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
         <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
-            <BrandLogo height={50} isMinimized={isMinimized} />
+            <BrandLogo height={26} isMinimized={isMinimized} />
             {!isMinimized && <span className="ta-brand-tag" style={{ marginLeft: "auto" }}>PRO</span>}
           </div>
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
