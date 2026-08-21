@@ -378,14 +378,16 @@ export const chartColors = {
           HERO BANNER: DISCO LMS COMMUNITY & COLLABORATIVE KNOWLEDGE HUB
           ========================================================================= */}
       <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
+        borderRadius: 18,
+        background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
         color: "#FFFFFF",
-        padding: "clamp(18px, 3vw, 26px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
+        padding: "clamp(16px, 2.5vw, 24px)",
+        boxShadow: "0 10px 28px -4px rgba(15, 23, 42, 0.35)",
+        border: "1px solid rgba(99, 102, 241, 0.35)",
         position: "relative",
-        overflow: "hidden"
+        overflow: "hidden",
+        width: "100%",
+        boxSizing: "border-box"
       }}>
         {/* Background Stock Photo with Overlay */}
         <img
@@ -393,21 +395,21 @@ export const chartColors = {
           alt=""
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
+            objectFit: "cover", opacity: 0.28, zIndex: 0
           }}
         />
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
+          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.82) 55%, rgba(15,23,42,0.65) 100%)",
           zIndex: 0
         }} />
 
-        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ minWidth: 0, flex: "1 1 240px" }}>
+            <h1 style={{ fontSize: "clamp(19px, 2.2vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
               Train AI Community Hub
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
               Share projects, ask questions, and collaborate with peers and mentors.
             </p>
           </div>
@@ -416,9 +418,9 @@ export const chartColors = {
             className="tai-btn"
             onClick={() => setPostComposerOpen(true)}
             style={{
-              background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13,
-              padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
-              boxShadow: "0 6px 20px rgba(79, 70, 229, 0.45)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0
+              background: "var(--grad)", color: "#FFFFFF", fontWeight: 800, fontSize: 13,
+              padding: "9px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(79, 70, 229, 0.4)", display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
             }}
           >
             <Plus size={16} /> Share or Ask Question
@@ -449,7 +451,7 @@ export const chartColors = {
           </div>
 
           {/* Primary View Mode Tabs */}
-          <div className="tai-row tai-gap6" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
             {[
               { k: "feed", label: "Community Feed", icon: MessageCircle },
               { k: "instructors", label: "Instructors & Faculty", icon: GraduationCap },
@@ -482,6 +484,7 @@ export const chartColors = {
                     alignItems: "center",
                     gap: 6,
                     flexShrink: 0,
+                    whiteSpace: "nowrap",
                     transition: "all 0.15s ease"
                   }}
                   onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--text)"; } }}
@@ -497,7 +500,7 @@ export const chartColors = {
 
         {/* Space Channels Horizontal Bar */}
         {activeTab === "feed" && (
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+          <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
             {SPACES.map(sp => {
               const Icon = sp.icon;
               const isActive = selectedSpace === sp.id;
@@ -518,6 +521,7 @@ export const chartColors = {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
+                    flexShrink: 0,
                     transition: "all 0.15s ease"
                   }}
                 >
@@ -583,10 +587,10 @@ export const chartColors = {
                   />
                 </div>
                 <div>
-                  <label className="tai-label">Project / Figma Link (optional)</label>
+                  <label className="tai-label">External Repository Link (optional)</label>
                   <input
                     className="tai-input tai-mt6"
-                    placeholder="https://figma.com/..."
+                    placeholder="https://github.com/..."
                     value={composerLink}
                     onChange={(e) => setComposerLink(e.target.value)}
                   />
@@ -623,7 +627,7 @@ export const chartColors = {
         <div className="tai-dashboard-grid">
           
           {/* Main Feed Column */}
-          <div className="tai-col tai-gap18">
+          <div className="tai-col tai-gap18" style={{ minWidth: 0, width: "100%" }}>
             
             {filteredFeedPosts.map(post => {
               const reactions = post.isReal
@@ -637,24 +641,26 @@ export const chartColors = {
                   id={`community-post-${post.id}`}
                   className="tai-card"
                   style={{
-                    padding: 22,
-                    borderRadius: 18,
+                    padding: "18px 16px",
+                    borderRadius: 16,
                     border: post.pinned ? "1.5px solid rgba(99, 102, 241, 0.45)" : "1px solid var(--border)",
                     boxShadow: post.pinned ? "0 4px 20px rgba(79, 70, 229, 0.08)" : "var(--shadow-card)",
-                    background: "var(--surface)"
+                    background: "var(--surface)",
+                    width: "100%",
+                    boxSizing: "border-box"
                   }}
                 >
-                  {/* Pinned & Space Tag */}
-                  <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-                    <div className="tai-row tai-gap8">
+                  {/* Pinned & Space Tag - Wrapped Cleanly Without Overlapping */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, minWidth: 0 }}>
                       {post.pinned && (
-                        <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#D97706", fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#D97706", fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                           <Pin size={11} /> PINNED ANNOUNCEMENT
                         </span>
                       )}
                       <Tag tone="primary">{post.spaceLabel}</Tag>
                     </div>
-                    <span style={{ fontSize: 12, color: "var(--text-3)" }}>{post.time}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--text-3)", flexShrink: 0, marginLeft: "auto" }}>{post.time}</span>
                   </div>
 
                   {/* Author Header */}

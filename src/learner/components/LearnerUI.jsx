@@ -521,13 +521,29 @@ export function LearnerHeader({
   return (
     <header className="tai-global-header">
       <div className="tai-header-left">
-        <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer" }}>
-          <img
-            src={brandLogoUrl || defaultLogo}
-            alt="Train AI"
-            className="tai-header-logo"
-            style={{ height: 44, width: "auto", maxWidth: 140, objectFit: "contain", display: "block" }}
-          />
+        <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 9 }}>
+          {brandLogoUrl ? (
+            <img
+              src={brandLogoUrl}
+              alt="Train AI"
+              className="tai-header-logo"
+              style={{ height: 36, width: "auto", maxWidth: 130, objectFit: "contain", display: "block" }}
+            />
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{
+                width: 32, height: 32, borderRadius: 9,
+                background: "var(--grad)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 3px 10px rgba(79,70,229,0.35)", color: "#FFFFFF", fontWeight: 900, fontSize: 15
+              }}>
+                ⚡
+              </div>
+              <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: "-0.03em", color: "var(--text)", fontFamily: "var(--font)" }}>
+                TRAIN<span style={{ color: "var(--primary)" }}>.AI</span>
+              </span>
+            </div>
+          )}
         </div>
         {searchComponent}
       </div>

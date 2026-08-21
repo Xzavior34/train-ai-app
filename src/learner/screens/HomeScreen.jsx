@@ -188,14 +188,14 @@ export function HomeScreen({
                 <img 
                   src={continueCourse.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
                   alt={continueCourse.title}
-                  style={{ width: 64, height: 50, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+                  style={{ width: 56, height: 56, borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
                 />
-                <div style={{ flex: "1 1 140px", minWidth: 0 }}>
-                  <div className="tai-row tai-between">
+                <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+                  <div className="tai-row tai-between" style={{ marginBottom: 2 }}>
                     <Tag tone="primary">{continueCourse.category || "Technology"}</Tag>
                     <span style={{ fontSize: 11, color: "var(--text-3)" }}>12 hrs</span>
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {continueCourse.title}
                   </div>
                   <div className="tai-mt6">
@@ -208,7 +208,7 @@ export function HomeScreen({
                 </div>
                 <button 
                   className="tai-btn tai-btn-primary tai-btn-sm"
-                  style={{ padding: "7px 14px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
+                  style={{ padding: "8px 16px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
                   onClick={() => push("courseDetail", { id: continueCourse.id })}
                 >
                   Continue →
