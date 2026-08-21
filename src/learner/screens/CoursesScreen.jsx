@@ -443,13 +443,21 @@ export function CoursesScreen({
           transition: "all 0.3s ease"
         }}
       >
+        {/* Hero Background Cover Image with Dark Overlay */}
+        <img
+          key={currentSpotlight.id + "-bg"}
+          src={currentSpotlight.coverImage}
+          alt=""
+          className="tai-fade-in"
+          style={{
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover", opacity: 0.28, zIndex: 0
+          }}
+        />
         <div style={{
-          position: "absolute",
-          top: -100, right: -100,
-          width: 350, height: 350,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, transparent 70%)",
-          pointerEvents: "none"
+          position: "absolute", inset: 0,
+          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 55%, rgba(15,23,42,0.7) 100%)",
+          zIndex: 0
         }} />
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, alignItems: "center", position: "relative", zIndex: 1 }}>
@@ -458,7 +466,7 @@ export function CoursesScreen({
           <div>
             <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
               <div className="tai-row tai-gap8">
-                <span style={{ fontSize: 12.5, color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.9)", fontWeight: 800, background: "rgba(99, 102, 241, 0.3)", padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(99, 102, 241, 0.4)" }}>
                   {currentSpotlight.cohortTag} • {currentSpotlight.badge}
                 </span>
               </div>
@@ -560,15 +568,15 @@ export function CoursesScreen({
             </div>
           </div>
 
-          {/* Right Column: Visual Cover & Multi-Track Carousel switcher */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Right Column: Visual Cover & Multi-Track Carousel switcher (Desktop Only) */}
+          <div className="tai-desktop-only" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.18)" }}>
               <img
                 key={currentSpotlight.id + "-img"}
                 src={currentSpotlight.coverImage}
                 alt={currentSpotlight.title}
                 className="tai-fade-in"
-                style={{ width: "100%", height: 230, objectFit: "cover", display: "block" }}
+                style={{ width: "100%", height: 210, objectFit: "cover", display: "block" }}
               />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.88) 0%, transparent 60%)" }} />
               
@@ -624,7 +632,7 @@ export function CoursesScreen({
         </div>
 
         {/* Bottom Carousel Dot Indicators */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 18 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
           {SPOTLIGHT_SLIDES.map((_, idx) => (
             <button
               key={idx}

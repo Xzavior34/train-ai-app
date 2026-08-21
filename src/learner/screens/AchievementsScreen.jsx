@@ -236,7 +236,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {/* =========================================================================
           KEY STATS TILES STRIP
           ========================================================================= */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
         <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
           <div className="tai-row tai-gap10">
             <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>

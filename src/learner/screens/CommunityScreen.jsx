@@ -433,7 +433,7 @@ export const chartColors = {
         <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
           
           {/* Search Input */}
-          <div style={{ flex: 1, minWidth: 280, position: "relative" }}>
+          <div style={{ flex: "1 1 200px", minWidth: 0, position: "relative" }}>
             <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
             <input
               type="text"
