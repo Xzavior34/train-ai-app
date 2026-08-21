@@ -195,20 +195,48 @@ export const TOKENS = `
     .ta-org-selector select { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-h1 { font-size: 19px; }
     .ta-table-wrap .ta-table { min-width: 460px; }
-  }
-  .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .14s ease; font-family: var(--font); }
-  .ta-btn:active { transform: scale(.97); }
-  .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: var(--shadow-btn); }
-  .ta-btn-primary:hover { box-shadow: 0 8px 20px -4px rgba(79,70,229,0.45); transform: translateY(-1px); }
+  .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
+  .ta-btn:active { transform: scale(.96); }
+  .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32); }
+  .ta-btn-primary:hover { box-shadow: 0 8px 22px -2px rgba(79,70,229,0.48); transform: translateY(-2px); }
   .ta-btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); }
-  .ta-btn-outline:hover { background: var(--surface-2); border-color: #CBD5E1; }
+  .ta-btn-outline:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-1px); }
   .ta-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
-  .ta-btn-ghost:hover { background: #E0E7FF; }
+  .ta-btn-ghost:hover { background: #E0E7FF; transform: translateY(-1px); }
   .ta-btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 10px; }
   .ta-btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
-  .ta-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px;
-    box-shadow: var(--shadow-card); transition: all .2s ease; }
-  .ta-card-hover:hover { box-shadow: var(--shadow-hover); border-color: #CBD5E1; transform: translateY(-2px); }
+  
+  /* Modern Glass Cards for Platform */
+  .ta-card {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow .24s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color .24s ease;
+  }
+  .ta.dark .ta-card {
+    background: rgba(18, 24, 43, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  }
+  .ta-card-hover {
+    cursor: pointer;
+  }
+  .ta-card-hover:hover {
+    box-shadow: 0 16px 36px -6px rgba(79, 70, 229, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(99, 102, 241, 0.35);
+    transform: translateY(-3px) scale(1.006);
+  }
+  .ta.dark .ta-card-hover:hover {
+    box-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+    border-color: rgba(129, 140, 248, 0.35);
+    transform: translateY(-3px) scale(1.006);
+  }
   .ta-grid { display: grid; gap: 18px; }
   .ta-grid-5 { grid-template-columns: repeat(5, 1fr); }
   .ta-grid-4 { grid-template-columns: repeat(4, 1fr); }
