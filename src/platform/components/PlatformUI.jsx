@@ -188,13 +188,22 @@ export const TOKENS = `
       width: 34px; height: 34px; border-radius: 8px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
     }
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
-    .ta-topbar { height: auto; min-height: 68px; flex-wrap: wrap; row-gap: 8px; padding: 12px 16px; }
+    .ta-topbar { height: auto; min-height: 60px; flex-wrap: wrap; row-gap: 8px; padding: 10px 14px; }
     .ta-topbar-left { flex: 1 1 100%; }
     .ta-topbar-right { gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1 1 100%; }
     .ta-org-selector { max-width: 130px; }
     .ta-org-selector select { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-h1 { font-size: 19px; }
     .ta-table-wrap .ta-table { min-width: 460px; }
+  }
+  @media (max-width: 480px) {
+    .ta-topbar { padding: 8px 10px; min-height: 52px; }
+    .ta-content { padding: 12px 10px 80px; }
+    .ta-card { padding: 14px 12px; border-radius: 14px; }
+    .ta-h1 { font-size: 17px; }
+    .ta-sub { font-size: 12px; }
+    .ta-btn { padding: 8px 14px; font-size: 12.5px; border-radius: 10px; }
+    .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; }
   }
   .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
   .ta-btn:active { transform: scale(.96); }

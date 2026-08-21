@@ -462,7 +462,13 @@ export const chartColors = {
               return (
                 <button
                   key={t.k}
-                  onClick={() => setActiveTab(t.k)}
+                  onClick={() => {
+                    if (t.k === "leaderboard") {
+                      push("leaderboard");
+                    } else {
+                      setActiveTab(t.k);
+                    }
+                  }}
                   style={{
                     padding: "8px 14px",
                     borderRadius: 10,

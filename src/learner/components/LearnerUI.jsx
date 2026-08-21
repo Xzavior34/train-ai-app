@@ -170,19 +170,24 @@ export const TOKENS = `
   @media (max-width: 899px) {
     .tai-header-search { display: none; }
     .tai-workspace-pill span { display: none; }
-    .tai-global-header { padding: 0 12px; height: 56px; }
+    .tai-global-header { padding: 0 12px; height: 56px; width: 100%; box-sizing: border-box; }
     .tai-header-brand img { height: 38px !important; }
-    .tai-body { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); }
+    .tai-body { padding: 12px 10px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; overflow-x: hidden; }
     .tai-streak-pill, .tai-credits-pill { padding: 5px 8px; font-size: 11.5px; gap: 4px; }
     .tai-header-right { gap: 6px; }
+    .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 16px !important; }
   }
   @media (max-width: 480px) {
     .tai-streak-pill span.tai-pill-unit,
     .tai-credits-pill span.tai-pill-unit { display: none; }
-    .tai-global-header { padding: 0 8px; }
-    .tai-header-brand img { height: 34px !important; }
-    .tai-body { padding: 10px 10px calc(84px + env(safe-area-inset-bottom)); }
-    .tai-card { padding: 16px; border-radius: 14px; }
+    .tai-global-header { padding: 0 8px; height: 52px; }
+    .tai-header-brand img { height: 30px !important; }
+    .tai-body { padding: 8px 6px calc(82px + env(safe-area-inset-bottom)); }
+    .tai-card { padding: 14px 12px; border-radius: 14px; }
+    .tai-iconbtn { width: 34px; height: 34px; border-radius: 10px; }
+    .tai-topbar { padding: 4px 0 10px; }
+    .tai-h1 { font-size: 19px; }
+    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 12px !important; }
   }
   .tai-topbar { display:flex; justify-content:space-between; align-items:center; padding: 8px 0 18px; }
   .tai-h1 { font-size: clamp(20px, 4vw, 24px); font-weight: 800; letter-spacing: -0.025em; margin:0; color: var(--text); }
@@ -462,6 +467,7 @@ export const NAV_ITEMS = [
   { key: "courses", label: "Courses", icon: BookOpen },
   { key: "ai", label: "AI Coach", icon: Zap },
   { key: "community", label: "Community", icon: Users },
+  { key: "leaderboard", label: "Rank", icon: Trophy },
 ];
 
 export function BottomNav({ active, go }) {
@@ -479,7 +485,7 @@ export function BottomNav({ active, go }) {
             aria-label={item.label}
           >
             <div className="tai-navitem-icon-wrap">
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
+              <Icon size={19} strokeWidth={isActive ? 2.5 : 1.8} />
             </div>
             <span className="tai-navitem-label">{item.label}</span>
           </button>
@@ -522,14 +528,25 @@ export function LearnerHeader({
       </div>
 
       <div className="tai-header-right">
+        {/* Rank Pill */}
+        <div
+          className="tai-streak-pill"
+          style={{ background: "#FEF3C7", borderColor: "#FDE68A", color: "#D97706" }}
+          onClick={() => go?.("leaderboard")}
+          title="Learner Leaderboard & Top 3 Rank"
+        >
+          <Trophy size={14} color="#D97706" />
+          <span>#4 <span className="tai-pill-unit">Rank</span></span>
+        </div>
+
         {/* Streak Pill */}
-        <div className="tai-streak-pill" onClick={() => go?.("achievements")}>
+        <div className="tai-streak-pill" onClick={() => go?.("achievements")} title="Active Streak">
           <Flame size={14} color="#EA580C" />
-          <span>{user?.streak || 10} <span className="tai-pill-unit">days</span></span>
+          <span>{user?.streak || 8} <span className="tai-pill-unit">days</span></span>
         </div>
 
         {/* AI Credits Pill */}
-        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))}>
+        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
           <Sparkles size={13} color="#4F46E5" />
           <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
         </div>

@@ -554,10 +554,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     return fetchMentorAvailability(sessionMentorChoice.id);
   }, [sessionMentorChoice?.id]);
 
-  const activeTabKey = ["home", "courses", "ai", "community"].includes(screen) ? screen
+  const activeTabKey = ["home", "courses", "ai", "community", "leaderboard"].includes(screen) ? screen
     : ["courseDetail", "lesson"].includes(screen) ? "courses"
     : ["insights"].includes(screen) ? "ai"
     : ["postDetail", "mentors", "mentorDetail", "cohort"].includes(screen) ? "community"
+    : ["achievements"].includes(screen) ? "leaderboard"
     : null;
 
   const unreadNotifs = notifications.filter(n => !n.read).length;
