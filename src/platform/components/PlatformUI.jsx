@@ -263,7 +263,15 @@ export const TOKENS = `
       flex-wrap: nowrap; box-sizing: border-box; width: 100%;
     }
     .ta-topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-    .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    /* Theme toggle + notifications bell are square icon buttons that sit in
+       the header on every admin/mentor/manager/superadmin screen - shrink
+       them (and the profile pill down to just its avatar) on mobile so they
+       don't crowd the title out along with the quick-action/sign-out
+       buttons, which are already compacted above. */
+    .ta-header-icon-btn { width: 34px !important; height: 34px !important; border-radius: 10px !important; }
+    .ta-profile-pill-text { display: none; }
+    .ta-profile-pill { padding: 3px !important; }
     .ta-content { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
       position: fixed; top: 0; left: 0; z-index: 100;
@@ -595,7 +603,13 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
 
   return (
     <>
-      {mobileOpen && <div className="ta-scrim ta-scrim-sidebar" onClick={onClose} />}
+      {mobileOpen && (
+        <div
+          className="ta-scrim ta-scrim-sidebar"
+          onClick={onClose}
+          style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(15,23,42,.45)" }}
+        />
+      )}
       <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
         <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
@@ -670,7 +684,13 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
 
   return (
     <>
-      {mobileOpen && <div className="ta-scrim ta-scrim-sidebar" onClick={onClose} />}
+      {mobileOpen && (
+        <div
+          className="ta-scrim ta-scrim-sidebar"
+          onClick={onClose}
+          style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(15,23,42,.45)" }}
+        />
+      )}
       <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
         <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
@@ -1144,7 +1164,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
 
         {/* Theme Toggle (Dark / Light) */}
         <button
-          className="ta-btn ta-btn-outline"
+          className="ta-btn ta-btn-outline ta-header-icon-btn"
           style={{ width: 42, height: 42, padding: 0, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
           onClick={() => {
             const next = !isDarkTheme;
@@ -1158,7 +1178,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
         </button>
 
         {/* Notifications icon */}
-        <div style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+        <div className="ta-header-icon-btn" style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
           <Bell size={17} color="var(--text-2)" />
         </div>
 
@@ -1169,12 +1189,12 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
 
         {/* User Profile Pill - opens the real Settings Hub */}
         <div
-          className="ta-row ta-gap8"
+          className="ta-row ta-gap8 ta-profile-pill"
           style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0 }}
           onClick={() => canOpenOwnSettings && onNavigate("settings")}
         >
           <Avatar initials={userInitials} size={32} />
-          <div className="ta-col" style={{ lineHeight: 1.2, paddingRight: 4 }}>
+          <div className="ta-col ta-profile-pill-text" style={{ lineHeight: 1.2, paddingRight: 4 }}>
             <span className="ta-profile-pill-name" style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
             <span className="ta-profile-pill-name" style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
           </div>

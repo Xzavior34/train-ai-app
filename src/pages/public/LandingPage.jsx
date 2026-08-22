@@ -1174,8 +1174,8 @@ const styles = {
   footerSitemap: { display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5 },
   footerLink: { color: "#64748B", cursor: "pointer" },
 
-  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100 },
-  modalCard: { background: "#fff", borderRadius: 18, padding: 24, maxWidth: 460, width: "100%", boxShadow: "0 30px 60px -24px rgba(15,23,42,.35)" },
+  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100, overflowY: "auto", boxSizing: "border-box" },
+  modalCard: { background: "#fff", borderRadius: 18, padding: 24, maxWidth: 460, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 60px -24px rgba(15,23,42,.35)" },
   modalHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   modalTitle: { fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 },
   modalClose: { border: "none", background: "#F8FAFC", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex" },

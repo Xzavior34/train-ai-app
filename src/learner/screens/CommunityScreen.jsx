@@ -541,9 +541,10 @@ export const chartColors = {
       {postComposerOpen && (
         <div style={{
           position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 500,
-          display: "flex", alignItems: "center", justifyContent: "center", padding: 20
+          display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+          overflowY: "auto", boxSizing: "border-box"
         }}>
-          <div className="tai-card" style={{ maxWidth: 580, width: "100%", padding: 24, borderRadius: 20 }}>
+          <div className="tai-card" style={{ maxWidth: 580, width: "100%", maxHeight: "100%", overflowY: "auto", padding: 24, borderRadius: 20, boxSizing: "border-box" }}>
             <div className="tai-row tai-between" style={{ marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
               <div className="tai-row tai-gap8">
                 <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
