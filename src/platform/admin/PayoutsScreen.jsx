@@ -131,7 +131,7 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
         </div>
 
         {tab === "requests" && (
-          <div className="ta-card">
+          <div className="ta-card" style={{ borderRadius: 10 }}>
             <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap", marginBottom: 14 }}>
               <div className="ta-search" style={{ flex: "1 1 200px", minWidth: 160 }}>
                 <Search size={14} />
@@ -198,7 +198,7 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
         )}
 
         {tab === "access" && (
-          <div className="ta-card">
+          <div className="ta-card" style={{ borderRadius: 10 }}>
             <div className="ta-row ta-gap8">
               <ShieldCheck size={17} color="var(--primary)" />
               <div style={{ fontWeight: 800, fontSize: 15 }}>Who is allowed to withdraw</div>
@@ -219,7 +219,7 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
 
             <div className="ta-col ta-gap8 ta-mt12">
               {mentors.map((m) => (
-                <div key={m.id} className="ta-row ta-between" style={{ gap: 10, padding: "10px 12px", background: "var(--surface-2)", borderRadius: 10, flexWrap: "wrap" }}>
+                <div key={m.id} className="ta-row ta-between" style={{ gap: 10, padding: "10px 12px", background: "var(--surface-2)", borderRadius: 8, flexWrap: "wrap" }}>
                   <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
                     <Avatar initials={(m.name || "I").slice(0, 2).toUpperCase()} size={30} />
                     <div style={{ minWidth: 0 }}>

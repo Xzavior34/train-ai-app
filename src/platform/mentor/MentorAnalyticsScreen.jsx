@@ -307,7 +307,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
                 key={rev.id}
                 style={{
                   padding: "16px 18px",
-                  borderRadius: 14,
+                  borderRadius: 8,
                   background: "var(--surface-2)",
                   border: "1px solid var(--border)",
                   display: "flex",

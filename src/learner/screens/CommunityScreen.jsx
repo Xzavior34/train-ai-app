@@ -451,7 +451,7 @@ export const chartColors = {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: "100%", height: 44, paddingLeft: 42, paddingRight: 14,
-                borderRadius: 12, border: "1.5px solid var(--border)", background: "var(--surface)",
+                borderRadius: 8, border: "1.5px solid var(--border)", background: "var(--surface)",
                 fontSize: 13.5, color: "var(--text)", outline: "none"
               }}
             />
@@ -681,7 +681,7 @@ export const chartColors = {
                   className="tai-card"
                   style={{
                     padding: "18px 16px",
-                    borderRadius: 16,
+                    borderRadius: 10,
                     border: post.pinned ? "1.5px solid rgba(99, 102, 241, 0.45)" : "1px solid var(--border)",
                     boxShadow: post.pinned ? "0 4px 20px rgba(79, 70, 229, 0.08)" : "var(--shadow-card)",
                     background: "var(--surface)",
@@ -737,7 +737,7 @@ export const chartColors = {
                   {post.codeSnippet && (
                     <pre style={{
                       background: "#0F172A", color: "#E2E8F0", padding: "14px 16px",
-                      borderRadius: 12, fontSize: 12, lineHeight: 1.5, overflowX: "auto", margin: "0 0 14px",
+                      borderRadius: 8, fontSize: 12, lineHeight: 1.5, overflowX: "auto", margin: "0 0 14px",
                       fontFamily: "monospace"
                     }}>
                       <code>{post.codeSnippet}</code>
@@ -746,7 +746,7 @@ export const chartColors = {
 
                   {/* Image Attachment */}
                   {post.imageUrl && (
-                    <div style={{ width: "100%", height: 220, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+                    <div style={{ width: "100%", height: 220, borderRadius: 8, overflow: "hidden", marginBottom: 14 }}>
                       <img src={post.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
                   )}
@@ -824,7 +824,7 @@ export const chartColors = {
                   {isCommentsOpen && (
                     <div className="tai-col tai-gap10" style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
                       {(post.comments || []).map(c => (
-                        <div key={c.id} style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 12 }}>
+                        <div key={c.id} style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 8 }}>
                           <div className="tai-row tai-between">
                             <div className="tai-row tai-gap8">
                               <Avatar src={c.avatar} initials={initialsOf(c.author)} size={24} />
@@ -909,7 +909,7 @@ export const chartColors = {
             )}
 
             {/* Study Circles Preview Widget */}
-            <div className="tai-card" style={{ padding: 20, borderRadius: 18 }}>
+            <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
                 <h4 style={{ fontSize: 14.5, fontWeight: 800, margin: 0, color: "var(--text)" }}>
                   Featured Study Circles
@@ -924,7 +924,7 @@ export const chartColors = {
 
               <div className="tai-col tai-gap10">
                 {STUDY_CIRCLES.slice(0, 2).map(c => (
-                  <div key={c.id} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 12 }}>
+                  <div key={c.id} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
                     <div className="tai-row tai-between">
                       <span style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>{c.name}</span>
                       <span style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700 }}>{c.membersCount} peers</span>
@@ -958,7 +958,7 @@ export const chartColors = {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {UPCOMING_EVENTS.map(ev => (
-              <div key={ev.id} className="tai-card" style={{ padding: 22, borderRadius: 18, background: "var(--surface)" }}>
+              <div key={ev.id} className="tai-card" style={{ padding: 22, borderRadius: 10, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
                   <span style={{ background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)", fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 8 }}>
                     {ev.type}
@@ -1006,18 +1006,18 @@ export const chartColors = {
             const cohortPosts = cohortPostsQuery.data || [];
             const cohortResources = cohortResourcesQuery.data || [];
             if (cohortMembershipQuery.loading) {
-              return <div className="tai-card tai-fade-in" style={{ padding: 20, borderRadius: 18 }}>Loading your cohort…</div>;
+              return <div className="tai-card tai-fade-in" style={{ padding: 20, borderRadius: 10 }}>Loading your cohort…</div>;
             }
             if (!myCohort) return null;
             return (
               <div
                 className="tai-card tai-card-hover tai-fade-in"
-                style={{ padding: 20, borderRadius: 18, background: "var(--grad-subtle)", border: "1px solid var(--primary-light)", cursor: "pointer" }}
+                style={{ padding: 20, borderRadius: 10, background: "var(--grad-subtle)", border: "1px solid var(--primary-light)", cursor: "pointer" }}
                 onClick={() => goTab?.("cohort")}
               >
                 <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                   <div className="tai-row tai-gap10" style={{ minWidth: 0 }}>
-                    <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--grad)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 8, background: "var(--grad)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Users size={20} color="#fff" />
                     </div>
                     <div style={{ minWidth: 0 }}>

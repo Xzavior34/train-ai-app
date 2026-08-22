@@ -71,7 +71,7 @@ export function AlmostThereNudge({ userId, user = {}, achievements = [], onView 
   }
 
   return (
-    <div className="tai-card tai-mt12" style={{ borderColor: "var(--success)", background: "var(--success-bg)", position: "relative", cursor: onView ? "pointer" : "default" }} onClick={onView}>
+    <div className="tai-card tai-mt12" style={{ borderColor: "var(--border)", background: "var(--surface)", borderRadius: 10, position: "relative", cursor: onView ? "pointer" : "default" }} onClick={onView}>
       <button
         onClick={(e) => { e.stopPropagation(); dismiss(); }}
         aria-label="Dismiss"
@@ -80,7 +80,7 @@ export function AlmostThereNudge({ userId, user = {}, achievements = [], onView 
         <X size={15} />
       </button>
       <div className="tai-row tai-gap12">
-        <div className="tai-iconbtn" style={{ background: "var(--success)", border: "none", color: "#fff" }}>
+        <div className="tai-iconbtn" style={{ background: "var(--success)", border: "none", color: "#fff", borderRadius: 8 }}>
           <Trophy size={17} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>

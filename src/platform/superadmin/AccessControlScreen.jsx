@@ -150,7 +150,7 @@ function ImpersonationPanel() {
           {results.length > 0 && (
             <div className="ta-col ta-gap6 ta-mt12 anim-stagger">
               {results.map((u) => (
-                <div key={u.id} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 10, gap: 8, flexWrap: "wrap" }}>
+                <div key={u.id} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 8, gap: 8, flexWrap: "wrap" }}>
                   <span className="ta-row ta-gap8" style={{ fontSize: 13, fontWeight: 600, minWidth: 0, flex: "1 1 auto", overflow: "hidden" }}>
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.display_name || "Unnamed user"}</span> <Tag>{u.role}</Tag>
                   </span>
@@ -313,7 +313,7 @@ export function AccessControlScreen() {
             {mentorsQuery.loading && <div className="ta-empty">Loading instructors...</div>}
             {!mentorsQuery.loading && mentors.length === 0 && <div className="ta-empty">No instructors on the platform yet.</div>}
             {mentors.map((m) => (
-              <div key={m.id} className="ta-row ta-between" style={{ padding: "9px 10px", background: "var(--surface-2)", borderRadius: 10, gap: 8 }}>
+              <div key={m.id} className="ta-row ta-between" style={{ padding: "9px 10px", background: "var(--surface-2)", borderRadius: 8, gap: 8 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
                 <Switch on={!!m.payouts_enabled} onChange={() => handleTogglePayouts(m.id, !!m.payouts_enabled)} />
               </div>

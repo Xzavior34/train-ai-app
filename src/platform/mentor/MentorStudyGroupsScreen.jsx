@@ -291,7 +291,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                     <div
                       key={m.user_id}
                       className="ta-row ta-between"
-                      style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 12, border: "1px solid var(--border)" }}
+                      style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}
                     >
                       <div className="ta-row ta-gap10">
                         <div style={{ width: 32, height: 32, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--primary)", fontSize: 12 }}>

@@ -287,7 +287,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                       alignItems: "center", 
                       gap: 12, 
                       padding: "12px 14px", 
-                      borderRadius: 12, 
+                      borderRadius: 8, 
                       background: t.done ? "var(--surface-2)" : "var(--surface-3)",
                       cursor: "pointer",
                       transition: "all 0.15s ease",
@@ -330,7 +330,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 {activeCohorts.map(c => {
                   const endingSoon = c.ends_at && new Date(c.ends_at).getTime() - Date.now() < 14 * 86400000;
                   return (
-                    <div key={c.id} style={{ padding: "14px 16px", borderRadius: 12, background: "var(--surface-3)" }}>
+                    <div key={c.id} style={{ padding: "14px 16px", borderRadius: 8, background: "var(--surface-3)" }}>
                       <div className="ta-row ta-between">
                         <div className="ta-row ta-gap8" style={{ minWidth: 0 }}>
                           <BookOpen size={16} color="var(--primary)" style={{ flexShrink: 0 }} />
@@ -404,7 +404,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
                 {studentRisks.map(s => (
-                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)", flexWrap: "wrap", gap: 10 }}>
+                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 10 }}>
                     <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 160px" }}>
                       <img
                         src={s.avatar}
@@ -483,7 +483,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
               {/* Upcoming sessions timeline */}
               <div className="ta-col ta-gap10 ta-mt16">
-                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
+                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "break-word" }}>Cloud Architecture Masterclass</div>
                     <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
@@ -493,7 +493,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                   <Tag tone="primary">Upcoming</Tag>
                 </div>
 
-                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
+                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "break-word" }}>Generative AI Prompts Workshop</div>
                     <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>

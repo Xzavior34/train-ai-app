@@ -93,7 +93,7 @@ export function EmailsScreen() {
     <div className="ta-fade">
       <TopBar title="Platform Emails" sub="System notifications & email broadcasts" />
       <div className="ta-content" style={{ maxWidth: 760, margin: "0 auto" }}>
-        <div className="ta-card">
+        <div className="ta-card" style={{ borderRadius: 10 }}>
           <div className="ta-title">Send Broadcast Email</div>
           <input className="ta-input ta-mt12" placeholder="Email subject line..." value={subject} onChange={(e) => setSubject(e.target.value)} />
           <textarea className="ta-input ta-mt12" rows={5} placeholder="Email content body..." value={body} onChange={(e) => setBody(e.target.value)} />
@@ -160,7 +160,7 @@ export function EmailsScreen() {
           )}
         </div>
 
-        <div className="ta-card ta-mt16 anim-stagger">
+        <div className="ta-card ta-mt16 anim-stagger" style={{ borderRadius: 10 }}>
           <div className="ta-row ta-between">
             <div className="ta-row ta-gap8">
               <Mail size={16} color="var(--primary)" />

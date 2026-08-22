@@ -239,7 +239,7 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
 
       <div className="ta-title ta-mt20" style={{ fontSize: 13.5 }}>Logo</div>
       {logoUrl && (
-        <img src={logoUrl} alt="Logo preview" style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", marginTop: 10, border: "1px solid var(--border)" }} />
+        <img src={logoUrl} alt="Logo preview" style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", marginTop: 10, border: "1px solid var(--border)" }} />
       )}
       <div style={{ marginTop: 10 }}>
         <FileUploadZone
@@ -493,7 +493,7 @@ export function OrgOnboardingWizard({ currentUserProfileId, orgSelector, onSwitc
       <div className="ta-content" style={{ maxWidth: 720 }}>
         <StepIndicator stepIndex={stepIndex} />
 
-        <div className="ta-card ta-mt20">
+        <div className="ta-card ta-mt20" style={{ borderRadius: 10 }}>
           {step === "details" && (
             <DetailsStep
               currentUserProfileId={currentUserProfileId}

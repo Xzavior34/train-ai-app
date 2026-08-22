@@ -20,7 +20,7 @@ export function GJPScreen({ orgId, orgSelector, setScreen }) {
     <div className="ta-fade">
       <TopBar title="Graduation Job Placement (GJP)" sub="Career readiness & candidate placement" orgSelector={orgSelector} onNavigate={setScreen} />
       <div className="ta-content">
-        <div className="ta-card">
+        <div className="ta-card" style={{ borderRadius: 10 }}>
           <div className="ta-row ta-gap8">
             <Briefcase size={16} color="var(--text-3)" />
             <span className="ta-body" style={{ fontSize: 12.5 }}>

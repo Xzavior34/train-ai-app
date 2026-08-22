@@ -34,10 +34,10 @@ export function GamificationCard({ level = 1, totalPoints = 0, streak = 0, strea
   const preview = achievements.slice(0, 5);
 
   return (
-    <div className="tai-card tai-mt12">
+    <div className="tai-card tai-mt12" style={{ borderRadius: 10 }}>
       <div className="tai-row tai-between">
         <div className="tai-row tai-gap10">
-          <div className="tai-iconbtn" style={{ background: "var(--grad)", border: "none", color: "#fff" }}>
+          <div className="tai-iconbtn" style={{ background: "#4F46E5", border: "none", color: "#fff", borderRadius: 8 }}>
             <Trophy size={18} />
           </div>
           <div>
@@ -86,7 +86,7 @@ export function GamificationCard({ level = 1, totalPoints = 0, streak = 0, strea
                 title={a.achievement_title || "Achievement"}
                 className="tai-row"
                 style={{
-                  width: 38, height: 38, borderRadius: 12, background: "var(--surface-2)",
+                  width: 38, height: 38, borderRadius: 8, background: "var(--surface-2)",
                   alignItems: "center", justifyContent: "center", flexShrink: 0,
                 }}
               >
@@ -96,7 +96,7 @@ export function GamificationCard({ level = 1, totalPoints = 0, streak = 0, strea
           })}
           {earnedCount > preview.length && (
             <div className="tai-row" style={{
-              width: 38, height: 38, borderRadius: 12, background: "var(--surface-3)",
+              width: 38, height: 38, borderRadius: 8, background: "var(--surface-3)",
               alignItems: "center", justifyContent: "center", fontSize: 11.5, fontWeight: 700, color: "var(--text-2)", flexShrink: 0,
             }}>
               +{earnedCount - preview.length}

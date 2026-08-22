@@ -322,7 +322,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             </div>
 
             <div className="ta-hero-actions">
-              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
                 <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Platform</div>
                 <div style={{ fontSize: 15, fontWeight: 900, color: "#fff", textTransform: "capitalize" }}>{videoPlatform.replace(/_/g, " ")}</div>
               </div>
@@ -372,7 +372,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
                       alignItems: "center",
                       gap: 12,
                       padding: "10px 14px",
-                      borderRadius: 12,
+                      borderRadius: 8,
                       cursor: "pointer",
                       background: isActive ? "var(--surface-2)" : "transparent",
                       borderLeft: isActive ? "3px solid var(--primary)" : "3px solid transparent",
@@ -454,7 +454,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             {credentialsQuery.loading && <div className="ta-empty">Loading credentials...</div>}
             {!credentialsQuery.loading && (credentialsQuery.data || []).length === 0 && <div className="ta-empty">No credentials added yet.</div>}
             {(credentialsQuery.data || []).map(c => (
-              <div key={c.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+              <div key={c.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
                 <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 180px" }}>
                   <BadgeCheck size={16} color={c.is_verified ? "var(--success)" : "var(--text-3)"} style={{ flexShrink: 0 }} />
                   <div style={{ minWidth: 0 }}>
@@ -486,7 +486,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             {portfolioQuery.loading && <div className="ta-empty">Loading portfolio...</div>}
             {!portfolioQuery.loading && (portfolioQuery.data || []).length === 0 && <div className="ta-empty">No portfolio items added yet.</div>}
             {(portfolioQuery.data || []).map(p => (
-              <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+              <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
                 <div style={{ minWidth: 0, flex: "1 1 180px" }}>
                   <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{p.title}</span>
@@ -539,7 +539,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
                 {remindersQuery.loading && <div className="ta-empty">Loading reminders...</div>}
                 {!remindersQuery.loading && (remindersQuery.data || []).length === 0 && <div className="ta-empty">No reminders configured.</div>}
                 {(remindersQuery.data || []).map((r) => (
-                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
                     <div style={{ fontSize: 13, minWidth: 0, overflowWrap: "break-word", flex: "1 1 160px" }}>{r.reminder_type} • {r.hours_before}h before{r.custom_message ? `: "${r.custom_message}"` : ""}</div>
                     <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={async () => { await deleteReminderSetting(r.id); remindersQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
@@ -583,7 +583,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!templatesQuery.loading && (templatesQuery.data || []).length === 0 && <div className="ta-empty">No templates yet.</div>}
                 {(templatesQuery.data || []).map((t) => (
-                  <div key={t.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                  <div key={t.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
                     <div style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0, overflowWrap: "break-word", flex: "1 1 160px" }}>{t.title}</div>
                     <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={async () => { await deleteSessionTemplate(t.id); templatesQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
@@ -600,7 +600,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!policiesQuery.loading && (policiesQuery.data || []).length === 0 && <div className="ta-empty">No cancellation policies set.</div>}
                 {(policiesQuery.data || []).map((p) => (
-                  <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                  <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
                     <div style={{ fontSize: 13, minWidth: 0, flex: "1 1 160px" }}>Cancel within {p.hours_before}h: {p.fee_percentage}% fee</div>
                     <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={async () => { await deleteCancellationPolicy(p.id); policiesQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
@@ -634,7 +634,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!resourcesQuery.loading && (resourcesQuery.data || []).length === 0 && <div className="ta-empty">No resources yet.</div>}
                 {(resourcesQuery.data || []).map((r) => (
-                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap", gap: 8 }}>
                     <div style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0, overflowWrap: "break-word", flex: "1 1 160px" }}>{r.title}</div>
                     <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={async () => { await deleteMentorResource(r.id); resourcesQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
@@ -653,7 +653,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-col ta-gap8 ta-mt12">
                 {!agreementsQuery.loading && (agreementsQuery.data || []).length === 0 && <div className="ta-empty">No agreements yet.</div>}
                 {(agreementsQuery.data || []).map((a) => (
-                  <div key={a.id} className="ta-row ta-gap8" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap" }}>
+                  <div key={a.id} className="ta-row ta-gap8" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 13, minWidth: 0, overflowWrap: "break-word" }}>{a.learner_name}</span>
                     <Tag tone={a.status === "signed" ? "success" : "warning"}>{a.status}</Tag>
                   </div>

@@ -506,7 +506,7 @@ export function LessonScreen({
             <button
               className={`tai-btn ${isCompleted ? "tai-btn-outline" : "tai-btn-primary"} tai-lesson-nav-complete`}
               style={{
-                padding: "11px 18px", borderRadius: 14, fontSize: 13.5, fontWeight: 800,
+                padding: "11px 18px", borderRadius: 8, fontSize: 13.5, fontWeight: 800,
                 boxShadow: isCompleted ? "none" : "0 4px 16px rgba(79, 70, 229, 0.3)"
               }}
               onClick={handleMarkDone}
@@ -520,7 +520,7 @@ export function LessonScreen({
                 className="tai-btn tai-btn-outline"
                 disabled={!prevLesson}
                 onClick={() => prevLesson && push("lesson", { id: course?.id, lessonId: prevLesson.id })}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 12, opacity: prevLesson ? 1 : 0.4, fontSize: 12.5 }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 8, opacity: prevLesson ? 1 : 0.4, fontSize: 12.5 }}
               >
                 <ChevronLeft size={15} /> Prev Lesson
               </button>
@@ -529,7 +529,7 @@ export function LessonScreen({
                 className="tai-btn tai-btn-outline"
                 disabled={!nextLesson}
                 onClick={() => nextLesson && push("lesson", { id: course?.id, lessonId: nextLesson.id })}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 12, opacity: nextLesson ? 1 : 0.4, fontSize: 12.5 }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 8, opacity: nextLesson ? 1 : 0.4, fontSize: 12.5 }}
               >
                 Next Lesson <ChevronRight size={15} />
               </button>
@@ -613,7 +613,7 @@ export function LessonScreen({
               </div>
 
               {/* Learning Objectives Checklist */}
-              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 14 }}>
+              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8 }}>
                 <div style={{ fontSize: 11.5, fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
                   What You'll Master in this Lesson
                 </div>
@@ -633,7 +633,7 @@ export function LessonScreen({
               </div>
 
               {/* Instructor Bio Card */}
-              <div className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 14, flexWrap: "wrap", gap: 12 }}>
+              <div className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: "1 1 200px" }}>
                   <img
                     src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
@@ -710,7 +710,7 @@ export function LessonScreen({
                     <div style={{
                       maxWidth: "88%",
                       padding: "10px 14px",
-                      borderRadius: 14,
+                      borderRadius: 8,
                       background: msg.sender === "user" ? "var(--primary)" : "var(--surface-3)",
                       color: msg.sender === "user" ? "#FFFFFF" : "var(--text)",
                       fontSize: 12.5,
@@ -806,7 +806,7 @@ export function LessonScreen({
               )}
 
               {(lessonNotesQuery?.data || []).map(n => (
-                <div key={n.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-3)", padding: 12, borderRadius: 12 }}>
+                <div key={n.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
                   <div className="tai-row tai-between" style={{ marginBottom: 4 }}>
                     <span
                       onClick={() => setCurrentTimeSec(n.timestamp_seconds)}
@@ -845,7 +845,7 @@ export function LessonScreen({
 
               {/* Question Composer */}
               {showQuestionComposer && (
-                <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 14 }}>
+                <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8 }}>
                   <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 8 }}>Ask a Question linked to {formatTime(currentTimeSec)}</div>
                   <input
                     className="tai-input"
@@ -872,7 +872,7 @@ export function LessonScreen({
               {/* Q&A List */}
               <div className="tai-col tai-gap10">
                 {qaThreads.map((thread) => (
-                  <div key={thread.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 14 }}>
+                  <div key={thread.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                     <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
                       <div className="tai-row tai-gap8" style={{ minWidth: 0, flex: 1 }}>
                         <img src={thread.avatar} alt="" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
@@ -986,7 +986,7 @@ export function LessonScreen({
                 {LESSON_RESOURCES.map((res) => {
                   const Icon = res.icon;
                   return (
-                    <div key={res.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 12, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                    <div key={res.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                       <div>
                         <div className="tai-row tai-gap8" style={{ marginBottom: 6 }}>
                           <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1024,7 +1024,7 @@ export function LessonScreen({
                 <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>Help instructors improve learning outcomes and clarity</div>
               </div>
 
-              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 16, borderRadius: 14 }}>
+              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 16, borderRadius: 8 }}>
                 <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginBottom: 6 }}>Rate this lesson</div>
                 <div className="tai-row tai-gap6" style={{ marginBottom: 12 }}>
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -1082,7 +1082,7 @@ export function LessonScreen({
         {sidebarOpen && (
           <div className="tai-card anim-slide-down" style={{
             padding: "16px 14px",
-            borderRadius: 18,
+            borderRadius: 10,
             background: "var(--surface)",
             border: "1px solid var(--border)",
             display: "flex",
@@ -1153,7 +1153,7 @@ export function LessonScreen({
                             onClick={() => push("lesson", { id: course?.id, lessonId: les.id })}
                             style={{
                               padding: "10px 12px",
-                              borderRadius: 12,
+                              borderRadius: 8,
                               background: isCurrent ? "var(--primary-tint)" : "var(--surface-2)",
                               border: `1.5px solid ${isCurrent ? "var(--primary-light, #818CF8)" : "transparent"}`,
                               cursor: "pointer",

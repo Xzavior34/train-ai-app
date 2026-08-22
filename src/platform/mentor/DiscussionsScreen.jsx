@@ -168,7 +168,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
             </div>
 
             <div className="ta-hero-actions">
-              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
                 <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Avg Response Time</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>1.4 Hours</div>
               </div>
@@ -247,7 +247,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
                     <img
                       src={d.menteeAvatar}
                       alt=""
-                      style={{ width: 42, height: 42, borderRadius: 12, objectFit: "cover", flexShrink: 0, border: "1px solid var(--border)" }}
+                      style={{ width: 42, height: 42, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid var(--border)" }}
                     />
                     <div style={{ minWidth: 0 }}>
                       <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center" }}>
@@ -309,7 +309,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
                             key={idx}
                             style={{
                               padding: "12px 14px",
-                              borderRadius: 12,
+                              borderRadius: 8,
                               background: rep.role === "Instructor" ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)",
                               border: `1px solid ${rep.role === "Instructor" ? "rgba(99, 102, 241, 0.3)" : "var(--border)"}`
                             }}
@@ -329,7 +329,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
                     )}
 
                     {/* Instructor Answer Box */}
-                    <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 14, border: "1px solid var(--border)" }}>
+                    <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8, border: "1px solid var(--border)" }}>
                       <div className="ta-row ta-between" style={{ marginBottom: 8, alignItems: "center" }}>
                         <div className="ta-row ta-gap6">
                           <MessageSquareQuote size={15} color="var(--primary)" />

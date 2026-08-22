@@ -172,7 +172,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
         {!detailQuery.loading && !cohort && <div className="ta-empty">Cohort not found.</div>}
 
         {editingSettings && (
-          <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
+          <div className="ta-card ta-mt16" style={{ borderColor: "var(--border)", borderRadius: 10 }}>
             <div className="ta-title">Cohort settings</div>
             <div className="ta-label ta-mt12">Cohort banner</div>
             <div className="ta-row ta-gap12" style={{ alignItems: "center" }}>
@@ -230,7 +230,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
             </div>
 
             {tab === "members" && (
-              <div className="ta-card ta-mt16">
+              <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
                 <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
                   <select className="ta-input" style={{ flex: 1, minWidth: 200 }} value={addUserId} onChange={(e) => setAddUserId(e.target.value)}>
                     <option value="">Add a member from org...</option>
@@ -286,7 +286,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
             )}
 
             {tab === "courses" && (
-              <div className="ta-card ta-mt16">
+              <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
                 <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
                   <select className="ta-input" style={{ flex: 1, minWidth: 180 }} value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
                     <option value="">Select member...</option>
@@ -318,7 +318,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
             )}
 
             {tab === "assignedlearner" && (
-              <div className="ta-card ta-mt16">
+              <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
                 <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 12 }}>
                   Every course assignment, grouped by learner rather than by course.
                 </div>
@@ -328,7 +328,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                     const name = m.user_profiles?.display_name || "Unnamed user";
                     const assignedToThisLearner = learnerCourses.filter((lc) => lc.user_id === m.user_id);
                     return (
-                      <div key={m.user_id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                      <div key={m.user_id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8 }}>
                         <div style={{ fontWeight: 700, fontSize: 13.5 }}>{name}</div>
                         {assignedToThisLearner.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>No courses assigned yet.</div>}
                         {assignedToThisLearner.map((lc) => (
@@ -345,7 +345,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
             )}
 
             {tab === "progressmatrix" && (
-              <div className="ta-card ta-mt16">
+              <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
                 <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 12 }}>
                   Each learner's progress across every course assigned to them in this cohort.
                 </div>
@@ -382,7 +382,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
             )}
 
             {tab === "activity" && (
-              <div className="ta-card ta-mt16">
+              <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
                 <textarea
                   className="ta-input"
                   style={{ width: "100%", minHeight: 70, fontFamily: "inherit" }}
@@ -399,7 +399,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                 <div className="ta-mt16" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {posts.length === 0 && <div className="ta-empty">No posts yet.</div>}
                   {posts.map((p) => (
-                    <div key={p.id} className="ta-card" style={{ padding: 14 }}>
+                    <div key={p.id} className="ta-card" style={{ padding: 14, borderRadius: 8 }}>
                       <div className="ta-row ta-between">
                         <div className="ta-row ta-gap8">
                           <Avatar initials={(p.user_profiles?.display_name || "U").slice(0, 2).toUpperCase()} size={26} />
@@ -417,7 +417,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
             {tab === "resources" && (
               <div className="ta-grid ta-grid-2 ta-mt16">
-                <div className="ta-card">
+                <div className="ta-card" style={{ borderRadius: 10 }}>
                   <div className="ta-title">Resources</div>
                   <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
                     <input className="ta-input" style={{ flex: 1, minWidth: 140 }} placeholder="Resource title" value={resourceTitle} onChange={(e) => setResourceTitle(e.target.value)} />
@@ -435,7 +435,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                     </div>
                   ))}
                 </div>
-                <div className="ta-card">
+                <div className="ta-card" style={{ borderRadius: 10 }}>
                   <div className="ta-title">Sessions</div>
                   <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
                     <input className="ta-input" style={{ flex: 1, minWidth: 140 }} placeholder="Session title" value={sessionTitle} onChange={(e) => setSessionTitle(e.target.value)} />

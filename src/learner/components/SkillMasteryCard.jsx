@@ -31,7 +31,7 @@ export function SkillMasteryCard({ courses = [] }) {
     .slice(0, 4);
 
   return (
-    <div className="tai-card tai-mt12">
+    <div className="tai-card tai-mt12" style={{ borderRadius: 10 }}>
       <div className="tai-row tai-gap8">
         <Zap size={16} color="var(--primary)" />
         <div className="tai-title-sm">Skill mastery</div>

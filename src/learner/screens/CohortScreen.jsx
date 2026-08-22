@@ -189,7 +189,7 @@ export function CohortScreen({
               className="tai-card"
               style={{
                 padding: 22,
-                borderRadius: 18,
+                borderRadius: 10,
                 border: cp.is_announcement ? "1.5px solid rgba(99, 102, 241, 0.4)" : "1px solid var(--border)",
                 background: "var(--surface)"
               }}
@@ -249,7 +249,7 @@ export function CohortScreen({
         <div className="tai-col tai-gap16">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {sessions.map(s => (
-              <div key={s.id} className="tai-card" style={{ padding: 22, borderRadius: 18, background: "var(--surface)" }}>
+              <div key={s.id} className="tai-card" style={{ padding: 22, borderRadius: 10, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
                   <span style={{ background: "rgba(239, 68, 68, 0.15)", color: "#EF4444", fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}>
                     <Video size={12} /> {s.status || "Live Studio"}
@@ -294,7 +294,7 @@ export function CohortScreen({
         <div className="tai-col tai-gap16">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {assignedCourses.map(cc => (
-              <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 18, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id })}>
+              <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 10, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id })}>
                 <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
                   {cc.courses?.title || "Untitled course"}
                 </h3>
@@ -302,7 +302,7 @@ export function CohortScreen({
                   {cc.courses?.description}
                 </p>
 
-                <div style={{ marginBottom: 16, background: "var(--surface-3)", padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div style={{ marginBottom: 16, background: "var(--surface-3)", padding: "12px 14px", borderRadius: 8, border: "1px solid var(--border)" }}>
                   <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>
                     <span style={{ color: "var(--text-2)" }}>Curriculum Pace</span>
                     <span style={{ color: "var(--primary)", fontWeight: 800, background: "var(--primary-tint)", padding: "2px 8px", borderRadius: 6 }}>

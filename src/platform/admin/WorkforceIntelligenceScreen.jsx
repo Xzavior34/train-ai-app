@@ -113,13 +113,13 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         </div>
 
         {/* Learner Selector Bar */}
-        <div className="ta-card" style={{ padding: 16, borderRadius: 14, background: "var(--surface-2)" }}>
+        <div className="ta-card" style={{ padding: 16, borderRadius: 10, background: "var(--surface-2)" }}>
           <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
             <div className="ta-row ta-gap10">
               <img 
                 src={currentLearner.avatar} 
                 alt={currentLearner.name}
-                style={{ width: 44, height: 44, borderRadius: 12, objectFit: "cover", border: "2px solid var(--primary)" }}
+                style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "2px solid var(--primary)" }}
               />
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>{currentLearner.name}</div>
@@ -159,7 +159,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                 key={step.title} 
                 style={{ 
                   padding: 16, 
-                  borderRadius: 14, 
+                  borderRadius: 8, 
                   background: step.status === "active" ? "rgba(99, 102, 241, 0.08)" : "var(--surface-3)",
                   border: step.status === "active" ? "2px solid #4F46E5" : "1px solid var(--border)",
                   position: "relative"
@@ -240,7 +240,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                       alignItems: "center", 
                       gap: 12, 
                       padding: "12px 14px", 
-                      borderRadius: 12, 
+                      borderRadius: 8, 
                       background: "var(--surface-3)",
                       border: c.done ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid var(--border)"
                     }}

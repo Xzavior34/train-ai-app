@@ -290,7 +290,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               onClick={() => setActiveProgressTab(t.k)}
               style={{
                 padding: "8px 16px",
-                borderRadius: 12,
+                borderRadius: 8,
                 border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                 background: isActive ? "var(--primary-tint)" : "var(--surface)",
                 color: isActive ? "var(--primary)" : "var(--text-2)",
@@ -323,7 +323,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             
             {/* Weekly Learning Hours Chart Card */}
-            <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
+            <div className="tai-card" style={{ padding: 24, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
@@ -337,7 +337,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               </div>
 
               {/* Bar Chart Visualizer */}
-              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 160, padding: "20px 10px 10px", background: "var(--surface-3)", borderRadius: 14 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 160, padding: "20px 10px 10px", background: "var(--surface-3)", borderRadius: 8 }}>
                 {WEEKLY_HOURS.map((item, idx) => (
                   <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, flex: 1 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>{item.hours}h</span>
@@ -349,7 +349,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             </div>
 
             {/* Skill Mastery Radar */}
-            <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
+            <div className="tai-card" style={{ padding: 24, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>

@@ -205,7 +205,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                       style={{
                         padding: "12px 14px",
                         background: "var(--surface-3)",
-                        borderRadius: 12,
+                        borderRadius: 8,
                         cursor: "pointer",
                         border: "1px solid var(--border)",
                         transition: "all 0.15s ease",
@@ -245,7 +245,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No cohorts yet.</div>
                 )}
                 {(cohortProgressQuery.data || []).map(c => (
-                  <div key={c.name} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("cohorts")}>
+                  <div key={c.name} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("cohorts")}>
                     <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 8, gap: 10 }}>
                       <span style={{ fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
                       <span style={{ color: "var(--primary)", fontWeight: 700, flexShrink: 0 }}>{c.progress}%</span>
@@ -384,7 +384,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No at-risk students right now.</div>
                 )}
                 {(riskQuery.data || []).map((s, idx) => (
-                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
+                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
                     <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
                       <img
                         src={s.avatar || `https://images.unsplash.com/photo-${1534528741775 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`}
@@ -422,7 +422,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No active instructors yet.</div>
                 )}
                 {(mentorsQuery.data || []).map((m, idx) => (
-                  <div key={m.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
+                  <div key={m.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
                     <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
                       <img
                         src={m.avatar || `https://images.unsplash.com/photo-${1573496359142 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`}
@@ -456,7 +456,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No upcoming sessions scheduled.</div>
                 )}
                 {(sessionsQuery.data || []).map((s, i) => (
-                  <div key={i} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                  <div key={i} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13 }}>{s.title}</div>
                       <div style={{ fontSize: 11, color: "var(--text-3)" }}>{s.mentor} • {s.time}</div>

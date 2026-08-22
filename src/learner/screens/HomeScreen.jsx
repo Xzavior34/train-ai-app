@@ -347,7 +347,7 @@ export function HomeScreen({
           </div>
 
           {/* Recommended Courses For You Grid */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
               <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 14 }}>
                 <Zap size={16} color="var(--primary)" />
@@ -362,7 +362,7 @@ export function HomeScreen({
                   key={sc.id}
                   className="tai-card-hover"
                   style={{
-                    borderRadius: 14,
+                    borderRadius: 8,
                     overflow: "hidden",
                     background: "var(--surface-3)",
                     border: "1px solid var(--border)",
@@ -403,7 +403,7 @@ export function HomeScreen({
           <AIRecommendationsCard user={user} courses={courses} session={session} goTab={goTab} maxItems={1} showSeeAll />
 
           {/* Learning Activity Chart */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
               <div>
                 <div className="tai-title-sm" style={{ fontSize: 14 }}>Learning Activity</div>
@@ -442,7 +442,7 @@ export function HomeScreen({
           </div>
 
           {/* Assignment Tracker Section */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
               <div>
                 <div className="tai-title-sm">Assignment Tracker</div>
@@ -459,7 +459,7 @@ export function HomeScreen({
                   key={a.id}
                   className="tai-row tai-between"
                   style={{
-                    padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12,
+                    padding: "12px 14px", background: "var(--surface-3)", borderRadius: 8,
                     border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease",
                     flexWrap: "wrap", gap: 8
                   }}
@@ -486,7 +486,7 @@ export function HomeScreen({
           </div>
 
           {/* Peer Study Groups & Virtual Audio Lounge */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
               <div className="tai-row tai-gap8">
                 <Users size={16} color="var(--primary)" />
@@ -500,7 +500,7 @@ export function HomeScreen({
                 { name: "Figma UI Critique Room", peers: 6, topic: "Design Systems", active: true },
                 { name: "Full-Stack AI Engineering Lab", peers: 4, topic: "LangChain & APIs", active: true }
               ].map((grp, idx) => (
-                <div key={idx} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
+                <div key={idx} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
                   <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis" }}>{grp.name}</div>
                     <div className="tai-row tai-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, flexWrap: "wrap" }}>

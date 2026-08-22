@@ -269,21 +269,21 @@ export function ProfileScreen({
 
           {/* 4 Stat Cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginTop: 20 }}>
-            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
               <div style={{ fontWeight: 900, fontSize: 20, color: "var(--primary)" }}>{user.mastery ?? 88}%</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Curriculum Mastery</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
               <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: 20, color: "#F59E0B" }}>
                 <span>{user.streak ?? 8}</span> <Flame size={18} color="#F59E0B" fill="#F59E0B" />
               </div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Active Day Streak</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
               <div style={{ fontWeight: 900, fontSize: 20, color: "var(--text)" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Credential Points</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
               <div style={{ fontWeight: 900, fontSize: 20, color: "var(--success)" }}>3 Issued</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Course Certificates</div>
             </div>
@@ -372,7 +372,7 @@ export function ProfileScreen({
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <ShieldCheck size={20} color="#10B981" />
                   </div>
                   <div>
@@ -555,7 +555,7 @@ export function ProfileScreen({
           >
             <div className="tai-row tai-between">
               <div className="tai-row tai-gap14">
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(99, 102, 241, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(99, 102, 241, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Accessibility size={20} color="var(--primary)" />
                 </div>
                 <div>
@@ -575,7 +575,7 @@ export function ProfileScreen({
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Smartphone size={20} color="#10B981" />
                   </div>
                   <div>
@@ -626,7 +626,7 @@ export function ProfileScreen({
             </p>
 
             {pendingErasureRequest ? (
-              <div className="tai-row tai-gap10" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 12 }}>
+              <div className="tai-row tai-gap10" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <Clock size={18} color="var(--warning)" />
                 <div style={{ fontSize: 13, color: "var(--text)" }}>
                   <strong>Deletion request pending review:</strong> Submitted {pendingErasureRequest.requested_at ? new Date(pendingErasureRequest.requested_at).toLocaleDateString() : "recently"}.
@@ -688,12 +688,12 @@ export function ProfileScreen({
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginTop: 18 }}>
-                  <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+                  <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
                     <Users size={18} color="var(--primary)" style={{ marginBottom: 6 }} />
                     <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{referralStats?.signups ?? 0}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, fontWeight: 600 }}>Friends Joined</div>
                   </div>
-                  <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+                  <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
                     <Gift size={18} color="var(--primary)" style={{ marginBottom: 6 }} />
                     <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{referralStats?.clicks ?? 0}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, fontWeight: 600 }}>Link Clicks</div>

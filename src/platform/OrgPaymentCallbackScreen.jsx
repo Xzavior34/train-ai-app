@@ -85,7 +85,7 @@ export function OrgPaymentCallbackScreen({ onDone }) {
   return (
     <div className="ta" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-1, #F5F6FA)", padding: 20 }}>
       <style>{TOKENS}</style>
-      <div className="ta-fade" style={{ width: "100%", maxWidth: 420, textAlign: "center", padding: 32, background: "#fff", borderRadius: 16, boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
+      <div className="ta-fade" style={{ width: "100%", maxWidth: 420, textAlign: "center", padding: 32, background: "#fff", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,.08)" }}>
         {state === "verifying" && <Loader2 size={32} className="ta-spin" color="#4F46E5" />}
         {state === "success" && <CheckCircle2 size={32} color="#17A673" />}
         {state === "failed" && <XCircle size={32} color="#E5484D" />}

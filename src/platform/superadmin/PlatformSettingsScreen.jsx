@@ -123,10 +123,10 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
         {!settingsQuery.loading && (
           <>
             {/* Database & Mock Data Management Card */}
-            <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #818CF8)", background: "var(--surface)" }}>
+            <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #818CF8)", background: "var(--surface)", borderRadius: 10 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div className="ta-row ta-gap10">
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Database size={18} color="var(--primary)" />
                   </div>
                   <div>
@@ -149,7 +149,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
 
               {/* Active Supabase Multi-Project Switcher */}
               {onSwitchProject && (
-                <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
                   <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                       Active Supabase Project
@@ -218,7 +218,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
               </div>
             </div>
 
-            <div className="ta-card">
+            <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-title">Global Feature Flags</div>
               <div className="ta-row ta-between ta-mt16">
                 <span>Allow self-registration</span>
@@ -229,7 +229,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
               </button>
             </div>
 
-            <div className="ta-card ta-mt20">
+            <div className="ta-card ta-mt20" style={{ borderRadius: 10 }}>
               <div className="ta-row ta-between">
                 <div className="ta-title">Other settings</div>
                 <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setFormOpen((v) => !v)}>

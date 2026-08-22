@@ -464,7 +464,7 @@ export function CoursesScreen({
 
           {/* Right Column: Visual Cover & Multi-Track Carousel switcher */}
           <div className="tai-desktop-only" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.18)" }}>
+            <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.18)" }}>
               <img
                 key={currentSpotlight.id + "-img"}
                 src={currentSpotlight.coverImage}
@@ -550,7 +550,7 @@ export function CoursesScreen({
       {/* =========================================================================
           FILTER STRIP & SEARCH CONTROL
           ========================================================================= */}
-      <div className="tai-card" style={{ padding: "16px 18px", borderRadius: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
+      <div className="tai-card" style={{ padding: "16px 18px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
         <div className="tai-col tai-gap14">
           
           {/* Source Tabs */}
@@ -572,7 +572,7 @@ export function CoursesScreen({
                     alignItems: "center",
                     gap: 8,
                     padding: "8px 16px",
-                    borderRadius: 12,
+                    borderRadius: 8,
                     border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                     background: isActive ? "var(--primary)" : "var(--surface-2)",
                     color: isActive ? "#FFFFFF" : "var(--text)",
@@ -607,7 +607,7 @@ export function CoursesScreen({
                 onChange={(e) => setCourseSearch(e.target.value)}
                 style={{
                   width: "100%", height: 42, paddingLeft: 42, paddingRight: 14,
-                  borderRadius: 12, border: "1.5px solid var(--border)", background: "var(--surface-2)",
+                  borderRadius: 8, border: "1.5px solid var(--border)", background: "var(--surface-2)",
                   fontSize: 13.5, color: "var(--text)", outline: "none"
                 }}
               />
@@ -618,7 +618,7 @@ export function CoursesScreen({
                 className="tai-btn tai-btn-outline tai-btn-sm"
                 onClick={() => setShowMyCoursesOnly(!showMyCoursesOnly)}
                 style={{
-                  height: 42, padding: "0 16px", borderRadius: 12, fontWeight: 700, whiteSpace: "nowrap",
+                  height: 42, padding: "0 16px", borderRadius: 8, fontWeight: 700, whiteSpace: "nowrap",
                   background: showMyCoursesOnly ? "var(--primary-tint)" : "transparent",
                   borderColor: showMyCoursesOnly ? "var(--primary)" : "var(--border)",
                   color: showMyCoursesOnly ? "var(--primary)" : "var(--text)"
@@ -944,7 +944,7 @@ export function CoursesScreen({
               onClick={() => setActiveRecording(rec)}
               style={{
                 background: "var(--surface)",
-                borderRadius: 16,
+                borderRadius: 10,
                 border: "1px solid var(--border)",
                 overflow: "hidden",
                 cursor: "pointer",
@@ -988,7 +988,7 @@ export function CoursesScreen({
       {activeRecording && (
         <PortalModal isOpen={true} onClose={() => setActiveRecording(null)} title={activeRecording.title}>
           <div style={{ padding: "6px 0" }}>
-            <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, background: "#000", borderRadius: 12, overflow: "hidden", marginBottom: 14 }}>
+            <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, background: "#000", borderRadius: 8, overflow: "hidden", marginBottom: 14 }}>
               <iframe
                 title={activeRecording.title}
                 src={activeRecording.videoUrl}
@@ -1020,7 +1020,7 @@ export function CoursesScreen({
               {activeSpecialization.description}
             </p>
 
-            <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 12, marginBottom: 16 }}>
+            <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8, marginBottom: 16 }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", marginBottom: 8 }}>
                 Competencies Covered ({activeSpecialization.skills.length})
               </div>

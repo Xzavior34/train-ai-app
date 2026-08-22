@@ -98,7 +98,7 @@ export function SearchBar({
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
-          borderRadius: 14,
+          borderRadius: 8,
           padding: "10px 14px",
         }}
       >

@@ -439,7 +439,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                   <div
                     key={slot.id}
                     className="ta-row ta-between"
-                    style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 12, border: "1px solid var(--border)" }}
+                    style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}
                   >
                     <div>
                       <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{DAY_NAMES[slot.day_of_week]}</div>

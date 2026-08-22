@@ -305,7 +305,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             {!skillGapsQuery.loading && (skillGapsQuery.data || []).length === 0 && <div className="ta-empty">No learners yet.</div>}
             <div className="ta-col ta-gap8 ta-mt12">
               {(skillGapsQuery.data || []).map((l) => (
-                <div key={l.learnerId} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, cursor: "pointer" }} onClick={() => setExpandedLearnerId(expandedLearnerId === l.learnerId ? null : l.learnerId)}>
+                <div key={l.learnerId} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, cursor: "pointer" }} onClick={() => setExpandedLearnerId(expandedLearnerId === l.learnerId ? null : l.learnerId)}>
                   <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 600, fontSize: 13, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.name}</span>
                     <span style={{ fontSize: 11.5, color: "var(--text-2)", flexShrink: 0 }}>{l.completedSkills.length} demonstrated - {l.gapSkills.length} gaps</span>

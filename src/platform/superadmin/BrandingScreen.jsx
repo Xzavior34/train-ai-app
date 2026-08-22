@@ -32,7 +32,7 @@ export function BrandingScreen() {
   const [logoUrl, setLogoUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#4338CA");
   const [themeMode, setThemeMode] = useState("light");
-  const [borderRadius, setBorderRadius] = useState("12px");
+  const [borderRadius, setBorderRadius] = useState("10px");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export function BrandingScreen() {
       <div className="ta-content" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "start" }}>
         
         {/* Controls Card */}
-        <div className="ta-card" style={{ padding: 24 }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
           <div className="ta-title" style={{ fontSize: 16 }}>Tenant Customization</div>
           
           <div className="ta-mt16">
@@ -161,7 +161,7 @@ export function BrandingScreen() {
               <img
                 src={logoUrl}
                 alt="Logo"
-                style={{ width: 56, height: 56, borderRadius: 12, objectFit: "cover", marginBottom: 10, border: "1px solid var(--border)" }}
+                style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", marginBottom: 10, border: "1px solid var(--border)" }}
               />
             )}
             <FileUploadZone
@@ -180,7 +180,7 @@ export function BrandingScreen() {
         </div>
 
         {/* Live Preview Card */}
-        <div className="ta-card" style={{ padding: 24, background: themeMode === "dark" ? "#0F172A" : "var(--surface)", color: themeMode === "dark" ? "#F8FAFC" : "var(--text)" }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10, background: themeMode === "dark" ? "#0F172A" : "var(--surface)", color: themeMode === "dark" ? "#F8FAFC" : "var(--text)" }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
             <div className="ta-row ta-gap8">
               <Eye size={16} color={primaryColor} />
@@ -192,7 +192,7 @@ export function BrandingScreen() {
           <div style={{ marginTop: 20, padding: 18, borderRadius: borderRadius, background: themeMode === "dark" ? "#1E293B" : "var(--surface-2)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
               <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 auto" }}>
-                <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 10, background: primaryColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
+                <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 8, background: primaryColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
                   {selectedOrg.name?.charAt(0) || "T"}
                 </div>
                 <div style={{ minWidth: 0, overflow: "hidden" }}>

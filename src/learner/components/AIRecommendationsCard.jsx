@@ -75,7 +75,7 @@ export function AIRecommendationsCard({ user, courses = [], session, goTab, maxI
         {showSeeAll && goTab && <span className="tai-link" onClick={() => goTab("ai")}>Open AI Coach</span>}
       </div>
 
-      <div className="tai-card tai-mt10">
+      <div className="tai-card tai-mt10" style={{ borderRadius: 10 }}>
         {recQuery.loading && (
           <div className="tai-empty">Generating personalized recommendations with AI...</div>
         )}

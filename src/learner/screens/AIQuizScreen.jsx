@@ -243,7 +243,7 @@ export function AIQuizScreen({
               onClick={() => setAiTab(t.k)}
               style={{
                 padding: "8px 16px",
-                borderRadius: 12,
+                borderRadius: 8,
                 border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                 background: isActive ? "var(--primary-tint)" : "var(--surface)",
                 color: isActive ? "var(--primary)" : "var(--text-2)",
@@ -322,7 +322,7 @@ export function AIQuizScreen({
 
           {/* Expandable Chat History Drawer */}
           {showHistory && (
-            <div className="tai-card tai-fade-in" style={{ padding: 16, borderRadius: 14, background: "var(--surface-3)", border: "1px solid var(--border)" }}>
+            <div className="tai-card tai-fade-in" style={{ padding: 16, borderRadius: 8, background: "var(--surface-3)", border: "1px solid var(--border)" }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
                 Recent AI Learning Sessions
               </div>
@@ -336,7 +336,7 @@ export function AIQuizScreen({
                       onClick={() => handleSelectThread(thread)}
                       style={{
                         padding: "12px 14px",
-                        borderRadius: 12,
+                        borderRadius: 8,
                         background: isSelected ? "var(--surface)" : "var(--surface-2)",
                         border: isSelected ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                         cursor: "pointer",
@@ -416,7 +416,7 @@ export function AIQuizScreen({
               flexDirection: "column",
               gap: 14,
               background: "var(--surface)",
-              borderRadius: 16,
+              borderRadius: 10,
               border: "1px solid var(--border)",
               width: "100%",
               boxSizing: "border-box"
@@ -428,7 +428,7 @@ export function AIQuizScreen({
 
             {!coachMessagesLoading && coachMessages.length === 0 && (
               <div style={{ textAlign: "center", margin: "auto", maxWidth: 460, padding: 30 }}>
-                <div style={{ width: 64, height: 64, borderRadius: 20, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                <div style={{ width: 64, height: 64, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
                   <Zap size={28} color="var(--primary)" />
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
@@ -739,7 +739,7 @@ export function AIQuizScreen({
                     Answer Breakdown
                   </div>
                   {quizResult.details.map((d, i) => (
-                    <div key={i} style={{ background: "var(--surface-3)", padding: 14, borderRadius: 12, border: "1px solid var(--border)" }}>
+                    <div key={i} style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8, border: "1px solid var(--border)" }}>
                       <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10 }}>
                         <span style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>{i + 1}. {d.question}</span>
                         <span style={{ flexShrink: 0, display: "flex", paddingTop: 1 }}>
@@ -755,7 +755,7 @@ export function AIQuizScreen({
 
               <button
                 className="tai-btn tai-btn-primary"
-                style={{ width: "100%", padding: "12px 0", borderRadius: 12, fontWeight: 800 }}
+                style={{ width: "100%", padding: "12px 0", borderRadius: 8, fontWeight: 800 }}
                 onClick={() => { setQuizStage("setup"); setAiQuiz(null); setActiveQuizSource("bank"); setQuizResult(null); }}
               >
                 Take Another Assessment
@@ -776,7 +776,7 @@ export function AIQuizScreen({
             <div className="tai-empty">No conversation history yet. Start a session in the Coach tab!</div>
           )}
           {coachMessages.map((m, i) => (
-            <div key={i} className="tai-card" style={{ padding: 16, borderRadius: 14 }}>
+            <div key={i} className="tai-card" style={{ padding: 16, borderRadius: 8 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", marginBottom: 4 }}>
                 {m.role === "user" ? "You" : "AI Coach"} • {m.created_at ? new Date(m.created_at).toLocaleString() : "Recent"}
               </div>
@@ -793,7 +793,7 @@ export function AIQuizScreen({
         <div className="tai-col tai-gap16">
           <AIInsightsCard session={session} credits={credits} consumeCredit={consumeCredit} onBuyCredits={onBuyCredits} orgId={orgId} />
 
-          <div className="tai-card" style={{ padding: 22, borderRadius: 18 }}>
+          <div className="tai-card" style={{ padding: 22, borderRadius: 10 }}>
             <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 12px" }}>
               Skill Strengths &amp; Growth Opportunities
             </h3>
@@ -803,7 +803,7 @@ export function AIQuizScreen({
             ) : (
               <div className="tai-col tai-gap10">
                 {weakAreas.map((w, i) => (
-                  <div key={i} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
+                  <div key={i} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
                     <div style={{ minWidth: 0, flex: "1 1 160px" }}>
                       <div style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.topic}</div>
                       <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>{w.note}</div>

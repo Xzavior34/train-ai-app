@@ -50,7 +50,7 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
         </div>
 
         <div className="ta-grid ta-grid-2 ta-mt20">
-          <div className="ta-card">
+          <div className="ta-card" style={{ borderRadius: 10 }}>
             <div className="ta-title">Compliance status breakdown</div>
             <div className="ta-col ta-gap12 ta-mt16">
               {complianceQuery.loading && <div className="ta-empty">Loading compliance data...</div>}
@@ -59,15 +59,15 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
               )}
               {!complianceQuery.loading && orgAssignments.length > 0 && (
                 <>
-                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Completed</span><Tag tone="success">{completedCount}</Tag></div>
-                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Pending / in progress</span><Tag tone="warning">{pendingCount}</Tag></div>
-                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Overdue</span><Tag tone="danger">{overdueCount}</Tag></div>
+                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Completed</span><Tag tone="success">{completedCount}</Tag></div>
+                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Pending / in progress</span><Tag tone="warning">{pendingCount}</Tag></div>
+                  <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)" }}><span style={{ fontSize: 13.5 }}>Overdue</span><Tag tone="danger">{overdueCount}</Tag></div>
                 </>
               )}
             </div>
           </div>
 
-          <div className="ta-card">
+          <div className="ta-card" style={{ borderRadius: 10 }}>
             <div className="ta-title">People directory</div>
             <div className="ta-body ta-mt8" style={{ fontSize: 12.5 }}>
               {usersQuery.loading ? "Loading..." : `${orgUsers.length} people in this organization.`}
@@ -87,7 +87,7 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
           </div>
         </div>
 
-        <div className="ta-card ta-mt20">
+        <div className="ta-card ta-mt20" style={{ borderRadius: 10 }}>
           <div className="ta-row ta-gap10">
             <ShieldCheck size={16} color="var(--text-3)" />
             <span className="ta-body" style={{ fontSize: 12.5 }}>

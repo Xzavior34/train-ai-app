@@ -211,7 +211,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
         {tab === "compose" && (
           <>
             {/* ---- Audience ---- */}
-            <div className="ta-card">
+            <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-row ta-gap8">
                 <Users size={17} color="var(--primary)" />
                 <div style={{ fontWeight: 800, fontSize: 15 }}>Who receives this</div>
@@ -231,7 +231,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
                       onClick={() => setSegment(s.key)}
                       className="ta-card ta-card-hover"
                       style={{
-                        padding: "11px 13px", borderRadius: 12, cursor: "pointer",
+                        padding: "11px 13px", borderRadius: 10, cursor: "pointer",
                         border: `1px solid ${active ? "var(--primary)" : "var(--border)"}`,
                         background: active ? "var(--primary-tint)" : "var(--surface)",
                       }}
@@ -266,7 +266,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
                     {membersQuery.loading && <div className="ta-empty">Loading members...</div>}
                     {!membersQuery.loading && filteredForPicker.length === 0 && <div className="ta-empty">No members found.</div>}
                     {filteredForPicker.map((m) => (
-                      <label key={m.id} className="ta-row ta-gap10" style={{ padding: "7px 10px", background: "var(--surface-2)", borderRadius: 10, cursor: "pointer" }}>
+                      <label key={m.id} className="ta-row ta-gap10" style={{ padding: "7px 10px", background: "var(--surface-2)", borderRadius: 8, cursor: "pointer" }}>
                         <input
                           type="checkbox"
                           checked={customIds.has(m.id)}
@@ -287,7 +287,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
                 </div>
               )}
 
-              <div className="ta-row ta-gap10 ta-mt12" style={{ flexWrap: "wrap", padding: "10px 12px", background: "var(--surface-2)", borderRadius: 10 }}>
+              <div className="ta-row ta-gap10 ta-mt12" style={{ flexWrap: "wrap", padding: "10px 12px", background: "var(--surface-2)", borderRadius: 8 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 700 }}>
                   {membersQuery.loading ? "Counting..." : `${sendable.length} recipient${sendable.length === 1 ? "" : "s"}`}
                 </span>
@@ -305,7 +305,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
             </div>
 
             {/* ---- Message ---- */}
-            <div className="ta-card">
+            <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-row ta-gap8">
                 <Mail size={17} color="var(--primary)" />
                 <div style={{ fontWeight: 800, fontSize: 15 }}>Message</div>
@@ -331,7 +331,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
                   { key: "in_app", label: "In-app notification", hint: "Appears in their notification bell" },
                   { key: "push", label: "Push notification", hint: "Only reaches members who enabled push" },
                 ].map((c) => (
-                  <div key={c.key} className="ta-row ta-between" style={{ gap: 10, padding: "8px 10px", background: "var(--surface-2)", borderRadius: 10 }}>
+                  <div key={c.key} className="ta-row ta-between" style={{ gap: 10, padding: "8px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 12.5, fontWeight: 700 }}>{c.label}</div>
                       <div style={{ fontSize: 11, color: "var(--text-3)" }}>{c.hint}</div>
@@ -346,7 +346,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
               )}
 
               {lastResult && (
-                <div className="ta-mt12" style={{ padding: "10px 12px", background: lastResult.failed.length ? "var(--warning-bg)" : "var(--success-bg)", color: lastResult.failed.length ? "var(--warning)" : "var(--success)", borderRadius: 10, fontSize: 12.5 }}>
+                <div className="ta-mt12" style={{ padding: "10px 12px", background: lastResult.failed.length ? "var(--warning-bg)" : "var(--success-bg)", color: lastResult.failed.length ? "var(--warning)" : "var(--success)", borderRadius: 8, fontSize: 12.5 }}>
                   {lastResult.sent} sent{lastResult.failed.length ? ` • ${lastResult.failed.length} failed (${lastResult.failed.slice(0, 3).map((f) => f.email).join(", ")}${lastResult.failed.length > 3 ? "..." : ""})` : " — all delivered to the mail service"}
                 </div>
               )}
@@ -364,7 +364,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
               Starting points you can edit before sending. Picking one drops it into the composer.
             </div>
             {TEMPLATES.map((t) => (
-              <div key={t.name} className="ta-card">
+              <div key={t.name} className="ta-card" style={{ borderRadius: 10 }}>
                 <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 800, fontSize: 14 }}>{t.name}</div>
@@ -374,7 +374,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
                     Use template
                   </button>
                 </div>
-                <div className="ta-mt10" style={{ fontSize: 12, color: "var(--text-3)", whiteSpace: "pre-wrap", background: "var(--surface-2)", borderRadius: 10, padding: 12 }}>
+                <div className="ta-mt10" style={{ fontSize: 12, color: "var(--text-3)", whiteSpace: "pre-wrap", background: "var(--surface-2)", borderRadius: 8, padding: 12 }}>
                   {t.body}
                 </div>
               </div>
@@ -383,7 +383,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
         )}
 
         {tab === "history" && (
-          <div className="ta-card">
+          <div className="ta-card" style={{ borderRadius: 10 }}>
             <div style={{ fontSize: 12.5, color: "var(--text-2)", marginBottom: 12 }}>
               Real rows from the email_campaigns table, newest first. Open and click counts come from the
               mail provider's webhooks, so they fill in after delivery rather than immediately.

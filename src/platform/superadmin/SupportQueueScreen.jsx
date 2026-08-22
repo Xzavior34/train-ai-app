@@ -49,7 +49,7 @@ export function SupportQueueScreen({ currentUserId }) {
       <TopBar title="Support Queue" sub={`Every organization's support requests, in one place - ${openCount} open`} />
       <div className="ta-content">
         <div className="ta-row ta-gap16" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div className="ta-card" style={{ flex: 1, minWidth: "min(320px, 100%)" }}>
+          <div className="ta-card" style={{ flex: 1, minWidth: "min(320px, 100%)", borderRadius: 10 }}>
             <div className="ta-title">All tickets ({tickets.length})</div>
             <div className="ta-col ta-gap8 ta-mt12">
               {ticketsQuery.loading && <div className="ta-empty">Loading tickets...</div>}
@@ -71,7 +71,7 @@ export function SupportQueueScreen({ currentUserId }) {
           </div>
 
           {selectedTicket && (
-            <div className="ta-card ta-fade" style={{ flex: 1, minWidth: "min(340px, 100%)" }}>
+            <div className="ta-card ta-fade" style={{ flex: 1, minWidth: "min(340px, 100%)", borderRadius: 10 }}>
               <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 700, wordBreak: "break-word" }}>{selectedTicket.subject}</div>
@@ -89,7 +89,7 @@ export function SupportQueueScreen({ currentUserId }) {
                     key={m.id}
                     style={{
                       padding: "10px 12px",
-                      borderRadius: 10,
+                      borderRadius: 8,
                       background: m.is_internal_note ? "var(--warning-bg, #FEF3C7)" : "var(--surface-2)",
                       border: `1px solid ${m.is_internal_note ? "var(--warning-border, #FDE68A)" : "var(--border)"}`,
                       color: m.is_internal_note ? "var(--text)" : "var(--text)"
@@ -121,7 +121,7 @@ export function SupportQueueScreen({ currentUserId }) {
           )}
         </div>
 
-        <div className="ta-card ta-mt20">
+        <div className="ta-card ta-mt20" style={{ borderRadius: 10 }}>
           <div className="ta-title" style={{ fontSize: 16 }}>General Platform Feedback</div>
           <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
             Feedback submitted from learner and organization profile screens.
@@ -130,7 +130,7 @@ export function SupportQueueScreen({ currentUserId }) {
             {feedbackQuery.loading && <div className="ta-empty">Loading feedback...</div>}
             {!feedbackQuery.loading && (feedbackQuery.data || []).length === 0 && <div className="ta-empty">No feedback submitted yet.</div>}
             {(feedbackQuery.data || []).map((f) => (
-              <div key={f.id} style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 12, border: "1px solid var(--border)" }}>
+              <div key={f.id} style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div className="ta-row ta-between" style={{ gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
                   <span style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>{f.name}</span>
                   <Tag tone="primary">{f.category}</Tag>

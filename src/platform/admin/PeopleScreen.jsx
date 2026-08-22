@@ -228,7 +228,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
             ].map((k) => {
               const Icon = k.Icon;
               return (
-                <div key={k.label} className="ta-card" style={{ padding: "12px 14px", borderRadius: 12 }}>
+                <div key={k.label} className="ta-card" style={{ padding: "12px 14px", borderRadius: 10 }}>
                   <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>
                     <Icon size={12} /> {k.label}
                   </div>
@@ -705,7 +705,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
 
               {/* Bulk bar - suspend was the only bulk action that existed. */}
               {selectedMemberIds.size > 0 && (
-                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", padding: "10px 12px", background: "var(--primary-tint)", borderRadius: 12, marginBottom: 14 }}>
+                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", padding: "10px 12px", background: "var(--primary-tint)", borderRadius: 8, marginBottom: 14 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)" }}>{selectedMemberIds.size} selected</span>
                   <button className="ta-btn ta-btn-outline ta-btn-sm" disabled={bulkBusy}
                     onClick={() => runBulk("Reactivated", (m) => updateOrgMemberStatus(m.id, orgId, "active"))}>

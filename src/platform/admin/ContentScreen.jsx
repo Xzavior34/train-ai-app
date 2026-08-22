@@ -628,7 +628,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 </div>
 
                 {editLessons.length === 0 ? (
-                  <div className="ta-empty" style={{ padding: 40, border: "1px dashed var(--border)", borderRadius: 12 }}>
+                  <div className="ta-empty" style={{ padding: 40, border: "1px dashed var(--border)", borderRadius: 8 }}>
                     No lessons created yet. Click "Add New Lesson" above to build the curriculum.
                   </div>
                 ) : (
@@ -709,7 +709,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   {materialsQuery.loading && <div className="ta-empty">Loading materials...</div>}
                   {!materialsQuery.loading && (materialsQuery.data || []).length === 0 && <div className="ta-empty">No materials added yet.</div>}
                   {(materialsQuery.data || []).map((m) => (
-                    <div key={m.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                    <div key={m.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8 }}>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.title}</div>
                         {m.description && <div style={{ fontSize: 12, color: "var(--text-2)" }}>{m.description}</div>}
@@ -876,7 +876,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         <div className="ta-empty">No questions yet - add the first one below.</div>
                       )}
                       {(assessmentQuery.data.questions || []).map((q, i) => (
-                        <div key={q.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                        <div key={q.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8 }}>
                           <div>
                             <div style={{ fontWeight: 700, fontSize: 13.5 }}>{i + 1}. {q.question}</div>
                             <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 3 }}>

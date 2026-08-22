@@ -81,7 +81,7 @@ export function DailyLoginReward({ session, onClaimed }) {
   return (
     <div
       className="tai-card tai-mt12"
-      style={{ background: "linear-gradient(135deg, #FEF3E0 0%, #FFF7EB 100%)", border: "1px solid var(--warning)", position: "relative" }}
+      style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, position: "relative" }}
     >
       <button
         onClick={dismiss}

@@ -251,7 +251,7 @@ results = vector_store.similarity_search(query, k=4)`
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: "100%", height: 44, paddingLeft: 42, paddingRight: 14,
-                borderRadius: 12, border: "1.5px solid var(--border)", background: "var(--surface)",
+                borderRadius: 8, border: "1.5px solid var(--border)", background: "var(--surface)",
                 fontSize: 13.5, color: "var(--text)", outline: "none"
               }}
             />

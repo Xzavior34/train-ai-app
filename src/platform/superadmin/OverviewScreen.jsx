@@ -124,11 +124,11 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           </div>
 
           <div className="ta-hero-actions">
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
               <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>AI Speed</div>
               <div style={{ fontSize: 15, fontWeight: 900, color: "#34D399" }}>18ms avg</div>
             </div>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
               <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>WebSockets</div>
               <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24" }}>428 Live</div>
             </div>
@@ -142,10 +142,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
         
         {/* Card 1 */}
-        <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Organizations</span>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Building2 size={18} />
             </div>
           </div>
@@ -161,10 +161,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 2 */}
-        <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Platform Users</span>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(79, 70, 229, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(79, 70, 229, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Users size={18} />
             </div>
           </div>
@@ -180,10 +180,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 3 */}
-        <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Published Courses</span>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Layers size={18} />
             </div>
           </div>
@@ -199,10 +199,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 4 */}
-        <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Weekly Active Users (7d)</span>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Activity size={18} />
             </div>
           </div>
@@ -224,7 +224,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         
         {/* Multi-Month Growth Chart */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Platform Growth &amp; Enrollment Trajectory</div>
@@ -278,7 +278,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* AI Engine Activity & Consumption Matrix */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>AI Inference Engine Telemetry</div>
@@ -300,7 +300,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               </div>
             ))}
 
-            <div style={{ background: "var(--surface-3)", padding: 14, borderRadius: 12, marginTop: 8 }}>
+            <div style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8, marginTop: 8 }}>
               <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
                 <span style={{ color: "var(--text-2)", fontWeight: 600 }}>Average Prompt Response Latency:</span>
                 <span style={{ color: "var(--success)", fontWeight: 800 }}>340 ms</span>
@@ -320,7 +320,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         
         {/* Tenant Table */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Tenant Organizations</div>
@@ -379,7 +379,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Real-time Audit Stream */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Live Platform Audit Stream</div>
@@ -399,7 +399,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               { text: "Security audit completed: 0 vulnerabilities found in auth policies", time: "2h ago" },
               { text: "Global Edge CDN cache invalidated & refreshed in 4 regions", time: "4h ago" }
             ]).slice(0, 5).map((a, i) => (
-              <div key={i} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+              <div key={i} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: 1 }}>
                   <Clock size={14} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
                   <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

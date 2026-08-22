@@ -147,7 +147,7 @@ export function MentorsScreen({
         </div>
 
         {sessionMentorChoice && (
-          <div className="tai-row tai-gap14 tai-mt14" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 14, border: "1px solid var(--border)" }}>
+          <div className="tai-row tai-gap14 tai-mt14" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
             <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={48} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sessionMentorChoice.name}</div>
@@ -224,7 +224,7 @@ export function MentorsScreen({
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: "100%", height: 44, paddingLeft: 42, paddingRight: 14,
-            borderRadius: 12, border: "1.5px solid var(--border)", background: "var(--surface)",
+            borderRadius: 8, border: "1.5px solid var(--border)", background: "var(--surface)",
             fontSize: 13.5, color: "var(--text)", outline: "none"
           }}
         />
@@ -232,7 +232,7 @@ export function MentorsScreen({
 
       <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 20 }}>
         {filteredMentors.length === 0 && (
-          <div className="tai-card tai-empty" style={{ gridColumn: "1 / -1", borderRadius: 16 }}>
+          <div className="tai-card tai-empty" style={{ gridColumn: "1 / -1", borderRadius: 10 }}>
             No instructors found matching "{searchQuery}".
           </div>
         )}
@@ -253,7 +253,7 @@ export function MentorsScreen({
               id={`mentor-card-${m.id}`}
               className="tai-card tai-card-hover"
               style={{
-                borderRadius: 18,
+                borderRadius: 10,
                 borderColor: isExpanded ? "var(--primary)" : "var(--border)",
                 cursor: "pointer",
                 padding: 22

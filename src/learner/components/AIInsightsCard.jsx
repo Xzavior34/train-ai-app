@@ -86,7 +86,7 @@ export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, 
 
   if (insightsManualMode) {
     return (
-      <div className="tai-card tai-mt12" style={{ borderColor: "var(--primary)" }}>
+      <div className="tai-card tai-mt12" style={{ borderColor: "var(--border)", borderRadius: 10 }}>
         <div className="tai-row tai-gap8"><Zap size={16} color="var(--primary)" /><div style={{ fontWeight: 700, fontSize: 14 }}>A note from your organization</div></div>
         <div style={{ fontSize: 12.8, color: "var(--text-2)", marginTop: 8, lineHeight: 1.5 }}>
           {insightsManualMessage || "Your organization has enabled manual insights, but hasn't added a message yet."}
@@ -96,7 +96,7 @@ export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, 
   }
 
   return (
-    <div className="tai-card tai-mt12" style={{ borderColor: "var(--primary)" }}>
+    <div className="tai-card tai-mt12" style={{ borderColor: "var(--border)", borderRadius: 10 }}>
       <div className="tai-row tai-between">
         <div className="tai-row tai-gap8">
           <Zap size={16} color="var(--primary)" />

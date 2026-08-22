@@ -100,7 +100,7 @@ function PathBuilder({ path, orgId, onBack, onChanged }) {
             { label: "Status", value: path.isPublished ? "Published" : "Draft", hint: path.isPublished ? "Visible to learners" : "Hidden from learners" },
             { label: "Level", value: path.level || "beginner", hint: path.category || "No category set" },
           ].map((k) => (
-            <div key={k.label} className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
+            <div key={k.label} className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
               <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>{k.label}</div>
               <div style={{ fontSize: 22, fontWeight: 800, marginTop: 4, textTransform: "capitalize" }}>{k.value}</div>
               <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{k.hint}</div>
@@ -128,7 +128,7 @@ function PathBuilder({ path, orgId, onBack, onChanged }) {
           <div className="ta-col ta-gap6 ta-mt12">
             {steps.map((step, idx) => (
               <div key={step.id}>
-                <div style={{ padding: 12, background: "var(--surface-2)", borderRadius: 12 }}>
+                <div style={{ padding: 12, background: "var(--surface-2)", borderRadius: 8 }}>
                   <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
                     <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 220px" }}>
                       <div style={{

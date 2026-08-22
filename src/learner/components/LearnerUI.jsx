@@ -917,13 +917,13 @@ export function DesktopSidebar({
   );
 }
 
-export function CourseThumb({ course, size = 56, rounded = 14 }) {
+export function CourseThumb({ course, size = 56, rounded = 8 }) {
   const [errored, setErrored] = useState(false);
   if (errored) {
     return (
       <div style={{
         width: size, height: size, borderRadius: rounded, flexShrink: 0,
-        background: `linear-gradient(135deg, ${course.grad?.[0] || "#4F46E5"}, ${course.grad?.[1] || "#818CF8"})`,
+        background: course.grad?.[0] || "#4F46E5",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <GraduationCap size={size * 0.42} color="#fff" strokeWidth={1.6} />
@@ -934,7 +934,7 @@ export function CourseThumb({ course, size = 56, rounded = 14 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: rounded, flexShrink: 0, overflow: "hidden", position: "relative",
-      background: `linear-gradient(135deg, ${course.grad?.[0] || "#4F46E5"}, ${course.grad?.[1] || "#818CF8"})`,
+      background: "#0F172A",
       boxShadow: "0 2px 6px rgba(15,23,42,0.06)"
     }}>
       <img
@@ -1095,9 +1095,10 @@ export function ScheduleView({ push, back }) {
             className="tai-card tai-card-hover"
             style={{
               padding: 22,
-              background: sess.isLive ? "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)" : "var(--surface)",
+              borderRadius: 10,
+              background: sess.isLive ? "#0F172A" : "var(--surface)",
               color: sess.isLive ? "#fff" : "var(--text)",
-              border: sess.isLive ? "none" : "1px solid var(--border)",
+              border: sess.isLive ? "1px solid #1E293B" : "1px solid var(--border)",
               boxShadow: sess.isLive ? "0 10px 30px rgba(15,23,42,0.25)" : "var(--shadow-card)"
             }}
           >

@@ -321,7 +321,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
                         onClick={() => setPayoutMethod(m.key)}
                         style={{
                           padding: "12px 14px",
-                          borderRadius: 12,
+                          borderRadius: 8,
                           background: isSel ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)",
                           border: isSel ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                           cursor: "pointer",
@@ -423,7 +423,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
               )}
 
               {(refundsQuery.data || []).map(r => (
-                <div key={r.id} style={{ padding: "14px 16px", background: "var(--surface-2)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div key={r.id} style={{ padding: "14px 16px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
                   <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: 14 }}>{r.user_profiles?.display_name || "Learner"} - {r.reason}</div>

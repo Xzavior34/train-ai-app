@@ -125,7 +125,7 @@ const styles = {
   },
   glow: { display: "none" },
   card: {
-    position: "relative", width: "100%", maxWidth: 420, background: "#fff", borderRadius: 12, padding: 32,
+    position: "relative", width: "100%", maxWidth: 420, background: "#fff", borderRadius: 8, padding: 32,
     border: "1px solid #E2E8F0", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.06)",
   },
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 18 },

@@ -31,12 +31,12 @@ export function TracksScreen() {
               <div
                 key={t.id}
                 className="ta-card ta-card-hover"
-                style={{ cursor: "pointer", padding: "18px 20px", borderRadius: 12, border: "1px solid var(--border)" }}
+                style={{ cursor: "pointer", padding: "18px 20px", borderRadius: 10, border: "1px solid var(--border)" }}
                 onClick={() => setExpanded(isOpen ? null : t.id)}
               >
                 <div className="ta-row ta-between" style={{ gap: 8, alignItems: "center" }}>
                   <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Map size={18} color="var(--primary)" />
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>

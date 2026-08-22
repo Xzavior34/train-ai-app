@@ -958,7 +958,7 @@ export function DashboardSwitcher({ currentDashboard, availableDashboards, roleL
             <div
               key={key}
               className={`ta-ws-item ${isActive ? "active" : ""}`}
-              style={{ padding: "14px 16px", borderRadius: 14, cursor: isActive ? "default" : "pointer" }}
+              style={{ padding: "14px 16px", borderRadius: 10, cursor: isActive ? "default" : "pointer" }}
               onClick={() => { if (!isActive) onSwitch(key); }}
             >
               <Icon size={20} />

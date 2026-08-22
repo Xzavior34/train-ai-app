@@ -242,11 +242,11 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             </div>
 
             <div className="ta-hero-actions">
-              <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+              <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
                 <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Total Registered</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: "#fff" }}>{orgs.length} Tenants</div>
               </div>
-              <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+              <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
                 <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Users</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>{orgs.reduce((sum, o) => sum + (o.user_count || 0), 0)} Active</div>
               </div>
@@ -271,7 +271,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                   className="ta-card ta-card-hover"
                   style={{
                     padding: 20,
-                    borderRadius: 16,
+                    borderRadius: 10,
                     border: "1px solid var(--border)",
                     display: "flex",
                     flexDirection: "column",
@@ -285,7 +285,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                     <div className="ta-row ta-between" style={{ alignItems: "flex-start", marginBottom: 12, gap: 10 }}>
                       <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 auto" }}>
                         <div style={{
-                          width: 44, height: 44, borderRadius: 12,
+                          width: 44, height: 44, borderRadius: 8,
                           background: "var(--primary-tint)", color: "var(--primary)",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           border: "1px solid rgba(99, 102, 241, 0.2)", flexShrink: 0
@@ -305,7 +305,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                     {/* Stats Metric Strip */}
                     <div style={{
                       display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10,
-                      background: "var(--surface-2)", padding: "10px 14px", borderRadius: 12, marginBottom: 12
+                      background: "var(--surface-2)", padding: "10px 14px", borderRadius: 8, marginBottom: 12
                     }}>
                       <div>
                         <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700 }}>MEMBERS</div>
@@ -426,7 +426,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
         )}
 
         {newOrgOpen && (
-          <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
+          <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--border)", borderRadius: 10 }}>
             <div className="ta-title">Create New Organization</div>
             <input className="ta-input ta-mt12" placeholder="Organization name..." value={name} onChange={e => setName(e.target.value)} />
             <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>

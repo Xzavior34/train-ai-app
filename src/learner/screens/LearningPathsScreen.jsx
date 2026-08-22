@@ -322,11 +322,11 @@ export function LearningPathsScreen({ push, back }) {
 
           {/* Quick Metrics */}
           <div className="tai-row tai-gap16 tai-mt20" style={{ flexWrap: "wrap" }}>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)" }}>
               <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>ACTIVE ENROLLED TRACKS</div>
               <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>2 In Progress</div>
             </div>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)" }}>
               <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>TOTAL CURRICULUM</div>
               <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>180+ Hours • 14 Courses</div>
             </div>
@@ -335,7 +335,7 @@ export function LearningPathsScreen({ push, back }) {
       </div>
 
       {/* Filter Tabs & Search Bar Strip */}
-      <div className="tai-card" style={{ padding: "14px 18px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+      <div className="tai-card" style={{ padding: "14px 18px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
         <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12, alignItems: "center" }}>
           
           {/* Categories Pills */}
@@ -473,7 +473,7 @@ export function LearningPathsScreen({ push, back }) {
                     style={{
                       padding: "10px 14px",
                       background: course.status === "in_progress" ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)",
-                      borderRadius: 12,
+                      borderRadius: 8,
                       border: course.status === "in_progress" ? "1.5px solid var(--primary)" : "1px solid var(--border)"
                     }}
                   >
@@ -541,7 +541,7 @@ export function LearningPathsScreen({ push, back }) {
       {selectedTrack && (
         <PortalModal isOpen={true} onClose={() => setSelectedTrack(null)} title={selectedTrack.title}>
           <div style={{ padding: "6px 0" }}>
-            <div style={{ position: "relative", height: 140, borderRadius: 14, overflow: "hidden", marginBottom: 16 }}>
+            <div style={{ position: "relative", height: 140, borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
               <img src={selectedTrack.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%)" }} />
               <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, color: "#fff" }}>

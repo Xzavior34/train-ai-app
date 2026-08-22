@@ -553,14 +553,14 @@ export default function LandingPage({ onNavigate }) {
                 <img
                   src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80"
                   alt="Train AI Professional Team"
-                  style={{ width: "100%", height: 260, objectFit: "cover", borderRadius: 12, border: "1px solid #E2E8F0" }}
+                  style={{ width: "100%", height: 260, objectFit: "cover", borderRadius: 8, border: "1px solid #E2E8F0" }}
                 />
               </div>
 
               {/* Grounded Workforce Telemetry Card */}
               <div style={{
                 position: "relative", zIndex: 2, width: "100%", maxWidth: 420,
-                background: "#FFFFFF", borderRadius: 12, padding: "18px 20px",
+                background: "#FFFFFF", borderRadius: 8, padding: "18px 20px",
                 border: "1px solid #CBD5E1", boxShadow: "0 4px 16px rgba(15,23,42,0.06)",
                 textAlign: "left", boxSizing: "border-box"
               }}>
@@ -898,14 +898,14 @@ export default function LandingPage({ onNavigate }) {
               
               {/* Phone Chassis */}
               <div style={{
-                width: 270, height: 475, background: "#0F172A", borderRadius: 24,
+                width: 270, height: 475, background: "#0F172A", borderRadius: 10,
                 padding: 6, border: "2px solid #334155", position: "relative",
                 display: "flex", flexDirection: "column", boxSizing: "border-box"
               }}>
                 
                 {/* Screen */}
                 <div style={{
-                  flex: 1, background: "#F8FAFC", borderRadius: 18, overflow: "hidden",
+                  flex: 1, background: "#F8FAFC", borderRadius: 10, overflow: "hidden",
                   display: "flex", flexDirection: "column", position: "relative"
                 }}>
                   
@@ -1460,7 +1460,7 @@ export default function LandingPage({ onNavigate }) {
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <div style={{
             background: "#4F46E5",
-            borderRadius: 12, padding: "40px 24px", textAlign: "center"
+            borderRadius: 8, padding: "40px 24px", textAlign: "center"
           }}>
             <h2 style={{ fontSize: "clamp(22px, 3.2vw, 34px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 10px", color: "#FFFFFF", lineHeight: 1.15 }}>
               Ready to Build a Workforce That Is Ready for<br />What's Next?
@@ -1702,7 +1702,7 @@ const styles = {
   requestDemoOutlineBtn: { padding: "10px 18px", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer" },
   heroPill: { background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "6px 10px", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 },
   modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 100 },
-  modalCard: { background: "#FFFFFF", borderRadius: 12, padding: 20, maxWidth: 460, width: "100%", maxHeight: "85vh", overflowY: "auto", border: "1px solid #E2E8F0", boxShadow: "0 8px 30px rgba(15,23,42,0.2)" },
+  modalCard: { background: "#FFFFFF", borderRadius: 8, padding: 20, maxWidth: 460, width: "100%", maxHeight: "85vh", overflowY: "auto", border: "1px solid #E2E8F0", boxShadow: "0 8px 30px rgba(15,23,42,0.2)" },
   modalClose: { border: "none", background: "#F1F5F9", borderRadius: 6, padding: 5, cursor: "pointer", display: "flex", color: "#64748B" },
   formInput: { width: "100%", border: "1px solid #E2E8F0", padding: "8px 10px", fontSize: 12, borderRadius: 6, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#FFFFFF" },
   formTextarea: { width: "100%", border: "1px solid #E2E8F0", padding: "8px 10px", fontSize: 12, borderRadius: 6, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit", background: "#FFFFFF" },

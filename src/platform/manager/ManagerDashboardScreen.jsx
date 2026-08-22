@@ -141,7 +141,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
         <div className="ta-sidebar-layout">
           {/* Main Left Column: Reports & Compliance */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
-            <div className="ta-card">
+            <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-row ta-between">
                 <div className="ta-title">Direct reports ({reports.length})</div>
               </div>
@@ -173,7 +173,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
               </div>
             </div>
 
-            <div className="ta-card">
+            <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-title">Team Compliance Status</div>
               <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Mandatory training standing for your direct reports specifically.</div>
               <div className="ta-table-wrap ta-mt12">
@@ -196,14 +196,14 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
               </div>
             </div>
 
-            <div className="ta-card">
+            <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-title">Team Cohorts</div>
               <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Cohorts your direct reports belong to.</div>
               <div className="ta-col ta-gap10 ta-mt12 anim-stagger">
                 {teamCohortsQuery.loading && <div className="ta-empty">Loading...</div>}
                 {!teamCohortsQuery.loading && (teamCohortsQuery.data || []).length === 0 && <div className="ta-empty">None of your team members are enrolled in a cohort yet.</div>}
                 {(teamCohortsQuery.data || []).map((c) => (
-                  <div key={c.id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
+                  <div key={c.id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8 }}>
                     <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 4 }}>
                       <span style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{c.name}</span>
                       <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>
@@ -221,7 +221,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
 
           {/* Right Column: Skills & Department Notes */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div className="ta-card">
+            <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-row ta-gap8"><PieChart size={16} color="var(--primary)" /><div className="ta-title">Team Skill Snapshot</div></div>
               <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
                 Completion by course category across your direct reports.
@@ -241,7 +241,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
               </div>
             </div>
 
-            <div className="ta-card">
+            <div className="ta-card" style={{ borderRadius: 10 }}>
               <div className="ta-title">Skill Gaps by Member</div>
               <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>
                 Click a member to inspect demonstrated competencies and gaps.
@@ -250,7 +250,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
               {!skillGapsDetailQuery.loading && (skillGapsDetailQuery.data || []).length === 0 && <div className="ta-empty">No direct reports yet.</div>}
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {(skillGapsDetailQuery.data || []).map((l) => (
-                  <div key={l.learnerId} className="ta-card-hover" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, cursor: "pointer", transition: "all .2s ease" }} onClick={() => setExpandedReportId(expandedReportId === l.learnerId ? null : l.learnerId)}>
+                  <div key={l.learnerId} className="ta-card-hover" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, cursor: "pointer", transition: "all .2s ease" }} onClick={() => setExpandedReportId(expandedReportId === l.learnerId ? null : l.learnerId)}>
                     <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 4 }}>
                       <span style={{ fontWeight: 600, fontSize: 13, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{l.name}</span>
                       <span style={{ fontSize: 11.5, color: "var(--text-2)", flexShrink: 0 }}>{l.completedSkills.length} demonstrated • {l.gapSkills.length} gaps</span>
@@ -275,7 +275,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
             </div>
 
             {department && (
-              <div className="ta-card">
+              <div className="ta-card" style={{ borderRadius: 10 }}>
                 <div className="ta-row ta-gap8"><StickyNote size={16} color="var(--primary)" /><div className="ta-title">Feedback for {department}</div></div>
                 <div className="ta-row ta-gap8 ta-mt12">
                   <input className="ta-input" style={{ flex: 1 }} placeholder="Add a note about this department..." value={noteText} onChange={(e) => setNoteText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddDeptNote()} />
