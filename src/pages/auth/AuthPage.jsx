@@ -6,6 +6,7 @@ import { registerOrganization, joinDefaultOrganization, attributeReferralSignupI
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "",
   onForgotPassword, recoveryMode = false, onCompletePasswordReset,
+  onGoHome
 }) {
   const [mode, setMode] = useState("signin");
   // A password-recovery link click lands here with a real (temporary)
@@ -189,8 +190,17 @@ export default function AuthPage({
         onSubmit={mode === "forgot" ? handleForgotPasswordSubmit : mode === "recovery" ? handleSetNewPasswordSubmit : handleSubmit}
         className="auth-card" style={styles.card}
       >
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-          <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 48, width: "auto", objectFit: "contain", display: "block" }} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div onClick={onGoHome || (() => { window.location.href = "/"; })} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 44, width: "auto", objectFit: "contain", display: "block" }} />
+          </div>
+          <span
+            onClick={onGoHome || (() => { window.location.href = "/"; })}
+            style={{ fontSize: 12, color: "#64748B", fontWeight: 700, cursor: "pointer" }}
+            className="auth-switch"
+          >
+            ← Back to website
+          </span>
         </div>
 
         {mode === "forgot" && (
