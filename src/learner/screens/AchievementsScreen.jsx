@@ -609,50 +609,49 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
         onClose={() => setSelectedCertificate(null)}
         maxWidth={700}
         zIndex={9999}
-        style={{ background: "#fff", color: "#0F172A", border: "10px solid #F8FAFC", padding: "24px 20px" }}
       >
         {selectedCertificate && (
           <>
             <div className="tai-row tai-between" style={{ marginBottom: 20, gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", textTransform: "uppercase", letterSpacing: ".06em" }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--primary-light, #818CF8)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 OFFICIAL CERTIFICATE OF COMPLETION
               </span>
-              <button onClick={() => setSelectedCertificate(null)} style={{ background: "transparent", border: "none", color: "#64748B", cursor: "pointer" }}>
+              <button onClick={() => setSelectedCertificate(null)} style={{ background: "transparent", border: "none", color: "var(--text-3)", cursor: "pointer" }}>
                 <X size={20} />
               </button>
             </div>
 
             <div style={{ textAlign: "center", padding: "10px 20px 20px" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".04em" }}>This certifies that</div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: "#0F172A", margin: "8px 0" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em" }}>This certifies that</div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text)", margin: "8px 0" }}>
                 {session?.user?.user_metadata?.full_name || session?.user?.email || "Learner"}
               </div>
-              <div style={{ fontSize: 13, color: "#64748B" }}>has successfully mastered the comprehensive curriculum for</div>
+              <div style={{ fontSize: 13, color: "var(--text-2)" }}>has successfully mastered the comprehensive curriculum for</div>
               
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: "#4F46E5", margin: "14px 0 6px" }}>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--primary-light, #818CF8)", margin: "14px 0 6px" }}>
                 {selectedCertificate.title}
               </h2>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#334155" }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>
                 {selectedCertificate.specialization}
               </div>
 
-              <div style={{ display: "inline-block", background: "#F1F5F9", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 800, color: "#0F172A", marginTop: 14 }}>
+              <div style={{ display: "inline-block", background: "var(--surface-2)", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 800, color: "var(--text)", marginTop: 14 }}>
                 Grade: {selectedCertificate.grade}
               </div>
 
-              <div className="tai-row tai-between" style={{ marginTop: 28, paddingTop: 20, borderTop: "1px dashed #CBD5E1", fontSize: 12, color: "#64748B", textAlign: "left", flexWrap: "wrap", gap: 12 }}>
+              <div className="tai-row tai-between" style={{ marginTop: 28, paddingTop: 20, borderTop: "1px dashed var(--border)", fontSize: 12, color: "var(--text-3)", textAlign: "left", flexWrap: "wrap", gap: 12 }}>
                 <div>
-                  <div>Instructor: <strong>{selectedCertificate.instructor}</strong></div>
-                  <div>Issued: <strong>{selectedCertificate.issueDate}</strong></div>
+                  <div>Instructor: <strong style={{ color: "var(--text)" }}>{selectedCertificate.instructor}</strong></div>
+                  <div>Issued: <strong style={{ color: "var(--text)" }}>{selectedCertificate.issueDate}</strong></div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div>Credential ID: <strong>{selectedCertificate.credentialId}</strong></div>
-                  <div>Verified by: <strong>Train AI Academic Authority</strong></div>
+                  <div>Credential ID: <strong style={{ color: "var(--text)" }}>{selectedCertificate.credentialId}</strong></div>
+                  <div>Verified by: <strong style={{ color: "var(--text)" }}>Train AI Academic Authority</strong></div>
                 </div>
               </div>
             </div>
 
-            <div className="tai-row tai-between" style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #E2E8F0", flexWrap: "wrap", gap: 10 }}>
+            <div className="tai-row tai-between" style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 10 }}>
               <button
                 className="tai-btn tai-btn-outline"
                 onClick={() => {
