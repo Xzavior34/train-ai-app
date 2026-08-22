@@ -482,7 +482,7 @@ export function StatCard({ stat }) {
     <div className="ta-card ta-card-hover" style={{ width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
       <div>
         <div className="ta-row ta-between" style={{ gap: 8, alignItems: "center" }}>
-          <span className="ta-label" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}>{stat.label}</span>
+          <span className="ta-label" style={{ minWidth: 0, fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", lineHeight: 1.3, wordBreak: "break-word" }}>{stat.label}</span>
           {Icon && (
             <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Icon size={18} color="var(--primary)" />

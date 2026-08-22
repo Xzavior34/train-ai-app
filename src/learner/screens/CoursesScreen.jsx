@@ -312,7 +312,6 @@ export function CoursesScreen({
       const matchPartner = c.partner?.toLowerCase().includes(q);
       if (!matchTitle && !matchDesc && !matchCat && !matchInst && !matchPartner) return false;
     }
-    if (courseLevelFilter !== "all" && c.level?.toLowerCase() !== courseLevelFilter.toLowerCase()) return false;
     if (selectedCategory !== "all") {
       const catObj = CATEGORIES.find(cat => cat.id === selectedCategory);
       if (catObj && !c.category?.toLowerCase().includes(catObj.label.split(" ")[0].toLowerCase())) {
@@ -655,13 +654,65 @@ export function CoursesScreen({
       </div>
 
       <div className="tai-col tai-gap16">
-        
-        <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 14 }}>
+        {/* Prominent High-Priority Category & Source Filters */}
+        <div className="tai-scrollx tai-gap10" style={{ padding: "4px 2px", width: "100%", boxSizing: "border-box" }}>
+          {[
+            { id: "all", label: "All Courses", icon: BookOpen, count: allAvailableCourses.length },
+            { id: "assigned", label: "Assigned to Me", icon: ShieldCheck, count: allAvailableCourses.filter(c => c.assigned || c.enrolled || c.source === "assigned").length, highlight: true },
+            { id: "internal", label: "Internal Courses", icon: Laptop, count: allAvailableCourses.filter(c => c.isInternal || c.source === "internal").length },
+            { id: "partners", label: "External Partners", icon: Sparkles, count: allAvailableCourses.filter(c => c.partner || c.source === "partner").length },
+            { id: "bookmarks", label: "Bookmarked", icon: Heart, count: Object.values(bookmarkedIds).filter(Boolean).length }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = !showMyCoursesOnly && courseSourceTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab(tab.id); }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "10px 18px",
+                  borderRadius: 14,
+                  border: isActive ? "1.5px solid var(--primary, #4F46E5)" : "1px solid var(--border)",
+                  background: isActive ? "var(--primary-gradient, linear-gradient(135deg, #4F46E5 0%, #6366F1 100%))" : "var(--surface)",
+                  color: isActive ? "#FFFFFF" : "var(--text)",
+                  fontWeight: isActive ? 800 : 600,
+                  fontSize: 13.5,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  boxShadow: isActive ? "0 4px 16px -2px rgba(79, 70, 229, 0.35)" : "0 1px 3px rgba(15, 23, 42, 0.03)",
+                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+                }}
+              >
+                <Icon size={16} color={isActive ? "#FFFFFF" : (tab.highlight ? "var(--primary)" : "var(--text-2)")} />
+                <span>{tab.label}</span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    padding: "2px 8px",
+                    borderRadius: 99,
+                    background: isActive ? "rgba(255, 255, 255, 0.25)" : "var(--surface-2, #F1F5F9)",
+                    color: isActive ? "#FFFFFF" : "var(--text-2)"
+                  }}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search Bar and Sort Options */}
+        <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
           <div className="tai-row tai-gap10" style={{ flex: 1, minWidth: 260, position: "relative" }}>
             <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
             <input
               type="text"
-              placeholder="Search 100+ courses, skills, instructors, or certifications..."
+              placeholder="Search masterclasses, skills, instructors, or certifications..."
               value={courseSearch}
               onChange={(e) => setCourseSearch(e.target.value)}
               style={{
@@ -680,22 +731,7 @@ export function CoursesScreen({
             />
           </div>
 
-          <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
-            <select
-              value={courseLevelFilter}
-              onChange={(e) => setCourseLevelFilter(e.target.value)}
-              style={{
-                height: 44, padding: "0 14px", borderRadius: 12,
-                border: "1.5px solid var(--border)", background: "var(--surface)",
-                fontSize: 13, fontWeight: 600, color: "var(--text)", cursor: "pointer", outline: "none"
-              }}
-            >
-              <option value="all">All Levels</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
-
+          <div className="tai-row tai-gap10" style={{ flexShrink: 0 }}>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -713,6 +749,7 @@ export function CoursesScreen({
           </div>
         </div>
 
+        {/* Topic Subcategory Pills */}
         <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
           {CATEGORIES.map(cat => {
             const isActive = selectedCategory === cat.id;
@@ -721,21 +758,19 @@ export function CoursesScreen({
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
                 style={{
-                  padding: "8px 16px",
+                  padding: "7px 14px",
                   borderRadius: 99,
-                  border: isActive ? "1.5px solid #4F46E5" : "1px solid var(--border)",
-                  background: isActive ? "#4F46E5" : "var(--surface)",
+                  border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                  background: isActive ? "var(--primary)" : "var(--surface)",
                   color: isActive ? "#FFFFFF" : "var(--text)",
                   fontWeight: isActive ? 800 : 600,
-                  fontSize: 13,
+                  fontSize: 12.5,
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   flexShrink: 0,
                   transition: "all 0.15s ease",
                   boxShadow: isActive ? "0 4px 12px rgba(79, 70, 229, 0.25)" : "none"
                 }}
-                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary)"; } }}
-                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text)"; } }}
               >
                 {cat.label}
               </button>
@@ -743,64 +778,7 @@ export function CoursesScreen({
           })}
         </div>
 
-        <div className="tai-row tai-between" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, marginTop: 4, flexWrap: "wrap", gap: 10 }}>
-          <div className="tai-scrollx tai-gap14" style={{ width: "100%", boxSizing: "border-box" }}>
-            <span
-              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("all"); }}
-              style={{
-                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
-                color: (!showMyCoursesOnly && courseSourceTab === "all") ? "var(--primary)" : "var(--text-3)",
-                borderBottom: (!showMyCoursesOnly && courseSourceTab === "all") ? "2.5px solid var(--primary)" : "none"
-              }}
-            >
-              All Courses ({allAvailableCourses.length})
-            </span>
-
-            <span
-              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("assigned"); }}
-              style={{
-                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
-                color: courseSourceTab === "assigned" ? "var(--primary)" : "var(--text-3)",
-                borderBottom: courseSourceTab === "assigned" ? "2.5px solid var(--primary)" : "none"
-              }}
-            >
-              Assigned to Me ({allAvailableCourses.filter(c => c.assigned || c.enrolled).length})
-            </span>
-
-            <span
-              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("internal"); }}
-              style={{
-                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
-                color: courseSourceTab === "internal" ? "var(--primary)" : "var(--text-3)",
-                borderBottom: courseSourceTab === "internal" ? "2.5px solid var(--primary)" : "none"
-              }}
-            >
-              Internal Courses ({allAvailableCourses.filter(c => c.isInternal || c.source === "internal").length})
-            </span>
-
-            <span
-              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("partners"); }}
-              style={{
-                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
-                color: courseSourceTab === "partners" ? "var(--primary)" : "var(--text-3)",
-                borderBottom: courseSourceTab === "partners" ? "2.5px solid var(--primary)" : "none"
-              }}
-            >
-              External Partners ({allAvailableCourses.filter(c => c.partner || c.source === "partner").length})
-            </span>
-
-            <span
-              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("bookmarks"); }}
-              style={{
-                fontSize: 13.5, fontWeight: 800, cursor: "pointer", paddingBottom: 8, whiteSpace: "nowrap",
-                color: courseSourceTab === "bookmarks" ? "var(--primary)" : "var(--text-3)",
-                borderBottom: courseSourceTab === "bookmarks" ? "2.5px solid var(--primary)" : "none"
-              }}
-            >
-              Bookmarked ({Object.values(bookmarkedIds).filter(Boolean).length})
-            </span>
-          </div>
-
+        <div className="tai-row tai-between" style={{ paddingBottom: 4, marginTop: 2 }}>
           <span style={{ fontSize: 12.5, color: "var(--text-3)", fontWeight: 600 }}>
             Showing {filteredCatalog.length} curated masterclasses
           </span>
