@@ -80,21 +80,54 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
         onNavigate={setScreen}
         right={
           <div style={{ position: "relative" }}>
-            <button className="ta-btn ta-btn-primary" onClick={() => setQuickActionOpen(v => !v)}>
+            <button
+              className="ta-btn ta-btn-primary"
+              onClick={() => setQuickActionOpen(v => !v)}
+              style={{
+                background: "var(--grad)",
+                color: "#FFFFFF",
+                fontWeight: 700,
+                boxShadow: "0 4px 14px rgba(79, 70, 229, 0.32)"
+              }}
+            >
               <Plus size={15} /> Quick action
             </button>
             {quickActionOpen && (
-              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 48, right: 0, width: 210, maxWidth: "calc(100vw - 48px)", padding: 8, zIndex: 50 }}>
-                <div className="ta-dropdown-item" onClick={() => { setScreen("content"); setQuickActionOpen(false); }}>
-                  <BookOpen size={14} /> Create course
+              <>
+                <div
+                  style={{ position: "fixed", inset: 0, zIndex: 190 }}
+                  onClick={() => setQuickActionOpen(false)}
+                />
+                <div
+                  className="ta-card anim-slide-down"
+                  style={{
+                    position: "absolute",
+                    top: 48,
+                    right: 0,
+                    width: 220,
+                    maxWidth: "calc(100vw - 32px)",
+                    padding: "8px 6px",
+                    zIndex: 200,
+                    boxShadow: "0 14px 36px -8px rgba(15,23,42,0.3)",
+                    border: "1px solid var(--border)",
+                    background: "var(--surface)"
+                  }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="ta-dropdown-item ta-row ta-gap10" style={{ padding: "9px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }} onClick={() => { setScreen("content"); setQuickActionOpen(false); }}>
+                    <BookOpen size={15} color="var(--primary)" />
+                    <span>Create Masterclass</span>
+                  </div>
+                  <div className="ta-dropdown-item ta-row ta-gap10" style={{ padding: "9px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }} onClick={() => { setScreen("cohorts"); setQuickActionOpen(false); }}>
+                    <Layers size={15} color="var(--primary)" />
+                    <span>Create Cohort</span>
+                  </div>
+                  <div className="ta-dropdown-item ta-row ta-gap10" style={{ padding: "9px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }} onClick={() => { setScreen("people"); setQuickActionOpen(false); }}>
+                    <Users size={15} color="var(--primary)" />
+                    <span>Invite Members</span>
+                  </div>
                 </div>
-                <div className="ta-dropdown-item" onClick={() => { setScreen("cohorts"); setQuickActionOpen(false); }}>
-                  <Layers size={14} /> Create cohort
-                </div>
-                <div className="ta-dropdown-item" onClick={() => { setScreen("people"); setQuickActionOpen(false); }}>
-                  <Users size={14} /> Invite member
-                </div>
-              </div>
+              </>
             )}
           </div>
         }

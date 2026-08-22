@@ -331,14 +331,13 @@ export const TOKENS = `
       border-radius: 10px !important;
     }
   }
-  @media (max-width: 480px) {
+  @media (max-width: 640px) {
     .ta-topbar { padding: 0 14px; height: 56px; min-height: 56px; }
     .ta-content { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
-    .ta-card { padding: 16px 14px; border-radius: 16px; width: 100%; box-sizing: border-box; }
+    .ta-card { padding: 18px 16px; border-radius: 16px; width: 100%; box-sizing: border-box; }
     .ta-h1 { font-size: 14.5px; }
     .ta-btn { padding: 8px 14px; font-size: 12.5px; border-radius: 10px; }
-    .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
-    .ta-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; }
+    .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; }
   }
   .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
   .ta-btn:active { transform: scale(.96); }
@@ -482,21 +481,27 @@ export function Switch({ on, onChange }) {
 export function StatCard({ stat }) {
   const Icon = stat.icon;
   return (
-    <div className="ta-card ta-card-hover">
-      <div className="ta-row ta-between" style={{ gap: 8 }}>
-        <span className="ta-label" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{stat.label}</span>
-        {Icon && <div style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon size={17} color="var(--primary)" /></div>}
+    <div className="ta-card ta-card-hover" style={{ width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      <div>
+        <div className="ta-row ta-between" style={{ gap: 8, alignItems: "center" }}>
+          <span className="ta-label" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}>{stat.label}</span>
+          {Icon && (
+            <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon size={18} color="var(--primary)" />
+            </div>
+          )}
+        </div>
+        <div className="ta-row ta-between ta-mt12" style={{ alignItems: "baseline", flexWrap: "wrap", gap: 8 }}>
+          <div style={{ fontSize: "clamp(22px, 3.5vw, 26px)", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--text)", lineHeight: 1 }}>{stat.value}</div>
+          {stat.delta && (
+            <div className="ta-row ta-gap4" style={{ fontSize: 11.5, fontWeight: 700, color: stat.up ? "var(--success)" : "var(--danger)", background: stat.up ? "var(--success-bg)" : "var(--danger-bg)", border: `1px solid ${stat.up ? "var(--success-border)" : "var(--danger-border)"}`, padding: "2px 8px", borderRadius: 6, flexShrink: 0 }}>
+              {stat.up ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
+              {stat.delta}
+            </div>
+          )}
+        </div>
       </div>
-      <div className="ta-row ta-between ta-mt12">
-        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", color: "var(--text)" }}>{stat.value}</div>
-        {stat.delta && (
-          <div className="ta-row ta-gap4" style={{ fontSize: 12, fontWeight: 700, color: stat.up ? "var(--success)" : "var(--danger)", background: stat.up ? "var(--success-bg)" : "var(--danger-bg)", padding: "2px 7px", borderRadius: 6 }}>
-            {stat.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-            {stat.delta}
-          </div>
-        )}
-      </div>
-      {stat.sub && <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 5, fontWeight: 500 }}>{stat.sub}</div>}
+      {stat.sub && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 8, fontWeight: 500, lineHeight: 1.4 }}>{stat.sub}</div>}
     </div>
   );
 }
@@ -1061,21 +1066,27 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
 
           {/* Universal Search Results Popover */}
           {isSearchOpen && searchValue.trim() !== "" && (
-            <div
-              className="ta-card anim-slide-down"
-              style={{
-                position: "absolute",
-                top: 48,
-                left: 0,
-                width: 380,
-                maxHeight: 380,
-                overflowY: "auto",
-                padding: "8px 0",
-                zIndex: 200,
-                boxShadow: "0 14px 36px -8px rgba(15,23,42,0.22)",
-                border: "1px solid var(--border)",
-              }}
-            >
+            <>
+              <div
+                style={{ position: "fixed", inset: 0, zIndex: 190 }}
+                onClick={() => setIsSearchOpen(false)}
+              />
+              <div
+                className="ta-card anim-slide-down"
+                style={{
+                  position: "absolute",
+                  top: 48,
+                  left: 0,
+                  width: 380,
+                  maxHeight: "65vh",
+                  overflowY: "auto",
+                  padding: "8px 0",
+                  zIndex: 200,
+                  boxShadow: "0 14px 36px -8px rgba(15,23,42,0.22)",
+                  border: "1px solid var(--border)",
+                  background: "var(--surface)"
+                }}
+              >
               {debouncedSearch.length === 1 && (
                 <div style={{ padding: "10px 14px", fontSize: 12, color: "var(--text-3)" }}>
                   Keep typing: 2+ characters searches real students, courses & cohorts too.
@@ -1158,6 +1169,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
                 </>
               )}
             </div>
+          </>
           )}
         </div>
 
@@ -1231,32 +1243,44 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
             <MoreVertical size={18} color="var(--text-2)" />
           </button>
           {isMoreMenuOpen && (
-            <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 46, right: 0, width: 220, padding: 8, zIndex: 250 }}>
+            <>
               <div
-                className="ta-dropdown-item ta-row ta-gap8"
-                onClick={() => { const next = !isDarkTheme; setIsDarkTheme(next); setGlobalThemeDark(next); setIsMoreMenuOpen(false); }}
-              >
-                {isDarkTheme ? <Sun size={15} color="#FBBF24" /> : <Moon size={15} color="var(--text-2)" />}
-                <span>{isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
-              </div>
-              {right && (
-                <div onClick={() => setIsMoreMenuOpen(false)}>
-                  {right}
+                style={{ position: "fixed", inset: 0, zIndex: 240 }}
+                onClick={() => setIsMoreMenuOpen(false)}
+              />
+              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 46, right: 0, width: 230, padding: "8px 6px", zIndex: 250, border: "1px solid var(--border)", background: "var(--surface)", boxShadow: "0 14px 36px -8px rgba(15,23,42,0.3)" }}>
+                <div
+                  className="ta-dropdown-item ta-row ta-gap8"
+                  style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                  onClick={() => { const next = !isDarkTheme; setIsDarkTheme(next); setGlobalThemeDark(next); setIsMoreMenuOpen(false); }}
+                >
+                  {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
+                  <span>{isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
                 </div>
-              )}
-              <div className="ta-nav-divider" />
-              <div
-                className="ta-dropdown-item ta-row ta-gap8"
-                style={{ color: "var(--danger)" }}
-                onClick={() => {
-                  setIsMoreMenuOpen(false);
-                  (onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); }))();
-                }}
-              >
-                <LogOut size={15} />
-                <span>Sign Out</span>
+                {canOpenOwnSettings && (
+                  <div
+                    className="ta-dropdown-item ta-row ta-gap8"
+                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                    onClick={() => { setIsMoreMenuOpen(false); onNavigate("settings"); }}
+                  >
+                    <Settings size={16} color="var(--text-2)" />
+                    <span>Settings &amp; Preferences</span>
+                  </div>
+                )}
+                <div className="ta-divider" style={{ margin: "6px 0" }} />
+                <div
+                  className="ta-dropdown-item ta-row ta-gap8"
+                  style={{ color: "var(--danger)", padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                  onClick={() => {
+                    setIsMoreMenuOpen(false);
+                    (onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); }))();
+                  }}
+                >
+                  <LogOut size={16} />
+                  <span>Sign Out</span>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
