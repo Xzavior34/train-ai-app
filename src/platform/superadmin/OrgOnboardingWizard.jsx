@@ -76,14 +76,14 @@ function StepIndicator({ stepIndex }) {
 
 function SummaryRow({ icon: Icon, label, done, value }) {
   return (
-    <div className="ta-row ta-between" style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 12 }}>
-      <div className="ta-row ta-gap10">
+    <div className="ta-row ta-between" style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 12, gap: 10, flexWrap: "wrap" }}>
+      <div className="ta-row ta-gap10" style={{ flexShrink: 0 }}>
         <Icon size={16} color="var(--primary)" />
         <span style={{ fontWeight: 700, fontSize: 13 }}>{label}</span>
       </div>
-      <div className="ta-row ta-gap8">
-        <span style={{ fontSize: 12.5, color: "var(--text-2)" }}>{value}</span>
-        {done ? <CheckCircle2 size={16} color="var(--success)" /> : <Circle size={16} color="var(--text-3)" />}
+      <div className="ta-row ta-gap8" style={{ minWidth: 0 }}>
+        <span style={{ fontSize: 12.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
+        {done ? <CheckCircle2 size={16} color="var(--success)" style={{ flexShrink: 0 }} /> : <Circle size={16} color="var(--text-3)" style={{ flexShrink: 0 }} />}
       </div>
     </div>
   );
@@ -144,7 +144,7 @@ function DetailsStep({ currentUserProfileId, onComplete }) {
       <div className="ta-title">Step 1: Organization details</div>
       <div className="ta-body ta-mt8">Create a brand-new organization, or resume onboarding one that already exists in the database but has no members yet.</div>
 
-      <div className="ta-row ta-gap8 ta-mt16">
+      <div className="ta-row ta-gap8 ta-mt16" style={{ flexWrap: "wrap" }}>
         <button className={`ta-pill ${mode === "new" ? "active" : ""}`} onClick={() => { setMode("new"); setError(""); }}>Create new organization</button>
         <button className={`ta-pill ${mode === "resume" ? "active" : ""}`} onClick={() => { setMode("resume"); setError(""); }}>Resume an existing organization</button>
       </div>
@@ -266,7 +266,7 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
 
       {error && <div className="ta-mt12" style={{ color: "var(--danger)", fontSize: 12.5 }}>{error}</div>}
 
-      <div className="ta-row ta-gap8 ta-mt20">
+      <div className="ta-row ta-gap8 ta-mt20" style={{ flexWrap: "wrap" }}>
         <button className="ta-btn ta-btn-outline" onClick={onBack}><ArrowLeft size={14} /> Back</button>
         <button className="ta-btn ta-btn-ghost" onClick={onSkip}>Skip branding for now</button>
         <button className="ta-btn ta-btn-primary" onClick={handleSave} disabled={saving || !hasInput}>
@@ -347,16 +347,16 @@ function InviteStep({ org, invites, onInviteSent, onDone, onBack }) {
           <div className="ta-label">Sent this session ({invites.length})</div>
           <div className="ta-col ta-gap8 anim-stagger" style={{ marginTop: 10 }}>
             {invites.map((inv) => (
-              <div key={inv.id} className="ta-row ta-between" style={{ padding: "8px 12px", background: "var(--surface-2)", borderRadius: 10, fontSize: 13 }}>
-                <span>{inv.email}</span>
-                <span style={{ color: "var(--text-3)", fontSize: 12 }}>{inv.role} · {inv.organization_role}</span>
+              <div key={inv.id} className="ta-row ta-between" style={{ padding: "8px 12px", background: "var(--surface-2)", borderRadius: 10, fontSize: 13, gap: 8, flexWrap: "wrap" }}>
+                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{inv.email}</span>
+                <span style={{ color: "var(--text-3)", fontSize: 12, flexShrink: 0 }}>{inv.role} · {inv.organization_role}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div className="ta-row ta-gap8 ta-mt20">
+      <div className="ta-row ta-gap8 ta-mt20" style={{ flexWrap: "wrap" }}>
         <button className="ta-btn ta-btn-outline" onClick={onBack}><ArrowLeft size={14} /> Back</button>
         <button className="ta-btn ta-btn-ghost" onClick={onDone}>
           {invites.length > 0 ? "Done inviting. Continue" : "Skip this step"} <ArrowRight size={14} />
@@ -425,7 +425,7 @@ function CohortStep({ org, currentUserProfileId, onCreated, onSkip, onBack }) {
 
       {error && <div className="ta-mt12" style={{ color: "var(--danger)", fontSize: 12.5 }}>{error}</div>}
 
-      <div className="ta-row ta-gap8 ta-mt20">
+      <div className="ta-row ta-gap8 ta-mt20" style={{ flexWrap: "wrap" }}>
         <button className="ta-btn ta-btn-outline" onClick={onBack}><ArrowLeft size={14} /> Back</button>
         <button className="ta-btn ta-btn-ghost" onClick={onSkip}>Skip this for now</button>
         <button className="ta-btn ta-btn-primary" onClick={handleCreate} disabled={saving}>
@@ -454,7 +454,7 @@ function FinishStep({ org, brandingResult, invites, cohortResult, orgSelector, o
         <SummaryRow icon={Layers} label="First cohort" done={cohortDone} value={cohortDone ? `"${cohortResult.name}" created` : "Skipped. Not created"} />
       </div>
 
-      <div className="ta-row ta-gap8 ta-mt24">
+      <div className="ta-row ta-gap8 ta-mt24" style={{ flexWrap: "wrap" }}>
         <button
           className="ta-btn ta-btn-primary"
           onClick={() => {

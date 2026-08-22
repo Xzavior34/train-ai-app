@@ -31,7 +31,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
       <TopBar title="My Study Groups" sub="Groups you're a member of and help facilitate" orgSelector={orgSelector} />
       <div className="ta-content">
         <div className="ta-row ta-gap16" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div className="ta-card" style={{ flex: 1, minWidth: 300 }}>
+          <div className="ta-card" style={{ flex: 1, minWidth: "min(300px, 100%)" }}>
             <div className="ta-title">Your groups ({groups.length})</div>
             <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
               {groupsQuery.loading && <div className="ta-empty">Loading your study groups...</div>}
@@ -75,7 +75,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
           </div>
 
           {selectedGroup && (
-            <div className="ta-card" style={{ flex: 1, minWidth: 320 }}>
+            <div className="ta-card" style={{ flex: 1, minWidth: "min(320px, 100%)" }}>
               <div className="ta-title">{selectedGroup.name}</div>
 
               <div className="ta-label ta-mt12">Description</div>
@@ -94,9 +94,9 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                 {membersQuery.loading && <div className="ta-empty">Loading members...</div>}
                 {!membersQuery.loading && members.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No members yet.</div>}
                 {members.map((m) => (
-                  <div key={m.user_id} className="ta-row ta-between" style={{ background: "var(--surface-2)", padding: "8px 10px", borderRadius: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 12.5 }}>{m.display_name}</div>
+                  <div key={m.user_id} className="ta-row ta-between" style={{ background: "var(--surface-2)", padding: "8px 10px", borderRadius: 8, gap: 8 }}>
+                    <div style={{ minWidth: 0, overflow: "hidden" }}>
+                      <div style={{ fontWeight: 600, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.display_name}</div>
                       <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{m.role === "lead" ? "Group Lead" : "Member"}</div>
                     </div>
                     {m.user_id !== mentorId && (

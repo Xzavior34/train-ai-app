@@ -258,7 +258,7 @@ results = vector_store.similarity_search(query, k=4)`
         <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
           
           {/* Search Input */}
-          <div style={{ flex: 1, minWidth: 280, position: "relative" }}>
+          <div style={{ flex: 1, minWidth: 200, position: "relative" }}>
             <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
             <input
               type="text"
@@ -360,7 +360,7 @@ results = vector_store.similarity_search(query, k=4)`
             </h3>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {filteredCourses.map(course => (
               <div
                 key={course.id}
@@ -445,7 +445,7 @@ results = vector_store.similarity_search(query, k=4)`
             </h3>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
             {filteredLessons.map(lesson => (
               <div
                 key={lesson.id}
@@ -501,21 +501,21 @@ results = vector_store.similarity_search(query, k=4)`
             </h3>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
             {filteredSnippets.map(snippet => (
               <div key={snippet.id} className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
-                <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
-                  <div>
+                <div className="tai-row tai-between" style={{ marginBottom: 10, gap: 10, flexWrap: "wrap" }}>
+                  <div style={{ minWidth: 0, flex: "1 1 160px" }}>
                     <span style={{ fontSize: 11, fontWeight: 800, color: "#818CF8", background: "rgba(99, 102, 241, 0.1)", padding: "2px 8px", borderRadius: 6 }}>
                       {snippet.language}
                     </span>
-                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "6px 0 2px" }}>
+                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "6px 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {snippet.title}
                     </h4>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{snippet.source}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{snippet.source}</div>
                   </div>
 
-                  <div className="tai-row tai-gap6">
+                  <div className="tai-row tai-gap6" style={{ flexShrink: 0 }}>
                     <button
                       className="tai-btn tai-btn-outline tai-btn-sm"
                       onClick={() => handleCopySnippet(snippet.id, snippet.code)}
@@ -561,14 +561,14 @@ results = vector_store.similarity_search(query, k=4)`
           <div className="tai-col tai-gap12">
             {filteredNotes.map(note => (
               <div key={note.id} className="tai-card" style={{ padding: 18, borderRadius: 16, background: "var(--surface-3)" }}>
-                <div className="tai-row tai-between">
-                  <div>
-                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "0 0 2px" }}>
+                <div className="tai-row tai-between" style={{ gap: 10, flexWrap: "wrap" }}>
+                  <div style={{ minWidth: 0, flex: "1 1 160px" }}>
+                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "0 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {note.title}
                     </h4>
-                    <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 700 }}>{note.source}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{note.source}</div>
                   </div>
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexShrink: 0 }}>
                     <span style={{ fontSize: 11, color: "var(--text-3)" }}>{note.date}</span>
                     <button
                       onClick={() => handleRemoveNote(note.id)}

@@ -348,20 +348,20 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
                 {studentRisks.map(s => (
-                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}>
-                    <div className="ta-row ta-gap10">
-                      <img 
-                        src={s.avatar} 
-                        alt={s.name} 
-                        style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }} 
+                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)", flexWrap: "wrap", gap: 10 }}>
+                    <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 160px" }}>
+                      <img
+                        src={s.avatar}
+                        alt={s.name}
+                        style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
                       />
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{s.name}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{s.role} • {s.lastActive}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.role} • {s.lastActive}</div>
                       </div>
                     </div>
 
-                    <div className="ta-row ta-gap8">
+                    <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
                       <Tag tone={s.riskTone}>{s.risk}</Tag>
                       <button 
                         className="ta-btn ta-btn-ghost ta-btn-sm" 
@@ -426,9 +426,9 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
               {/* Upcoming sessions timeline */}
               <div className="ta-col ta-gap10 ta-mt16">
-                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700 }}>Cloud Architecture Masterclass</div>
+                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "break-word" }}>Cloud Architecture Masterclass</div>
                     <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
                       <Clock size={11} /> Tomorrow • 3:00 PM (45m)
                     </div>
@@ -436,9 +436,9 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                   <Tag tone="primary">Upcoming</Tag>
                 </div>
 
-                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700 }}>Generative AI Prompts Workshop</div>
+                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "break-word" }}>Generative AI Prompts Workshop</div>
                     <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
                       <Clock size={11} /> Friday • 5:00 PM (90m)
                     </div>

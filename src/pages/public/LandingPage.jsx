@@ -333,6 +333,8 @@ export default function LandingPage({ onNavigate }) {
           .lp-header-actions button { padding: 8px 11px; font-size: 12px; }
           .lp-brand-sub { display: none; }
           .lp-comparison-table { font-size: 11.5px !important; }
+          .lp-legal-links { flex-wrap: wrap; row-gap: 6px; }
+          .lp-contact-toggle { flex-wrap: wrap; justify-content: center; }
         }
         @media (max-width: 560px) {
           .lp-hero-section { padding: 36px 16px 48px !important; }
@@ -342,15 +344,24 @@ export default function LandingPage({ onNavigate }) {
           .lp-section-h2 { font-size: 22px !important; }
           .lp-demo-form-row { flex-direction: column; }
           .lp-footer-inner { flex-direction: column; gap: 20px; align-items: flex-start !important; text-align: left; }
+          .lp-pricing-card { max-width: 100% !important; }
         }
         @media (max-width: 480px) {
           .lp-hero-cta-row { flex-direction: column; }
+        }
+        @media (max-width: 400px) {
+          .lp-header-brand img { height: 36px !important; }
+          .lp-header-actions { gap: 4px; }
+          .lp-header-actions button { padding: 7px 9px; font-size: 11px; }
+          .lp-contact-toggle-btn { padding: 7px 12px !important; font-size: 11.5px !important; }
+          .lp-mockup-url { display: none; }
+          .lp-mockup-grid { padding: 14px !important; gap: 14px !important; }
         }
       `}</style>
 
       <header style={styles.header}>
         <div className="lp-header-inner" style={styles.headerInner}>
-          <div style={{ ...styles.brandRow, cursor: "pointer" }} onClick={() => handleNav("home")}>
+          <div className="lp-header-brand" style={{ ...styles.brandRow, cursor: "pointer" }} onClick={() => handleNav("home")}>
             <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 48, width: "auto", objectFit: "contain", display: "block" }} />
           </div>
 
@@ -422,20 +433,20 @@ export default function LandingPage({ onNavigate }) {
           textAlign: "left"
         }}>
           {/* Mockup Top Header */}
-          <div style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444" }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B" }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981" }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginLeft: 8 }}>app.trainailtd.com/workforce-intelligence</span>
+          <div className="lp-mockup-header" style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, rowGap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444", flexShrink: 0 }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B", flexShrink: 0 }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981", flexShrink: 0 }} />
+              <span className="lp-mockup-url" style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginLeft: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>app.trainailtd.com/workforce-intelligence</span>
             </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "3px 10px", borderRadius: 8 }}>⚡ Live Intelligence Signal</span>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "3px 10px", borderRadius: 8, whiteSpace: "nowrap" }}>⚡ Live Intelligence Signal</span>
             </div>
           </div>
 
           {/* Mockup Dashboard Content Grid */}
-          <div style={{ padding: 24, background: "#F8FAFC", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+          <div className="lp-mockup-grid" style={{ padding: 24, background: "#F8FAFC", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))", gap: 20 }}>
             {/* Workforce Intelligence Readiness by Team Card matching Screenshot 3 */}
             <div style={{
               background: "#FFFFFF", borderRadius: 18, border: "1px solid #E2E8F0", padding: 22,
@@ -810,7 +821,7 @@ export default function LandingPage({ onNavigate }) {
 
           <div className="lp-stagger" style={styles.pricingGrid}>
             {PRICING_TIERS.map((tier) => (
-              <div key={tier.name} className="lp-card" style={tier.highlighted ? { ...styles.pricingCard, ...styles.pricingCardHighlighted } : styles.pricingCard}>
+              <div key={tier.name} className="lp-card lp-pricing-card" style={tier.highlighted ? { ...styles.pricingCard, ...styles.pricingCardHighlighted } : styles.pricingCard}>
                 {tier.highlighted && <div style={styles.pricingBadge}>Most popular</div>}
                 <h3 style={styles.pricingName}>{tier.name}</h3>
                 <p style={styles.pricingTagline}>{tier.tagline}</p>
@@ -882,7 +893,7 @@ export default function LandingPage({ onNavigate }) {
               : "Send us your procurement, partnership, or custom requirements question."}
           </p>
 
-          <div style={styles.contactModeToggle}>
+          <div className="lp-contact-toggle" style={styles.contactModeToggle}>
             <button
               type="button"
               className="lp-contact-toggle-btn"
@@ -1037,7 +1048,7 @@ export default function LandingPage({ onNavigate }) {
             <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("individuals")}>For Individuals</span>
             <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("book-demo")}>Contact</span>
           </div>
-          <div style={{ display: "flex", gap: 16, fontSize: 12.5, color: "#656C86" }}>
+          <div className="lp-legal-links" style={{ display: "flex", gap: 16, fontSize: 12.5, color: "#656C86" }}>
             <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("privacy")}>Privacy Policy</span>
             <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("terms")}>Terms of Service</span>
             <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("cookie")}>Cookie Policy</span>

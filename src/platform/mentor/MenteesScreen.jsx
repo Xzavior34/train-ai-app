@@ -153,7 +153,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
         {/* Search & Filter Bar */}
         <div className="ta-card">
           <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
-            <div className="ta-row ta-gap10" style={{ flex: 1, minWidth: 280 }}>
+            <div className="ta-row ta-gap10" style={{ flex: 1, minWidth: "min(280px, 100%)" }}>
               <div className="ta-search" style={{ width: "100%", background: "var(--surface-3)" }}>
                 <Search size={16} color="var(--text-3)" />
                 <input
@@ -289,17 +289,17 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
             {/* Selected Mentee Detail Drawer */}
             {selectedMentee && (
               <div className="ta-card ta-mt16 anim-pop" style={{ borderLeft: "4px solid var(--primary)", marginTop: 16 }}>
-                <div className="ta-row ta-between">
-                  <div className="ta-row ta-gap12">
+                <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
+                  <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 220px" }}>
                     <Avatar initials={selectedMentee.initials} size={42} />
-                    <div>
-                      <div className="ta-title" style={{ fontSize: 16, fontWeight: 700 }}>{selectedMentee.name}: Progress Report</div>
-                      <div style={{ fontSize: 12, color: "var(--text-2)" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="ta-title" style={{ fontSize: 16, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedMentee.name}: Progress Report</div>
+                      <div style={{ fontSize: 12, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {selectedMentee.courses && selectedMentee.courses.length > 0 ? selectedMentee.courses.join(", ") : "Not enrolled in any course"}
                       </div>
                     </div>
                   </div>
-                  <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setSelectedMentee(null)}><X size={16} /></button>
+                  <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setSelectedMentee(null)}><X size={16} /></button>
                 </div>
 
                 <div className="ta-grid ta-grid-3 anim-stagger" style={{ marginTop: 16 }}>
@@ -353,9 +353,9 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
 
         {certModalUser && (
           <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)", maxWidth: 480 }}>
-            <div className="ta-row ta-between">
-              <div className="ta-title">Give Certificate to {certModalUser.name || "this learner"}</div>
-              <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setCertModalUser(null)}><X size={14} /></button>
+            <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+              <div className="ta-title" style={{ minWidth: 0, overflowWrap: "break-word" }}>Give Certificate to {certModalUser.name || "this learner"}</div>
+              <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setCertModalUser(null)}><X size={14} /></button>
             </div>
             <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
               Issues a certificate directly - independent of the request/approve flow, doesn't require an existing course.

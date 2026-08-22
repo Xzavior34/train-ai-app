@@ -29,12 +29,12 @@ export function TracksScreen() {
             const isOpen = expanded === t.id;
             return (
               <div key={t.id} className="ta-card ta-card-hover" style={{ cursor: "pointer" }} onClick={() => setExpanded(isOpen ? null : t.id)}>
-                <div className="ta-row ta-between">
-                  <div className="ta-row ta-gap10">
-                    <Map size={20} color="var(--primary)" />
-                    <div style={{ fontWeight: 800, fontSize: 16 }}>{t.name}</div>
+                <div className="ta-row ta-between" style={{ gap: 8 }}>
+                  <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                    <Map size={20} color="var(--primary)" style={{ flexShrink: 0 }} />
+                    <div style={{ fontWeight: 800, fontSize: 16, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</div>
                   </div>
-                  {isOpen ? <ChevronUp size={16} color="var(--text-2)" /> : <ChevronDown size={16} color="var(--text-2)" />}
+                  {isOpen ? <ChevronUp size={16} color="var(--text-2)" style={{ flexShrink: 0 }} /> : <ChevronDown size={16} color="var(--text-2)" style={{ flexShrink: 0 }} />}
                 </div>
                 <div className="ta-body ta-mt8">{t.courses || 0} associated course{t.courses === 1 ? "" : "s"}</div>
                 <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>

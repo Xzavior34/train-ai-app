@@ -49,7 +49,7 @@ export function SupportQueueScreen({ currentUserId }) {
       <TopBar title="Support Queue" sub={`Every organization's support requests, in one place - ${openCount} open`} />
       <div className="ta-content">
         <div className="ta-row ta-gap16" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
-          <div className="ta-card" style={{ flex: 1, minWidth: 320 }}>
+          <div className="ta-card" style={{ flex: 1, minWidth: "min(320px, 100%)" }}>
             <div className="ta-title">All tickets ({tickets.length})</div>
             <div className="ta-col ta-gap8 ta-mt12">
               {ticketsQuery.loading && <div className="ta-empty">Loading tickets...</div>}
@@ -60,8 +60,8 @@ export function SupportQueueScreen({ currentUserId }) {
                   onClick={() => setSelectedTicketId(t.id)}
                   style={{ cursor: "pointer", padding: "10px 12px", borderRadius: 8, background: selectedTicketId === t.id ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)", transition: "background .15s ease" }}
                 >
-                  <div className="ta-row ta-between">
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>{t.subject}</span>
+                  <div className="ta-row ta-between" style={{ gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "1 1 auto" }}>{t.subject}</span>
                     <Tag tone={t.status === "resolved" || t.status === "closed" ? "success" : t.status === "in_progress" ? "warning" : "danger"}>{t.status.replace("_", " ")}</Tag>
                   </div>
                   <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{t.organizations?.name || "Unknown org"} - {new Date(t.created_at).toLocaleDateString()}</div>
@@ -71,13 +71,13 @@ export function SupportQueueScreen({ currentUserId }) {
           </div>
 
           {selectedTicket && (
-            <div className="ta-card ta-fade" style={{ flex: 1, minWidth: 340 }}>
-              <div className="ta-row ta-between">
-                <div>
-                  <div style={{ fontWeight: 700 }}>{selectedTicket.subject}</div>
+            <div className="ta-card ta-fade" style={{ flex: 1, minWidth: "min(340px, 100%)" }}>
+              <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis" }}>{selectedTicket.subject}</div>
                   <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>{selectedTicket.organizations?.name} - {selectedTicket.priority}</div>
                 </div>
-                <select className="ta-input" style={{ width: 130 }} value={selectedTicket.status} onChange={(e) => handleStatusChange(selectedTicket.id, e.target.value)}>
+                <select className="ta-input" style={{ width: 130, flexShrink: 0 }} value={selectedTicket.status} onChange={(e) => handleStatusChange(selectedTicket.id, e.target.value)}>
                   {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
                 </select>
               </div>
@@ -116,8 +116,8 @@ export function SupportQueueScreen({ currentUserId }) {
             {!feedbackQuery.loading && (feedbackQuery.data || []).length === 0 && <div className="ta-empty">No feedback submitted yet.</div>}
             {(feedbackQuery.data || []).map((f) => (
               <div key={f.id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                <div className="ta-row ta-between">
-                  <span style={{ fontWeight: 700, fontSize: 13 }}>{f.name}</span>
+                <div className="ta-row ta-between" style={{ gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: 700, fontSize: 13, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
                   <Tag>{f.category}</Tag>
                 </div>
                 <div style={{ fontSize: 13, marginTop: 6 }}>{f.message}</div>

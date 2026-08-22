@@ -119,10 +119,18 @@ export default function PlatformOwnerApp({ onSwitchDashboard, userRoles: userRol
 
   useEffect(() => {
     const checkDark = () => {
-      setIsDark(localStorage.getItem("trainai_theme_dark") === "true" || document.documentElement.classList.contains("dark"));
+      const active = localStorage.getItem("trainai_theme_dark") === "true" || document.documentElement.classList.contains("dark");
+      setIsDark(active);
+      if (active) document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
     };
+    checkDark();
     window.addEventListener("storage", checkDark);
-    return () => window.removeEventListener("storage", checkDark);
+    window.addEventListener("trainai-theme-change", checkDark);
+    return () => {
+      window.removeEventListener("storage", checkDark);
+      window.removeEventListener("trainai-theme-change", checkDark);
+    };
   }, []);
 
   return (

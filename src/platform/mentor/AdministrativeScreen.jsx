@@ -176,9 +176,9 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
               {!refundsQuery.loading && (refundsQuery.data || []).length === 0 && <div className="ta-empty">No refund or dispute requests.</div>}
               {(refundsQuery.data || []).map(r => (
                 <div key={r.id} style={{ padding: 14, background: "var(--surface-3)", borderRadius: 12 }}>
-                  <div className="ta-row ta-between">
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13.5 }}>{r.learner_name || "Learner"} · ${Number(r.amount || 0).toFixed(2)} {r.type || "refund"}</div>
+                  <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13.5, overflowWrap: "break-word" }}>{r.learner_name || "Learner"} · ${Number(r.amount || 0).toFixed(2)} {r.type || "refund"}</div>
                       <div style={{ fontSize: 12, color: "var(--text-3)" }}>{r.created_at ? new Date(r.created_at).toLocaleDateString() : ""}{r.session_date ? ` · session ${new Date(r.session_date).toLocaleDateString()}` : ""}</div>
                     </div>
                     <Tag tone={r.status === "approved" ? "success" : r.status === "rejected" ? "danger" : "warning"}>{r.status || "pending"}</Tag>

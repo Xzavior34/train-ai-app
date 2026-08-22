@@ -125,16 +125,16 @@ export function MentorsScreen({
           ========================================================================= */}
       {requestingSession && sessionMentorChoice && (
         <div className="tai-card" style={{ borderColor: "var(--primary)", borderWidth: 2, padding: 24, borderRadius: 20, boxShadow: "0 10px 30px rgba(79, 70, 229, 0.15)" }}>
-          <div className="tai-row tai-between">
-            <div style={{ fontWeight: 800, fontSize: 17, color: "var(--text)" }}>Schedule 1-on-1 Mentorship Session</div>
-            <button className="tai-btn tai-btn-ghost tai-btn-sm" onClick={closeBooking}>Cancel</button>
+          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
+            <div style={{ fontWeight: 800, fontSize: 17, color: "var(--text)", minWidth: 0, flex: "1 1 200px" }}>Schedule 1-on-1 Mentorship Session</div>
+            <button className="tai-btn tai-btn-ghost tai-btn-sm" style={{ flexShrink: 0 }} onClick={closeBooking}>Cancel</button>
           </div>
-          
+
           <div className="tai-row tai-gap14 tai-mt14">
             <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={48} />
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>{sessionMentorChoice.name}</div>
-              <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700 }}>${sessionMentorChoice.rate}/hr • {sessionMentorChoice.title}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sessionMentorChoice.name}</div>
+              <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>${sessionMentorChoice.rate}/hr • {sessionMentorChoice.title}</div>
             </div>
           </div>
 
@@ -259,8 +259,8 @@ export function MentorsScreen({
                 </div>
               </div>
 
-              <div className="tai-row tai-between tai-mt16">
-                <div className="tai-row tai-gap12" style={{ fontSize: 12.5, color: "var(--text-2)", fontWeight: 600 }}>
+              <div className="tai-row tai-between tai-mt16" style={{ flexWrap: "wrap", gap: 10 }}>
+                <div className="tai-row tai-gap12" style={{ fontSize: 12.5, color: "var(--text-2)", fontWeight: 600, flexWrap: "wrap" }}>
                   <span className="tai-row tai-gap4"><Star size={13} color="var(--warning)" fill="var(--warning)" /> {m.rating}</span>
                   <span>•</span>
                   <span>{m.sessions} sessions completed</span>

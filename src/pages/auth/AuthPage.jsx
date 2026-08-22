@@ -117,6 +117,11 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
         .role-picker-card:active { transform: scale(.98); }
         .role-picker-card.active { border-color: #4F46E5 !important; background: #EEF2FF !important; }
         .auth-submit:active { transform: scale(.98); }
+        @media (max-width: 400px) {
+          .auth-card { padding: 24px 20px !important; }
+          .role-picker-header { flex-wrap: wrap; row-gap: 4px; }
+          .role-picker-header .role-picker-badge { margin-left: 0 !important; }
+        }
       `}</style>
 
       <div style={styles.glowTop} />
@@ -143,10 +148,10 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
                 cursor: "pointer", display: "flex", flexDirection: "column", gap: 6
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div className="role-picker-header" style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <Building2 size={16} color={accountType === "organization" ? "#4F46E5" : "#656C86"} />
                 <span style={{ fontSize: 13.5, fontWeight: 700, color: "#10142A" }}>Organization</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "2px 7px", borderRadius: 999, marginLeft: "auto" }}>RECOMMENDED</span>
+                <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "2px 7px", borderRadius: 999, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
               </div>
               <span style={{ fontSize: 11, color: "#656C86", lineHeight: 1.3 }}>
                 Bring your team onto Train AI: workforce readiness, cohorts, and org-wide reporting. You become the organization's admin.

@@ -146,12 +146,12 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
                 {selectedCourseIds.map((cid, idx) => {
                   const course = courses.find((c) => c.id === cid);
                   return (
-                    <div key={cid} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 10 }}>
-                      <div className="ta-row ta-gap8">
-                        <GripVertical size={14} color="var(--text-3)" />
-                        <span style={{ fontSize: 12.5, fontWeight: 600 }}>{idx + 1}. {course?.title || "Unknown course"}</span>
+                    <div key={cid} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 10, gap: 8 }}>
+                      <div className="ta-row ta-gap8" style={{ minWidth: 0, flex: 1 }}>
+                        <GripVertical size={14} color="var(--text-3)" style={{ flexShrink: 0 }} />
+                        <span style={{ fontSize: 12.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{idx + 1}. {course?.title || "Unknown course"}</span>
                       </div>
-                      <div className="ta-row ta-gap6">
+                      <div className="ta-row ta-gap6" style={{ flexShrink: 0 }}>
                         <button className="ta-iconbtn" disabled={idx === 0} onClick={() => moveCourse(idx, -1)} aria-label="Move up">↑</button>
                         <button className="ta-iconbtn" disabled={idx === selectedCourseIds.length - 1} onClick={() => moveCourse(idx, 1)} aria-label="Move down">↓</button>
                         <button className="ta-iconbtn" onClick={() => toggleCourseSelected(cid)} aria-label="Remove"><X size={13} /></button>
@@ -169,9 +169,9 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
                 <div className="ta-empty">{courses.length === 0 ? "No courses exist yet. Create one in Content & Courses first." : "Every course is already in this path."}</div>
               )}
               {courses.filter((c) => !selectedCourseIds.includes(c.id)).map((c) => (
-                <div key={c.id} className="ta-row ta-between ta-dropdown-item" style={{ padding: "6px 10px" }} onClick={() => toggleCourseSelected(c.id)}>
-                  <span style={{ fontSize: 12.5 }}>{c.title}</span>
-                  <Plus size={14} color="var(--primary)" />
+                <div key={c.id} className="ta-row ta-between ta-dropdown-item" style={{ padding: "6px 10px", gap: 8 }} onClick={() => toggleCourseSelected(c.id)}>
+                  <span style={{ fontSize: 12.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</span>
+                  <Plus size={14} color="var(--primary)" style={{ flexShrink: 0 }} />
                 </div>
               ))}
             </div>
@@ -234,7 +234,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
               <div>No learning paths yet. Create one to guide learners through an ordered set of courses.</div>
             </div>
           )}
-          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
+          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
           {paths.map((p, idx) => {
             const pathImages = [
               "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",

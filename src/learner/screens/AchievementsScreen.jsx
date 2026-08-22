@@ -334,7 +334,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {activeProgressTab === "overview" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             
             {/* Weekly Learning Hours Chart Card */}
             <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
@@ -435,7 +435,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             Accredited certificates issued upon completing syllabi, final assessments, and peer reviews.
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {CERTIFICATES.map((cert) => (
               <div
                 key={cert.id}
@@ -464,7 +464,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
 
                 <div style={{ padding: 20, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
-                    <div className="tai-row tai-between" style={{ fontSize: 12, color: "var(--text-3)", paddingBottom: 10, borderBottom: "1px solid var(--border)" }}>
+                    <div className="tai-row tai-between" style={{ fontSize: 12, color: "var(--text-3)", paddingBottom: 10, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 6 }}>
                       <span>ID: <strong style={{ color: "var(--text)" }}>{cert.credentialId}</strong></span>
                       <span>Issued: <strong style={{ color: "var(--text)" }}>{cert.issueDate}</strong></span>
                     </div>
@@ -478,7 +478,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
                     </div>
                   </div>
 
-                  <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                  <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 10 }}>
                     <span style={{ fontSize: 12, fontWeight: 800, color: "var(--success)" }}>
                       {cert.grade}
                     </span>
@@ -511,7 +511,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               </h3>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
               {effectiveAchievements.map((a) => {
                 const def = ACHIEVEMENT_CATALOG.find((d) => d.id === a.achievement_id);
                 const Icon = iconForCategory(def?.category);
@@ -544,7 +544,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               </h3>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
               {locked.map((def) => {
                 const Icon = iconForCategory(def.category);
                 const { current, threshold, percent: p } = getAchievementProgress(def, user);
@@ -606,15 +606,15 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {selectedCertificate && (
         <div
           className="tai-scrim"
-          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 300 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 14, zIndex: 300, overflowY: "auto", boxSizing: "border-box" }}
           onClick={() => setSelectedCertificate(null)}
         >
           <div
             className="tai-card"
-            style={{ maxWidth: 700, width: "100%", background: "#fff", borderRadius: 20, padding: 32, color: "#0F172A", border: "12px solid #F8FAFC", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
+            style={{ maxWidth: 700, width: "100%", background: "#fff", borderRadius: 20, padding: "24px 20px", color: "#0F172A", border: "10px solid #F8FAFC", boxShadow: "0 20px 50px rgba(0,0,0,0.3)", boxSizing: "border-box" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="tai-row tai-between" style={{ marginBottom: 20 }}>
+            <div className="tai-row tai-between" style={{ marginBottom: 20, gap: 10, flexWrap: "wrap" }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 OFFICIAL CERTIFICATE OF COMPLETION
               </span>

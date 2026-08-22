@@ -325,7 +325,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
                 </div>
 
-                <div className="ta-row ta-gap10">
+                <div className="ta-row ta-gap10" style={{ flexWrap: "wrap" }}>
                   <button
                     className={`ta-btn ta-btn-sm ${editIsPublished ? "ta-btn-outline" : "ta-btn-primary"}`}
                     onClick={() => setEditIsPublished(!editIsPublished)}
@@ -612,13 +612,13 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       <div
                         key={l.id || `lesson-${idx}`}
                         className="ta-card ta-row ta-between ta-gap12"
-                        style={{ background: "var(--surface-3)", padding: 14, borderRadius: 10, border: "1px solid var(--border)" }}
+                        style={{ background: "var(--surface-3)", padding: 14, borderRadius: 10, border: "1px solid var(--border)", flexWrap: "wrap" }}
                       >
                         <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
                           {idx + 1}
                         </div>
 
-                        <div className="ta-grid ta-grid-3 ta-gap12" style={{ flex: 1, minWidth: 0 }}>
+                        <div className="ta-grid ta-grid-3 ta-gap12" style={{ flex: "1 1 200px", minWidth: 0 }}>
                           <div className="ta-col" style={{ gap: 4 }}>
                             <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Lesson Title</label>
                             <input
@@ -1104,9 +1104,9 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
             </div>
 
             {selectedCourseIds.size > 0 && (
-              <div className="ta-card ta-row ta-between" style={{ marginBottom: 12, borderColor: "var(--primary)" }}>
+              <div className="ta-card ta-row ta-between" style={{ marginBottom: 12, borderColor: "var(--primary)", gap: 10, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 13, fontWeight: 600 }}>{selectedCourseIds.size} course{selectedCourseIds.size === 1 ? "" : "s"} selected</span>
-                <div className="ta-row ta-gap8">
+                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
                   <button className="ta-btn ta-btn-outline ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("publish")}>Publish</button>
                   <button className="ta-btn ta-btn-outline ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("unpublish")}>Unpublish</button>
                   <button className="ta-btn ta-btn-danger ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("archive")}>Archive</button>
@@ -1114,7 +1114,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 </div>
               </div>
             )}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
               {coursesQuery.loading && <div className="ta-empty">Loading courses...</div>}
               {!coursesQuery.loading && courses.length === 0 && <div className="ta-empty">No courses created yet.</div>}
               {courses.map((c, idx) => {
@@ -1182,11 +1182,11 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         )}
                       </div>
 
-                      <div className="ta-row ta-between" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                        <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>
+                      <div className="ta-row ta-between" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)", gap: 8, flexWrap: "wrap" }}>
+                        <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {c.enrollment_count || 8} Enrolled • {c.lessons?.length || 4} Lessons
                         </div>
-                        <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => setActiveCourseId(c.id)}>
+                        <button className="ta-btn ta-btn-primary ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setActiveCourseId(c.id)}>
                           <Settings size={13} /> Manage Course
                         </button>
                       </div>

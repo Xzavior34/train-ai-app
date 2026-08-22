@@ -40,15 +40,15 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
           )}
           {discussions.map((d) => (
             <div key={d.id} className="ta-card">
-              <div className="ta-row ta-between">
-                <div className="ta-row ta-gap10">
-                  <MessageCircle size={16} color="var(--primary)" />
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>{d.title}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-2)" }}>{d.mentee} · {d.course}</div>
+              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
+                <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 200px" }}>
+                  <MessageCircle size={16} color="var(--primary)" style={{ flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.mentee} · {d.course}</div>
                   </div>
                 </div>
-                <div className="ta-row ta-gap10">
+                <div className="ta-row ta-gap10" style={{ flexShrink: 0, flexWrap: "wrap" }}>
                   <Tag tone={d.resolved ? "success" : "warning"}>{d.resolved ? "Resolved" : "Open"}</Tag>
                   {!d.resolved && (
                     <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => handleResolve(d.id)}>

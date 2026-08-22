@@ -411,15 +411,15 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             {credentialsQuery.loading && <div className="ta-empty">Loading credentials...</div>}
             {!credentialsQuery.loading && (credentialsQuery.data || []).length === 0 && <div className="ta-empty">No credentials added yet.</div>}
             {(credentialsQuery.data || []).map(c => (
-              <div key={c.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                <div className="ta-row ta-gap10">
-                  <BadgeCheck size={16} color={c.is_verified ? "var(--success)" : "var(--text-3)"} />
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{c.title}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-3)" }}>{c.issuing_organization} · {(c.credential_type || "").replace(/_/g, " ")}</div>
+              <div key={c.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 180px" }}>
+                  <BadgeCheck size={16} color={c.is_verified ? "var(--success)" : "var(--text-3)"} style={{ flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.issuing_organization} · {(c.credential_type || "").replace(/_/g, " ")}</div>
                   </div>
                 </div>
-                <div className="ta-row ta-gap8">
+                <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
                   <Tag tone={c.is_verified ? "success" : "warning"}>{c.is_verified ? "verified" : "unverified"}</Tag>
                   <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => handleDeleteCredential(c.id)}><Trash2 size={14} /></button>
                 </div>
@@ -443,20 +443,20 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             {portfolioQuery.loading && <div className="ta-empty">Loading portfolio...</div>}
             {!portfolioQuery.loading && (portfolioQuery.data || []).length === 0 && <div className="ta-empty">No portfolio items added yet.</div>}
             {(portfolioQuery.data || []).map(p => (
-              <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                <div>
-                  <div className="ta-row ta-gap8">
-                    <span style={{ fontWeight: 700, fontSize: 13.5 }}>{p.title}</span>
+              <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                <div style={{ minWidth: 0, flex: "1 1 180px" }}>
+                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{p.title}</span>
                     <Tag>{(p.item_type || "link").replace(/_/g, " ")}</Tag>
                   </div>
                   {p.description && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 3 }}>{p.description}</div>}
                   {p.media_urls?.[0] && (
-                    <a href={p.media_urls[0]} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--primary)", display: "inline-flex", alignItems: "center", gap: 4, marginTop: 4 }}>
-                      <LinkIcon size={12} /> {p.media_urls[0]}
+                    <a href={p.media_urls[0]} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: "var(--primary)", display: "flex", alignItems: "center", gap: 4, marginTop: 4, minWidth: 0 }}>
+                      <LinkIcon size={12} style={{ flexShrink: 0 }} /> <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.media_urls[0]}</span>
                     </a>
                   )}
                 </div>
-                <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => handleDeletePortfolioItem(p.id)}><Trash2 size={14} /></button>
+                <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => handleDeletePortfolioItem(p.id)}><Trash2 size={14} /></button>
               </div>
             ))}
           </div>
@@ -496,9 +496,9 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
                 {remindersQuery.loading && <div className="ta-empty">Loading reminders...</div>}
                 {!remindersQuery.loading && (remindersQuery.data || []).length === 0 && <div className="ta-empty">No reminders configured.</div>}
                 {(remindersQuery.data || []).map((r) => (
-                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                    <div style={{ fontSize: 13 }}>{r.reminder_type} • {r.hours_before}h before{r.custom_message ? `: "${r.custom_message}"` : ""}</div>
-                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteReminderSetting(r.id); remindersQuery.refetch(); }}><Trash2 size={14} /></button>
+                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ fontSize: 13, minWidth: 0, overflowWrap: "break-word", flex: "1 1 160px" }}>{r.reminder_type} • {r.hours_before}h before{r.custom_message ? `: "${r.custom_message}"` : ""}</div>
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={async () => { await deleteReminderSetting(r.id); remindersQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
                 ))}
               </div>
@@ -540,9 +540,9 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!templatesQuery.loading && (templatesQuery.data || []).length === 0 && <div className="ta-empty">No templates yet.</div>}
                 {(templatesQuery.data || []).map((t) => (
-                  <div key={t.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{t.title}</div>
-                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteSessionTemplate(t.id); templatesQuery.refetch(); }}><Trash2 size={14} /></button>
+                  <div key={t.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0, overflowWrap: "break-word", flex: "1 1 160px" }}>{t.title}</div>
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={async () => { await deleteSessionTemplate(t.id); templatesQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
                 ))}
               </div>
@@ -557,9 +557,9 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!policiesQuery.loading && (policiesQuery.data || []).length === 0 && <div className="ta-empty">No cancellation policies set.</div>}
                 {(policiesQuery.data || []).map((p) => (
-                  <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                    <div style={{ fontSize: 13 }}>Cancel within {p.hours_before}h: {p.fee_percentage}% fee</div>
-                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteCancellationPolicy(p.id); policiesQuery.refetch(); }}><Trash2 size={14} /></button>
+                  <div key={p.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ fontSize: 13, minWidth: 0, flex: "1 1 160px" }}>Cancel within {p.hours_before}h: {p.fee_percentage}% fee</div>
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={async () => { await deleteCancellationPolicy(p.id); policiesQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
                 ))}
               </div>
@@ -591,9 +591,9 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {!resourcesQuery.loading && (resourcesQuery.data || []).length === 0 && <div className="ta-empty">No resources yet.</div>}
                 {(resourcesQuery.data || []).map((r) => (
-                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13.5 }}>{r.title}</div>
-                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={async () => { await deleteMentorResource(r.id); resourcesQuery.refetch(); }}><Trash2 size={14} /></button>
+                  <div key={r.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0, overflowWrap: "break-word", flex: "1 1 160px" }}>{r.title}</div>
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={async () => { await deleteMentorResource(r.id); resourcesQuery.refetch(); }}><Trash2 size={14} /></button>
                   </div>
                 ))}
               </div>
@@ -610,8 +610,9 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
               <div className="ta-col ta-gap8 ta-mt12">
                 {!agreementsQuery.loading && (agreementsQuery.data || []).length === 0 && <div className="ta-empty">No agreements yet.</div>}
                 {(agreementsQuery.data || []).map((a) => (
-                  <div key={a.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                    <div style={{ fontSize: 13 }}>{a.learner_name} • <Tag tone={a.status === "signed" ? "success" : "warning"}>{a.status}</Tag></div>
+                  <div key={a.id} className="ta-row ta-gap8" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13, minWidth: 0, overflowWrap: "break-word" }}>{a.learner_name}</span>
+                    <Tag tone={a.status === "signed" ? "success" : "warning"}>{a.status}</Tag>
                   </div>
                 ))}
               </div>

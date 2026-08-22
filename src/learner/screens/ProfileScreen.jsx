@@ -333,7 +333,7 @@ export function ProfileScreen({
               style={{ cursor: "pointer", background: "var(--surface)" }}
               onClick={() => push("achievements")}
             >
-              <div className="tai-row tai-between">
+              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Trophy size={20} color="var(--primary)" />
@@ -354,7 +354,7 @@ export function ProfileScreen({
               style={{ cursor: "pointer", background: "var(--surface)" }}
               onClick={onOpenDashboardSwitcher}
             >
-              <div className="tai-row tai-between">
+              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <ShieldCheck size={20} color="#10B981" />
@@ -489,7 +489,7 @@ export function ProfileScreen({
                 Select where you would like to receive course assignments, critique notices, and peer messages.
               </p>
               <div className="tai-col tai-gap14">
-                <div className="tai-row tai-between">
+                <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                   <div className="tai-row tai-gap10">
                     <Mail size={16} color="var(--text-2)" />
                     <div>
@@ -500,7 +500,7 @@ export function ProfileScreen({
                   <Switch on={notifPrefs.email_enabled} onChange={() => handleToggleNotifPref("email_enabled")} />
                 </div>
 
-                <div className="tai-row tai-between">
+                <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                   <div className="tai-row tai-gap10">
                     <Smartphone size={16} color="var(--text-2)" />
                     <div>
@@ -511,7 +511,7 @@ export function ProfileScreen({
                   <Switch on={notifPrefs.push_enabled} onChange={() => handleToggleNotifPref("push_enabled")} />
                 </div>
 
-                <div className="tai-row tai-between">
+                <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                   <div className="tai-row tai-gap10">
                     <Bell size={16} color="var(--text-2)" />
                     <div>
@@ -557,7 +557,7 @@ export function ProfileScreen({
               style={{ cursor: "pointer" }}
               onClick={() => setShowMfaSetup(true)}
             >
-              <div className="tai-row tai-between">
+              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Smartphone size={20} color="#10B981" />

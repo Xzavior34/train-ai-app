@@ -85,11 +85,16 @@ export default function App() {
     return () => { cancelled = true; };
   }, [loading, session?.user?.id, isDemoMode]);
 
-  // Apply persisted accessibility preferences (font size / high contrast /
-  // reduced motion) immediately on boot, before the panel is ever opened,
-  // so the choice actually sticks across reloads.
+  // Apply persisted accessibility and theme preferences immediately on boot
   useEffect(() => {
     applyAccessibilityPrefs(getStoredAccessibilityPrefs());
+    try {
+      if (localStorage.getItem("trainai_theme_dark") === "true") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    } catch {}
   }, []);
 
   // Native online/offline detection - no new dependency, just the browser's

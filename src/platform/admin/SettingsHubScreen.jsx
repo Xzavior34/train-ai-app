@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { TopBar, ToastContext, Switch, Tag } from "../components/PlatformUI.jsx";
+import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
 import { Lock, ShieldCheck, Moon } from "lucide-react";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
@@ -507,11 +507,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     onChange={() => {
                       const next = !isDark;
                       setIsDark(next);
-                      try {
-                        localStorage.setItem("trainai_theme_dark", next ? "true" : "false");
-                        if (next) document.documentElement.classList.add("dark");
-                        else document.documentElement.classList.remove("dark");
-                      } catch {}
+                      setGlobalThemeDark(next);
                       showToast(next ? "Dark mode activated" : "Light mode activated");
                     }}
                   />

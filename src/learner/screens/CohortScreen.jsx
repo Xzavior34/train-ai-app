@@ -303,13 +303,13 @@ export function CohortScreen({
                 background: "var(--surface)"
               }}
             >
-              <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
-                <div className="tai-row tai-gap10">
+              <div className="tai-row tai-between" style={{ marginBottom: 10, gap: 10, flexWrap: "wrap" }}>
+                <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: "1 1 180px" }}>
                   <Avatar initials={initialsOf(cp.user_profiles?.display_name)} size={38} src={cp.user_profiles?.avatar_url} />
-                  <div>
-                    <div className="tai-row tai-gap6">
-                      <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{cp.user_profiles?.display_name || "Cohort Facilitator"}</span>
-                      <span style={{ background: "#4F46E5", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
+                      <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{cp.user_profiles?.display_name || "Cohort Facilitator"}</span>
+                      <span style={{ background: "#4F46E5", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
                         INSTRUCTOR
                       </span>
                     </div>
@@ -356,7 +356,7 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "sessions" && (
         <div className="tai-col tai-gap16">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {sessions.map(s => (
               <div key={s.id} className="tai-card" style={{ padding: 22, borderRadius: 18, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
@@ -371,14 +371,14 @@ export function CohortScreen({
                 <h3 style={{ fontSize: 15.5, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
                   {s.title}
                 </h3>
-                <div className="tai-row tai-gap8" style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 14 }}>
+                <div className="tai-row tai-gap8" style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 14, flexWrap: "wrap" }}>
                   <Clock size={13} />
                   <span>{new Date(s.starts_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
                   <span>•</span>
                   <span>Facilitator: <strong>{s.instructor || "Astrid Larsson"}</strong></span>
                 </div>
 
-                <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
                   <Avatar src={s.instructorAvatar} initials="AL" size={32} />
                   {s.join_url ? (
                     <a href={s.join_url} target="_blank" rel="noreferrer" className="tai-btn tai-btn-primary tai-btn-sm" style={{ textDecoration: "none" }}>
@@ -401,7 +401,7 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "courses" && (
         <div className="tai-col tai-gap16">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {assignedCourses.map(cc => (
               <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 18, cursor: "pointer" }} onClick={() => push("courseDetail", { id: cc.courses?.id || "course-figma-ai" })}>
                 <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
@@ -421,7 +421,7 @@ export function CohortScreen({
                   <ProgressBar value={cc.courses?.progress || 46} height={9} />
                 </div>
 
-                <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 11.5, color: "var(--danger)", fontWeight: 700 }}>
                     Due: {new Date(cc.due_at).toLocaleDateString()}
                   </span>
@@ -442,14 +442,14 @@ export function CohortScreen({
         <div className="tai-col tai-gap14">
           {resources.map(r => (
             <div key={r.id} className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
-              <div className="tai-row tai-between">
-                <div className="tai-row tai-gap12">
-                  <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="tai-row tai-between" style={{ gap: 12, flexWrap: "wrap" }}>
+                <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: "1 1 200px" }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     {r.resource_type === "link" ? <Link2 size={18} color="var(--primary)" /> : <FileText size={18} color="var(--primary)" />}
                   </div>
-                  <div>
-                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: 0 }}>{r.title}</h4>
-                    <p style={{ fontSize: 12, color: "var(--text-3)", margin: "2px 0 0" }}>{r.description}</p>
+                  <div style={{ minWidth: 0 }}>
+                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</h4>
+                    <p style={{ fontSize: 12, color: "var(--text-3)", margin: "2px 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.description}</p>
                   </div>
                 </div>
 
@@ -458,7 +458,7 @@ export function CohortScreen({
                   target="_blank"
                   rel="noreferrer"
                   className="tai-btn tai-btn-outline tai-btn-sm"
-                  style={{ textDecoration: "none" }}
+                  style={{ textDecoration: "none", flexShrink: 0 }}
                 >
                   <ExternalLink size={13} /> Access File
                 </a>
@@ -475,17 +475,18 @@ export function CohortScreen({
         <div className="tai-grid2">
           {instructorMembers.map(m => (
             <div key={m.id} className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
-              <div className="tai-row tai-between">
-                <div className="tai-row tai-gap12">
+              <div className="tai-row tai-between" style={{ gap: 12, flexWrap: "wrap" }}>
+                <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: "1 1 160px" }}>
                   <Avatar src={m.user_profiles?.avatar_url} initials={initialsOf(m.user_profiles?.display_name)} size={48} />
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>{m.user_profiles?.display_name}</div>
-                    <div style={{ fontSize: 12, color: "var(--primary)", fontWeight: 700 }}>{m.user_profiles?.role || "Lead Facilitator"}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.user_profiles?.display_name}</div>
+                    <div style={{ fontSize: 12, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.user_profiles?.role || "Lead Facilitator"}</div>
                   </div>
                 </div>
 
                 <button
                   className="tai-btn tai-btn-primary tai-btn-sm"
+                  style={{ flexShrink: 0 }}
                   onClick={() => {
                     if (push) push("messages", { recipientName: m.user_profiles?.display_name });
                     showToast(`Starting chat with ${m.user_profiles?.display_name}...`);

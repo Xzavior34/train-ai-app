@@ -103,7 +103,10 @@ export function LessonScreen({
           </div>
 
           <div>
-            <div style={{ fontWeight: 800, fontSize: 16.5, color: "#fff", letterSpacing: "-0.01em" }}>
+            <div style={{
+              fontWeight: 800, fontSize: 16.5, color: "#fff", letterSpacing: "-0.01em",
+              overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3
+            }}>
               {lesson?.title}
             </div>
             <div className="tai-row tai-gap10 tai-mt6" style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
@@ -219,9 +222,9 @@ export function LessonScreen({
                 }}
                 onClick={() => setActiveChapterIndex(idx)}
               >
-                <div className="tai-row tai-gap12">
+                <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: 1 }}>
                   <span style={{
-                    fontSize: 12, fontWeight: 800,
+                    fontSize: 12, fontWeight: 800, flexShrink: 0,
                     color: activeChapterIndex === idx ? "var(--primary)" : "var(--text-3)",
                     fontVariantNumeric: "tabular-nums"
                   }}>
@@ -229,12 +232,13 @@ export function LessonScreen({
                   </span>
                   <span style={{
                     fontSize: 13.5, fontWeight: activeChapterIndex === idx ? 700 : 500,
-                    color: activeChapterIndex === idx ? "var(--primary-dark)" : "var(--text)"
+                    color: activeChapterIndex === idx ? "var(--primary-dark)" : "var(--text)",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0
                   }}>
                     {ch.title}
                   </span>
                 </div>
-                <Play size={13} color={activeChapterIndex === idx ? "var(--primary)" : "var(--text-3)"} fill={activeChapterIndex === idx ? "var(--primary)" : "none"} />
+                <Play size={13} color={activeChapterIndex === idx ? "var(--primary)" : "var(--text-3)"} fill={activeChapterIndex === idx ? "var(--primary)" : "none"} style={{ flexShrink: 0 }} />
               </div>
             ))}
           </div>
@@ -246,7 +250,10 @@ export function LessonScreen({
             style={{ width: "100%", padding: "13px 20px", color: "var(--primary)", borderColor: "var(--primary-light)" }}
             onClick={() => push("lesson", { id: course.id, lessonId: nextLesson.id })}
           >
-            Next Lesson: {nextLesson.title} <ChevronRight size={16} />
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
+              Next Lesson: {nextLesson.title}
+            </span>
+            <ChevronRight size={16} style={{ flexShrink: 0 }} />
           </button>
         )}
       </div>

@@ -302,7 +302,7 @@ function DiscussionTab({ discussionQuery, session, discussionInput, setDiscussio
           value={discussionInput}
           onChange={(e) => setDiscussionInput(e.target.value)}
         />
-        <div className="tai-row tai-between tai-mt10">
+        <div className="tai-row tai-between tai-mt10" style={{ flexWrap: "wrap", gap: 8 }}>
           <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Visible to everyone taking this course.</span>
           <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={sending || !discussionInput.trim()} onClick={handleSend}>
             <Send size={14} /> {sending ? "Posting…" : "Post"}
@@ -369,7 +369,7 @@ function NotesTab({ course, notesQuery, session, newNoteText, setNewNoteText, ad
           value={newNoteText}
           onChange={(e) => setNewNoteText(e.target.value)}
         />
-        <div className="tai-row tai-between tai-mt10">
+        <div className="tai-row tai-between tai-mt10" style={{ flexWrap: "wrap", gap: 8 }}>
           <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Only visible to you.</span>
           <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={saving || !newNoteText.trim()} onClick={handleSave}>
             <Edit3 size={14} /> {saving ? "Saving…" : "Save note"}
@@ -538,8 +538,8 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
 
   return (
     <div className="tai-mt16 tai-col tai-gap16">
-      <div className="tai-row tai-between">
-        <div>
+      <div className="tai-row tai-between" style={{ gap: 10, flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
           <div className="tai-title-sm">{assessment?.title || "Final Course Assessment"}</div>
           <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{effectiveQuestions.length} multiple-choice questions • Passing score: 70%</div>
         </div>

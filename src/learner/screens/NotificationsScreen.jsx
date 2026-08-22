@@ -146,13 +146,13 @@ export function NotificationsScreen({
         onBack={back}
         hideBell
         right={
-          <div className="tai-row tai-gap8">
+          <div className="tai-row tai-gap8" style={{ flexWrap: "wrap", justifyContent: "flex-end" }}>
             {unreadCount > 0 && (
               <button
                 type="button"
                 className="tai-btn tai-btn-ghost tai-btn-sm"
                 onClick={handleMarkAll}
-                style={{ fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
+                style={{ fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
               >
                 <CheckCheck size={15} /> Mark All Read
               </button>
@@ -162,7 +162,7 @@ export function NotificationsScreen({
                 type="button"
                 className="tai-btn tai-btn-ghost tai-btn-sm"
                 onClick={handleClearAll}
-                style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
+                style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
                 title="Clear all notifications"
               >
                 <Trash2 size={14} /> Clear

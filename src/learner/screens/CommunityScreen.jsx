@@ -664,18 +664,18 @@ export const chartColors = {
                   </div>
 
                   {/* Author Header */}
-                  <div className="tai-row tai-gap12" style={{ marginBottom: 14 }}>
+                  <div className="tai-row tai-gap12" style={{ marginBottom: 14, minWidth: 0 }}>
                     <Avatar src={post.author.avatar} initials={initialsOf(post.author.name)} size={44} />
-                    <div>
-                      <div className="tai-row tai-gap6">
-                        <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>{post.author.name}</span>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="tai-row tai-gap6" style={{ minWidth: 0, flexWrap: "wrap" }}>
+                        <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{post.author.name}</span>
                         {post.author.isStaff && (
-                          <span style={{ background: "#4F46E5", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4 }}>
+                          <span style={{ background: "#4F46E5", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
                             {post.author.badge}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 12, color: "var(--text-3)" }}>{post.author.title}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.author.title}</div>
                     </div>
                   </div>
 
@@ -916,7 +916,7 @@ export const chartColors = {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {UPCOMING_EVENTS.map(ev => (
               <div key={ev.id} className="tai-card" style={{ padding: 22, borderRadius: 18, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
@@ -1039,7 +1039,7 @@ export const chartColors = {
             </button>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {STUDY_CIRCLES.map(sc => (
               <div key={sc.id} className="tai-card" style={{ padding: 22, borderRadius: 18, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 8 }}>
@@ -1060,7 +1060,7 @@ export const chartColors = {
                   <Target size={14} color="var(--primary)" /> <span><strong>Goal:</strong> {sc.goal}</span>
                 </div>
 
-                <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>{sc.membersCount} Members</span>
                   <button
                     className="tai-btn tai-btn-primary tai-btn-sm"
@@ -1098,7 +1098,7 @@ export const chartColors = {
             </button>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {[
               {
                 id: "inst-1",
@@ -1196,13 +1196,14 @@ export const chartColors = {
                   <div style={{
                     background: "var(--surface-3)", padding: "10px 12px", borderRadius: 12,
                     border: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-2)",
-                    display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16
+                    display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16,
+                    flexWrap: "wrap", gap: 6
                   }}>
-                    <span className="tai-row tai-gap6">
-                      <Clock size={13} color="var(--primary)" />
+                    <span className="tai-row tai-gap6" style={{ minWidth: 0 }}>
+                      <Clock size={13} color="var(--primary)" style={{ flexShrink: 0 }} />
                       <span><strong>Next Live Session:</strong> {inst.hours}</span>
                     </span>
-                    <span className="tai-row tai-gap4" style={{ fontWeight: 800, color: "#F59E0B" }}>
+                    <span className="tai-row tai-gap4" style={{ fontWeight: 800, color: "#F59E0B", flexShrink: 0 }}>
                       ★ {inst.rating}
                     </span>
                   </div>

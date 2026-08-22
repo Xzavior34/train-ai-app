@@ -55,14 +55,14 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
 
   return (
     <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
-      <div className="ta-row ta-between">
-        <div>
-          <div className="ta-title">{org.name}</div>
+      <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="ta-title" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{org.name}</div>
           <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>
             {org.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "-"} plan - status: {org.status}
           </div>
         </div>
-        <div className="ta-row ta-gap8">
+        <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
           <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={handleToggleStatus}>
             {org.status === "suspended" ? <><Unlock size={13} /> Reactivate</> : <><Lock size={13} /> Suspend</>}
           </button>
@@ -92,8 +92,8 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
             const hasOverride = key in overrideMap;
             const resolved = hasOverride ? overrideMap[key] : null; // resolved via tier default server-side when no override exists; we only show explicit overrides here plus a toggle to set one
             return (
-              <div key={key} className="ta-row ta-between" style={{ padding: "6px 4px" }}>
-                <div className="ta-row ta-gap8">
+              <div key={key} className="ta-row ta-between" style={{ padding: "6px 4px", gap: 8 }}>
+                <div className="ta-row ta-gap8" style={{ minWidth: 0, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12.5 }}>{label}</span>
                   {hasOverride && <Tag tone="warning">Override</Tag>}
                 </div>
@@ -291,8 +291,8 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                 >
                   <div>
                     {/* Top Row: Org Icon, Name, and Status */}
-                    <div className="ta-row ta-between" style={{ alignItems: "flex-start", marginBottom: 12 }}>
-                      <div className="ta-row ta-gap12">
+                    <div className="ta-row ta-between" style={{ alignItems: "flex-start", marginBottom: 12, gap: 10 }}>
+                      <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 auto" }}>
                         <div style={{
                           width: 44, height: 44, borderRadius: 12,
                           background: "var(--primary-tint)", color: "var(--primary)",
@@ -301,8 +301,8 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                         }}>
                           <Building2 size={22} />
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)" }}>{o.name}</div>
+                        <div style={{ minWidth: 0, overflow: "hidden" }}>
+                          <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>
                           <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>ID: {o.id.slice(0, 12)}...</div>
                         </div>
                       </div>
@@ -338,7 +338,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                   </div>
 
                   {/* Actions Footer */}
-                  <div className="ta-row ta-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                  <div className="ta-row ta-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
                       Created {new Date(o.created_at).toLocaleDateString()}
                     </span>
@@ -438,7 +438,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
           <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
             <div className="ta-title">Create New Organization</div>
             <input className="ta-input ta-mt12" placeholder="Organization name..." value={name} onChange={e => setName(e.target.value)} />
-            <div className="ta-row ta-gap8 ta-mt12">
+            <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
               <button className="ta-btn ta-btn-primary" onClick={async () => {
                 if (!name.trim()) return;
                 await createOrganization({ name: name.trim() });

@@ -156,18 +156,18 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
 
             <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
-              <div className="ta-row ta-gap12" style={{ flex: 1, minWidth: 260 }}>
-                <div className="ta-search" style={{ flex: 1 }}>
+              <div className="ta-row ta-gap12" style={{ flex: "1 1 260px", minWidth: 0, flexWrap: "wrap" }}>
+                <div className="ta-search" style={{ flex: "1 1 180px", minWidth: 0, width: "auto" }}>
                   <Search size={14} />
-                  <input 
-                    className="ta-input" 
-                    style={{ border: "none", padding: 0 }} 
-                    placeholder="Search students by name, email or role..." 
-                    value={search} 
-                    onChange={e => setSearch(e.target.value)} 
+                  <input
+                    className="ta-input"
+                    style={{ border: "none", padding: 0, width: "100%" }}
+                    placeholder="Search students by name, email or role..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
                   />
                 </div>
-                <select className="ta-input" style={{ width: 180 }} value={cohortFilter} onChange={(e) => setCohortFilter(e.target.value)}>
+                <select className="ta-input" style={{ width: "auto", minWidth: 140, flex: "0 1 180px" }} value={cohortFilter} onChange={(e) => setCohortFilter(e.target.value)}>
                   <option value="all">All Cohorts</option>
                   <option value="none">Not in a cohort</option>
                   {cohorts.map((c) => (

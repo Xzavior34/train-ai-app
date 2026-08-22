@@ -112,21 +112,25 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
         </div>
 
         <div className="ta-grid ta-grid-4 anim-stagger">
-          <div className="ta-card" style={{ background: "var(--surface-3)" }}>
-            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>Overall readiness</span><span style={{ fontWeight: 700, color: "var(--primary)" }}>{statsQuery.data?.completionRate || 0}%</span></div>
+          <div className="ta-card" style={{ background: "var(--surface-3)", minWidth: 0 }}>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Overall readiness</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--primary)", margin: "4px 0 8px" }}>{statsQuery.data?.completionRate || 0}%</div>
             <ProgressBar value={statsQuery.data?.completionRate || 0} />
           </div>
-          <div className="ta-card" style={{ background: "var(--surface-3)" }}>
-            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>Active learners</span><span style={{ fontWeight: 700 }}>{statsQuery.data?.activeStudents || 0}</span></div>
+          <div className="ta-card" style={{ background: "var(--surface-3)", minWidth: 0 }}>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Active learners</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", margin: "4px 0 8px" }}>{statsQuery.data?.activeStudents || 0}</div>
             <ProgressBar value={statsQuery.data?.completionRate || 0} />
           </div>
-          <div className="ta-card" style={{ background: "var(--surface-3)" }}>
-            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>AI Coach usage</span><span style={{ fontWeight: 700 }}>{aiByFeatureQuery.data?.coach ?? 0}</span></div>
-            <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 4 }}>Real AI Coach replies logged for your organization</div>
+          <div className="ta-card" style={{ background: "var(--surface-3)", minWidth: 0 }}>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>AI Coach usage</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", margin: "4px 0 6px" }}>{aiByFeatureQuery.data?.coach ?? 0}</div>
+            <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Real AI Coach replies logged for your organization</div>
           </div>
-          <div className="ta-card" style={{ background: "var(--surface-3)" }}>
-            <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 6 }}><span>Quiz Generator usage</span><span style={{ fontWeight: 700 }}>{aiByFeatureQuery.data?.quiz ?? 0}</span></div>
-            <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 4 }}>Real AI-generated quizzes created - the honest proxy for credits used, since no separate credits-balance table exists</div>
+          <div className="ta-card" style={{ background: "var(--surface-3)", minWidth: 0 }}>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Quiz Generator usage</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", margin: "4px 0 6px" }}>{aiByFeatureQuery.data?.quiz ?? 0}</div>
+            <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Real AI-generated quizzes created - the honest proxy for credits used, since no separate credits-balance table exists</div>
           </div>
         </div>
 

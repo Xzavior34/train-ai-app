@@ -44,13 +44,14 @@ export function AnalysisNotesCard({ authorId, organizationId }) {
         {notesQuery.loading && <div className="ta-empty">Loading notes...</div>}
         {!notesQuery.loading && (notesQuery.data || []).length === 0 && <div className="ta-empty">No notes yet.</div>}
         {(notesQuery.data || []).map((n) => (
-          <div key={n.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, alignItems: "flex-start" }}>
-            <div>
-              <div style={{ fontSize: 13 }}>{n.note_text}</div>
+          <div key={n.id} className="ta-row ta-between" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, alignItems: "flex-start", gap: 10 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, overflowWrap: "break-word", wordBreak: "break-word" }}>{n.note_text}</div>
               <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>{new Date(n.created_at).toLocaleString()}</div>
             </div>
             <button
               className="ta-btn ta-btn-ghost ta-btn-sm"
+              style={{ flexShrink: 0 }}
               onClick={async () => {
                 const result = await deleteAnalysisNote(n.id);
                 if (!result.success) showToast(result.error);

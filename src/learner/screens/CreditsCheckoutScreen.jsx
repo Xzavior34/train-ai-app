@@ -185,7 +185,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
         />
 
         <div className="tai-label tai-mt16">Payment provider</div>
-        <div className="tai-grid2 tai-mt8">
+        <div className="tai-mt8" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
           <div
             className={`tai-card${paystackAllowed ? " tai-card-hover" : ""}`}
             style={{

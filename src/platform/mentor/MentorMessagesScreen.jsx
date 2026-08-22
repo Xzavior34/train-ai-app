@@ -194,21 +194,21 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
             <div style={{ display: "flex", flexDirection: "column", background: "var(--surface)" }}>
 
               {/* Header */}
-              <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--surface)" }}>
-                <div className="ta-row ta-gap12">
+              <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "var(--surface)", flexWrap: "wrap" }}>
+                <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 160px" }}>
                   {isNarrow && (
-                    <button className="ta-btn ta-btn-outline ta-btn-sm" style={{ padding: 8 }} onClick={() => setActiveContactId(null)} aria-label="Back to conversations">
+                    <button className="ta-btn ta-btn-outline ta-btn-sm" style={{ padding: 8, flexShrink: 0 }} onClick={() => setActiveContactId(null)} aria-label="Back to conversations">
                       <ChevronLeft size={16} />
                     </button>
                   )}
                   <Avatar initials={activeContact.initials} size={40} />
-                  <div>
-                    <span style={{ fontWeight: 800, fontSize: 15 }}>{activeContact.name}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ fontWeight: 800, fontSize: 15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{activeContact.name}</span>
                   </div>
                 </div>
 
                 {setScreen && (
-                  <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setScreen("mentees")}>
+                  <button className="ta-btn ta-btn-outline ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setScreen("mentees")}>
                     <BookOpen size={14} /> View Progress
                   </button>
                 )}

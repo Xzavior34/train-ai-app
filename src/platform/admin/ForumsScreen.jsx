@@ -79,7 +79,7 @@ export function ForumsScreen({ orgSelector, setScreen }) {
   return (
     <div className="ta-fade">
       {selectedForum && (
-        <div style={{ padding: "16px 32px 0" }}>
+        <div style={{ padding: "16px clamp(16px, 4vw, 32px) 0" }}>
           <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setSelectedForumId(null)}>
             <ArrowLeft size={14} /> Back to categories
           </button>

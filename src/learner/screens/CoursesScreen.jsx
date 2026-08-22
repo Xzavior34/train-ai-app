@@ -806,7 +806,7 @@ export function CoursesScreen({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         {filteredCatalog.length === 0 ? (
           <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 24px", borderRadius: 20 }}>
             <div style={{ width: 64, height: 64, borderRadius: 20, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
@@ -942,7 +942,7 @@ export function CoursesScreen({
                 </div>
 
                 <div>
-                  <div className="tai-row tai-between" style={{ padding: "10px 0", borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
+                  <div className="tai-row" style={{ padding: "10px 0", borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)", fontWeight: 600, gap: 6, flexWrap: "wrap" }}>
                     <span>{course.hours} Total Hours</span>
                     <span>•</span>
                     <span>{course.lessonsCount} Modules</span>
@@ -994,7 +994,7 @@ export function CoursesScreen({
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
           {SPECIALIZATIONS.map((spec) => (
             <div
               key={spec.id}
@@ -1038,7 +1038,7 @@ export function CoursesScreen({
                 </div>
               </div>
 
-              <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", alignItems: "center" }}>
+              <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
                 <div className="tai-col">
                   <span style={{ fontSize: 11, color: "var(--text-3)" }}>Duration: {spec.months}</span>
                   <span className="tai-row tai-gap4" style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
@@ -1189,12 +1189,12 @@ export function CoursesScreen({
       {activeSpecialization && (
         <div
           className="tai-scrim"
-          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 300 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 300, overflowY: "auto", boxSizing: "border-box" }}
           onClick={() => setActiveSpecialization(null)}
         >
           <div
             className="tai-card"
-            style={{ maxWidth: 640, width: "100%", background: "var(--surface)", borderRadius: 20, padding: 28 }}
+            style={{ maxWidth: 640, width: "100%", background: "var(--surface)", borderRadius: 20, padding: "24px 20px", boxSizing: "border-box" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
@@ -1227,13 +1227,13 @@ export function CoursesScreen({
               </div>
             </div>
 
-            <div className="tai-row tai-between" style={{ alignItems: "center" }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 12 }}>
               <div>
                 <div style={{ fontSize: 12, color: "var(--text-3)" }}>Estimated Duration</div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>{activeSpecialization.months}</div>
               </div>
 
-              <div className="tai-row tai-gap10">
+              <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
                 <button className="tai-btn tai-btn-outline" onClick={() => setActiveSpecialization(null)}>
                   Close
                 </button>

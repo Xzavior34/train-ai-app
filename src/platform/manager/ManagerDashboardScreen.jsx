@@ -200,8 +200,8 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
                 {!teamCohortsQuery.loading && (teamCohortsQuery.data || []).length === 0 && <div className="ta-empty">None of your team members are enrolled in a cohort yet.</div>}
                 {(teamCohortsQuery.data || []).map((c) => (
                   <div key={c.id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                    <div className="ta-row ta-between">
-                      <span style={{ fontWeight: 700, fontSize: 13.5 }}>{c.name}</span>
+                    <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 4 }}>
+                      <span style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{c.name}</span>
                       <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>
                         {c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "No start date"}{c.ends_at ? ` to ${new Date(c.ends_at).toLocaleDateString()}` : ""}
                       </span>
@@ -227,9 +227,9 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
                 {!skillSnapshotQuery.loading && (skillSnapshotQuery.data || []).length === 0 && <div className="ta-empty">No course activity to summarize yet.</div>}
                 {(skillSnapshotQuery.data || []).map((s) => (
                   <div key={s.category}>
-                    <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
-                      <span style={{ fontWeight: 600 }}>{s.category}</span>
-                      <span>{s.avgProgress}% avg ({s.learnerCount} enrollments)</span>
+                    <div className="ta-row ta-between" style={{ fontSize: 12.5, flexWrap: "wrap", gap: 4 }}>
+                      <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{s.category}</span>
+                      <span style={{ flexShrink: 0 }}>{s.avgProgress}% avg ({s.learnerCount} enrollments)</span>
                     </div>
                     <ProgressBar value={s.avgProgress} />
                   </div>
@@ -247,9 +247,9 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {(skillGapsDetailQuery.data || []).map((l) => (
                   <div key={l.learnerId} className="ta-card-hover" style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, cursor: "pointer", transition: "all .2s ease" }} onClick={() => setExpandedReportId(expandedReportId === l.learnerId ? null : l.learnerId)}>
-                    <div className="ta-row ta-between">
-                      <span style={{ fontWeight: 600, fontSize: 13 }}>{l.name}</span>
-                      <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>{l.completedSkills.length} demonstrated • {l.gapSkills.length} gaps</span>
+                    <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 4 }}>
+                      <span style={{ fontWeight: 600, fontSize: 13, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{l.name}</span>
+                      <span style={{ fontSize: 11.5, color: "var(--text-2)", flexShrink: 0 }}>{l.completedSkills.length} demonstrated • {l.gapSkills.length} gaps</span>
                     </div>
                     {expandedReportId === l.learnerId && (
                       <div className="ta-row ta-gap16 ta-mt10" style={{ flexWrap: "wrap" }}>

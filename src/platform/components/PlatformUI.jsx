@@ -3,7 +3,7 @@ import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail,
   Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy,
-  PanelLeftClose, PanelLeftOpen, Check, CheckCircle2
+  PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { DASHBOARD_META } from "../../lib/roleRouting.js";
@@ -13,6 +13,27 @@ import { fetchCurrentUserProfile, fetchOrgMembers, fetchUsersInOrg, fetchCourses
 export const MobileMenuContext = React.createContext(() => {});
 export const ToastContext = React.createContext(() => {});
 export const NavigationContext = React.createContext(null);
+
+export function getStoredThemeDark() {
+  try {
+    return localStorage.getItem("trainai_theme_dark") === "true" ||
+      (typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
+  } catch {
+    return false;
+  }
+}
+
+export function setGlobalThemeDark(isDark) {
+  try {
+    localStorage.setItem("trainai_theme_dark", isDark ? "true" : "false");
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    window.dispatchEvent(new CustomEvent("trainai-theme-change", { detail: { isDark } }));
+  } catch {}
+}
 
 export const TOKENS = `
   .ta * { box-sizing: border-box; }
@@ -54,7 +75,7 @@ export const TOKENS = `
     min-height: 100vh; min-height: 100dvh;
     transition: background .25s ease, color .25s ease;
   }
-  .ta.dark, html.dark .ta {
+  .ta.dark, html.dark .ta, html.dark body, html.dark {
     --bg: #090D1A;
     --surface: #121829;
     --surface-2: #1B243B;
@@ -64,9 +85,13 @@ export const TOKENS = `
     --text-3: #64748B;
     --border: rgba(255, 255, 255, 0.1);
     --border-subtle: rgba(255, 255, 255, 0.06);
-    --success-bg: #064E3B;
-    --warning-bg: #451A03;
-    --danger-bg: #450A0A;
+    --success-bg: rgba(16, 185, 129, 0.18);
+    --success-border: rgba(16, 185, 129, 0.35);
+    --warning-bg: rgba(245, 158, 11, 0.18);
+    --warning-border: rgba(245, 158, 11, 0.35);
+    --danger-bg: rgba(239, 68, 68, 0.18);
+    --danger-border: rgba(239, 68, 68, 0.35);
+    --primary-tint: rgba(99, 102, 241, 0.2);
   }
   .ta.dark .ta-sidebar, html.dark .ta-sidebar {
     background: #0D1222;
@@ -83,6 +108,7 @@ export const TOKENS = `
   .ta.dark .ta-search, html.dark .ta-search {
     background: #161D31;
     border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text);
   }
   .ta.dark .ta-search:focus-within, html.dark .ta-search:focus-within {
     background: #121829;
@@ -223,7 +249,14 @@ export const TOKENS = `
   @media (max-width: 899px) {
     .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
-    .ta-desktop-only { display: none !important; }
+    /* Despite the name, this is NOT safe to hide outright on mobile here:
+       it wraps each screen's header quick-action (e.g. "Create cohort") and
+       the header Sign Out button, and unlike the learner app there is no
+       redundant place to reach either of those in the admin/mentor/manager/
+       superadmin apps. Shrink to fit the header instead of removing them. */
+    .ta-desktop-only .ta-btn { padding: 7px 12px; font-size: 12.5px; gap: 6px; }
+    button.ta-desktop-only.ta-btn { width: 36px; height: 36px; padding: 0; border-radius: 10px; gap: 0; flex-shrink: 0; }
+    button.ta-desktop-only.ta-btn span { display: none; }
     .ta-topbar {
       padding: 0 16px; height: 58px; min-height: 58px;
       display: flex; align-items: center; justify-content: space-between;
@@ -319,20 +352,22 @@ export const TOKENS = `
   /* Card surface for Platform - no backdrop-filter: this app is dense with
      stacked/nested cards and tables, and a blur costs real scroll/render
      performance for near-zero visible benefit on flat backgrounds. */
+  /* Card surface for Platform */
   .ta-card {
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid rgba(226, 232, 240, 0.85);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 22px;
     box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
     transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1),
                 box-shadow .24s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color .24s ease;
+                border-color .24s ease,
+                background .2s ease;
   }
-  .ta.dark .ta-card {
-    background: rgba(18, 24, 43, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  .ta.dark .ta-card, html.dark .ta-card, html.dark .ta .ta-card {
+    background: var(--surface) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
   }
   .ta-card-hover {
     cursor: pointer;
@@ -342,9 +377,9 @@ export const TOKENS = `
     border-color: rgba(99, 102, 241, 0.35);
     transform: translateY(-3px) scale(1.006);
   }
-  .ta.dark .ta-card-hover:hover {
-    box-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
-    border-color: rgba(129, 140, 248, 0.35);
+  .ta.dark .ta-card-hover:hover, html.dark .ta .ta-card-hover:hover {
+    box-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(129, 140, 248, 0.35) !important;
     transform: translateY(-3px) scale(1.006);
   }
   .ta-grid { display: grid; gap: 18px; }
@@ -376,12 +411,12 @@ export const TOKENS = `
   .ta-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700; background: var(--surface-2); color: var(--primary); display:inline-flex; align-items:center; gap:4px; }
   .ta-divider { height: 1px; background: var(--border); border: none; margin: 16px 0; }
   .ta-table { width: 100%; border-collapse: collapse; }
-  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border); background: #fff; }
+  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
   .ta-table-wrap .ta-table { min-width: 560px; }
   .ta-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 700; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-3); }
-  .ta-table td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); }
+  .ta-table td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text); }
   .ta-table tr:last-child td { border-bottom: none; }
-  .ta-table tr:hover td { background: var(--surface-3); }
+  .ta-table tr:hover td { background: var(--surface-2); }
   .ta-progress-track { width: 100%; height: 7px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
   .ta-progress-fill { height: 100%; border-radius: 99px; background: var(--grad); transition: width .3s ease; }
   .ta-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--border); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; margin-bottom: 20px; }
@@ -446,9 +481,9 @@ export function StatCard({ stat }) {
   const Icon = stat.icon;
   return (
     <div className="ta-card ta-card-hover">
-      <div className="ta-row ta-between">
-        <span className="ta-label">{stat.label}</span>
-        {Icon && <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon size={17} color="var(--primary)" /></div>}
+      <div className="ta-row ta-between" style={{ gap: 8 }}>
+        <span className="ta-label" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>{stat.label}</span>
+        {Icon && <div style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}><Icon size={17} color="var(--primary)" /></div>}
       </div>
       <div className="ta-row ta-between ta-mt12">
         <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.02em", color: "var(--text)" }}>{stat.value}</div>
@@ -741,7 +776,7 @@ export function DashboardSwitcher({ currentDashboard, availableDashboards, roleL
           instead of overlaying it. Inline styles have unambiguous highest
           specificity, so this can't be re-broken by stylesheet ordering
           the same way. */}
-      <div className="ta-card" style={{ maxWidth: 460, width: "100%", background: "#fff" }} onClick={(e) => e.stopPropagation()}>
+      <div className="ta-card" style={{ maxWidth: 460, width: "100%", background: "var(--surface)" }} onClick={(e) => e.stopPropagation()}>
         <div className="ta-row ta-between">
           <div className="ta-row ta-gap8">
             <Repeat size={18} color="var(--primary)" />
@@ -844,6 +879,19 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
+  const [isDarkTheme, setIsDarkTheme] = useState(() => getStoredThemeDark());
+
+  useEffect(() => {
+    const syncTheme = () => {
+      setIsDarkTheme(getStoredThemeDark());
+    };
+    window.addEventListener("storage", syncTheme);
+    window.addEventListener("trainai-theme-change", syncTheme);
+    return () => {
+      window.removeEventListener("storage", syncTheme);
+      window.removeEventListener("trainai-theme-change", syncTheme);
+    };
+  }, []);
 
   const userDisplayName = profileQuery?.data?.display_name || "Admin User";
   const userInitials = userDisplayName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "AU";
@@ -1094,11 +1142,22 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           )}
         </div>
 
-        {/* Notifications icon - decorative for now: there is no platform-side
-            (admin/mentor/superadmin) notifications feed in the schema to back
-            a real unread count (that only exists on the learner app side), so
-            this deliberately has no fake unread dot or click affordance
-            rather than pretending there's something behind it. */}
+        {/* Theme Toggle (Dark / Light) */}
+        <button
+          className="ta-btn ta-btn-outline"
+          style={{ width: 42, height: 42, padding: 0, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+          onClick={() => {
+            const next = !isDarkTheme;
+            setIsDarkTheme(next);
+            setGlobalThemeDark(next);
+          }}
+          title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {isDarkTheme ? <Sun size={17} color="#FBBF24" /> : <Moon size={17} color="var(--text-2)" />}
+        </button>
+
+        {/* Notifications icon */}
         <div style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
           <Bell size={17} color="var(--text-2)" />
         </div>

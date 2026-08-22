@@ -75,9 +75,9 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
             <div className="ta-col ta-gap10 ta-mt16 anim-stagger">
               {!usersQuery.loading && orgUsers.length === 0 && <div className="ta-empty">No org members found.</div>}
               {orgUsers.slice(0, 8).map((u) => (
-                <div key={u.id} className="ta-row ta-gap10">
+                <div key={u.id} className="ta-row ta-gap10" style={{ minWidth: 0 }}>
                   <Avatar initials={u.initials} size={28} />
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{u.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name}</span>
                 </div>
               ))}
               {orgUsers.length > 8 && (

@@ -186,17 +186,17 @@ export function BrandingScreen() {
           </div>
 
           <div style={{ marginTop: 20, padding: 18, borderRadius: borderRadius, background: themeMode === "dark" ? "#1E293B" : "var(--surface-2)", border: "1px solid var(--border)" }}>
-            <div className="ta-row ta-between">
-              <div className="ta-row ta-gap10">
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: primaryColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
+            <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
+              <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 auto" }}>
+                <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 10, background: primaryColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
                   {selectedOrg.name?.charAt(0) || "T"}
                 </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>{selectedOrg.name}</div>
+                <div style={{ minWidth: 0, overflow: "hidden" }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedOrg.name}</div>
                   <div style={{ fontSize: 11, opacity: 0.7 }}>Enterprise AI Academy</div>
                 </div>
               </div>
-              <button style={{ background: primaryColor, color: "#fff", border: "none", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              <button style={{ background: primaryColor, color: "#fff", border: "none", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
                 Enroll
               </button>
             </div>

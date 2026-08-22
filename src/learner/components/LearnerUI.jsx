@@ -161,7 +161,9 @@ export const TOKENS = `
     box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.35); display: flex; align-items: center; gap: 10px; max-width: 90%;
     animation: slideUp .22s cubic-bezier(.16,1,.3,1) both; border: 1px solid rgba(255,255,255,0.1);
   }
-  .tai-topbar { display:flex; justify-content:space-between; align-items:center; padding: 8px 0 18px; }
+  .tai-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; row-gap: 10px; padding: 8px 0 18px; }
+  .tai-topbar > .tai-row.tai-gap12 { min-width: 0; }
+  .tai-topbar-actions { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
   .tai-h1 { font-size: clamp(20px, 4vw, 24px); font-weight: 800; letter-spacing: -0.025em; margin:0; color: var(--text); }
   .tai-sub { font-size: 13px; color: var(--text-2); margin: 3px 0 0; font-weight: 500; }
   .tai-iconbtn { width:38px; height:38px; border-radius:12px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border:1px solid var(--border);
@@ -469,7 +471,7 @@ export function TopBar({ title, sub, onBack, right }) {
           {sub && <p className="tai-sub">{sub}</p>}
         </div>
       </div>
-      {right && <div className="tai-row tai-gap8">{right}</div>}
+      {right && <div className="tai-row tai-gap8 tai-topbar-actions">{right}</div>}
     </div>
   );
 }
@@ -765,14 +767,6 @@ export function DesktopSidebar({
               >
                 <Users size={15} />
                 <span>Cohorts</span>
-              </div>
-              <div
-                className={`tai-sub-item ${activeScreen === "community" && currentTab === "leaderboard" ? "active" : ""}`}
-                onClick={() => go("leaderboard")}
-                title="Leaderboard & Rank"
-              >
-                <Trophy size={15} />
-                <span>Rank</span>
               </div>
             </div>
           )}

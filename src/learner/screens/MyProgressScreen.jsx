@@ -309,7 +309,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
               <div
                 key={course.id}
                 className="tai-card tai-card-hover"
-                style={{ padding: "24px 26px", borderRadius: 20, background: "var(--surface)", border: "1px solid var(--border)" }}
+                style={{ padding: "clamp(16px, 4vw, 24px) clamp(16px, 4vw, 26px)", borderRadius: 20, background: "var(--surface)", border: "1px solid var(--border)" }}
                 onClick={() => push("courseDetail", { id: course.id })}
               >
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "space-between" }}>

@@ -332,9 +332,9 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                         <div style={{ fontWeight: 700, fontSize: 13.5 }}>{name}</div>
                         {assignedToThisLearner.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>No courses assigned yet.</div>}
                         {assignedToThisLearner.map((lc) => (
-                          <div key={lc.id} className="ta-row ta-between" style={{ fontSize: 12.5, marginTop: 6 }}>
-                            <span>{lc.courses?.title || "Unknown course"}</span>
-                            <span style={{ color: "var(--text-2)" }}>{lc.assigned_at ? new Date(lc.assigned_at).toLocaleDateString() : "N/A"}</span>
+                          <div key={lc.id} className="ta-row ta-between" style={{ fontSize: 12.5, marginTop: 6, gap: 8, flexWrap: "wrap" }}>
+                            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lc.courses?.title || "Unknown course"}</span>
+                            <span style={{ color: "var(--text-2)", flexShrink: 0 }}>{lc.assigned_at ? new Date(lc.assigned_at).toLocaleDateString() : "N/A"}</span>
                           </div>
                         ))}
                       </div>
@@ -426,9 +426,9 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                   </div>
                   {resources.length === 0 && <div className="ta-empty ta-mt12">No resources shared yet.</div>}
                   {resources.map((r) => (
-                    <div key={r.id} className="ta-row ta-between ta-mt12" style={{ fontSize: 13 }}>
-                      <span style={{ fontWeight: 600 }}>{r.title}</span>
-                      <div className="ta-row ta-gap8">
+                    <div key={r.id} className="ta-row ta-between ta-mt12" style={{ fontSize: 13, gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</span>
+                      <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
                         {r.external_url && <a href={r.external_url} target="_blank" rel="noreferrer" style={{ color: "var(--primary)" }}>Open</a>}
                         <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleDeleteResource(r.id, r.title)}><Trash2 size={13} /></button>
                       </div>
@@ -444,9 +444,9 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                   </div>
                   {sessions.length === 0 && <div className="ta-empty ta-mt12">No sessions scheduled.</div>}
                   {sessions.map((s) => (
-                    <div key={s.id} className="ta-row ta-between ta-mt12" style={{ fontSize: 13 }}>
-                      <span style={{ fontWeight: 600 }}>{s.title}</span>
-                      <div className="ta-row ta-gap8">
+                    <div key={s.id} className="ta-row ta-between ta-mt12" style={{ fontSize: 13, gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</span>
+                      <div className="ta-row ta-gap8" style={{ flexShrink: 0, flexWrap: "wrap" }}>
                         <span style={{ color: "var(--text-2)" }}>{s.starts_at ? new Date(s.starts_at).toLocaleString() : "N/A"}</span>
                         <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleDeleteSession(s.id, s.title)}><Trash2 size={13} /></button>
                       </div>

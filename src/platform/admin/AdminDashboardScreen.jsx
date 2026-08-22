@@ -225,9 +225,9 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 )}
                 {(cohortProgressQuery.data || []).map(c => (
                   <div key={c.name} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("cohorts")}>
-                    <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 8 }}>
-                      <span style={{ fontWeight: 700 }}>{c.name}</span>
-                      <span style={{ color: "var(--primary)", fontWeight: 700 }}>{c.progress}%</span>
+                    <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 8, gap: 10 }}>
+                      <span style={{ fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+                      <span style={{ color: "var(--primary)", fontWeight: 700, flexShrink: 0 }}>{c.progress}%</span>
                     </div>
                     <ProgressBar value={c.progress} />
                   </div>
@@ -337,10 +337,10 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               background: "var(--surface-2)",
               border: "1px solid var(--border)"
             }}>
-              <div className="ta-row ta-between">
-                <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 13.5 }}>
-                  <Brain size={16} />
-                  <span>Cohort Diagnostic Insights</span>
+              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+                <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>
+                  <Brain size={16} style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Cohort Diagnostic Insights</span>
                 </div>
                 <Tag tone="warning">Early Alert</Tag>
               </div>
@@ -381,16 +381,16 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No at-risk students right now.</div>
                 )}
                 {(riskQuery.data || []).map((s, idx) => (
-                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("people")}>
-                    <div className="ta-row ta-gap10">
-                      <img 
-                        src={s.avatar || `https://images.unsplash.com/photo-${1534528741775 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`} 
-                        alt={s.name} 
-                        style={{ width: 34, height: 34, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }}
+                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
+                    <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                      <img
+                        src={s.avatar || `https://images.unsplash.com/photo-${1534528741775 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`}
+                        alt={s.name}
+                        style={{ width: 34, height: 34, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
                         onError={(e) => { e.target.style.display = "none"; }}
                       />
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13 }}>{s.name}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
                         <div style={{ fontSize: 11, color: "var(--text-3)" }}>
                           {s.days === "N/A" ? "No recent activity" : `${s.days} days inactive`}
                         </div>
@@ -419,16 +419,16 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No active instructors yet.</div>
                 )}
                 {(mentorsQuery.data || []).map((m, idx) => (
-                  <div key={m.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("people")}>
-                    <div className="ta-row ta-gap10">
-                      <img 
-                        src={m.avatar || `https://images.unsplash.com/photo-${1573496359142 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`} 
-                        alt={m.name} 
-                        style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }}
+                  <div key={m.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
+                    <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                      <img
+                        src={m.avatar || `https://images.unsplash.com/photo-${1573496359142 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`}
+                        alt={m.name}
+                        style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
                         onError={(e) => { e.target.style.display = "none"; }}
                       />
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13 }}>{m.name}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
                         <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.sessions} session{m.sessions === 1 ? "" : "s"}</div>
                       </div>
                     </div>
@@ -447,9 +447,9 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             {activityLogQuery.loading && <div className="ta-empty">Loading...</div>}
             {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && <div className="ta-empty">No recorded activity yet.</div>}
             {(activityLogQuery.data || []).map((a) => (
-              <div key={a.id} className="ta-row ta-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 12.5 }}>{a.text}</span>
-                <span style={{ fontSize: 11, color: "var(--text-3)" }}>{a.time}</span>
+              <div key={a.id} className="ta-row ta-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)", gap: 10 }}>
+                <span style={{ fontSize: 12.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.text}</span>
+                <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{a.time}</span>
               </div>
             ))}
           </div>

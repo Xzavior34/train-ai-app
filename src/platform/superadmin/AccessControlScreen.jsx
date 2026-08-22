@@ -139,8 +139,8 @@ function ImpersonationPanel() {
 
       {!viewing ? (
         <>
-          <div className="ta-row ta-gap8 ta-mt12">
-            <input className="ta-input" style={{ flex: 1 }} placeholder="Search by name..." value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} />
+          <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
+            <input className="ta-input" style={{ flex: "1 1 180px" }} placeholder="Search by name..." value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} />
             <button className="ta-btn ta-btn-primary" onClick={handleSearch} disabled={searching}><Search size={14} /> Search</button>
           </div>
           <input className="ta-input ta-mt8" style={{ width: "100%" }} placeholder="Reason for viewing (required, logged)" value={reason} onChange={(e) => setReason(e.target.value)} />
@@ -148,9 +148,11 @@ function ImpersonationPanel() {
           {results.length > 0 && (
             <div className="ta-col ta-gap6 ta-mt12 anim-stagger">
               {results.map((u) => (
-                <div key={u.id} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 10 }}>
-                  <span className="ta-row ta-gap8" style={{ fontSize: 13, fontWeight: 600 }}>{u.display_name || "Unnamed user"} <Tag>{u.role}</Tag></span>
-                  <button className="ta-btn ta-btn-ghost ta-btn-sm" disabled={loadingView} onClick={() => handleView(u)}>View</button>
+                <div key={u.id} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 10, gap: 8, flexWrap: "wrap" }}>
+                  <span className="ta-row ta-gap8" style={{ fontSize: 13, fontWeight: 600, minWidth: 0, flex: "1 1 auto", overflow: "hidden" }}>
+                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.display_name || "Unnamed user"}</span> <Tag>{u.role}</Tag>
+                  </span>
+                  <button className="ta-btn ta-btn-ghost ta-btn-sm" disabled={loadingView} onClick={() => handleView(u)} style={{ flexShrink: 0 }}>View</button>
                 </div>
               ))}
             </div>
@@ -259,9 +261,9 @@ export function AccessControlScreen() {
           <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 6 }}>
             Super Admin can only be granted to a real, existing @trainailtd.com account - enforced by the database itself, not just this form.
           </div>
-          <div className="ta-row ta-gap8 ta-mt12">
+          <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
             <input
-              className="ta-input" style={{ flex: 1 }}
+              className="ta-input" style={{ flex: "1 1 180px" }}
               placeholder="name@trainailtd.com"
               value={grantEmail}
               onChange={(e) => setGrantEmail(e.target.value)}
@@ -279,7 +281,7 @@ export function AccessControlScreen() {
               {!superAdminsQuery.loading && superAdmins.length === 0 && <tr><td colSpan={3} className="ta-empty">No super admins found.</td></tr>}
               {superAdmins.map(sa => (
                 <tr key={sa.userId}>
-                  <td><div className="ta-row ta-gap10"><Avatar initials={sa.initials || "SA"} size={32} /><span style={{ fontWeight: 600 }}>{sa.name || "Super Admin"}</span></div></td>
+                  <td><div className="ta-row ta-gap10" style={{ minWidth: 0 }}><Avatar initials={sa.initials || "SA"} size={32} /><span style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sa.name || "Super Admin"}</span></div></td>
                   <td><Tag tone="danger">Super Admin</Tag></td>
                   <td>
                     <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={async () => {
@@ -304,8 +306,8 @@ export function AccessControlScreen() {
             {mentorsQuery.loading && <div className="ta-empty">Loading instructors...</div>}
             {!mentorsQuery.loading && mentors.length === 0 && <div className="ta-empty">No instructors on the platform yet.</div>}
             {mentors.map((m) => (
-              <div key={m.id} className="ta-row ta-between" style={{ padding: "9px 10px", background: "var(--surface-2)", borderRadius: 10 }}>
-                <span style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</span>
+              <div key={m.id} className="ta-row ta-between" style={{ padding: "9px 10px", background: "var(--surface-2)", borderRadius: 10, gap: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
                 <Switch on={!!m.payouts_enabled} onChange={() => handleTogglePayouts(m.id, !!m.payouts_enabled)} />
               </div>
             ))}
@@ -317,8 +319,8 @@ export function AccessControlScreen() {
           <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>
             For a user genuinely locked out of their authenticator app - removes every two-factor method on their account so they can sign in and re-enroll. Calls the same real, already-deployed admin-reset-mfa function used by the 1.0 reference codebase.
           </div>
-          <div className="ta-row ta-gap8 ta-mt12">
-            <input className="ta-input" style={{ flex: 1 }} placeholder="user@company.com" value={mfaResetEmail} onChange={(e) => setMfaResetEmail(e.target.value)} />
+          <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
+            <input className="ta-input" style={{ flex: "1 1 180px" }} placeholder="user@company.com" value={mfaResetEmail} onChange={(e) => setMfaResetEmail(e.target.value)} />
             <button className="ta-btn ta-btn-danger" disabled={mfaResetting || !mfaResetEmail.trim()} onClick={handleMfaReset}>
               {mfaResetting ? "Resetting..." : "Reset 2FA"}
             </button>

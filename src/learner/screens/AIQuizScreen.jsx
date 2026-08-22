@@ -343,7 +343,7 @@ export function AIQuizScreen({
                 Recent AI Learning Sessions
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
                 {chatThreads.map(thread => {
                   const isSelected = activeThreadId === thread.id;
                   return (
@@ -360,11 +360,11 @@ export function AIQuizScreen({
                         transition: "all 0.15s ease"
                       }}
                     >
-                      <div className="tai-row tai-between" style={{ marginBottom: 4 }}>
-                        <div style={{ fontWeight: 800, fontSize: 13, color: isSelected ? "var(--primary)" : "var(--text)" }}>
+                      <div className="tai-row tai-between" style={{ marginBottom: 4, gap: 8 }}>
+                        <div style={{ fontWeight: 800, fontSize: 13, color: isSelected ? "var(--primary)" : "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {thread.title}
                         </div>
-                        <span style={{ fontSize: 11, color: "var(--text-3)" }}>{thread.date}</span>
+                        <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{thread.date}</span>
                       </div>
                       <div style={{ fontSize: 11.5, color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {thread.snippet}
@@ -565,7 +565,7 @@ export function AIQuizScreen({
       {aiTab === "quiz" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {quizStage === "setup" && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
               
               {/* Generator Configuration Card */}
               <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
@@ -593,7 +593,7 @@ export function AIQuizScreen({
                   style={{ height: 42, fontSize: 13.5, marginBottom: 14 }}
                 />
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12, marginBottom: 16 }}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", marginBottom: 6 }}>
                       Difficulty Level
@@ -753,9 +753,11 @@ export function AIQuizScreen({
                   </div>
                   {quizResult.details.map((d, i) => (
                     <div key={i} style={{ background: "var(--surface-3)", padding: 14, borderRadius: 12, border: "1px solid var(--border)" }}>
-                      <div className="tai-row tai-between">
-                        <span style={{ fontWeight: 700, fontSize: 13.5 }}>{i + 1}. {d.question}</span>
-                        {d.isCorrect ? <CheckCircle2 size={16} color="var(--success)" /> : <HelpCircle size={16} color="var(--danger)" />}
+                      <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10 }}>
+                        <span style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>{i + 1}. {d.question}</span>
+                        <span style={{ flexShrink: 0, display: "flex", paddingTop: 1 }}>
+                          {d.isCorrect ? <CheckCircle2 size={16} color="var(--success)" /> : <HelpCircle size={16} color="var(--danger)" />}
+                        </span>
                       </div>
                       {!d.isCorrect && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 4 }}>Correct: {d.correctOption}</div>}
                       {d.explanation && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>{d.explanation}</div>}
@@ -814,9 +816,9 @@ export function AIQuizScreen({
             ) : (
               <div className="tai-col tai-gap10">
                 {weakAreas.map((w, i) => (
-                  <div key={i} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13.5 }}>{w.topic}</div>
+                  <div key={i} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 0, flex: "1 1 160px" }}>
+                      <div style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.topic}</div>
                       <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>{w.note}</div>
                     </div>
                     <Tag tone="warning">{w.mastery}% Mastery</Tag>

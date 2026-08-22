@@ -165,7 +165,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalOrgs}
           </div>
-          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> +20% QoQ
             </span>
@@ -184,7 +184,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalUsers.toLocaleString()}
           </div>
-          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> +14.2% MoM
             </span>
@@ -203,7 +203,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalCourses}
           </div>
-          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--primary)", fontWeight: 700 }}>
               <CheckCircle2 size={14} /> 100% Accredited
             </span>
@@ -222,7 +222,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveActiveInWeek.toLocaleString()}
           </div>
-          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> 69.8% Engagement
             </span>
@@ -238,7 +238,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         
         {/* Multi-Month Growth Chart */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Platform Growth &amp; Enrollment Trajectory</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Monthly active seats and course enrollments</div>
@@ -262,7 +262,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           </div>
 
           {/* Bar Chart Visualization */}
-          <div style={{ height: 210, display: "flex", alignItems: "flex-end", justifyContent: "space-between", paddingTop: 30, paddingBottom: 10, gap: 12 }}>
+          <div style={{ height: 210, display: "flex", alignItems: "flex-end", justifyContent: "space-between", paddingTop: 30, paddingBottom: 10, gap: 12, overflowX: "auto" }}>
             {MONTHLY_GROWTH_DATA.map((item, idx) => {
               const val = activeChartMetric === "enrollments" ? item.enrollments : `$${(item.revenue / 1000).toFixed(1)}k`;
               return (
@@ -292,7 +292,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
 
         {/* AI Engine Activity & Consumption Matrix */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>AI Inference Engine Telemetry</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Gemini 2.5 Flash query distribution</div>
@@ -334,7 +334,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         
         {/* Tenant Table */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Tenant Organizations</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Multi-tenant seat allocations &amp; statuses</div>
@@ -360,12 +360,12 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 {orgs.map((o) => (
                   <tr key={o.id}>
                     <td>
-                      <div className="ta-row ta-gap10">
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--primary)" }}>
+                      <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--primary)", flexShrink: 0 }}>
                           <Building2 size={16} />
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{o.name}</div>
+                        <div style={{ minWidth: 0, overflow: "hidden" }}>
+                          <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>
                           <div style={{ fontSize: 11, color: "var(--text-3)" }}>ID: {o.id.slice(0, 8)}...</div>
                         </div>
                       </div>
@@ -392,7 +392,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
 
         {/* Real-time Audit Stream */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Live Platform Audit Stream</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Real-time events from safe_admin_audit_log</div>
