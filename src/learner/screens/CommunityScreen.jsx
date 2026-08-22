@@ -539,20 +539,80 @@ export const chartColors = {
           POST COMPOSER MODAL
           ========================================================================= */}
       {postComposerOpen && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 500,
-          display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
-          overflowY: "auto", boxSizing: "border-box"
-        }}>
-          <div className="tai-card" style={{ maxWidth: 580, width: "100%", maxHeight: "100%", overflowY: "auto", padding: 24, borderRadius: 20, boxSizing: "border-box" }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(10, 14, 26, 0.65)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            zIndex: 999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            overflowY: "auto",
+            boxSizing: "border-box"
+          }}
+          onClick={() => setPostComposerOpen(false)}
+        >
+          <div
+            className="tai-card anim-slide-down"
+            style={{
+              maxWidth: 600,
+              width: "100%",
+              maxHeight: "88vh",
+              overflowY: "auto",
+              padding: "24px 26px",
+              borderRadius: 22,
+              boxSizing: "border-box",
+              background: "var(--surface)",
+              boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
+              border: "1px solid var(--border)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="tai-row tai-between" style={{ marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
               <div className="tai-row tai-gap8">
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <MessageCircle size={16} color="var(--primary)" />
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <MessageCircle size={18} color="var(--primary)" />
                 </div>
-                <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>Create Community Post</h3>
+                <div>
+                  <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: "var(--text)" }}>Share or Ask Question</h3>
+                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Publish a question, project, or discussion to the community</div>
+                </div>
               </div>
               <button className="tai-iconbtn" onClick={() => setPostComposerOpen(false)}><X size={16} /></button>
+            </div>
+
+            {/* Post Category Selectors */}
+            <div className="tai-scrollx" style={{ paddingBottom: 6, marginBottom: 12 }}>
+              {[
+                { id: "discussion", label: "💬 Discussion" },
+                { id: "question", label: "❓ Ask Question" },
+                { id: "showcase", label: "🚀 Project Showcase" },
+                { id: "resource", label: "📚 Resource" },
+              ].map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setComposerType(t.id)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 999,
+                    border: composerType === t.id ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                    background: composerType === t.id ? "var(--primary-tint)" : "var(--surface-2)",
+                    color: composerType === t.id ? "var(--primary)" : "var(--text-2)",
+                    fontWeight: composerType === t.id ? 800 : 600,
+                    fontSize: 12,
+                    cursor: "pointer",
+                    marginRight: 6,
+                    whiteSpace: "nowrap"
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
 
             <div className="tai-col tai-gap12">
@@ -560,9 +620,10 @@ export const chartColors = {
                 <label className="tai-label">Post Title</label>
                 <input
                   className="tai-input tai-mt6"
-                  placeholder="e.g. Feedback on my new Figma UI kit tokens..."
+                  placeholder="e.g. How do I optimize context caching for multimodal Gemini?"
                   value={composerTitle}
                   onChange={(e) => setComposerTitle(e.target.value)}
+                  autoFocus
                 />
               </div>
 
@@ -571,7 +632,7 @@ export const chartColors = {
                 <textarea
                   className="tai-input tai-mt6"
                   rows={4}
-                  placeholder="Share your progress, describe what you built, or ask a specific question..."
+                  placeholder="Share your code, describe what you are building, or ask a specific question..."
                   value={composerContent}
                   onChange={(e) => setComposerContent(e.target.value)}
                 />
@@ -579,7 +640,7 @@ export const chartColors = {
 
               <div className="tai-grid2">
                 <div>
-                  <label className="tai-label">Image or Screenshot URL (optional)</label>
+                  <label className="tai-label">Image or Screenshot URL (Optional)</label>
                   <input
                     className="tai-input tai-mt6"
                     placeholder="https://..."
@@ -588,7 +649,7 @@ export const chartColors = {
                   />
                 </div>
                 <div>
-                  <label className="tai-label">External Repository Link (optional)</label>
+                  <label className="tai-label">Repository or Demo Link (Optional)</label>
                   <input
                     className="tai-input tai-mt6"
                     placeholder="https://github.com/..."
@@ -599,7 +660,7 @@ export const chartColors = {
               </div>
 
               <div>
-                <label className="tai-label">Tags (comma separated)</label>
+                <label className="tai-label">Tags (Comma Separated)</label>
                 <input
                   className="tai-input tai-mt6"
                   placeholder="Design Tokens, Figma, AI, Frontend"
@@ -612,7 +673,7 @@ export const chartColors = {
                 <button className="tai-btn tai-btn-ghost" onClick={() => setPostComposerOpen(false)}>
                   Cancel
                 </button>
-                <button className="tai-btn tai-btn-primary" onClick={handleCreatePost} disabled={posting}>
+                <button className="tai-btn tai-btn-primary" onClick={handleCreatePost} disabled={posting || !composerContent.trim()}>
                   {posting ? "Publishing…" : "Publish Post →"}
                 </button>
               </div>
