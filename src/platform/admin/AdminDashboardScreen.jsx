@@ -73,8 +73,8 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   return (
     <div className="ta-fade">
       <TopBar
-        title={orgQuery.data?.name || "Dashboard"}
-        sub={`Admin workspace • ${profileQuery.data?.display_name || "Admin"}`}
+        title="Admin Workspace"
+        sub={orgQuery.data?.name || "Overview"}
         orgSelector={orgSelector}
         profileQuery={profileQuery}
         onNavigate={setScreen}
@@ -84,13 +84,20 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               className="ta-btn ta-btn-primary"
               onClick={() => setQuickActionOpen(v => !v)}
               style={{
-                background: "var(--grad)",
+                height: 34,
+                padding: "0 12px",
+                borderRadius: 8,
+                background: "#4F46E5",
                 color: "#FFFFFF",
                 fontWeight: 700,
-                boxShadow: "0 4px 14px rgba(79, 70, 229, 0.32)"
+                fontSize: 12.5,
+                border: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5
               }}
             >
-              <Plus size={15} /> Quick action
+              <Plus size={14} /> Quick action
             </button>
             {quickActionOpen && (
               <>

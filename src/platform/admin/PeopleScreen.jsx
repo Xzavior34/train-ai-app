@@ -99,14 +99,33 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
         title="People & Access" sub="Directory, instructor applications & invitations"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={<button className="ta-btn ta-btn-primary" onClick={() => setInviteOpen(true)}><UserPlus size={15} /> Invite user</button>}
+        right={
+          <button
+            className="ta-btn ta-btn-primary"
+            style={{
+              height: 34,
+              padding: "0 12px",
+              borderRadius: 8,
+              background: "#4F46E5",
+              color: "#FFFFFF",
+              fontWeight: 700,
+              fontSize: 12.5,
+              border: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5
+            }}
+            onClick={() => setInviteOpen(true)}
+          >
+            <UserPlus size={14} /> Invite user
+          </button>
+        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
             PEOPLE & ACCESS HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
@@ -127,25 +146,25 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
 
         {tab === "all" && (
           <div className="ta-col ta-gap16">
-            {/* Top 4 KPI Metrics Header from Acadence media_1787304901645.jpg */}
+            {/* Top 4 KPI Metrics Header */}
             <div className="ta-grid ta-grid-4 anim-stagger">
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Students</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Total Students</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>{members.length}</div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{invitations.length} invite{invitations.length === 1 ? "" : "s"} pending</div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>At Risk Learners</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>At Risk Learners</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: behindCount > 0 ? "#EF4444" : "var(--text)", marginTop: 4 }}>{behindCount}</div>
                 <div style={{ fontSize: 11, color: behindCount > 0 ? "#EF4444" : "var(--text-3)", marginTop: 2 }}>{behindCount > 0 ? "Needs intervention" : "All learners on pace"}</div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Avg. Attendance</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Avg. Attendance</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#10B981", marginTop: 4 }}>92%</div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Live sessions</div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Top Achievers</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Top Achievers</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#4F46E5", marginTop: 4 }}>24</div>
                 <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 2 }}>Ranked this month</div>
               </div>

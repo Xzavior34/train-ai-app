@@ -206,8 +206,24 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
             </div>
 
             <div className="ta-hero-actions">
-              <button className="ta-btn ta-btn-primary" onClick={openCreate} style={{ background: "#4F46E5", border: "none" }}>
-                <Plus size={15} /> New Learning Path
+              <button
+                className="ta-btn ta-btn-primary"
+                onClick={openCreate}
+                style={{
+                  height: 34,
+                  padding: "0 12px",
+                  borderRadius: 8,
+                  background: "#4F46E5",
+                  color: "#FFFFFF",
+                  fontWeight: 700,
+                  fontSize: 12.5,
+                  border: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5
+                }}
+              >
+                <Plus size={14} /> New Learning Path
               </button>
             </div>
           </div>
@@ -232,7 +248,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
             const img = pathImages[idx % pathImages.length];
 
             return (
-              <div key={p.id} className="ta-card ta-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 16, display: "flex", flexDirection: "column", background: "var(--surface)", border: "1px solid var(--border)" }}>
+              <div key={p.id} className="ta-card ta-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 10, display: "flex", flexDirection: "column", background: "var(--surface)", border: "1px solid var(--border)" }}>
                 <div style={{ position: "relative", width: "100%", height: 100, overflow: "hidden" }}>
                   <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(15,23,42,0.2) 0%, rgba(15,23,42,0.7) 100%)" }} />

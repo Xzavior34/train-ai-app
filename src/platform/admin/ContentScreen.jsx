@@ -283,8 +283,24 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
               </button>
             </div>
           ) : (
-            <button className="ta-btn ta-btn-primary" onClick={() => setNewCourseOpen(true)}>
-              <Plus size={15} /> Create course
+            <button
+              className="ta-btn ta-btn-primary"
+              style={{
+                height: 34,
+                padding: "0 12px",
+                borderRadius: 8,
+                background: "#4F46E5",
+                color: "#FFFFFF",
+                fontWeight: 700,
+                fontSize: 12.5,
+                border: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5
+              }}
+              onClick={() => setNewCourseOpen(true)}
+            >
+              <Plus size={14} /> Create course
             </button>
           )
         }
@@ -582,10 +598,10 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
 
                 {/* AI Curriculum Generator Trigger Card */}
                 <div style={{
-                  padding: "14px 18px",
-                  borderRadius: 12,
-                  background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(147, 51, 234, 0.08) 100%)",
-                  border: "1px solid rgba(99, 102, 241, 0.25)",
+                  padding: "12px 16px",
+                  borderRadius: 8,
+                  background: "rgba(79, 70, 229, 0.05)",
+                  border: "1px solid rgba(79, 70, 229, 0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1077,20 +1093,6 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
           <>
             {/* Masterclasses & Content Hero Banner */}
             <div className="ta-hero-banner" style={{ marginBottom: 20 }}>
-              <img
-                src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
-                alt=""
-                style={{
-                  position: "absolute", inset: 0, width: "100%", height: "100%",
-                  objectFit: "cover", opacity: 0.32, zIndex: 0
-                }}
-              />
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-                zIndex: 0
-              }} />
-
               <div className="ta-hero-inner">
                 <div className="ta-hero-text">
                   <h1 className="ta-hero-title">

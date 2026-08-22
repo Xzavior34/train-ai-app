@@ -159,45 +159,45 @@ export const TOKENS = `
   }
   .ta-nav-item {
     display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
-    font-size: 13px; font-weight: 600; color: var(--text-2); transition: background-color .15s ease;
+    font-size: 13px; font-weight: 600; color: var(--text-2); transition: background-color .15s ease; line-height: 1.35;
   }
   .ta-nav-item:hover { background: var(--surface-2); color: var(--text); }
   .ta-nav-item.active {
-    background: var(--surface-2);
-    color: var(--primary); font-weight: 700; border-left: 2.5px solid var(--primary); padding-left: 7.5px;
+    background: var(--primary-tint);
+    color: var(--primary); font-weight: 700;
   }
   .ta-nav-divider { height: 1px; background: var(--border); margin: 8px 4px; }
   .ta-workspace-card {
-    background: var(--surface-3); border: 1px solid var(--border); border-radius: 8px; padding: 4px;
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 3px;
     margin-bottom: 10px; display: flex; flex-direction: column; gap: 2px;
   }
   .ta-ws-item {
-    display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; cursor: pointer;
-    font-size: 12.5px; font-weight: 600; color: var(--text-2); transition: background-color .14s ease;
+    display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; cursor: pointer;
+    font-size: 12.5px; font-weight: 600; color: var(--text-2); transition: background-color .14s ease; line-height: 1.35;
   }
-  .ta-ws-item:hover { background: var(--surface-2); color: var(--text); }
-  .ta-ws-item.active { background: #4F46E5; color: #FFFFFF; font-weight: 700; }
+  .ta-ws-item:hover { background: var(--surface); color: var(--text); }
+  .ta-ws-item.active { background: var(--surface); color: var(--primary); font-weight: 700; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(15,23,42,0.05); }
   .ta-nav-footer { display:flex; flex-direction:column; gap:3px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
   .ta-toggle-btn {
     display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; border-radius: 6px;
     border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer;
     transition: background-color .15s ease; margin-bottom: 8px;
   }
-  .ta-toggle-btn:hover { background: var(--surface-3); color: var(--primary); border-color: var(--primary-light); }
+  .ta-toggle-btn:hover { background: var(--surface); color: var(--primary); border-color: var(--border); }
   .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
   .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 72px; }
   .ta-topbar {
     height: 54px; min-height: 54px; max-height: 54px; border-bottom: 1px solid var(--border); background: var(--surface);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 24px); position: sticky; top: 0; z-index: 50;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(12px, 1.8vw, 20px); position: sticky; top: 0; z-index: 50;
+    box-sizing: border-box; width: 100%; gap: 12px;
   }
-  .ta-topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding-right: 10px; }
-  .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .ta-search { display:flex; align-items:center; gap:6px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; width: clamp(140px, 15vw, 210px); color: var(--text-3); font-size: 12px; transition: border-color .15s ease; flex-shrink: 0; }
-  .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12); background: #fff; }
+  .ta-topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex-shrink: 0; }
+  .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 1; min-width: 0; margin-left: auto; }
+  .ta-search { display:flex; align-items:center; gap:6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; width: clamp(130px, 16vw, 210px); color: var(--text-2); font-size: 12px; transition: border-color .15s ease; flex-shrink: 1; min-width: 90px; }
+  .ta-search:focus-within { border-color: var(--primary); background: var(--surface); }
   .ta-content { padding: 20px clamp(14px, 2vw, 28px) 64px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-  .ta-h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); line-height: 1.2; }
-  .ta-sub { font-size: 11.5px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+  .ta-h1 { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); line-height: 1.25; }
+  .ta-sub { font-size: 11px; color: var(--text-3); margin: 1px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }
@@ -608,7 +608,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
             <BrandLogo height={22} isMinimized={isMinimized} />
             {!isMinimized && (
-              <span className="ta-brand-tag" style={{ marginLeft: "auto", background: "linear-gradient(135deg, #F59E0B, #EF4444)", color: "#FFFFFF" }}>OWNER</span>
+              <span className="ta-brand-tag" style={{ marginLeft: "auto", background: "#F59E0B", color: "#FFFFFF" }}>OWNER</span>
             )}
           </div>
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
@@ -1167,9 +1167,10 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
         {/* Theme Toggle (Dark / Light) - full button on desktop, folded into
             the mobile "more" menu below instead of shown here, so it isn't
             a 6th thing competing for room in an already-tight mobile header. */}
+        {/* Theme Toggle (Dark / Light) */}
         <button
           className="ta-btn ta-btn-outline ta-header-full-only"
-          style={{ width: 42, height: 42, padding: 0, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+          style={{ width: 34, height: 34, padding: 0, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
           onClick={() => {
             const next = !isDarkTheme;
             setIsDarkTheme(next);
@@ -1178,46 +1179,41 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
           aria-label={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          {isDarkTheme ? <Sun size={17} color="#FBBF24" /> : <Moon size={17} color="var(--text-2)" />}
+          {isDarkTheme ? <Sun size={15} color="#FBBF24" /> : <Moon size={15} color="var(--text-2)" />}
         </button>
 
-        {/* Notifications icon - desktop only; purely decorative (no real
-            feed to back it yet), so it isn't worth a slot in the mobile
-            menu either. */}
-        <div className="ta-header-full-only" style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
-          <Bell size={17} color="var(--text-2)" />
+        {/* Notifications icon */}
+        <div className="ta-header-full-only" style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 8, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Bell size={15} color="var(--text-2)" />
         </div>
 
-        {/* Primary Header Quick Action - full-size on desktop, replicated
-            (not dropped) inside the mobile "more" menu below. */}
+        {/* Primary Header Quick Action */}
         <div className="ta-header-full-only">
           {right}
         </div>
 
-        {/* User Profile Pill - opens the real Settings Hub. Always visible -
-            this is the one action worth a permanent, dedicated slot. */}
+        {/* User Profile Pill */}
         <div
           className="ta-row ta-gap8 ta-profile-pill"
-          style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0 }}
+          style={{ background: "var(--surface)", height: 34, padding: "2px 8px 2px 4px", borderRadius: 8, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0, alignItems: "center" }}
           onClick={() => canOpenOwnSettings && onNavigate("settings")}
         >
-          <Avatar initials={userInitials} size={32} />
-          <div className="ta-col ta-profile-pill-text" style={{ lineHeight: 1.2, paddingRight: 4 }}>
-            <span className="ta-profile-pill-name" style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
-            <span className="ta-profile-pill-name" style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
+          <Avatar initials={userInitials} size={26} />
+          <div className="ta-col ta-profile-pill-text" style={{ lineHeight: 1.15, paddingRight: 2 }}>
+            <span className="ta-profile-pill-name" style={{ fontSize: 11.5, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
+            <span className="ta-profile-pill-name" style={{ fontSize: 9.5, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
           </div>
         </div>
 
-        {/* Sign Out Action - full button on desktop, replicated inside the
-            mobile "more" menu below. */}
+        {/* Sign Out Action */}
         <button
           className="ta-btn ta-btn-ghost ta-btn-sm ta-header-full-only"
           onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
           title="Sign Out"
           aria-label="Sign out"
-          style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
+          style={{ height: 34, padding: "0 8px", borderRadius: 8, color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12 }}
         >
-          <LogOut size={15} />
+          <LogOut size={14} />
           <span>Sign Out</span>
         </button>
 
