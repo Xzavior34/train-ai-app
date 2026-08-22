@@ -472,142 +472,221 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
         )}
 
         {inviteOpen && (
-          <div className="ta-card anim-slide-down" style={{ borderColor: "var(--primary)" }}>
-            <div className="ta-row ta-between">
-              <div className="ta-title">{bulkMode ? "Bulk Invite Users" : "Invite New User"}</div>
-              <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setBulkMode((v) => !v)}>
-                {bulkMode ? "Switch to single invite" : "Switch to bulk invite"}
-              </button>
-            </div>
-            {!bulkMode ? (
-              <>
-                <div className="ta-grid ta-grid-2 ta-mt12">
-                  <input className="ta-input" placeholder="User email address..." value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} />
-                  <select className="ta-input" value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
-                    <option value="learner">Learner</option>
-                    <option value="mentor">Instructor</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div className="ta-row ta-gap8 ta-mt12">
-                  <button className="ta-btn ta-btn-primary" onClick={async () => {
-                    if (!inviteEmail.trim() || !orgId) return;
-                    await createInvitation({ organizationId: orgId, email: inviteEmail.trim(), role: inviteRole });
-                    setInviteOpen(false); setInviteEmail("");
-                    invitationsQuery.refetch();
-                    showToast("Invitation sent!");
-                  }}>Send invitation</button>
-                  <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
-                  One email per line - PRD "bulk onboarding/offboarding," confirmed unbuilt before this. Each one goes through the exact same real invitation flow as a single invite (createInvitation, same authorization checks) - just looped, not a separate/weaker code path.
-                </div>
-                <textarea className="ta-input ta-mt12" rows={6} placeholder={"jane@company.com\nbob@company.com\n..."} value={bulkEmails} onChange={(e) => setBulkEmails(e.target.value)} />
-                <select className="ta-input ta-mt8" style={{ width: 200 }} value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
-                  <option value="learner">Learner</option>
-                  <option value="mentor">Instructor</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <div className="ta-row ta-gap8 ta-mt12">
-                  <button
-                    className="ta-btn ta-btn-primary"
-                    disabled={bulkSubmitting}
-                    onClick={async () => {
-                      const emails = bulkEmails.split("\n").map((e) => e.trim()).filter((e) => e && e.includes("@"));
-                      if (!emails.length || !orgId) return;
-                      setBulkSubmitting(true);
-                      let succeeded = 0, failed = 0;
-                      for (const email of emails) {
-                        try {
-                          await createInvitation({ organizationId: orgId, email, role: inviteRole });
-                          succeeded++;
-                        } catch {
-                          failed++;
-                        }
-                      }
-                      setBulkSubmitting(false);
-                      setInviteOpen(false); setBulkEmails(""); setBulkMode(false);
-                      invitationsQuery.refetch();
-                      showToast(`${succeeded} invitation${succeeded === 1 ? "" : "s"} sent${failed > 0 ? `, ${failed} failed` : ""}.`);
-                    }}
-                  >
-                    {bulkSubmitting ? "Sending..." : `Send ${bulkEmails.split("\n").filter((e) => e.trim().includes("@")).length} invitations`}
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 300,
+              background: "rgba(10, 14, 26, 0.65)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 20,
+              overflowY: "auto"
+            }}
+            onClick={() => setInviteOpen(false)}
+          >
+            <div
+              className="ta-card anim-slide-down"
+              style={{
+                maxWidth: 520,
+                width: "100%",
+                borderRadius: 20,
+                padding: 24,
+                background: "var(--surface)",
+                boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
+                border: "1px solid var(--border)",
+                maxHeight: "90vh",
+                overflowY: "auto"
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="ta-row ta-between">
+                <div className="ta-title" style={{ fontSize: 18 }}>{bulkMode ? "Bulk Invite Users" : "Invite New User"}</div>
+                <div className="ta-row ta-gap8">
+                  <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setBulkMode((v) => !v)}>
+                    {bulkMode ? "Single invite" : "Bulk invite"}
                   </button>
-                  <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
+                  <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setInviteOpen(false)}><X size={16} /></button>
                 </div>
-
-                <div className="ta-mt16" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                  <div style={{ fontWeight: 700, fontSize: 12.5 }}>Or import a CSV file</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
-                    Confirmed directly against the real 1.0 reference (BulkUserImportExport) - a CSV with "email" and optional "role" columns lets you mix learners and instructors in one file, unlike the uniform-role list above.
+              </div>
+              {!bulkMode ? (
+                <>
+                  <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 14 }}>
+                    Invite a new member to join your organization workspace.
+                  </p>
+                  <div className="ta-grid ta-grid-2 ta-mt12">
+                    <div>
+                      <div className="ta-label">Email Address</div>
+                      <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} placeholder="user@company.com" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} autoFocus />
+                    </div>
+                    <div>
+                      <div className="ta-label">Role</div>
+                      <select className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
+                        <option value="learner">Learner</option>
+                        <option value="mentor">Instructor</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
                   </div>
-                  <input
-                    type="file" accept=".csv,text/csv" className="ta-mt8"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file || !orgId) return;
-                      const text = await file.text();
-                      const rows = parseUserImportCsv(text);
-                      if (!rows.length) { showToast("No valid rows found in this CSV."); return; }
-                      setBulkSubmitting(true);
-                      try {
-                        const result = await bulkImportUsers(rows, orgId, null);
-                        showToast(`${result.succeeded.length} invited${result.failed.length > 0 ? `, ${result.failed.length} failed (${result.failed.slice(0, 3).map((f) => f.email).join(", ")}${result.failed.length > 3 ? "..." : ""})` : ""}.`);
-                        invitationsQuery.refetch();
-                        setInviteOpen(false); setBulkMode(false);
-                      } finally {
+                  <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
+                    <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
+                    <button className="ta-btn ta-btn-primary" onClick={async () => {
+                      if (!inviteEmail.trim() || !orgId) return;
+                      await createInvitation({ organizationId: orgId, email: inviteEmail.trim(), role: inviteRole });
+                      setInviteOpen(false); setInviteEmail("");
+                      invitationsQuery.refetch();
+                      showToast("Invitation sent successfully!");
+                    }}>Send Invitation</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 8 }}>
+                    Enter one email per line. Each user receives an automated onboarding invitation.
+                  </div>
+                  <textarea className="ta-input ta-mt10" rows={5} placeholder={"jane@company.com\nbob@company.com\n..."} value={bulkEmails} onChange={(e) => setBulkEmails(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }} />
+                  <div className="ta-mt10">
+                    <div className="ta-label">Assign Role</div>
+                    <select className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
+                      <option value="learner">Learner</option>
+                      <option value="mentor">Instructor</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div className="ta-row ta-gap10 ta-mt16" style={{ justifyContent: "flex-end" }}>
+                    <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
+                    <button
+                      className="ta-btn ta-btn-primary"
+                      disabled={bulkSubmitting}
+                      onClick={async () => {
+                        const emails = bulkEmails.split("\n").map((e) => e.trim()).filter((e) => e && e.includes("@"));
+                        if (!emails.length || !orgId) return;
+                        setBulkSubmitting(true);
+                        let succeeded = 0, failed = 0;
+                        for (const email of emails) {
+                          try {
+                            await createInvitation({ organizationId: orgId, email, role: inviteRole });
+                            succeeded++;
+                          } catch {
+                            failed++;
+                          }
+                        }
                         setBulkSubmitting(false);
-                        e.target.value = "";
-                      }
-                    }}
-                  />
-                </div>
-              </>
-            )}
+                        setInviteOpen(false); setBulkEmails(""); setBulkMode(false);
+                        invitationsQuery.refetch();
+                        showToast(`${succeeded} invitation${succeeded === 1 ? "" : "s"} sent${failed > 0 ? `, ${failed} failed` : ""}.`);
+                      }}
+                    >
+                      {bulkSubmitting ? "Sending..." : `Send ${bulkEmails.split("\n").filter((e) => e.trim().includes("@")).length} Invitations`}
+                    </button>
+                  </div>
+
+                  <div className="ta-mt16" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                    <div style={{ fontWeight: 700, fontSize: 13 }}>Or Import CSV File</div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+                      CSV with "email" and optional "role" columns.
+                    </div>
+                    <input
+                      type="file" accept=".csv,text/csv" className="ta-mt8"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file || !orgId) return;
+                        const text = await file.text();
+                        const rows = parseUserImportCsv(text);
+                        if (!rows.length) { showToast("No valid rows found in this CSV."); return; }
+                        setBulkSubmitting(true);
+                        try {
+                          const result = await bulkImportUsers(rows, orgId, null);
+                          showToast(`${result.succeeded.length} invited${result.failed.length > 0 ? `, ${result.failed.length} failed (${result.failed.slice(0, 3).map((f) => f.email).join(", ")}${result.failed.length > 3 ? "..." : ""})` : ""}.`);
+                          invitationsQuery.refetch();
+                          setInviteOpen(false); setBulkMode(false);
+                        } finally {
+                          setBulkSubmitting(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
 
       {certModalUser && (
-        <div className="ta-card ta-mt16 anim-slide-down" style={{ borderColor: "var(--primary)", maxWidth: 480 }}>
-          <div className="ta-row ta-between">
-            <div className="ta-title">Give Certificate to {certModalUser.display_name || "this person"}</div>
-            <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setCertModalUser(null)}><X size={14} /></button>
-          </div>
-          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-            Issues a certificate directly - independent of the request/approve flow, doesn't require an existing course.
-          </div>
-          <div className="ta-label ta-mt16">Certificate title</div>
-          <input className="ta-input ta-mt6" placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} />
-          <div className="ta-label ta-mt16">Upload certificate file (optional)</div>
-          <FileUploadZone
-            bucket="uploads"
-            pathPrefix={`certificates/${certModalUser.user_id}`}
-            accept="application/pdf,image/*"
-            onUploaded={(url) => setCertFileUrl(url)}
-            label="Drag and drop a certificate PDF or image, or click to browse"
-          />
-          <div className="ta-row ta-gap8 ta-mt20">
-            <button
-              className="ta-btn ta-btn-primary"
-              disabled={issuingCert || !certTitle.trim()}
-              onClick={async () => {
-                setIssuingCert(true);
-                try {
-                  const result = await issueCertificateDirectly(certModalUser.user_id, orgId, certTitle.trim(), null, certFileUrl || null);
-                  if (!result.success) showToast(result.error);
-                  else { showToast(`Certificate issued to ${certModalUser.display_name}.`); setCertModalUser(null); }
-                } finally {
-                  setIssuingCert(false);
-                }
-              }}
-            >
-              {issuingCert ? "Issuing..." : "Issue Certificate"}
-            </button>
-            <button className="ta-btn ta-btn-outline" onClick={() => setCertModalUser(null)}>Cancel</button>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 300,
+            background: "rgba(10, 14, 26, 0.65)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            overflowY: "auto"
+          }}
+          onClick={() => setCertModalUser(null)}
+        >
+          <div
+            className="ta-card anim-slide-down"
+            style={{
+              maxWidth: 500,
+              width: "100%",
+              borderRadius: 20,
+              padding: 24,
+              background: "var(--surface)",
+              boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
+              border: "1px solid var(--border)",
+              maxHeight: "90vh",
+              overflowY: "auto"
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="ta-row ta-between">
+              <div className="ta-title" style={{ fontSize: 18 }}>Issue Certificate to {certModalUser.display_name || "Member"}</div>
+              <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setCertModalUser(null)}><X size={16} /></button>
+            </div>
+            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+              Issues a direct verified credential to this member's portfolio.
+            </div>
+            <div className="ta-label ta-mt16">Certificate Title</div>
+            <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} autoFocus />
+            <div className="ta-label ta-mt16">Upload Certificate Document (Optional)</div>
+            <div className="ta-mt6">
+              <FileUploadZone
+                bucket="uploads"
+                pathPrefix={`certificates/${certModalUser.user_id}`}
+                accept="application/pdf,image/*"
+                onUploaded={(url) => setCertFileUrl(url)}
+                label="Drag and drop certificate PDF or image, or click to browse"
+              />
+            </div>
+            <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
+              <button className="ta-btn ta-btn-outline" onClick={() => setCertModalUser(null)}>Cancel</button>
+              <button
+                className="ta-btn ta-btn-primary"
+                disabled={issuingCert || !certTitle.trim()}
+                onClick={async () => {
+                  setIssuingCert(true);
+                  try {
+                    const result = await issueCertificateDirectly(certModalUser.user_id, orgId, certTitle.trim(), null, certFileUrl || null);
+                    if (!result.success) showToast(result.error);
+                    else { showToast(`Certificate issued to ${certModalUser.display_name}.`); setCertModalUser(null); }
+                  } finally {
+                    setIssuingCert(false);
+                  }
+                }}
+              >
+                {issuingCert ? "Issuing..." : "Issue Certificate"}
+              </button>
+            </div>
           </div>
         </div>
       )}

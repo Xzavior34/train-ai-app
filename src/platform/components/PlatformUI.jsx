@@ -185,14 +185,14 @@ export const TOKENS = `
   .ta-main { flex: 1; min-width: 0; }
   .ta-topbar {
     height: 72px; border-bottom: 1px solid var(--border); background: var(--surface);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top:0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(20px, 2.5vw, 32px); position: sticky; top:0; z-index: 20;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03);
   }
-  .ta-topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; padding-right: 16px; }
-  .ta-topbar-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-  .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 9px 14px; width: clamp(200px, 24vw, 360px); color: var(--text-3); font-size: 13px; transition: all .15s ease; }
+  .ta-topbar-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; padding-right: 16px; }
+  .ta-topbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 9px 14px; width: clamp(220px, 24vw, 380px); color: var(--text-3); font-size: 13px; transition: all .15s ease; }
   .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); background: #fff; }
-  .ta-content { padding: 32px; max-width: 1400px; margin: 0 auto; }
+  .ta-content { padding: 28px clamp(20px, 2.5vw, 40px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
   .ta-h1 { font-size: 23px; font-weight: 800; letter-spacing: -0.025em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; color: var(--text); }
   .ta-sub { font-size: 13.5px; color: var(--text-2); margin: 4px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-weight: 500; }
   @media (min-width: 900px) {
@@ -203,7 +203,7 @@ export const TOKENS = `
     border-radius: 20px;
     background: linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%);
     color: #FFFFFF;
-    padding: 22px 24px;
+    padding: clamp(22px, 2.2vw, 30px) clamp(24px, 2.5vw, 34px);
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
     border: 1px solid rgba(99, 102, 241, 0.4);
     position: relative;
@@ -217,7 +217,7 @@ export const TOKENS = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
     width: 100%;
     box-sizing: border-box;
   }
@@ -226,7 +226,7 @@ export const TOKENS = `
     flex: 1;
   }
   .ta-hero-title {
-    font-size: 22px;
+    font-size: clamp(22px, 2vw, 28px);
     font-weight: 900;
     letter-spacing: -0.025em;
     margin: 0 0 6px;
@@ -234,15 +234,15 @@ export const TOKENS = `
     line-height: 1.25;
   }
   .ta-hero-desc {
-    font-size: 13.5px;
+    font-size: clamp(13px, 1vw, 14.5px);
     color: rgba(255, 255, 255, 0.85);
     margin: 0;
-    max-width: 620px;
-    line-height: 1.45;
+    max-width: 680px;
+    line-height: 1.5;
   }
   .ta-hero-actions {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-shrink: 0;
     align-items: center;
   }
@@ -383,22 +383,19 @@ export const TOKENS = `
     border-color: rgba(129, 140, 248, 0.35) !important;
     transform: translateY(-3px) scale(1.006);
   }
-  .ta-grid { display: grid; gap: 18px; }
-  .ta-grid-5 { grid-template-columns: repeat(5, 1fr); }
-  .ta-grid-4 { grid-template-columns: repeat(4, 1fr); }
-  .ta-grid-3 { grid-template-columns: repeat(3, 1fr); }
-  .ta-grid-2 { grid-template-columns: 1fr 1fr; }
-  @media (max-width: 899px) {
-    .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 599px) {
-    .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr; }
+  .ta-grid { display: grid; gap: 20px; }
+  .ta-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .ta-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ta-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ta-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 641px) and (max-width: 1080px) {
+    .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 16px !important; }
   }
   /* Main content + sidebar layout: keeps the main column dominant instead of
      splitting 50/50 once both tracks clear an auto-fit minmax threshold */
   .ta-sidebar-layout { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
   @media (min-width: 900px) {
-    .ta-sidebar-layout { grid-template-columns: minmax(0, 2fr) minmax(300px, 360px); }
+    .ta-sidebar-layout { grid-template-columns: minmax(0, 2fr) minmax(320px, 380px); gap: 24px; }
   }
   .ta-row { display: flex; align-items: center; }
   .ta-between { justify-content: space-between; }
@@ -785,28 +782,51 @@ const DASHBOARD_ICONS = {
 
 export function DashboardSwitcher({ currentDashboard, availableDashboards, roleLabel, onSwitch, onClose }) {
   return (
-    <div className="ta-scrim" onClick={onClose} style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 200, position: "fixed", inset: 0 }}>
-      {/* position/inset/zIndex all set inline, not just via the .ta-scrim
-          class - a real bug found by testing: with three separate <style>
-          tags injected simultaneously (one per mounted dashboard, all
-          rendering the same TOKENS constant), this element's computed
-          position was resolving to "static" despite the class rule saying
-          "fixed", pushing the whole modal below the visible viewport
-          instead of overlaying it. Inline styles have unambiguous highest
-          specificity, so this can't be re-broken by stylesheet ordering
-          the same way. */}
-      <div className="ta-card" style={{ maxWidth: 460, width: "100%", background: "var(--surface)" }} onClick={(e) => e.stopPropagation()}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 999,
+        background: "rgba(10, 14, 26, 0.65)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+        overflowY: "auto"
+      }}
+      onClick={onClose}
+    >
+      <div
+        className="ta-card anim-slide-down"
+        style={{
+          maxWidth: 480,
+          width: "100%",
+          background: "var(--surface)",
+          borderRadius: 20,
+          padding: 24,
+          boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
+          border: "1px solid var(--border)",
+          maxHeight: "90vh",
+          overflowY: "auto"
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="ta-row ta-between">
           <div className="ta-row ta-gap8">
             <Repeat size={18} color="var(--primary)" />
-            <div className="ta-title" style={{ fontSize: 16 }}>Dashboard Switcher</div>
+            <div className="ta-title" style={{ fontSize: 18 }}>Dashboard Switcher</div>
           </div>
-          {roleLabel && <Tag tone="warning">{roleLabel}</Tag>}
+          <div className="ta-row ta-gap8">
+            {roleLabel && <Tag tone="warning">{roleLabel}</Tag>}
+            <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={onClose}><X size={16} /></button>
+          </div>
         </div>
-        <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6, marginBottom: 16 }}>
-          Open another dashboard without changing your saved role
+        <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 18 }}>
+          Switch between your authorized dashboard workspaces without changing your saved account role.
         </div>
-        <div className="ta-col ta-gap8">
+        <div className="ta-col ta-gap10">
           {availableDashboards.map((key) => {
             const Icon = DASHBOARD_ICONS[key];
             const meta = DASHBOARD_META[key];
@@ -815,15 +835,15 @@ export function DashboardSwitcher({ currentDashboard, availableDashboards, roleL
               <div
                 key={key}
                 className={`ta-ws-item ${isActive ? "active" : ""}`}
-                style={{ padding: "14px 16px", borderRadius: 12, cursor: isActive ? "default" : "pointer" }}
+                style={{ padding: "14px 16px", borderRadius: 14, cursor: isActive ? "default" : "pointer" }}
                 onClick={() => { if (!isActive) onSwitch(key); }}
               >
-                <Icon size={18} />
+                <Icon size={20} />
                 <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontWeight: 700, fontSize: 14 }}>{meta.label}</span>
-                  <span style={{ fontSize: 11.5, opacity: 0.8 }}>{meta.subtitle}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14.5 }}>{meta.label}</span>
+                  <span style={{ fontSize: 12, opacity: 0.8 }}>{meta.subtitle}</span>
                 </div>
-                {isActive && <Check size={16} />}
+                {isActive && <Check size={18} />}
               </div>
             );
           })}
