@@ -15,137 +15,38 @@ export function CohortScreen({
   const [tab, setTab] = useState("chat"); // "chat" | "courses" | "resources" | "sessions" | "members"
   const [expandedPostId, setExpandedPostId] = useState(null);
 
-  const effectiveCohort = cohort || {
-    id: "cohort-demo-q3",
-    name: "Q3 AI & Product Design Batch 04",
-    description: "Intensive 12-week professional track with live mentor critiques, weekly deliverables, and verified skill credentialing."
-  };
+  if (cohortMembershipQuery?.loading && !cohort) {
+    return (
+      <div>
+        <TopBar title="Cohort" onBack={back} />
+        <div className="tai-empty">Loading your cohort...</div>
+      </div>
+    );
+  }
 
-  const DEFAULT_POSTS = [
-    {
-      id: "post-1",
-      user_profiles: { display_name: "Astrid Larsson", avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" },
-      created_at: new Date(Date.now() - 3600000 * 4).toISOString(),
-      is_announcement: true,
-      content: "🚀 Welcome to Week 5! Tonight at 6:00 PM UTC we will conduct the live Figma Auto-Layout & Design Tokens review. Please ensure your Module 4 deliverable is submitted.",
-      reaction_count: 18,
-      cohort_post_replies: [
-        { id: "rep-1", user_profiles: { display_name: "Marcus Vance" }, content: "Looking forward to this session! Will the recording be uploaded afterwards?" },
-        { id: "rep-2", user_profiles: { display_name: "Astrid Larsson" }, content: "Yes Marcus! The high-res recording and transcript will be available in the Sessions tab within 1 hour." }
-      ]
-    },
-    {
-      id: "post-2",
-      user_profiles: { display_name: "Dr. Elena Vance", avatar_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80" },
-      created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-      is_announcement: false,
-      content: "Shared the updated Prompt Engineering Cheat Sheet and RAG Architecture diagrams in the Resources tab. Check it out before tomorrow's quiz.",
-      reaction_count: 12,
-      cohort_post_replies: []
-    }
-  ];
+  if (!cohort) {
+    return (
+      <div>
+        <TopBar title="Cohort" onBack={back} />
+        <div className="tai-empty">You're not part of a cohort yet. Once an admin adds you to one, its resources, sessions, and chat will show up here.</div>
+      </div>
+    );
+  }
 
-  const DEFAULT_RESOURCES = [
-    {
-      id: "res-1",
-      title: "Design System Architecture Starter Kit (Figma .fig)",
-      description: "Official starter file with pre-built variable tokens, semantic color ramps, and typography scale.",
-      resource_type: "file",
-      file_url: "https://figma.com",
-      author: "Astrid Larsson"
-    },
-    {
-      id: "res-2",
-      title: "Production RAG & Vector Embeddings Architecture PDF",
-      description: "Step-by-step technical manual on hybrid search, re-ranking models, and chunking parameters.",
-      resource_type: "link",
-      external_url: "https://github.com",
-      author: "Dr. Elena Vance"
-    },
-    {
-      id: "res-3",
-      title: "Week 5 Live Review Slide Deck & Evaluation Rubric",
-      description: "Presentation slides covering layout grids, accessibility standards, and production token deployment.",
-      resource_type: "file",
-      file_url: "https://trainailtd.com",
-      author: "Astrid Larsson"
-    }
-  ];
-
-  const DEFAULT_SESSIONS = [
-    {
-      id: "sess-1",
-      title: "Live UI Critique & Design Tokens System Review",
-      starts_at: new Date(Date.now() + 3600000 * 2).toISOString(),
-      join_url: "https://meet.google.com/new",
-      instructor: "Astrid Larsson",
-      instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-      status: "Starting in 2 hrs"
-    },
-    {
-      id: "sess-2",
-      title: "Full-Stack AI Workflows & Multi-Modal API Integration",
-      starts_at: new Date(Date.now() + 3600000 * 48).toISOString(),
-      join_url: "https://meet.google.com/new",
-      instructor: "Dr. Elena Vance",
-      instructorAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80",
-      status: "In 2 days"
-    },
-    {
-      id: "sess-past-1",
-      title: "Module 3: Prototyping & Micro-interactions in Spatial UI",
-      starts_at: new Date(Date.now() - 3600000 * 72).toISOString(),
-      recording_url: "https://trainailtd.com",
-      instructor: "Astrid Larsson",
-      instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-      status: "Recording Ready"
-    }
-  ];
-
-  const DEFAULT_COURSES = [
-    {
-      id: "cc-1",
-      courses: {
-        id: "course-figma-ai",
-        title: "Master Design Systems in Figma with Generative AI",
-        description: "Learn auto-layout, variable tokens, component variants, and AI acceleration.",
-        progress: 46
-      },
-      due_at: new Date(Date.now() + 3600000 * 24 * 7).toISOString()
-    },
-    {
-      id: "cc-2",
-      courses: {
-        id: "course-fullstack-ai",
-        title: "Full-Stack AI Application Engineering",
-        description: "Build production-grade GenAI apps with React 19, Supabase, and vector embeddings.",
-        progress: 19
-      },
-      due_at: new Date(Date.now() + 3600000 * 24 * 14).toISOString()
-    }
-  ];
-
-  const posts = (cohortPostsQuery?.data && cohortPostsQuery.data.length > 0) ? cohortPostsQuery.data : DEFAULT_POSTS;
-  const resources = (cohortResourcesQuery?.data && cohortResourcesQuery.data.length > 0) ? cohortResourcesQuery.data : DEFAULT_RESOURCES;
-  const sessions = (cohortSessionsQuery?.data && cohortSessionsQuery.data.length > 0) ? cohortSessionsQuery.data : DEFAULT_SESSIONS;
+  const posts = cohortPostsQuery?.data || [];
+  const resources = cohortResourcesQuery?.data || [];
+  const sessions = cohortSessionsQuery?.data || [];
   const now = Date.now();
   const upcomingSessions = sessions.filter(s => new Date(s.starts_at).getTime() >= now);
   const pastSessions = sessions.filter(s => new Date(s.starts_at).getTime() < now);
+  const activityTodayQuery = useSupabaseQuery(async () => (cohort?.id ? fetchCohortActivityToday(cohort.id) : 0), [cohort?.id]);
+  const activityToday = activityTodayQuery.data || 0;
 
-  const instructorMembers = (cohortMembersQuery?.data && cohortMembersQuery.data.length > 0)
-    ? cohortMembersQuery.data.filter(m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin")
-    : [
-        {
-          id: "m-1",
-          user_profiles: { display_name: "Astrid Larsson", role: "Lead Facilitator", avatar_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" }
-        },
-        {
-          id: "m-2",
-          user_profiles: { display_name: "Dr. Elena Vance", role: "AI Engineering Mentor", avatar_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80" }
-        }
-      ];
+  const instructorMembers = (cohortMembersQuery?.data || []).filter(
+    m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin"
+  );
 
-  const assignedCourses = (cohortCoursesQuery?.data && cohortCoursesQuery.data.length > 0) ? cohortCoursesQuery.data : DEFAULT_COURSES;
+  const assignedCourses = cohortCoursesQuery?.data || [];
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -189,7 +90,7 @@ export function CohortScreen({
           </div>
 
           <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{cohortMembersQuery?.data?.length || 68} Peers Enrolled</div>
+            <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{(cohortMembersQuery?.data || []).length} Peers Enrolled</div>
             <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Active Cohort Track</div>
           </div>
         </div>
@@ -245,6 +146,17 @@ export function CohortScreen({
         </div>
       </div>
 
+      {activityToday > 0 && (
+        <div className="tai-card" style={{ padding: 12 }}>
+          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+            <Flame size={16} color="var(--danger, #DC2626)" />
+            <span style={{ fontSize: 12.5 }}>
+              <strong>{activityToday}</strong> {activityToday === 1 ? "peer" : "peers"} in your cohort studied today. Don't fall behind.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* =========================================================================
           CONTROLS: Cohort Tabs
           ========================================================================= */}
@@ -292,6 +204,10 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "chat" && (
         <div className="tai-col tai-gap14">
+          {cohortPostsQuery?.loading && <div className="tai-empty">Loading cohort chat...</div>}
+          {!cohortPostsQuery?.loading && posts.length === 0 && (
+            <div className="tai-empty">No posts in your cohort chat yet.</div>
+          )}
           {posts.map(cp => (
             <div
               key={cp.id}
@@ -325,7 +241,7 @@ export function CohortScreen({
 
               <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
                 <span className="tai-row tai-gap4" style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 700 }}>
-                  <Heart size={14} color="#EF4444" fill="#EF4444" /> {cp.reaction_count || 12} Reactions
+                  <Heart size={14} color="#EF4444" fill="#EF4444" /> {cp.reaction_count || 0} Reactions
                 </span>
 
                 <button
@@ -375,7 +291,7 @@ export function CohortScreen({
                   <Clock size={13} />
                   <span>{new Date(s.starts_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
                   <span>•</span>
-                  <span>Facilitator: <strong>{s.instructor || "Astrid Larsson"}</strong></span>
+                  <span>Facilitator: <strong>{s.instructor || "TBD"}</strong></span>
                 </div>
 
                 <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
@@ -403,9 +319,9 @@ export function CohortScreen({
         <div className="tai-col tai-gap16">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {assignedCourses.map(cc => (
-              <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 18, cursor: "pointer" }} onClick={() => push("courseDetail", { id: cc.courses?.id || "course-figma-ai" })}>
+              <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 18, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id })}>
                 <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
-                  {cc.courses?.title || "Master Design Systems in Figma with AI"}
+                  {cc.courses?.title || "Untitled course"}
                 </h3>
                 <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 14px" }}>
                   {cc.courses?.description}
@@ -415,10 +331,10 @@ export function CohortScreen({
                   <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>
                     <span style={{ color: "var(--text-2)" }}>Curriculum Pace</span>
                     <span style={{ color: "var(--primary)", fontWeight: 800, background: "var(--primary-tint)", padding: "2px 8px", borderRadius: 6 }}>
-                      {cc.courses?.progress || 46}% Completed
+                      {cc.courses?.progress || 0}% Completed
                     </span>
                   </div>
-                  <ProgressBar value={cc.courses?.progress || 46} height={9} />
+                  <ProgressBar value={cc.courses?.progress || 0} height={9} />
                 </div>
 
                 <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
@@ -443,6 +359,10 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "resources" && (
         <div className="tai-col tai-gap14">
+          {cohortResourcesQuery?.loading && <div className="tai-empty">Loading resources...</div>}
+          {!cohortResourcesQuery?.loading && resources.length === 0 && (
+            <div className="tai-empty">No resources shared with your cohort yet.</div>
+          )}
           {resources.map(r => (
             <div key={r.id} className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
               <div className="tai-row tai-between" style={{ gap: 12, flexWrap: "wrap" }}>
@@ -476,6 +396,10 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "members" && (
         <div className="tai-grid2">
+          {cohortMembersQuery?.loading && <div className="tai-empty">Loading facilitators...</div>}
+          {!cohortMembersQuery?.loading && instructorMembers.length === 0 && (
+            <div className="tai-empty">No instructor assigned to this cohort yet.</div>
+          )}
           {instructorMembers.map(m => (
             <div key={m.id} className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
               <div className="tai-row tai-between" style={{ gap: 12, flexWrap: "wrap" }}>

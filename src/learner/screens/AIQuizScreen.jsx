@@ -735,6 +735,10 @@ export function AIQuizScreen({
             </div>
           )}
 
+          {quizStage === "active" && !currentQuestion && (
+            <div className="tai-empty">No questions available for this quiz.</div>
+          )}
+
           {/* QUIZ RESULT VIEW */}
           {quizStage === "result" && quizResult && (
             <div className="tai-card" style={{ maxWidth: 680, margin: "0 auto", width: "100%", padding: 32, textAlign: "center", borderRadius: 20 }}>
@@ -743,7 +747,7 @@ export function AIQuizScreen({
                 {Math.round(quizResult.score || 0)}% Score
               </h2>
               <p style={{ fontSize: 14, color: "var(--text-3)", margin: "0 0 20px" }}>
-                Correct: {quizResult.correct_count} / {quizResult.total} • Awarded +{quizResult.total_points || 0} XP
+                Correct: {quizResult.correct_count}{quizResult.total != null ? ` / ${quizResult.total}` : ""} • Awarded +{quizResult.total_points || 0} XP
               </p>
 
               {quizResult.isAIQuiz && Array.isArray(quizResult.details) && (

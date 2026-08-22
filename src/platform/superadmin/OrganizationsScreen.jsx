@@ -256,8 +256,8 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                 <div style={{ fontSize: 18, fontWeight: 900, color: "#fff" }}>{orgs.length} Tenants</div>
               </div>
               <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Seats</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>5,900 Active</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Users</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>{orgs.reduce((sum, o) => sum + (o.user_count || 0), 0)} Active</div>
               </div>
             </div>
           </div>

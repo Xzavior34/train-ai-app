@@ -10,7 +10,8 @@ import {
   fetchOrCreateCourseDiscussion, fetchCourseDiscussionMessages, fetchLessonNotes,
   fetchLessonsForCourse, fetchMyLessonProgress,
   fetchPublishedLearningPaths, fetchMyLearningPathEnrollments,
-  fetchMyBookmarks, toggleCourseBookmark, checkAndAwardAchievements
+  fetchMyBookmarks, toggleCourseBookmark, checkAndAwardAchievements,
+  fetchOrCreateMyReferralLink, fetchMyReferralStats
 } from "../../lib/api/learner.js";
 import { fetchCurrentUserProfile } from "../../lib/api/platform.js";
 import { fetchMyPersonalization } from "../../services/authService.js";
@@ -53,12 +54,34 @@ export function useLearnerData(session, screen, params) {
   // elsewhere in the app) and re-checks every threshold - safe to call
   // repeatedly since already-earned achievements are silently no-op'd by
   // a real unique constraint, not by this check.
+  //
+  // Also the only place a learner ever finds out a badge unlocked -
+  // previously the whole flow was silent (points landed, no toast, no
+  // celebration). newlyEarnedAchievements surfaces what to celebrate;
+  // consumers should clear it after showing it (see TrainAILearnerApp).
+  const [newlyEarnedAchievements, setNewlyEarnedAchievements] = useState([]);
   useEffect(() => {
     if (!session?.user?.id || !gamificationStatsQuery.data) return;
-    checkAndAwardAchievements(session.user.id, gamificationStatsQuery.data).then(() => {
+    const alreadyEarnedSlugs = (achievementsQuery.data || []).map((a) => a.achievement_slug || a.achievement_id);
+    checkAndAwardAchievements(session.user.id, gamificationStatsQuery.data, alreadyEarnedSlugs).then((newlyAwarded) => {
       achievementsQuery.refetch();
+      if (newlyAwarded && newlyAwarded.length > 0) {
+        setNewlyEarnedAchievements((prev) => [...prev, ...newlyAwarded]);
+      }
     });
   }, [session?.user?.id, gamificationStatsQuery.data]);
+
+  // "Invite & Earn" - only needed on the settings/profile screen, same
+  // gating pattern as the other screen-specific queries below.
+  const referralLinkQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id || screen !== "settings") return null;
+    return fetchOrCreateMyReferralLink(session.user.id);
+  }, [session?.user?.id, screen === "settings"]);
+
+  const referralStatsQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id || screen !== "settings") return { clicks: 0, signups: 0, conversionRate: 0 };
+    return fetchMyReferralStats(session.user.id);
+  }, [session?.user?.id, screen === "settings"]);
 
   // Only needed on the achievements screen - gated like the other
   // screen-specific queries (courseLessonsQuery, courseNotesQuery, etc.)
@@ -525,6 +548,10 @@ export function useLearnerData(session, screen, params) {
     streakActivityQuery,
     personalizationQuery,
     user,
+    newlyEarnedAchievements,
+    clearNewlyEarnedAchievements: () => setNewlyEarnedAchievements([]),
+    referralLinkQuery,
+    referralStatsQuery,
     leaderboardQuery,
     coursesQuery,
     enrollmentsQuery,

@@ -104,6 +104,8 @@ function ImpersonationPanel() {
     setSearching(true);
     try {
       setResults(await searchUsersForImpersonation(query));
+    } catch (e) {
+      showToast(e?.message || "Could not search users.");
     } finally {
       setSearching(false);
     }

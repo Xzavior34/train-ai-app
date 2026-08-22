@@ -5,7 +5,8 @@ import { fetchAIInsights } from "../../lib/api/schemaHelper.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   Bell, GraduationCap, Play, BookOpen, Users, Zap, ChevronRight, Layers, Trophy, Clock, Sparkles, Flame, Target,
-  Calendar, CheckCircle2, TrendingUp, BarChart3, AlertCircle, ArrowUpRight, Video, Award, Star, Palette, Lock, Radio
+  Calendar, CheckCircle2, TrendingUp, BarChart3, AlertCircle, ArrowUpRight, Video, Award, Star, Palette, Lock, Radio,
+  Bookmark
 } from "lucide-react";
 
 const STOCK_COURSES = [
@@ -46,13 +47,16 @@ export function HomeScreen({
   session, push, goTab, goToMyCourses, cohort = null, cohortLoading = false,
 }) {
   const enrolledCourses = (courses || []).filter(c => c.enrolled);
-  const continueCourse = enrolledCourses.find(c => c.progress < 100) || enrolledCourses[0] || courses[0] || null;
+  // Only fall back to another enrolled course, never an unenrolled catalog
+  // item - showing "Continue learning" progress/CTA for a course the
+  // learner isn't even enrolled in was a real bug, not a display choice.
+  const continueCourse = enrolledCourses.find(c => c.progress < 100) || enrolledCourses[0] || null;
   const otherAssignedCount = Math.max(0, enrolledCourses.length - (continueCourse ? 1 : 0));
 
   const goal = weeklyGoal || 5;
-  const done = user?.weeklyDone || 3;
+  const done = user?.weeklyDone || 0;
   const goalPercent = Math.min(100, Math.round((done / goal) * 100));
-  const userFirstName = (user?.name || "Evelyn").split(" ")[0];
+  const userFirstName = (user?.name || "Learner").split(" ")[0];
 
   const [activeDayIndex, setActiveDayIndex] = useState(2); // Wednesday active
 
@@ -101,6 +105,27 @@ export function HomeScreen({
           background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.82) 55%, rgba(15,23,42,0.65) 100%)",
           zIndex: 0
         }} />
+
+        {/* Profile + notifications - real navigation entry points from
+            Home that existed previously (settings, notifications) but had
+            dropped out of this hero redesign. */}
+        <div style={{ position: "absolute", top: 14, right: 14, zIndex: 2, display: "flex", gap: 8 }}>
+          <button
+            className="tai-iconbtn"
+            onClick={() => push("settings")}
+            style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", padding: 2, cursor: "pointer" }}
+          >
+            <Avatar initials={user?.initials || userFirstName?.[0] || "L"} size={28} />
+          </button>
+          <button
+            className="tai-iconbtn"
+            onClick={() => push("notifications")}
+            style={{ position: "relative", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+          >
+            <Bell size={15} color="#fff" />
+            {unreadNotifs > 0 && <span style={{ position: "absolute", top: 4, right: 5, width: 7, height: 7, borderRadius: "50%", background: "var(--danger, #EF4444)" }} />}
+          </button>
+        </div>
 
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="tai-hero-row">
@@ -174,7 +199,22 @@ export function HomeScreen({
         <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           
           {/* Continue Learning Banner */}
-          {continueCourse && (
+          {coursesLoading ? (
+            <div className="tai-card" style={{ padding: 20, textAlign: "center" }}>
+              <div className="tai-body-text">Loading your courses...</div>
+            </div>
+          ) : !continueCourse ? (
+            <div className="tai-card" style={{ padding: 20, textAlign: "center" }}>
+              <div className="tai-body-text">
+                {enrolledCourses.length > 0
+                  ? `You've completed all ${enrolledCourses.length} of your assigned courses.`
+                  : "No active course yet. Browse the catalog to get started."}
+              </div>
+              <button className="tai-btn tai-btn-primary tai-mt12" style={{ width: "100%" }} onClick={enrolledCourses.length > 0 ? goToMyCourses : () => goTab("courses")}>
+                <BookOpen size={16} /> {enrolledCourses.length > 0 ? "See my courses" : "Browse courses"}
+              </button>
+            </div>
+          ) : (
             <div className="tai-card tai-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 13.5 }}>
@@ -206,9 +246,9 @@ export function HomeScreen({
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="tai-row tai-between" style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>
                       <span>Progress</span>
-                      <span style={{ fontWeight: 700, color: "var(--primary)" }}>{continueCourse.progress || 50}%</span>
+                      <span style={{ fontWeight: 700, color: "var(--primary)" }}>{continueCourse.progress || 0}%</span>
                     </div>
-                    <ProgressBar value={continueCourse.progress || 50} height={6} />
+                    <ProgressBar value={continueCourse.progress || 0} height={6} />
                   </div>
                   <button 
                     className="tai-btn tai-btn-primary tai-btn-sm"
@@ -222,7 +262,26 @@ export function HomeScreen({
             </div>
           )}
 
-          {/* Q1 Onboarding Cohort Banner */}
+          {/* Q1 Onboarding Cohort Banner - loading/empty states restored;
+              the rich sprint mock only makes sense once a real cohort is
+              loaded, otherwise it falsely implies membership. */}
+          {cohortLoading ? (
+            <div className="tai-card" style={{ padding: 16 }}>
+              <div className="tai-body-text">Loading your cohort...</div>
+            </div>
+          ) : !cohort ? (
+            <div className="tai-card" style={{ padding: 16 }}>
+              <div className="tai-row tai-gap10">
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Users size={17} color="var(--primary)" />
+                </div>
+                <div>
+                  <div className="tai-label">Your cohort</div>
+                  <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Not part of a cohort yet</div>
+                </div>
+              </div>
+            </div>
+          ) : (
           <div className="tai-card" style={{
             padding: "16px",
             borderRadius: 16,
@@ -273,6 +332,7 @@ export function HomeScreen({
               </button>
             </div>
           </div>
+          )}
 
           {/* Career Path & Skill Growth Progression */}
           <div className="tai-card" style={{ padding: 18, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.25)" }}>
@@ -362,6 +422,10 @@ export function HomeScreen({
             </div>
           </div>
 
+          {/* Real personalized AI recommendation - was imported but never
+              rendered, leaving only the hardcoded stock grid above. */}
+          <AIRecommendationsCard user={user} courses={courses} session={session} goTab={goTab} maxItems={1} showSeeAll />
+
           {/* Learning Activity Chart */}
           <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
@@ -376,25 +440,28 @@ export function HomeScreen({
 
             {/* Bar Chart Visualization */}
             <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 120, padding: "0 10px 10px", borderBottom: "1px solid var(--border)" }}>
-              {WEEK_DAYS.map((d, i) => (
-                <div key={d.day} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: d.active ? "var(--primary)" : "var(--text-3)" }}>
-                    {d.hours}h
+              {WEEK_DAYS.map((d, i) => {
+                const isActive = i === activeDayIndex;
+                return (
+                  <div key={d.day} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: isActive ? "var(--primary)" : "var(--text-3)" }}>
+                      {d.hours}h
+                    </div>
+                    <div
+                      style={{
+                        width: 22, height: d.height, borderRadius: "6px 6px 2px 2px",
+                        background: isActive ? "var(--grad)" : "var(--surface-2)",
+                        boxShadow: isActive ? "0 4px 12px rgba(79, 70, 229, 0.35)" : "none",
+                        cursor: "pointer", transition: "all .16s ease"
+                      }}
+                      onClick={() => setActiveDayIndex(i)}
+                    />
+                    <div style={{ fontSize: 11, fontWeight: 600, color: isActive ? "var(--text)" : "var(--text-3)" }}>
+                      {d.day}
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      width: 22, height: d.height, borderRadius: "6px 6px 2px 2px",
-                      background: d.active ? "var(--grad)" : "var(--surface-2)",
-                      boxShadow: d.active ? "0 4px 12px rgba(79, 70, 229, 0.35)" : "none",
-                      cursor: "pointer", transition: "all .16s ease"
-                    }}
-                    onClick={() => setActiveDayIndex(i)}
-                  />
-                  <div style={{ fontSize: 11, fontWeight: 600, color: d.active ? "var(--text)" : "var(--text-3)" }}>
-                    {d.day}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -406,7 +473,7 @@ export function HomeScreen({
                 <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 2 }}>Tasks and deliverables for your enrolled courses</div>
               </div>
               <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)" }}>
-                3 Active
+                {ASSIGNMENTS.filter((a) => a.status !== "Completed").length} Active
               </span>
             </div>
 
@@ -669,6 +736,59 @@ export function HomeScreen({
             </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* My Progress & Bookmarks - real navigation screens that exist
+          elsewhere in the app but had dropped out of Home's links. */}
+      <div className="tai-grid2" style={{ gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div className="tai-card tai-card-hover" style={{ cursor: "pointer", padding: 16 }} onClick={() => push("myProgress")}>
+          <div className="tai-row tai-between">
+            <div className="tai-row tai-gap10">
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <BarChart3 size={18} color="var(--primary)" />
+              </div>
+              <div>
+                <div className="tai-label">My Progress</div>
+                <div style={{ fontWeight: 700, fontSize: 14.5, marginTop: 2 }}>Detailed breakdown</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="var(--text-3)" />
+          </div>
+        </div>
+
+        <div className="tai-card tai-card-hover" style={{ cursor: "pointer", padding: 16 }} onClick={() => push("bookmarks")}>
+          <div className="tai-row tai-between">
+            <div className="tai-row tai-gap10">
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Bookmark size={18} color="var(--primary)" />
+              </div>
+              <div>
+                <div className="tai-label">Bookmarks</div>
+                <div style={{ fontWeight: 700, fontSize: 14.5, marginTop: 2 }}>Saved lessons & snippets</div>
+              </div>
+            </div>
+            <ChevronRight size={18} color="var(--text-3)" />
+          </div>
+        </div>
+      </div>
+
+      {/* Quick links to the other 3 sections */}
+      <div style={{ marginTop: 4 }}>
+        <div className="tai-title-sm" style={{ marginBottom: 10 }}>Jump to</div>
+        <div className="tai-grid2" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
+          <div className="tai-card" style={{ cursor: "pointer", padding: 14, textAlign: "center" }} onClick={() => goTab("courses")}>
+            <BookOpen size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
+            <div style={{ fontWeight: 700, fontSize: 12.5, marginTop: 6 }}>Courses</div>
+          </div>
+          <div className="tai-card" style={{ cursor: "pointer", padding: 14, textAlign: "center" }} onClick={() => goTab("ai")}>
+            <Zap size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
+            <div style={{ fontWeight: 700, fontSize: 12.5, marginTop: 6 }}>AI Coach</div>
+          </div>
+          <div className="tai-card" style={{ cursor: "pointer", padding: 14, textAlign: "center" }} onClick={() => goTab("community")}>
+            <Users size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
+            <div style={{ fontWeight: 700, fontSize: 12.5, marginTop: 6 }}>Community</div>
+          </div>
         </div>
       </div>
     </div>

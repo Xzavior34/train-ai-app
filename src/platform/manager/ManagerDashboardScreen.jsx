@@ -109,7 +109,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
                   border: "1px solid rgba(16, 185, 129, 0.5)",
                   fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
                 }}>
-                  {reports.length || 8} DIRECT REPORTS ACTIVE
+                  {reports.length} DIRECT REPORTS ACTIVE
                 </span>
               </div>
 

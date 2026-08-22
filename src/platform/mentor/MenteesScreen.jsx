@@ -226,8 +226,8 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
               )}
                   {filteredMentees.map((m, idx) => {
                     const avatarUrl = m.avatar || `https://images.unsplash.com/photo-${1534528741775 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`;
-                    const riskTone = m.risk === "high" ? "danger" : m.risk === "medium" ? "warning" : "success";
-                    const riskLabel = m.risk === "high" ? "High Risk" : m.risk === "medium" ? "Needs Attention" : "On Track";
+                    const riskTone = m.risk === "high" ? "danger" : m.risk === "medium" ? "warning" : m.risk === "unknown" ? "neutral" : "success";
+                    const riskLabel = m.risk === "high" ? "High Risk" : m.risk === "medium" ? "Needs Attention" : m.risk === "unknown" ? "No Data" : "On Track";
 
                     return (
                       <tr key={m.id}>
@@ -246,20 +246,20 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                           </div>
                         </td>
                         <td style={{ fontSize: 12.5, fontWeight: 500 }}>
-                          {m.courses && m.courses.length > 0 ? m.courses.join(", ") : "AI & Product Design"}
+                          {m.courses && m.courses.length > 0 ? m.courses.join(", ") : <span style={{ color: "var(--text-3)" }}>Not enrolled in any course</span>}
                         </td>
-                        <td>{m.sessionsCompleted || 3} sessions</td>
+                        <td>{m.sessionsCompleted ?? 0} sessions</td>
                         <td>
                           <div className="ta-col ta-gap4" style={{ width: 130 }}>
                             <div className="ta-row ta-between" style={{ fontSize: 11 }}>
                               <span>Overall</span>
-                              <span style={{ fontWeight: 700 }}>{m.progress ?? 75}%</span>
+                              <span style={{ fontWeight: 700, color: m.progress == null ? "var(--text-3)" : undefined }}>{m.progress == null ? "Not visible" : `${m.progress}%`}</span>
                             </div>
-                            <ProgressBar value={m.progress ?? 75} />
+                            <ProgressBar value={m.progress ?? 0} />
                           </div>
                         </td>
-                        <td style={{ fontWeight: 700, color: (m.quizAvg ?? 84) >= 80 ? "var(--success)" : "var(--warning)" }}>
-                          {m.quizAvg ?? 84}%
+                        <td style={{ fontWeight: 700, color: m.quizAvg == null ? "var(--text-3)" : m.quizAvg >= 80 ? "var(--success)" : "var(--warning)" }}>
+                          {m.quizAvg == null ? "N/A" : `${m.quizAvg}%`}
                         </td>
                         <td><Tag tone={riskTone}>{riskLabel}</Tag></td>
                         <td>

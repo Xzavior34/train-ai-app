@@ -81,6 +81,22 @@ export async function updateWeeklyGoal(userId, goal) {
   }
 }
 
+// Chunking helper to prevent HTTP query string length limits when querying large org user ID arrays
+export async function safeInQuery(tableName, selectFields, idColumn, ids) {
+  if (!supabase || !ids || !ids.length) return [];
+  if (ids.length <= 100) {
+    const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, ids);
+    return data || [];
+  }
+  const results = [];
+  for (let i = 0; i < ids.length; i += 100) {
+    const chunk = ids.slice(i, i + 100);
+    const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, chunk);
+    if (data) results.push(...data);
+  }
+  return results;
+}
+
 export async function fetchOrgMembers(organizationId) {
   if (!supabase) {
     return [
@@ -120,7 +136,14 @@ export async function fetchOrgMembers(organizationId) {
 }
 
 export async function fetchUsersInOrg(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) {
+    return [
+      ...DEMO_LEARNERS.map((l) => ({ id: l.id, name: l.name, initials: l.initials })),
+      ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, name: i.name, initials: i.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() })),
+      { id: "demo-manager-id", name: "Demo Manager", initials: "DM" },
+    ];
+  }
+  if (!organizationId) return [];
   const { data, error } = await supabase
     .from("user_profiles")
     .select("id, display_name")
@@ -607,23 +630,16 @@ export async function fetchOrgDashboardStats(organizationId) {
   // auth uid), not the separate internal id PK.
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
-  const [{ count: activeStudents }, { count: cohortCount }, { count: courseCount }, { count: mentorCount }, { count: otherUserCount }, enrollmentAgg] = await Promise.all([
+  const [{ count: activeStudents }, { count: cohortCount }, { count: courseCount }, { count: mentorCount }, { count: otherUserCount }, enrollments] = await Promise.all([
     supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("role", "learner"),
     supabase.from("cohorts").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
     supabase.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true),
-    // No `is_approved` column on mentors in the shared schema - is_active is
-    // the closest available proxy.
     supabase.from("mentors").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("is_active", true),
-    // "Other users" for the Total Users block - managers and other admins,
-    // i.e. everyone in this org who is neither a learner nor a mentor.
     supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).not("role", "in", "(learner,mentor)"),
-    orgUserIds.length
-      ? supabase.from("course_enrollments").select("progress_percentage, completed_at").in("user_id", orgUserIds)
-      : Promise.resolve({ data: [] }),
+    safeInQuery("course_enrollments", "progress_percentage, completed_at", "user_id", orgUserIds),
   ]);
-  const enrollments = enrollmentAgg?.data || [];
   const completionRate = enrollments.length
-    ? Math.round((enrollments.filter(e => e.completed_at).length / enrollments.length) * 100)
+    ? Math.round((enrollments.filter(e => e.completed_at || (e.progress_percentage || 0) >= 100).length / enrollments.length) * 100)
     : 0;
   return {
     activeStudents: activeStudents || 0,
@@ -1292,12 +1308,7 @@ export async function fetchEnrollmentTrend(organizationId, monthsBack = 6) {
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
   if (!orgUserIds.length) return [];
-  const { data, error } = await supabase
-    .from("course_enrollments")
-    .select("created_at, completed_at")
-    .in("user_id", orgUserIds);
-  if (error) throw error;
-  const rows = data || [];
+  const rows = await safeInQuery("course_enrollments", "created_at, completed_at", "user_id", orgUserIds);
   const now = new Date();
   const buckets = [];
   for (let i = monthsBack - 1; i >= 0; i--) {
@@ -1323,52 +1334,35 @@ export async function fetchEnrollmentTrend(organizationId, monthsBack = 6) {
 }
 
 // 30-day retention: % of the org's user_profiles rows with last_active_at
-// inside the last 30 days. last_active_at is a real column (already used for
-// sorting in fetchOrgMembers and for the platform-wide "active this week"
-// count in fetchPlatformOverviewStats) - there is no separate login/activity
-// log table in the shared schema, so this is the most honest proxy for
-// retention available without inventing a new table.
-export async function fetchRetentionStats(organizationId) {
-  if (!supabase || !organizationId) return null;
-  const d30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const d7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const [{ count: total }, { count: active30 }, { count: active7 }] = await Promise.all([
-    supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
-    supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("last_active_at", d30),
-    supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("last_active_at", d7),
-  ]);
+// in the last 30 days vs total members.
+export async function fetchOrgRetention(organizationId) {
+  if (!supabase) return { retention30Pct: 84, active30Days: 120, totalUsers: 143 };
+  if (!organizationId) return { retention30Pct: 0, active30Days: 0, totalUsers: 0 };
+  const { data: profiles } = await supabase.from("user_profiles").select("last_active_at").eq("organization_id", organizationId);
+  const total = (profiles || []).length;
+  if (!total) return { retention30Pct: 0, active30Days: 0, totalUsers: 0 };
+  const now = Date.now();
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const active30 = (profiles || []).filter((p) => p.last_active_at && now - new Date(p.last_active_at).getTime() <= thirtyDaysMs).length;
   return {
-    totalUsers: total || 0,
-    active30: active30 || 0,
-    active7: active7 || 0,
-    retention30Pct: total ? Math.round(((active30 || 0) / total) * 100) : 0,
-    retention7Pct: total ? Math.round(((active7 || 0) / total) * 100) : 0,
+    retention30Pct: Math.round((active30 / total) * 100),
+    active30Days: active30,
+    totalUsers: total,
   };
 }
 
-// Feature adoption: % of the org's users who have at least one row in three
-// real, already-used-elsewhere tables - user_gamification_stats (gamified
-// learning), community_posts (community participation), mentorship_sessions
-// (booked a mentor). All three columns (user_id / user_id / learner_id) are
-// confirmed real columns already queried by schemaHelper.js.
-// Top Courses and Most Active Community - "for feature adoption that
-// should be replaced by top courses, most active community, as they
-// won't care much about which feature is most used. The feature tracking
-// is for us Train AI as the platform owner." Confirmed directly - the
-// admin-facing version drops feature-usage percentages entirely in favor
-// of what an org admin actually cares about day to day.
 export async function fetchTopCourses(organizationId, limit = 5) {
   if (!supabase) return demoTopCourses().slice(0, limit);
   if (!organizationId) return [];
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
   if (!orgUserIds.length) return [];
-  const { data: enrollments } = await supabase.from("course_enrollments").select("course_id, progress_percentage, completed_at").in("user_id", orgUserIds);
+  const enrollments = await safeInQuery("course_enrollments", "course_id, progress_percentage, completed_at", "user_id", orgUserIds);
   const byCourseId = {};
   for (const e of enrollments || []) {
     if (!byCourseId[e.course_id]) byCourseId[e.course_id] = { enrolled: 0, completed: 0 };
     byCourseId[e.course_id].enrolled += 1;
-    if (e.completed_at) byCourseId[e.course_id].completed += 1;
+    if (e.completed_at || (e.progress_percentage || 0) >= 100) byCourseId[e.course_id].completed += 1;
   }
   const courseIds = Object.keys(byCourseId);
   if (!courseIds.length) return [];
@@ -2375,7 +2369,7 @@ export async function createAgreementForMentee(mentorId, learnerName, agreementT
   if (!learner) throw new Error(`No learner found named "${learnerName}"`);
   const { data, error } = await supabase
     .from("mentorship_agreements")
-    .insert({ mentor_id: mentorId, learner_id: learner.user_id, agreement_type: agreementType, status: "pending learner signature" })
+    .insert({ mentor_id: mentorId, learner_id: learner.id, agreement_type: agreementType, status: "pending learner signature" })
     .select()
     .single();
   if (error) throw error;
@@ -2622,11 +2616,7 @@ export async function fetchOrgLearnerProgressOverview(organizationId) {
   if (!learners || learners.length === 0) return [];
 
   const learnerIds = learners.map(l => l.id);
-  const { data: enrollments, error: enrollError } = await supabase
-    .from("course_enrollments")
-    .select("user_id, progress_percentage, completed_at")
-    .in("user_id", learnerIds);
-  if (enrollError) throw enrollError;
+  const enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", learnerIds);
 
   const byUser = new Map();
   for (const e of (enrollments || [])) {
@@ -3340,14 +3330,12 @@ export async function fetchOrgGeneralOverview(organizationId) {
   if (!organizationId) return { studyGroupCount: 0, certificatesIssued: 0, avgAssessmentScore: null };
   const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
-  const [{ count: studyGroupCount }, { count: certificatesIssued }, attemptsResult] = await Promise.all([
+  const [{ count: studyGroupCount }, { count: certificatesIssued }, attemptsData] = await Promise.all([
     supabase.from("study_groups").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
     supabase.from("certificates").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "issued"),
-    orgUserIds.length
-      ? supabase.from("assessment_attempts").select("score").in("user_id", orgUserIds)
-      : Promise.resolve({ data: [] }),
+    safeInQuery("assessment_attempts", "score", "user_id", orgUserIds),
   ]);
-  const scores = (attemptsResult?.data || []).map((a) => a.score).filter((s) => s !== null && s !== undefined);
+  const scores = (attemptsData || []).map((a) => a.score).filter((s) => s !== null && s !== undefined);
   const avgAssessmentScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
   return { studyGroupCount: studyGroupCount || 0, certificatesIssued: certificatesIssued || 0, avgAssessmentScore };
 }
@@ -3361,11 +3349,25 @@ export async function fetchOrgGeneralOverview(organizationId) {
 export async function fetchMentorActiveCohorts(userId) {
   if (!supabase) return [{ id: DEMO_COHORT.id, name: DEMO_COHORT.name, ends_at: DEMO_COHORT.endsAt }];
   if (!userId) return [];
-  const { data: memberRows, error } = await supabase.from("cohort_members").select("cohort_id").eq("user_id", userId);
+  const { data: profile } = await supabase.from("user_profiles").select("organization_id").eq("id", userId).maybeSingle();
+  const orgId = profile?.organization_id;
+
+  const { data: memberRows } = await supabase.from("cohort_members").select("cohort_id").eq("user_id", userId);
+  const explicitCohortIds = (memberRows || []).map((r) => r.cohort_id);
+
+  let query = supabase.from("cohorts").select("id, name, description, starts_at, ends_at");
+  if (orgId && explicitCohortIds.length > 0) {
+    query = query.or(`organization_id.eq.${orgId},id.in.(${explicitCohortIds.join(",")})`);
+  } else if (orgId) {
+    query = query.eq("organization_id", orgId);
+  } else if (explicitCohortIds.length > 0) {
+    query = query.in("id", explicitCohortIds);
+  } else {
+    return [];
+  }
+
+  const { data: cohorts, error } = await query;
   if (error) { console.warn("Mentor cohorts fetch warning:", error); return []; }
-  const cohortIds = (memberRows || []).map((r) => r.cohort_id);
-  if (!cohortIds.length) return [];
-  const { data: cohorts } = await supabase.from("cohorts").select("id, name, starts_at, ends_at").in("id", cohortIds);
   const now = Date.now();
   return (cohorts || []).filter((c) => !c.ends_at || new Date(c.ends_at).getTime() >= now);
 }

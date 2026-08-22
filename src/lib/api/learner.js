@@ -323,13 +323,24 @@ export async function fetchMyGamificationStats(userId) {
 // src/learner/achievementCatalog.js), matched here by achievement_id.
 export async function fetchMyAchievements(userId) {
   if (!supabase || !userId) return [];
+  // my_achievements_with_slug (0145) joins in achievements.slug so rows can
+  // be matched against ACHIEVEMENT_CATALOG's string ids - the raw
+  // user_achievements.achievement_id is a uuid FK and never matches a
+  // catalog id directly. Falls back to the raw table if the view isn't
+  // available yet (e.g. migration not applied in this environment).
   const { data, error } = await supabase
+    .from("my_achievements_with_slug")
+    .select("*")
+    .order("earned_at", { ascending: false });
+  if (!error) return data || [];
+  console.warn("Achievements (with slug) fetch warning, falling back:", error);
+  const fallback = await supabase
     .from("user_achievements")
     .select("*")
     .eq("user_id", userId)
     .order("earned_at", { ascending: false });
-  if (error) { console.warn("Achievements fetch warning:", error); return []; }
-  return data || [];
+  if (fallback.error) { console.warn("Achievements fetch warning:", fallback.error); return []; }
+  return fallback.data || [];
 }
 
 // Daily activity/points log backing the streak (real `streak_tracking`
@@ -609,6 +620,51 @@ export async function toggleCourseBookmark(userId, courseId, isCurrentlyBookmark
   }
 }
 
+// Referral link + signup tracking - the real `referral_links`/
+// `referral_signups` tables (and the admin-side click/conversion analytics
+// reading them in lib/api/platform.js) have existed since 0004, but there
+// was never a learner-facing way to see or share your own code. Get-or-
+// create on first read rather than provisioning a link at signup, so it
+// only ever exists for a learner who actually opened this section. No RLS
+// on these tables (same as the rest of the gamification schema), so this
+// is a plain table read/insert like fetchMyBookmarks above rather than an
+// RPC call.
+export async function fetchOrCreateMyReferralLink(userId) {
+  if (!supabase || !userId) return null;
+  const { data: existing, error: fetchError } = await supabase
+    .from("referral_links")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (fetchError) { console.warn("Referral link fetch warning:", fetchError); return null; }
+  if (existing) return existing;
+
+  const { data: created, error: createError } = await supabase
+    .from("referral_links")
+    .insert({ user_id: userId })
+    .select("*")
+    .maybeSingle();
+  if (createError) { console.warn("Could not create referral link:", createError); return null; }
+  return created;
+}
+
+// Real referred-signup count + conversion rate for this learner's own link
+// (mirrors the shape get_referral_analytics() returns, computed the same
+// way as the admin-side referral analytics in platform.js).
+export async function fetchMyReferralStats(userId) {
+  if (!supabase || !userId) return { clicks: 0, signups: 0, conversionRate: 0 };
+  const { data: link } = await supabase.from("referral_links").select("id, clicks").eq("user_id", userId).maybeSingle();
+  if (!link) return { clicks: 0, signups: 0, conversionRate: 0 };
+  const { count } = await supabase
+    .from("referral_signups")
+    .select("id", { count: "exact", head: true })
+    .eq("referral_link_id", link.id)
+    .eq("signup_completed", true);
+  const signups = count || 0;
+  const clicks = link.clicks || 0;
+  return { clicks, signups, conversionRate: clicks > 0 ? Math.round((signups / clicks) * 1000) / 10 : 0 };
+}
+
 // Assessments - distinct from the AI Quiz Generator (fetchSafeQuizQuestions
 // / submitQuizAnswers above). Instructor-authored, tied to course
 // completion and certificates; server-scored via check_assessment_answers()
@@ -811,8 +867,15 @@ export async function submitLessonFeedback(userId, lessonId, courseId, { confide
 // already-earned achievement (real unique constraint on
 // user_achievements(user_id, achievement_id)) so calling this repeatedly
 // is always safe, not just on first-time completion.
-export async function checkAndAwardAchievements(userId, stats) {
-  if (!supabase || !userId || !stats) return;
+//
+// `alreadyEarnedSlugs` (achievement_slug values from fetchMyAchievements)
+// lets this report back which defs were newly awarded on this call, purely
+// so the caller can show an unlock celebration - it doesn't change what
+// gets awarded (the RPC's own unique constraint is still the real guard).
+export async function checkAndAwardAchievements(userId, stats, alreadyEarnedSlugs = []) {
+  if (!supabase || !userId || !stats) return [];
+  const earnedSet = new Set(alreadyEarnedSlugs);
+  const newlyAwarded = [];
   const statsForCatalog = {
     lessonsCompleted: stats.lessons_completed || 0,
     coursesCompleted: stats.courses_completed || 0,
@@ -830,9 +893,11 @@ export async function checkAndAwardAchievements(userId, stats) {
     if (current >= def.threshold) {
       try {
         await supabase.rpc("award_achievement_by_slug", { p_user_id: userId, p_slug: def.id });
+        if (!earnedSet.has(def.id)) newlyAwarded.push(def);
       } catch (e) {
         console.warn(`Could not award achievement ${def.id}:`, e);
       }
     }
   }
+  return newlyAwarded;
 }

@@ -156,6 +156,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
               {!mentorId && <div className="ta-empty">Your instructor profile isn't linked to an instructor record yet.</div>}
               {mentorId && sessionsQuery.loading && <div className="ta-empty">Loading sessions...</div>}
               {mentorId && !sessionsQuery.loading && sessions.length === 0 && <div className="ta-empty">No sessions yet. Booked and requested sessions with your mentees will show up here.</div>}
+              {mentorId && !sessionsQuery.loading && sessions.length > 0 && filteredSessions.length === 0 && <div className="ta-empty">No sessions matching filter.</div>}
               {filteredSessions.map(s => (
                 <div key={s.id} className="ta-card ta-row ta-between" style={{ flexWrap: "wrap", gap: 14, alignItems: "center" }}>
                   <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 240px" }}>
