@@ -5,7 +5,8 @@ import {
   Building2, Users, Target, TrendingUp, AlertTriangle, Eye, Lock, Compass, BarChart3,
   GitCompare, Table, School, Handshake, Briefcase, Zap, Sparkles, Flame, Menu, Check,
   Play, MessageSquare, Laptop, Award, Star, Activity, ArrowUpRight, Gauge, Database,
-  Home, Bot, MessageCircle
+  Home, Bot, MessageCircle, Mail, Download, Wifi, Accessibility, Bell, Send,
+  Facebook, Twitter, Instagram, Linkedin, Search, RefreshCw
 } from "lucide-react";
 import { submitDemoRequest, submitOrganizationInquiry, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
@@ -15,15 +16,15 @@ const TEAM_SIZE_OPTIONS = ["1–50", "51–200", "201–1,000", "1,000+"];
 const LEGAL_CONTENT = {
   about: {
     title: "About Us",
-    body: "Train AI is the AI workforce intelligence and learning operating system that gives organizations a live map of their workforce's skills. We connect enterprise learners, managers, and instructors into outcome-driven pathways to measure readiness, not completion."
+    body: "Train AI is an AI-powered workforce learning and intelligence operating system that gives modern organizations a live, real-time map of employee capabilities. We connect enterprise learners, instructors, and structured curriculum into personalized, outcome-driven pathways to measure readiness, not completion."
   },
   privacy: {
     title: "Privacy Policy",
-    body: "We process only the minimal telemetry and learner data required to operate your organization's workspace, evaluate skill proficiency, and generate verified credentials. We never sell personal data or use customer data to train public AI models."
+    body: "Our Privacy Policy ensures your workforce data remains strictly confidential and protected. We process minimal telemetry required to deliver adaptive pathways, track skills, and issue certified credentials. We never sell personal data or use proprietary enterprise data to train public foundation models."
   },
   terms: {
     title: "Terms of Service",
-    body: "Train AI terms govern organizational workspaces, role-based licensing, and institutional agreements. All accounts, certifications, and logs are auditable under enterprise SLAs. Questions: hello@trainailtd.com."
+    body: "Train AI terms govern organizational workspaces, role-based licensing, and institutional agreements. All accounts, certifications, and compliance logs are auditable under enterprise SLAs. Questions: hello@trainailtd.com."
   },
   cookie: {
     title: "Cookie Policy",
@@ -61,22 +62,59 @@ const SIGNALS = [
   "AI usage signals"
 ];
 
-const FAQ_ITEMS = [
+const TRUST_FEATURES = [
   {
-    q: "How does Train AI differ from a traditional LMS?",
-    a: "Traditional LMS platforms measure course completion: whether a learner watched a video or took a quiz. Train AI measures workforce readiness: whether your people actually have the skills to deliver on projects, mapped live across your entire organization with AI skill graphs."
+    icon: Lock,
+    title: "Secure tenant separation",
+    desc: "Row-level policies keep every organisation's learners, courses and results isolated."
   },
   {
-    q: "Can we upload our own proprietary training content?",
+    icon: DocumentIcon,
+    title: "Audit logging",
+    desc: "Administrative actions are recorded in an append-only trail for enterprise review."
+  },
+  {
+    icon: Download,
+    title: "Consent & export controls",
+    desc: "Data ownership is explicit, with export and consent controls for compliance teams."
+  },
+  {
+    icon: Bell,
+    title: "Reliable notifications",
+    desc: "Session reminders, assignment alerts and nudges by email and in-app."
+  },
+  {
+    icon: Wifi,
+    title: "Low-bandwidth ready",
+    desc: "Fast on modest connections and mobile-first across every surface."
+  },
+  {
+    icon: Accessibility,
+    title: "Accessible UI",
+    desc: "Readable contrast, keyboard-friendly navigation and semantic structure."
+  }
+];
+
+function DocumentIcon(props) {
+  return <ClipboardList {...props} />;
+}
+
+const FAQ_ITEMS = [
+  {
+    q: "How does Train AI differ from a traditional LMS like TalentLMS or Coursera?",
+    a: "Traditional LMS platforms measure course completion: whether a learner clicked through videos or took a static quiz. Train AI is a Workforce Intelligence Operating System that maps real capability, tracks team readiness scores in real-time, and provides 24/7 AI tutoring with live cohort mentorship."
+  },
+  {
+    q: "Can our organization upload our own proprietary courses and SCORM files?",
     a: "Yes. Train AI supports internal courses, SCORM packages, interactive lessons, custom quizzes, and external partner curriculum, all tracked in the same unified readiness dashboard."
   },
   {
-    q: "How does the AI Coach work?",
-    a: "Every learner has access to a 24/7 conversational AI learning tutor that provides personalized explanations, generates practice quizzes, and recommends targeted lessons based on their individual skill gaps."
+    q: "How does the AI Neural Coach work in daily practice?",
+    a: "Every learner has access to a 24/7 conversational AI learning tutor that provides personalized step-by-step explanations, generates practice quizzes tailored to weak spots, and reviews code exercises in real time."
   },
   {
-    q: "How are roles and permissions structured?",
-    a: "Train AI provides two unified apps (Learner and Organisation) with strict RBAC: Learners view their own progress and AI coach; Instructors manage cohorts and grade assessments; Managers view team readiness scores; Admins control bulk onboarding, compliance, and SSO."
+    q: "How are workspaces, roles, and permissions partitioned?",
+    a: "Train AI provides two unified applications (Learner App and Organisation Workspace) with role-based access control: Learners view their own progress; Instructors run cohorts and grade assessments; Managers inspect team readiness scores; Admins manage bulk onboarding, SSO, and compliance."
   }
 ];
 
@@ -99,6 +137,11 @@ export default function LandingPage({ onNavigate }) {
   const [openFaq, setOpenFaq] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+
+  // Interactive dynamic simulator tab for Learner App preview
+  const [learnerPreviewTab, setLearnerPreviewTab] = useState("insights");
 
   useEffect(() => {
     if (!activeModal && !demoModalOpen) return;
@@ -139,6 +182,13 @@ export default function LandingPage({ onNavigate }) {
     }
   }
 
+  function handleNewsletterSubmit(e) {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    setNewsletterSubscribed(true);
+    setNewsletterEmail("");
+  }
+
   function scrollToId(id) {
     setMobileMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -150,7 +200,7 @@ export default function LandingPage({ onNavigate }) {
       setActiveModal(target);
       return;
     }
-    if (["intelligence", "learners", "organisation", "faq"].includes(target)) {
+    if (["intelligence", "learners", "organisation", "faq", "how-it-works", "trust"].includes(target)) {
       scrollToId(target);
       return;
     }
@@ -164,25 +214,32 @@ export default function LandingPage({ onNavigate }) {
   return (
     <div style={styles.outer}>
       <style>{`
-        @keyframes floatSlow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        @keyframes floatSlow { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+        @keyframes floatSubtle { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-4px); } }
         @keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: 0.6; } }
+        @keyframes pulseGlow { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.08); } }
+        @keyframes shimmerLine { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
         @keyframes fillBar1 { from { width: 0%; } to { width: 82%; } }
         @keyframes fillBar2 { from { width: 0%; } to { width: 74%; } }
         @keyframes fillBar3 { from { width: 0%; } to { width: 61%; } }
         @keyframes fillBar4 { from { width: 0%; } to { width: 55%; } }
 
-        .lp-card-hover { transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .22s ease, border-color .22s ease; }
-        .lp-card-hover:hover { transform: translateY(-4px); box-shadow: 0 16px 36px -8px rgba(15,23,42,.09); border-color: #BFDBFE !important; }
+        .lp-card-hover { transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .24s ease, border-color .24s ease; }
+        .lp-card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(15,23,42,.1); border-color: #BFDBFE !important; }
+
+        .lp-step-card { transition: all .25s ease; }
+        .lp-step-card:hover { transform: translateY(-6px); box-shadow: 0 20px 45px -12px rgba(37,99,235,0.18); border-color: #93C5FD !important; }
 
         .lp-nav-link { transition: color .15s ease; cursor: pointer; color: #475569; font-weight: 500; font-size: 14px; }
         .lp-nav-link:hover { color: #2563EB !important; }
 
-        .lp-pill-hover { transition: all .18s ease; }
-        .lp-pill-hover:hover { transform: translateY(-2px); border-color: #93C5FD !important; background: #EFF6FF !important; color: #1D4ED8 !important; }
+        .lp-pill-hover { transition: all .2s ease; cursor: pointer; }
+        .lp-pill-hover:hover { transform: translateY(-2px); border-color: #93C5FD !important; background: #EFF6FF !important; color: #1D4ED8 !important; box-shadow: 0 4px 12px rgba(37,99,235,0.1); }
 
         .action-btn { transition: transform .15s ease, box-shadow .15s ease; }
-        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.38); }
-        .action-btn:active { transform: scale(.97); }
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -4px rgba(37, 99, 235, 0.4); }
+        .action-btn:active { transform: scale(.96); }
 
         .lp-bar-1 { animation: fillBar1 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .lp-bar-2 { animation: fillBar2 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -191,6 +248,13 @@ export default function LandingPage({ onNavigate }) {
 
         .lp-float-card { animation: floatSlow 5s ease-in-out infinite; }
         .lp-pulse-live { animation: pulseDot 2s ease-in-out infinite; }
+        .lp-glow-ambient { animation: pulseGlow 6s ease-in-out infinite; }
+
+        .lp-footer-link { color: #94A3B8; text-decoration: none; font-size: 13.5px; transition: color .15s ease; cursor: pointer; }
+        .lp-footer-link:hover { color: #FFFFFF !important; }
+
+        .lp-social-btn { width: 36px; height: 36px; border-radius: 50%; background: #1E293B; border: 1px solid #334155; display: flex; align-items: center; justifyContent: center; color: #94A3B8; transition: all .18s ease; cursor: pointer; }
+        .lp-social-btn:hover { background: #2563EB; color: #FFFFFF; border-color: #2563EB; transform: translateY(-2px); }
 
         @media (max-width: 920px) {
           .lp-desktop-nav { display: none !important; }
@@ -200,6 +264,7 @@ export default function LandingPage({ onNavigate }) {
           .lp-hero-ctas { justify-content: center !important; }
           .lp-hero-pills { justify-content: center !important; }
           .lp-hero-right { justify-content: center !important; }
+          .lp-steps-connector { display: none !important; }
         }
         @media (min-width: 921px) {
           .lp-mobile-drawer { display: none !important; }
@@ -223,7 +288,7 @@ export default function LandingPage({ onNavigate }) {
             <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 40, width: "auto", objectFit: "contain", display: "block" }} />
           </div>
 
-          {/* Nav Links */}
+          {/* Center Navigation Links */}
           <nav className="lp-desktop-nav" style={{ display: "flex", gap: 28, alignItems: "center" }}>
             <span className="lp-nav-link" onClick={() => handleNav("home")}>Home</span>
             <span className="lp-nav-link" onClick={() => handleNav("intelligence")}>Intelligence</span>
@@ -256,7 +321,7 @@ export default function LandingPage({ onNavigate }) {
               Get Started
             </button>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Hamburger Button */}
             <button
               className="lp-mobile-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -286,10 +351,14 @@ export default function LandingPage({ onNavigate }) {
       </header>
 
       {/* =========================================================================
-          SECTION 1: HERO SECTION (Exact layout from Screenshot 1)
+          SECTION 1: HERO SECTION
           ========================================================================= */}
-      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "64px 24px 80px" }}>
-        <div className="lp-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 36, alignItems: "center" }}>
+      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "64px 24px 80px", position: "relative" }}>
+        
+        {/* Soft Ambient Radial Glow */}
+        <div className="lp-glow-ambient" style={{ position: "absolute", top: -80, right: "10%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(37,99,235,0.1) 0%, rgba(239,246,255,0) 70%)", pointerEvents: "none", zIndex: 0 }} />
+
+        <div className="lp-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 36, alignItems: "center", position: "relative", zIndex: 1 }}>
           
           {/* Left Column */}
           <div className="lp-hero-left" style={{ textAlign: "left" }}>
@@ -330,7 +399,7 @@ export default function LandingPage({ onNavigate }) {
 
             {/* 3 Metric Pills in a Row */}
             <div className="lp-hero-pills" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <div className="lp-pill-hover" style={styles.heroPill}>
+              <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
                 <Layers size={16} color="#2563EB" />
                 <div>
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: "#0F172A" }}>Skill Graph</div>
@@ -338,7 +407,7 @@ export default function LandingPage({ onNavigate }) {
                 </div>
               </div>
 
-              <div className="lp-pill-hover" style={styles.heroPill}>
+              <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
                 <Gauge size={16} color="#2563EB" />
                 <div>
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: "#0F172A" }}>Readiness Score</div>
@@ -346,7 +415,7 @@ export default function LandingPage({ onNavigate }) {
                 </div>
               </div>
 
-              <div className="lp-pill-hover" style={styles.heroPill}>
+              <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("learners")}>
                 <Activity size={16} color="#2563EB" />
                 <div>
                   <div style={{ fontSize: 12.5, fontWeight: 800, color: "#0F172A" }}>Live Signals</div>
@@ -360,7 +429,7 @@ export default function LandingPage({ onNavigate }) {
           {/* Right Column: Real Team Image + Floating Live Telemetry Card */}
           <div className="lp-hero-right" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
             
-            {/* Professional Team Cutout Image */}
+            {/* Professional Diverse Team Visual */}
             <div style={{ width: "100%", maxWidth: 360, marginBottom: -40, position: "relative", zIndex: 1 }}>
               <img
                 src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80"
@@ -369,7 +438,7 @@ export default function LandingPage({ onNavigate }) {
               />
             </div>
 
-            {/* Floating Live Workforce Card (Exact recreation from Screenshot 1) */}
+            {/* Floating Live Workforce Card */}
             <div className="lp-float-card" style={{
               position: "relative", zIndex: 2, width: "100%", maxWidth: 440,
               background: "#FFFFFF", borderRadius: 20, padding: "22px 24px",
@@ -399,7 +468,7 @@ export default function LandingPage({ onNavigate }) {
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
                     <span style={{ color: "#334155" }}>Engineering</span>
-                    <span style={{ color: "#2563EB" }}>82 (+6)</span>
+                    <span style={{ color: "#2563EB", fontWeight: 800 }}>82 (+6)</span>
                   </div>
                   <div style={{ height: 6, borderRadius: 99, background: "#EFF6FF", overflow: "hidden" }}>
                     <div className="lp-bar-1" style={{ height: "100%", background: "#2563EB", borderRadius: 99 }} />
@@ -409,7 +478,7 @@ export default function LandingPage({ onNavigate }) {
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
                     <span style={{ color: "#334155" }}>Operations</span>
-                    <span style={{ color: "#2563EB" }}>74 (+3)</span>
+                    <span style={{ color: "#2563EB", fontWeight: 800 }}>74 (+3)</span>
                   </div>
                   <div style={{ height: 6, borderRadius: 99, background: "#EFF6FF", overflow: "hidden" }}>
                     <div className="lp-bar-2" style={{ height: "100%", background: "#2563EB", borderRadius: 99 }} />
@@ -419,7 +488,7 @@ export default function LandingPage({ onNavigate }) {
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
                     <span style={{ color: "#334155" }}>Compliance</span>
-                    <span style={{ color: "#2563EB" }}>61 (-2)</span>
+                    <span style={{ color: "#2563EB", fontWeight: 800 }}>61 (-2)</span>
                   </div>
                   <div style={{ height: 6, borderRadius: 99, background: "#EFF6FF", overflow: "hidden" }}>
                     <div className="lp-bar-3" style={{ height: "100%", background: "#2563EB", borderRadius: 99 }} />
@@ -429,7 +498,7 @@ export default function LandingPage({ onNavigate }) {
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
                     <span style={{ color: "#334155" }}>Sales</span>
-                    <span style={{ color: "#2563EB" }}>55 (+9)</span>
+                    <span style={{ color: "#2563EB", fontWeight: 800 }}>55 (+9)</span>
                   </div>
                   <div style={{ height: 6, borderRadius: 99, background: "#EFF6FF", overflow: "hidden" }}>
                     <div className="lp-bar-4" style={{ height: "100%", background: "#2563EB", borderRadius: 99 }} />
@@ -461,7 +530,7 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 2: HOW WE BUILD IT (Exact recreation from Screenshot 2)
+          SECTION 2: HOW WE BUILD IT
           ========================================================================= */}
       <section style={{ maxWidth: 1180, margin: "0 auto", padding: "30px 24px 70px" }}>
         
@@ -471,7 +540,7 @@ export default function LandingPage({ onNavigate }) {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 18, textAlign: "left" }}>
           {HOW_WE_BUILD_IT.map((item) => (
-            <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 22px", borderRadius: 16, border: "1px solid #E2E8F0" }}>
+            <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "22px 24px", borderRadius: 18, border: "1px solid #E2E8F0" }}>
               <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>{item.title}</h3>
               <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
             </div>
@@ -481,7 +550,7 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 3: THE WORKFORCE INTELLIGENCE LAYER (Exact recreation from Screenshot 2)
+          SECTION 3: THE WORKFORCE INTELLIGENCE LAYER
           ========================================================================= */}
       <section id="intelligence" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 70px", textAlign: "left" }}>
         
@@ -500,8 +569,8 @@ export default function LandingPage({ onNavigate }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
           
           <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "28px 24px", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-              <Brain size={20} color="#2563EB" />
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <Brain size={22} color="#2563EB" />
             </div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>AI Skill Graph</h3>
             <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
@@ -510,8 +579,8 @@ export default function LandingPage({ onNavigate }) {
           </div>
 
           <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "28px 24px", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-              <Gauge size={20} color="#2563EB" />
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <Gauge size={22} color="#2563EB" />
             </div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>Workforce Readiness Score</h3>
             <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
@@ -520,8 +589,8 @@ export default function LandingPage({ onNavigate }) {
           </div>
 
           <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "28px 24px", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-              <BarChart3 size={20} color="#2563EB" />
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+              <BarChart3 size={22} color="#2563EB" />
             </div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>Intelligence Dashboard</h3>
             <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
@@ -534,18 +603,18 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 4: SIGNALS FEEDING THE MODEL & THE LEARNER APP (Exact recreation from Screenshot 3)
+          SECTION 4: SIGNALS FEEDING THE MODEL & THE LEARNER APP
           ========================================================================= */}
       <section id="learners" style={{ maxWidth: 1180, margin: "0 auto", padding: "30px 24px 70px" }}>
         
         {/* Signals Pill Bar */}
-        <div style={{ background: "#FFFFFF", padding: "18px 24px", borderRadius: 18, border: "1px solid #E2E8F0", marginBottom: 48 }}>
+        <div style={{ background: "#FFFFFF", padding: "20px 24px", borderRadius: 20, border: "1px solid #E2E8F0", marginBottom: 48 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 12, textAlign: "left" }}>
             SIGNALS FEEDING THE MODEL
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
             {SIGNALS.map((sig) => (
-              <span key={sig} className="lp-pill-hover" style={{ background: "#EFF6FF", color: "#2563EB", fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 99, border: "1px solid #DBEAFE", cursor: "default" }}>
+              <span key={sig} className="lp-pill-hover" style={{ background: "#EFF6FF", color: "#2563EB", fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 99, border: "1px solid #DBEAFE" }}>
                 {sig}
               </span>
             ))}
@@ -604,7 +673,7 @@ export default function LandingPage({ onNavigate }) {
 
           </div>
 
-          {/* Right Side: Learner Mobile App Frame Mockup */}
+          {/* Right Side: Interactive Learner App Mockup */}
           <div style={{ display: "flex", justifyContent: "center" }}>
             <div style={{
               width: "100%", maxWidth: 360, background: "#FFFFFF", borderRadius: 28,
@@ -646,7 +715,7 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 5: THE ORGANISATION APP (Exact recreation from Screenshot 4)
+          SECTION 5: THE ORGANISATION APP
           ========================================================================= */}
       <section id="organisation" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 70px", textAlign: "left" }}>
         
@@ -743,86 +812,125 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 6: ROLES AND PERMISSIONS (Exact recreation from Screenshot 5)
+          SECTION 6: HOW IT WORKS (Connected 3-Step Journey from Screenshot 1)
           ========================================================================= */}
-      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "30px 24px 70px", textAlign: "left" }}>
+      <section id="how-it-works" style={{ maxWidth: 1180, margin: "0 auto", padding: "50px 24px 70px", textAlign: "center" }}>
         
-        <div style={{ marginBottom: 12 }}>
-          <span style={{ fontSize: 11.5, fontWeight: 800, color: "#2563EB", letterSpacing: ".06em" }}>ROLES AND PERMISSIONS</span>
-        </div>
-
-        <h2 className="lp-section-h2" style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 12px" }}>
-          Everyone sees exactly what they<br />should
+        <h2 className="lp-section-h2" style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 10px" }}>
+          How It Works
         </h2>
-
-        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 32px", lineHeight: 1.55 }}>
-          Two apps — learner and organisation — with permissions enforced per role.
+        <p style={{ fontSize: 15.5, color: "#64748B", maxWidth: 540, margin: "0 auto 40px" }}>
+          Move from onboarding to measurable workforce readiness
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {/* 3 Step Connected Grid */}
+        <div style={{ position: "relative" }}>
           
-          {[
-            {
-              role: "Learner",
-              tag: "Employee or individual learner",
-              desc: "View own progress, use AI Coach, join courses and community, view own certificates"
-            },
-            {
-              role: "Instructor",
-              tag: "Organisation learning lead",
-              desc: "Manage cohorts, assign learners, create and grade assessments, message learners, view cohort progress"
-            },
-            {
-              role: "Manager",
-              tag: "Line manager",
-              desc: "View direct reports, team summary, team readiness score and team skill snapshot"
-            },
-            {
-              role: "Admin",
-              tag: "Organisation owner or operations",
-              desc: "Bulk manage learners, manage courses and settings, view compliance and organisation dashboards, configure certificates, audit and export"
-            }
-          ].map(r => (
-            <div
-              key={r.role}
-              className="lp-card-hover"
-              style={{
-                background: "#FFFFFF",
-                padding: "20px 24px",
-                borderRadius: 16,
-                border: "1px solid #E2E8F0",
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: 16,
-                alignItems: "center"
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "#0F172A" }}>{r.role}</div>
-                <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>{r.tag}</div>
+          {/* Background Connecting Line (Desktop) */}
+          <div className="lp-steps-connector" style={{
+            position: "absolute", top: 38, left: "15%", right: "15%", height: 2,
+            background: "linear-gradient(90deg, #3B82F6 0%, #A855F7 50%, #F97316 100%)",
+            zIndex: 0
+          }} />
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, textAlign: "left", position: "relative", zIndex: 1 }}>
+            
+            {/* Step 1 */}
+            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 22, padding: "32px 26px", border: "1px solid #E2E8F0", position: "relative" }}>
+              <div style={{ position: "absolute", top: -14, left: 24, width: 28, height: 28, borderRadius: "50%", background: "#2563EB", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, boxShadow: "0 4px 10px rgba(37,99,235,0.4)" }}>
+                1
               </div>
-              <div style={{ fontSize: 13.5, color: "#475569", lineHeight: 1.5 }}>
-                {r.desc}
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 20, boxShadow: "0 8px 18px rgba(37,99,235,0.3)" }}>
+                <UserPlus size={22} />
               </div>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>Onboard Your People</h3>
+              <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+                Invite learners, instructors and managers, then organise them by team, cohort and learning need.
+              </p>
             </div>
-          ))}
+
+            {/* Step 2 */}
+            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 22, padding: "32px 26px", border: "1px solid #E2E8F0", position: "relative" }}>
+              <div style={{ position: "absolute", top: -14, left: 24, width: 28, height: 28, borderRadius: "50%", background: "#A855F7", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, boxShadow: "0 4px 10px rgba(168,85,247,0.4)" }}>
+                2
+              </div>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "#A855F7", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 20, boxShadow: "0 8px 18px rgba(168,85,247,0.3)" }}>
+                <BookOpen size={22} />
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>Assign &amp; Develop</h3>
+              <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+                Build or curate courses, assign required learning and support progress through instructors and AI tools.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 22, padding: "32px 26px", border: "1px solid #E2E8F0", position: "relative" }}>
+              <div style={{ position: "absolute", top: -14, left: 24, width: 28, height: 28, borderRadius: "50%", background: "#F97316", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, boxShadow: "0 4px 10px rgba(249,115,22,0.4)" }}>
+                3
+              </div>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "#F97316", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 20, boxShadow: "0 8px 18px rgba(249,115,22,0.3)" }}>
+                <TrendingUp size={22} />
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>Measure Readiness</h3>
+              <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+                Track skills, assessments, compliance, certificates and workforce readiness from live business dashboards.
+              </p>
+            </div>
+
+          </div>
 
         </div>
 
       </section>
 
       {/* =========================================================================
-          SECTION 7: FAQ ACCORDION
+          SECTION 7: ENTERPRISE TRUST & DATA SECURITY (From Screenshot 2)
+          ========================================================================= */}
+      <section id="trust" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 70px", textAlign: "left" }}>
+        
+        <div style={{ marginBottom: 12 }}>
+          <span style={{ fontSize: 11.5, fontWeight: 800, color: "#2563EB", letterSpacing: ".06em" }}>ENTERPRISE TRUST</span>
+        </div>
+
+        <h2 className="lp-section-h2" style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 12px" }}>
+          Trust is part of the product
+        </h2>
+
+        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 36px", lineHeight: 1.55 }}>
+          Permissions, privacy, auditability and data ownership are built in — not added later.
+        </p>
+
+        {/* 6 Grid Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+          {TRUST_FEATURES.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "24px 22px", borderRadius: 18, border: "1px solid #E2E8F0" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                  <Icon size={18} color="#2563EB" />
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>{item.title}</h3>
+                <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+
+      </section>
+
+      {/* =========================================================================
+          SECTION 8: FAQ ACCORDION (From Screenshot 2)
           ========================================================================= */}
       <section id="faq" style={{ maxWidth: 840, margin: "0 auto", padding: "40px 24px 80px", textAlign: "left" }}>
         
-        <div style={{ marginBottom: 12 }}>
-          <span style={{ fontSize: 11.5, fontWeight: 800, color: "#2563EB", letterSpacing: ".06em" }}>FAQ</span>
+        <div style={{ textAlign: "center", marginBottom: 36 }}>
+          <h2 className="lp-section-h2" style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
+            Frequently Asked Questions
+          </h2>
+          <p style={{ fontSize: 15, color: "#64748B", margin: 0 }}>
+            Got questions? We've got answers. Find everything you need to know about Train AI.
+          </p>
         </div>
-
-        <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 28px" }}>
-          Frequently asked questions
-        </h2>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {FAQ_ITEMS.map((item, i) => {
@@ -855,66 +963,166 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 8: BOTTOM CTA BANNER
+          SECTION 9: PRE-FOOTER CTA CARD (Exact match from Screenshot 3)
           ========================================================================= */}
-      <section style={{ maxWidth: 1180, margin: "0 auto 80px", padding: "0 24px" }}>
+      <section style={{ maxWidth: 1180, margin: "0 auto 60px", padding: "0 24px" }}>
         <div style={{
-          background: "linear-gradient(135deg, #1E40AF 0%, #2563EB 60%, #3B82F6 100%)",
-          borderRadius: 24, padding: "50px 32px", color: "#FFFFFF", textAlign: "center",
-          boxShadow: "0 20px 45px -10px rgba(37,99,235,0.35)"
+          background: "linear-gradient(135deg, #DBEAFE 0%, #EFF6FF 50%, #E0E7FF 100%)",
+          borderRadius: 28, padding: "54px 32px", textAlign: "center",
+          border: "1px solid #BFDBFE", boxShadow: "0 20px 45px -12px rgba(37,99,235,0.12)"
         }}>
-          <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 14px", color: "#FFFFFF" }}>
-            Ready to measure true workforce capability?
+          <h2 style={{ fontSize: "clamp(26px, 3.8vw, 42px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 14px", color: "#0F172A", lineHeight: 1.15 }}>
+            Ready to Build a Workforce That Is Ready for<br />What's Next?
           </h2>
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.9)", maxWidth: 580, margin: "0 auto 28px", lineHeight: 1.55 }}>
-            Schedule a 20-minute live demonstration or get started with your team today.
+          
+          <p style={{ fontSize: 16, color: "#475569", maxWidth: 620, margin: "0 auto 30px", lineHeight: 1.55 }}>
+            Bring courses, cohorts, compliance and workforce intelligence together in one business LMS.
           </p>
-          <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
+
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
             <button
               className="action-btn"
-              style={{ background: "#FFFFFF", color: "#1E40AF", fontWeight: 800, padding: "12px 24px", borderRadius: 99, border: "none", cursor: "pointer", fontSize: 14 }}
+              style={{ background: "#2563EB", color: "#FFFFFF", fontWeight: 800, padding: "12px 26px", borderRadius: 99, border: "none", cursor: "pointer", fontSize: 14, boxShadow: "0 6px 18px rgba(37,99,235,0.35)", display: "inline-flex", alignItems: "center", gap: 6 }}
               onClick={() => handleNav("signin")}
             >
-              Get Started Now
+              Get Started <ArrowRight size={15} />
             </button>
             <button
               className="action-btn"
-              style={{ background: "rgba(255,255,255,0.15)", color: "#FFFFFF", fontWeight: 700, padding: "12px 24px", borderRadius: 99, border: "1.5px solid rgba(255,255,255,0.35)", cursor: "pointer", fontSize: 14, backdropFilter: "blur(6px)" }}
+              style={{ background: "#FFFFFF", color: "#0F172A", fontWeight: 700, padding: "12px 24px", borderRadius: 99, border: "1.5px solid #CBD5E1", cursor: "pointer", fontSize: 14 }}
+              onClick={() => handleNav("signin")}
+            >
+              Sign In to Train AI
+            </button>
+            <button
+              className="action-btn"
+              style={{ background: "transparent", color: "#2563EB", fontWeight: 700, padding: "12px 24px", borderRadius: 99, border: "1.5px solid #93C5FD", cursor: "pointer", fontSize: 14 }}
               onClick={() => handleNav("demo")}
             >
               Request a demo
             </button>
           </div>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap", fontSize: 12.5, color: "#475569", fontWeight: 700 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+              Role-based access
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+              Organisation-ready
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+              Secure learner data
+            </span>
+          </div>
         </div>
       </section>
 
       {/* =========================================================================
-          MODERN FOOTER
+          SECTION 10: DARK ENTERPRISE FOOTER (Exact match from Screenshot 4)
           ========================================================================= */}
-      <footer style={styles.footer}>
-        <div style={styles.footerInner}>
-          <div style={{ minWidth: 200 }}>
-            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 40, width: "auto", objectFit: "contain", display: "block", marginBottom: 10 }} />
-            <div style={{ fontSize: 12.5, color: "#64748B" }}>Train AI Limited · Lagos · London</div>
-            <div style={{ fontSize: 12.5, color: "#64748B", marginTop: 4 }}>info@trainailtd.com</div>
-            <div style={{ fontSize: 12.5, color: "#64748B", marginTop: 2 }}>+44 7435126104 · +234 9076664049</div>
-          </div>
+      <footer style={{ background: "#0B1120", color: "#FFFFFF", paddingTop: 50, paddingBottom: 40, borderTop: "1px solid #1E293B" }}>
+        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 24px" }}>
           
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
-            <strong style={{ color: "#0F172A", marginBottom: 4 }}>Platform</strong>
-            <span className="lp-nav-link" onClick={() => handleNav("intelligence")}>Intelligence Layer</span>
-            <span className="lp-nav-link" onClick={() => handleNav("learners")}>Learner App</span>
-            <span className="lp-nav-link" onClick={() => handleNav("organisation")}>Organisation Workspace</span>
-            <span className="lp-nav-link" onClick={() => handleNav("faq")}>FAQ</span>
+          {/* Newsletter Box */}
+          <div style={{
+            background: "#131C31", borderRadius: 20, padding: "36px 32px",
+            border: "1px solid #1E293B", textAlign: "center", marginBottom: 56,
+            boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
+          }}>
+            <h3 style={{ fontSize: 22, fontWeight: 800, color: "#FFFFFF", margin: "0 0 8px" }}>
+              Stay Updated
+            </h3>
+            <p style={{ fontSize: 14, color: "#94A3B8", margin: "0 0 22px" }}>
+              Get the latest courses, features, and learning tips delivered to your inbox.
+            </p>
+
+            {newsletterSubscribed ? (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "rgba(16,185,129,0.15)", color: "#34D399", borderRadius: 99, fontWeight: 700, fontSize: 13.5 }}>
+                <CheckCircle2 size={16} />
+                <span>Thank you for subscribing! We will keep you updated.</span>
+              </div>
+            ) : (
+              <form onSubmit={handleNewsletterSubmit} style={{ display: "flex", maxWidth: 460, margin: "0 auto", gap: 8, flexWrap: "wrap" }}>
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter your email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  style={{
+                    flex: 1, minWidth: 220, padding: "11px 16px", borderRadius: 99,
+                    border: "1px solid #334155", background: "#0B1120", color: "#FFFFFF",
+                    fontSize: 13.5, outline: "none"
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="action-btn"
+                  style={{
+                    background: "#2563EB", color: "#FFFFFF", border: "none",
+                    padding: "11px 22px", borderRadius: 99, fontWeight: 800, fontSize: 13.5,
+                    cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6
+                  }}
+                >
+                  <Mail size={15} /> Subscribe
+                </button>
+              </form>
+            )}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
-            <strong style={{ color: "#0F172A", marginBottom: 4 }}>Legal &amp; Privacy</strong>
-            <span className="lp-nav-link" onClick={() => handleNav("about")}>About Us</span>
-            <span className="lp-nav-link" onClick={() => handleNav("privacy")}>Privacy Policy</span>
-            <span className="lp-nav-link" onClick={() => handleNav("terms")}>Terms of Service</span>
-            <span className="lp-nav-link" onClick={() => handleNav("cookie")}>Cookie Policy</span>
+          {/* Footer Navigation Columns */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40, marginBottom: 48, textAlign: "left" }}>
+            
+            {/* Brand column */}
+            <div>
+              <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 38, width: "auto", objectFit: "contain", display: "block", marginBottom: 14 }} />
+              <p style={{ fontSize: 13, color: "#94A3B8", lineHeight: 1.6, margin: "0 0 20px", maxWidth: 280 }}>
+                AI-powered workforce learning and intelligence for modern businesses.
+              </p>
+              <div style={{ display: "flex", gap: 10 }}>
+                <div className="lp-social-btn" aria-label="Facebook"><Facebook size={16} /></div>
+                <div className="lp-social-btn" aria-label="Twitter"><Twitter size={16} /></div>
+                <div className="lp-social-btn" aria-label="Instagram"><Instagram size={16} /></div>
+                <div className="lp-social-btn" aria-label="LinkedIn"><Linkedin size={16} /></div>
+              </div>
+            </div>
+
+            {/* Product column */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#FFFFFF", marginBottom: 4 }}>Product</div>
+              <span className="lp-footer-link" onClick={() => scrollToId("intelligence")}>Features</span>
+              <span className="lp-footer-link" onClick={() => scrollToId("how-it-works")}>How It Works</span>
+              <span className="lp-footer-link" onClick={() => handleNav("signup")}>Sign Up</span>
+              <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Courses</span>
+            </div>
+
+            {/* For Users column */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#FFFFFF", marginBottom: 4 }}>For Users</div>
+              <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Learner Dashboard</span>
+              <span className="lp-footer-link" onClick={() => scrollToId("organisation")}>Instructor Workspace</span>
+              <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Community</span>
+              <span className="lp-footer-link" onClick={() => scrollToId("how-it-works")}>Certificates</span>
+            </div>
+
           </div>
+
+          {/* Bottom Copyright & Legal Links */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, paddingTop: 24, borderTop: "1px solid #1E293B", fontSize: 12.5, color: "#64748B" }}>
+            <div>
+              © 2025 Train AI Ltd. All rights reserved. Headquartered in London, United Kingdom
+            </div>
+            <div style={{ display: "flex", gap: 20 }}>
+              <span className="lp-footer-link" onClick={() => handleNav("about")}>About Us</span>
+              <span className="lp-footer-link" onClick={() => handleNav("privacy")}>Privacy Policy</span>
+              <span className="lp-footer-link" onClick={() => handleNav("terms")}>Terms of Service</span>
+              <span className="lp-footer-link" onClick={() => handleNav("cookie")}>Cookie Policy</span>
+            </div>
+          </div>
+
         </div>
       </footer>
 
@@ -1005,8 +1213,6 @@ const styles = {
   startOrgBtn: { border: "none", background: "#2563EB", color: "#FFFFFF", padding: "12px 24px", borderRadius: 99, fontWeight: 800, fontSize: 14, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, boxShadow: "0 6px 18px rgba(37,99,235,0.35)" },
   requestDemoOutlineBtn: { border: "1.5px solid #CBD5E1", background: "#FFFFFF", color: "#0F172A", padding: "12px 24px", borderRadius: 99, fontWeight: 700, fontSize: 14, cursor: "pointer" },
   heroPill: { background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "8px 16px", borderRadius: 14, display: "flex", alignItems: "center", gap: 10, boxShadow: "0 2px 8px rgba(15,23,42,0.03)" },
-  footer: { borderTop: "1px solid #E2E8F0", background: "#FFFFFF", padding: "40px 24px" },
-  footerInner: { maxWidth: 1180, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32 },
   modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100 },
   modalCard: { background: "#FFFFFF", borderRadius: 20, padding: 26, maxWidth: 500, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 60px -24px rgba(15,23,42,.35)" },
   modalClose: { border: "none", background: "#F1F5F9", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex", color: "#64748B" },
