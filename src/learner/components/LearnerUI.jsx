@@ -325,7 +325,7 @@ export const TOKENS = `
   .tai-input { width:100%; border-radius:12px; border:1px solid var(--border); background: var(--surface); padding: 12px 16px;
     font-size:13.5px; color: var(--text); font-family: var(--font); transition: all .18s ease; }
   .tai-input:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); transform: translateY(-1px); }
-  .tai-fade-in { animation: fadeInScale .24s cubic-bezier(.16,1,.3,1) both; }
+  .tai-fade-in { animation: fadeIn .18s ease-out both; }
   .tai-switch { width:44px; height:26px; border-radius:99px; background: var(--surface-2); position:relative; cursor:pointer; flex-shrink:0; transition: background .18s ease; border: 1px solid var(--border); }
   .tai-switch.on { background: var(--primary); border-color: var(--primary); }
   .tai-switch-knob { width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition: left .18s cubic-bezier(.16,1,.3,1); box-shadow: 0 1px 3px rgba(0,0,0,.2); }

@@ -8,6 +8,7 @@ import {
   ShieldCheck, ArrowUpRight, Check, X, Star, TrendingUp
 } from "lucide-react";
 import { fetchMyMysteryBoxes, claimMysteryBox } from "../../lib/api/schemaHelper.js";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 function iconForCategory(category) {
   if (category === "streak") return Flame;
@@ -601,19 +602,17 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       )}
 
       {/* =========================================================================
-          CERTIFICATE PREVIEW MODAL
+          CERTIFICATE PREVIEW MODAL (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
           ========================================================================= */}
-      {selectedCertificate && (
-        <div
-          className="tai-scrim"
-          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 14, zIndex: 300, overflowY: "auto", boxSizing: "border-box" }}
-          onClick={() => setSelectedCertificate(null)}
-        >
-          <div
-            className="tai-card"
-            style={{ maxWidth: 700, width: "100%", background: "#fff", borderRadius: 20, padding: "24px 20px", color: "#0F172A", border: "10px solid #F8FAFC", boxShadow: "0 20px 50px rgba(0,0,0,0.3)", boxSizing: "border-box" }}
-            onClick={(e) => e.stopPropagation()}
-          >
+      <PortalModal
+        isOpen={Boolean(selectedCertificate)}
+        onClose={() => setSelectedCertificate(null)}
+        maxWidth={700}
+        zIndex={9999}
+        style={{ background: "#fff", color: "#0F172A", border: "10px solid #F8FAFC", padding: "24px 20px" }}
+      >
+        {selectedCertificate && (
+          <>
             <div className="tai-row tai-between" style={{ marginBottom: 20, gap: 10, flexWrap: "wrap" }}>
               <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 OFFICIAL CERTIFICATE OF COMPLETION
@@ -674,9 +673,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
                 <Download size={15} /> Download PDF Certificate
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </PortalModal>
 
     </div>
   );

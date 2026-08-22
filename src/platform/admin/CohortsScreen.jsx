@@ -1,8 +1,9 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
-import { Plus, Layers, Users, Calendar, ArrowRight } from "lucide-react";
+import { Plus, Layers, Users, Calendar, ArrowRight, X } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortsWithStats, createCohort } from "../../lib/api/platform.js";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
@@ -103,74 +104,48 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
               })}
             </div>
 
-            {newCohortOpen && (
-              <div
-                style={{
-                  position: "fixed",
-                  inset: 0,
-                  zIndex: 300,
-                  background: "rgba(10, 14, 26, 0.65)",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: 20,
-                  overflowY: "auto"
-                }}
-                onClick={() => setNewCohortOpen(false)}
-              >
-                <div
-                  className="ta-card anim-slide-down"
-                  style={{
-                    maxWidth: 480,
-                    width: "100%",
-                    borderRadius: 20,
-                    padding: 24,
-                    background: "var(--surface)",
-                    boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
-                    border: "1px solid var(--border)"
-                  }}
-                  onClick={e => e.stopPropagation()}
-                >
-                  <div className="ta-row ta-between">
-                    <div className="ta-title" style={{ fontSize: 18 }}>Create New Cohort</div>
-                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setNewCohortOpen(false)}><X size={16} /></button>
-                  </div>
-                  <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 14 }}>
-                    Set up a new synchronous learning batch for your organization.
-                  </p>
-                  <div className="ta-label">Cohort Name</div>
-                  <input
-                    className="ta-input ta-mt6"
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                    placeholder="e.g. Q3 Generative AI Engineering Batch"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                    autoFocus
-                  />
-                  <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
-                    <button className="ta-btn ta-btn-outline" onClick={() => setNewCohortOpen(false)}>Cancel</button>
-                    <button
-                      className="ta-btn ta-btn-primary"
-                      onClick={async () => {
-                        if (!name.trim()) { showToast("Enter a cohort name first."); return; }
-                        if (!orgId) {
-                          showToast("You need to be part of an organization to create a cohort. This account isn't linked to one yet.");
-                          return;
-                        }
-                        await createCohort({ organizationId: orgId, name: name.trim(), createdBy: currentUserId });
-                        setNewCohortOpen(false); setName("");
-                        cohortsQuery.refetch();
-                        showToast("Cohort created successfully!");
-                      }}
-                    >
-                      Save Cohort
-                    </button>
-                  </div>
-                </div>
+            <PortalModal
+              isOpen={newCohortOpen}
+              onClose={() => setNewCohortOpen(false)}
+              maxWidth={480}
+              zIndex={9999}
+            >
+              <div className="ta-row ta-between">
+                <div className="ta-title" style={{ fontSize: 18 }}>Create New Cohort</div>
+                <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setNewCohortOpen(false)}><X size={16} /></button>
               </div>
-            )}
+              <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 14 }}>
+                Set up a new synchronous learning batch for your organization.
+              </p>
+              <div className="ta-label">Cohort Name</div>
+              <input
+                className="ta-input ta-mt6"
+                style={{ width: "100%", boxSizing: "border-box" }}
+                placeholder="e.g. Q3 Generative AI Engineering Batch"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                autoFocus
+              />
+              <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
+                <button className="ta-btn ta-btn-outline" onClick={() => setNewCohortOpen(false)}>Cancel</button>
+                <button
+                  className="ta-btn ta-btn-primary"
+                  onClick={async () => {
+                    if (!name.trim()) { showToast("Enter a cohort name first."); return; }
+                    if (!orgId) {
+                      showToast("You need to be part of an organization to create a cohort. This account isn't linked to one yet.");
+                      return;
+                    }
+                    await createCohort({ organizationId: orgId, name: name.trim(), createdBy: currentUserId });
+                    setNewCohortOpen(false); setName("");
+                    cohortsQuery.refetch();
+                    showToast("Cohort created successfully!");
+                  }}
+                >
+                  Save Cohort
+                </button>
+              </div>
+            </PortalModal>
           </div>
 
           {/* Right Side Panel */}
