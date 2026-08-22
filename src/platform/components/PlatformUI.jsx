@@ -199,17 +199,17 @@ export const TOKENS = `
   .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
   .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 76px; }
   .ta-topbar {
-    min-height: 64px; height: auto; border-bottom: 1px solid var(--border); background: var(--surface);
-    display: flex; align-items: center; justify-content: space-between; padding: 10px clamp(16px, 2.5vw, 32px); position: sticky; top:0; z-index: 20;
+    height: 58px; min-height: 58px; max-height: 58px; border-bottom: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 28px); position: sticky; top: 0; z-index: 50;
     box-shadow: 0 1px 3px rgba(0,0,0,0.03); box-sizing: border-box; width: 100%;
   }
-  .ta-topbar-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; padding-right: 12px; }
-  .ta-topbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-  .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 9px 14px; width: clamp(220px, 24vw, 380px); color: var(--text-3); font-size: 13px; transition: all .15s ease; }
+  .ta-topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; padding-right: 10px; }
+  .ta-topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 10px; padding: 6px 12px; width: clamp(140px, 15vw, 210px); color: var(--text-3); font-size: 12.5px; transition: all .15s ease; flex-shrink: 0; }
   .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); background: #fff; }
-  .ta-content { padding: 28px clamp(20px, 2.5vw, 40px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-  .ta-h1 { font-size: clamp(17px, 2vw, 22px); font-weight: 800; letter-spacing: -0.02em; margin: 0; word-break: break-word; color: var(--text); line-height: 1.25; }
-  .ta-sub { font-size: clamp(11.5px, 1.2vw, 13px); color: var(--text-2); margin: 3px 0 0; font-weight: 500; line-height: 1.35; word-break: break-word; }
+  .ta-content { padding: 22px clamp(14px, 2vw, 32px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+  .ta-h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); line-height: 1.2; }
+  .ta-sub { font-size: 11.5px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }
@@ -263,7 +263,7 @@ export const TOKENS = `
   }
 
   @media (max-width: 899px) {
-    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
+    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
     /* The sidebar is an off-canvas drawer here (translateX(-100%) unless
        .mobile-open), so content must never be pushed over for it. */
@@ -277,12 +277,12 @@ export const TOKENS = `
     .ta-header-full-only { display: none !important; }
     .ta-header-mobile-only { display: block; }
     .ta-topbar {
-      padding: 10px 14px; min-height: 56px; height: auto;
+      padding: 0 12px; height: 52px; min-height: 52px; max-height: 52px;
       display: flex; align-items: center; justify-content: space-between;
-      box-sizing: border-box; width: 100%;
+      box-sizing: border-box; width: 100%; position: sticky; top: 0; z-index: 50; background: var(--surface);
     }
-    .ta-topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; padding-right: 8px; }
-    .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .ta-topbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; padding-right: 6px; }
+    .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .ta-profile-pill { padding: 3px !important; }
     .ta-content { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
@@ -298,8 +298,8 @@ export const TOKENS = `
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
-    .ta-h1 { font-size: 15px !important; font-weight: 800 !important; line-height: 1.25 !important; word-break: break-word !important; }
-    .ta-sub { display: block !important; font-size: 11px !important; color: var(--text-3) !important; margin-top: 1px !important; line-height: 1.3 !important; word-break: break-word !important; }
+    .ta-h1 { font-size: 14.5px !important; font-weight: 800 !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    .ta-sub { display: block !important; font-size: 11px !important; color: var(--text-3) !important; margin-top: 1px !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
     .ta-table-wrap .ta-table { min-width: 460px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
@@ -1021,20 +1021,20 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
         {orgSelector && (
           <div className="ta-row ta-gap8 ta-org-selector" style={{
             background: "var(--surface)",
-            padding: "6px 14px",
-            borderRadius: 12,
+            padding: "4px 10px",
+            borderRadius: 10,
             border: "1px solid var(--border)",
             boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
           }}>
-            <Building2 size={16} color="var(--primary)" />
+            <Building2 size={15} color="var(--primary)" />
             <div className="ta-col" style={{ lineHeight: 1 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em" }}>Tenant</span>
+              <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em" }}>Tenant</span>
               <select
                 value={orgSelector.selectedOrgId || ""}
                 onChange={(e) => orgSelector.onSelectOrg(e.target.value)}
                 style={{
-                  padding: "2px 0 0",
-                  fontSize: 12.5,
+                  padding: "1px 0 0",
+                  fontSize: 11.5,
                   fontWeight: 700,
                   border: "none",
                   background: "transparent",
@@ -1049,16 +1049,16 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
                 ))}
               </select>
             </div>
-            <ChevronRight size={14} color="var(--text-3)" style={{ transform: "rotate(90deg)" }} />
+            <ChevronRight size={13} color="var(--text-3)" style={{ transform: "rotate(90deg)" }} />
           </div>
         )}
 
         {/* Universal Search Bar with Live Results Popover */}
         <div className="ta-search" ref={searchRef} style={{ position: "relative", zIndex: 100 }}>
-          <Search size={15} color="var(--text-3)" />
+          <Search size={14} color="var(--text-3)" />
           <input
             type="text"
-            placeholder="Search students, courses, cohorts, or jump to a section..."
+            placeholder="Search platform..."
             value={searchValue}
             onFocus={() => setIsSearchOpen(true)}
             onChange={(e) => {
@@ -1068,12 +1068,12 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
             onKeyDown={(e) => {
               if (e.key === "Escape") setIsSearchOpen(false);
             }}
-            style={{ border: "none", background: "transparent", width: "100%", fontSize: 13, color: "var(--text)", outline: "none", fontFamily: "var(--font)" }}
+            style={{ border: "none", background: "transparent", width: "100%", fontSize: 12.5, color: "var(--text)", outline: "none", fontFamily: "var(--font)" }}
           />
           {searchValue ? (
-            <X size={14} color="var(--text-3)" style={{ cursor: "pointer" }} onClick={() => { setSearchValue(""); setIsSearchOpen(false); }} />
+            <X size={13} color="var(--text-3)" style={{ cursor: "pointer" }} onClick={() => { setSearchValue(""); setIsSearchOpen(false); }} />
           ) : (
-            <span style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", background: "var(--surface)", padding: "2px 6px", borderRadius: 6, border: "1px solid var(--border)" }}>⌘K</span>
+            <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text-3)", background: "var(--surface)", padding: "1px 5px", borderRadius: 4, border: "1px solid var(--border)" }}>⌘K</span>
           )}
 
           {/* Universal Search Results Popover */}
@@ -1087,12 +1087,12 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
                 className="ta-card anim-slide-down"
                 style={{
                   position: "absolute",
-                  top: 48,
+                  top: 42,
                   left: 0,
-                  width: 380,
+                  width: 320,
                   maxHeight: "65vh",
                   overflowY: "auto",
-                  padding: "8px 0",
+                  padding: "6px 0",
                   zIndex: 200,
                   boxShadow: "0 14px 36px -8px rgba(15,23,42,0.22)",
                   border: "1px solid var(--border)",
