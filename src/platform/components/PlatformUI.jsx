@@ -3,7 +3,7 @@ import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail,
   Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy,
-  PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon
+  PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { DASHBOARD_META } from "../../lib/roleRouting.js";
@@ -197,6 +197,7 @@ export const TOKENS = `
   .ta-sub { font-size: 13.5px; color: var(--text-2); margin: 4px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-weight: 500; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
+    .ta-header-mobile-only { display: none !important; }
   }
   .ta-hero-banner {
     border-radius: 20px;
@@ -249,28 +250,21 @@ export const TOKENS = `
   @media (max-width: 899px) {
     .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
-    /* Despite the name, this is NOT safe to hide outright on mobile here:
-       it wraps each screen's header quick-action (e.g. "Create cohort") and
-       the header Sign Out button, and unlike the learner app there is no
-       redundant place to reach either of those in the admin/mentor/manager/
-       superadmin apps. Shrink to fit the header instead of removing them. */
-    .ta-desktop-only .ta-btn { padding: 7px 12px; font-size: 12.5px; gap: 6px; }
-    button.ta-desktop-only.ta-btn { width: 36px; height: 36px; padding: 0; border-radius: 10px; gap: 0; flex-shrink: 0; }
-    button.ta-desktop-only.ta-btn span { display: none; }
+    /* The theme toggle, notifications bell, per-screen quick-action, and
+       Sign Out button all get hidden here rather than shrunk - crammed
+       together as icons they still read as "crowded" no matter how small.
+       Each one (except the purely-decorative bell) is replicated inside the
+       single "more" menu (.ta-header-mobile-only) instead, so nothing is
+       actually lost - it's consolidated into one tap target. */
+    .ta-header-full-only { display: none !important; }
+    .ta-header-mobile-only { display: block; }
     .ta-topbar {
       padding: 0 16px; height: 58px; min-height: 58px;
       display: flex; align-items: center; justify-content: space-between;
       flex-wrap: nowrap; box-sizing: border-box; width: 100%;
     }
     .ta-topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-    .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-    /* Theme toggle + notifications bell are square icon buttons that sit in
-       the header on every admin/mentor/manager/superadmin screen - shrink
-       them (and the profile pill down to just its avatar) on mobile so they
-       don't crowd the title out along with the quick-action/sign-out
-       buttons, which are already compacted above. */
-    .ta-header-icon-btn { width: 34px !important; height: 34px !important; border-radius: 10px !important; }
-    .ta-profile-pill-text { display: none; }
+    .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .ta-profile-pill { padding: 3px !important; }
     .ta-content { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
@@ -900,6 +894,8 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
   const [isDarkTheme, setIsDarkTheme] = useState(() => getStoredThemeDark());
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef(null);
 
   useEffect(() => {
     const syncTheme = () => {
@@ -984,6 +980,9 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
     function handleClickOutside(e) {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setIsSearchOpen(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
+        setIsMoreMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -1162,9 +1161,11 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           )}
         </div>
 
-        {/* Theme Toggle (Dark / Light) */}
+        {/* Theme Toggle (Dark / Light) - full button on desktop, folded into
+            the mobile "more" menu below instead of shown here, so it isn't
+            a 6th thing competing for room in an already-tight mobile header. */}
         <button
-          className="ta-btn ta-btn-outline ta-header-icon-btn"
+          className="ta-btn ta-btn-outline ta-header-full-only"
           style={{ width: 42, height: 42, padding: 0, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
           onClick={() => {
             const next = !isDarkTheme;
@@ -1177,17 +1178,21 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           {isDarkTheme ? <Sun size={17} color="#FBBF24" /> : <Moon size={17} color="var(--text-2)" />}
         </button>
 
-        {/* Notifications icon */}
-        <div className="ta-header-icon-btn" style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+        {/* Notifications icon - desktop only; purely decorative (no real
+            feed to back it yet), so it isn't worth a slot in the mobile
+            menu either. */}
+        <div className="ta-header-full-only" style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
           <Bell size={17} color="var(--text-2)" />
         </div>
 
-        {/* Primary Header Quick Action */}
-        <div className="ta-desktop-only">
+        {/* Primary Header Quick Action - full-size on desktop, replicated
+            (not dropped) inside the mobile "more" menu below. */}
+        <div className="ta-header-full-only">
           {right}
         </div>
 
-        {/* User Profile Pill - opens the real Settings Hub */}
+        {/* User Profile Pill - opens the real Settings Hub. Always visible -
+            this is the one action worth a permanent, dedicated slot. */}
         <div
           className="ta-row ta-gap8 ta-profile-pill"
           style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0 }}
@@ -1200,9 +1205,10 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           </div>
         </div>
 
-        {/* Sign Out Action */}
+        {/* Sign Out Action - full button on desktop, replicated inside the
+            mobile "more" menu below. */}
         <button
-          className="ta-btn ta-btn-ghost ta-btn-sm ta-desktop-only"
+          className="ta-btn ta-btn-ghost ta-btn-sm ta-header-full-only"
           onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
           title="Sign Out"
           aria-label="Sign out"
@@ -1211,6 +1217,48 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           <LogOut size={15} />
           <span>Sign Out</span>
         </button>
+
+        {/* Mobile-only "more" menu - replaces the theme toggle, quick action
+            and sign out above (hidden on mobile via .ta-header-full-only)
+            with one tap target instead of 3-4 separate icons crowding the
+            header. Every action is still fully reachable, just consolidated. */}
+        <div ref={moreMenuRef} className="ta-header-mobile-only" style={{ position: "relative" }}>
+          <button
+            style={{ width: 38, height: 38, padding: 0, borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            onClick={() => setIsMoreMenuOpen(v => !v)}
+            aria-label="More options"
+          >
+            <MoreVertical size={18} color="var(--text-2)" />
+          </button>
+          {isMoreMenuOpen && (
+            <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 46, right: 0, width: 220, padding: 8, zIndex: 250 }}>
+              <div
+                className="ta-dropdown-item ta-row ta-gap8"
+                onClick={() => { const next = !isDarkTheme; setIsDarkTheme(next); setGlobalThemeDark(next); setIsMoreMenuOpen(false); }}
+              >
+                {isDarkTheme ? <Sun size={15} color="#FBBF24" /> : <Moon size={15} color="var(--text-2)" />}
+                <span>{isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
+              </div>
+              {right && (
+                <div onClick={() => setIsMoreMenuOpen(false)}>
+                  {right}
+                </div>
+              )}
+              <div className="ta-nav-divider" />
+              <div
+                className="ta-dropdown-item ta-row ta-gap8"
+                style={{ color: "var(--danger)" }}
+                onClick={() => {
+                  setIsMoreMenuOpen(false);
+                  (onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); }))();
+                }}
+              >
+                <LogOut size={15} />
+                <span>Sign Out</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
