@@ -425,7 +425,10 @@ export function CohortScreen({
                   <span style={{ fontSize: 11.5, color: "var(--danger)", fontWeight: 700 }}>
                     Due: {new Date(cc.due_at).toLocaleDateString()}
                   </span>
-                  <button className="tai-btn tai-btn-primary tai-btn-sm">
+                  <button
+                    className="tai-btn tai-btn-primary tai-btn-sm"
+                    onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: cc.courses?.id || "course-figma-ai" }); }}
+                  >
                     Open Syllabus →
                   </button>
                 </div>

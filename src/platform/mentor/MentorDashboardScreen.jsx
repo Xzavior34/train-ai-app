@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { TopBar, StatCard, Tag } from "../components/PlatformUI.jsx";
+import React, { useState, useContext } from "react";
+import { TopBar, StatCard, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { 
   Users, Layers, CheckCircle2, Calendar, Radio, Star, 
@@ -12,6 +12,7 @@ import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHe
 import { fetchMentorActiveCohorts } from "../../lib/api/platform.js";
 
 export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId, onNavigate }) {
+  const showToast = useContext(ToastContext);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
   const [tasks, setTasks] = useState([
     { id: 1, text: "Grade Module 3 UI & Wireframe Submissions (8 pending)", done: false, priority: "high" },
@@ -324,7 +325,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 </button>
                 <button 
                   className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => alert("Diagnostic study guide generated and synced to student resource library.")}
+                  onClick={() => showToast("Diagnostic study guide generated and synced to student resource library.")}
                 >
                   Generate study guide
                 </button>

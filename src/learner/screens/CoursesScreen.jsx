@@ -1135,12 +1135,12 @@ export function CoursesScreen({
       {activeRecording && (
         <div
           className="tai-scrim"
-          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 300 }}
+          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 300, overflowY: "auto", boxSizing: "border-box" }}
           onClick={() => setActiveRecording(null)}
         >
           <div
             className="tai-card"
-            style={{ maxWidth: 760, width: "100%", background: "#0F172A", color: "#fff", borderRadius: 20, overflow: "hidden", padding: 0, border: "1px solid rgba(255,255,255,0.15)" }}
+            style={{ maxWidth: 760, width: "100%", maxHeight: "100%", background: "#0F172A", color: "#fff", borderRadius: 20, overflow: "hidden", padding: 0, border: "1px solid rgba(255,255,255,0.15)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
@@ -1163,17 +1163,18 @@ export function CoursesScreen({
               />
             </div>
 
-            <div style={{ padding: 18, background: "#1E293B", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div className="tai-row tai-gap10">
-                <img src={activeRecording.thumbnail} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{activeRecording.instructor}</div>
-                  <div style={{ fontSize: 11, color: "#94A3B8" }}>{activeRecording.role} • {activeRecording.duration}</div>
+            <div style={{ padding: 18, background: "#1E293B", display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", alignItems: "center" }}>
+              <div className="tai-row tai-gap10" style={{ minWidth: 0 }}>
+                <img src={activeRecording.thumbnail} alt="" style={{ width: 34, height: 34, flexShrink: 0, borderRadius: "50%", objectFit: "cover" }} />
+                <div style={{ minWidth: 0, overflow: "hidden" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeRecording.instructor}</div>
+                  <div style={{ fontSize: 11, color: "#94A3B8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeRecording.role} • {activeRecording.duration}</div>
                 </div>
               </div>
 
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
+                style={{ flexShrink: 0 }}
                 onClick={() => { setActiveRecording(null); push("courseDetail", { id: "course-figma-ai" }); }}
               >
                 Enroll in Full Track →

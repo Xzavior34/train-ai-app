@@ -451,7 +451,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           style={{ position: "fixed", inset: 0, background: "rgba(10,12,25,.55)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
           onClick={closeAssignModal}
         >
-          <div className="ta-card" style={{ maxWidth: 480, width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+          <div className="ta-card" style={{ maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
             <div className="ta-row ta-between">
               <div style={{ fontWeight: 800, fontSize: 15 }}>Assign course to learners</div>
               <button className="ta-iconbtn" onClick={closeAssignModal} aria-label="Close"><X size={16} /></button>

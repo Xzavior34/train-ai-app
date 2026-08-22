@@ -423,7 +423,11 @@ results = vector_store.similarity_search(query, k=4)`
                       {course.progress > 0 ? `${course.progress}% Complete` : "Ready to Start"}
                     </span>
 
-                    <button className="tai-btn tai-btn-primary tai-btn-sm" style={{ padding: "6px 14px", borderRadius: 8, fontWeight: 700 }}>
+                    <button
+                      className="tai-btn tai-btn-primary tai-btn-sm"
+                      style={{ padding: "6px 14px", borderRadius: 8, fontWeight: 700 }}
+                      onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: course.id }); }}
+                    >
                       {course.progress > 0 ? "Resume →" : "Start Course →"}
                     </button>
                   </div>
