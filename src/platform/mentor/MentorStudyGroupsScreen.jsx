@@ -182,7 +182,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                     style={{
                       cursor: "pointer",
                       padding: 0,
-                      borderRadius: 16,
+                      borderRadius: 10,
                       background: "var(--surface)",
                       border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border)",
                       overflow: "hidden",

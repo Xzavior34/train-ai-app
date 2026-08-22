@@ -1139,7 +1139,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 const coverImg = c.cover_image_url || fallbackImages[idx % fallbackImages.length];
 
                 return (
-                  <div key={c.id} className="ta-card ta-card-hover" style={{ display: "flex", flexDirection: "column", height: "100%", padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--border)" }}>
+                  <div key={c.id} className="ta-card ta-card-hover" style={{ display: "flex", flexDirection: "column", height: "100%", padding: 0, overflow: "hidden", borderRadius: 10, border: "1px solid var(--border)" }}>
                     <div style={{ position: "relative", width: "100%", height: 148, overflow: "hidden", background: "#0F172A" }}>
                       <img
                         src={coverImg}

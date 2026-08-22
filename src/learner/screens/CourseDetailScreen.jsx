@@ -135,7 +135,7 @@ export function CourseDetailScreen({
           {lessons.length > 0 && (
             <div className="tai-col tai-gap14">
               {/* Module Progress Card matching media_1787304915509.jpg */}
-              <div className="tai-card" style={{ padding: "18px 20px", borderRadius: 16, background: "var(--surface)" }}>
+              <div className="tai-card" style={{ padding: "18px 20px", borderRadius: 10, background: "var(--surface)" }}>
                 <div style={{ fontSize: 13, color: "var(--text-3)", fontWeight: 600 }}>Module Progress</div>
                 <div className="tai-row tai-between" style={{ alignItems: "baseline", marginTop: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -177,7 +177,7 @@ export function CourseDetailScreen({
                         cursor: locked ? "default" : "pointer",
                         opacity: locked ? 0.6 : 1,
                         padding: "16px 18px",
-                        borderRadius: 16,
+                        borderRadius: 10,
                         background: "var(--surface)",
                         border: "1px solid var(--border)"
                       }}
@@ -186,7 +186,7 @@ export function CourseDetailScreen({
                       <div className="tai-row tai-between" style={{ alignItems: "center" }}>
                         <div className="tai-row tai-gap14" style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
-                            width: 38, height: 38, borderRadius: 12,
+                            width: 38, height: 38, borderRadius: 8,
                             background: isDone ? "var(--success-bg)" : "var(--surface-3)",
                             color: isDone ? "var(--success)" : "var(--primary)",
                             display: "flex", alignItems: "center", justifyContent: "center",

@@ -255,7 +255,7 @@ export function LessonScreen({
           TOP INDUSTRY-STANDARD COURSE HEADER / APP BAR
           ========================================================================= */}
       <div className="tai-card" style={{
-        padding: "10px 14px", borderRadius: 16,
+        padding: "10px 14px", borderRadius: 10,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         gap: 10, background: "var(--surface)", border: "1px solid var(--border)",
         width: "100%", boxSizing: "border-box"
@@ -264,7 +264,7 @@ export function LessonScreen({
           <button
             className="tai-btn tai-btn-outline tai-btn-sm"
             onClick={back}
-            style={{ borderRadius: 10, flexShrink: 0, padding: "6px 10px", fontSize: 12 }}
+            style={{ borderRadius: 8, flexShrink: 0, padding: "6px 10px", fontSize: 12 }}
             title="Course Overview"
           >
             <ChevronLeft size={16} /> <span className="tai-header-full-text">Course Overview</span>
@@ -293,7 +293,7 @@ export function LessonScreen({
 
           <button
             className="tai-iconbtn"
-            style={{ borderRadius: 10, width: 34, height: 34 }}
+            style={{ borderRadius: 8, width: 34, height: 34 }}
             onClick={() => setSidebarOpen(v => !v)}
             title={sidebarOpen ? "Hide Course Curriculum" : "Show Course Curriculum"}
             aria-label="Toggle Curriculum"
@@ -316,7 +316,7 @@ export function LessonScreen({
             padding: 0,
             overflow: "hidden",
             position: "relative",
-            borderRadius: 20,
+            borderRadius: 10,
             background: "#080C16",
             border: "1px solid rgba(255, 255, 255, 0.1)",
             boxShadow: "0 20px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05)",

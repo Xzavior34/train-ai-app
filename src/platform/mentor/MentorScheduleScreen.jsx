@@ -277,9 +277,9 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
               )}
 
               {filteredSessions.map(s => (
-                <div key={s.id} className="ta-card ta-row ta-between" style={{ padding: "18px 20px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)", flexWrap: "wrap", gap: 14, alignItems: "center" }}>
+                <div key={s.id} className="ta-card ta-row ta-between" style={{ padding: "18px 20px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)", flexWrap: "wrap", gap: 14, alignItems: "center" }}>
                   <div className="ta-row ta-gap14" style={{ minWidth: 0, flex: "1 1 260px" }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Calendar size={20} color="var(--primary)" />
                     </div>
                     <div style={{ minWidth: 0 }}>

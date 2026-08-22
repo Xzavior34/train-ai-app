@@ -252,7 +252,7 @@ export function ProfileScreen({
 
           {/* Upload Zone Drawer */}
           {showAvatarUpload && session?.user?.id && (
-            <div className="tai-mt16" style={{ background: "var(--surface-2)", padding: 16, borderRadius: 16, border: "1px solid var(--border)" }}>
+            <div className="tai-mt16" style={{ background: "var(--surface-2)", padding: 16, borderRadius: 10, border: "1px solid var(--border)" }}>
               <FileUploadZone
                 bucket="uploads"
                 pathPrefix={`avatars/${session.user.id}`}
@@ -351,7 +351,7 @@ export function ProfileScreen({
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Trophy size={20} color="var(--primary)" />
                   </div>
                   <div>

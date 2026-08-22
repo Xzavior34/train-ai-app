@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, initialsOf } from "../components/LearnerUI.jsx";
-import { Send, ChevronLeft } from "lucide-react";
+import { Send, ChevronLeft, Search, X, MessageSquare, CheckCheck, Users } from "lucide-react";
 
-function useIsNarrow(breakpoint = 640) {
+function useIsNarrow(breakpoint = 680) {
   const [narrow, setNarrow] = useState(typeof window !== "undefined" && window.innerWidth < breakpoint);
   useEffect(() => {
     const onResize = () => setNarrow(window.innerWidth < breakpoint);
@@ -19,6 +19,7 @@ export function MessagesScreen({
 }) {
   const isNarrow = useIsNarrow();
   const [localInput, setLocalInput] = useState("");
+  const [searchThread, setSearchThread] = useState("");
 
   const currentThread = activeMentorThread;
 
@@ -26,6 +27,11 @@ export function MessagesScreen({
   const showConversation = !isNarrow || !!activeMentorThread;
 
   const currentMessages = conversationMessages || [];
+
+  const filteredThreads = messageThreads.filter(t =>
+    t.name?.toLowerCase().includes(searchThread.toLowerCase()) ||
+    t.last?.toLowerCase().includes(searchThread.toLowerCase())
+  );
 
   function handleSendLocal() {
     const text = messageInput !== undefined ? messageInput : localInput;
@@ -40,90 +46,186 @@ export function MessagesScreen({
   }
 
   return (
-    <div className="tai-fade-in">
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
       <TopBar title="Direct Messages" sub="Chat with your instructor" onBack={back} />
-      <div className="tai-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "260px 1fr", minHeight: 480 }}>
+
+      {/* =========================================================================
+          HERO BANNER: Direct Messages & Mentorship
+          ========================================================================= */}
+      <div style={{
+        borderRadius: 10,
+        background: "#0F172A",
+        color: "#FFFFFF",
+        padding: "clamp(16px, 2.5vw, 22px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
+              <span style={{
+                background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                border: "1px solid rgba(165, 180, 252, 0.5)",
+                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+              }}>
+                <Send size={13} color="#A5B4FC" /> 1-ON-1 INSTRUCTOR CHAT
+              </span>
+              <span style={{
+                background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                border: "1px solid rgba(16, 185, 129, 0.5)",
+                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+              }}>
+                {messageThreads.length} CONVERSATION{messageThreads.length === 1 ? "" : "S"}
+              </span>
+            </div>
+            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+              Direct Messages &amp; Mentorship
+            </h1>
+            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
+              Ask project questions, receive code review guidance, and communicate directly with your academy instructors.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          MESSAGING INTERFACE
+          ========================================================================= */}
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "300px 1fr", minHeight: 540, borderRadius: 10 }}>
 
         {/* Thread list */}
         {showThreadList && (
-        <div style={{ borderRight: isNarrow ? "none" : "1px solid var(--border)", background: "var(--surface-2)", overflowY: "auto" }}>
-          {threadsLoading && <div className="tai-empty" style={{ padding: 16, fontSize: 12.5 }}>Loading...</div>}
-          {!threadsLoading && messageThreads.length === 0 && (
-            <div className="tai-empty" style={{ padding: 16, fontSize: 12.5 }}>
-              No conversations yet. Message an instructor from Community or Instructors to start one.
-            </div>
-          )}
-          {messageThreads.map(t => {
-            const isActive = currentThread?.counterpartId === t.counterpartId;
-            return (
-              <div
-                key={t.counterpartId}
-                onClick={() => setActiveMentorThread ? setActiveMentorThread(t) : null}
+        <div style={{ borderRight: isNarrow ? "none" : "1px solid var(--border)", background: "var(--surface-3)", display: "flex", flexDirection: "column" }}>
+          
+          {/* Thread Search Bar */}
+          <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
+            <div style={{ position: "relative", width: "100%" }}>
+              <Search size={14} color="var(--text-3)" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
+              <input
+                type="text"
+                placeholder="Find conversation..."
+                value={searchThread}
+                onChange={(e) => setSearchThread(e.target.value)}
                 style={{
-                  padding: "12px 14px",
-                  cursor: "pointer",
-                  background: isActive ? "var(--surface)" : "transparent",
-                  borderLeft: isActive ? "3px solid var(--primary)" : "3px solid transparent",
-                  borderBottom: "1px solid var(--border)",
-                  transition: "background .16s ease"
+                  width: "100%", height: 34, paddingLeft: 32, paddingRight: 28,
+                  borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface-2)",
+                  fontSize: 12.5, color: "var(--text)", outline: "none"
                 }}
-              >
-                <div className="tai-row tai-gap10">
-                  <Avatar initials={initialsOf(t.name)} size={36} src={t.avatar} />
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div className="tai-row tai-between">
-                      <span style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{t.name}</span>
-                      {t.unread > 0 && (
-                        <span style={{ fontSize: 10, fontWeight: 800, background: "var(--primary)", color: "#fff", borderRadius: 99, padding: "2px 7px" }}>{t.unread}</span>
-                      )}
+              />
+              {searchThread && (
+                <button
+                  type="button"
+                  onClick={() => setSearchThread("")}
+                  style={{
+                    position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                    background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", display: "flex", alignItems: "center"
+                  }}
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            {threadsLoading && <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}>Loading conversations...</div>}
+            {!threadsLoading && messageThreads.length === 0 && (
+              <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}>
+                No conversations yet. Message an instructor from Community or Instructors to start one.
+              </div>
+            )}
+            {!threadsLoading && messageThreads.length > 0 && filteredThreads.length === 0 && (
+              <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}>
+                No conversations matched "{searchThread}".
+              </div>
+            )}
+            {filteredThreads.map(t => {
+              const isActive = currentThread?.counterpartId === t.counterpartId;
+              return (
+                <div
+                  key={t.counterpartId}
+                  onClick={() => setActiveMentorThread ? setActiveMentorThread(t) : null}
+                  style={{
+                    padding: "12px 14px",
+                    cursor: "pointer",
+                    background: isActive ? "var(--surface)" : "transparent",
+                    borderLeft: isActive ? "3px solid #4F46E5" : "3px solid transparent",
+                    borderBottom: "1px solid var(--border)",
+                    transition: "background .15s ease"
+                  }}
+                >
+                  <div className="tai-row tai-gap10">
+                    <Avatar initials={initialsOf(t.name)} size={36} src={t.avatar} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="tai-row tai-between">
+                        <span style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{t.name}</span>
+                        {t.unread > 0 && (
+                          <span style={{ fontSize: 10, fontWeight: 800, background: "#4F46E5", color: "#fff", borderRadius: 99, padding: "2px 7px" }}>{t.unread}</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{t.last || "No messages yet"}</div>
                     </div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{t.last}</div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
         )}
 
-        {/* Conversation */}
+        {/* Conversation Area */}
         {showConversation && (
-        <div style={{ display: "flex", flexDirection: "column", background: "var(--surface)" }}>
+        <div style={{ display: "flex", flexDirection: "column", background: "var(--surface)", height: "100%" }}>
           {!currentThread ? (
-            <div className="tai-empty" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              Select a conversation to start chatting.
+            <div className="tai-empty" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32 }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                <MessageSquare size={22} color="var(--text-3)" />
+              </div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text)" }}>Select an Instructor Conversation</div>
+              <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 4 }}>Choose a thread from the left to view messages and ask questions.</div>
             </div>
           ) : (
             <>
-              <div className="tai-row tai-between" style={{ padding: "12px 18px", borderBottom: "1px solid var(--border)" }}>
-                <div className="tai-row tai-gap10">
+              {/* Header */}
+              <div className="tai-row tai-between" style={{ padding: "12px 18px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
+                <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
                   {isNarrow && (
                     <button className="tai-iconbtn" style={{ marginLeft: -6 }} onClick={() => setActiveMentorThread(null)} aria-label="Back to conversations">
                       <ChevronLeft size={18} />
                     </button>
                   )}
-                  <Avatar initials={initialsOf(currentThread.name)} size={32} src={currentThread.avatar} />
+                  <Avatar initials={initialsOf(currentThread.name)} size={34} src={currentThread.avatar} />
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{currentThread.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--success)", fontWeight: 700 }}>● Online • Instructor</div>
+                    <div style={{ fontSize: 11, color: "var(--success)", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--success)" }} /> Verified Instructor
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div style={{ flex: 1, overflowY: "auto", padding: 18 }} className="tai-col tai-gap12">
+              {/* Messages Stream */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px" }} className="tai-col tai-gap12">
                 {conversationLoading && <div className="tai-empty">Loading messages...</div>}
-                {!conversationLoading && currentMessages.length === 0 && <div className="tai-empty">No messages in this conversation yet. Say hello!</div>}
+                {!conversationLoading && currentMessages.length === 0 && (
+                  <div className="tai-empty" style={{ padding: "32px 0", textAlign: "center" }}>
+                    No messages in this conversation yet. Send a message to start the conversation!
+                  </div>
+                )}
                 {currentMessages.map((m, idx) => {
                   const isMe = m.sender_id === session?.user?.id || m.sender_id === "me";
                   return (
                     <div key={m.id || idx} className="tai-row tai-gap10" style={{ alignSelf: isMe ? "flex-end" : "flex-start", maxWidth: "80%", flexDirection: isMe ? "row-reverse" : "row" }}>
                       {!isMe && <Avatar initials={initialsOf(currentThread.name)} size={28} src={currentThread.avatar} />}
                       <div style={{
-                        background: isMe ? "var(--primary)" : "var(--surface-2)",
-                        color: isMe ? "#fff" : "var(--text)",
-                        padding: "10px 14px", borderRadius: 14, fontSize: 13.5,
-                        lineHeight: 1.4,
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
+                        background: isMe ? "#4F46E5" : "var(--surface-2)",
+                        color: isMe ? "#FFFFFF" : "var(--text)",
+                        padding: "10px 14px", borderRadius: 10, fontSize: 13.5,
+                        lineHeight: 1.45,
+                        boxShadow: isMe ? "0 1px 4px rgba(79, 70, 229, 0.15)" : "none"
                       }}>
                         {m.content}
                       </div>
@@ -132,15 +234,21 @@ export function MessagesScreen({
                 })}
               </div>
 
-              <div className="tai-row tai-gap10" style={{ padding: "14px 18px", borderTop: "1px solid var(--border)", background: "var(--surface-2)" }}>
+              {/* Reply Input Bar */}
+              <div className="tai-row tai-gap10" style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", background: "var(--surface-2)", alignItems: "center" }}>
                 <input
-                  className="tai-input" style={{ flex: 1, background: "var(--surface)" }}
+                  className="tai-input"
+                  style={{ flex: 1, background: "var(--surface)", height: 38, borderRadius: 8, fontSize: 13 }}
                   placeholder={`Reply to ${currentThread.name}...`}
                   value={messageInput !== undefined ? messageInput : localInput}
                   onChange={e => setMessageInput ? setMessageInput(e.target.value) : setLocalInput(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") handleSendLocal(); }}
                 />
-                <button className="tai-btn tai-btn-primary" style={{ padding: "0 18px" }} onClick={handleSendLocal}>
+                <button
+                  className="tai-btn tai-btn-primary"
+                  style={{ height: 38, padding: "0 16px", borderRadius: 8, background: "#4F46E5", color: "#FFFFFF", fontWeight: 700 }}
+                  onClick={handleSendLocal}
+                >
                   <Send size={15} />
                 </button>
               </div>

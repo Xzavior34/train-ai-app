@@ -1081,7 +1081,7 @@ export const chartColors = {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {STUDY_CIRCLES.map(sc => (
-              <div key={sc.id} className="tai-card" style={{ padding: 22, borderRadius: 18, background: "var(--surface)" }}>
+              <div key={sc.id} className="tai-card" style={{ padding: 22, borderRadius: 10, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 8 }}>
                   <Tag tone="primary">{sc.topic}</Tag>
                   <span style={{ fontSize: 11, fontWeight: 800, color: "var(--success)", background: "rgba(16, 185, 129, 0.1)", padding: "2px 8px", borderRadius: 6 }}>
@@ -1096,7 +1096,7 @@ export const chartColors = {
                   Sprint: <strong>{sc.activeSprint}</strong>
                 </p>
 
-                <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 10, fontSize: 12, color: "var(--text-2)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, fontSize: 12, color: "var(--text-2)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
                   <Target size={14} color="var(--primary)" /> <span><strong>Goal:</strong> {sc.goal}</span>
                 </div>
 
@@ -1194,7 +1194,7 @@ export const chartColors = {
                 className="tai-card"
                 style={{
                   padding: 22,
-                  borderRadius: 18,
+                  borderRadius: 10,
                   background: "var(--surface)",
                   display: "flex",
                   flexDirection: "column",
@@ -1209,7 +1209,7 @@ export const chartColors = {
                       src={inst.avatar}
                       alt={inst.name}
                       style={{
-                        width: 56, height: 56, borderRadius: 16, objectFit: "cover",
+                        width: 56, height: 56, borderRadius: 8, objectFit: "cover",
                         border: "2px solid var(--primary-light)", flexShrink: 0
                       }}
                     />
@@ -1234,7 +1234,7 @@ export const chartColors = {
                   </p>
 
                   <div style={{
-                    background: "var(--surface-3)", padding: "10px 12px", borderRadius: 12,
+                    background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8,
                     border: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-2)",
                     display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16,
                     flexWrap: "wrap", gap: 6

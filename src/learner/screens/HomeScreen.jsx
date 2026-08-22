@@ -193,7 +193,7 @@ export function HomeScreen({
               </button>
             </div>
           ) : (
-            <div className="tai-card tai-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
+            <div className="tai-card tai-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 10, border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 13.5 }}>
                   <BookOpen size={16} color="var(--primary)" />
@@ -207,7 +207,7 @@ export function HomeScreen({
                   <img 
                     src={continueCourse.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
                     alt={continueCourse.title}
-                    style={{ width: 52, height: 52, borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
+                    style={{ width: 52, height: 52, borderRadius: 8, objectFit: "cover", flexShrink: 0 }}
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="tai-row tai-between" style={{ marginBottom: 3 }}>
@@ -240,17 +240,15 @@ export function HomeScreen({
             </div>
           )}
 
-          {/* Q1 Onboarding Cohort Banner - loading/empty states restored;
-              the rich sprint mock only makes sense once a real cohort is
-              loaded, otherwise it falsely implies membership. */}
+          {/* Cohort Sprint & Milestone Card */}
           {cohortLoading ? (
-            <div className="tai-card" style={{ padding: 16 }}>
-              <div className="tai-body-text">Loading your cohort...</div>
+            <div className="tai-card tai-empty" style={{ padding: 24, fontSize: 13 }}>
+              Loading cohort sprint data...
             </div>
           ) : !cohort ? (
-            <div className="tai-card" style={{ padding: 16 }}>
+            <div className="tai-card" style={{ padding: 16, borderRadius: 10 }}>
               <div className="tai-row tai-gap10">
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Users size={17} color="var(--primary)" />
                 </div>
                 <div>
@@ -262,9 +260,9 @@ export function HomeScreen({
           ) : (
           <div className="tai-card" style={{
             padding: "16px",
-            borderRadius: 16,
-            background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%)",
-            border: "1.5px solid rgba(99, 102, 241, 0.35)",
+            borderRadius: 10,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
             position: "relative",
             overflow: "hidden",
             width: "100%",
@@ -527,7 +525,7 @@ export function HomeScreen({
         <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           
           {/* Achievements: Your Level, Streak & Badges */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.3)" }}>
+          <div className="tai-card" style={{ padding: 20, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
               <div className="tai-row tai-gap6" style={{ fontWeight: 800, fontSize: 14 }}>
                 <Award size={18} color="var(--primary)" />
@@ -539,12 +537,12 @@ export function HomeScreen({
             </div>
 
             {/* Level & XP Meter */}
-            <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
+            <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, fontSize: 11.5, fontWeight: 700, marginBottom: 5 }}>
                 <span style={{ color: "var(--text)" }}>Level {user?.level || 2} • Senior Specialist</span>
                 <span style={{ color: "var(--primary)", flexShrink: 0 }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
               </div>
-              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+              <div style={{ height: 6, background: "var(--surface)", borderRadius: 3, overflow: "hidden" }}>
                 <div style={{ width: "90%", height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 3 }} />
               </div>
             </div>
@@ -590,8 +588,8 @@ export function HomeScreen({
               ].map((b, idx) => {
                 const BadgeIcon = b.icon;
                 return (
-                  <div key={idx} style={{ flex: 1, padding: "8px 4px", background: "var(--surface)", borderRadius: 10, textAlign: "center", border: "1px solid var(--border)" }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 8, background: b.bg, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 2 }}>
+                  <div key={idx} style={{ flex: 1, padding: "8px 4px", background: "var(--surface-3)", borderRadius: 8, textAlign: "center", border: "1px solid var(--border)" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 6, background: b.bg, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 2 }}>
                       <BadgeIcon size={14} color={b.color} />
                     </div>
                     <div style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text)" }}>{b.name}</div>
@@ -602,7 +600,7 @@ export function HomeScreen({
           </div>
 
           {/* Today's Schedule Card */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>Today's Schedule</div>
@@ -612,7 +610,7 @@ export function HomeScreen({
             </div>
 
             <div className="tai-col tai-gap10">
-              <div style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+              <div style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div className="tai-row tai-between">
                   <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>08:30 AM • PREVIEW</span>
                   <button 
@@ -628,7 +626,7 @@ export function HomeScreen({
               </div>
 
               <div
-                style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease" }}
+                style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease" }}
                 onClick={() => goToMyCourses()}
               >
                 <div className="tai-row tai-between">
@@ -641,7 +639,7 @@ export function HomeScreen({
               </div>
 
               <div
-                style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease" }}
+                style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease" }}
                 onClick={() => goTab("community")}
               >
                 <div className="tai-row tai-between">
@@ -656,7 +654,7 @@ export function HomeScreen({
           </div>
 
           {/* Book 1:1 Mentor Session */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
               <div className="tai-row tai-gap6" style={{ fontWeight: 700, fontSize: 13.5 }}>
                 <GraduationCap size={16} color="var(--primary)" />
@@ -670,9 +668,9 @@ export function HomeScreen({
                 { name: "Astrid Larsson", title: "Principal Design Mentor", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80", time: "Available Today 4 PM" },
                 { name: "Alex Rivera", title: "AI Lead Instructor", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80", time: "Available Tomorrow" }
               ].map((m, idx) => (
-                <div key={idx} className="tai-row tai-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10 }}>
+                <div key={idx} className="tai-row tai-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 8 }}>
                   <div className="tai-row tai-gap8">
-                    <img src={m.avatar} alt={m.name} style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover" }} />
+                    <img src={m.avatar} alt={m.name} style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover" }} />
                     <div>
                       <div style={{ fontSize: 12.5, fontWeight: 700 }}>{m.name}</div>
                       <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{m.time}</div>
@@ -687,7 +685,7 @@ export function HomeScreen({
           </div>
 
           {/* Leaderboard Card */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
               <div className="tai-row tai-gap6" style={{ fontWeight: 700, fontSize: 13.5 }}>
                 <Trophy size={16} color="#F59E0B" />
@@ -702,7 +700,7 @@ export function HomeScreen({
                 { name: "David Vance", xp: "1,380 XP", rank: 2, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" },
                 { name: "Elena Rostova", xp: "1,220 XP", rank: 3, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" }
               ].map((s) => (
-                <div key={s.name} className="tai-row tai-between" style={{ padding: "6px 10px", background: "var(--surface-3)", borderRadius: 10 }}>
+                <div key={s.name} className="tai-row tai-between" style={{ padding: "6px 10px", background: "var(--surface-3)", borderRadius: 8 }}>
                   <div className="tai-row tai-gap10">
                     <span style={{ fontSize: 12, fontWeight: 800, color: s.rank === 1 ? "#F59E0B" : "var(--text-3)" }}>#{s.rank}</span>
                     <img src={s.avatar} alt={s.name} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />

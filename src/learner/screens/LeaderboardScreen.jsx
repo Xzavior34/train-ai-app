@@ -374,7 +374,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
       {/* =========================================================================
           FULL RANKINGS TABLE
           ========================================================================= */}
-      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 16 }}>
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 10 }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
             <thead>

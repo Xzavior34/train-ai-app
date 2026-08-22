@@ -351,7 +351,7 @@ results = vector_store.similarity_search(query, k=4)`
                 className="tai-card-hover"
                 style={{
                   background: "var(--surface)",
-                  borderRadius: 18,
+                  borderRadius: 10,
                   border: "1px solid var(--border)",
                   overflow: "hidden",
                   display: "flex",
@@ -438,35 +438,34 @@ results = vector_store.similarity_search(query, k=4)`
               <div
                 key={lesson.id}
                 className="tai-card tai-card-hover"
-                style={{ padding: 16, borderRadius: 16, display: "flex", gap: 14, cursor: "pointer" }}
+                style={{ padding: 16, borderRadius: 10, display: "flex", gap: 14, cursor: "pointer" }}
                 onClick={() => push("lesson", { id: lesson.courseId, lessonId: lesson.id })}
               >
-                <div style={{ position: "relative", width: 100, height: 75, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
+                <div style={{ position: "relative", width: 100, height: 75, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
                   <img src={lesson.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   <div style={{ position: "absolute", inset: 0, background: "rgba(15,23,42,0.4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Play size={12} color="var(--primary)" fill="var(--primary)" style={{ marginLeft: 2 }} />
                     </div>
                   </div>
-                  <span style={{ position: "absolute", bottom: 4, right: 4, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 9.5, fontWeight: 700, padding: "1px 4px", borderRadius: 4 }}>
-                    {lesson.duration}
-                  </span>
                 </div>
 
-                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ minWidth: 0, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
-                    <div style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700 }}>{lesson.courseTitle}</div>
-                    <div style={{ fontSize: 13.5, fontWeight: 800, color: "var(--text)", margin: "2px 0 0", lineHeight: 1.3, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
-                      {lesson.title}
+                    <div className="tai-row tai-between" style={{ marginBottom: 4 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>{lesson.courseTitle}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>{lesson.duration}</span>
                     </div>
+                    <h4 style={{ fontSize: 14, fontWeight: 800, color: "var(--text)", margin: 0, lineHeight: 1.35, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                      {lesson.title}
+                    </h4>
                   </div>
-
-                  <div className="tai-row tai-between" style={{ marginTop: 8 }}>
-                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>Saved {lesson.savedDate}</span>
+                  <div className="tai-row tai-between" style={{ marginTop: 8, fontSize: 11.5, color: "var(--text-3)" }}>
+                    <span>{lesson.instructor}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleRemoveLesson(lesson.id); }}
-                      style={{ background: "transparent", border: "none", color: "var(--text-3)", cursor: "pointer" }}
-                      title="Remove bookmark"
+                      style={{ background: "transparent", border: "none", color: "var(--text-3)", cursor: "pointer", padding: 2 }}
+                      title="Remove lesson"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -491,7 +490,7 @@ results = vector_store.similarity_search(query, k=4)`
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
             {filteredSnippets.map(snippet => (
-              <div key={snippet.id} className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+              <div key={snippet.id} className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10, gap: 10, flexWrap: "wrap" }}>
                   <div style={{ minWidth: 0, flex: "1 1 160px" }}>
                     <span style={{ fontSize: 11, fontWeight: 800, color: "#818CF8", background: "rgba(99, 102, 241, 0.1)", padding: "2px 8px", borderRadius: 6 }}>
@@ -524,7 +523,7 @@ results = vector_store.similarity_search(query, k=4)`
 
                 <pre style={{
                   background: "#0F172A", color: "#E2E8F0", padding: "14px 16px",
-                  borderRadius: 12, fontSize: 12, lineHeight: 1.5, overflowX: "auto", margin: "10px 0 0",
+                  borderRadius: 8, fontSize: 12, lineHeight: 1.5, overflowX: "auto", margin: "10px 0 0",
                   fontFamily: "monospace"
                 }}>
                   <code>{snippet.code}</code>
@@ -548,7 +547,7 @@ results = vector_store.similarity_search(query, k=4)`
 
           <div className="tai-col tai-gap12">
             {filteredNotes.map(note => (
-              <div key={note.id} className="tai-card" style={{ padding: 18, borderRadius: 16, background: "var(--surface-3)" }}>
+              <div key={note.id} className="tai-card" style={{ padding: 18, borderRadius: 10, background: "var(--surface-3)" }}>
                 <div className="tai-row tai-between" style={{ gap: 10, flexWrap: "wrap" }}>
                   <div style={{ minWidth: 0, flex: "1 1 160px" }}>
                     <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "0 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -580,9 +579,9 @@ results = vector_store.similarity_search(query, k=4)`
           EMPTY STATE
           ========================================================================= */}
       {totalFilteredCount === 0 && (
-        <div className="tai-card" style={{ textAlign: "center", padding: "60px 24px", borderRadius: 20 }}>
-          <div style={{ width: 64, height: 64, borderRadius: 20, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-            <Bookmark size={28} color="var(--primary)" />
+        <div className="tai-card" style={{ textAlign: "center", padding: "60px 24px", borderRadius: 10 }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+            <Bookmark size={26} color="var(--primary)" />
           </div>
           <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
             No Bookmarks Found in This View
@@ -594,7 +593,7 @@ results = vector_store.similarity_search(query, k=4)`
           </p>
           <button
             className="tai-btn tai-btn-primary"
-            style={{ padding: "10px 22px", borderRadius: 12, fontWeight: 800 }}
+            style={{ padding: "10px 22px", borderRadius: 8, fontWeight: 800 }}
             onClick={() => { setSearchQuery(""); setSelectedCollection("all"); push("courses"); }}
           >
             Browse Courses Catalog →

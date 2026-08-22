@@ -142,9 +142,9 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           KEY STAT TILES STRIP
           ========================================================================= */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <BookOpen size={18} color="var(--primary)" />
             </div>
             <div>
@@ -154,9 +154,9 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <GraduationCap size={18} color="#10B981" />
             </div>
             <div>
@@ -166,9 +166,9 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Clock size={18} color="#F59E0B" />
             </div>
             <div>
@@ -178,9 +178,9 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Flame size={18} color="#8B5CF6" />
             </div>
             <div>
@@ -197,7 +197,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 20 }}>
 
         {/* Weekly Learning Bar Chart */}
-        <div className="tai-card" style={{ padding: 22, borderRadius: 18 }}>
+        <div className="tai-card" style={{ padding: 22, borderRadius: 10 }}>
           <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
@@ -212,44 +212,55 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 150, padding: "16px 8px 8px", background: "var(--surface-3)", borderRadius: 14 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 150, padding: "16px 8px 8px", background: "var(--surface-3)", borderRadius: 10 }}>
             {WEEKLY_BREAKDOWN.map((d, i) => (
               <div key={d.day} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>{d.hours}h</span>
                 <div
                   style={{
-                    width: 24, height: `${d.heightPct}%`,
-                    background: d.active ? "#4F46E5" : "rgba(99, 102, 241, 0.35)",
-                    borderRadius: "6px 6px 2px 2px"
+                    width: "45%",
+                    maxWidth: 32,
+                    height: `${d.heightPct}%`,
+                    background: d.active ? "#4F46E5" : "var(--primary-tint)",
+                    borderRadius: "6px 6px 0 0",
+                    transition: "height 0.3s ease"
                   }}
                 />
-                <span style={{ fontSize: 11.5, fontWeight: d.active ? 800 : 600, color: d.active ? "var(--primary)" : "var(--text-3)" }}>{d.day}</span>
+                <span style={{ fontSize: 11.5, fontWeight: d.active ? 800 : 600, color: d.active ? "var(--primary)" : "var(--text-3)" }}>
+                  {d.day}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Skill Mastery Breakdown */}
-        <div className="tai-card" style={{ padding: 22, borderRadius: 18 }}>
+        {/* Competency Mastery Overview */}
+        <div className="tai-card" style={{ padding: 22, borderRadius: 10 }}>
           <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
-                Skill Competency Tracker
+                Target Skills Mastery
               </h3>
               <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>
-                Mastery levels based on completed coursework &amp; quizzes
+                Evaluated from assessments &amp; projects
               </div>
             </div>
+            <span className="tai-tag" style={{ background: "rgba(79, 70, 229, 0.1)", color: "var(--primary)", fontWeight: 700 }}>
+              Level 2
+            </span>
           </div>
 
-          <div className="tai-col tai-gap12">
-            {SKILLS_OVERVIEW.map((s, idx) => (
-              <div key={idx}>
-                <div className="tai-row tai-between" style={{ fontSize: 12.5, marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, color: "var(--text)" }}>{s.name}</span>
-                  <span style={{ fontWeight: 800, color: "var(--primary)" }}>{s.mastery}% ({s.status})</span>
+          <div className="tai-col tai-gap14">
+            {SKILLS_OVERVIEW.map(skill => (
+              <div key={skill.name}>
+                <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 5 }}>
+                  <span style={{ color: "var(--text)" }}>{skill.name}</span>
+                  <div className="tai-row tai-gap6">
+                    <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>{skill.status}</span>
+                    <span style={{ color: "var(--primary)", fontWeight: 800 }}>{skill.mastery}%</span>
+                  </div>
                 </div>
-                <ProgressBar value={s.mastery} height={6} />
+                <ProgressBar value={skill.mastery} height={7} />
               </div>
             ))}
           </div>
@@ -258,14 +269,13 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
       </div>
 
       {/* =========================================================================
-          COURSES IN PROGRESS: DETAILED CARDS & NEXT UP ACTIONS
+          COURSE BREAKDOWN: STATUS TABS & EXPANDED SYLLABUS CARDS
           ========================================================================= */}
-      <div className="tai-col tai-gap16">
-        <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
-          <div className="tai-row tai-gap8">
-            <BookOpen size={20} color="var(--primary)" />
+      <div>
+        <div className="tai-row tai-between" style={{ marginBottom: 16, flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+          <div>
             <h2 style={{ fontSize: 18, fontWeight: 900, color: "var(--text)", margin: 0 }}>
-              Enrolled Courses &amp; Syllabi Breakdown
+              Enrolled Courses &amp; Modules
             </h2>
           </div>
 
@@ -294,14 +304,14 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
               <div
                 key={course.id}
                 className="tai-card tai-card-hover"
-                style={{ padding: "clamp(16px, 4vw, 24px) clamp(16px, 4vw, 26px)", borderRadius: 20, background: "var(--surface)", border: "1px solid var(--border)" }}
+                style={{ padding: "clamp(16px, 4vw, 24px) clamp(16px, 4vw, 26px)", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}
                 onClick={() => push("courseDetail", { id: course.id })}
               >
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "space-between" }}>
                   
                   {/* Left: Course Image & Information with Generous Spacing */}
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", flex: "1 1 360px", minWidth: 0 }}>
-                    <div style={{ width: 130, height: 92, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 4px 12px rgba(15,23,42,0.08)", border: "1px solid var(--border)" }}>
+                    <div style={{ width: 130, height: 92, borderRadius: 8, overflow: "hidden", flexShrink: 0, boxShadow: "0 4px 12px rgba(15,23,42,0.08)", border: "1px solid var(--border)" }}>
                       <img
                         src={course.coverImageUrl}
                         alt={course.title}
@@ -335,7 +345,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
                   </div>
 
                   {/* Right: Dedicated Progress Bar & Resume Action Panel */}
-                  <div style={{ flex: "1 1 300px", background: "var(--surface-3)", padding: "16px 20px", borderRadius: 14, border: "1px solid var(--border)" }}>
+                  <div style={{ flex: "1 1 300px", background: "var(--surface-3)", padding: "16px 20px", borderRadius: 8, border: "1px solid var(--border)" }}>
                     <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>
                       <span style={{ color: "var(--text-2)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginRight: 8 }}>
                         {isCompleted ? "Course Completed • 100%" : `Next: ${course.nextLesson || "Continue Lesson"}`}
@@ -354,7 +364,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
 
                       <button
                         className="tai-btn tai-btn-primary tai-btn-sm"
-                        style={{ padding: "8px 18px", borderRadius: 10, fontWeight: 700 }}
+                        style={{ padding: "8px 18px", borderRadius: 8, fontWeight: 700 }}
                         onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: course.id }); }}
                       >
                         {isCompleted ? "Review Syllabus →" : "Resume Lesson →"}

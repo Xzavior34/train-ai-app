@@ -80,43 +80,51 @@ export function MentorsScreen({
           HERO BANNER: Expert Mentors & 1-on-1 Office Hours
           ========================================================================= */}
       <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
+        borderRadius: 10,
+        background: "#0F172A",
         color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
+        padding: "clamp(16px, 2.5vw, 22px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
-          zIndex: 0
-        }} />
-
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+            <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
+              <span style={{
+                background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                border: "1px solid rgba(165, 180, 252, 0.5)",
+                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+              }}>
+                <Video size={13} color="#A5B4FC" /> 1-ON-1 INSTRUCTOR SESSIONS
+              </span>
+              <span style={{
+                background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                border: "1px solid rgba(16, 185, 129, 0.5)",
+                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+              }}>
+                {mentorsList.length} ACTIVE INSTRUCTOR{mentorsList.length === 1 ? "" : "S"}
+              </span>
+            </div>
+            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
               Expert Instructors &amp; 1-on-1 Mentorship
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
               Book dedicated 1-on-1 sessions for portfolio reviews, code architecture deep-dives, design token audits, and career guidance.
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Average Rating: 4.9 ★</div>
+          <div style={{
+            background: "rgba(255, 255, 255, 0.05)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+            borderRadius: 8,
+            padding: "10px 16px",
+            flexShrink: 0
+          }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
+            <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 2, fontWeight: 600 }}>Average Rating: 4.9 ★</div>
           </div>
         </div>
       </div>

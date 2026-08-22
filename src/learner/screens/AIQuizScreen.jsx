@@ -551,7 +551,7 @@ export function AIQuizScreen({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
               
               {/* Generator Configuration Card */}
-              <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
+              <div className="tai-card" style={{ padding: 24, borderRadius: 10 }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                   <div>
                     <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
@@ -621,7 +621,7 @@ export function AIQuizScreen({
 
                 <button
                   className="tai-btn tai-btn-primary"
-                  style={{ width: "100%", padding: "12px 0", borderRadius: 12, fontWeight: 800 }}
+                  style={{ width: "100%", padding: "12px 0", borderRadius: 10, fontWeight: 800 }}
                   disabled={quizGenerating || !quizGenTopic?.trim()}
                   onClick={handleGenerateQuiz}
                 >
@@ -631,7 +631,7 @@ export function AIQuizScreen({
 
               {/* Today's Daily Stats Card */}
               <div className="tai-col tai-gap14">
-                <div className="tai-card" style={{ padding: 20, borderRadius: 18 }}>
+                <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
                   <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>Assessment Daily Goal</span>
                     <Tag tone="primary">1 of 3 Done</Tag>
@@ -640,13 +640,13 @@ export function AIQuizScreen({
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+                  <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Trophy size={20} color="#F59E0B" />
                     <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>340 XP</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Total Quiz Points</div>
                   </div>
 
-                  <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+                  <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Flame size={20} color="#EF4444" />
                     <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>8 Days</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Practice Streak</div>
@@ -659,7 +659,7 @@ export function AIQuizScreen({
 
           {/* ACTIVE QUIZ VIEW */}
           {quizStage === "active" && currentQuestion && (
-            <div className="tai-card" style={{ padding: 28, borderRadius: 20, maxWidth: 680, margin: "0 auto", width: "100%" }}>
+            <div className="tai-card" style={{ padding: 28, borderRadius: 10, maxWidth: 680, margin: "0 auto", width: "100%" }}>
               <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                 <span style={{ fontSize: 12, fontWeight: 800, color: "var(--primary)", textTransform: "uppercase" }}>
                   Question {quizIndex + 1} of {questions.length}
@@ -681,7 +681,7 @@ export function AIQuizScreen({
                       className="tai-card-hover"
                       style={{
                         padding: "14px 18px",
-                        borderRadius: 12,
+                        borderRadius: 10,
                         border: selected ? "2px solid #4F46E5" : "1.5px solid var(--border)",
                         background: selected ? "var(--primary-tint)" : "var(--surface)",
                         cursor: "pointer",
@@ -724,7 +724,7 @@ export function AIQuizScreen({
 
           {/* QUIZ RESULT VIEW */}
           {quizStage === "result" && quizResult && (
-            <div className="tai-card" style={{ maxWidth: 680, margin: "0 auto", width: "100%", padding: 32, textAlign: "center", borderRadius: 20 }}>
+            <div className="tai-card" style={{ maxWidth: 680, margin: "0 auto", width: "100%", padding: 32, textAlign: "center", borderRadius: 10 }}>
               <Trophy size={54} color="#F59E0B" style={{ margin: "0 auto 12px" }} />
               <h2 style={{ fontSize: 24, fontWeight: 900, color: "var(--text)", margin: "0 0 6px" }}>
                 {Math.round(quizResult.score || 0)}% Score

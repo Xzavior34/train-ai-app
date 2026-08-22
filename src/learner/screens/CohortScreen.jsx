@@ -339,10 +339,10 @@ export function CohortScreen({
             <div className="tai-empty">No resources shared with your cohort yet.</div>
           )}
           {resources.map(r => (
-            <div key={r.id} className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+            <div key={r.id} className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ gap: 12, flexWrap: "wrap" }}>
                 <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: "1 1 200px" }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     {r.resource_type === "link" ? <Link2 size={18} color="var(--primary)" /> : <FileText size={18} color="var(--primary)" />}
                   </div>
                   <div style={{ minWidth: 0 }}>
@@ -376,7 +376,7 @@ export function CohortScreen({
             <div className="tai-empty">No instructor assigned to this cohort yet.</div>
           )}
           {instructorMembers.map(m => (
-            <div key={m.id} className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
+            <div key={m.id} className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ gap: 12, flexWrap: "wrap" }}>
                 <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: "1 1 160px" }}>
                   <Avatar src={m.user_profiles?.avatar_url} initials={initialsOf(m.user_profiles?.display_name)} size={48} />

@@ -76,7 +76,7 @@ const SPOTLIGHT_SLIDES = [
   {
     id: "course-figma-ai",
     badge: "ENROLLED • SPRINT 5",
-    badgeGradient: "linear-gradient(135deg, #10B981, #059669)",
+    badgeGradient: "#059669",
     cohortTag: "Spring Cohort 2026",
     title: "Master Design Systems in Figma with Generative AI",
     description: "Building production design systems, auto-layout 5.0, design tokens, and AI acceleration for enterprise design teams.",
@@ -97,7 +97,7 @@ const SPOTLIGHT_SLIDES = [
   {
     id: "course-fullstack-ai",
     badge: "ACTIVE MULTI-COURSE LEARNING",
-    badgeGradient: "linear-gradient(135deg, #6366F1, #4F46E5)",
+    badgeGradient: "#4F46E5",
     cohortTag: "Advanced Engineering Track",
     title: "Full-Stack AI Application Engineering with React 19",
     description: "Architecting end-to-end LLM applications with vector embeddings, Supabase pgvector, FastAPI, and autonomous agents.",
@@ -118,7 +118,7 @@ const SPOTLIGHT_SLIDES = [
   {
     id: "course-spatial-ui",
     badge: "NEW MASTERCLASS SPOTLIGHT",
-    badgeGradient: "linear-gradient(135deg, #EC4899, #8B5CF6)",
+    badgeGradient: "#7C3AED",
     cohortTag: "Executive Masterclass",
     title: "Spatial Computing & VisionOS Design Foundations",
     description: "Immersive 3D spatial user experiences, depth layering, glassmorphism tokens, and spatial ergonomics for next-gen apps.",
@@ -139,7 +139,7 @@ const SPOTLIGHT_SLIDES = [
   {
     id: "course-cloud-devops",
     badge: "TRENDING IN YOUR COHORT",
-    badgeGradient: "linear-gradient(135deg, #F59E0B, #D97706)",
+    badgeGradient: "#D97706",
     cohortTag: "Infrastructure Batch",
     title: "Cloud Infrastructure, Kubernetes & AI Microservices",
     description: "Production CI/CD pipelines, container orchestration, edge deployment, and GPU scaling for high-throughput AI workloads.",
@@ -170,7 +170,7 @@ const SPECIALIZATIONS = [
     reviews: "3,420",
     level: "Intermediate",
     badge: "PROFESSIONAL CERTIFICATE",
-    badgeBg: "linear-gradient(135deg, #4F46E5, #7C3AED)",
+    badgeBg: "#4F46E5",
     description: "Master modern AI design workflows, generative prototyping, vector tokens, and spatial interfaces with direct industry credentialing.",
     skills: ["Figma AI", "Design Systems", "Spatial UI", "Token Architecture", "UX Research"],
     image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80"
@@ -178,14 +178,14 @@ const SPECIALIZATIONS = [
   {
     id: "spec-2",
     title: "Full-Stack Generative AI Application Engineering",
-    provider: "Train AI Engineering Labs • Anthropic",
-    coursesCount: 5,
+    provider: "Train AI Engineering Labs • Anthropic Partner",
+    coursesCount: 4,
     months: "4 Months (8 hrs/week)",
-    rating: 4.9,
+    rating: 4.95,
     reviews: "2,890",
     level: "Advanced",
-    badge: "CAREER TRACK",
-    badgeBg: "linear-gradient(135deg, #059669, #10B981)",
+    badge: "ENGINEERING TRACK",
+    badgeBg: "#059669",
     description: "Build production-ready multi-modal AI agents, vector database backends, RAG pipelines, and reactive enterprise apps.",
     skills: ["LangChain", "Vector DBs", "FastAPI", "React 19", "OpenAI / Gemini APIs"],
     image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80"
@@ -663,8 +663,8 @@ export function CoursesScreen({
           ========================================================================= */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
         {filteredCatalog.length === 0 ? (
-          <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 24px", borderRadius: 20 }}>
-            <div style={{ width: 60, height: 60, borderRadius: 20, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+          <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 24px", borderRadius: 10 }}>
+            <div style={{ width: 60, height: 60, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
               <BookOpen size={26} color="var(--primary)" />
             </div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
@@ -863,7 +863,7 @@ export function CoursesScreen({
               onClick={() => setActiveSpecialization(spec)}
               style={{
                 background: "var(--surface)",
-                borderRadius: 18,
+                borderRadius: 10,
                 border: "1px solid var(--border)",
                 padding: 22,
                 display: "flex",

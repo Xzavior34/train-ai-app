@@ -161,11 +161,11 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
             { name: "Discord Community Bot", category: "Community", desc: "Manage role gated channels and sync cohort study pod discussions.", icon: "https://images.unsplash.com/photo-1614680376593-902f749f7ffc?w=100&auto=format&fit=crop&q=80", status: "Configured", enabled: false },
             { name: "Custom Event Webhooks", category: "Developer API", desc: "Stream raw JSON payloads for all student and instructor platform lifecycle events.", icon: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100&auto=format&fit=crop&q=80", status: "Custom", enabled: true },
           ].map((conn, idx) => (
-            <div key={idx} className="ta-card ta-card-hover" style={{ borderRadius: 16, padding: 18, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div key={idx} className="ta-card ta-card-hover" style={{ borderRadius: 10, padding: 18, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
               <div>
                 <div className="ta-row ta-between">
                   <div className="ta-row ta-gap10">
-                    <img src={conn.icon} alt="" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover" }} />
+                    <img src={conn.icon} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
                     <div>
                       <div style={{ fontWeight: 800, fontSize: 14 }}>{conn.name}</div>
                       <div style={{ fontSize: 11, color: "var(--text-3)" }}>{conn.category}</div>
@@ -194,7 +194,7 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
             <div className="ta-title">Custom Webhooks ({integrations.length})</div>
             <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 14, marginTop: 14 }}>
               {integrations.map(i => (
-                <div key={i.id} style={{ padding: 14, background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div key={i.id} style={{ padding: 14, background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
                   <div className="ta-row ta-between">
                     <div className="ta-row ta-gap8">
                       <Plug size={15} color="var(--primary)" />

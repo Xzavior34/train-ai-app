@@ -223,9 +223,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           KEY STATS TILES STRIP
           ========================================================================= */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <BookOpen size={18} color="var(--primary)" />
             </div>
             <div>
@@ -235,9 +235,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <GraduationCap size={18} color="#10B981" />
             </div>
             <div>
@@ -247,9 +247,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Flame size={18} color="#F59E0B" />
             </div>
             <div>
@@ -259,9 +259,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Clock size={18} color="#8B5CF6" />
             </div>
             <div>
