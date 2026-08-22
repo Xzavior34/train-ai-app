@@ -1362,7 +1362,7 @@ export async function fetchTopCourses(organizationId, limit = 5) {
   for (const e of enrollments || []) {
     if (!byCourseId[e.course_id]) byCourseId[e.course_id] = { enrolled: 0, completed: 0 };
     byCourseId[e.course_id].enrolled += 1;
-    if (e.completed_at) byCourseId[e.course_id].completed += 1;
+    if (e.completed_at || (e.progress_percentage || 0) >= 100) byCourseId[e.course_id].completed += 1;
   }
   const courseIds = Object.keys(byCourseId);
   if (!courseIds.length) return [];

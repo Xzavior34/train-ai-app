@@ -18,7 +18,10 @@ import { resolveViewMode, DASHBOARDS } from "./lib/roleRouting.js";
 import { getAuthenticatorAssuranceLevel } from "./lib/api/mfa.js";
 
 export default function App() {
-  const { session, loading, authError, signIn, signUp, signOut, isDemoMode } = useAuth();
+  const {
+    session, loading, authError, signIn, signUp, signOut, isDemoMode,
+    isPasswordRecovery, sendPasswordReset, completePasswordReset,
+  } = useAuth();
 
   // Platform Owner's separate login - PRD Section 10: "not login from
   // initial login area - separate login." Checked before any of the
@@ -235,6 +238,21 @@ export default function App() {
     );
   }
 
+  // A password-reset email link click lands here with a real (temporary)
+  // session already established by Supabase - checked before every other
+  // gate below (including the normal !session -> AuthPage branch) since
+  // otherwise a signed-in-looking session would just drop the visitor
+  // straight into their dashboard with no prompt to actually set a new
+  // password, silently defeating the whole reset flow.
+  if (isPasswordRecovery) {
+    return (
+      <>
+        <OfflineIndicator mode={offlineMode} />
+        <AuthPage recoveryMode onCompletePasswordReset={completePasswordReset} />
+      </>
+    );
+  }
+
   // Invitation links are handled before every other boot gate (sign-in,
   // MFA, onboarding) since a brand-new invitee has no session, no MFA
   // factor and no onboarding state yet - none of those gates apply until
@@ -274,7 +292,7 @@ export default function App() {
       return (
         <>
           <OfflineIndicator mode={offlineMode} />
-          <AuthPage onSignIn={signIn} onSignUp={signUp} authError={authError} initialEmail={inviteAuthEmail} />
+          <AuthPage onSignIn={signIn} onSignUp={signUp} authError={authError} initialEmail={inviteAuthEmail} onForgotPassword={sendPasswordReset} />
           <ConsentBanner session={session} />
         </>
       );
