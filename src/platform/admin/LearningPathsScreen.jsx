@@ -636,7 +636,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
                   <div style={{ position: "absolute", top: 10, right: 10 }}>
                     <Tag tone={p.isPublished ? "success" : "default"}>{p.isPublished ? "Published" : "Draft"}</Tag>
                   </div>
-                  <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 15, textShadow: "0 2px 4px rgba(0,0,0,0.5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 14.5, textShadow: "0 2px 4px rgba(0,0,0,0.6)", lineHeight: 1.25, wordBreak: "break-word" }}>
                     {p.title}
                   </div>
                 </div>

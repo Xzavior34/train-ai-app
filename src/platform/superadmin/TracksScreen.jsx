@@ -40,7 +40,7 @@ export function TracksScreen() {
                       <Map size={18} color="var(--primary)" />
                     </div>
                     <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontWeight: 800, fontSize: 15.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>
+                      <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", wordBreak: "break-word", lineHeight: 1.25 }}>
                         {t.name}
                       </div>
                       <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, fontWeight: 500 }}>

@@ -57,7 +57,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
     <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
       <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
         <div style={{ minWidth: 0 }}>
-          <div className="ta-title" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{org.name}</div>
+          <div className="ta-title" style={{ wordBreak: "break-word" }}>{org.name}</div>
           <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>
             {org.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "-"} plan - status: {org.status}
           </div>
@@ -292,8 +292,8 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                         }}>
                           <Building2 size={22} />
                         </div>
-                        <div style={{ minWidth: 0, overflow: "hidden" }}>
-                          <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", wordBreak: "break-word", lineHeight: 1.25 }}>{o.name}</div>
                           <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>ID: {o.id.slice(0, 12)}...</div>
                         </div>
                       </div>

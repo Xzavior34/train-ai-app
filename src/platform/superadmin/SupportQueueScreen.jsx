@@ -73,8 +73,8 @@ export function SupportQueueScreen({ currentUserId }) {
           {selectedTicket && (
             <div className="ta-card ta-fade" style={{ flex: 1, minWidth: "min(340px, 100%)" }}>
               <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis" }}>{selectedTicket.subject}</div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontWeight: 700, wordBreak: "break-word" }}>{selectedTicket.subject}</div>
                   <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>{selectedTicket.organizations?.name} - {selectedTicket.priority}</div>
                 </div>
                 <select className="ta-input" style={{ width: 130, flexShrink: 0 }} value={selectedTicket.status} onChange={(e) => handleStatusChange(selectedTicket.id, e.target.value)}>

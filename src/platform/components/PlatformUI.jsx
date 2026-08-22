@@ -126,19 +126,47 @@ export const TOKENS = `
     z-index: 30;
   }
   .ta-sidebar.ta-sidebar-minimized {
-    width: 72px; padding: 18px 6px;
+    width: 68px; padding: 18px 6px;
   }
   .ta-sidebar.ta-sidebar-minimized .ta-brand-name,
   .ta-sidebar.ta-sidebar-minimized .ta-brand-tag,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-section-title,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-item span,
   .ta-sidebar.ta-sidebar-minimized .ta-ws-item span,
+  .ta-sidebar.ta-sidebar-minimized .ta-ws-item div,
+  .ta-sidebar.ta-sidebar-minimized .ta-ws-item > div,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-item svg:last-child {
-    display: none;
+    display: none !important;
   }
-  .ta-sidebar.ta-sidebar-minimized .ta-nav-item,
-  .ta-sidebar.ta-sidebar-minimized .ta-ws-item {
-    justify-content: center; padding: 10px 0; gap: 0;
+  .ta-sidebar.ta-sidebar-minimized .ta-workspace-card {
+    padding: 2px;
+    margin-bottom: 8px;
+    background: var(--surface-2);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .ta-sidebar.ta-sidebar-minimized .ta-ws-item,
+  .ta-sidebar.ta-sidebar-minimized .ta-nav-item {
+    width: 100%;
+    min-height: 38px;
+    height: 38px;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    box-sizing: border-box;
+  }
+  .ta-sidebar.ta-sidebar-minimized .ta-ws-item svg,
+  .ta-sidebar.ta-sidebar-minimized .ta-nav-item svg {
+    margin: 0 auto !important;
+    flex-shrink: 0 !important;
   }
   .ta-sidebar.ta-sidebar-minimized .ta-brand {
     justify-content: center; padding: 0 0 14px;
@@ -218,19 +246,19 @@ export const TOKENS = `
   }
   .ta-toggle-btn:hover { background: var(--surface); color: var(--primary); border-color: var(--border); }
   .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
-  .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 72px; }
+  .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 68px; }
   .ta-topbar {
-    height: 54px; min-height: 54px; max-height: 54px; border-bottom: 1px solid var(--border); background: var(--surface);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(12px, 1.8vw, 20px); position: sticky; top: 0; z-index: 50;
-    box-sizing: border-box; width: 100%; gap: 14px;
+    min-height: 54px; height: auto; border-bottom: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between; padding: 6px clamp(12px, 1.8vw, 20px); position: sticky; top: 0; z-index: 50;
+    box-sizing: border-box; width: 100%; gap: 12px;
   }
-  .ta-topbar-left { display: flex; align-items: center; gap: 10px; min-width: 170px; flex: 0 0 auto; }
-  .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; justify-content: flex-end; min-width: 0; }
+  .ta-topbar-left { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; }
+  .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; justify-content: flex-end; }
   .ta-search { display:flex; align-items:center; gap:6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; width: clamp(120px, 14vw, 190px); color: var(--text-2); font-size: 12px; transition: border-color .15s ease; flex-shrink: 1; min-width: 90px; }
   .ta-search:focus-within { border-color: var(--primary); background: var(--surface); }
   .ta-content { padding: 20px clamp(14px, 2vw, 28px) 64px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-  .ta-h1 { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); line-height: 1.3; }
-  .ta-sub { font-size: 11px; color: var(--text-3); margin: 1px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+  .ta-h1 { font-size: clamp(14px, 1.2vw, 16px); font-weight: 800; letter-spacing: -0.015em; margin: 0; color: var(--text); line-height: 1.25; word-break: normal; overflow-wrap: break-word; }
+  .ta-sub { font-size: 11.5px; color: var(--text-3); margin: 2px 0 0; font-weight: 500; line-height: 1.25; word-break: normal; overflow-wrap: break-word; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }
@@ -290,12 +318,20 @@ export const TOKENS = `
     .ta-header-full-only { display: none !important; }
     .ta-header-mobile-only { display: block; }
     .ta-topbar {
-      padding: 0 12px; height: 50px; min-height: 50px; max-height: 50px;
+      padding: 6px 12px; min-height: 52px; height: auto; max-height: none;
       display: flex; align-items: center; justify-content: space-between;
       box-sizing: border-box; width: 100%; position: sticky; top: 0; z-index: 50; background: var(--surface);
+      gap: 8px;
     }
-    .ta-topbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; padding-right: 6px; }
-    .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .ta-topbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; }
+    .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex: 0 0 auto; }
+    .ta-topbar-right .ta-btn {
+      height: 32px !important;
+      padding: 0 10px !important;
+      font-size: 11.5px !important;
+      border-radius: 6px !important;
+      gap: 4px !important;
+    }
     .ta-profile-pill { padding: 3px !important; }
     .ta-content { padding: 14px 14px calc(80px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
@@ -311,8 +347,18 @@ export const TOKENS = `
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
-    .ta-h1 { font-size: 14.5px !important; font-weight: 800 !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-    .ta-sub { display: block !important; font-size: 11px !important; color: var(--text-3) !important; margin-top: 1px !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    .ta-h1 {
+      font-size: clamp(13.5px, 4vw, 15px) !important;
+      font-weight: 800 !important;
+      line-height: 1.25 !important;
+      color: var(--text) !important;
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      word-break: normal !important;
+      overflow-wrap: break-word !important;
+    }
+    .ta-sub { display: none !important; }
     .ta-table-wrap .ta-table { min-width: 460px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
@@ -343,6 +389,8 @@ export const TOKENS = `
       font-size: 17px !important;
       line-height: 1.3 !important;
       margin-bottom: 4px !important;
+      word-break: normal !important;
+      overflow-wrap: break-word !important;
     }
     .ta-hero-desc {
       font-size: 12px !important;
@@ -361,10 +409,10 @@ export const TOKENS = `
     }
   }
   @media (max-width: 640px) {
-    .ta-topbar { padding: 0 12px; height: 50px; min-height: 50px; }
+    .ta-topbar { padding: 6px 10px; min-height: 50px; height: auto; }
     .ta-content { padding: 12px 12px calc(80px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-card { padding: 16px 14px; border-radius: 10px; width: 100%; box-sizing: border-box; }
-    .ta-h1 { font-size: 14px; }
+    .ta-h1 { font-size: 13.5px !important; font-weight: 800 !important; line-height: 1.25 !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
     .ta-btn { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
     .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; }
   }
@@ -811,10 +859,12 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
                   onClick={() => { setWorkspace(w.key); onClose(); }}
                   title={w.label}
                 >
-                  <Icon size={16} />
-                  <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, flex: 1, minWidth: 0 }}>
-                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.label}</span>
-                  </div>
+                  <Icon size={17} style={{ flexShrink: 0 }} />
+                  {!isMinimized && (
+                    <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, flex: 1, minWidth: 0 }}>
+                      <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.label}</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1090,7 +1140,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
     <div className="ta-topbar">
       <div className="ta-topbar-left">
         <button className="ta-menu-btn" onClick={openMenu} aria-label="Open menu"><Menu size={20} /></button>
-        <div style={{ minWidth: 0 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <div className="ta-h1">{title}</div>
           {sub && <div className="ta-sub">{sub}</div>}
         </div>
