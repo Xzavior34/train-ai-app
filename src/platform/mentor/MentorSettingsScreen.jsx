@@ -287,6 +287,62 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
       <TopBar title="Instructor Settings" sub="Profile setup, communications, session preferences, and teaching resources" />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
+        {/* =========================================================================
+            INSTRUCTOR SETTINGS HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.28, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
+            zIndex: 0
+          }} />
+
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
+                <span style={{
+                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                  border: "1px solid rgba(165, 180, 252, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <BadgeCheck size={13} color="#A5B4FC" /> TEACHING STUDIO CONFIGURATION
+                </span>
+                <span style={{
+                  background: completionPct === 100 ? "rgba(16, 185, 129, 0.28)" : "rgba(245, 158, 11, 0.28)",
+                  color: completionPct === 100 ? "#A7F3D0" : "#FDE68A",
+                  border: completionPct === 100 ? "1px solid rgba(16, 185, 129, 0.5)" : "1px solid rgba(245, 158, 11, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                }}>
+                  {completionPct}% PROFILE READINESS
+                </span>
+              </div>
+
+              <h1 className="ta-hero-title">
+                Instructor Studio &amp; Preferences
+              </h1>
+              <p className="ta-hero-desc">
+                Customize your public instructor biography, manage verified certifications, configure video room links, and share student resource libraries.
+              </p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Platform</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#fff", textTransform: "capitalize" }}>{videoPlatform.replace(/_/g, " ")}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Main Settings 2-Column Grid */}
         <div style={{ display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "minmax(260px, 300px) minmax(0, 1fr)", gap: 24, alignItems: "start" }}>
 
