@@ -401,52 +401,36 @@ export const chartColors = {
           HERO BANNER: DISCO LMS COMMUNITY & COLLABORATIVE KNOWLEDGE HUB
           ========================================================================= */}
       <div style={{
-        borderRadius: 18,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+        borderRadius: 10,
+        background: "#0F172A",
         color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 24px)",
-        boxShadow: "0 10px 28px -4px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.35)",
+        padding: "clamp(16px, 2.5vw, 22px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
         position: "relative",
         overflow: "hidden",
         width: "100%",
         boxSizing: "border-box"
       }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.28, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.82) 55%, rgba(15,23,42,0.65) 100%)",
-          zIndex: 0
-        }} />
-
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div style={{ minWidth: 0, flex: "1 1 240px" }}>
-            <h1 style={{ fontSize: "clamp(19px, 2.2vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
               Train AI Community Hub
             </h1>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
+            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
               Share projects, ask questions, and collaborate with peers and mentors.
             </p>
           </div>
 
           <button
-            className="tai-btn"
+            className="tai-btn tai-btn-primary"
             onClick={() => setPostComposerOpen(true)}
             style={{
-              background: "var(--grad)", color: "#FFFFFF", fontWeight: 800, fontSize: 13,
-              padding: "9px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(79, 70, 229, 0.4)", display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
+              padding: "8px 14px", borderRadius: 8, fontWeight: 700, fontSize: 13,
+              display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
             }}
           >
-            <Plus size={16} /> Share or Ask Question
+            <Plus size={15} /> Share or Ask Question
           </button>
         </div>
       </div>
@@ -891,19 +875,20 @@ export const chartColors = {
             
             {/* Live Studio & AMAs Mini Card */}
             <div className="tai-card" style={{
-              background: "linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)",
-              color: "#FFFFFF", padding: 20, borderRadius: 18
+              background: "#0F172A",
+              color: "#FFFFFF", padding: 18, borderRadius: 10,
+              border: "1px solid #1E293B"
             }}>
               <div className="tai-row tai-between">
-                <span style={{ background: "rgba(239, 68, 68, 0.25)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.4)", fontSize: 10.5, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>
+                <span style={{ background: "rgba(239, 68, 68, 0.2)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.3)", fontSize: 10.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>
                   UPCOMING LIVE
                 </span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Studio 1</span>
+                <span style={{ fontSize: 11, color: "#94A3B8" }}>Studio 1</span>
               </div>
-              <h4 style={{ fontSize: 15, fontWeight: 800, margin: "10px 0 4px", color: "#fff" }}>
+              <h4 style={{ fontSize: 14.5, fontWeight: 800, margin: "8px 0 3px", color: "#fff" }}>
                 Spatial UI &amp; Design Systems Critique
               </h4>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", margin: "0 0 14px" }}>
+              <p style={{ fontSize: 12, color: "#94A3B8", margin: "0 0 12px" }}>
                 Tomorrow at 10:00 AM • Astrid Larsson
               </p>
               <button
@@ -911,7 +896,7 @@ export const chartColors = {
                 onClick={() => showToast("RSVP Confirmed! Calendar invite sent.")}
                 style={{
                   width: "100%", background: "#4F46E5", color: "#fff", border: "none",
-                  padding: "9px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 800, cursor: "pointer"
+                  padding: "8px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer"
                 }}
               >
                 RSVP for Studio Stream →

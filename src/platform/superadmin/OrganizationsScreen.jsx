@@ -197,20 +197,6 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             ORGANIZATIONS HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-          {/* Background Stock Photo with Overlay */}
-          <img
-            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.28, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">

@@ -100,19 +100,6 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
         <div className="ta-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.28, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -156,7 +143,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
           
-          <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Available For Withdrawal</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.15)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -171,7 +158,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Lifetime Gross Earnings</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -186,7 +173,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Pending Settlement</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -203,7 +190,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
 
         </div>
 
-        <div className="ta-card" style={{ padding: "10px 14px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "10px 14px", background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
             {[
               { k: "earnings", label: "Earnings Breakdown" },
@@ -229,7 +216,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
         </div>
 
         {tab === "earnings" && (
-          <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
               <div>
                 <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Detailed Transaction History</div>
@@ -287,7 +274,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
         {tab === "payouts" && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
             
-            <div className="ta-card" style={{ padding: "22px 24px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-card" style={{ padding: "22px 24px", background: "var(--surface)", border: "1px solid var(--border)" }}>
               <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Request a Payout Withdrawal</div>
               <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Transfer your available balance to your preferred payout method</div>
 
@@ -378,7 +365,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
               </button>
             </div>
 
-            <div className="ta-card" style={{ padding: "22px 24px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-card" style={{ padding: "22px 24px", background: "var(--surface)", border: "1px solid var(--border)" }}>
               <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Payout Request History</div>
               <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Track automated disbursement confirmations and bank clearing times</div>
 
@@ -421,7 +408,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
         )}
 
         {tab === "refunds" && (
-          <div className="ta-card" style={{ padding: "22px 24px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "22px 24px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Student Refund &amp; Dispute Resolutions</div>
             <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Review session rescheduling disputes and cancellation appeals</div>
 

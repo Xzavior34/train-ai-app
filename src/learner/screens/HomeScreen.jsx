@@ -82,58 +82,41 @@ export function HomeScreen({
           HERO BANNER: Visually Consistent Learner Command Center
           ========================================================================= */}
       <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+        borderRadius: 10,
+        background: "#0F172A",
         color: "#FFFFFF",
-        padding: "clamp(18px, 3vw, 26px)",
-        boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
+        padding: "clamp(16px, 2.5vw, 22px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.35, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.82) 55%, rgba(15,23,42,0.65) 100%)",
-          zIndex: 0
-        }} />
-
-        {/* Profile + notifications - real navigation entry points from
-            Home that existed previously (settings, notifications) but had
-            dropped out of this hero redesign. */}
+        {/* Profile + notifications */}
         <div style={{ position: "absolute", top: 14, right: 14, zIndex: 2, display: "flex", gap: 8 }}>
           <button
             className="tai-iconbtn"
             onClick={() => push("settings")}
-            style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", padding: 2, cursor: "pointer" }}
+            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "50%", padding: 2, cursor: "pointer" }}
           >
-            <Avatar initials={user?.initials || userFirstName?.[0] || "L"} size={28} />
+            <Avatar initials={user?.initials || userFirstName?.[0] || "L"} size={26} />
           </button>
           <button
             className="tai-iconbtn"
             onClick={() => push("notifications")}
-            style={{ position: "relative", background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+            style={{ position: "relative", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
           >
-            <Bell size={15} color="#fff" />
-            {unreadNotifs > 0 && <span style={{ position: "absolute", top: 4, right: 5, width: 7, height: 7, borderRadius: "50%", background: "var(--danger, #EF4444)" }} />}
+            <Bell size={14} color="#fff" />
+            {unreadNotifs > 0 && <span style={{ position: "absolute", top: 3, right: 4, width: 6, height: 6, borderRadius: "50%", background: "var(--danger, #EF4444)" }} />}
           </button>
         </div>
 
-        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="tai-hero-row">
             <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+              <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
                 Welcome back, {userFirstName || "Learner"}
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+              <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
                 {done} of {goal} weekly lessons done. Continue in <strong style={{ color: "#A5B4FC" }}>{continueCourse?.title || "AI Fundamentals"}</strong>.
               </p>
             </div>
@@ -142,9 +125,8 @@ export function HomeScreen({
               <button
                 className="tai-btn tai-hero-btn"
                 style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
-                  padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", fontSize: 13,
-                  boxShadow: "0 4px 14px rgba(79, 70, 229, 0.4)",
+                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 700,
+                  padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 13,
                   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
                   cursor: "pointer"
                 }}
@@ -157,34 +139,30 @@ export function HomeScreen({
 
           {/* Milestone Progress Bar */}
           <div style={{
-            background: "rgba(15, 23, 42, 0.6)",
-            backdropFilter: "blur(10px)",
+            background: "#1E293B",
             padding: "10px 14px",
-            borderRadius: 12,
-            border: "1px solid rgba(255, 255, 255, 0.15)"
+            borderRadius: 8,
+            border: "1px solid #334155"
           }}>
-            <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, color: "#FFFFFF" }}>
+            <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#FFFFFF" }}>
               <span className="tai-row tai-gap6">
                 <Target size={13} color="#818CF8" />
                 <span>Weekly Sprint Goal ({done}/{goal})</span>
               </span>
-              <span style={{ color: "#34D399", fontWeight: 800 }}>{goalPercent}% Completed</span>
+              <span style={{ color: "#34D399", fontWeight: 700 }}>{goalPercent}% Completed</span>
             </div>
 
             <div style={{
-              height: 8,
-              borderRadius: 99,
-              background: "rgba(255, 255, 255, 0.18)",
-              overflow: "hidden",
-              padding: 1,
-              border: "1px solid rgba(255, 255, 255, 0.15)"
+              height: 6,
+              borderRadius: 3,
+              background: "#334155",
+              overflow: "hidden"
             }}>
               <div style={{
                 width: `${goalPercent}%`,
                 height: "100%",
-                background: "linear-gradient(90deg, #10B981 0%, #34D399 50%, #6366F1 100%)",
-                borderRadius: 99,
-                boxShadow: "0 0 10px rgba(16, 185, 129, 0.7)",
+                background: "#10B981",
+                borderRadius: 3,
                 transition: "width 0.4s ease"
               }} />
             </div>
@@ -309,13 +287,13 @@ export function HomeScreen({
               <Tag tone="primary">Sprint 5</Tag>
             </div>
 
-            <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)", marginBottom: 12 }}>
+            <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
               <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
                 <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
                 <span style={{ color: "var(--primary)" }}>42% Completed</span>
               </div>
-              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
-                <div style={{ width: "42%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
+              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: "42%", height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 3 }} />
               </div>
             </div>
 
@@ -325,7 +303,7 @@ export function HomeScreen({
               </div>
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ padding: "7px 16px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
+                style={{ padding: "6px 14px", fontSize: 12, fontWeight: 700, flexShrink: 0, borderRadius: 6 }}
                 onClick={() => push("cohort")}
               >
                 Enter Cohort Space →
@@ -335,7 +313,7 @@ export function HomeScreen({
           )}
 
           {/* Career Path & Skill Growth Progression */}
-          <div className="tai-card" style={{ padding: 18, borderRadius: 16, background: "linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(99, 102, 241, 0.05) 100%)", border: "1px solid rgba(99, 102, 241, 0.25)" }}>
+          <div className="tai-card" style={{ padding: 16, borderRadius: 10, background: "rgba(79, 70, 229, 0.04)", border: "1px solid rgba(79, 70, 229, 0.18)" }}>
             <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 8 }}>
               <div>
                 <div className="tai-row tai-gap8" style={{ fontWeight: 800, fontSize: 14.5, color: "var(--primary)" }}>
@@ -561,13 +539,13 @@ export function HomeScreen({
             </div>
 
             {/* Level & XP Meter */}
-            <div style={{ background: "var(--surface)", padding: "12px 14px", borderRadius: 12, border: "1px solid var(--border)", marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, fontSize: 12, fontWeight: 800, marginBottom: 6 }}>
+            <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, fontSize: 11.5, fontWeight: 700, marginBottom: 5 }}>
                 <span style={{ color: "var(--text)" }}>Level {user?.level || 2} • Senior Specialist</span>
                 <span style={{ color: "var(--primary)", flexShrink: 0 }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
               </div>
-              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
-                <div style={{ width: "90%", height: "100%", background: "var(--grad)", borderRadius: 99 }} />
+              <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: "90%", height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 3 }} />
               </div>
             </div>
 

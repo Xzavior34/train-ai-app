@@ -93,62 +93,47 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           HERO BANNER: My Learning Journey & Weekly Milestone
           ========================================================================= */}
       <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 27, 75, 0.85) 100%)",
+        borderRadius: 10,
+        background: "#0F172A",
         color: "#FFFFFF",
-        padding: "clamp(18px, 3vw, 26px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
+        padding: "clamp(16px, 2.5vw, 22px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
-          zIndex: 0
-        }} />
-
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
               My Learning Progress
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               16.6 study hours logged across {inProgressCount} active courses this week.
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>17 / 20 Lessons Done</div>
-            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>85% Sprint Met</div>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.06)", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF" }}>17 / 20 Lessons Done</div>
+            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>85% Sprint Met</div>
           </div>
         </div>
 
-        {/* Weekly Goal Progress Bar (High-Contrast Hero Feature) */}
+        {/* Weekly Goal Progress Bar */}
         <div style={{
-          position: "relative", zIndex: 1, marginTop: 16,
-          background: "rgba(255,255,255,0.12)", backdropFilter: "blur(10px)",
-          padding: "12px 16px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.22)"
+          position: "relative", zIndex: 1, marginTop: 14,
+          background: "#1E293B",
+          padding: "10px 14px", borderRadius: 8, border: "1px solid #334155"
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 13, fontWeight: 800, marginBottom: 8, color: "#FFFFFF" }}>
+          <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#FFFFFF" }}>
             <span>
               Weekly Sprint Progress (85% Target Met)
             </span>
-            <span style={{ color: "#FDE68A", fontSize: 12.5, fontWeight: 700 }}>
+            <span style={{ color: "#34D399", fontSize: 11.5, fontWeight: 700 }}>
               3 of 20 lessons remaining
             </span>
           </div>
-          <div style={{ height: 10, borderRadius: 99, background: "rgba(0,0,0,0.35)", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
-            <div style={{ width: "85%", height: "100%", background: "linear-gradient(90deg, #34D399 0%, #6366F1 100%)", borderRadius: 99, boxShadow: "0 0 12px rgba(52, 211, 153, 0.6)" }} />
+          <div style={{ height: 6, borderRadius: 3, background: "#334155", overflow: "hidden" }}>
+            <div style={{ width: "85%", height: "100%", background: "#10B981", borderRadius: 3, transition: "width 0.4s ease" }} />
           </div>
         </div>
       </div>

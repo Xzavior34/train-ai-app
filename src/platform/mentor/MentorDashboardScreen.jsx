@@ -133,19 +133,6 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             INSTRUCTOR WORKSPACE HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -193,7 +180,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
         {/* Top 4 Balanced KPI Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Active Learners</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -206,7 +193,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Active Cohorts</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -219,7 +206,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Pending Reviews</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -232,7 +219,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Engagement Rate</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(139, 92, 246, 0.12)", color: "#8B5CF6", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -245,7 +232,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Instructor Rating</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -258,7 +245,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Total Earnings</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -279,7 +266,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
             
             {/* Today's Tasks */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Today's Tasks</div>
@@ -324,7 +311,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
 
             {/* Batch Progress */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Batch Progress</div>
@@ -363,12 +350,9 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
 
             {/* Cohort Diagnostic Insights & Action Plan */}
-            <div className="ta-card" style={{ 
-              padding: 22, 
-              borderRadius: 16, 
+            <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
-              border: "1px solid var(--border)"
-            }}>
+              border: "1px solid var(--border)" }}>
               <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 14 }}>
                 <Brain size={18} />
                 <span>Cohort Diagnostic &amp; Recommendations</span>
@@ -409,7 +393,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             
             {/* Student Risk Monitor */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Student Risk Monitor</div>
@@ -450,7 +434,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
 
             {/* My Schedule & Live Session Card */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>My Schedule</div>

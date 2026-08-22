@@ -81,19 +81,6 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
             STUDY GROUPS HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.28, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -146,7 +133,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
           {/* Left Column: Groups List & Create Box */}
           <div className="ta-col ta-gap14">
             
-            <div className="ta-card" style={{ padding: "18px 20px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-card" style={{ padding: "18px 20px", background: "var(--surface)", border: "1px solid var(--border)" }}>
               <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Create New Study Circle</div>
               <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Form a focused group for a specific course module or capstone</div>
               
@@ -241,7 +228,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
 
           {/* Right Column: Selected Group Workspace */}
           {activeGroup && (
-            <div className="ta-card" style={{ padding: "22px 24px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-card" style={{ padding: "22px 24px", background: "var(--surface)", border: "1px solid var(--border)" }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 10, paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{activeGroup.name}</div>

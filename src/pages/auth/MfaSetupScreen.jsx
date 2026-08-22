@@ -194,9 +194,9 @@ export default function MfaSetupScreen({ onClose }) {
               disabled={busy}
               className="mfa2-primary-btn"
               style={{
-                width: "100%", border: "none", cursor: busy ? "default" : "pointer", borderRadius: 14,
-                fontWeight: 700, fontSize: 14, padding: "13px 18px", color: "#fff", opacity: busy ? 0.75 : 1,
-                background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
+                width: "100%", border: "none", cursor: busy ? "default" : "pointer", borderRadius: 8,
+                fontWeight: 700, fontSize: 14, padding: "11px 16px", color: "#fff", opacity: busy ? 0.75 : 1,
+                background: "#4F46E5",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}
             >
@@ -290,10 +290,10 @@ export default function MfaSetupScreen({ onClose }) {
                 disabled={busy || code.length !== 6}
                 className="mfa2-primary-btn"
                 style={{
-                  flex: 1.4, border: "none", cursor: busy || code.length !== 6 ? "default" : "pointer", borderRadius: 13,
-                  fontWeight: 700, fontSize: 13.5, padding: "12px 14px", color: "#fff",
+                  flex: 1.4, border: "none", cursor: busy || code.length !== 6 ? "default" : "pointer", borderRadius: 8,
+                  fontWeight: 700, fontSize: 13.5, padding: "10px 14px", color: "#fff",
                   opacity: busy || code.length !== 6 ? 0.6 : 1,
-                  background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
+                  background: "#4F46E5",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 }}
               >

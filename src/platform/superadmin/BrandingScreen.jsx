@@ -63,7 +63,7 @@ export function BrandingScreen() {
       <div className="ta-content" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "start" }}>
         
         {/* Controls Card */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 16 }}>
+        <div className="ta-card" style={{ padding: 24 }}>
           <div className="ta-title" style={{ fontSize: 16 }}>Tenant Customization</div>
           
           <div className="ta-mt16">
@@ -180,7 +180,7 @@ export function BrandingScreen() {
         </div>
 
         {/* Live Preview Card */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 16, background: themeMode === "dark" ? "#0F172A" : "var(--surface)", color: themeMode === "dark" ? "#F8FAFC" : "var(--text)" }}>
+        <div className="ta-card" style={{ padding: 24, background: themeMode === "dark" ? "#0F172A" : "var(--surface)", color: themeMode === "dark" ? "#F8FAFC" : "var(--text)" }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
             <div className="ta-row ta-gap8">
               <Eye size={16} color={primaryColor} />

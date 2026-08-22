@@ -183,22 +183,23 @@ export function ProfileScreen({
       {/* =========================================================================
           HERO PROFILE COVER & IDENTITY CARD
           ========================================================================= */}
-      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 22, border: "1px solid var(--border)" }}>
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 10, border: "1px solid var(--border)" }}>
         {/* Cover Photo */}
         <div style={{
-          height: 120,
-          background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 60%, #312E81 100%)",
+          height: 110,
+          background: "#0F172A",
+          borderBottom: "1px solid #1E293B",
           position: "relative"
         }}>
           <img
             src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
             alt="Cover"
-            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.35 }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
           />
         </div>
 
         {/* Profile Content */}
-        <div style={{ padding: "0 clamp(16px, 3.5vw, 28px) 24px", marginTop: -40 }}>
+        <div style={{ padding: "0 clamp(16px, 3.5vw, 24px) 20px", marginTop: -36 }}>
           <div className="tai-row tai-between" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
             <div className="tai-row tai-gap16" style={{ alignItems: "flex-end", flexWrap: "wrap" }}>
               <div

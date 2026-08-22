@@ -111,19 +111,6 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
             DIRECT MESSAGES HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.28, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -155,7 +142,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
           </div>
         </div>
 
-        <div className="ta-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "320px 1fr", minHeight: 600, borderRadius: 16 }}>
+        <div className="ta-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "320px 1fr", minHeight: 600 }}>
 
           {/* Left Sidebar: Find Learners & Conversation List */}
           {(!isNarrow || !activeContact) && (

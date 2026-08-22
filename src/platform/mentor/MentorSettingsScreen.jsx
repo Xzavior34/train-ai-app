@@ -291,19 +291,6 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             INSTRUCTOR SETTINGS HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.28, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -348,7 +335,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
 
           {/* Left Navigation Sidebar & Profile Meter */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
-            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between">
                 <div className="ta-title" style={{ fontSize: 15 }}>Profile Readiness</div>
                 <div style={{ fontWeight: 800, color: "var(--primary)", fontSize: 14 }}>{completionPct}%</div>
@@ -368,7 +355,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             </div>
 
             {/* Vertical Settings Tabs */}
-            <div className="ta-card" style={{ padding: 10, borderRadius: 16, display: "flex", flexDirection: "column", gap: 4 }}>
+            <div className="ta-card" style={{ padding: 10, display: "flex", flexDirection: "column", gap: 4 }}>
               {[
                 { k: "profile", label: "Profile & Portfolio", Icon: User, desc: "Bio, photo, credentials" },
                 { k: "communications", label: "Communications", Icon: Bell, desc: "Notifications and alerts" },
@@ -407,7 +394,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
           <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
             {tab === "profile" && (
               <>
-                <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+                <div className="ta-card" style={{ padding: 22 }}>
                   <div className="ta-title" style={{ fontSize: 16 }}>Instructor Public Profile</div>
                   <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>This information is visible to enrolled learners and co-instructors.</div>
                   
