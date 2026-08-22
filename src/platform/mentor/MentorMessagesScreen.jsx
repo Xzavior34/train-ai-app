@@ -105,8 +105,57 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
     <div className="ta-fade">
       <TopBar title="Instructor Direct Messages" sub="Find learners and communicate directly across all active courses" orgSelector={orgSelector} />
 
-      <div className="ta-content">
-        <div className="ta-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "320px 1fr", minHeight: 600 }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        
+        {/* =========================================================================
+            DIRECT MESSAGES HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.28, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
+            zIndex: 0
+          }} />
+
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
+                <span style={{
+                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                  border: "1px solid rgba(165, 180, 252, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <Send size={13} color="#A5B4FC" /> REAL-TIME INSTRUCTOR CHAT
+                </span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                  border: "1px solid rgba(16, 185, 129, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                }}>
+                  {contacts.length} CONNECTED LEARNER{contacts.length === 1 ? "" : "S"}
+                </span>
+              </div>
+
+              <h1 className="ta-hero-title">
+                Direct Mentorship Messaging
+              </h1>
+              <p className="ta-hero-desc">
+                Provide 1:1 guidance, answer assignment queries in real-time, and collaborate with fellow academy instructors.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="ta-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "320px 1fr", minHeight: 600, borderRadius: 16 }}>
 
           {/* Left Sidebar: Find Learners & Conversation List */}
           {(!isNarrow || !activeContact) && (
