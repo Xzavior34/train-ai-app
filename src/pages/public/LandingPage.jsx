@@ -749,13 +749,13 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 4: THE LEARNER APP (Compact, High-Density, Perfectly Proportioned)
+          SECTION 4: THE LEARNER APP (Rich Full-Height Vertical Showcase - Zero White Space)
           ========================================================================= */}
       <section id="learners" className="lp-bg-surface-tint" style={{ width: "100%" }}>
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 20px 55px" }}>
           
           {/* Signals Pill Bar */}
-          <div style={{ background: "#FFFFFF", padding: "14px 18px", borderRadius: 16, border: "1px solid #E2E8F0", marginBottom: 30, boxShadow: "0 2px 6px rgba(15,23,42,0.02)" }}>
+          <div style={{ background: "#FFFFFF", padding: "14px 18px", borderRadius: 16, border: "1px solid #E2E8F0", marginBottom: 28, boxShadow: "0 2px 6px rgba(15,23,42,0.02)" }}>
             <div style={{ fontSize: 10, fontWeight: 800, color: "#64748B", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 8, textAlign: "left" }}>
               SIGNALS FEEDING THE MODEL
             </div>
@@ -778,88 +778,137 @@ export default function LandingPage({ onNavigate }) {
           </h2>
 
           <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 640, margin: "0 0 24px", lineHeight: 1.5, textAlign: "left" }}>
-            Learners get a focused workspace with primary navigation at the bottom of the screen: Home, Courses, AI Coach, and Community. Tap the bottom tabs inside the simulator to explore.
+            Learners get a focused workspace with primary navigation at the bottom of the screen: Home, Courses, AI Coach, and Community. Tap the tabs on the left or the phone buttons to preview live.
           </p>
 
-          <div className="lp-learner-grid" style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 24, alignItems: "center" }}>
+          <div className="lp-learner-grid" style={{ display: "grid", gridTemplateColumns: "1.25fr 0.75fr", gap: 24, alignItems: "stretch" }}>
             
-            {/* 2x2 Feature Description Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, textAlign: "left" }}>
+            {/* Left Side: Rich Vertical Interactive Tab Stack (Fills Entire Height Seamlessly) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, justifyContent: "space-between" }}>
               
+              {/* Tab 1: Home */}
               <div
                 className="lp-card-hover"
                 onClick={() => setMobileLearnerTab("home")}
                 style={{
-                  background: "#FFFFFF", padding: 14, borderRadius: 14,
+                  background: mobileLearnerTab === "home" ? "#EEF2FF" : "#FFFFFF",
+                  padding: "14px 16px", borderRadius: 14,
                   border: mobileLearnerTab === "home" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
                   boxShadow: mobileLearnerTab === "home" ? "0 4px 14px rgba(79,70,229,0.12)" : "0 2px 6px rgba(15,23,42,0.02)",
-                  cursor: "pointer"
+                  cursor: "pointer", transition: "all .18s ease"
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <Home size={16} color="#4F46E5" />
-                  <h3 style={{ fontSize: 14.5, fontWeight: 800, color: "#0F172A", margin: 0 }}>Home</h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: mobileLearnerTab === "home" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "home" ? "#fff" : "#4F46E5" }}>
+                      <Home size={15} />
+                    </div>
+                    <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: 0 }}>Home Workspace</h3>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: mobileLearnerTab === "home" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "home" ? "rgba(79,70,229,0.15)" : "#F1F5F9", padding: "2px 8px", borderRadius: 99 }}>
+                    {mobileLearnerTab === "home" ? "Active Preview" : "Personalized"}
+                  </span>
                 </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.45 }}>
+                <p style={{ fontSize: 12.5, color: "#64748B", margin: "2px 0 0", lineHeight: 1.45 }}>
                   Current sprint progress, career roadmap, active cohorts and daily streak tracker.
                 </p>
               </div>
 
+              {/* Tab 2: Courses */}
               <div
                 className="lp-card-hover"
                 onClick={() => setMobileLearnerTab("courses")}
                 style={{
-                  background: "#FFFFFF", padding: 14, borderRadius: 14,
+                  background: mobileLearnerTab === "courses" ? "#EEF2FF" : "#FFFFFF",
+                  padding: "14px 16px", borderRadius: 14,
                   border: mobileLearnerTab === "courses" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
                   boxShadow: mobileLearnerTab === "courses" ? "0 4px 14px rgba(79,70,229,0.12)" : "0 2px 6px rgba(15,23,42,0.02)",
-                  cursor: "pointer"
+                  cursor: "pointer", transition: "all .18s ease"
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <BookOpen size={16} color="#4F46E5" />
-                  <h3 style={{ fontSize: 14.5, fontWeight: 800, color: "#0F172A", margin: 0 }}>Courses</h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: mobileLearnerTab === "courses" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "courses" ? "#fff" : "#4F46E5" }}>
+                      <BookOpen size={15} />
+                    </div>
+                    <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: 0 }}>Courses &amp; Masterclasses</h3>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: mobileLearnerTab === "courses" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "courses" ? "rgba(79,70,229,0.15)" : "#F1F5F9", padding: "2px 8px", borderRadius: 99 }}>
+                    {mobileLearnerTab === "courses" ? "Active Preview" : "49 Courses"}
+                  </span>
                 </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.45 }}>
+                <p style={{ fontSize: 12.5, color: "#64748B", margin: "2px 0 0", lineHeight: 1.45 }}>
                   Executive masterclasses, spotlight carousels, assigned tracks, and video trailers.
                 </p>
               </div>
 
+              {/* Tab 3: AI Coach */}
               <div
                 className="lp-card-hover"
                 onClick={() => setMobileLearnerTab("ai")}
                 style={{
-                  background: "#FFFFFF", padding: 14, borderRadius: 14,
+                  background: mobileLearnerTab === "ai" ? "#EEF2FF" : "#FFFFFF",
+                  padding: "14px 16px", borderRadius: 14,
                   border: mobileLearnerTab === "ai" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
                   boxShadow: mobileLearnerTab === "ai" ? "0 4px 14px rgba(79,70,229,0.12)" : "0 2px 6px rgba(15,23,42,0.02)",
-                  cursor: "pointer"
+                  cursor: "pointer", transition: "all .18s ease"
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <Zap size={16} color="#4F46E5" />
-                  <h3 style={{ fontSize: 14.5, fontWeight: 800, color: "#0F172A", margin: 0 }}>AI Coach</h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: mobileLearnerTab === "ai" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "ai" ? "#fff" : "#4F46E5" }}>
+                      <Zap size={15} />
+                    </div>
+                    <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: 0 }}>AI Neural Coach</h3>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: mobileLearnerTab === "ai" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "ai" ? "rgba(79,70,229,0.15)" : "#F1F5F9", padding: "2px 8px", borderRadius: 99 }}>
+                    {mobileLearnerTab === "ai" ? "Active Preview" : "24/7 Neural Tutor"}
+                  </span>
                 </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.45 }}>
+                <p style={{ fontSize: 12.5, color: "#64748B", margin: "2px 0 0", lineHeight: 1.45 }}>
                   AI Learning Coach, custom adaptive assessment generator, and debugging assistant.
                 </p>
               </div>
 
+              {/* Tab 4: Community */}
               <div
                 className="lp-card-hover"
                 onClick={() => setMobileLearnerTab("community")}
                 style={{
-                  background: "#FFFFFF", padding: 14, borderRadius: 14,
+                  background: mobileLearnerTab === "community" ? "#EEF2FF" : "#FFFFFF",
+                  padding: "14px 16px", borderRadius: 14,
                   border: mobileLearnerTab === "community" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
                   boxShadow: mobileLearnerTab === "community" ? "0 4px 14px rgba(79,70,229,0.12)" : "0 2px 6px rgba(15,23,42,0.02)",
-                  cursor: "pointer"
+                  cursor: "pointer", transition: "all .18s ease"
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <Users size={16} color="#4F46E5" />
-                  <h3 style={{ fontSize: 14.5, fontWeight: 800, color: "#0F172A", margin: 0 }}>Community</h3>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: mobileLearnerTab === "community" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "community" ? "#fff" : "#4F46E5" }}>
+                      <Users size={15} />
+                    </div>
+                    <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: 0 }}>Community Hub</h3>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: mobileLearnerTab === "community" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "community" ? "rgba(79,70,229,0.15)" : "#F1F5F9", padding: "2px 8px", borderRadius: 99 }}>
+                    {mobileLearnerTab === "community" ? "Active Preview" : "Peer Network"}
+                  </span>
                 </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.45 }}>
+                <p style={{ fontSize: 12.5, color: "#64748B", margin: "2px 0 0", lineHeight: 1.45 }}>
                   Community hub, pinned faculty announcements, live polls, and student discussions.
                 </p>
+              </div>
+
+              {/* Bottom Feature Badges Bar */}
+              <div style={{ background: "#FFFFFF", borderRadius: 12, padding: "10px 14px", border: "1px solid #E2E8F0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: "#334155" }}>
+                  <Flame size={12} color="#EA580C" /> Daily Streaks
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: "#334155" }}>
+                  <Target size={12} color="#4F46E5" /> Adaptive Quizzes
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 700, color: "#334155" }}>
+                  <Award size={12} color="#16A34A" /> Micro-Certs
+                </span>
               </div>
 
             </div>
