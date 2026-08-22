@@ -5,6 +5,7 @@ import {
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
   PanelLeftClose, PanelLeftOpen, Video
 } from "lucide-react";
+import { LearningPathsScreen } from "../screens/LearningPathsScreen.jsx";
 
 // Lets any screen's shared TopBar show a real unread-notifications bell
 // without threading unreadNotifs/push down through every screen's props.
@@ -1063,132 +1064,7 @@ export function QuickWinCard({ title, duration, points, onClick }) {
 }
 
 export function LearningPathsView({ push, back }) {
-  const TRACKS = [
-    {
-      id: "track-1",
-      title: "AI & Product Engineering Career Track",
-      category: "Full-Stack AI",
-      progress: 68,
-      hours: "48 hours",
-      coursesCount: 4,
-      skills: ["React 19", "Figma AI", "Supabase", "Vector DBs", "LLM APIs"],
-      steps: [
-        { title: "Master Design Systems in Figma with AI", status: "completed", hours: "12h" },
-        { title: "Full-Stack AI Application Engineering", status: "in_progress", hours: "16h" },
-        { title: "Cloud Infrastructure & Microservices", status: "upcoming", hours: "10h" },
-        { title: "Capstone: Production AI Agent Deployment", status: "upcoming", hours: "10h" }
-      ]
-    },
-    {
-      id: "track-2",
-      title: "Generative AI & Autonomous Agent Architect",
-      category: "AI & Agents",
-      progress: 25,
-      hours: "36 hours",
-      coursesCount: 3,
-      skills: ["LangChain", "Autonomous Agents", "Prompt Design", "RAG Pipelines"],
-      steps: [
-        { title: "Prompt Engineering & Multi-Modal Generation", status: "completed", hours: "8h" },
-        { title: "Building Autonomous Agent Workflows", status: "in_progress", hours: "14h" },
-        { title: "Enterprise RAG & Knowledge Graphs", status: "upcoming", hours: "14h" }
-      ]
-    },
-    {
-      id: "track-3",
-      title: "Spatial UI & Modern Frontend Mastery",
-      category: "Design & UX",
-      progress: 0,
-      hours: "40 hours",
-      coursesCount: 4,
-      skills: ["Spatial Design", "Figma Variables", "Motion UI", "Accessibility"],
-      steps: [
-        { title: "UI/UX Principles for Modern Web & Mobile", status: "upcoming", hours: "10h" },
-        { title: "Micro-interactions & After Effects for UI", status: "upcoming", hours: "10h" },
-        { title: "Spatial Computing Interfaces in Three.js", status: "upcoming", hours: "12h" },
-        { title: "Design Systems Governance & Tokens", status: "upcoming", hours: "8h" }
-      ]
-    }
-  ];
-
-  return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <TopBar title="Learning Paths & Career Tracks" sub="Structured milestone journeys designed for job-ready skill mastery" onBack={back} />
-
-      <div className="tai-col tai-gap16">
-        {TRACKS.map((track) => (
-          <div
-            key={track.id}
-            className="tai-card tai-card-hover"
-            style={{ padding: 22, background: "var(--surface)", border: "1px solid var(--border)" }}
-          >
-            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
-              <div>
-                <Tag tone="primary">{track.category}</Tag>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text)", margin: "8px 0 4px" }}>
-                  {track.title}
-                </h3>
-                <div style={{ fontSize: 12.5, color: "var(--text-3)", fontWeight: 600 }}>
-                  {track.coursesCount} courses • {track.hours} total duration
-                </div>
-              </div>
-
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "var(--primary)" }}>{track.progress}% Complete</div>
-                <div style={{ width: 140, marginTop: 6 }}><ProgressBar value={track.progress} height={7} /></div>
-              </div>
-            </div>
-
-            {/* Skills Pills */}
-            <div className="tai-row tai-gap6 tai-mt12" style={{ flexWrap: "wrap" }}>
-              {track.skills.map((s) => (
-                <span key={s} style={{ fontSize: 11, fontWeight: 700, background: "var(--surface-2)", color: "var(--text-2)", padding: "3px 8px", borderRadius: 6 }}>
-                  {s}
-                </span>
-              ))}
-            </div>
-
-            {/* Step-by-Step Curriculum Roadmap */}
-            <div className="tai-col tai-gap8 tai-mt16" style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 14 }}>
-              {track.steps.map((step, idx) => (
-                <div key={idx} className="tai-row tai-between" style={{ padding: "8px 12px", background: "var(--surface-3)", borderRadius: 10 }}>
-                  <div className="tai-row tai-gap10">
-                    <div style={{
-                      width: 24, height: 24, borderRadius: "50%",
-                      background: step.status === "completed" ? "var(--success-bg)" : step.status === "in_progress" ? "var(--primary-tint)" : "var(--surface-2)",
-                      color: step.status === "completed" ? "var(--success)" : step.status === "in_progress" ? "var(--primary)" : "var(--text-3)",
-                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800
-                    }}>
-                      {step.status === "completed" ? "✓" : idx + 1}
-                    </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{step.title}</span>
-                  </div>
-                  <div className="tai-row tai-gap10">
-                    <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{step.hours}</span>
-                    <span style={{
-                      fontSize: 11, fontWeight: 800, textTransform: "uppercase",
-                      color: step.status === "completed" ? "var(--success)" : step.status === "in_progress" ? "var(--primary)" : "var(--text-3)"
-                    }}>
-                      {step.status === "completed" ? "Completed" : step.status === "in_progress" ? "In Progress" : "Locked"}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="tai-row tai-between tai-mt16" style={{ paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
-              <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Includes Verified Certificate upon completion</span>
-              <button
-                className="tai-btn tai-btn-primary tai-btn-sm"
-                onClick={() => push("courseDetail", { id: "stock-1" })}
-              >
-                {track.progress > 0 ? "Continue Track →" : "Start Learning Path →"}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <LearningPathsScreen push={push} back={back} />;
 }
 
 export function ScheduleView({ push, back }) {
