@@ -169,6 +169,21 @@ export const TOKENS = `
     font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3);
     padding: 14px 10px 6px; margin-top: 4px;
   }
+  /* .ta-iconbtn was already used by admin screens (Learning Paths' reorder and
+     delete controls) but was never defined anywhere in TOKENS, so those
+     buttons fell back to the browser's default button chrome. The new
+     People/Paths/Builder controls lean on it heavily, so it gets a real
+     definition here. */
+  .ta-iconbtn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; flex-shrink: 0;
+    border-radius: 9px; border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-2); cursor: pointer; font-size: 13px; line-height: 1;
+    transition: all .15s ease; padding: 0;
+  }
+  .ta-iconbtn:hover:not(:disabled) { background: var(--surface-2); color: var(--text); border-color: var(--text-3); }
+  .ta-iconbtn:active:not(:disabled) { transform: scale(.94); }
+  .ta-iconbtn:disabled { opacity: .4; cursor: not-allowed; }
   .ta-nav-item {
     display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; cursor: pointer;
     font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .16s ease;
@@ -464,7 +479,23 @@ export const TOKENS = `
   .anim-stagger > *:nth-child(n+7) { animation-delay: .26s; }
 `;
 
-export function Avatar({ initials, size = 36, style = {} }) {
+// `src` support added so the directory can show a member's real avatar_url
+// where one is set and fall back to initials otherwise. Without it the
+// People screen had no way to render a real avatar at all, which is why it
+// was previously generating throwaway stock-photo URLs per table row.
+export function Avatar({ initials, size = 36, style = {}, src }) {
+  const [failed, setFailed] = useState(false);
+  if (src && !failed) {
+    return (
+      <img
+        className="ta-avatar"
+        src={src}
+        alt={initials || "Member"}
+        onError={() => setFailed(true)}
+        style={{ width: size, height: size, objectFit: "cover", flexShrink: 0, ...style }}
+      />
+    );
+  }
   return <div className="ta-avatar" style={{ width: size, height: size, fontSize: size * 0.36, ...style }}>{initials}</div>;
 }
 
@@ -542,20 +573,58 @@ const WORKSPACES = [
   // through the Dashboard Switcher below, not through this list.
 ];
 
+// The admin sidebar is grouped into labelled sections rather than one flat
+// list of thirteen items. Sections and their contents mirror the reference
+// app's AdminShell (Workspace / Analytics / Learning / People / Operations /
+// Platform) - notably Operations, which had no equivalent here at all, and
+// which is where Email Center and Payouts now live.
 const ADMIN_NAV = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "workforce", label: "Workforce Intelligence", icon: Brain },
-  { key: "people", label: "People & Access", icon: Users },
-  { key: "content", label: "Content & Courses", icon: BookOpen },
-  { key: "paths", label: "Learning Paths", icon: Map },
-  { key: "moderation", label: "Content Moderation", icon: Flag },
-  { key: "studygroups", label: "Study Groups", icon: Users },
-  { key: "analytics", label: "Analytics Hub", icon: BarChart3 },
-  { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
-  { key: "compliance", label: "Learner Progress", icon: ShieldCheck },
-  { key: "roleaccess", label: "Role & Access Control", icon: ShieldCheck },
-  { key: "integrations", label: "Integrations", icon: Plug },
-  { key: "settings", label: "Settings Hub", icon: Settings },
+  {
+    section: "Workspace",
+    items: [
+      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { key: "workforce", label: "Workforce Intelligence", icon: Brain },
+    ],
+  },
+  {
+    section: "Learning",
+    items: [
+      { key: "content", label: "Courses", icon: BookOpen },
+      { key: "coursebuilder", label: "Course Builder", icon: Sparkles },
+      { key: "paths", label: "Learning Paths", icon: Map },
+      { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
+      { key: "compliance", label: "Learner Progress", icon: ShieldCheck },
+      { key: "studygroups", label: "Study Groups", icon: Users },
+    ],
+  },
+  {
+    section: "People",
+    items: [
+      { key: "people", label: "Users & Access", icon: Users },
+      { key: "roleaccess", label: "Role & Access Control", icon: ShieldCheck },
+    ],
+  },
+  {
+    section: "Operations",
+    items: [
+      { key: "emails", label: "Email Center", icon: Mail },
+      { key: "payouts", label: "Payouts", icon: Briefcase },
+      { key: "integrations", label: "Integrations", icon: Plug },
+      { key: "moderation", label: "Content Moderation", icon: Flag },
+    ],
+  },
+  {
+    section: "Insights",
+    items: [
+      { key: "analytics", label: "Analytics Hub", icon: BarChart3 },
+    ],
+  },
+  {
+    section: "Platform",
+    items: [
+      { key: "settings", label: "Settings Hub", icon: Settings },
+    ],
+  },
 ];
 
 const MENTOR_NAV = [
@@ -697,7 +766,13 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
 export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, userRoles = ["admin", "mentor", "super_admin"] }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_sidebar_minimized") === "true");
   const allowedWorkspaces = WORKSPACES.filter(w => w.roles.some(r => userRoles.includes(r)));
-  const navItems = NAV_BY_WORKSPACE[workspace] || MENTOR_NAV;
+  // MENTOR_NAV / MANAGER_NAV / SUPERADMIN_NAV are still flat arrays - wrap
+  // them in a single "Navigation" section so one render path handles both
+  // shapes instead of duplicating the nav markup per workspace.
+  const rawNav = NAV_BY_WORKSPACE[workspace] || MENTOR_NAV;
+  const navSections = Array.isArray(rawNav) && rawNav.length && rawNav[0].items
+    ? rawNav
+    : [{ section: "Navigation", items: rawNav }];
 
   const toggleMinimized = () => {
     setIsMinimized(prev => {
@@ -756,24 +831,28 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           })}
         </div>
 
-        {!isMinimized && <div className="ta-nav-section-title">Navigation</div>}
-        <div className="ta-nav">
-          {navItems.map(s => {
-            const Icon = s.icon;
-            const isActive = screen === s.key;
-            return (
-              <div
-                key={s.key}
-                className={`ta-nav-item ${isActive ? "active" : ""}`}
-                onClick={() => { setScreen(s.key); onClose(); }}
-                title={s.label}
-              >
-                <Icon size={17} />
-                <span style={{ flex: 1 }}>{s.label}</span>
-              </div>
-            );
-          })}
-        </div>
+        {navSections.map(group => (
+          <React.Fragment key={group.section}>
+            {!isMinimized && <div className="ta-nav-section-title">{group.section}</div>}
+            <div className="ta-nav">
+              {group.items.map(item => {
+                const Icon = item.icon;
+                const isActive = screen === item.key;
+                return (
+                  <div
+                    key={item.key}
+                    className={`ta-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => { setScreen(item.key); onClose(); }}
+                    title={item.label}
+                  >
+                    <Icon size={17} />
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </React.Fragment>
+        ))}
 
         <div className="ta-nav-footer">
           {onOpenDashboardSwitcher && (

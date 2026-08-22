@@ -1,606 +1,471 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { TopBar, Tag, ProgressBar } from "../components/LearnerUI.jsx";
-import { 
-  Map, Award, BookOpen, Clock, CheckCircle2, Star, 
-  Users, ArrowRight, Sparkles, ChevronRight, Layers, 
-  ShieldCheck, Filter, Search, Play, Check, X, Laptop,
-  Compass, Zap
+import {
+  Map as MapIcon, Route, Lock, CheckCircle2, PlayCircle, Trophy, Clock, BookOpen,
+  ChevronDown, ChevronUp, Plus, X, Compass, Sparkles, ArrowRight, LogOut,
 } from "lucide-react";
-import { PortalModal } from "../../components/common/PortalModal.jsx";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import {
+  resolvePathProgress, enrollInLearningPath, leaveLearningPath, syncLearningPathProgress,
+  fetchAvailableTracks, fetchMyTracks, addMyTrack, removeMyTrack,
+} from "../../lib/api/learner.js";
 
-const TRACK_CATEGORIES = [
-  { id: "all", label: "All Career Tracks" },
-  { id: "ai", label: "AI & Machine Learning" },
-  { id: "design", label: "UI/UX & Spatial Design" },
-  { id: "engineering", label: "Full-Stack & Web Dev" },
-  { id: "cloud", label: "Cloud & DevOps" },
-  { id: "product", label: "Product & Strategy" }
-];
+const STEP_TONE = {
+  completed: { bg: "var(--success-bg)", fg: "var(--success)", label: "Completed" },
+  in_progress: { bg: "var(--primary-tint)", fg: "var(--primary)", label: "In progress" },
+  available: { bg: "var(--surface-2)", fg: "var(--text-2)", label: "Available" },
+  locked: { bg: "var(--surface-2)", fg: "var(--text-3)", label: "Locked" },
+};
 
-export const LEARNING_TRACKS = [
-  {
-    id: "track-ai-product-eng",
-    title: "AI Product Design & Spatial Systems Specialization",
-    category: "design",
-    categoryLabel: "UI/UX & Spatial Design",
-    provider: "Train AI Academy • Apple & Figma Partner",
-    badge: "PROFESSIONAL CERTIFICATE",
-    badgeColor: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
-    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80",
-    description: "Master modern AI design workflows, generative prototyping, vector token pipelines, and visionOS spatial interface design with direct industry certification.",
-    progress: 68,
-    isEnrolled: true,
-    totalHours: "48 Hours",
-    coursesCount: 4,
-    rating: 4.9,
-    reviews: "3,420",
-    enrolledCount: "14.2k",
-    targetRole: "Senior AI Product Designer / Spatial Experience Architect",
-    skills: ["Figma AI", "Design Tokens", "VisionOS Ergonomics", "Spatial Three.js", "Generative UI"],
-    courses: [
-      {
-        id: "course-figma-ai",
-        step: 1,
-        title: "Master Design Systems in Figma with AI",
-        duration: "14 Hours",
-        status: "completed",
-        instructor: "Astrid Larsson",
-        instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 24,
-        description: "Variables 2.0, token aliases, auto-layout 5.0, and AI layout plugins."
-      },
-      {
-        id: "course-spatial-ui",
-        step: 2,
-        title: "Spatial Computing & VisionOS Design Foundations",
-        duration: "14 Hours",
-        status: "in_progress",
-        instructor: "Sarah Connor",
-        instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 18,
-        description: "Depth hierarchies, spatial audio, glassmorphism tokens, and eye-tracking UX."
-      },
-      {
-        id: "course-prompt-pro",
-        step: 3,
-        title: "Generative AI UI Prototyping & Dynamic Interfaces",
-        duration: "10 Hours",
-        status: "upcoming",
-        instructor: "Elena Rostova",
-        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 16,
-        description: "Zero-shot UI prompt schemas, component generation, and real-time state hydration."
-      },
-      {
-        id: "course-fullstack-ai",
-        step: 4,
-        title: "Capstone: Production Enterprise Spatial Design System",
-        duration: "10 Hours",
-        status: "upcoming",
-        instructor: "Alex Rivera",
-        instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 12,
-        description: "Deliver an end-to-end multi-platform design token system evaluated by staff architects."
-      }
-    ]
-  },
-  {
-    id: "track-fullstack-ai-eng",
-    title: "Full-Stack Generative AI Application Architect",
-    category: "ai",
-    categoryLabel: "AI & Machine Learning",
-    provider: "Train AI Engineering Labs • Anthropic & OpenAI",
-    badge: "CAREER TRACK",
-    badgeColor: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80",
-    description: "Build, evaluate, and scale production-grade multi-agent applications with Python FastAPI backends, LangChain orchestration, vector embeddings, and React 19.",
-    progress: 25,
-    isEnrolled: true,
-    totalHours: "56 Hours",
-    coursesCount: 4,
-    rating: 4.9,
-    reviews: "2,890",
-    enrolledCount: "18.6k",
-    targetRole: "Principal AI Engineer / LLM Systems Architect",
-    skills: ["LangChain", "Vector Databases", "FastAPI", "React 19", "Autonomous Agents", "RAG"],
-    courses: [
-      {
-        id: "course-prompt-pro",
-        step: 1,
-        title: "Prompt Engineering & Multi-Modal Foundation Models",
-        duration: "12 Hours",
-        status: "completed",
-        instructor: "Elena Rostova",
-        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 16,
-        description: "Zero-shot, chain-of-thought, function calling JSON schemas, and automated evals."
-      },
-      {
-        id: "course-fullstack-ai",
-        step: 2,
-        title: "Full-Stack AI Application Engineering with React 19",
-        duration: "20 Hours",
-        status: "in_progress",
-        instructor: "Alex Rivera",
-        instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 32,
-        description: "FastAPI REST/WebSocket gateways, Supabase pgvector, and responsive client state."
-      },
-      {
-        id: "course-cloud-devops",
-        step: 3,
-        title: "Enterprise RAG, Vector Search & Knowledge Graphs",
-        duration: "12 Hours",
-        status: "upcoming",
-        instructor: "David Vance",
-        instructorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 18,
-        description: "Hierarchical chunking, re-ranking models, hybrid lexical/dense search."
-      },
-      {
-        id: "course-product-metrics",
-        step: 4,
-        title: "Capstone: Autonomous Multi-Agent Copilot Deployment",
-        duration: "12 Hours",
-        status: "upcoming",
-        instructor: "Marcus Wright",
-        instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 14,
-        description: "Deploy a production-grade multi-agent workflow with observability & tracing."
-      }
-    ]
-  },
-  {
-    id: "track-cloud-devops-mlops",
-    title: "Cloud Infrastructure, Kubernetes & AI MLOps",
-    category: "cloud",
-    categoryLabel: "Cloud & DevOps",
-    provider: "Train AI Cloud Labs • Google Cloud Certified",
-    badge: "INDUSTRY ACCREDITED",
-    badgeColor: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
-    description: "Architect resilient cloud-native infrastructure, Kubernetes clusters, GPU inference pipelines, automated CI/CD releases, and telemetry observability.",
-    progress: 0,
-    isEnrolled: false,
-    totalHours: "42 Hours",
-    coursesCount: 3,
-    rating: 4.8,
-    reviews: "1,420",
-    enrolledCount: "9.3k",
-    targetRole: "Lead MLOps Engineer / Cloud DevOps Architect",
-    skills: ["Kubernetes", "Docker", "GPU Autoscaling", "Prometheus / Grafana", "CI/CD Pipelines"],
-    courses: [
-      {
-        id: "course-cloud-devops",
-        step: 1,
-        title: "Cloud Native Microservices & Docker Containerization",
-        duration: "16 Hours",
-        status: "upcoming",
-        instructor: "David Vance",
-        instructorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 22,
-        description: "Multi-stage Docker builds, image hardening, and container orchestration."
-      },
-      {
-        id: "course-fullstack-ai",
-        step: 2,
-        title: "Kubernetes Clustering & GPU Inference Workloads",
-        duration: "14 Hours",
-        status: "upcoming",
-        instructor: "Alex Rivera",
-        instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 18,
-        description: "Horizontal Pod Autoscalers, Helm charts, and low-latency Triton GPU serving."
-      },
-      {
-        id: "course-product-metrics",
-        step: 3,
-        title: "Telemetry, Distributed Tracing & Continuous Deployment",
-        duration: "12 Hours",
-        status: "upcoming",
-        instructor: "Marcus Wright",
-        instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 16,
-        description: "OpenTelemetry, Grafana dashboards, zero-downtime rolling updates."
-      }
-    ]
-  },
-  {
-    id: "track-product-ai-strategy",
-    title: "AI Product Management, Growth & Data Strategy",
-    category: "product",
-    categoryLabel: "Product & Strategy",
-    provider: "Train AI Executive Education",
-    badge: "EXECUTIVE CERTIFICATE",
-    badgeColor: "linear-gradient(135deg, #EC4899 0%, #8B5CF6 100%)",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
-    description: "Lead AI product transformations, leverage experimentation flywheels, calculate model ROI, and design retention mechanics for AI-powered platforms.",
-    progress: 0,
-    isEnrolled: false,
-    totalHours: "38 Hours",
-    coursesCount: 3,
-    rating: 4.9,
-    reviews: "1,120",
-    enrolledCount: "7.8k",
-    targetRole: "VP of Product / AI Growth Director",
-    skills: ["AI Roadmapping", "Cohort Retention", "A/B Experimentation", "Product-Led Growth", "Model ROI"],
-    courses: [
-      {
-        id: "course-product-metrics",
-        step: 1,
-        title: "Data-Driven Product Management & Growth Flywheels",
-        duration: "14 Hours",
-        status: "upcoming",
-        instructor: "Marcus Wright",
-        instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 20,
-        description: "Cohort retention analysis, pirate metrics (AARRR), and growth experiments."
-      },
-      {
-        id: "course-prompt-pro",
-        step: 2,
-        title: "Evaluating AI Features, Cost Economics & Latency Budgets",
-        duration: "12 Hours",
-        status: "upcoming",
-        instructor: "Elena Rostova",
-        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 16,
-        description: "Token economics, model distillation tradeoffs, and guardrail architectures."
-      },
-      {
-        id: "course-figma-ai",
-        step: 3,
-        title: "Capstone: Enterprise AI Product Strategy Pitch",
-        duration: "12 Hours",
-        status: "upcoming",
-        instructor: "Astrid Larsson",
-        instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 14,
-        description: "Comprehensive product requirements document (PRD) and business case."
-      }
-    ]
-  }
-];
-
-export function LearningPathsScreen({ push, back }) {
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTrack, setSelectedTrack] = useState(null);
-
-  const filteredTracks = LEARNING_TRACKS.filter(track => {
-    const matchesCategory = selectedCategory === "all" || track.category === selectedCategory;
-    const matchesSearch = searchQuery === "" ||
-      track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      track.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      track.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+function PathCard({ path, enrollment, enrollments, onEnroll, onLeave, onOpenCourse, busy }) {
+  const [open, setOpen] = useState(false);
+  const resolved = useMemo(() => resolvePathProgress(path, enrollments), [path, enrollments]);
+  const isEnrolled = !!enrollment;
+  const isComplete = resolved.total > 0 && resolved.completedCount === resolved.total;
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      
-      {/* =========================================================================
-          LEARNING PATHS HERO BANNER
-          ========================================================================= */}
-      <div
-        style={{
-          position: "relative",
-          borderRadius: 20,
-          overflow: "hidden",
-          background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 55%, #312E81 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 32px)",
-          boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
-          border: "1px solid rgba(99, 102, 241, 0.35)"
-        }}
-      >
-        <img
-          src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.28, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 55%, rgba(15,23,42,0.7) 100%)",
-          zIndex: 0
-        }} />
-
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-            <span style={{
-              background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-              border: "1px solid rgba(165, 180, 252, 0.5)",
-              fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-              display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-            }}>
-              <Compass size={13} color="#A5B4FC" /> CAREER ROADMAPS &amp; SPECIALIZATIONS
-            </span>
-            <span style={{
-              background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-              border: "1px solid rgba(16, 185, 129, 0.5)",
-              fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-            }}>
-              ACCREDITED CERTIFICATE INCLUDED
-            </span>
+    <div className="tai-card" style={{ padding: 20, background: "var(--surface)", border: "1px solid var(--border)" }}>
+      <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-start" }}>
+        <div style={{ minWidth: 0, flex: "1 1 260px" }}>
+          <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
+            {path.category && <Tag tone="primary">{path.category}</Tag>}
+            <Tag>{path.level}</Tag>
+            {isComplete && <Tag tone="success">Completed</Tag>}
           </div>
-
-          <h1 style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF" }}>
-            Learning Paths &amp; Career Tracks
-          </h1>
-          <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 640, lineHeight: 1.5 }}>
-            Master job-ready competencies through sequenced, multi-course roadmaps. Complete progressive capstones and earn verified industry certificates.
-          </p>
-
-          {/* Quick Metrics */}
-          <div className="tai-row tai-gap16 tai-mt20" style={{ flexWrap: "wrap" }}>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)" }}>
-              <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>ACTIVE ENROLLED TRACKS</div>
-              <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>2 In Progress</div>
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.15)" }}>
-              <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.7)", fontWeight: 700 }}>TOTAL CURRICULUM</div>
-              <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>180+ Hours • 14 Courses</div>
-            </div>
+          <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", margin: "10px 0 4px", overflowWrap: "anywhere" }}>
+            {path.title}
+          </h3>
+          <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5, overflowWrap: "anywhere" }}>
+            {path.description || "A guided, ordered journey through this organization's courses."}
+          </div>
+          <div className="tai-row tai-gap12 tai-mt10" style={{ flexWrap: "wrap", fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>
+            <span className="tai-row tai-gap6"><BookOpen size={13} /> {resolved.total} course{resolved.total === 1 ? "" : "s"}</span>
+            {resolved.totalHours > 0 && <span className="tai-row tai-gap6"><Clock size={13} /> {resolved.totalHours}h total</span>}
+            {isEnrolled && <span className="tai-row tai-gap6"><CheckCircle2 size={13} /> {resolved.completedCount} of {resolved.total} done</span>}
           </div>
         </div>
+
+        {isEnrolled && (
+          <div style={{ textAlign: "right", minWidth: 150 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--primary)" }}>{resolved.overallProgress}% complete</div>
+            <div style={{ width: 150, marginTop: 6 }}><ProgressBar value={resolved.overallProgress} height={7} /></div>
+          </div>
+        )}
       </div>
 
-      {/* Filter Tabs & Search Bar Strip */}
-      <div className="tai-card" style={{ padding: "14px 18px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
-        <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-          
-          {/* Categories Pills */}
-          <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2 }}>
-            {TRACK_CATEGORIES.map(cat => {
-              const isSelected = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  style={{
-                    padding: "7px 14px",
-                    borderRadius: 99,
-                    border: isSelected ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                    background: isSelected ? "var(--primary)" : "var(--surface)",
-                    color: isSelected ? "#FFFFFF" : "var(--text)",
-                    fontWeight: isSelected ? 800 : 600,
-                    fontSize: 12.5,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                    boxShadow: isSelected ? "0 4px 12px rgba(79, 70, 229, 0.25)" : "none"
-                  }}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Search Input */}
-          <div className="tai-row tai-gap8" style={{ flex: "1 1 240px", maxWidth: 320, minWidth: 200, position: "relative" }}>
-            <Search size={15} color="var(--text-3)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
-            <input
-              type="text"
-              placeholder="Search tracks by skill, title..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: "100%", height: 38, paddingLeft: 36, paddingRight: 12,
-                borderRadius: 10, border: "1.5px solid var(--border)", background: "var(--surface-2)",
-                fontSize: 13, color: "var(--text)", outline: "none"
-              }}
-            />
-          </div>
-
+      {isEnrolled && isComplete && (
+        <div className="tai-row tai-gap8 tai-mt12" style={{ padding: "10px 12px", background: "var(--success-bg)", color: "var(--success)", borderRadius: 12, fontWeight: 700, fontSize: 13 }}>
+          <Trophy size={16} /> Journey complete. Every course in this path is finished.
         </div>
-      </div>
+      )}
 
-      {/* Career Tracks Cards Grid */}
-      <div className="tai-col tai-gap20 anim-stagger">
-        {filteredTracks.map((track) => (
-          <div
-            key={track.id}
-            className="tai-card tai-card-hover"
-            style={{
-              padding: 0,
-              borderRadius: 20,
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              overflow: "hidden",
-              boxShadow: "0 4px 20px -2px rgba(15, 23, 42, 0.05)"
-            }}
+      {resolved.total === 0 && (
+        <div className="tai-mt12" style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+          No courses have been added to this path yet.
+        </div>
+      )}
+
+      {resolved.total > 0 && (
+        <>
+          <button
+            className="tai-btn tai-btn-ghost tai-btn-sm tai-mt12"
+            onClick={() => setOpen((v) => !v)}
+            style={{ paddingLeft: 0 }}
           >
-            {/* Top Banner with Stock Cover Image */}
-            <div style={{ position: "relative", height: 160, width: "100%", overflow: "hidden" }}>
-              <img
-                src={track.image}
-                alt={track.title}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.4) 60%, transparent 100%)" }} />
+            {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            {open ? "Hide roadmap" : `View roadmap (${resolved.total} steps)`}
+          </button>
 
-              <div style={{ position: "absolute", top: 14, left: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ background: track.badgeColor, color: "#FFFFFF", fontSize: 10.5, fontWeight: 800, padding: "4px 10px", borderRadius: 6, letterSpacing: ".03em" }}>
-                  {track.badge}
-                </span>
-                <span style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", color: "#FFFFFF", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6 }}>
-                  {track.coursesCount} Course Series
-                </span>
-              </div>
-
-              <div style={{ position: "absolute", bottom: 12, left: 16, right: 16 }} className="tai-row tai-between">
-                <div style={{ fontSize: 12, color: "#E0E7FF", fontWeight: 700 }}>
-                  {track.provider}
-                </div>
-                <div className="tai-row tai-gap6" style={{ color: "#FDE68A", fontSize: 12, fontWeight: 800 }}>
-                  <Star size={13} fill="#F59E0B" color="#F59E0B" /> {track.rating} ({track.reviews} ratings)
-                </div>
-              </div>
-            </div>
-
-            {/* Track Content Body */}
-            <div style={{ padding: "20px 24px" }}>
-              
-              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12, alignItems: "flex-start" }}>
-                <div style={{ flex: 1, minWidth: 260 }}>
-                  <h3 style={{ fontSize: 19, fontWeight: 900, color: "var(--text)", margin: "0 0 6px", lineHeight: 1.3 }}>
-                    {track.title}
-                  </h3>
-                  <p style={{ fontSize: 13.5, color: "var(--text-2)", margin: 0, lineHeight: 1.5 }}>
-                    {track.description}
-                  </p>
-                </div>
-
-                {track.isEnrolled && (
-                  <div style={{ textAlign: "right", minWidth: 140 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "var(--primary)" }}>{track.progress}% Track Progress</div>
-                    <div style={{ width: 140, marginTop: 6 }}>
-                      <ProgressBar value={track.progress} height={7} />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Skills Tags */}
-              <div className="tai-row tai-gap6 tai-mt14" style={{ flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: "var(--text-3)", marginRight: 4 }}>Skills Covered:</span>
-                {track.skills.map((skill, idx) => (
-                  <span key={idx} style={{ background: "var(--surface-2)", color: "var(--text-2)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, border: "1px solid var(--border)" }}>
-                    {skill}
-                  </span>
-                ))}
-              </div>
-
-              {/* Step-by-Step Curriculum Roadmap */}
-              <div className="tai-col tai-gap8 tai-mt16" style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: 2 }}>
-                  Curriculum Sequence ({track.coursesCount} Milestone Modules)
-                </div>
-
-                {track.courses.map((course, idx) => (
+          {open && (
+            <div className="tai-mt12" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {resolved.steps.map((step, idx) => {
+                const tone = STEP_TONE[step.status] || STEP_TONE.locked;
+                const canOpen = step.isUnlocked;
+                return (
                   <div
-                    key={course.id || idx}
-                    className="tai-row tai-between"
+                    key={step.pathCourseId || step.id}
+                    className="tai-card"
                     style={{
-                      padding: "10px 14px",
-                      background: course.status === "in_progress" ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)",
-                      borderRadius: 12,
-                      border: course.status === "in_progress" ? "1.5px solid var(--primary)" : "1px solid var(--border)"
+                      padding: "12px 14px",
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--border)",
+                      opacity: step.isUnlocked ? 1 : 0.7,
                     }}
                   >
-                    <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: "50%",
-                        background: course.status === "completed" ? "#10B981" : course.status === "in_progress" ? "var(--primary)" : "var(--surface-3)",
-                        color: course.status === "upcoming" ? "var(--text-3)" : "#FFFFFF",
-                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0
-                      }}>
-                        {course.status === "completed" ? <Check size={14} /> : idx + 1}
+                    <div className="tai-row tai-between" style={{ gap: 10, flexWrap: "wrap" }}>
+                      <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
+                        <div
+                          style={{
+                            width: 28,
+                            height: 28,
+                            borderRadius: "50%",
+                            background: tone.bg,
+                            color: tone.fg,
+                            display: "grid",
+                            placeItems: "center",
+                            fontSize: 12,
+                            fontWeight: 800,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {step.isCompleted ? <CheckCircle2 size={16} /> : !step.isUnlocked ? <Lock size={14} /> : idx + 1}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", overflowWrap: "anywhere" }}>
+                            {step.title}
+                          </div>
+                          <div className="tai-row tai-gap8" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, flexWrap: "wrap" }}>
+                            {step.hours ? <span>{step.hours}h</span> : null}
+                            {step.level ? <span style={{ textTransform: "capitalize" }}>{step.level}</span> : null}
+                            {!step.isRequired && <span>Optional</span>}
+                            {step.unlockRule === "manual" && <span>Open anytime</span>}
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {course.title}
-                        </div>
-                        <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>
-                          {course.instructor} • {course.lessonsCount} lessons • {course.duration}
-                        </div>
+                      <div className="tai-row tai-gap10" style={{ flexShrink: 0 }}>
+                        {step.progress > 0 && !step.isCompleted && (
+                          <div style={{ width: 70 }}><ProgressBar value={step.progress} height={5} /></div>
+                        )}
+                        <span style={{ fontSize: 10.5, fontWeight: 800, textTransform: "uppercase", color: tone.fg, letterSpacing: 0.3 }}>
+                          {tone.label}
+                        </span>
+                        {clickable && <ArrowRight size={13} color="var(--text-3)" />}
                       </div>
                     </div>
-
-                    <div className="tai-row tai-gap10" style={{ flexShrink: 0 }}>
-                      <Tag tone={course.status === "completed" ? "success" : course.status === "in_progress" ? "primary" : "default"}>
-                        {course.status === "completed" ? "COMPLETED" : course.status === "in_progress" ? "IN PROGRESS" : "UPCOMING"}
-                      </Tag>
-                    </div>
+                    {idx < resolved.steps.length - 1 && (
+                      <div style={{ display: "flex", justifyContent: "center", padding: "2px 0" }}>
+                        <ChevronDown size={14} color="var(--text-3)" />
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-
-              {/* Card Footer Actions */}
-              <div className="tai-row tai-between tai-mt18" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-                <div className="tai-row tai-gap6" style={{ fontSize: 12.5, color: "var(--text-3)", fontWeight: 600 }}>
-                  <ShieldCheck size={16} color="#10B981" />
-                  <span>Target Outcome: <strong>{track.targetRole}</strong></span>
-                </div>
-
-                <div className="tai-row tai-gap10">
-                  <button
-                    className="tai-btn tai-btn-outline tai-btn-sm"
-                    onClick={() => setSelectedTrack(track)}
-                  >
-                    View Syllabus Details
-                  </button>
-                  <button
-                    className="tai-btn tai-btn-primary tai-btn-sm"
-                    style={{ padding: "8px 18px", fontWeight: 800 }}
-                    onClick={() => {
-                      const firstActiveCourse = track.courses.find(c => c.status === "in_progress") || track.courses[0];
-                      push("courseDetail", { id: firstActiveCourse.id });
-                    }}
-                  >
-                    {track.isEnrolled ? "Continue Track →" : "Start Learning Path →"}
-                  </button>
-                </div>
-              </div>
-
+                );
+              })}
             </div>
+          )}
+        </>
+      )}
+
+      <div className="tai-row tai-between tai-mt16" style={{ paddingTop: 12, borderTop: "1px solid var(--border-subtle)", gap: 10, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
+          {isEnrolled
+            ? resolved.nextStep ? `Up next: ${resolved.nextStep.title}` : "Nothing left to unlock"
+            : "Enroll to track your progress through this path"}
+        </span>
+        <div className="tai-row tai-gap8">
+          {isEnrolled && (
+            <button className="tai-btn tai-btn-ghost tai-btn-sm" disabled={busy} onClick={() => onLeave(path)} title="Leave this path">
+              <LogOut size={13} /> Leave
+            </button>
+          )}
+          {isEnrolled ? (
+            <button
+              className="tai-btn tai-btn-primary tai-btn-sm"
+              disabled={!resolved.nextStep}
+              onClick={() => resolved.nextStep && onOpenCourse(resolved.nextStep.id)}
+            >
+              <PlayCircle size={14} /> {resolved.completedCount > 0 ? "Continue path" : "Start first course"}
+            </button>
+          ) : (
+            <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={busy || resolved.total === 0} onClick={() => onEnroll(path)}>
+              <Route size={14} /> Start this journey
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TracksTab({ userId, showToast, onOpenCourses }) {
+  const availableQuery = useSupabaseQuery(async () => fetchAvailableTracks(), []);
+  const myTracksQuery = useSupabaseQuery(async () => (userId ? fetchMyTracks(userId) : []), [userId]);
+  const available = availableQuery.data || [];
+  const myTracks = myTracksQuery.data || [];
+  const [customTrack, setCustomTrack] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const followed = new Set(myTracks.map((t) => (t || "").toLowerCase()));
+  const addable = available.filter((t) => !followed.has(t.name.toLowerCase()));
+
+  async function handleAdd(name) {
+    if (!userId) { showToast("Sign in to add a track."); return; }
+    setBusy(true);
+    try {
+      const res = await addMyTrack(userId, name);
+      showToast(res.success ? `${name} added to your tracks.` : res.error);
+      if (res.success) myTracksQuery.refetch();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleRemove(name) {
+    setBusy(true);
+    try {
+      const res = await removeMyTrack(userId, name);
+      showToast(res.success ? `${name} removed from your tracks.` : res.error);
+      if (res.success) myTracksQuery.refetch();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="tai-col tai-gap16">
+      <div className="tai-card" style={{ padding: 20 }}>
+        <div className="tai-row tai-gap8">
+          <Compass size={17} color="var(--primary)" />
+          <div style={{ fontWeight: 800, fontSize: 15 }}>My tracks</div>
+        </div>
+        <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+          Tracks shape your recommendations and the focus area shown on your home screen. Add as many as you like.
+        </div>
+
+        {myTracksQuery.loading && <div className="tai-mt12" style={{ fontSize: 12.5, color: "var(--text-3)" }}>Loading your tracks...</div>}
+        {!myTracksQuery.loading && myTracks.length === 0 && (
+          <div className="tai-mt12" style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+            You're not following any track yet. Add one below and your recommendations start following it.
           </div>
+        )}
+        {myTracks.length > 0 && (
+          <div className="tai-row tai-gap8 tai-mt12" style={{ flexWrap: "wrap" }}>
+            {myTracks.map((t) => (
+              <span
+                key={t}
+                className="tai-row tai-gap6"
+                style={{
+                  background: "var(--primary-tint)", color: "var(--primary)", borderRadius: 999,
+                  padding: "6px 8px 6px 12px", fontSize: 12.5, fontWeight: 700,
+                }}
+              >
+                {t}
+                <button
+                  className="tai-iconbtn"
+                  disabled={busy}
+                  onClick={() => handleRemove(t)}
+                  aria-label={`Remove ${t}`}
+                  style={{ width: 20, height: 20, background: "transparent", border: "none", color: "inherit", cursor: "pointer" }}
+                >
+                  <X size={13} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="tai-card" style={{ padding: 20 }}>
+        <div className="tai-row tai-gap8">
+          <Sparkles size={17} color="var(--primary)" />
+          <div style={{ fontWeight: 800, fontSize: 15 }}>Add a track</div>
+        </div>
+        <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+          Every track below is backed by real published courses in the catalog.
+        </div>
+
+        {availableQuery.loading && <div className="tai-mt12" style={{ fontSize: 12.5, color: "var(--text-3)" }}>Loading tracks...</div>}
+        {!availableQuery.loading && available.length === 0 && (
+          <div className="tai-mt12" style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+            No tracks are available yet. Tracks come from course categories, so they appear here once courses are published with one.
+          </div>
+        )}
+        {!availableQuery.loading && available.length > 0 && addable.length === 0 && (
+          <div className="tai-mt12" style={{ fontSize: 12.5, color: "var(--text-3)" }}>
+            You're following every available track.
+          </div>
+        )}
+
+        {addable.length > 0 && (
+          <div className="tai-col tai-gap8 tai-mt12">
+            {addable.map((t) => (
+              <div key={t.name} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, gap: 10, flexWrap: "wrap" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>{t.name}</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                    {t.courses} course{t.courses === 1 ? "" : "s"}{t.hours ? ` • ${t.hours}h of content` : ""}
+                  </div>
+                  {(t.courseTitles || []).length > 0 && (
+                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 3, overflowWrap: "anywhere" }}>
+                      {t.courseTitles.slice(0, 3).join(" • ")}{t.courseTitles.length > 3 ? " • ..." : ""}
+                    </div>
+                  )}
+                </div>
+                <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={busy} onClick={() => handleAdd(t.name)}>
+                  <Plus size={13} /> Add track
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="tai-mt16" style={{ paddingTop: 14, borderTop: "1px solid var(--border-subtle)" }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700 }}>Or name your own</div>
+          <div className="tai-row tai-gap8 tai-mt8" style={{ flexWrap: "wrap" }}>
+            <input
+              className="tai-input"
+              style={{ flex: "1 1 200px", minWidth: 0 }}
+              placeholder="e.g. Machine Learning Ops"
+              value={customTrack}
+              onChange={(e) => setCustomTrack(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && customTrack.trim()) { handleAdd(customTrack.trim()); setCustomTrack(""); } }}
+            />
+            <button
+              className="tai-btn tai-btn-outline tai-btn-sm"
+              disabled={busy || !customTrack.trim()}
+              onClick={() => { handleAdd(customTrack.trim()); setCustomTrack(""); }}
+            >
+              <Plus size={13} /> Add
+            </button>
+          </div>
+        </div>
+
+        <button className="tai-btn tai-btn-ghost tai-btn-sm tai-mt12" onClick={onOpenCourses} style={{ paddingLeft: 0 }}>
+          Browse the course catalog <ArrowRight size={13} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function LearningPathsScreen({
+  session, push, back, showToast,
+  pathsQuery, pathEnrollmentsQuery, enrollments = [],
+}) {
+  const userId = session?.user?.id || null;
+  const [tab, setTab] = useState("paths");
+  const [busy, setBusy] = useState(false);
+
+  const paths = pathsQuery?.data || [];
+  const pathEnrollments = pathEnrollmentsQuery?.data || [];
+  const enrollmentByPath = useMemo(
+    () => Object.fromEntries(pathEnrollments.map((e) => [e.path_id, e])),
+    [pathEnrollments]
+  );
+
+  // Keep each enrolled path's stored row in step with the learner's real
+  // course completions. Nothing did this before, so current_course_index and
+  // status stayed frozen at their insert-time values forever. Guarded by a
+  // ref so a re-render never turns this into a write loop.
+  const syncedRef = useRef({});
+  useEffect(() => {
+    if (!userId || !paths.length) return;
+    for (const path of paths) {
+      const enrollment = enrollmentByPath[path.id];
+      if (!enrollment) continue;
+      const resolved = resolvePathProgress(path, enrollments);
+      if (!resolved.total) continue;
+      const isComplete = resolved.completedCount === resolved.total;
+      const nextIndex = isComplete
+        ? resolved.total
+        : resolved.steps.findIndex((s) => !s.isCompleted);
+      const signature = `${nextIndex}:${isComplete}`;
+      const alreadyStored = `${enrollment.current_course_index}:${enrollment.status === "completed"}`;
+      if (signature === alreadyStored) continue;
+      if (syncedRef.current[path.id] === signature) continue;
+      syncedRef.current[path.id] = signature;
+      syncLearningPathProgress(userId, path.id, { currentIndex: nextIndex, isComplete });
+    }
+  }, [userId, paths, enrollments, enrollmentByPath]);
+
+  async function handleEnroll(path) {
+    if (!userId) { showToast("Sign in to start a learning path."); return; }
+    setBusy(true);
+    try {
+      await enrollInLearningPath(userId, path.id);
+      showToast(`You've started "${path.title}".`);
+      pathEnrollmentsQuery?.refetch?.();
+    } catch (e) {
+      showToast(e?.message || "Could not start this path.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleLeave(path) {
+    if (!userId) return;
+    setBusy(true);
+    try {
+      const res = await leaveLearningPath(userId, path.id);
+      showToast(res.success ? `You've left "${path.title}".` : res.error);
+      if (res.success) {
+        delete syncedRef.current[path.id];
+        pathEnrollmentsQuery?.refetch?.();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const enrolledCount = paths.filter((p) => enrollmentByPath[p.id]).length;
+
+  return (
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <TopBar
+        title="Learning Paths & Tracks"
+        sub="Guided, ordered course journeys plus the tracks you choose to follow"
+        onBack={back}
+      />
+
+      <div className="tai-row tai-gap8" style={{ flexWrap: "wrap" }}>
+        {[
+          { k: "paths", label: `Learning paths${paths.length ? ` (${paths.length})` : ""}` },
+          { k: "tracks", label: "My tracks" },
+        ].map((t) => (
+          <button
+            key={t.k}
+            className={`tai-btn tai-btn-sm ${tab === t.k ? "tai-btn-primary" : "tai-btn-outline"}`}
+            onClick={() => setTab(t.k)}
+          >
+            {t.label}
+          </button>
         ))}
       </div>
 
-      {/* Detailed Track Modal */}
-      {selectedTrack && (
-        <PortalModal isOpen={true} onClose={() => setSelectedTrack(null)} title={selectedTrack.title}>
-          <div style={{ padding: "6px 0" }}>
-            <div style={{ position: "relative", height: 140, borderRadius: 14, overflow: "hidden", marginBottom: 16 }}>
-              <img src={selectedTrack.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%)" }} />
-              <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, color: "#fff" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#A5B4FC" }}>{selectedTrack.provider}</div>
-                <div style={{ fontSize: 16, fontWeight: 900 }}>{selectedTrack.title}</div>
+      {tab === "paths" && (
+        <div className="tai-col tai-gap16">
+          {enrolledCount > 0 && (
+            <div style={{ fontSize: 12.5, color: "var(--text-3)", fontWeight: 600 }}>
+              You're enrolled in {enrolledCount} of {paths.length} path{paths.length === 1 ? "" : "s"}.
+            </div>
+          )}
+
+          {pathsQuery?.loading && (
+            <div className="tai-card" style={{ padding: 24, textAlign: "center", fontSize: 13, color: "var(--text-3)" }}>
+              Loading learning paths...
+            </div>
+          )}
+
+          {!pathsQuery?.loading && paths.length === 0 && (
+            <div className="tai-card" style={{ padding: 32, textAlign: "center" }}>
+              <MapIcon size={30} color="var(--text-3)" style={{ opacity: 0.5 }} />
+              <div style={{ fontSize: 14, fontWeight: 700, marginTop: 10 }}>No learning paths published yet</div>
+              <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 4 }}>
+                Your organization's admins build these. In the meantime, pick a track below or browse the catalog.
               </div>
-            </div>
-
-            <p style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.5, margin: "0 0 16px" }}>
-              {selectedTrack.description}
-            </p>
-
-            <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text)", marginBottom: 8 }}>Included Courses:</div>
-            <div className="tai-col tai-gap8" style={{ maxHeight: 260, overflowY: "auto" }}>
-              {selectedTrack.courses.map((c, i) => (
-                <div
-                  key={c.id || i}
-                  style={{ padding: "10px 12px", background: "var(--surface-2)", borderRadius: 10, border: "1px solid var(--border)" }}
-                >
-                  <div className="tai-row tai-between">
-                    <span style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>Module {i + 1}: {c.title}</span>
-                    <Tag tone="primary">{c.duration}</Tag>
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>{c.description}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="tai-row tai-between tai-mt20" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
-              <button className="tai-btn tai-btn-outline tai-btn-sm" onClick={() => setSelectedTrack(null)}>Close</button>
-              <button
-                className="tai-btn tai-btn-primary tai-btn-sm"
-                onClick={() => {
-                  const targetCourse = selectedTrack.courses.find(c => c.status === "in_progress") || selectedTrack.courses[0];
-                  setSelectedTrack(null);
-                  push("courseDetail", { id: targetCourse.id });
-                }}
-              >
-                Launch Track Curriculum →
+              <button className="tai-btn tai-btn-outline tai-btn-sm tai-mt12" onClick={() => setTab("tracks")}>
+                <Compass size={14} /> Choose a track instead
               </button>
             </div>
-          </div>
-        </PortalModal>
+          )}
+
+          {paths.map((path) => (
+            <PathCard
+              key={path.id}
+              path={path}
+              enrollment={enrollmentByPath[path.id]}
+              enrollments={enrollments}
+              onEnroll={handleEnroll}
+              onLeave={handleLeave}
+              onOpenCourse={(courseId) => push("courseDetail", { id: courseId })}
+              busy={busy}
+            />
+          ))}
+        </div>
       )}
 
+      {tab === "tracks" && (
+        <TracksTab userId={userId} showToast={showToast} onOpenCourses={() => push("courses")} />
+      )}
     </div>
   );
 }

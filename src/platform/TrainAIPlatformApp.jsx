@@ -8,6 +8,8 @@ import { AdminDashboardScreen } from "./admin/AdminDashboardScreen.jsx";
 import { PeopleScreen } from "./admin/PeopleScreen.jsx";
 import { ContentScreen } from "./admin/ContentScreen.jsx";
 import { LearningPathsScreen } from "./admin/LearningPathsScreen.jsx";
+import { EmailCenterScreen } from "./admin/EmailCenterScreen.jsx";
+import { PayoutsScreen } from "./admin/PayoutsScreen.jsx";
 import { WorkforceIntelligenceScreen } from "./admin/WorkforceIntelligenceScreen.jsx";
 import { ModerationScreen } from "./admin/ModerationScreen.jsx";
 import { AdminStudyGroupsScreen } from "./admin/AdminStudyGroupsScreen.jsx";
@@ -182,9 +184,15 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
               {workspace === "admin" && (
                 <>
                   {screen === "dashboard" && <AdminDashboardScreen orgId={effectiveOrgId} profileQuery={profileQuery} setScreen={setScreen} orgSelector={orgSelector} isPlatformOwner={userRoles.includes("super_admin")} />}
-                  {screen === "people" && <PeopleScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
+                  {screen === "people" && <PeopleScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "paths" && <LearningPathsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
+                  {/* Course Builder is its own Learning nav entry - same
+                      ContentScreen, mounted with the builder wizard already
+                      open. */}
+                  {screen === "coursebuilder" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} openBuilderOnMount />}
+                  {screen === "emails" && <EmailCenterScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
+                  {screen === "payouts" && <PayoutsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "moderation" && <ModerationScreen orgSelector={orgSelector} setScreen={setScreen} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
                   {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}

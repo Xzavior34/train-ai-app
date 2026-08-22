@@ -540,7 +540,7 @@ export async function fetchPublishedLearningPaths(organizationId) {
   if (!supabase) return [];
   let query = supabase
     .from("learning_paths")
-    .select("*, learning_path_courses(*, courses(id, title, duration_hours))")
+    .select("*, learning_path_courses(*, courses(id, title, description, level, category, duration_hours, cover_image_url))")
     .eq("is_published", true)
     .order("created_at", { ascending: false });
   if (organizationId) query = query.eq("organization_id", organizationId);
@@ -556,11 +556,200 @@ export async function fetchPublishedLearningPaths(organizationId) {
       .sort((a, b) => a.order_index - b.order_index)
       .map((pc) => ({
         id: pc.course_id,
+        pathCourseId: pc.id,
         title: pc.courses?.title || "Course",
+        description: pc.courses?.description || "",
+        level: pc.courses?.level || null,
+        category: pc.courses?.category || null,
+        coverImageUrl: pc.courses?.cover_image_url || null,
         hours: pc.courses?.duration_hours || 0,
         isRequired: pc.is_required !== false,
+        // These two real columns were dropped by this mapper, which is why a
+        // "guided" path rendered as a flat list with nothing gated - the
+        // learner side had no rule to evaluate in the first place.
+        unlockRule: pc.unlock_rule || "complete_previous",
+        prerequisiteCourseIds: pc.prerequisite_course_ids || [],
+        orderIndex: pc.order_index ?? 0,
       })),
   }));
+}
+
+/**
+ * Resolves one path's steps against a learner's real course progress and
+ * returns each step's completed / unlocked / progress state.
+ *
+ * Unlock semantics follow the schema's two real columns:
+ *   - unlock_rule = "complete_previous": step N opens once step N-1 is done
+ *   - prerequisite_course_ids: every listed course must be complete
+ *   - anything else (including a null rule): open
+ * The first step is always open, otherwise a new path is unstartable.
+ */
+export function resolvePathProgress(path, enrollments = []) {
+  const byCourse = new Map();
+  for (const e of enrollments || []) {
+    byCourse.set(e.course_id, {
+      progress: e.progress_percentage || 0,
+      completed: !!e.completed_at || (e.progress_percentage || 0) >= 100,
+    });
+  }
+  const steps = (path?.courses || []).map((c, idx, all) => {
+    const own = byCourse.get(c.id);
+    const isCompleted = !!own?.completed;
+    let isUnlocked = true;
+    if (c.unlockRule === "complete_previous" && idx > 0) {
+      const prev = all[idx - 1];
+      isUnlocked = !!byCourse.get(prev.id)?.completed;
+    } else if ((c.prerequisiteCourseIds || []).length > 0) {
+      isUnlocked = c.prerequisiteCourseIds.every((id) => !!byCourse.get(id)?.completed);
+    }
+    if (idx === 0) isUnlocked = true;
+    return {
+      ...c,
+      isCompleted,
+      isUnlocked,
+      isEnrolled: byCourse.has(c.id),
+      progress: own?.progress || 0,
+      status: isCompleted ? "completed" : own && own.progress > 0 ? "in_progress" : isUnlocked ? "available" : "locked",
+    };
+  });
+  const total = steps.length;
+  const completedCount = steps.filter((s) => s.isCompleted).length;
+  const totalHours = steps.reduce((sum, s) => sum + (Number(s.hours) || 0), 0);
+  return {
+    steps,
+    total,
+    completedCount,
+    totalHours,
+    overallProgress: total > 0 ? Math.round((completedCount / total) * 100) : 0,
+    nextStep: steps.find((s) => s.isUnlocked && !s.isCompleted) || null,
+  };
+}
+
+/* --------------------------------------------------------------------------
+   Learning tracks a learner picks for themselves.
+
+   `user_personalization.learning_tracks` is a real text[] column that
+   onboarding writes once and nothing in the app could ever change again -
+   a learner had no way to add a track, drop one, or even see which ones were
+   on their profile, despite the home screen reading the first entry to label
+   their focus area. These functions are that missing surface.
+
+   Track names are course categories - the same aggregate the admin-side
+   fetchLearningTracksSummary derives its Learning Tracks list from - so a
+   track a learner adds always maps to real, browsable courses rather than a
+   free-text label with nothing behind it.
+   -------------------------------------------------------------------------- */
+
+export async function fetchAvailableTracks() {
+  if (!supabase) {
+    return [
+      { name: "Data & AI", courses: 6, hours: 24, courseTitles: ["AI Fundamentals"] },
+      { name: "Design & UX", courses: 4, hours: 16, courseTitles: [] },
+      { name: "Leadership", courses: 3, hours: 12, courseTitles: ["Leadership Essentials"] },
+      { name: "Compliance", courses: 2, hours: 5, courseTitles: ["Workplace Compliance 101"] },
+    ];
+  }
+  const { data, error } = await supabase
+    .from("courses")
+    .select("id, title, category, duration_hours")
+    .eq("is_published", true)
+    .is("archived_at", null);
+  if (error) { console.warn("Available tracks fetch warning:", error); return []; }
+  const byCategory = new Map();
+  for (const c of data || []) {
+    const name = (c.category || "").trim();
+    if (!name) continue;
+    const bucket = byCategory.get(name) || { name, courses: 0, hours: 0, courseTitles: [] };
+    bucket.courses += 1;
+    bucket.hours += Number(c.duration_hours) || 0;
+    if (bucket.courseTitles.length < 6) bucket.courseTitles.push(c.title);
+    byCategory.set(name, bucket);
+  }
+  return [...byCategory.values()].sort((a, b) => b.courses - a.courses);
+}
+
+export async function fetchMyTracks(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from("user_personalization")
+    .select("learning_tracks")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) { console.warn("My tracks fetch warning:", error); return []; }
+  return data?.learning_tracks || [];
+}
+
+// Upsert, not update: a learner who skipped onboarding has no
+// user_personalization row at all, and a plain update against a missing row
+// succeeds while changing nothing - exactly the silent no-op that would make
+// an "Add track" button look wired up while doing nothing.
+export async function addMyTrack(userId, trackName) {
+  if (!supabase || !userId) return { success: false, error: "Not signed in." };
+  const name = (trackName || "").trim();
+  if (!name) return { success: false, error: "Pick a track first." };
+  try {
+    const current = await fetchMyTracks(userId);
+    if (current.some((t) => (t || "").toLowerCase() === name.toLowerCase())) {
+      return { success: false, error: `You're already following ${name}.` };
+    }
+    const next = [...current, name];
+    const { error } = await supabase
+      .from("user_personalization")
+      .upsert({ user_id: userId, learning_tracks: next }, { onConflict: "user_id" });
+    if (error) throw error;
+    return { success: true, tracks: next };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not add this track." };
+  }
+}
+
+export async function removeMyTrack(userId, trackName) {
+  if (!supabase || !userId) return { success: false, error: "Not signed in." };
+  try {
+    const current = await fetchMyTracks(userId);
+    const next = current.filter((t) => t !== trackName);
+    const { error } = await supabase
+      .from("user_personalization")
+      .upsert({ user_id: userId, learning_tracks: next }, { onConflict: "user_id" });
+    if (error) throw error;
+    return { success: true, tracks: next };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not remove this track." };
+  }
+}
+
+// Leaving a path. enrollInLearningPath had no counterpart, so a learner who
+// started a journey by mistake was stuck with it on their dashboard forever.
+export async function leaveLearningPath(userId, pathId) {
+  if (!supabase || !userId || !pathId) return { success: false, error: "Missing path." };
+  const { error } = await supabase
+    .from("learning_path_enrollments")
+    .delete()
+    .eq("user_id", userId)
+    .eq("path_id", pathId);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+// Keeps the enrollment row honest as a learner works through a path:
+// current_course_index drives "resume where I left off", and status /
+// completed_at are what dashboard and certificate checks read. Nothing ever
+// updated this row after the initial insert, so every enrollment stayed at
+// index 0 / in_progress permanently, even for a finished journey.
+export async function syncLearningPathProgress(userId, pathId, { currentIndex, isComplete } = {}) {
+  if (!supabase || !userId || !pathId) return;
+  const patch = { updated_at: new Date().toISOString() };
+  if (Number.isFinite(currentIndex)) patch.current_course_index = currentIndex;
+  if (isComplete !== undefined) {
+    patch.status = isComplete ? "completed" : "in_progress";
+    patch.completed_at = isComplete ? new Date().toISOString() : null;
+  }
+  const { error } = await supabase
+    .from("learning_path_enrollments")
+    .update(patch)
+    .eq("user_id", userId)
+    .eq("path_id", pathId);
+  if (error) console.warn("Path progress sync warning:", error);
 }
 
 export async function fetchMyLearningPathEnrollments(userId) {

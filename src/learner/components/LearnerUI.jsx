@@ -1077,9 +1077,14 @@ export function QuickWinCard({ title, duration, points, onClick }) {
   );
 }
 
-export function LearningPathsView({ push, back }) {
-  return <LearningPathsScreen push={push} back={back} />;
-}
+// LearningPathsView used to live here: a hardcoded three-entry TRACKS array
+// with invented progress percentages, invented step lists and a button that
+// sent every learner to the same stock course id. It is replaced by
+// learner/screens/LearningPathsScreen.jsx, which reads the real
+// learning_paths / learning_path_courses / learning_path_enrollments tables
+// the admin path builder writes to, evaluates each step's real unlock rule
+// against the learner's own course completions, and lets a learner add and
+// drop their own tracks (user_personalization.learning_tracks).
 
 export function ScheduleView({ push, back }) {
   const SESSIONS = [

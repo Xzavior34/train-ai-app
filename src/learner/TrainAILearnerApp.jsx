@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../lib/useAuth.js";
 import { useLearnerData } from "./hooks/useLearnerData.js";
-import { TOKENS, BottomNav, DesktopSidebar, LearnerHeader, LearningPathsView, ScheduleView, timeAgo, NotificationBellContext } from "./components/LearnerUI.jsx";
+import { TOKENS, BottomNav, DesktopSidebar, LearnerHeader, ScheduleView, timeAgo, NotificationBellContext } from "./components/LearnerUI.jsx";
+import { LearningPathsScreen } from "./screens/LearningPathsScreen.jsx";
 import { SearchBar } from "./components/SearchBar.jsx";
 import { fetchOrgAISettings, fetchOrgLeaderboardSettings, fetchOrgGamificationSettings } from "../lib/api/organizations.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
@@ -19,7 +20,6 @@ import { AchievementsScreen } from "./screens/AchievementsScreen.jsx";
 import { LeaderboardScreen } from "./screens/LeaderboardScreen.jsx";
 import { BookmarksScreen } from "./screens/BookmarksScreen.jsx";
 import { MyProgressScreen } from "./screens/MyProgressScreen.jsx";
-import { LearningPathsScreen } from "./screens/LearningPathsScreen.jsx";
 import { CreditsCheckoutScreen } from "./screens/CreditsCheckoutScreen.jsx";
 import { PaymentCallbackScreen } from "./screens/PaymentCallbackScreen.jsx";
 import { useCredits } from "./hooks/useCredits.js";
@@ -186,6 +186,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     gamificationStatsQuery, achievementsQuery, streakActivityQuery, leaderboardQuery, enrollmentsQuery, lessonProgressQuery,
     userProfileQuery, handleToggleBookmark,
     newlyEarnedAchievements, clearNewlyEarnedAchievements,
+    // Both of these were already fetched by useLearnerData and returned
+    // here, then never destructured or passed anywhere - the Learning Paths
+    // screen they exist for was rendering a hardcoded array instead. They
+    // now reach the real screen.
+    learningPathsQuery, pathEnrollmentsQuery,
   } = learnerData;
 
   // Celebrate a newly-unlocked achievement the moment useLearnerData()
@@ -909,7 +914,15 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                 <MyProgressScreen user={user} courses={courses} push={push} back={back} session={session} showToast={showToast} />
               )}
               {screen === "learningPaths" && (
-                <LearningPathsScreen push={push} back={back} />
+                <LearningPathsScreen
+                  session={session}
+                  push={push}
+                  back={back}
+                  showToast={showToast}
+                  pathsQuery={learningPathsQuery}
+                  pathEnrollmentsQuery={pathEnrollmentsQuery}
+                  enrollments={enrollmentsQuery.data || []}
+                />
               )}
               {screen === "schedule" && (
                 <ScheduleView push={push} back={back} />

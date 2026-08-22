@@ -1079,6 +1079,10 @@ export async function fetchLearningPathsAdmin() {
     title: p.title,
     description: p.description,
     level: p.level_label || "beginner",
+    // Real column, previously dropped on the floor by this mapper as well as
+    // by create/update - so the admin list had no category to show even for
+    // paths where one was set directly in the database.
+    category: p.category || null,
     isPublished: !!p.is_published,
     courseIds: (p.learning_path_courses || [])
       .sort((a, b) => a.order_index - b.order_index)
@@ -1090,35 +1094,68 @@ export async function fetchLearningPathsAdmin() {
   }));
 }
 
-export async function createLearningPath({ title, description, level, courseIds }, organizationId, createdBy) {
+export async function createLearningPath({ title, description, level, category, courseIds, isPublished = true }, organizationId, createdBy) {
   if (!supabase) return null;
   const { data: path, error } = await supabase
     .from("learning_paths")
-    .insert({ title, description, level_label: level, organization_id: organizationId, created_by: createdBy, is_published: true })
+    .insert({
+      title,
+      description,
+      level_label: level,
+      // `category` is a real learning_paths column that create/update never
+      // wrote, so a category set in the UI silently vanished on save - and
+      // the learner-facing path catalog groups on exactly that column.
+      category: category || null,
+      organization_id: organizationId,
+      created_by: createdBy,
+      is_published: !!isPublished,
+    })
     .select()
     .single();
   if (error) throw error;
   if (courseIds?.length) {
-    const rows = courseIds.map((cid, i) => ({ path_id: path.id, course_id: cid, order_index: i }));
+    // unlock_rule/is_required are written explicitly so a path created here
+    // behaves as a guided sequential journey straight away. They were left
+    // null before, which the learner-side unlock logic reads as "no rule"
+    // and therefore unlocks every step at once.
+    const rows = courseIds.map((cid, i) => ({ path_id: path.id, course_id: cid, order_index: i, unlock_rule: "complete_previous", is_required: true }));
     const { error: pcErr } = await supabase.from("learning_path_courses").insert(rows);
     if (pcErr) throw pcErr;
   }
   return path;
 }
 
-export async function updateLearningPath(id, { title, description, level, courseIds }) {
+export async function updateLearningPath(id, { title, description, level, category, courseIds }) {
   if (!supabase) return;
+  const patch = { title, description, level_label: level };
+  if (category !== undefined) patch.category = category || null;
   const { error } = await supabase
     .from("learning_paths")
-    .update({ title, description, level_label: level })
+    .update(patch)
     .eq("id", id);
   if (error) throw error;
-  // Same replace-all-rows strategy as lessons: the path builder always
-  // submits the complete, reordered course list.
+  // Same replace-all-rows strategy as lessons: this path *does* always
+  // submit the complete, reordered course list. Per-step edits that must
+  // preserve unlock_rule/is_required go through updatePathCourse instead.
+  const { data: existingRows } = await supabase
+    .from("learning_path_courses")
+    .select("course_id, unlock_rule, is_required, prerequisite_course_ids")
+    .eq("path_id", id);
+  // Carry each step's existing rule forward across the replace, so
+  // reordering or renaming a path no longer quietly resets every unlock
+  // rule back to the default.
+  const prior = Object.fromEntries((existingRows || []).map((r) => [r.course_id, r]));
   const { error: delErr } = await supabase.from("learning_path_courses").delete().eq("path_id", id);
   if (delErr) throw delErr;
   if (courseIds?.length) {
-    const rows = courseIds.map((cid, i) => ({ path_id: id, course_id: cid, order_index: i }));
+    const rows = courseIds.map((cid, i) => ({
+      path_id: id,
+      course_id: cid,
+      order_index: i,
+      unlock_rule: prior[cid]?.unlock_rule || "complete_previous",
+      is_required: prior[cid]?.is_required !== false,
+      prerequisite_course_ids: prior[cid]?.prerequisite_course_ids || [],
+    }));
     const { error: insErr } = await supabase.from("learning_path_courses").insert(rows);
     if (insErr) throw insErr;
   }
@@ -3803,4 +3840,395 @@ export async function submitPlatformFeedback(userId, { category, message, rating
   } catch (e) {
     return { success: false, error: e?.message || "Could not submit your feedback." };
   }
+}
+
+/* ==========================================================================
+   PEOPLE & ACCESS: full user management
+   --------------------------------------------------------------------------
+   The People screen previously exposed only three real actions per member
+   (suspend/activate, issue certificate, export data). Everything else a
+   directory needs - open a member's record, edit their profile, change their
+   role, move them between cohorts, assign them a course, remove them from
+   the organization, resend or copy an invite link - had no backing function
+   anywhere in this file. These are those functions.
+   ========================================================================= */
+
+// Platform role lives on user_profiles.role (platform_role enum) and is
+// mirrored into user_roles, which is what the role-routing layer
+// (lib/roleRouting.js) and most RLS policies actually read. Writing only one
+// of the two leaves a member who "looks" like an admin in the directory but
+// still lands on the learner dashboard, so both are kept in step here.
+export async function updateUserPlatformRole(userId, role, organizationId) {
+  if (!supabase || !userId || !role) return { success: false, error: "Missing user or role." };
+  try {
+    const { error: profileErr } = await supabase.from("user_profiles").update({ role }).eq("id", userId);
+    if (profileErr) throw profileErr;
+
+    // user_roles is additive by design (a user can legitimately hold more
+    // than one platform role). Replacing the rows this screen manages keeps
+    // the directory's single-role picker honest without clobbering a
+    // super_admin grant, which is issued from Platform Owner, not here.
+    const { data: existing } = await supabase.from("user_roles").select("id, role").eq("user_id", userId);
+    const managed = ["learner", "mentor", "admin", "manager", "hr"];
+    for (const row of existing || []) {
+      if (managed.includes(row.role) && row.role !== role) {
+        await supabase.from("user_roles").delete().eq("id", row.id);
+      }
+    }
+    if (!(existing || []).some((r) => r.role === role)) {
+      const { error: insErr } = await supabase.from("user_roles").insert({ user_id: userId, role });
+      if (insErr && insErr.code !== "23505") throw insErr;
+    }
+
+    // organization_members.role is a *different* enum (org_member_role) with
+    // its own vocabulary - map the platform role onto the closest org role
+    // rather than trying to write an invalid enum value into it.
+    if (organizationId) {
+      const orgRole = role === "admin" ? "admin" : role === "manager" ? "people_manager" : role === "mentor" ? "content_manager" : "member";
+      await supabase.from("organization_members").update({ role: orgRole }).eq("user_id", userId).eq("organization_id", organizationId);
+    }
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not update this member's role." };
+  }
+}
+
+// Admin-side profile edit. Deliberately narrow: the fields an admin has a
+// legitimate reason to correct on someone else's record (name, department,
+// school, bio, reporting line). Never touches role - that goes through
+// updateUserPlatformRole above so both role tables stay in step.
+export async function updateUserProfileAsAdmin(userId, patch = {}) {
+  if (!supabase || !userId) return { success: false, error: "Missing user." };
+  const allowed = {};
+  if (patch.displayName !== undefined) allowed.display_name = patch.displayName;
+  if (patch.department !== undefined) allowed.department = patch.department || null;
+  if (patch.school !== undefined) allowed.school = patch.school || null;
+  if (patch.bio !== undefined) allowed.bio = patch.bio || null;
+  if (patch.managerId !== undefined) allowed.manager_id = patch.managerId || null;
+  if (!Object.keys(allowed).length) return { success: true };
+  const { error } = await supabase.from("user_profiles").update(allowed).eq("id", userId);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+// Removes a member from one organization without deleting their account -
+// distinct from deleteUserCascade (gdprService), which is the destructive
+// erasure path and is only ever reached from a reviewed DSAR request.
+export async function removeOrgMember(userId, organizationId) {
+  if (!supabase || !userId || !organizationId) return { success: false, error: "Missing user or organization." };
+  try {
+    const { error } = await supabase
+      .from("organization_members")
+      .delete()
+      .eq("user_id", userId)
+      .eq("organization_id", organizationId);
+    if (error) throw error;
+    // Drop the denormalised pointer too, otherwise fetchOrgMembers (which
+    // filters on user_profiles.organization_id, not the membership table)
+    // keeps listing them in the directory they were just removed from.
+    await supabase.from("user_profiles").update({ organization_id: null }).eq("id", userId);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not remove this member." };
+  }
+}
+
+// One member's full record, assembled for the directory's detail drawer.
+// Every piece is a real read - no placeholder sections. Individually
+// tolerant of failures so one table the caller's role can't see doesn't
+// blank out the whole drawer.
+export async function fetchUserDetailForAdmin(userId, organizationId) {
+  if (!supabase || !userId) return null;
+  const safe = async (fn, fallback) => { try { return await fn(); } catch { return fallback; } };
+
+  const [profileRes, memberRes, rolesRes, enrollRes, certsRes, cohortRes, statsRes, complianceRes] = await Promise.all([
+    safe(async () => (await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle()).data, null),
+    safe(async () => organizationId
+      ? (await supabase.from("organization_members").select("*").eq("user_id", userId).eq("organization_id", organizationId).maybeSingle()).data
+      : null, null),
+    safe(async () => (await supabase.from("user_roles").select("role").eq("user_id", userId)).data || [], []),
+    safe(async () => (await supabase.from("course_enrollments").select("*, courses(id, title, category, duration_hours)").eq("user_id", userId)).data || [], []),
+    safe(async () => (await supabase.from("certificates").select("*").eq("user_id", userId).order("issued_at", { ascending: false })).data || [], []),
+    safe(async () => (await supabase.from("cohort_members").select("id, cohort_id, cohorts(id, name)").eq("user_id", userId)).data || [], []),
+    safe(async () => (await supabase.from("user_gamification_stats").select("*").eq("user_id", userId).maybeSingle()).data, null),
+    safe(async () => (await supabase.from("compliance_assignments").select("*, courses(title)").eq("user_id", userId).order("due_at", { ascending: true })).data || [], []),
+  ]);
+
+  const enrollments = (enrollRes || []).map((e) => ({
+    id: e.id,
+    courseId: e.course_id,
+    title: e.courses?.title || "Course",
+    category: e.courses?.category || null,
+    progress: e.progress_percentage || 0,
+    completedAt: e.completed_at || null,
+    enrolledAt: e.enrolled_at || e.created_at || null,
+  }));
+  const completed = enrollments.filter((e) => e.completedAt).length;
+  const avgProgress = enrollments.length
+    ? Math.round(enrollments.reduce((s, e) => s + (e.progress || 0), 0) / enrollments.length)
+    : 0;
+
+  return {
+    profile: profileRes,
+    membership: memberRes,
+    roles: (rolesRes || []).map((r) => r.role),
+    enrollments,
+    completedCount: completed,
+    avgProgress,
+    certificates: certsRes || [],
+    cohorts: (cohortRes || []).map((c) => ({ memberRowId: c.id, id: c.cohort_id, name: c.cohorts?.name || "Cohort" })),
+    stats: statsRes,
+    compliance: (complianceRes || []).map((c) => ({
+      id: c.id, title: c.courses?.title || "Course", status: c.status, dueAt: c.due_at, completedAt: c.completed_at,
+    })),
+  };
+}
+
+// Re-issues a pending invitation. There is no "resend" RPC in the schema, so
+// this cancels the stale row and creates a fresh one through the same
+// createInvitation path (edge function first, create_user_invitation RPC as
+// fallback) - which is what actually re-sends the email and mints a new
+// 7-day token, rather than just touching a timestamp on a dead invite.
+export async function resendInvitation(invitation) {
+  if (!supabase || !invitation?.id) return { success: false, error: "Missing invitation." };
+  try {
+    await supabase.from("user_invitations").update({ status: "cancelled" }).eq("id", invitation.id);
+    const row = await createInvitation({
+      email: invitation.email,
+      role: invitation.role || "learner",
+      organizationId: invitation.organization_id,
+      organizationRole: invitation.organization_role || "member",
+    });
+    return { success: true, invitation: row };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not resend this invitation." };
+  }
+}
+
+// The link an admin can copy and hand to someone directly, for when the
+// invite email doesn't arrive (no RESEND_API_KEY configured, spam filter,
+// wrong address). Matches the `?invite=TOKEN` form App.jsx boots
+// AcceptInvitationScreen from.
+export function buildInvitationLink(invitation) {
+  if (!invitation?.token) return null;
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/?invite=${invitation.token}`;
+}
+
+// Moves a member into a cohort, replacing any cohort they were already in
+// when `exclusive` is set (the directory's "Cohort / Track" column shows one
+// cohort per member, so leaving stale rows behind makes that column lie).
+export async function assignMemberToCohort(userId, cohortId, addedBy, { exclusive = true } = {}) {
+  if (!supabase || !userId || !cohortId) return { success: false, error: "Missing member or cohort." };
+  try {
+    const { data: existing } = await supabase.from("cohort_members").select("id, cohort_id").eq("user_id", userId);
+    if ((existing || []).some((r) => r.cohort_id === cohortId)) return { success: true, alreadyMember: true };
+    if (exclusive) {
+      for (const row of existing || []) {
+        await supabase.from("cohort_members").delete().eq("id", row.id);
+      }
+    }
+    const { error } = await supabase
+      .from("cohort_members")
+      .insert({ cohort_id: cohortId, user_id: userId, added_by: addedBy || null });
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not assign this member to the cohort." };
+  }
+}
+
+export async function removeMemberFromCohort(userId, cohortId) {
+  if (!supabase || !userId || !cohortId) return { success: false, error: "Missing member or cohort." };
+  const { error } = await supabase.from("cohort_members").delete().eq("user_id", userId).eq("cohort_id", cohortId);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+// Real numbers for the People screen's KPI row. Two of those four tiles used
+// to be hardcoded ("92%" avg attendance, "24" top achievers) - identical for
+// every organization and never moving. There is still no attendance or
+// session-checkin data anywhere in this schema, so that tile is reported as
+// unavailable rather than invented; the other three are computed from real
+// rows.
+export async function fetchOrgPeopleKpis(organizationId) {
+  if (!supabase || !organizationId) {
+    return { totalMembers: 0, activeMembers: 0, suspendedMembers: 0, pendingInvites: 0, topAchievers: 0, avgCompletion: 0, attendanceAvailable: false };
+  }
+  const safe = async (fn, fallback) => { try { return await fn(); } catch { return fallback; } };
+
+  const profiles = await safe(async () => (await supabase.from("user_profiles").select("id").eq("organization_id", organizationId)).data || [], []);
+  const ids = profiles.map((p) => p.id);
+
+  const [members, invites, stats, enrollments] = await Promise.all([
+    safe(async () => (await supabase.from("organization_members").select("user_id, status").eq("organization_id", organizationId)).data || [], []),
+    safe(async () => (await supabase.from("user_invitations").select("id").eq("organization_id", organizationId).eq("status", "pending")).data || [], []),
+    ids.length ? safe(async () => (await supabase.from("user_gamification_stats").select("user_id, total_points").in("user_id", ids)).data || [], []) : [],
+    ids.length ? safe(async () => (await supabase.from("course_enrollments").select("user_id, progress_percentage, completed_at").in("user_id", ids)).data || [], []) : [],
+  ]);
+
+  const active = (members || []).filter((m) => m.status === "active").length;
+  const suspended = (members || []).filter((m) => m.status === "suspended").length;
+  // "Top achievers" = members who have actually earned points this cycle,
+  // ranked by the same total_points the leaderboard uses. A member sitting
+  // on zero points is not an achiever, so they're excluded rather than
+  // counted to pad the number.
+  const topAchievers = (stats || []).filter((s) => (s.total_points || 0) > 0).length;
+  const avgCompletion = (enrollments || []).length
+    ? Math.round((enrollments || []).reduce((s, e) => s + (e.progress_percentage || 0), 0) / enrollments.length)
+    : 0;
+
+  return {
+    totalMembers: ids.length,
+    activeMembers: active,
+    suspendedMembers: suspended,
+    pendingInvites: (invites || []).length,
+    topAchievers,
+    avgCompletion,
+    attendanceAvailable: false,
+  };
+}
+
+/* ==========================================================================
+   LEARNING PATHS: per-course sequencing (builder)
+   --------------------------------------------------------------------------
+   createLearningPath/updateLearningPath above replace the whole
+   learning_path_courses set on every save, which is fine for a plain ordered
+   list but throws away the two columns that make a path a *guided* journey:
+   is_required and unlock_rule. These functions operate on individual rows so
+   the builder can toggle a step's unlock rule or requirement without
+   rewriting the sequence, and so `category` (which the old create/update
+   pair never wrote at all) is persisted.
+   ========================================================================= */
+
+export async function fetchLearningPathById(pathId) {
+  if (!supabase || !pathId) return null;
+  const { data, error } = await supabase.from("learning_paths").select("*").eq("id", pathId).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchLearningPathCourses(pathId) {
+  if (!supabase || !pathId) return [];
+  const { data, error } = await supabase
+    .from("learning_path_courses")
+    .select("*, courses(id, title, level, duration_hours, category, is_published)")
+    .eq("path_id", pathId)
+    .order("order_index", { ascending: true });
+  if (error) throw error;
+  return (data || []).map((pc) => ({
+    id: pc.id,
+    pathId: pc.path_id,
+    courseId: pc.course_id,
+    orderIndex: pc.order_index,
+    isRequired: pc.is_required !== false,
+    unlockRule: pc.unlock_rule || "complete_previous",
+    prerequisiteCourseIds: pc.prerequisite_course_ids || [],
+    course: pc.courses || null,
+  }));
+}
+
+export async function addCourseToPath(pathId, courseId, orderIndex) {
+  if (!supabase || !pathId || !courseId) return null;
+  const { data, error } = await supabase
+    .from("learning_path_courses")
+    .insert({
+      path_id: pathId,
+      course_id: courseId,
+      order_index: Number.isFinite(orderIndex) ? orderIndex : 0,
+      unlock_rule: "complete_previous",
+      is_required: true,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function removeCourseFromPath(pathCourseId) {
+  if (!supabase || !pathCourseId) return;
+  const { error } = await supabase.from("learning_path_courses").delete().eq("id", pathCourseId);
+  if (error) throw error;
+}
+
+export async function updatePathCourse(pathCourseId, patch = {}) {
+  if (!supabase || !pathCourseId) return;
+  const row = {};
+  if (patch.unlockRule !== undefined) row.unlock_rule = patch.unlockRule;
+  if (patch.isRequired !== undefined) row.is_required = !!patch.isRequired;
+  if (patch.orderIndex !== undefined) row.order_index = patch.orderIndex;
+  if (patch.prerequisiteCourseIds !== undefined) row.prerequisite_course_ids = patch.prerequisiteCourseIds;
+  if (!Object.keys(row).length) return;
+  const { error } = await supabase.from("learning_path_courses").update(row).eq("id", pathCourseId);
+  if (error) throw error;
+}
+
+// Swaps two steps' order_index. Written as two explicit updates rather than
+// a bulk upsert because order_index carries no unique constraint here, so
+// there is no transient-collision problem to work around.
+export async function reorderPathCourses(rows) {
+  if (!supabase || !rows?.length) return;
+  for (let i = 0; i < rows.length; i++) {
+    await supabase.from("learning_path_courses").update({ order_index: i }).eq("id", rows[i].id);
+  }
+}
+
+// Path metadata only - leaves the course sequence untouched, unlike
+// updateLearningPath which deliberately replaces it wholesale.
+export async function updateLearningPathMeta(pathId, { title, description, level, category, isPublished } = {}) {
+  if (!supabase || !pathId) return;
+  const patch = {};
+  if (title !== undefined) patch.title = title;
+  if (description !== undefined) patch.description = description || null;
+  if (level !== undefined) patch.level_label = level;
+  if (category !== undefined) patch.category = category || null;
+  if (isPublished !== undefined) patch.is_published = !!isPublished;
+  if (!Object.keys(patch).length) return;
+  const { error } = await supabase.from("learning_paths").update(patch).eq("id", pathId);
+  if (error) throw error;
+}
+
+// How many learners have actually started each path, keyed by path id. The
+// admin list previously showed a course count but nothing about uptake, so
+// an unused path looked identical to the org's most popular one.
+export async function fetchLearningPathEnrollmentCounts() {
+  if (!supabase) return {};
+  const { data, error } = await supabase.from("learning_path_enrollments").select("path_id, status");
+  if (error) { console.warn("Path enrollment count warning:", error); return {}; }
+  const counts = {};
+  for (const row of data || []) {
+    const bucket = counts[row.path_id] || { total: 0, completed: 0 };
+    bucket.total += 1;
+    if (row.status === "completed") bucket.completed += 1;
+    counts[row.path_id] = bucket;
+  }
+  return counts;
+}
+
+// Assigns a whole path to learners by enrolling them in it, so an admin can
+// push a journey out rather than waiting for learners to find it. Uses the
+// same existence check enrollInLearningPath (lib/api/learner.js) uses -
+// learning_path_enrollments has no declared unique constraint to upsert on.
+export async function assignLearningPathToUsers(pathId, userIds) {
+  if (!supabase || !pathId) return { success: false, error: "Missing path." };
+  const ids = [...new Set((userIds || []).filter(Boolean))];
+  if (!ids.length) return { success: false, error: "Select at least one learner." };
+  let enrolled = 0;
+  const failed = [];
+  for (const userId of ids) {
+    try {
+      const { data: existing } = await supabase
+        .from("learning_path_enrollments")
+        .select("id").eq("user_id", userId).eq("path_id", pathId).maybeSingle();
+      if (existing) continue;
+      const { error } = await supabase
+        .from("learning_path_enrollments")
+        .insert({ user_id: userId, path_id: pathId, status: "in_progress", current_course_index: 0 });
+      if (error) throw error;
+      enrolled++;
+    } catch (e) {
+      failed.push({ userId, reason: e?.message || "Could not enroll" });
+    }
+  }
+  return { success: failed.length === 0, enrolled, failed };
 }

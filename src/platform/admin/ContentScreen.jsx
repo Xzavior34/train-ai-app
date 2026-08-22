@@ -2,9 +2,10 @@ import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial, fetchCourseQualityReview, submitCourseQualityReview } from "../../lib/api/platform.js";
+import { fetchCourses, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial, fetchCourseQualityReview, submitCourseQualityReview } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
+import { CourseBuilderWizard } from "./CourseBuilderWizard.jsx";
 
 function GradingRow({ attempt, currentUserId, onOverride }) {
   const [editing, setEditing] = useState(false);
@@ -45,9 +46,14 @@ function GradingRow({ attempt, currentUserId, onOverride }) {
   );
 }
 
-export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId, setSelectedCourseId, currentUserId }) {
+export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId, setSelectedCourseId, currentUserId, openBuilderOnMount = false }) {
   const showToast = useContext(ToastContext);
-  const [activeCourseId, setActiveCourseId] = useState(selectedCourseId || null);
+  // When the sidebar's Course Builder entry is what mounted this screen, start
+  // on the course LIST, not on whatever course was last opened. Without this,
+  // a stale selectedCourseId put the screen into its "Managing: <course>"
+  // branch - and the wizard, which only rendered in the list branch, silently
+  // never appeared, so the nav item looked broken.
+  const [activeCourseId, setActiveCourseId] = useState(openBuilderOnMount ? null : (selectedCourseId || null));
   const [activeTab, setActiveTab] = useState("overview"); // overview, curriculum, learners
 
   // Sync external prop if coming from search click
@@ -57,7 +63,10 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
     }
   }, [selectedCourseId]);
 
-  const [newCourseOpen, setNewCourseOpen] = useState(false);
+  // openBuilderOnMount backs the sidebar's own "Course Builder" entry under
+  // Learning - that nav item lands here with the wizard already open rather
+  // than making someone find the Create button first.
+  const [newCourseOpen, setNewCourseOpen] = useState(openBuilderOnMount);
   const [selectedCourseIds, setSelectedCourseIds] = useState(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
@@ -84,9 +93,9 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
       setBulkActionLoading(false);
     }
   }
-  const [newTitle, setNewTitle] = useState("");
-  const [newCategory, setNewCategory] = useState("Data & AI");
-  const [newCoverImageUrl, setNewCoverImageUrl] = useState("");
+  // newTitle/newCategory/newCoverImageUrl removed: the inline create-course
+  // card that owned them is now the CourseBuilderWizard popup, which holds
+  // its own form state and resets it on close.
 
   const coursesQuery = useSupabaseQuery(async () => fetchCourses(orgId), [orgId]);
   const courses = coursesQuery.data || [];
@@ -1196,43 +1205,24 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
               })}
             </div>
 
-            {newCourseOpen && (
-              <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
-                <div className="ta-title" style={{ fontWeight: 800, fontSize: 18 }}>Create New Course</div>
-                <div className="ta-grid ta-grid-2 ta-mt12 ta-gap12">
-                  <input className="ta-input" placeholder="Course title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)" }} />
-                  <input className="ta-input" placeholder="Category (e.g. Data & AI)..." value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)" }} />
-                </div>
-                <div className="ta-mt12">
-                  <div className="ta-label" style={{ marginBottom: 6, fontSize: 12, fontWeight: 700 }}>Cover image (optional)</div>
-                  <FileUploadZone
-                    bucket="uploads"
-                    pathPrefix="courses/covers"
-                    accept="image/*"
-                    maxSizeMB={5}
-                    label="Drag and drop a cover image, or click to browse"
-                    onUploaded={(url) => setNewCoverImageUrl(url)}
-                  />
-                </div>
-                <div className="ta-row ta-gap8 ta-mt12">
-                  <button className="ta-btn ta-btn-primary" onClick={async () => {
-                    if (!newTitle.trim()) return;
-                    try {
-                      await createCourse({ organizationId: orgId, title: newTitle.trim(), category: newCategory.trim(), status: "published", coverImageUrl: newCoverImageUrl || undefined }, currentUserId);
-                      setNewCourseOpen(false); setNewTitle(""); setNewCoverImageUrl("");
-                      coursesQuery.refetch();
-                      showToast("Course created successfully!");
-                    } catch (err) {
-                      showToast("Failed to create course: " + (err?.message || "Unknown error"));
-                    }
-                  }}>Save & Publish Course</button>
-                  <button className="ta-btn ta-btn-outline" onClick={() => setNewCourseOpen(false)}>Cancel</button>
-                </div>
-              </div>
-            )}
+
           </>
         )}
       </div>
+
+      {/* Creating a course opens the Course Builder wizard as a popup
+          (PortalModal), replacing the three-field inline card that used
+          to sit here and wrote every new course straight out as
+          published with no level, duration, description, curriculum,
+          compliance window or approval setting. */}
+      <CourseBuilderWizard
+        isOpen={newCourseOpen}
+        onClose={() => setNewCourseOpen(false)}
+        orgId={orgId}
+        currentUserId={currentUserId}
+        categorySuggestions={[...new Set((coursesQuery.data || []).map((c) => c.category).filter(Boolean))]}
+        onCreated={() => coursesQuery.refetch()}
+      />
     </div>
   );
 }
