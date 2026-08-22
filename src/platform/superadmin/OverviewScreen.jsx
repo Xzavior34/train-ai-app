@@ -234,7 +234,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       {/* =========================================================================
           ANALYTICS VISUALIZATION & AI CONSUMPTION SPLIT
           ========================================================================= */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         
         {/* Multi-Month Growth Chart */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
@@ -330,7 +330,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       {/* =========================================================================
           TENANT ORGANIZATIONS TABLE & AUDIT STREAM
           ========================================================================= */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         
         {/* Tenant Table */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>

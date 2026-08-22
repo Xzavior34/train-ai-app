@@ -234,7 +234,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
               <div>No learning paths yet. Create one to guide learners through an ordered set of courses.</div>
             </div>
           )}
-          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 16 }}>
           {paths.map((p, idx) => {
             const pathImages = [
               "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",

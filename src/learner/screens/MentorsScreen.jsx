@@ -208,7 +208,7 @@ export function MentorsScreen({
         />
       </div>
 
-      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 20 }}>
         {filteredMentors.length === 0 && (
           <div className="tai-card tai-empty" style={{ gridColumn: "1 / -1", borderRadius: 16 }}>
             No instructors found matching "{searchQuery}".
