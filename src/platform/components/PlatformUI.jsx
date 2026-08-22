@@ -199,17 +199,17 @@ export const TOKENS = `
   .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
   .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 76px; }
   .ta-topbar {
-    height: 72px; border-bottom: 1px solid var(--border); background: var(--surface);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(20px, 2.5vw, 32px); position: sticky; top:0; z-index: 20;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    min-height: 64px; height: auto; border-bottom: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between; padding: 10px clamp(16px, 2.5vw, 32px); position: sticky; top:0; z-index: 20;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03); box-sizing: border-box; width: 100%;
   }
-  .ta-topbar-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; padding-right: 16px; }
+  .ta-topbar-left { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; padding-right: 12px; }
   .ta-topbar-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
   .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 9px 14px; width: clamp(220px, 24vw, 380px); color: var(--text-3); font-size: 13px; transition: all .15s ease; }
   .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); background: #fff; }
   .ta-content { padding: 28px clamp(20px, 2.5vw, 40px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-  .ta-h1 { font-size: 23px; font-weight: 800; letter-spacing: -0.025em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; color: var(--text); }
-  .ta-sub { font-size: 13.5px; color: var(--text-2); margin: 4px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-weight: 500; }
+  .ta-h1 { font-size: clamp(17px, 2vw, 22px); font-weight: 800; letter-spacing: -0.02em; margin: 0; word-break: break-word; color: var(--text); line-height: 1.25; }
+  .ta-sub { font-size: clamp(11.5px, 1.2vw, 13px); color: var(--text-2); margin: 3px 0 0; font-weight: 500; line-height: 1.35; word-break: break-word; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }
@@ -277,14 +277,14 @@ export const TOKENS = `
     .ta-header-full-only { display: none !important; }
     .ta-header-mobile-only { display: block; }
     .ta-topbar {
-      padding: 0 16px; height: 58px; min-height: 58px;
+      padding: 10px 14px; min-height: 56px; height: auto;
       display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: nowrap; box-sizing: border-box; width: 100%;
+      box-sizing: border-box; width: 100%;
     }
-    .ta-topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .ta-topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; padding-right: 8px; }
     .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .ta-profile-pill { padding: 3px !important; }
-    .ta-content { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
+    .ta-content { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
       position: fixed; top: 0; left: 0; z-index: 100;
       transform: translateX(-100%); transition: transform .22s ease;
@@ -298,8 +298,8 @@ export const TOKENS = `
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
-    .ta-h1 { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ta-sub { display: none; }
+    .ta-h1 { font-size: 15px !important; font-weight: 800 !important; line-height: 1.25 !important; word-break: break-word !important; }
+    .ta-sub { display: block !important; font-size: 11px !important; color: var(--text-3) !important; margin-top: 1px !important; line-height: 1.3 !important; word-break: break-word !important; }
     .ta-table-wrap .ta-table { min-width: 460px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
