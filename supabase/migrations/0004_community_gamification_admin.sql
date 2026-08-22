@@ -297,7 +297,7 @@ create table weekly_goal_commitments (
 create table referral_links (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references user_profiles(id) on delete cascade,
-  code text unique not null default encode(gen_random_bytes(4), 'hex'),
+  code text unique not null default encode(extensions.gen_random_bytes(4), 'hex'),
   label text,
   clicks int not null default 0,
   is_active boolean default true,

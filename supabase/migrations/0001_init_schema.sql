@@ -22,6 +22,8 @@
 -- =============================================================================
 
 create extension if not exists pgcrypto;
+set search_path = public, extensions;
+
 
 -- ---------------------------------------------------------------------------
 -- Enums
@@ -131,7 +133,7 @@ create table user_invitations (
   role platform_role not null default 'learner',
   organization_id uuid references organizations(id),
   organization_role org_member_role not null default 'member',
-  token text unique not null default encode(gen_random_bytes(24), 'hex'),
+  token text unique not null default encode(extensions.gen_random_bytes(24), 'hex'),
   status text not null default 'pending',
   invited_by uuid references user_profiles(id),
   expires_at timestamptz not null default (now() + interval '7 days'),
