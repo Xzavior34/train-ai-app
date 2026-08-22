@@ -19,6 +19,7 @@ import { AchievementsScreen } from "./screens/AchievementsScreen.jsx";
 import { LeaderboardScreen } from "./screens/LeaderboardScreen.jsx";
 import { BookmarksScreen } from "./screens/BookmarksScreen.jsx";
 import { MyProgressScreen } from "./screens/MyProgressScreen.jsx";
+import { LearningPathsScreen } from "./screens/LearningPathsScreen.jsx";
 import { CreditsCheckoutScreen } from "./screens/CreditsCheckoutScreen.jsx";
 import { PaymentCallbackScreen } from "./screens/PaymentCallbackScreen.jsx";
 import { useCredits } from "./hooks/useCredits.js";
@@ -908,7 +909,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                 <MyProgressScreen user={user} courses={courses} push={push} back={back} session={session} showToast={showToast} />
               )}
               {screen === "learningPaths" && (
-                <LearningPathsView push={push} back={back} />
+                <LearningPathsScreen push={push} back={back} />
               )}
               {screen === "schedule" && (
                 <ScheduleView push={push} back={back} />
