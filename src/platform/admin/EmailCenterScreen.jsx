@@ -180,8 +180,20 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
         orgSelector={orgSelector}
         onNavigate={setScreen}
         right={
-          <button className="ta-btn ta-btn-outline" onClick={() => campaignsQuery.refetch()}>
-            <RefreshCw size={15} /> Refresh history
+          <button
+            className="ta-btn ta-btn-outline"
+            style={{
+              height: 34,
+              padding: "0 12px",
+              borderRadius: 8,
+              fontSize: 12.5,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5
+            }}
+            onClick={() => campaignsQuery.refetch()}
+          >
+            <RefreshCw size={13} /> Refresh history
           </button>
         }
       />

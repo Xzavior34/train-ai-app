@@ -88,8 +88,20 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
         orgSelector={orgSelector}
         onNavigate={setScreen}
         right={
-          <button className="ta-btn ta-btn-outline" onClick={() => { requestsQuery.refetch(); mentorsQuery.refetch(); }}>
-            <RefreshCw size={15} /> Refresh
+          <button
+            className="ta-btn ta-btn-outline"
+            style={{
+              height: 34,
+              padding: "0 12px",
+              borderRadius: 8,
+              fontSize: 12.5,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5
+            }}
+            onClick={() => { requestsQuery.refetch(); mentorsQuery.refetch(); }}
+          >
+            <RefreshCw size={13} /> Refresh
           </button>
         }
       />
@@ -101,7 +113,7 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
             { label: "Approved / paid", value: paidTotal ? paidTotal.toLocaleString() : "0", hint: "Cleared for withdrawal" },
             { label: "Payouts enabled", value: `${enabledCount}/${mentors.length}`, hint: "Instructors allowed to withdraw" },
           ].map((k) => (
-            <div key={k.label} className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
+            <div key={k.label} className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
               <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>{k.label}</div>
               <div style={{ fontSize: 22, fontWeight: 800, marginTop: 4 }}>{k.value}</div>
               <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{k.hint}</div>

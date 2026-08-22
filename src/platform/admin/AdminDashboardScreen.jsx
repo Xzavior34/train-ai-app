@@ -73,8 +73,8 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   return (
     <div className="ta-fade">
       <TopBar
-        title="Admin Workspace"
-        sub={orgQuery.data?.name || "Overview"}
+        title="Dashboard"
+        sub={orgQuery.data?.name || "Admin Workspace"}
         orgSelector={orgSelector}
         profileQuery={profileQuery}
         onNavigate={setScreen}
