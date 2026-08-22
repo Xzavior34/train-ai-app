@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star, Flame, User, CheckCircle2, Lock, BookOpen, Sparkles, Mail, Sliders, Shield, MessageSquare, Send, Check } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star, Flame, User, CheckCircle2, Lock, BookOpen, Sparkles, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
 import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
@@ -24,9 +24,12 @@ export function ProfileScreen({
   showToast,
   gamificationEnabled = true,
   weeklyGoal = 5,
-  setWeeklyGoal
+  setWeeklyGoal,
+  referralLink = null,
+  referralStats = null
 }) {
   const [activeTab, setActiveTab] = useState("profile");
+  const [copiedReferral, setCopiedReferral] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [notifPrefs, setNotifPrefs] = useState(null);
   const [feedbackText, setFeedbackText] = useState("");
@@ -169,6 +172,7 @@ export function ProfileScreen({
     { key: "notifications", label: "Notifications", icon: Bell },
     { key: "security", label: "Security & Access", icon: Shield },
     { key: "privacy", label: "Privacy & Data", icon: Download },
+    { key: "referrals", label: "Invite & Earn", icon: Gift },
     { key: "feedback", label: "Support & Feedback", icon: MessageSquare },
   ];
 
@@ -644,6 +648,64 @@ export function ProfileScreen({
       {/* =========================================================================
           TAB 6: SUPPORT & FEEDBACK
           ========================================================================= */}
+      {activeTab === "referrals" && (
+        <div className="tai-col tai-gap16 anim-stagger">
+          <div className="tai-card">
+            <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Invite Friends &amp; Earn</h2>
+            <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
+              Share your personal link. When someone signs up through it, it's tracked here.
+            </p>
+
+            {referralLink?.code ? (
+              <>
+                <div className="tai-row tai-gap8" style={{ flexWrap: "wrap" }}>
+                  <input
+                    className="tai-input"
+                    readOnly
+                    value={`${typeof window !== "undefined" ? window.location.origin : ""}/?ref=${referralLink.code}`}
+                    style={{ flex: 1, minWidth: 220, fontSize: 12.5 }}
+                    onFocus={(e) => e.target.select()}
+                  />
+                  <button
+                    type="button"
+                    className="tai-btn tai-btn-primary"
+                    onClick={async () => {
+                      const url = `${window.location.origin}/?ref=${referralLink.code}`;
+                      try {
+                        await navigator.clipboard.writeText(url);
+                        setCopiedReferral(true);
+                        notify("Referral link copied!");
+                        setTimeout(() => setCopiedReferral(false), 2000);
+                      } catch {
+                        notify("Couldn't copy automatically - select and copy the link above.");
+                      }
+                    }}
+                  >
+                    {copiedReferral ? <Check size={15} /> : <Copy size={15} />}
+                    {copiedReferral ? "Copied" : "Copy Link"}
+                  </button>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginTop: 18 }}>
+                  <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+                    <Users size={18} color="var(--primary)" style={{ marginBottom: 6 }} />
+                    <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{referralStats?.signups ?? 0}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, fontWeight: 600 }}>Friends Joined</div>
+                  </div>
+                  <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+                    <Gift size={18} color="var(--primary)" style={{ marginBottom: 6 }} />
+                    <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{referralStats?.clicks ?? 0}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, fontWeight: 600 }}>Link Clicks</div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading your referral link...</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeTab === "feedback" && (
         <div className="tai-col tai-gap16 anim-stagger">
           <div className="tai-card">

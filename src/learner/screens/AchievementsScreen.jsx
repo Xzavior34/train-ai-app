@@ -149,7 +149,11 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
 
   const effectiveAchievements = (achievements && achievements.length > 0) ? achievements : DEFAULT_EARNED;
   const { ceiling, percent } = levelProgress(user.level || 2, user.totalPoints || 450);
-  const earnedIds = new Set(effectiveAchievements.map((a) => a.achievement_id));
+  // Real earned rows carry the catalog slug as achievement_slug (via the
+  // my_achievements_with_slug view - achievement_id itself is a uuid FK
+  // and never matches a catalog id). Demo/default rows already use the
+  // slug directly in achievement_id, so both are checked.
+  const earnedIds = new Set(effectiveAchievements.map((a) => a.achievement_slug || a.achievement_id));
   const locked = ACHIEVEMENT_CATALOG.filter((def) => !earnedIds.has(def.id));
 
   return (
@@ -514,7 +518,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
               {effectiveAchievements.map((a) => {
-                const def = ACHIEVEMENT_CATALOG.find((d) => d.id === a.achievement_id);
+                const def = ACHIEVEMENT_CATALOG.find((d) => d.id === (a.achievement_slug || a.achievement_id));
                 const Icon = iconForCategory(def?.category);
                 return (
                   <div key={a.id} className="tai-card tai-card-hover" style={{ padding: 18, borderRadius: 16, display: "flex", gap: 14, alignItems: "center" }}>

@@ -6,6 +6,7 @@ import {
   GitCompare, Table, School, Handshake, Briefcase, Zap, Sparkles, Flame
 } from "lucide-react";
 import { submitDemoRequest, submitOrganizationInquiry, captureAttributionFromURL } from "../../lib/api/waitlist.js";
+import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
 
 // ============================================================================
 // Copy source: "TRAIN AI - Website Copy & Structure - Master Draft" (New
@@ -204,6 +205,15 @@ export default function LandingPage({ onNavigate }) {
   // mount, before any UTM query params could be lost to navigation within
   // this single-page app.
   useEffect(() => { captureAttributionFromURL(); }, []);
+
+  // Referral link clicks (the "Invite & Earn" panel in ProfileScreen) -
+  // same "capture once on mount before it's lost" reasoning as the UTM
+  // capture above, kept as a separate call since it's a distinct feature
+  // with its own storage key.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) trackReferralClickIfPresent(ref);
+  }, []);
 
   const [demoName, setDemoName] = useState("");
   const [demoEmail, setDemoEmail] = useState("");

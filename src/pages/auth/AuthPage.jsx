@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2 } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
-import { registerOrganization, joinDefaultOrganization } from "../../lib/api/organizations.js";
+import { registerOrganization, joinDefaultOrganization, attributeReferralSignupIfPending } from "../../lib/api/organizations.js";
 
 export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail = "" }) {
   const [mode, setMode] = useState("signin");
@@ -65,6 +65,13 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
       // unchanged from before.
       const signupRole = "learner"; // Manager/Admin/Instructor are always assigned after login via org invitation, never chosen at signup
       const result = await onSignUp(email, password, signupRole, accountType);
+
+      // Attribute this signup to whoever's referral link brought them here
+      // (captured earlier on LandingPage, if any) - best-effort, never
+      // blocks or affects the signup flow itself either way.
+      if (!result?.error && result?.data?.user?.id) {
+        attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
+      }
 
       if (accountType === "organization" && !result?.error) {
         const orgResult = await registerOrganization(orgName);

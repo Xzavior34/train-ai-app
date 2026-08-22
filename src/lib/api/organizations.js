@@ -461,3 +461,63 @@ export async function startSeatPurchasePayment({ orgId, seats, email, provider =
     return { success: false, error: e?.message || "Could not start payment." };
   }
 }
+
+// -----------------------------------------------------------------------
+// Referral link click + signup attribution. The learner-facing "Invite &
+// Earn" panel (ProfileScreen) generates a shareable `?ref=<code>` link;
+// these two functions are the other half - without them the link's click
+// count and "friends joined" stat would just stay at zero forever, which
+// would be its own version of the achievement-system bug (a feature that
+// visibly promises tracking but never actually tracks anything).
+// -----------------------------------------------------------------------
+const REFERRAL_CODE_STORAGE_KEY = "trainai_pending_referral_code";
+
+/**
+ * Call once, on app/landing-page load, with the raw `ref` query param (if
+ * any). Records the click against that referral_links row and remembers
+ * the code locally so it can be attributed to a signup that may happen
+ * minutes later, on a different screen. Safe to call with no code, and
+ * safe to call more than once (best-effort click counting, not exact).
+ */
+export async function trackReferralClickIfPresent(code) {
+  if (!code) return;
+  try {
+    localStorage.setItem(REFERRAL_CODE_STORAGE_KEY, code);
+  } catch { /* ignore - localStorage may be unavailable */ }
+  if (!supabase) return; // demo mode: nothing to persist
+  try {
+    const { data: link } = await supabase.from("referral_links").select("id, clicks").eq("code", code).eq("is_active", true).maybeSingle();
+    if (!link) return;
+    await supabase.from("referral_links").update({ clicks: (link.clicks || 0) + 1 }).eq("id", link.id);
+  } catch (e) {
+    console.warn("Could not record referral click:", e);
+  }
+}
+
+/**
+ * Call once, right after a new account is created. If a referral code was
+ * captured earlier in this browser (trackReferralClickIfPresent), records
+ * the attributed signup and clears the stored code either way so it's
+ * never applied twice.
+ */
+export async function attributeReferralSignupIfPending(newUserId) {
+  let code = null;
+  try {
+    code = localStorage.getItem(REFERRAL_CODE_STORAGE_KEY);
+    localStorage.removeItem(REFERRAL_CODE_STORAGE_KEY);
+  } catch { /* ignore */ }
+  if (!code || !newUserId || !supabase) return;
+  try {
+    const { data: link } = await supabase.from("referral_links").select("id, user_id").eq("code", code).eq("is_active", true).maybeSingle();
+    if (!link || link.user_id === newUserId) return; // no self-referrals
+    await supabase.from("referral_signups").insert({
+      referrer_user_id: link.user_id,
+      referred_user_id: newUserId,
+      referral_code: code,
+      referral_link_id: link.id,
+      signup_completed: true,
+    });
+  } catch (e) {
+    console.warn("Could not attribute referral signup:", e);
+  }
+}
