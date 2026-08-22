@@ -85,7 +85,15 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
         sub="Connect webhooks for platform events"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={<button className="ta-btn ta-btn-primary" onClick={() => setFormOpen((v) => !v)}><Plus size={15} /> New webhook</button>}
+        right={
+          <button
+            className="ta-btn ta-btn-primary"
+            style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+            onClick={() => setFormOpen((v) => !v)}
+          >
+            <Plus size={14} /> New webhook
+          </button>
+        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================

@@ -263,7 +263,12 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   <span>Status: <strong style={{ color: "var(--text-1)" }}>{org?.status || "trial"}</strong></span>
                   <span>Max users: <strong style={{ color: "var(--text-1)" }}>{org?.max_users ?? "N/A"}</strong></span>
                 </div>
-                <button className="ta-btn ta-btn-primary ta-mt16" onClick={handleSave} disabled={saving || !orgName.trim()}>
+                <button
+                  className="ta-btn ta-btn-primary ta-mt16"
+                  style={{ height: 36, padding: "0 16px", borderRadius: 8, fontSize: 13 }}
+                  onClick={handleSave}
+                  disabled={saving || !orgName.trim()}
+                >
                   {saving ? "Saving..." : "Save profile"}
                 </button>
               </div>

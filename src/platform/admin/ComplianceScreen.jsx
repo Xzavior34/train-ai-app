@@ -153,19 +153,31 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
         orgSelector={orgSelector}
         onNavigate={setScreen}
         right={
-          <div className="ta-row ta-gap8">
-            <button className="ta-btn ta-btn-outline" onClick={handleExportCompliance}>
-              <Download size={14} /> Export Report
+          <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+            <button
+              className="ta-btn ta-btn-outline"
+              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+              onClick={handleExportCompliance}
+            >
+              <Download size={13} /> Export Report
             </button>
-            <button className="ta-btn ta-btn-primary" onClick={async () => {
-              if (!orgId) return;
-              await refreshComplianceStatus(orgId);
-              complianceQuery.refetch();
-              showToast("Compliance audit refreshed!");
-            }}>
-              <RefreshCw size={14} /> Refresh Audit
+            <button
+              className="ta-btn ta-btn-outline"
+              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+              onClick={async () => {
+                if (!orgId) return;
+                await refreshComplianceStatus(orgId);
+                complianceQuery.refetch();
+                showToast("Compliance audit refreshed!");
+              }}
+            >
+              <RefreshCw size={13} /> Refresh Audit
             </button>
-            <button className="ta-btn ta-btn-primary" onClick={() => setShowAssignModal(true)}>
+            <button
+              className="ta-btn ta-btn-primary"
+              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+              onClick={() => setShowAssignModal(true)}
+            >
               <Plus size={14} /> Assign Course
             </button>
           </div>

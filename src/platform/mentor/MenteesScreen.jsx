@@ -36,7 +36,14 @@ function LearnerNotesSection({ learnerId, orgId, authorId }) {
       <div className="ta-row ta-gap8"><StickyNote size={15} color="var(--primary)" /><div style={{ fontWeight: 700, fontSize: 13.5 }}>Feedback notes</div></div>
       <div className="ta-row ta-gap8 ta-mt10">
         <input className="ta-input" style={{ flex: 1 }} placeholder="Add a note about this learner..." value={noteText} onChange={(e) => setNoteText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddNote()} />
-        <button className="ta-btn ta-btn-primary ta-btn-sm" disabled={saving || !noteText.trim()} onClick={handleAddNote}>Add</button>
+        <button
+          className="ta-btn ta-btn-primary ta-btn-sm"
+          style={{ height: 32, padding: "0 12px", borderRadius: 8, fontSize: 12.5 }}
+          disabled={saving || !noteText.trim()}
+          onClick={handleAddNote}
+        >
+          Add
+        </button>
       </div>
       <div className="ta-col ta-gap8 ta-mt10">
         {notesQuery.loading && <div style={{ fontSize: 12, color: "var(--text-3)" }}>Loading notes...</div>}

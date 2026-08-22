@@ -180,15 +180,29 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                 <List size={14} />
               </button>
             </div>
-            <button className="ta-btn ta-btn-outline" onClick={() => setShowBilling((v) => !v)}>
-              <CreditCard size={15} /> {showBilling ? "Hide billing" : "Billing"}
+            <button
+              className="ta-btn ta-btn-outline"
+              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+              onClick={() => setShowBilling((v) => !v)}
+            >
+              <CreditCard size={13} /> {showBilling ? "Hide billing" : "Billing"}
             </button>
             {onLaunchOnboarding && (
-              <button className="ta-btn ta-btn-outline" onClick={onLaunchOnboarding}>
-                <Rocket size={15} /> Set up new organization
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={onLaunchOnboarding}
+              >
+                <Rocket size={13} /> Set up new organization
               </button>
             )}
-            <button className="ta-btn ta-btn-primary" onClick={() => setNewOrgOpen(true)}><Plus size={15} /> Create organization</button>
+            <button
+              className="ta-btn ta-btn-primary"
+              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+              onClick={() => setNewOrgOpen(true)}
+            >
+              <Plus size={14} /> Create organization
+            </button>
           </div>
         }
       />

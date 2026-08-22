@@ -141,12 +141,17 @@ export function EmailsScreen() {
             )}
           </div>
 
-          <button className="ta-btn ta-btn-primary ta-mt12" disabled={!canSend || sending} onClick={handleSend}>
-            <Send size={15} /> {sending ? "Sending..." : "Broadcast email"}
+          <button
+            className="ta-btn ta-btn-primary ta-mt12"
+            style={{ height: 36, padding: "0 16px", borderRadius: 8, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+            disabled={!canSend || sending}
+            onClick={handleSend}
+          >
+            <Send size={14} /> {sending ? "Sending..." : "Broadcast email"}
           </button>
 
           {lastResult && (
-            <div className="ta-card ta-mt12" style={{ background: "var(--surface-2)", padding: 12 }}>
+            <div className="ta-card ta-mt12" style={{ background: "var(--surface-2)", padding: 12, borderRadius: 8 }}>
               <div style={{ fontSize: 12.5, fontWeight: 700 }}>Last broadcast result</div>
               <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
                 {lastResult.email_sent ?? 0} emailed · {lastResult.in_app_sent ?? 0} in-app · {lastResult.push_sent ?? 0} push queued · {lastResult.failed ?? 0} failed (of {lastResult.total_recipients ?? 0} total)
@@ -161,7 +166,11 @@ export function EmailsScreen() {
               <Mail size={16} color="var(--primary)" />
               <div className="ta-title">Campaign History</div>
             </div>
-            <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => campaignsQuery.refetch()}>
+            <button
+              className="ta-btn ta-btn-ghost ta-btn-sm"
+              style={{ height: 30, padding: "0 10px", borderRadius: 6, fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5 }}
+              onClick={() => campaignsQuery.refetch()}
+            >
               <RefreshCw size={13} /> Refresh
             </button>
           </div>

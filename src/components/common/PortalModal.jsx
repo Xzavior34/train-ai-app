@@ -118,7 +118,7 @@ export function PortalModal({
           width: "100%",
           maxHeight: "calc(100dvh - 32px)",
           overflowY: "auto",
-          borderRadius: 24,
+          borderRadius: 16,
           padding: "clamp(18px, 2.5vw, 28px)",
           boxSizing: "border-box",
           position: "relative",

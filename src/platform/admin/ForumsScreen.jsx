@@ -91,7 +91,15 @@ export function ForumsScreen({ orgSelector, setScreen }) {
         sub={selectedForum ? "Moderate threads in this category" : "Manage discussion categories and moderate threads"}
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={!selectedForum && <button className="ta-btn ta-btn-primary" onClick={openCreate}><Plus size={15} /> New category</button>}
+        right={!selectedForum && (
+          <button
+            className="ta-btn ta-btn-primary"
+            style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+            onClick={openCreate}
+          >
+            <Plus size={14} /> New category
+          </button>
+        )}
       />
       <div className="ta-content">
         {!selectedForum && (

@@ -6,7 +6,7 @@ export function Avatar({ initials = "U", size = 36, style = {} }) {
     <div
       style={{
         width: size, height: size, borderRadius: "50%",
-        background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
+        background: "#4F46E5",
         color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
         fontWeight: 700, fontSize: size * 0.36, flexShrink: 0, ...style
       }}
@@ -23,7 +23,7 @@ export function ProgressBar({ value = 0, height = 7 }) {
       <div
         style={{
           width: `${safeVal}%`, height, borderRadius: 99,
-          background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
+          background: "#4F46E5",
           transition: "width .4s ease"
         }}
       />

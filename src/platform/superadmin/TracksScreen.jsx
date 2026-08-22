@@ -31,7 +31,7 @@ export function TracksScreen() {
               <div
                 key={t.id}
                 className="ta-card ta-card-hover"
-                style={{ cursor: "pointer", padding: "18px 20px", borderRadius: 16, border: "1px solid var(--border)" }}
+                style={{ cursor: "pointer", padding: "18px 20px", borderRadius: 12, border: "1px solid var(--border)" }}
                 onClick={() => setExpanded(isOpen ? null : t.id)}
               >
                 <div className="ta-row ta-between" style={{ gap: 8, alignItems: "center" }}>

@@ -171,9 +171,9 @@ export default function AccessibilityPanel({ onClose }) {
           type="button"
           onClick={onClose}
           style={{
-            marginTop: 22, width: "100%", border: "none", cursor: "pointer", borderRadius: 14, fontWeight: 700,
-            fontSize: 14, padding: "13px 18px", color: "#fff",
-            background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)"
+            marginTop: 22, width: "100%", border: "none", cursor: "pointer", borderRadius: 8, fontWeight: 700,
+            fontSize: 14, padding: "11px 18px", color: "#fff",
+            background: "#4F46E5"
           }}
         >
           Done

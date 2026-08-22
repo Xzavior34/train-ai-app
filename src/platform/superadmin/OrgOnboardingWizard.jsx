@@ -59,7 +59,7 @@ function StepIndicator({ stepIndex }) {
                 width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 12, fontWeight: 700,
-                background: i < stepIndex ? "var(--success)" : i === stepIndex ? "var(--grad)" : "var(--surface-2)",
+                background: i < stepIndex ? "var(--success)" : i === stepIndex ? "#4F46E5" : "var(--surface-2)",
                 color: i <= stepIndex ? "#fff" : "var(--text-3)",
               }}
             >
@@ -76,7 +76,7 @@ function StepIndicator({ stepIndex }) {
 
 function SummaryRow({ icon: Icon, label, done, value }) {
   return (
-    <div className="ta-row ta-between" style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 12, gap: 10, flexWrap: "wrap" }}>
+    <div className="ta-row ta-between" style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 8, gap: 10, flexWrap: "wrap" }}>
       <div className="ta-row ta-gap10" style={{ flexShrink: 0 }}>
         <Icon size={16} color="var(--primary)" />
         <span style={{ fontWeight: 700, fontSize: 13 }}>{label}</span>

@@ -66,8 +66,14 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
         orgSelector={orgSelector}
         onNavigate={setScreen}
         right={
-          <button className="ta-btn ta-btn-outline" onClick={handleExport} disabled={!trend.length || !canExport} title={!canExport ? `Requires ${minTierLabelFor("analytics_export")} plan` : undefined}>
-            {!canExport && <Lock size={13} />} <Download size={15} /> Export CSV
+          <button
+            className="ta-btn ta-btn-outline"
+            style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+            onClick={handleExport}
+            disabled={!trend.length || !canExport}
+            title={!canExport ? `Requires ${minTierLabelFor("analytics_export")} plan` : undefined}
+          >
+            {!canExport && <Lock size={12} />} <Download size={13} /> Export CSV
           </button>
         }
       />

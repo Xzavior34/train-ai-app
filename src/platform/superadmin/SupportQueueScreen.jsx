@@ -105,7 +105,13 @@ export function SupportQueueScreen({ currentUserId }) {
 
               <div className="ta-row ta-gap8 ta-mt12">
                 <input className="ta-input" style={{ flex: 1 }} placeholder="Reply to this ticket..." value={replyText} onChange={(e) => setReplyText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleReply()} />
-                <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleReply}>Send</button>
+                <button
+                  className="ta-btn ta-btn-primary"
+                  style={{ height: 34, padding: "0 14px", borderRadius: 8, fontSize: 12.5 }}
+                  onClick={handleReply}
+                >
+                  Send
+                </button>
               </div>
               <label className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 11.5, cursor: "pointer", color: "var(--text-2)" }}>
                 <input type="checkbox" checked={isInternal} onChange={(e) => setIsInternal(e.target.checked)} />

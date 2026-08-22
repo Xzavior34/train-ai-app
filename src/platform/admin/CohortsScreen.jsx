@@ -18,7 +18,15 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
         title="Cohort Management" sub="Active learning batches & timeline progress"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={<button className="ta-btn ta-btn-primary" onClick={() => setNewCohortOpen(true)}><Plus size={15} /> Create cohort</button>}
+        right={
+          <button
+            className="ta-btn ta-btn-primary"
+            style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+            onClick={() => setNewCohortOpen(true)}
+          >
+            <Plus size={14} /> Create cohort
+          </button>
+        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================

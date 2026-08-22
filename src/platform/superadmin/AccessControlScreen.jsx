@@ -271,7 +271,12 @@ export function AccessControlScreen() {
               onChange={(e) => setGrantEmail(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleGrant()}
             />
-            <button className="ta-btn ta-btn-primary" disabled={granting || !grantEmail.trim()} onClick={handleGrant}>
+            <button
+              className="ta-btn ta-btn-primary"
+              style={{ height: 34, padding: "0 14px", borderRadius: 8, fontSize: 12.5 }}
+              disabled={granting || !grantEmail.trim()}
+              onClick={handleGrant}
+            >
               {granting ? "Granting..." : "Grant Super Admin"}
             </button>
           </div>

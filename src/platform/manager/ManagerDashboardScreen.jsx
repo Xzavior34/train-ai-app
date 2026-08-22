@@ -72,7 +72,24 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
       <TopBar
         title={`My Team${profileQuery?.data?.display_name ? `: ${profileQuery.data.display_name}` : ""}`}
         sub="Progress and compliance for your direct reports"
-        right={<button className="ta-btn ta-btn-outline" onClick={handleDownloadReport} disabled={reports.length === 0}><Download size={14} /> Download Report</button>}
+        right={
+          <button
+            className="ta-btn ta-btn-outline"
+            style={{
+              height: 34,
+              padding: "0 12px",
+              borderRadius: 8,
+              fontSize: 12.5,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5
+            }}
+            onClick={handleDownloadReport}
+            disabled={reports.length === 0}
+          >
+            <Download size={13} /> Download Report
+          </button>
+        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================

@@ -50,15 +50,15 @@ function MiniSwitch({ on, onChange, disabled }) {
 }
 
 const primaryBtnStyle = {
-  border: "none", cursor: "pointer", borderRadius: 12, fontWeight: 700, fontSize: 12.5, padding: "9px 14px",
-  background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)", color: "#fff"
+  border: "none", cursor: "pointer", borderRadius: 8, fontWeight: 700, fontSize: 12.5, padding: "9px 14px",
+  background: "#4F46E5", color: "#fff"
 };
 const outlineBtnStyle = {
-  border: "1.5px solid #E6E9F5", cursor: "pointer", borderRadius: 12, fontWeight: 700, fontSize: 12.5,
+  border: "1.5px solid #E6E9F5", cursor: "pointer", borderRadius: 8, fontWeight: 700, fontSize: 12.5,
   padding: "9px 14px", background: "transparent", color: "#10142A"
 };
 const ghostBtnStyle = {
-  border: "none", cursor: "pointer", borderRadius: 12, fontWeight: 700, fontSize: 12.5, padding: "9px 14px",
+  border: "none", cursor: "pointer", borderRadius: 8, fontWeight: 700, fontSize: 12.5, padding: "9px 14px",
   background: "#EEF2FF", color: "#4F46E5"
 };
 
