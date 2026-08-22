@@ -3,6 +3,7 @@ import { Avatar, ProgressBar, Tag, CourseThumb } from "../components/LearnerUI.j
 import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
 import { fetchAIInsights } from "../../lib/api/schemaHelper.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 import {
   Bell, GraduationCap, Play, BookOpen, Users, Zap, ChevronRight, Layers, Trophy, Clock, Flame, Target,
   Calendar, CheckCircle2, TrendingUp, BarChart3, AlertCircle, ArrowUpRight, Video, Award, Star, Palette, Lock, Radio,
@@ -91,25 +92,6 @@ export function HomeScreen({
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* Profile + notifications */}
-        <div style={{ position: "absolute", top: 14, right: 14, zIndex: 2, display: "flex", gap: 8 }}>
-          <button
-            className="tai-iconbtn"
-            onClick={() => push("settings")}
-            style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "50%", padding: 2, cursor: "pointer" }}
-          >
-            <Avatar initials={user?.initials || userFirstName?.[0] || "L"} size={26} />
-          </button>
-          <button
-            className="tai-iconbtn"
-            onClick={() => push("notifications")}
-            style={{ position: "relative", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-          >
-            <Bell size={14} color="#fff" />
-            {unreadNotifs > 0 && <span style={{ position: "absolute", top: 3, right: 4, width: 6, height: 6, borderRadius: "50%", background: "var(--danger, #EF4444)" }} />}
-          </button>
-        </div>
-
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="tai-hero-row">
             <div style={{ minWidth: 0, flex: 1 }}>
@@ -356,46 +338,66 @@ export function HomeScreen({
               <span className="tai-link" style={{ fontSize: 12 }} onClick={() => goTab("courses")}>View Catalog</span>
             </div>
 
-            <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
-              {STOCK_COURSES.map((sc) => (
-                <div
-                  key={sc.id}
-                  className="tai-card-hover"
-                  style={{
-                    borderRadius: 8,
-                    overflow: "hidden",
-                    background: "var(--surface-3)",
-                    border: "1px solid var(--border)",
-                    cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column",
-                    transition: "all .2s cubic-bezier(.16,1,.3,1)"
-                  }}
-                  onClick={() => goTab("courses")}
-                >
-                  <div style={{ height: 110, position: "relative" }}>
-                    <img src={sc.image} alt={sc.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <div style={{ position: "absolute", top: 8, left: 8 }}>
-                      <Tag>{sc.category}</Tag>
-                    </div>
-                  </div>
-                  <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)", lineHeight: 1.3 }}>{sc.title}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>
-                        {sc.hours} hours • {sc.lessons} lessons
+            {(() => {
+              const catalogList = (courses && courses.length > 0)
+                ? courses.slice(0, 3).map((c, i) => ({
+                    id: c.id,
+                    title: c.title,
+                    category: c.category || "General",
+                    hours: c.hours || 6,
+                    lessons: c.lessons || 12,
+                    rating: c.rating || 4.9,
+                    image: c.coverImageUrl || c.image || STOCK_COURSES[i % STOCK_COURSES.length].image
+                  }))
+                : (isMockDataEnabled() ? STOCK_COURSES : []);
+
+              if (catalogList.length === 0) {
+                return <div className="tai-empty" style={{ padding: "16px 0", fontSize: 13 }}>No catalog courses published yet.</div>;
+              }
+
+              return (
+                <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
+                  {catalogList.map((sc) => (
+                    <div
+                      key={sc.id}
+                      className="tai-card-hover"
+                      style={{
+                        borderRadius: 8,
+                        overflow: "hidden",
+                        background: "var(--surface-3)",
+                        border: "1px solid var(--border)",
+                        cursor: "pointer",
+                        display: "flex",
+                        flexDirection: "column",
+                        transition: "all .2s cubic-bezier(.16,1,.3,1)"
+                      }}
+                      onClick={() => push("courseDetail", { id: sc.id })}
+                    >
+                      <div style={{ height: 110, position: "relative" }}>
+                        <img src={sc.image} alt={sc.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <div style={{ position: "absolute", top: 8, left: 8 }}>
+                          <Tag>{sc.category}</Tag>
+                        </div>
+                      </div>
+                      <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)", lineHeight: 1.3 }}>{sc.title}</div>
+                          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>
+                            {sc.hours} hours • {sc.lessons} lessons
+                          </div>
+                        </div>
+                        <div className="tai-row tai-between tai-mt10" style={{ paddingTop: 8, borderTop: "1px solid var(--border)" }}>
+                          <span className="tai-row tai-gap4" style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>
+                            <Star size={12} fill="var(--primary)" color="var(--primary)" /> {sc.rating}
+                          </span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-2)" }}>Explore →</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="tai-row tai-between tai-mt10" style={{ paddingTop: 8, borderTop: "1px solid var(--border)" }}>
-                      <span className="tai-row tai-gap4" style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>
-                        <Star size={12} fill="var(--primary)" color="var(--primary)" /> {sc.rating}
-                      </span>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-2)" }}>Explore →</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
 
           {/* Real personalized AI recommendation - was imported but never

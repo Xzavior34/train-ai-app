@@ -299,7 +299,34 @@ export function CoursesScreen({
   });
 
   const enrolledList = allAvailableCourses.filter(c => c.enrolled);
-  const currentSpotlight = SPOTLIGHT_SLIDES[activeSlide];
+  
+  const dynamicSpotlightSlides = (courses && courses.length > 0)
+    ? courses.slice(0, 4).map((c, idx) => ({
+        id: c.id,
+        badge: c.enrolled ? "ENROLLED • IN PROGRESS" : "FEATURED MASTERCLASS",
+        badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#4F46E5" : "#D97706",
+        cohortTag: c.category || "Professional Track",
+        title: c.title,
+        description: c.tagline || c.description || "Master core industry competencies, practical design token workflows, and production implementations.",
+        rating: c.rating || 4.9,
+        reviews: `${c.reviewsCount || 420} reviews`,
+        enrolled: `${c.studentsCount || "1.2k"} Enrolled`,
+        status: c.enrolled ? "In Progress" : "Available",
+        progress: c.progress || 0,
+        lessonsRemaining: `${c.lessons || 12} lessons`,
+        instructor: c.instructor || "Curriculum Specialist",
+        instructorRole: c.instructorRole || "Lead Instructor",
+        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
+        cta: c.enrolled ? "Resume Lesson" : "Explore Course",
+        action: c.enrolled ? "continue" : "explore",
+        lessonsText: `${c.lessons || 12} Lessons • ${c.hours || 8} hrs`
+      }))
+    : (mockEnabled ? SPOTLIGHT_SLIDES : []);
+
+  const currentSpotlight = dynamicSpotlightSlides.length > 0
+    ? dynamicSpotlightSlides[activeSlide % dynamicSpotlightSlides.length]
+    : null;
 
   // Filtering logic
   const filteredCatalogUnsorted = allAvailableCourses.filter(c => {
@@ -344,56 +371,57 @@ export function CoursesScreen({
       {/* =========================================================================
           DYNAMIC MOVING SPOTLIGHT HERO CAROUSEL
           ========================================================================= */}
-      <div
-        onMouseEnter={() => setIsCarouselPaused(true)}
-        onMouseLeave={() => setIsCarouselPaused(false)}
-        style={{
-          position: "relative",
-          borderRadius: 10,
-          overflow: "hidden",
-          background: "#0F172A",
-          color: "#FFFFFF",
-          padding: "clamp(16px, 2.5vw, 24px)",
-          boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-          border: "1px solid #1E293B",
-          transition: "all 0.3s ease"
-        }}
-      >
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, alignItems: "center", position: "relative", zIndex: 1 }}>
-          
-          {/* Left Column: Spotlight details */}
-          <div>
-            <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-              <span style={{ fontSize: 11, color: "#E0E7FF", fontWeight: 700, background: "rgba(99, 102, 241, 0.2)", padding: "3px 8px", borderRadius: 6, border: "1px solid rgba(165, 180, 252, 0.3)" }}>
-                {currentSpotlight.cohortTag} • {currentSpotlight.badge}
-              </span>
+      {currentSpotlight && (
+        <div
+          onMouseEnter={() => setIsCarouselPaused(true)}
+          onMouseLeave={() => setIsCarouselPaused(false)}
+          style={{
+            position: "relative",
+            borderRadius: 10,
+            overflow: "hidden",
+            background: "#0F172A",
+            color: "#FFFFFF",
+            padding: "clamp(16px, 2.5vw, 24px)",
+            boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+            border: "1px solid #1E293B",
+            transition: "all 0.3s ease"
+          }}
+        >
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, alignItems: "center", position: "relative", zIndex: 1 }}>
+            
+            {/* Left Column: Spotlight details */}
+            <div>
+              <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+                <span style={{ fontSize: 11, color: "#E0E7FF", fontWeight: 700, background: "rgba(99, 102, 241, 0.2)", padding: "3px 8px", borderRadius: 6, border: "1px solid rgba(165, 180, 252, 0.3)" }}>
+                  {currentSpotlight.cohortTag} • {currentSpotlight.badge}
+                </span>
 
-              {/* Prev / Next Controls */}
-              <div className="tai-row tai-gap6">
-                <button
-                  aria-label="Previous Slide"
-                  onClick={() => setActiveSlide(prev => (prev - 1 + SPOTLIGHT_SLIDES.length) % SPOTLIGHT_SLIDES.length)}
-                  style={{
-                    width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.08)", color: "#fff", display: "flex", alignItems: "center",
-                    justifyContent: "center", cursor: "pointer"
-                  }}
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button
-                  aria-label="Next Slide"
-                  onClick={() => setActiveSlide(prev => (prev + 1) % SPOTLIGHT_SLIDES.length)}
-                  style={{
-                    width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.08)", color: "#fff", display: "flex", alignItems: "center",
-                    justifyContent: "center", cursor: "pointer"
-                  }}
-                >
-                  <ChevronRight size={14} />
-                </button>
+                {/* Prev / Next Controls */}
+                <div className="tai-row tai-gap6">
+                  <button
+                    aria-label="Previous Slide"
+                    onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
+                    style={{
+                      width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.08)", color: "#fff", display: "flex", alignItems: "center",
+                      justifyContent: "center", cursor: "pointer"
+                    }}
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    aria-label="Next Slide"
+                    onClick={() => setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length)}
+                    style={{
+                      width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)",
+                      background: "rgba(255,255,255,0.08)", color: "#fff", display: "flex", alignItems: "center",
+                      justifyContent: "center", cursor: "pointer"
+                    }}
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
               </div>
-            </div>
 
             <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in" style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.25, color: "#FFFFFF" }}>
               {currentSpotlight.title}
@@ -494,8 +522,8 @@ export function CoursesScreen({
 
             {/* Quick Track Switcher Tabs */}
             <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2, width: "100%" }}>
-              {SPOTLIGHT_SLIDES.map((slide, idx) => {
-                const isSelected = idx === activeSlide;
+              {dynamicSpotlightSlides.map((slide, idx) => {
+                const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
                 return (
                   <button
                     key={slide.id}
@@ -527,16 +555,16 @@ export function CoursesScreen({
 
         {/* Carousel Dot Indicators */}
         <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
-          {SPOTLIGHT_SLIDES.map((_, idx) => (
+          {dynamicSpotlightSlides.map((_, idx) => (
             <button
               key={idx}
               aria-label={`Go to slide ${idx + 1}`}
               onClick={() => setActiveSlide(idx)}
               style={{
-                width: idx === activeSlide ? 22 : 7,
+                width: idx === (activeSlide % dynamicSpotlightSlides.length) ? 22 : 7,
                 height: 7,
                 borderRadius: 99,
-                background: idx === activeSlide ? "#818CF8" : "rgba(255,255,255,0.3)",
+                background: idx === (activeSlide % dynamicSpotlightSlides.length) ? "#818CF8" : "rgba(255,255,255,0.3)",
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
@@ -546,6 +574,7 @@ export function CoursesScreen({
           ))}
         </div>
       </div>
+      )}
 
       {/* =========================================================================
           FILTER STRIP & SEARCH CONTROL

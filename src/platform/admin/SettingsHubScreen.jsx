@@ -519,6 +519,9 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                         if (window.confirm("Purge all mock data and switch to real database records only?")) {
                           purgeAllMockData();
                           showToast("All mock data purged! Live database mode active.");
+                          setTimeout(() => {
+                            window.location.reload();
+                          }, 500);
                         }
                       }}
                     >
@@ -530,6 +533,9 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       onClick={() => {
                         restoreMockData();
                         showToast("Demo & mock masterclasses restored.");
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 500);
                       }}
                     >
                       <RefreshCw size={13} /> Restore Demo Data

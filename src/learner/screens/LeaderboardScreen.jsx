@@ -4,6 +4,7 @@ import {
   Trophy, Medal, Crown, Flame, Award, ArrowUp, ArrowDown, Minus,
   Search, Filter, Users, TrendingUp, ChevronRight, CheckCircle2
 } from "lucide-react";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, push }) {
   const [timeframe, setTimeframe] = useState("week"); // "all" | "month" | "week" | "cohort"
@@ -131,7 +132,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
         badgesCount: l.badges_count || 4,
         isCurrentUser: l.user_id === session?.user?.id
       }))
-    : DEFAULT_LEADERBOARD;
+    : (isMockDataEnabled() ? DEFAULT_LEADERBOARD : []);
 
   const filteredLearners = learners.filter(l =>
     l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

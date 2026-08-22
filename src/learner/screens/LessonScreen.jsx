@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { submitLessonFeedback } from "../../lib/api/learner.js";
 import { getYouTubeEmbedId, isMockDataEnabled } from "../../lib/mockDataManager.js";
+import { CourseVideoPlayer } from "../components/CourseVideoPlayer.jsx";
 
 // Industry-Standard Interactive Chapters
 const DEFAULT_CHAPTERS = [
@@ -311,195 +312,24 @@ export function LessonScreen({
         {/* Left Column: Widescreen Video Player & Interactive Tabs */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, width: "100%", boxSizing: "border-box" }}>
 
-          {/* Video Player Cinema Box */}
-          <div className="tai-card" style={{
-            padding: 0,
-            overflow: "hidden",
-            position: "relative",
-            borderRadius: 10,
-            background: "#080C16",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            boxShadow: "0 20px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05)",
-            width: "100%",
-            boxSizing: "border-box"
-          }}>
-            {/* Real 16:9 Cinema Aspect Ratio Viewport */}
-            <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%", height: 0, background: "#000" }}>
-              {/* Working Interactive Video Stream */}
-              {(() => {
-                const videoEmbedId = lesson?.youtubeVideoId || lesson?.video_url?.match(/(?:embed\/|v=|youtu\.be\/)([\w-]+)/)?.[1] || getYouTubeEmbedId(course?.id, lesson?.id);
-                return (
-                  <iframe
-                    key={videoEmbedId}
-                    title={lesson?.title || "Lesson Video"}
-                    src={`https://www.youtube-nocookie.com/embed/${videoEmbedId}?autoplay=${isPlaying ? 1 : 0}&enablejsapi=1&rel=0&modestbranding=1`}
-                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                );
-              })()}
-
-              {/* Speaker / Topic Ambient Badge Overlay */}
-              <div style={{
-                position: "absolute", top: 12, left: 12, zIndex: 10,
-                display: "flex", alignItems: "center", gap: 6,
-                background: "rgba(10, 14, 26, 0.75)", backdropFilter: "blur(8px)",
-                padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)",
-                maxWidth: "85%"
-              }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981", flexShrink: 0 }} />
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lesson?.title}</span>
-                <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.6)", flexShrink: 0 }}>• {videoQuality}</span>
-              </div>
-            </div>
-
-            {/* Cinema Video Control Bar Overlay */}
-            <div style={{
-              background: "#0D1322",
-              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
-              padding: "10px 14px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-              boxSizing: "border-box",
-              width: "100%"
-            }}>
-              {/* Interactive Scrub Progress Bar */}
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  height: 5,
-                  background: "rgba(255, 255, 255, 0.15)",
-                  borderRadius: 99,
-                  cursor: "pointer"
-                }}
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const clickPercent = (e.clientX - rect.left) / rect.width;
-                  setCurrentTimeSec(Math.round(clickPercent * totalDurationSec));
-                }}
-              >
-                <div style={{
-                  width: `${(currentTimeSec / totalDurationSec) * 100}%`,
-                  height: "100%",
-                  background: "var(--primary, #4F46E5)",
-                  borderRadius: 99,
-                  position: "relative"
-                }}>
-                  <div style={{
-                    position: "absolute", right: -4, top: -3.5,
-                    width: 12, height: 12, borderRadius: "50%",
-                    background: "#FFFFFF"
-                  }} />
-                </div>
-              </div>
-
-              {/* Bottom Cinema Controls */}
-              <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                  <button
-                    className="tai-iconbtn"
-                    style={{ background: "var(--primary)", color: "#fff", border: "none", width: 34, height: 34, borderRadius: "50%" }}
-                    onClick={() => setIsPlaying(v => !v)}
-                    aria-label={isPlaying ? "Pause" : "Play"}
-                  >
-                    {isPlaying ? <Pause size={16} /> : <Play size={16} fill="#fff" style={{ marginLeft: 2 }} />}
-                  </button>
-
-                  <button
-                    className="tai-iconbtn"
-                    style={{ color: "rgba(255,255,255,0.8)", width: 30, height: 30, borderRadius: 8 }}
-                    onClick={() => setCurrentTimeSec(Math.max(0, currentTimeSec - 10))}
-                    title="Rewind 10s"
-                  >
-                    <RotateCcw size={14} />
-                  </button>
-
-                  <button
-                    className="tai-iconbtn"
-                    style={{ color: "rgba(255,255,255,0.8)", width: 30, height: 30, borderRadius: 8 }}
-                    onClick={() => setCurrentTimeSec(Math.min(totalDurationSec, currentTimeSec + 10))}
-                    title="Forward 10s"
-                  >
-                    <RotateCw size={14} />
-                  </button>
-
-                  <button
-                    className="tai-iconbtn"
-                    style={{ color: "rgba(255,255,255,0.8)", width: 30, height: 30, borderRadius: 8 }}
-                    onClick={() => setIsMuted(v => !v)}
-                    title={isMuted ? "Unmute" : "Mute"}
-                  >
-                    {isMuted ? <VolumeX size={15} color="#EF4444" /> : <Volume2 size={15} />}
-                  </button>
-
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: "#FFFFFF", fontVariantNumeric: "tabular-nums", marginLeft: 2 }}>
-                    {formatTime(currentTimeSec)} <span style={{ color: "rgba(255,255,255,0.5)" }}>/ {formatTime(totalDurationSec)}</span>
-                  </span>
-                </div>
-
-                {/* Right Video Controls */}
-                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                  {/* Speed Selector */}
-                  <div style={{ position: "relative" }}>
-                    <button
-                      className="tai-btn tai-btn-sm"
-                      style={{
-                        background: "rgba(255,255,255,0.08)", color: "#FFFFFF",
-                        border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "3px 8px", fontSize: 11.5, fontWeight: 700
-                      }}
-                      onClick={() => setShowSpeedMenu(v => !v)}
-                    >
-                      {playbackSpeed}x
-                    </button>
-                    {showSpeedMenu && (
-                      <div className="tai-card anim-slide-down" style={{
-                        position: "absolute", bottom: 32, right: 0, width: 80, padding: 4, zIndex: 100,
-                        background: "#1E293B", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10
-                      }}>
-                        {[0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map((spd) => (
-                          <div
-                            key={spd}
-                            style={{
-                              padding: "5px 6px", borderRadius: 6, fontSize: 11.5, color: playbackSpeed === spd ? "#818CF8" : "#FFFFFF",
-                              fontWeight: playbackSpeed === spd ? 800 : 500, cursor: "pointer", textAlign: "center"
-                            }}
-                            onClick={() => { setPlaybackSpeed(spd); setShowSpeedMenu(false); }}
-                          >
-                            {spd}x
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Quality Selector */}
-                  <button
-                    className="tai-btn tai-btn-sm"
-                    style={{
-                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF",
-                      border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "3px 8px", fontSize: 11.5, fontWeight: 700
-                    }}
-                    onClick={() => setVideoQuality(v => v === "1080p HD" ? "720p" : "1080p HD")}
-                  >
-                    {videoQuality === "1080p HD" ? "1080p" : videoQuality}
-                  </button>
-
-                  {/* Theatre Mode Toggle */}
-                  <button
-                    className="tai-iconbtn"
-                    style={{ color: "rgba(255,255,255,0.8)", width: 30, height: 30, borderRadius: 8 }}
-                    onClick={() => setIsTheatreMode(v => !v)}
-                    title={isTheatreMode ? "Exit Theatre Mode" : "Theatre Mode"}
-                  >
-                    <Maximize2 size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Universal High-Performance Course Video Player */}
+          <CourseVideoPlayer
+            ref={videoPlayerRef}
+            videoUrl={lesson?.video_url}
+            youtubeVideoId={lesson?.youtubeVideoId}
+            courseId={course?.id}
+            lessonId={lesson?.id}
+            lessonTitle={lesson?.title}
+            durationMinutes={lesson?.duration || 20}
+            isTheatreMode={isTheatreMode}
+            onToggleTheatreMode={() => setIsTheatreMode(v => !v)}
+            onProgress={(cur, dur) => {
+              setCurrentTimeSec(Math.round(cur));
+            }}
+            onEnded={() => {
+              if (!isCompleted) handleMarkDone();
+            }}
+          />
 
           {/* Quick Action Lesson Controls Bar (Prev Lesson • Mark Complete • Next Lesson) */}
           <div className="tai-lesson-nav-container">
@@ -809,7 +639,10 @@ export function LessonScreen({
                 <div key={n.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
                   <div className="tai-row tai-between" style={{ marginBottom: 4 }}>
                     <span
-                      onClick={() => setCurrentTimeSec(n.timestamp_seconds)}
+                      onClick={() => {
+                        setCurrentTimeSec(n.timestamp_seconds);
+                        videoPlayerRef.current?.seekTo(n.timestamp_seconds);
+                      }}
                       style={{ fontSize: 11.5, fontWeight: 800, color: "var(--primary)", cursor: "pointer", background: "var(--primary-tint)", padding: "2px 6px", borderRadius: 6 }}
                       title="Jump video to this timestamp"
                     >
@@ -948,7 +781,10 @@ export function LessonScreen({
                     return (
                       <div
                         key={line.time}
-                        onClick={() => setCurrentTimeSec(line.seconds)}
+                        onClick={() => {
+                          setCurrentTimeSec(line.seconds);
+                          videoPlayerRef.current?.seekTo(line.seconds);
+                        }}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 8,

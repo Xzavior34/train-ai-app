@@ -9,6 +9,7 @@ import {
   fetchMyManagedStudyGroups, fetchStudyGroupMembers, 
   removeStudyGroupMember, updateStudyGroupDetails, createStudyGroup 
 } from "../../lib/api/schemaHelper.js";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 const DEFAULT_GROUP_IMAGES = [
   "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=80",
@@ -54,7 +55,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
     image: DEFAULT_GROUP_IMAGES[i % DEFAULT_GROUP_IMAGES.length],
     membersCount: g.members_count || 12,
     nextMeetup: "Every Wednesday @ 5:00 PM"
-  })) : defaultGroups;
+  })) : (isMockDataEnabled() ? defaultGroups : []);
 
   const activeGroup = groups.find((g) => g.id === selectedGroupId) || groups[0];
 
@@ -70,7 +71,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
     { user_id: "m-3", display_name: "Liam Torres", role: "member", email: "liam@domain.com" },
     { user_id: "m-4", display_name: "Priya Nair", role: "member", email: "priya@domain.com" }
   ];
-  const members = rawMembers.length > 0 ? rawMembers : defaultMembers;
+  const members = rawMembers.length > 0 ? rawMembers : (isMockDataEnabled() ? defaultMembers : []);
 
   return (
     <div className="ta-fade">

@@ -104,6 +104,9 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
       purgeAllMockData();
       setMockDataActive(false);
       showToast("All mock data purged! Real database mode is now live.");
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     }
   }
 
@@ -111,6 +114,9 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
     restoreMockData();
     setMockDataActive(true);
     showToast("Demo & mock masterclasses restored for testing.");
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   }
 
   return (

@@ -386,10 +386,6 @@ export function useLearnerData(session, screen, params) {
       return MOCK_COURSE_LESSONS[params.id];
     }
 
-    if (mockEnabled) {
-      return MOCK_COURSE_LESSONS["course-figma-ai"];
-    }
-
     return [];
   }
 

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchDiscussionsForMentor, resolveDiscussion } from "../../lib/api/platform.js";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function DiscussionsScreen({ mentorId, orgSelector }) {
   const showToast = useContext(ToastContext);
@@ -84,7 +85,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
     createdAt: d.created_at ? new Date(d.created_at).toLocaleDateString() : "Recent",
     upvotes: d.upvotes || Math.floor(Math.random() * 8) + 2,
     replies: d.replies || []
-  })) : defaultDiscussions;
+  })) : (isMockDataEnabled() ? defaultDiscussions : []);
 
   const filteredDiscussions = allDiscussions.filter(d => {
     const matchesSearch = searchQuery === "" ||

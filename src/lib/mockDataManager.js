@@ -36,9 +36,22 @@ export function setMockDataEnabled(enabled) {
 export function purgeAllMockData() {
   try {
     localStorage.setItem(STORAGE_KEY, "false");
-    // Clear any temporary demo bookmarks and local mock states
+    
+    // Clear all temporary demo and mock states across localStorage
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith("trainai_mock_") || key.startsWith("mock_") || key.startsWith("demo_"))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
     localStorage.removeItem("trainai_mock_bookmarks");
     localStorage.removeItem("trainai_mock_notes");
+    localStorage.removeItem("trainai_mock_quizzes");
+    localStorage.removeItem("trainai_mock_courses");
+    localStorage.removeItem("trainai_demo_mode");
+
     window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { enabled: false, purged: true } }));
     return true;
   } catch (err) {
@@ -128,6 +141,7 @@ export const MOCK_YOUTUBE_VIDEOS = {
  * Resolves the YouTube embed video ID or URL for any course / lesson
  */
 export function getYouTubeEmbedId(courseId, lessonId) {
+  if (!isMockDataEnabled()) return null;
   if (!courseId) return "jwEbff6X3vY";
   const courseConfig = MOCK_YOUTUBE_VIDEOS[courseId];
   if (courseConfig) {
@@ -137,4 +151,53 @@ export function getYouTubeEmbedId(courseId, lessonId) {
     return courseConfig.defaultVideoId;
   }
   return "jwEbff6X3vY";
+}
+
+/**
+ * Universal video source parser supporting direct HTML5 videos (mp4, webm),
+ * YouTube URLs/IDs, Vimeo URLs, and mock video fallbacks.
+ */
+export function parseVideoSource(rawUrl, courseId, lessonId) {
+  const cleanUrl = typeof rawUrl === "string" ? rawUrl.trim() : "";
+
+  // 1. Direct HTML5 video file
+  if (cleanUrl && cleanUrl.match(/\.(mp4|webm|ogg|mov|m3u8)(\?.*)?$/i)) {
+    return { type: "html5", src: cleanUrl };
+  }
+
+  // 2. YouTube URL
+  if (cleanUrl) {
+    const ytMatch = cleanUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/i);
+    if (ytMatch) {
+      return { type: "youtube", videoId: ytMatch[1] };
+    }
+  }
+
+  // 3. Vimeo URL
+  if (cleanUrl) {
+    const vimeoMatch = cleanUrl.match(/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)(\d+)/i);
+    if (vimeoMatch) {
+      return { type: "vimeo", videoId: vimeoMatch[1] };
+    }
+  }
+
+  // 4. If plain 11-char string that looks like a YouTube ID
+  if (cleanUrl && /^[a-zA-Z0-9_-]{11}$/.test(cleanUrl)) {
+    return { type: "youtube", videoId: cleanUrl };
+  }
+
+  // 5. If it's a generic web video URL
+  if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("https://") || cleanUrl.startsWith("blob:")) {
+    return { type: "html5", src: cleanUrl };
+  }
+
+  // 6. If mock data is enabled, check mock YouTube dictionary
+  if (isMockDataEnabled()) {
+    const mockId = getYouTubeEmbedId(courseId, lessonId);
+    if (mockId) {
+      return { type: "youtube", videoId: mockId, isMock: true };
+    }
+  }
+
+  return { type: "none" };
 }
