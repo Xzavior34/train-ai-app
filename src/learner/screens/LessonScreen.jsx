@@ -9,6 +9,7 @@ import {
   Sliders, ExternalLink, Bot, Terminal, Copy, Paperclip
 } from "lucide-react";
 import { submitLessonFeedback } from "../../lib/api/learner.js";
+import { getYouTubeEmbedId, isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 // Industry-Standard Interactive Chapters
 const DEFAULT_CHAPTERS = [
@@ -326,13 +327,19 @@ export function LessonScreen({
             {/* Real 16:9 Cinema Aspect Ratio Viewport */}
             <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%", height: 0, background: "#000" }}>
               {/* Working Interactive Video Stream */}
-              <iframe
-                title={lesson?.title || "Lesson Video"}
-                src={`https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=${isPlaying ? 1 : 0}&enablejsapi=1&rel=0&modestbranding=1`}
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              {(() => {
+                const videoEmbedId = lesson?.youtubeVideoId || lesson?.video_url?.match(/(?:embed\/|v=|youtu\.be\/)([\w-]+)/)?.[1] || getYouTubeEmbedId(course?.id, lesson?.id);
+                return (
+                  <iframe
+                    key={videoEmbedId}
+                    title={lesson?.title || "Lesson Video"}
+                    src={`https://www.youtube-nocookie.com/embed/${videoEmbedId}?autoplay=${isPlaying ? 1 : 0}&enablejsapi=1&rel=0&modestbranding=1`}
+                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                );
+              })()}
 
               {/* Speaker / Topic Ambient Badge Overlay */}
               <div style={{

@@ -23,6 +23,7 @@ import {
   fetchCohortResources, fetchCohortSessions, fetchCohortAssignedCourses, fetchCohortMembers
 } from "../../lib/api/schemaHelper.js";
 import { initialsOf, gradForIndex, timeAgo } from "../components/LearnerUI.jsx";
+import { isMockDataEnabled, subscribeToMockDataChanges, getYouTubeEmbedId } from "../../lib/mockDataManager.js";
 
 export function useLearnerData(session, screen, params) {
   const userProfileQuery = useSupabaseQuery(async () => {
@@ -122,11 +123,170 @@ export function useLearnerData(session, screen, params) {
     return fetchMyBookmarks(session.user.id);
   }, [session?.user?.id]);
 
+  const [mockEnabled, setMockEnabled] = useState(() => isMockDataEnabled());
+  useEffect(() => {
+    return subscribeToMockDataChanges((enabled) => setMockEnabled(enabled));
+  }, []);
+
+  const MOCK_COURSE_LESSONS = {
+    "course-figma-ai": [
+      { id: "l-figma-1", title: "1. Foundations of Spatial Design Systems & Tokens", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "jwEbff6X3vY" },
+      { id: "l-figma-2", title: "2. Setting Up Figma Variables & Modes for Enterprise", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "7gqG2_v-s_s" },
+      { id: "l-figma-3", title: "3. Auto-Layout 5.0 & Responsive Component Matrix", duration: 26, module: "Module 2: Advanced Prototyping", youtubeVideoId: "b_3gLp0r-2w" },
+      { id: "l-figma-4", title: "4. Integrating AI Design Plugins & Code Exporters", duration: 30, module: "Module 2: Advanced Prototyping", youtubeVideoId: "5A4Q4DqM3E8" }
+    ],
+    "course-fullstack-ai": [
+      { id: "l-fullstack-1", title: "1. Multi-Agent Systems Architecture & Tool Calling", duration: 24, module: "Module 1: Agent Systems", youtubeVideoId: "2F3TfH3Yf-A" },
+      { id: "l-fullstack-2", title: "2. FastAPI Backend Setup with Streaming Endpoints", duration: 28, module: "Module 1: Agent Systems", youtubeVideoId: "aywZrzNaKjs" },
+      { id: "l-fullstack-3", title: "3. Vector Search with Supabase pgvector & RAG Pipelines", duration: 35, module: "Module 2: Vector Stores & Scaling", youtubeVideoId: "L_W_tXq3u3k" }
+    ],
+    "course-prompt-pro": [
+      { id: "l-prompt-1", title: "1. Zero-Shot, Few-Shot & Chain-of-Thought Prompting", duration: 16, module: "Module 1: Core Prompting", youtubeVideoId: "jC4v5AS4RIM" },
+      { id: "l-prompt-2", title: "2. Function Calling Schemas & Automated Model Eval", duration: 20, module: "Module 2: Schemas & Evals", youtubeVideoId: "94S35K3mZ_k" }
+    ],
+    "course-cloud-devops": [
+      { id: "l-cloud-1", title: "1. Containerizing Microservices with Multi-Stage Docker", duration: 22, module: "Module 1: Containers", youtubeVideoId: "d6WC5n9G_sM" },
+      { id: "l-cloud-2", title: "2. Deploying & Scaling Kubernetes Pods on Google Cloud", duration: 30, module: "Module 2: Kubernetes", youtubeVideoId: "X48VuDVv0do" }
+    ],
+    "course-spatial-ui": [
+      { id: "l-spatial-1", title: "1. VisionOS Spatial Canvas & Depth Ergonomics", duration: 18, module: "Module 1: Spatial Canvas", youtubeVideoId: "Vb0nP_R590k" },
+      { id: "l-spatial-2", title: "2. Eye Tracking, Gaze Targets & Glassmorphism Tokens", duration: 25, module: "Module 2: Interactions", youtubeVideoId: "7pL4f-O1o34" }
+    ],
+    "course-data-python": [
+      { id: "l-data-1", title: "1. Python for Data Science & Pandas DataFrame Analytics", duration: 24, module: "Module 1: Data Analytics", youtubeVideoId: "LHBE6Q9XlzI" },
+      { id: "l-data-2", title: "2. Vector Embeddings, Cosine Similarity & Index Tuning", duration: 28, module: "Module 2: Vector Math", youtubeVideoId: "nLRL_NcnK-4" }
+    ]
+  };
+
+  const DEFAULT_FALLBACK_COURSES = [
+    {
+      id: "course-figma-ai",
+      title: "Master Design Systems in Figma with AI",
+      tagline: "Build scalable enterprise design systems using Figma variables, token architecture, auto-layout 5.0, and generative AI plugins.",
+      category: "UI/UX & Design Systems",
+      level: "intermediate",
+      hours: 18,
+      lessons: 4,
+      enrolled: true,
+      isBookmarked: true,
+      progress: 72,
+      source: "assigned",
+      coverImageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
+      instructor: "Astrid Larsson",
+      partner: "Figma Official",
+      grad: gradForIndex(0),
+      mandatory: true,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-fullstack-ai",
+      title: "Full-Stack AI Application Engineering",
+      tagline: "Architect and deploy end-to-end multi-agent applications with Python FastAPI backends, LangChain orchestration, and React frontends.",
+      category: "Full-Stack & Web Dev",
+      level: "advanced",
+      hours: 26,
+      lessons: 3,
+      enrolled: false,
+      isBookmarked: false,
+      progress: 0,
+      source: "internal",
+      isInternal: true,
+      coverImageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
+      instructor: "Alex Rivera",
+      grad: gradForIndex(1),
+      mandatory: false,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-prompt-pro",
+      title: "Prompt Engineering & LLM Architecture",
+      tagline: "Master zero-shot, few-shot, chain-of-thought prompting, function calling schemas, and automated model evaluations.",
+      category: "AI & Prompt Engineering",
+      level: "beginner",
+      hours: 12,
+      lessons: 2,
+      enrolled: true,
+      isBookmarked: false,
+      progress: 100,
+      source: "assigned",
+      partner: "Anthropic / OpenAI",
+      coverImageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80",
+      instructor: "Elena Rostova",
+      grad: gradForIndex(2),
+      mandatory: true,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-cloud-devops",
+      title: "Cloud Native Microservices & Kubernetes",
+      tagline: "Containerize scalable services with Docker, manage Kubernetes clusters on Google Cloud, and set up automated CI/CD pipelines.",
+      category: "Cloud & DevOps",
+      level: "intermediate",
+      hours: 22,
+      lessons: 2,
+      enrolled: false,
+      isBookmarked: false,
+      progress: 0,
+      source: "partner",
+      partner: "Google Cloud",
+      coverImageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
+      instructor: "David Vance",
+      grad: gradForIndex(3),
+      mandatory: false,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-spatial-ui",
+      title: "Spatial Computing & VisionOS Design Foundations",
+      tagline: "Design immersive 3D spatial user experiences, depth layering, eye-tracking ergonomics, and glassmorphism interface tokens.",
+      category: "UI/UX & Design Systems",
+      level: "advanced",
+      hours: 14,
+      lessons: 2,
+      enrolled: false,
+      isBookmarked: false,
+      progress: 0,
+      source: "partner",
+      partner: "Apple VisionOS",
+      coverImageUrl: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80",
+      instructor: "Sarah Connor",
+      grad: gradForIndex(4),
+      mandatory: false,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-data-python",
+      title: "Python Data Science, Vector Stores & pgvector",
+      tagline: "Perform high-performance data wrangling, model training, similarity search indexing, and real-time visualization dashboards.",
+      category: "Data Science & Python",
+      level: "intermediate",
+      hours: 20,
+      lessons: 2,
+      enrolled: false,
+      isBookmarked: false,
+      progress: 0,
+      source: "internal",
+      isInternal: true,
+      coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+      instructor: "David Kim",
+      grad: gradForIndex(5),
+      mandatory: false,
+      price: 0,
+      requiresApproval: false
+    }
+  ];
+
   const courses = (() => {
     const enrollmentByCourseId = new Map((enrollmentsQuery.data || []).map(e => [e.course_id, e]));
     const lessonCounts = lessonCountsQuery.data || {};
     const bookmarkedIds = new Set(bookmarksQuery.data || []);
-    return (coursesQuery.data || []).map((c, i) => {
+    
+    const dbCourses = (coursesQuery.data || []).map((c, i) => {
       const enrollment = enrollmentByCourseId.get(c.id);
       return {
         id: c.id,
@@ -148,9 +308,27 @@ export function useLearnerData(session, screen, params) {
         requiresApproval: !!c.requires_approval,
       };
     });
+
+    if (!mockEnabled) {
+      return dbCourses;
+    }
+
+    if (dbCourses.length > 0) {
+      return dbCourses;
+    }
+
+    return DEFAULT_FALLBACK_COURSES;
   })();
 
-  function courseById(id) { return courses.find(c => c.id === id); }
+  function courseById(id) {
+    if (!id) return courses[0];
+    const found = courses.find(c => c.id === id);
+    if (found) return found;
+    if (mockEnabled) {
+      return DEFAULT_FALLBACK_COURSES.find(c => c.id === id) || courses[0];
+    }
+    return null;
+  }
 
   const courseLessonsQuery = useSupabaseQuery(async () => {
     if (!params?.id || !["courseDetail", "lesson"].includes(screen)) return [];
@@ -172,10 +350,24 @@ export function useLearnerData(session, screen, params) {
       duration: l.duration_minutes || 0,
       completed: !!progressByLessonId.get(l.id)?.is_completed,
       current: false,
+      youtubeVideoId: l.youtube_video_id || getYouTubeEmbedId(params?.id, l.id)
     }));
-    const firstIncomplete = mapped.findIndex(l => !l.completed);
-    if (firstIncomplete >= 0) mapped[firstIncomplete].current = true;
-    return mapped;
+
+    if (mapped.length > 0) {
+      const firstIncomplete = mapped.findIndex(l => !l.completed);
+      if (firstIncomplete >= 0) mapped[firstIncomplete].current = true;
+      return mapped;
+    }
+
+    if (mockEnabled && params?.id && MOCK_COURSE_LESSONS[params.id]) {
+      return MOCK_COURSE_LESSONS[params.id];
+    }
+
+    if (mockEnabled) {
+      return MOCK_COURSE_LESSONS["course-figma-ai"];
+    }
+
+    return [];
   }
 
   const courseNotesQuery = useSupabaseQuery(async () => {

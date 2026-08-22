@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
-import { Lock, ShieldCheck, Moon } from "lucide-react";
+import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw } from "lucide-react";
+import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
@@ -489,6 +490,74 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   <Switch on={leaderboardEnabled} onChange={handleToggleLeaderboard} />
                 </div>
                 {savingLeaderboard && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 8 }}>Saving...</div>}
+              </div>
+
+              {/* Database & Mock Data Management Card */}
+              <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #818CF8)" }}>
+                <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
+                  <div className="ta-row ta-gap10">
+                    <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Database size={17} color="var(--primary)" />
+                    </div>
+                    <div>
+                      <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Database &amp; Mock Data Mode</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                        Toggle demo prototype data vs live production database records
+                      </div>
+                    </div>
+                  </div>
+
+                  <span style={{
+                    fontSize: 10.5, fontWeight: 800, padding: "2px 8px", borderRadius: 6,
+                    background: isMockDataEnabled() ? "var(--warning-bg, #FEF3C7)" : "var(--success-bg, #DCFCE7)",
+                    color: isMockDataEnabled() ? "var(--warning, #D97706)" : "var(--success, #16A34A)"
+                  }}>
+                    {isMockDataEnabled() ? "DEMO ACTIVE" : "REAL DB ONLY"}
+                  </span>
+                </div>
+
+                <div style={{ marginTop: 14 }}>
+                  <div className="ta-row ta-between" style={{ alignItems: "center" }}>
+                    <div style={{ minWidth: 0, flex: 1, paddingRight: 14 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>Include Mock &amp; Demo Courses</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, lineHeight: 1.4 }}>
+                        When connecting your live Supabase database, turn this off to show only your real organization tables.
+                      </div>
+                    </div>
+                    <Switch
+                      on={isMockDataEnabled()}
+                      onChange={() => {
+                        const next = !isMockDataEnabled();
+                        setMockDataEnabled(next);
+                        showToast(next ? "Mock data enabled" : "Real database mode active");
+                      }}
+                    />
+                  </div>
+
+                  <div className="ta-row ta-gap8 ta-mt14" style={{ flexWrap: "wrap" }}>
+                    <button
+                      className="ta-btn ta-btn-danger ta-btn-sm"
+                      onClick={() => {
+                        if (window.confirm("Purge all mock data and switch to real database records only?")) {
+                          purgeAllMockData();
+                          showToast("All mock data purged! Live database mode active.");
+                        }
+                      }}
+                    >
+                      <Trash2 size={13} /> Purge All Mock Data
+                    </button>
+
+                    <button
+                      className="ta-btn ta-btn-outline ta-btn-sm"
+                      onClick={() => {
+                        restoreMockData();
+                        showToast("Demo & mock masterclasses restored.");
+                      }}
+                    >
+                      <RefreshCw size={13} /> Restore Demo Data
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="ta-card">
