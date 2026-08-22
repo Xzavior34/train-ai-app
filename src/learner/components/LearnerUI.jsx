@@ -23,8 +23,8 @@ export const TOKENS = `
     --primary-dark: #4338CA;
     --primary-light: #6366F1;
     --primary-tint: #EEF2FF;
-    --grad: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
-    --grad-subtle: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+    --grad: #4F46E5;
+    --grad-subtle: #EEF2FF;
     --text: #0F172A;
     --text-2: #475569;
     --text-3: #94A3B8;
@@ -39,11 +39,11 @@ export const TOKENS = `
     --danger: #EF4444;
     --danger-bg: #FEF2F2;
     --danger-border: #FECACA;
-    --radius: 20px;
-    --radius-sm: 12px;
-    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
-    --shadow-hover: 0 8px 24px -4px rgba(79, 70, 229, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-    --shadow-btn: 0 4px 14px -2px rgba(79, 70, 229, 0.32);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.02);
+    --shadow-hover: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    --shadow-btn: none;
     --font: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-family: var(--font);
     color: var(--text);
@@ -67,30 +67,30 @@ export const TOKENS = `
   
   /* Top Full-Width Learner Global Header */
   .tai-global-header {
-    height: 58px; min-height: 58px; width: 100%; max-width: 100%; background: var(--surface); border-bottom: 1px solid var(--border);
+    height: 54px; min-height: 54px; width: 100%; max-width: 100%; background: var(--surface); border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 24px);
     position: sticky; top: 0; z-index: 60; box-shadow: 0 1px 3px rgba(15,23,42,0.03); box-sizing: border-box;
   }
   .tai-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .tai-header-brand { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; flex-shrink: 0; }
-  .tai-header-brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
-  .tai-header-brand-name { font-size: 15.5px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
-  .tai-header-search { display: flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 11px; width: clamp(140px, 15vw, 210px); font-size: 12px; color: var(--text-2); }
+  .tai-header-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: #4F46E5; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .tai-header-brand-name { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+  .tai-header-search { display: flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; width: clamp(140px, 15vw, 210px); font-size: 12px; color: var(--text-2); }
   .tai-header-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 12px; font-family: inherit; color: var(--text); }
   
   .tai-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-workspace-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .14s ease; flex-shrink: 0; }
+  .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-workspace-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .14s ease; flex-shrink: 0; }
   .tai-workspace-pill:hover { background: var(--surface-2); border-color: #CBD5E1; }
   
-  .tai-desktop-shell { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; align-items: stretch; min-height: calc(100vh - 58px); box-sizing: border-box; }
+  .tai-desktop-shell { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; align-items: stretch; min-height: calc(100vh - 54px); box-sizing: border-box; }
   .tai-app {
-    width: 100%; max-width: 100%; flex: 1; min-height: calc(100vh - 58px);
+    width: 100%; max-width: 100%; flex: 1; min-height: calc(100vh - 54px);
     background: var(--bg); position: relative; display: flex; flex-direction: column; min-width: 0; box-sizing: border-box;
   }
   .tai-body {
-    flex: 1; padding: 20px 24px calc(88px + env(safe-area-inset-bottom));
+    flex: 1; padding: 20px 24px calc(80px + env(safe-area-inset-bottom));
     width: 100%; max-width: 1240px; margin: 0 auto; box-sizing: border-box;
   }
 
@@ -98,16 +98,16 @@ export const TOKENS = `
   .tai-desktop-sidebar { display: none; }
   @media (min-width: 900px) {
     .tai-desktop-sidebar {
-      display: flex; flex-direction: column; width: 250px; flex-shrink: 0;
-      position: fixed; top: 58px; left: max(0px, calc((100vw - 1440px) / 2));
-      height: calc(100vh - 58px); height: calc(100dvh - 58px); background: var(--surface); border-right: 1px solid var(--border);
-      padding: 16px 12px; box-shadow: 2px 0 12px -6px rgba(15, 23, 42, 0.03); z-index: 40; overflow-y: auto;
+      display: flex; flex-direction: column; width: 240px; flex-shrink: 0;
+      position: fixed; top: 54px; left: max(0px, calc((100vw - 1440px) / 2));
+      height: calc(100vh - 54px); height: calc(100dvh - 54px); background: var(--surface); border-right: 1px solid var(--border);
+      padding: 16px 10px; box-shadow: 1px 0 6px rgba(15, 23, 42, 0.02); z-index: 40; overflow-y: auto;
       transition: width .2s ease, padding .2s ease;
     }
-    .tai-app { margin-left: 250px; transition: margin-left .2s ease; }
-    .tai-desktop-sidebar.tai-sidebar-minimized + .tai-app { margin-left: 72px; }
+    .tai-app { margin-left: 240px; transition: margin-left .2s ease; }
+    .tai-desktop-sidebar.tai-sidebar-minimized + .tai-app { margin-left: 68px; }
     .tai-desktop-sidebar.tai-sidebar-minimized {
-      width: 72px; padding: 16px 8px;
+      width: 68px; padding: 16px 6px;
     }
     .tai-desktop-sidebar.tai-sidebar-minimized .tai-group-header span,
     .tai-desktop-sidebar.tai-sidebar-minimized .tai-single-nav span,
@@ -123,32 +123,32 @@ export const TOKENS = `
     .tai-desktop-sidebar.tai-sidebar-minimized .tai-sub-items {
       padding: 2px 0 4px 0;
     }
-    .tai-sidebar-nav { display: flex; flex-direction: column; gap: 3px; flex: 1; }
-    .tai-nav-group { margin-bottom: 4px; }
+    .tai-sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+    .tai-nav-group { margin-bottom: 3px; }
     .tai-group-header {
-      display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px;
-      cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
+      display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 8px;
+      cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
     }
     .tai-group-header:hover { background: var(--surface-2); color: var(--text); }
     .tai-group-header.active { color: var(--primary); font-weight: 700; }
-    .tai-sub-items { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 6px 12px; }
+    .tai-sub-items { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 4px 10px; }
     .tai-sub-item {
-      display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 8px; cursor: pointer;
-      font-size: 13px; font-weight: 500; color: var(--text-2); transition: all .14s ease;
+      display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 6px; cursor: pointer;
+      font-size: 12.5px; font-weight: 500; color: var(--text-2); transition: all .14s ease;
     }
     .tai-sub-item:hover { background: var(--surface-2); color: var(--text); }
-    .tai-sub-item.active { background: #EEF2FF; color: #4F46E5; font-weight: 700; border-left: 3px solid #4F46E5; padding-left: 9px; }
+    .tai-sub-item.active { background: #EEF2FF; color: #4F46E5; font-weight: 700; border-left: 2.5px solid #4F46E5; padding-left: 7.5px; }
     .tai-single-nav {
-      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer;
-      font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
     }
     .tai-single-nav:hover { background: var(--surface-2); color: var(--text); }
-    .tai-single-nav.active { background: #EEF2FF; color: #4F46E5; font-weight: 700; border-left: 3px solid #4F46E5; padding-left: 9px; }
-    .tai-sidebar-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
+    .tai-single-nav.active { background: #EEF2FF; color: #4F46E5; font-weight: 700; border-left: 2.5px solid #4F46E5; padding-left: 7.5px; }
+    .tai-sidebar-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
     .tai-toggle-sidebar-btn {
-      display: flex; align-items: center; justify-content: center; width: 100%; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; border-radius: 6px;
       border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer;
-      transition: all .15s ease; margin-bottom: 10px;
+      transition: all .15s ease; margin-bottom: 8px;
     }
     .tai-toggle-sidebar-btn:hover { background: var(--surface-3); color: var(--primary); border-color: var(--primary-light); }
   }
@@ -160,38 +160,30 @@ export const TOKENS = `
   }
   .tai, .tai * { -webkit-tap-highlight-color: transparent; }
   .tai-toast {
-    position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%); z-index: 200;
-    background: #0F172A; color: #FFFFFF; padding: 12px 20px; border-radius: 14px; font-size: 13.5px; font-weight: 600;
-    box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.35); display: flex; align-items: center; gap: 10px; max-width: 90%;
-    animation: slideUp .22s cubic-bezier(.16,1,.3,1) both; border: 1px solid rgba(255,255,255,0.1);
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 200;
+    background: #0F172A; color: #FFFFFF; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2); display: flex; align-items: center; gap: 8px; max-width: 90%;
+    animation: slideUp .18s cubic-bezier(.16,1,.3,1) both; border: 1px solid rgba(255,255,255,0.1);
   }
   .tai-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap: nowrap; gap: 10px; padding: 6px 0 14px; width: 100%; box-sizing: border-box; }
   .tai-topbar > .tai-row.tai-gap12 { min-width: 0; flex: 1; }
   .tai-topbar-actions { flex-wrap: nowrap; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
   .tai-h1 { font-size: clamp(17px, 2.5vw, 20px); font-weight: 800; letter-spacing: -0.02em; margin:0; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
   .tai-sub { font-size: 12px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-  .tai-iconbtn { width:34px; height:34px; border-radius:10px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border:1px solid var(--border);
-    box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  .tai-iconbtn { width:32px; height:32px; border-radius:8px; background: #FFFFFF; border:1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     display:flex; align-items:center; justify-content:center; color: var(--text); flex-shrink:0; cursor:pointer;
-    transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); }
-  .tai-iconbtn:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-2px) scale(1.04); box-shadow: 0 6px 16px -2px rgba(79, 70, 229, 0.18); }
-  .tai-iconbtn:active { transform: scale(0.94); }
+    transition: background-color .15s ease, border-color .15s ease; }
+  .tai-iconbtn:hover { background: var(--surface-2); border-color: #CBD5E1; }
+  .tai-iconbtn:active { transform: scale(0.96); }
   
-  /* Card surface with a subtle specular highlight - no backdrop-filter on
-     cards: this screen stacks many of them per page, and blurring flat
-     background colors costs real scroll/render performance for no visible
-     benefit. (.tai-iconbtn and .tai-navbar keep their blur - those are single,
-     small, fixed elements, not repeated per-card.) */
   .tai-card {
-    background: rgba(255, 255, 255, 0.96);
-    border-radius: 18px;
-    padding: 22px;
-    border: 1px solid rgba(226, 232, 240, 0.85);
-    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
-    transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow .24s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color .24s ease,
-                background .24s ease;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+    transition: border-color .15s ease, box-shadow .15s ease;
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -199,35 +191,16 @@ export const TOKENS = `
     box-sizing: border-box;
   }
   .tai.dark .tai-card {
-    background: rgba(18, 24, 43, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.4);
   }
   .tai-card-hover {
     cursor: pointer;
   }
   .tai-card-hover:hover {
-    box-shadow: 0 16px 36px -6px rgba(79, 70, 229, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-    border-color: rgba(99, 102, 241, 0.35);
-    transform: translateY(-3px) scale(1.006);
-  }
-  .tai.dark .tai-card-hover:hover {
-    box-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
-    border-color: rgba(129, 140, 248, 0.35);
-    transform: translateY(-3px) scale(1.006);
-  }
-  .tai-card-hover:active {
-    transform: translateY(-1px) scale(0.995);
-  }
-  
-  /* Card image dynamic zoom */
-  .tai-card-hover img.tai-zoomable,
-  .tai-card:hover img.tai-zoomable {
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .tai-card-hover:hover img.tai-zoomable,
-  .tai-card:hover img.tai-zoomable {
-    transform: scale(1.04);
+    border-color: #CBD5E1;
+    box-shadow: var(--shadow-hover);
   }
 
   .tai-row { display:flex; align-items:center; }
@@ -235,112 +208,85 @@ export const TOKENS = `
   .tai-gap4 { gap:4px; } .tai-gap6 { gap:6px; } .tai-gap8 { gap:8px; } .tai-gap10 { gap:10px; } .tai-gap12 { gap:12px; } .tai-gap14 { gap:14px; } .tai-gap16 { gap:16px; } .tai-gap18 { gap:18px; } .tai-gap20 { gap:20px; }
   .tai-col { display:flex; flex-direction:column; }
   .tai-mt4 { margin-top:4px; } .tai-mt6 { margin-top:6px; } .tai-mt8 { margin-top:8px; } .tai-mt10 { margin-top:10px; } .tai-mt12 { margin-top:12px; } .tai-mt14 { margin-top:14px; } .tai-mt16 { margin-top:16px; } .tai-mt20 { margin-top:20px; } .tai-mt24 { margin-top:24px; }
-  .tai-label { font-size:11.5px; font-weight:700; color: var(--text-3); text-transform:uppercase; letter-spacing:.06em; }
-  .tai-title-sm { font-size:16px; font-weight:800; letter-spacing: -0.01em; color: var(--text); }
-  .tai-body-text { font-size: 13.5px; color: var(--text-2); line-height:1.5; }
+  .tai-label { font-size:11px; font-weight:700; color: var(--text-3); text-transform:uppercase; letter-spacing:.06em; }
+  .tai-title-sm { font-size:15px; font-weight:800; letter-spacing: -0.01em; color: var(--text); }
+  .tai-body-text { font-size: 13px; color: var(--text-2); line-height:1.5; }
   
-  /* Buttons with micro spring animations */
-  .tai-btn { border:none; cursor:pointer; border-radius: 12px; font-weight:700; font-size:14px; padding: 12px 20px;
-    display:flex; align-items:center; justify-content:center; gap:8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
-  .tai-btn-primary { background: var(--grad); color:#fff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32); }
-  .tai-btn-primary:hover { opacity: 0.96; transform: translateY(-2px); box-shadow: 0 8px 22px -2px rgba(79, 70, 229, 0.48); }
-  .tai-btn-primary:active { transform: scale(.96); }
+  .tai-btn { border:none; cursor:pointer; border-radius: 8px; font-weight:600; font-size:13.5px; padding: 10px 16px;
+    display:flex; align-items:center; justify-content:center; gap:6px; transition: background-color .15s ease, border-color .15s ease; font-family: var(--font); }
+  .tai-btn-primary { background: #4F46E5; color:#fff; }
+  .tai-btn-primary:hover { background: #4338CA; }
+  .tai-btn-primary:active { transform: scale(.98); }
   .tai-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
-  .tai-btn-ghost:hover { background: #E0E7FF; color: var(--primary-dark); transform: translateY(-1px); }
-  .tai-btn-ghost:active { transform: scale(.96); }
+  .tai-btn-ghost:hover { background: #E0E7FF; color: var(--primary-dark); }
+  .tai-btn-ghost:active { transform: scale(.98); }
   .tai-btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); font-weight: 600; }
-  .tai-btn-outline:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-1px); }
-  .tai-btn-outline:active { transform: scale(.96); }
-  .tai-btn-sm { padding: 8px 14px; font-size:12.5px; border-radius:10px; }
+  .tai-btn-outline:hover { background: var(--surface-2); border-color: #CBD5E1; }
+  .tai-btn-outline:active { transform: scale(.98); }
+  .tai-btn-sm { padding: 6px 12px; font-size:12px; border-radius:6px; }
   
-  /* Interactive Pills with spring motion */
-  .tai-pill { padding:7px 16px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); }
-  .tai-pill:hover { transform: translateY(-1px); }
-  .tai-pill:active { transform: scale(0.96); }
-  .tai-pill-active { background: var(--primary); color:#fff; box-shadow: 0 4px 14px -2px rgba(79, 70, 229, 0.4); }
+  .tai-pill { padding:6px 12px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: background-color .15s ease; }
+  .tai-pill-active { background: var(--primary); color:#fff; }
   .tai-pill-inactive { background: var(--surface); color: var(--text-2); border-color: var(--border); }
   .tai-pill-inactive:hover { background: var(--surface-2); color: var(--text); border-color: #CBD5E1; }
   
-  /* Dynamic tags */
-  .tai-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight:700; background: var(--surface-2); color: var(--primary); letter-spacing: 0.02em; transition: all .16s ease; }
-  .tai-tag:hover { transform: scale(1.03); }
+  .tai-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight:700; background: var(--surface-2); color: var(--primary); letter-spacing: 0.02em; }
   
   .tai-scrollx { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; -ms-overflow-style:none; scrollbar-width:none; }
   .tai-scrollx::-webkit-scrollbar { display:none; }
-  .tai-progress-track { width:100%; height:8px; border-radius:99px; background: var(--surface-2); overflow:hidden; }
-  .tai-progress-fill { height:100%; border-radius:99px; background: var(--grad); transition: width .35s cubic-bezier(0.16, 1, 0.3, 1); }
-  .tai-avatar { border-radius:50%; background: var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; box-shadow: 0 2px 8px rgba(79,70,229,0.25); }
-  .tai-divider { height:1px; background: var(--border); border:none; margin: 14px 0; }
+  .tai-progress-track { width:100%; height:6px; border-radius:4px; background: var(--surface-2); overflow:hidden; }
+  .tai-progress-fill { height:100%; border-radius:4px; background: var(--primary); transition: width .25s ease; }
+  .tai-avatar { border-radius:50%; background: #4F46E5; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
+  .tai-divider { height:1px; background: var(--border); border:none; margin: 12px 0; }
   
-  /* Full-width attached bottom navigation on mobile with dynamic glowing pill motion */
+  /* Full-width attached bottom navigation on mobile - clean, solid, accessible */
   .tai-navbar {
     position: fixed; left: 0; right: 0; bottom: 0; width: 100vw; max-width: 100%;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(226, 232, 240, 0.85);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
     display: flex; justify-content: space-around; align-items: center;
-    padding: 8px 14px max(12px, env(safe-area-inset-bottom)); z-index: 100;
-    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
-    transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
+    padding: 6px 12px max(8px, env(safe-area-inset-bottom)); z-index: 100;
+    box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.04);
   }
   .tai.dark .tai-navbar {
-    background: rgba(13, 18, 34, 0.94);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+    background: #0D1222;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
   .tai-navitem {
-    display: flex; flex-direction: row; align-items: center; justify-content: center;
-    cursor: pointer; color: var(--text-3); padding: 8px 14px; border-radius: 999px;
-    background: transparent; border: none; outline: none;
-    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-3); padding: 4px 8px; border-radius: 6px;
+    background: transparent; border: none; outline: none; gap: 3px;
+    transition: color .15s ease;
   }
   .tai-navitem:hover {
     color: var(--text);
   }
   .tai-navitem-icon-wrap {
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
   }
   .tai-navitem-label {
-    max-width: 0; opacity: 0; transform: scale(0.7);
-    overflow: hidden; white-space: nowrap; margin-left: 0;
-    font-size: 12.5px; font-weight: 800; letter-spacing: 0.02em;
-    transition: max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-                opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-                margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em; color: var(--text-3);
   }
-  /* Active dynamic glowing pill state */
   .tai-navitem.active {
-    background: var(--grad); color: #FFFFFF;
-    padding: 8px 18px;
-    box-shadow: 0 4px 18px rgba(79, 70, 229, 0.45);
-    transform: translateY(-2px);
-  }
-  .tai-navitem.active .tai-navitem-icon-wrap {
-    transform: scale(1.08);
-    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
+    color: #4F46E5;
   }
   .tai-navitem.active .tai-navitem-label {
-    max-width: 90px; opacity: 1; transform: scale(1);
-    margin-left: 7px; color: #FFFFFF;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    color: #4F46E5; font-weight: 800;
   }
-  .tai-input { width:100%; border-radius:12px; border:1px solid var(--border); background: var(--surface); padding: 12px 16px;
-    font-size:13.5px; color: var(--text); font-family: var(--font); transition: all .18s ease; }
-  .tai-input:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); transform: translateY(-1px); }
-  .tai-fade-in { animation: fadeIn .18s ease-out both; }
-  .tai-switch { width:44px; height:26px; border-radius:99px; background: var(--surface-2); position:relative; cursor:pointer; flex-shrink:0; transition: background .18s ease; border: 1px solid var(--border); }
+  .tai-input { width:100%; border-radius:8px; border:1px solid var(--border); background: var(--surface); padding: 10px 14px;
+    font-size:13px; color: var(--text); font-family: var(--font); transition: border-color .15s ease; }
+  .tai-input:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15); }
+  .tai-fade-in { animation: fadeIn .15s ease-out both; }
+  .tai-switch { width:40px; height:22px; border-radius:99px; background: var(--surface-2); position:relative; cursor:pointer; flex-shrink:0; transition: background .15s ease; border: 1px solid var(--border); }
   .tai-switch.on { background: var(--primary); border-color: var(--primary); }
-  .tai-switch-knob { width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition: left .18s cubic-bezier(.16,1,.3,1); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .tai-switch-knob { width:16px; height:16px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition: left .15s ease; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
   .tai-switch.on .tai-switch-knob { left:20px; }
-  .tai-empty { text-align:center; padding: 42px 18px; color: var(--text-2); }
-  .tai-grid2 { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
-  .tai-grid3 { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
-  .tai-grid4 { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
-  .tai-link { color: var(--primary); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:3px; transition: all .16s ease; }
-  .tai-link:hover { transform: translateX(2px); }
-  .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 24px; align-items: start; width: 100%; max-width: 100%; box-sizing: border-box; }
+  .tai-empty { text-align:center; padding: 36px 16px; color: var(--text-2); }
+  .tai-grid2 { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; width:100%; box-sizing:border-box; }
+  .tai-grid3 { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:16px; width:100%; box-sizing:border-box; }
+  .tai-grid4 { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:16px; width:100%; box-sizing:border-box; }
+  .tai-link { color: var(--primary); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:3px; }
+  .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 20px; align-items: start; width: 100%; max-width: 100%; box-sizing: border-box; }
 
   /* Learner Hero & Career Roadmap responsive classes */
   .tai-hero-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
