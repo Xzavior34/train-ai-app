@@ -66,54 +66,47 @@ export const TOKENS = `
   
   /* Top Full-Width Learner Global Header */
   .tai-global-header {
-    height: 72px; width: 100%; max-width: 100%; background: var(--surface); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    height: 58px; min-height: 58px; width: 100%; max-width: 100%; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 24px);
     position: sticky; top: 0; z-index: 60; box-shadow: 0 1px 3px rgba(15,23,42,0.03); box-sizing: border-box;
   }
-  .tai-header-left { display: flex; align-items: center; gap: 20px; min-width: 0; }
-  .tai-header-brand { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; flex-shrink: 0; }
-  .tai-header-brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(79,70,229,0.3); }
-  .tai-header-brand-name { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
-  .tai-header-search { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 7px 14px; width: clamp(180px, 22vw, 320px); font-size: 13px; color: var(--text-2); }
-  .tai-header-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 13px; font-family: inherit; color: var(--text); }
+  .tai-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .tai-header-brand { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; flex-shrink: 0; }
+  .tai-header-brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
+  .tai-header-brand-name { font-size: 15.5px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+  .tai-header-search { display: flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 11px; width: clamp(140px, 15vw, 210px); font-size: 12px; color: var(--text-2); }
+  .tai-header-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 12px; font-family: inherit; color: var(--text); }
   
-  .tai-header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .tai-streak-pill { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-credits-pill { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-workspace-pill { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; transition: all .14s ease; flex-shrink: 0; }
+  .tai-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-workspace-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .14s ease; flex-shrink: 0; }
   .tai-workspace-pill:hover { background: var(--surface-2); border-color: #CBD5E1; }
   
-  .tai-desktop-shell { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; align-items: stretch; min-height: calc(100vh - 72px); box-sizing: border-box; }
+  .tai-desktop-shell { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; align-items: stretch; min-height: calc(100vh - 58px); box-sizing: border-box; }
   .tai-app {
-    width: 100%; max-width: 100%; flex: 1; min-height: calc(100vh - 72px);
+    width: 100%; max-width: 100%; flex: 1; min-height: calc(100vh - 58px);
     background: var(--bg); position: relative; display: flex; flex-direction: column; min-width: 0; box-sizing: border-box;
   }
   .tai-body {
-    flex: 1; padding: 24px 28px calc(90px + env(safe-area-inset-bottom));
+    flex: 1; padding: 20px 24px calc(88px + env(safe-area-inset-bottom));
     width: 100%; max-width: 1240px; margin: 0 auto; box-sizing: border-box;
   }
 
   /* Collapsible Accordion Sidebar */
   .tai-desktop-sidebar { display: none; }
   @media (min-width: 900px) {
-    /* position: fixed rather than sticky - see the matching note on
-       .ta-sidebar in PlatformUI.jsx's TOKENS for why (this app, the
-       platform app, and the owner app are all kept mounted at once with
-       display none/block, which empirically broke sticky). .tai-desktop-
-       shell is centered with a max-width of 1440px, so unlike the admin
-       sidebar this can't just pin to the viewport's left edge - it has to
-       track the same centering offset the shell uses. */
     .tai-desktop-sidebar {
       display: flex; flex-direction: column; width: 250px; flex-shrink: 0;
-      position: fixed; top: 72px; left: max(0px, calc((100vw - 1440px) / 2));
-      height: calc(100vh - 72px); height: calc(100dvh - 72px); background: var(--surface); border-right: 1px solid var(--border);
-      padding: 18px 12px; box-shadow: 2px 0 12px -6px rgba(15, 23, 42, 0.03); z-index: 40; overflow-y: auto;
+      position: fixed; top: 58px; left: max(0px, calc((100vw - 1440px) / 2));
+      height: calc(100vh - 58px); height: calc(100dvh - 58px); background: var(--surface); border-right: 1px solid var(--border);
+      padding: 16px 12px; box-shadow: 2px 0 12px -6px rgba(15, 23, 42, 0.03); z-index: 40; overflow-y: auto;
       transition: width .2s ease, padding .2s ease;
     }
     .tai-app { margin-left: 250px; transition: margin-left .2s ease; }
     .tai-desktop-sidebar.tai-sidebar-minimized + .tai-app { margin-left: 72px; }
     .tai-desktop-sidebar.tai-sidebar-minimized {
-      width: 72px; padding: 18px 8px;
+      width: 72px; padding: 16px 8px;
     }
     .tai-desktop-sidebar.tai-sidebar-minimized .tai-group-header span,
     .tai-desktop-sidebar.tai-sidebar-minimized .tai-single-nav span,
@@ -171,12 +164,12 @@ export const TOKENS = `
     box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.35); display: flex; align-items: center; gap: 10px; max-width: 90%;
     animation: slideUp .22s cubic-bezier(.16,1,.3,1) both; border: 1px solid rgba(255,255,255,0.1);
   }
-  .tai-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; row-gap: 10px; padding: 8px 0 18px; }
-  .tai-topbar > .tai-row.tai-gap12 { min-width: 0; }
-  .tai-topbar-actions { flex-wrap: wrap; justify-content: flex-end; row-gap: 8px; }
-  .tai-h1 { font-size: clamp(20px, 4vw, 24px); font-weight: 800; letter-spacing: -0.025em; margin:0; color: var(--text); }
-  .tai-sub { font-size: 13px; color: var(--text-2); margin: 3px 0 0; font-weight: 500; }
-  .tai-iconbtn { width:38px; height:38px; border-radius:12px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border:1px solid var(--border);
+  .tai-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap: nowrap; gap: 10px; padding: 6px 0 14px; width: 100%; box-sizing: border-box; }
+  .tai-topbar > .tai-row.tai-gap12 { min-width: 0; flex: 1; }
+  .tai-topbar-actions { flex-wrap: nowrap; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+  .tai-h1 { font-size: clamp(17px, 2.5vw, 20px); font-weight: 800; letter-spacing: -0.02em; margin:0; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+  .tai-sub { font-size: 12px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+  .tai-iconbtn { width:34px; height:34px; border-radius:10px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border:1px solid var(--border);
     box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
     display:flex; align-items:center; justify-content:center; color: var(--text); flex-shrink:0; cursor:pointer;
     transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); }
