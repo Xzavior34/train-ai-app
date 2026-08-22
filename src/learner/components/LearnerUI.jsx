@@ -400,6 +400,59 @@ export const TOKENS = `
     .tai-roadmap-item-title { font-size: 9.5px !important; }
     .tai-roadmap-item-status { font-size: 8px !important; }
   }
+
+  /* Universal Cinema Video & Lesson Responsive Rules */
+  .tai-lesson-cinema-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 18px;
+    align-items: start;
+    transition: all 0.25s ease;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .tai-lesson-cinema-layout.tai-cinema-full {
+    grid-template-columns: 1fr !important;
+  }
+  .tai-lesson-nav-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .tai-lesson-nav-complete { flex: 2 1 240px; order: 2; }
+  .tai-lesson-nav-subrow { display: flex; gap: 12px; flex: 2 1 300px; }
+  .tai-lesson-nav-subrow > button:first-child { order: 1; }
+  .tai-lesson-nav-subrow > button:last-child { order: 3; }
+
+  @media (max-width: 899px) {
+    .tai-lesson-cinema-layout {
+      grid-template-columns: 1fr !important;
+      gap: 14px !important;
+    }
+  }
+  @media (max-width: 768px) {
+    .tai-lesson-nav-container {
+      flex-direction: column !important;
+      gap: 10px !important;
+    }
+    .tai-lesson-nav-complete {
+      width: 100% !important;
+      flex: none !important;
+      order: 1 !important;
+    }
+    .tai-lesson-nav-subrow {
+      width: 100% !important;
+      display: flex !important;
+      gap: 8px !important;
+      flex: none !important;
+      order: 2 !important;
+    }
+    .tai-header-full-text { display: none !important; }
+  }
 `;
 
 export const COURSE_GRAD_PALETTE = [
