@@ -930,11 +930,22 @@ export function DesktopSidebar({
         <div
           className={`tai-single-nav ${activeScreen === "settings" ? "active" : ""}`}
           onClick={onProfile}
-          title="My Profile"
+          title="My Profile & Settings"
         >
           <Settings size={16} />
-          <span>Profile</span>
+          <span>Settings</span>
         </div>
+        {onSignOut && (
+          <div
+            className="tai-single-nav"
+            onClick={onSignOut}
+            title="Sign Out to Landing Page"
+            style={{ color: "var(--danger)" }}
+          >
+            <LogOut size={16} />
+            <span>Sign Out</span>
+          </div>
+        )}
       </div>
     </aside>
   );

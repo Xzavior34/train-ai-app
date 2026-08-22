@@ -301,7 +301,14 @@ export default function App() {
       return (
         <>
           <OfflineIndicator mode={offlineMode} />
-          <AuthPage onSignIn={signIn} onSignUp={signUp} authError={authError} initialEmail={inviteAuthEmail} onForgotPassword={sendPasswordReset} />
+          <AuthPage
+            onSignIn={signIn}
+            onSignUp={signUp}
+            authError={authError}
+            initialEmail={inviteAuthEmail}
+            onForgotPassword={sendPasswordReset}
+            onGoHome={() => setPublicView("landing")}
+          />
           <ConsentBanner session={session} />
         </>
       );
