@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
