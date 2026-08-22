@@ -669,13 +669,14 @@ export function LearnerHeader({
           />
         </div>
 
-        {/* Sign Out Button (Desktop only) */}
+        {/* Sign Out Button */}
         {onSignOut && (
           <button
-            className="tai-iconbtn tai-desktop-only"
+            className="tai-iconbtn"
             onClick={onSignOut}
             title="Sign out"
             style={{ color: "var(--danger)" }}
+            aria-label="Sign out"
           >
             <LogOut size={16} />
           </button>

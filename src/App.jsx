@@ -229,11 +229,20 @@ export default function App() {
     setNeedsOnboarding(false);
   }
 
+  async function handleGlobalSignOut() {
+    await signOut();
+    setUserRoles(["learner"]);
+    setHasPlatformRole(false);
+    setViewMode("learner");
+    setPublicView("landing");
+    setOwnerPortalAuthenticated(false);
+  }
+
   if (loading) {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <LoadingScreen message="Loading Train AI..." />
+        <LoadingScreen message="Connecting to Train AI..." />
       </>
     );
   }
@@ -317,7 +326,7 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <LoadingScreen message="Loading Train AI..." />
+        <LoadingScreen message="Verifying security credentials..." />
       </>
     );
   }
@@ -325,7 +334,7 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <MfaChallengeScreen onVerified={() => setMfaGate("clear")} onSignOut={signOut} />
+        <MfaChallengeScreen onVerified={() => setMfaGate("clear")} onSignOut={handleGlobalSignOut} />
         <ConsentBanner session={session} />
       </>
     );
@@ -335,7 +344,7 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <LoadingScreen message="Loading Train AI..." />
+        <LoadingScreen message="Loading personalized learning tracks..." />
       </>
     );
   }
@@ -358,7 +367,7 @@ export default function App() {
           onSwitchToPlatform={hasPlatformRole ? () => setViewMode("platform") : undefined}
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
-          onSignOut={signOut}
+          onSignOut={handleGlobalSignOut}
         />
       </div>
       <div style={{ display: viewMode === "platform" ? "block" : "none" }}>
@@ -369,7 +378,7 @@ export default function App() {
           userRoles={userRoles}
           superAdminSelectedOrgId={superAdminSelectedOrgId}
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
-          onSignOut={signOut}
+          onSignOut={handleGlobalSignOut}
         />
       </div>
       <div style={{ display: viewMode === "owner" ? "block" : "none" }}>
@@ -378,7 +387,7 @@ export default function App() {
           userRoles={userRoles}
           superAdminSelectedOrgId={superAdminSelectedOrgId}
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
-          onSignOut={signOut}
+          onSignOut={handleGlobalSignOut}
         />
       </div>
       <ConsentBanner session={session} />
