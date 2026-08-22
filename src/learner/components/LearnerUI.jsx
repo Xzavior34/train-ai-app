@@ -92,16 +92,26 @@ export const TOKENS = `
     flex: 1; padding: 24px 28px calc(90px + env(safe-area-inset-bottom));
     width: 100%; max-width: 1240px; margin: 0 auto; box-sizing: border-box;
   }
-  
+
   /* Collapsible Accordion Sidebar */
   .tai-desktop-sidebar { display: none; }
   @media (min-width: 900px) {
+    /* position: fixed rather than sticky - see the matching note on
+       .ta-sidebar in PlatformUI.jsx's TOKENS for why (this app, the
+       platform app, and the owner app are all kept mounted at once with
+       display none/block, which empirically broke sticky). .tai-desktop-
+       shell is centered with a max-width of 1440px, so unlike the admin
+       sidebar this can't just pin to the viewport's left edge - it has to
+       track the same centering offset the shell uses. */
     .tai-desktop-sidebar {
-      display: flex; flex-direction: column; width: 250px; flex-shrink: 0; position: sticky; top: 72px;
+      display: flex; flex-direction: column; width: 250px; flex-shrink: 0;
+      position: fixed; top: 72px; left: max(0px, calc((100vw - 1440px) / 2));
       height: calc(100vh - 72px); height: calc(100dvh - 72px); background: var(--surface); border-right: 1px solid var(--border);
       padding: 18px 12px; box-shadow: 2px 0 12px -6px rgba(15, 23, 42, 0.03); z-index: 40; overflow-y: auto;
       transition: width .2s ease, padding .2s ease;
     }
+    .tai-app { margin-left: 250px; transition: margin-left .2s ease; }
+    .tai-desktop-sidebar.tai-sidebar-minimized + .tai-app { margin-left: 72px; }
     .tai-desktop-sidebar.tai-sidebar-minimized {
       width: 72px; padding: 18px 8px;
     }
