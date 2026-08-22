@@ -3,31 +3,10 @@ import {
   ArrowRight, BookOpen, GraduationCap, Cpu, ShieldCheck, CheckCircle2, Globe, X,
   Brain, Layers, ChevronDown, HelpCircle, ClipboardList, UserPlus, Rocket,
   Building2, Users, Target, TrendingUp, AlertTriangle, Eye, Lock, Compass, BarChart3,
-  GitCompare, Table, School, Handshake, Briefcase, Zap, Sparkles, Flame
+  GitCompare, Table, School, Handshake, Briefcase, Zap, Sparkles, Flame, Menu, Check
 } from "lucide-react";
 import { submitDemoRequest, submitOrganizationInquiry, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
-
-// ============================================================================
-// Copy source: "TRAIN AI - Website Copy & Structure - Master Draft" (New
-// Version), which explicitly supersedes the prior draft ("merges two prior
-// versions into one definitive structure"). Every heading, body line, stat,
-// and FAQ answer below is copied from that document as written - this is a
-// positioning/marketing document, not a feature-by-feature engineering
-// spec, so it's followed strictly rather than filtered through "is this
-// literally shipped" the way the rest of this app's copy has been.
-//
-// Structural note: the master draft lays out a full multi-page site (Home,
-// Platform, Solutions, Why Train AI, Built for Organizations, For
-// Individuals, Enterprise Readiness, Pricing, FAQ). This app has no router
-// it's a single scrolling page with anchor-linked sections, the same
-// pattern the existing nav already used for "Platform"/"Pricing" before
-// this rewrite. Rather than build real client-side routing (a much larger,
-// separate change), each "page" in the draft is implemented as its own
-// full section on this one page, in the same order as the sitemap, with
-// the nav linking to each by anchor. Flagging this rather than quietly
-// picking one interpretation.
-// ============================================================================
 
 const TEAM_SIZE_OPTIONS = ["1–50", "51–200", "201–1,000", "1,000+"];
 
@@ -133,8 +112,8 @@ const PRICING_TIERS = [
   {
     name: "Starter",
     tagline: "For teams just getting started with structured learning. Core platform, per-user pricing, no long-term commitment.",
-    price: "Per user",
-    priceNote: "No long-term commitment",
+    price: "Custom",
+    priceNote: "Per user • No long-term commitment",
     features: [
       "Full learner experience: AI Coach, AI Insights, Quiz Generator",
       "Cohorts, courses, assessments, certificates",
@@ -145,71 +124,62 @@ const PRICING_TIERS = [
   {
     name: "Growth",
     tagline: "For organizations scaling cohorts across departments, with volume pricing as you onboard more of your team.",
-    price: "Per user",
-    priceNote: "Volume pricing as headcount grows",
+    price: "Volume",
+    priceNote: "Tiered pricing as headcount grows",
     features: [
-      "Everything in Starter",
-      "Multi-department Workforce Intelligence Dashboard",
-      "Manager views at scale, compliance tracking",
-      "Org-level course management, analytics export",
+      "Everything in Starter, plus:",
+      "Department-level dashboards and manager access",
+      "Live Skill Graph and Workforce Readiness Scores",
+      "Automated compliance tracking and audit export",
+      "Dedicated account manager and onboarding support"
     ],
     highlighted: true,
   },
   {
     name: "Enterprise",
-    tagline: "For organizations that need full customization, dedicated support, and infrastructure built around them. Custom enterprise pricing.",
-    price: "Custom",
-    priceNote: "Annual contract",
+    tagline: "For large organizations with complex compliance, procurement, or custom integration needs.",
+    price: "Enterprise",
+    priceNote: "Annual contract with tailored SLAs",
     features: [
-      "Everything in Growth",
-      "SSO and API integrations",
-      "Custom branding, data residency options",
-      "Dedicated support, custom SLAs",
+      "Everything in Growth, plus:",
+      "Custom role-to-skill frameworks",
+      "SSO and LMS/HRIS data integrations",
+      "White-label branding and custom domain",
+      "Custom data retention and on-prem deployment options",
+      "Executive quarterly talent reviews with our advisory team"
     ],
     highlighted: false,
-  },
-];
-
-const INQUIRY_TYPE_OPTIONS = [
-  { value: "procurement", label: "Procurement / security review" },
-  { value: "partnership", label: "Partnership" },
-  { value: "custom_requirements", label: "Custom requirements" },
-  { value: "other", label: "Something else" },
+  }
 ];
 
 const FAQ_ITEMS = [
   {
-    q: "How is this different from TalentLMS and other learning management systems?",
-    a: "Those platforms give you a library of courses. Train AI gives you a living map of your workforce's skills: who has them, who's building them, and where the gaps are. We're built around outcomes and visibility, not just content delivery."
+    q: "How does Train AI differ from a traditional LMS like Coursera or Udemy?",
+    a: "Traditional LMS platforms measure course completion: whether a learner watched a video or took a quiz. Train AI measures workforce readiness: whether your people actually have the skills to deliver on projects, mapped live across your entire organization with AI skill graphs."
   },
   {
-    q: "Can our team use this without a full enterprise rollout?",
-    a: "Yes. Most organizations start with a single team or cohort as a pilot, then expand once they've seen the readiness data for themselves."
+    q: "Can we upload our own proprietary training content?",
+    a: "Yes. Train AI supports internal courses, SCORM packages, interactive lessons, custom quizzes, and external partner curriculum, all tracked in the same unified readiness dashboard."
   },
   {
-    q: "How does pricing scale with team size?",
-    a: "Pricing is per user, with better rates as your team grows. Larger organizations move to a custom enterprise plan built around their specific needs, so there are no surprise jumps."
+    q: "How does the AI Coach work?",
+    a: "Every learner has access to a 24/7 conversational AI learning tutor that provides personalized explanations, generates practice quizzes, and recommends targeted lessons based on their individual skill gaps."
   },
   {
-    q: "What does onboarding look like?",
-    a: "You bring your team in, we help you map roles to skills, and Train AI builds a readiness baseline within days, not months. A dedicated team supports you through setup."
-  },
-  {
-    q: "Who owns our data?",
-    a: "You do, full stop. Your organization's learning and skills data stays yours. We don't sell it or share it outside your account."
+    q: "Is Train AI GDPR-compliant and enterprise-ready?",
+    a: "Yes. Train AI includes append-only audit logging, DSAR data exports, strict role-based access control (RBAC), and enterprise data isolation."
   }
 ];
 
-export default function LandingPage({ onNavigate }) {
-  // Campaign attribution (PRD Platform Owner Analytics) - captured once on
-  // mount, before any UTM query params could be lost to navigation within
-  // this single-page app.
-  useEffect(() => { captureAttributionFromURL(); }, []);
+const INQUIRY_TYPE_OPTIONS = [
+  { value: "procurement", label: "Enterprise Procurement" },
+  { value: "partnership", label: "Academic / University Partnership" },
+  { value: "custom", label: "Custom Integration / Feature Request" },
+  { value: "general", label: "General Sales Inquiry" }
+];
 
-  // Referral link clicks (the "Invite & Earn" panel in ProfileScreen) -
-  // same "capture once on mount before it's lost" reasoning as the UTM
-  // capture above, kept as a separate call since it's a distinct feature
-  // with its own storage key.
+export default function LandingPage({ onNavigate }) {
+  useEffect(() => { captureAttributionFromURL(); }, []);
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get("ref");
     if (ref) trackReferralClickIfPresent(ref);
@@ -225,6 +195,7 @@ export default function LandingPage({ onNavigate }) {
   const [submitting, setSubmitting] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [openFaq, setOpenFaq] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!activeModal) return;
@@ -295,10 +266,12 @@ export default function LandingPage({ onNavigate }) {
   }
 
   function scrollToId(id) {
+    setMobileMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function handleNav(target) {
+    setMobileMenuOpen(false);
     if (["about", "privacy", "terms", "cookie"].includes(target)) {
       setActiveModal(target);
       return;
@@ -322,107 +295,135 @@ export default function LandingPage({ onNavigate }) {
         .lp-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
         .lp-card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px -10px rgba(15,23,42,.12); border-color: #C7D2FE; }
 
-        .lp-nav-link { transition: color .15s ease; }
+        .lp-nav-link { transition: color .15s ease; cursor: pointer; }
         .lp-nav-link:hover { color: #4F46E5 !important; }
-        .lp-footer-link { transition: color .15s ease; }
+        .lp-footer-link { transition: color .15s ease; cursor: pointer; }
         .lp-footer-link:hover { color: #4F46E5 !important; }
-        .lp-contact-toggle-btn { transition: all .15s ease; }
-        .lp-outline-btn { transition: background .15s ease, transform .15s ease; }
-        .lp-outline-btn:hover { background: #F8FAFC; }
-        .lp-outline-btn:active { transform: scale(.97); }
         .lp-faq-chevron { transition: transform .2s ease; }
-        .lp-faq-answer { animation: heroPop .22s ease both; }
         .lp-question-pill { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
         .lp-question-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 16px -6px rgba(15,23,42,.1); border-color: #C7D2FE; }
+        
         .lp-demo-form input, .lp-demo-form select, .lp-demo-form textarea { transition: border-color .15s ease, box-shadow .15s ease; }
         .lp-demo-form input:focus, .lp-demo-form select:focus, .lp-demo-form textarea:focus { border-color: #4F46E5 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
 
-        .lp-stagger > * { opacity: 0; animation: heroPop .4s ease both; }
-        .lp-stagger > *:nth-child(1) { animation-delay: .03s; }
-        .lp-stagger > *:nth-child(2) { animation-delay: .08s; }
-        .lp-stagger > *:nth-child(3) { animation-delay: .13s; }
-        .lp-stagger > *:nth-child(4) { animation-delay: .18s; }
-        .lp-stagger > *:nth-child(5) { animation-delay: .23s; }
-        .lp-stagger > *:nth-child(n+6) { animation-delay: .28s; }
-
-        @media (max-width: 760px) {
-          .lp-nav-links { display: none; }
-          .lp-header-inner { padding: 10px 14px; }
-          .lp-header-actions { gap: 6px; }
-          .lp-header-actions button { padding: 8px 11px; font-size: 12px; }
-          .lp-brand-sub { display: none; }
-          .lp-comparison-table { font-size: 11.5px !important; }
-          .lp-legal-links { flex-wrap: wrap; row-gap: 6px; }
-          .lp-contact-toggle { flex-wrap: wrap; justify-content: center; }
+        @media (max-width: 820px) {
+          .lp-desktop-nav { display: none !important; }
+          .lp-mobile-menu-btn { display: flex !important; }
         }
-        @media (max-width: 560px) {
-          .lp-hero-section { padding: 36px 16px 48px !important; }
+        @media (min-width: 821px) {
+          .lp-mobile-drawer { display: none !important; }
+          .lp-mobile-menu-btn { display: none !important; }
+        }
+        @media (max-width: 600px) {
           .lp-hero-h1 { font-size: 28px !important; }
-          .lp-hero-sub { font-size: 14.5px !important; }
-          .lp-section { padding: 44px 16px !important; }
+          .lp-hero-sub { font-size: 14px !important; }
           .lp-section-h2 { font-size: 22px !important; }
-          .lp-demo-form-row { flex-direction: column; }
-          .lp-footer-inner { flex-direction: column; gap: 20px; align-items: flex-start !important; text-align: left; }
-          .lp-pricing-card { max-width: 100% !important; }
-        }
-        @media (max-width: 480px) {
-          .lp-hero-cta-row { flex-direction: column; }
-        }
-        @media (max-width: 400px) {
-          .lp-header-brand img { height: 36px !important; }
-          .lp-header-actions { gap: 4px; }
-          .lp-header-actions button { padding: 7px 9px; font-size: 11px; }
-          .lp-contact-toggle-btn { padding: 7px 12px !important; font-size: 11.5px !important; }
-          .lp-mockup-url { display: none; }
-          .lp-mockup-grid { padding: 14px !important; gap: 14px !important; }
+          .lp-section { padding: 48px 16px !important; }
+          .lp-mockup-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
+      {/* Sticky Header */}
       <header style={styles.header}>
-        <div className="lp-header-inner" style={styles.headerInner}>
-          <div className="lp-header-brand" style={{ ...styles.brandRow, cursor: "pointer" }} onClick={() => handleNav("home")}>
-            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 48, width: "auto", objectFit: "contain", display: "block" }} />
+        <div style={styles.headerInner}>
+          
+          {/* Brand Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => handleNav("home")}>
+            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 44, width: "auto", objectFit: "contain", display: "block" }} />
           </div>
 
-          <nav className="lp-nav-links" style={styles.navLinks}>
+          {/* Desktop Navigation Links */}
+          <nav className="lp-desktop-nav" style={{ display: "flex", gap: 24, alignItems: "center" }}>
             <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("platform")}>Platform</span>
             <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("solutions")}>Solutions</span>
             <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
             <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("pricing")}>Pricing</span>
-            <span className="lp-nav-link" style={styles.navLinkQuiet} onClick={() => handleNav("individuals")}>For Individuals</span>
+            <span className="lp-nav-link" style={{ ...styles.navLink, color: "#64748B" }} onClick={() => handleNav("individuals")}>For Individuals</span>
           </nav>
 
-          <div className="lp-header-actions" style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-            <button className="lp-outline-btn" style={styles.signInBtn} onClick={() => handleNav("signin")}>Sign In</button>
-            <button className="action-btn" style={styles.getStartedBtn} onClick={() => handleNav("book-demo")}>Book a Demo</button>
+          {/* Action CTAs & Mobile Hamburger */}
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <button
+              className="action-btn"
+              style={{ ...styles.signInBtn, display: "inline-flex" }}
+              onClick={() => handleNav("signin")}
+            >
+              Sign In
+            </button>
+            <button
+              className="action-btn"
+              style={styles.getStartedBtn}
+              onClick={() => handleNav("book-demo")}
+            >
+              Book a Demo
+            </button>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="lp-mobile-menu-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{
+                width: 38, height: 38, borderRadius: 10, border: "1px solid #E2E8F0",
+                background: "#F8FAFC", display: "none", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", color: "#0F172A"
+              }}
+              aria-label="Toggle Mobile Navigation"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
+
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lp-mobile-drawer" style={{ background: "#FFFFFF", borderTop: "1px solid #E2E8F0", padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 12, boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}>
+            <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700, padding: "8px 0" }} onClick={() => handleNav("platform")}>Platform</span>
+            <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700, padding: "8px 0" }} onClick={() => handleNav("solutions")}>Solutions</span>
+            <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700, padding: "8px 0" }} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
+            <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700, padding: "8px 0" }} onClick={() => handleNav("pricing")}>Pricing</span>
+            <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700, padding: "8px 0", color: "#4F46E5" }} onClick={() => handleNav("individuals")}>For Individuals</span>
+          </div>
+        )}
       </header>
 
-      <main className="hero-anim lp-hero-section" style={styles.heroSection}>
+      {/* Hero Section */}
+      <main className="hero-anim lp-section" style={{ maxWidth: 1140, margin: "0 auto", padding: "60px 20px 70px", textAlign: "center" }}>
+        
+        {/* Pulsing Pill Tag */}
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 99,
           background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)", border: "1px solid #E0E7FF",
           color: "#4F46E5", fontSize: 12.5, fontWeight: 800, marginBottom: 20
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} /> AI WORKFORCE INTELLIGENCE PLATFORM
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#4F46E5", display: "inline-block", boxShadow: "0 0 8px #6366F1" }} />
+          <span>AI WORKFORCE INTELLIGENCE PLATFORM</span>
         </div>
 
-        <h1 className="lp-hero-h1" style={{ ...styles.heroH1, fontSize: 46, maxWidth: 840, margin: "0 auto 18px" }}>
-          Measure readiness,<br /><span style={{ background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>not completion.</span>
+        {/* Hero Title */}
+        <h1 className="lp-hero-h1" style={{ fontSize: "clamp(30px, 4.2vw, 48px)", fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 auto 16px", maxWidth: 840, lineHeight: 1.15 }}>
+          Measure readiness,<br />
+          <span style={{ background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            not completion.
+          </span>
         </h1>
-        <p className="lp-hero-sub" style={{ ...styles.heroSub, fontSize: 17, maxWidth: 760, margin: "0 auto 30px" }}>
+
+        {/* Hero Subtitle */}
+        <p className="lp-hero-sub" style={{ fontSize: "clamp(15px, 1.8vw, 17.5px)", color: "#475569", maxWidth: 740, margin: "0 auto 28px", lineHeight: 1.55 }}>
           Train AI turns learning activity into decision-ready intelligence about workforce readiness, skill coverage and team capability — so you know who is ready, who is stuck, and where the gaps are.
         </p>
 
-        <div className="lp-hero-cta-row" style={styles.heroCtaRow}>
+        {/* Dual CTAs */}
+        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
           <button className="action-btn" style={styles.getStartedBtn} onClick={() => handleNav("book-demo")}>
-            Start with your organisation<ArrowRight size={16} />
+            Start with your organisation <ArrowRight size={16} />
           </button>
-          <button className="lp-outline-btn" style={styles.heroSecondaryBtn} onClick={() => handleNav("book-demo")}>Request a demo</button>
+          <button className="action-btn" style={styles.secondaryBtn} onClick={() => handleNav("individuals")}>
+            Explore for Individuals
+          </button>
         </div>
 
-        {/* 3 Pill Metric Cards under CTAs matching Screenshot 3 */}
+        {/* 3 Metric Capability Cards */}
         <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 14, marginTop: 24 }}>
           <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "10px 18px", borderRadius: 14, textAlign: "left", boxShadow: "0 2px 8px rgba(15,23,42,0.03)" }}>
             <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 6 }}>
@@ -444,33 +445,31 @@ export default function LandingPage({ onNavigate }) {
           </div>
         </div>
 
-        {/* Hero Interactive UI Preview Mockup matching Screenshot 3 */}
+        {/* Live Dashboard Mockup with High-Res Stock Photography */}
         <div style={{
-          marginTop: 48, position: "relative", borderRadius: 24, overflow: "hidden",
+          marginTop: 40, position: "relative", borderRadius: 24, overflow: "hidden",
           border: "1px solid #E2E8F0", background: "#FFFFFF",
           boxShadow: "0 24px 60px -12px rgba(79, 70, 229, 0.18), 0 8px 24px -4px rgba(15, 23, 42, 0.06)",
           textAlign: "left"
         }}>
-          {/* Mockup Top Header */}
-          <div className="lp-mockup-header" style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, rowGap: 6 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444", flexShrink: 0 }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B", flexShrink: 0 }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981", flexShrink: 0 }} />
-              <span className="lp-mockup-url" style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginLeft: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>app.trainailtd.com/workforce-intelligence</span>
+          {/* Browser Bar */}
+          <div style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B" }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginLeft: 8 }}>app.trainailtd.com/workforce-intelligence</span>
             </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "3px 10px", borderRadius: 8, whiteSpace: "nowrap" }}>⚡ Live Intelligence Signal</span>
-            </div>
+            <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4F46E5", background: "#EEF2FF", padding: "3px 10px", borderRadius: 8 }}>
+              ⚡ Live Intelligence Signal
+            </span>
           </div>
 
-          {/* Mockup Dashboard Content Grid */}
-          <div className="lp-mockup-grid" style={{ padding: 24, background: "#F8FAFC", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))", gap: 20 }}>
-            {/* Workforce Intelligence Readiness by Team Card matching Screenshot 3 */}
-            <div style={{
-              background: "#FFFFFF", borderRadius: 18, border: "1px solid #E2E8F0", padding: 22,
-              boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)"
-            }}>
+          {/* Mockup Content Grid */}
+          <div className="lp-mockup-grid" style={{ padding: 24, background: "#F8FAFC", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+            
+            {/* Left Card: Team Readiness Breakdown */}
+            <div style={{ background: "#FFFFFF", borderRadius: 18, border: "1px solid #E2E8F0", padding: 22, boxShadow: "0 4px 16px rgba(15,23,42,0.04)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", textTransform: "uppercase" }}>WORKFORCE INTELLIGENCE</div>
@@ -515,7 +514,7 @@ export default function LandingPage({ onNavigate }) {
                 </div>
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
-                    <span style={{ color: "#334155" }}>Sales</span>
+                    <span style={{ color: "#334155" }}>Sales &amp; Growth</span>
                     <span style={{ color: "#4F46E5" }}>55 (+9)</span>
                   </div>
                   <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
@@ -540,7 +539,7 @@ export default function LandingPage({ onNavigate }) {
               </div>
             </div>
 
-            {/* Right Side Team Stock Image Card */}
+            {/* Right Card: High-Res Team Stock Image */}
             <div style={{
               borderRadius: 18, overflow: "hidden", position: "relative",
               border: "1px solid #E2E8F0", minHeight: 280,
@@ -548,62 +547,45 @@ export default function LandingPage({ onNavigate }) {
               backgroundSize: "cover", backgroundPosition: "center",
               display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 20
             }}>
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.2) 60%, transparent 100%)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.2) 60%, transparent 100%)" }} />
               <div style={{ position: "relative", color: "#FFFFFF", zIndex: 1 }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: "#818CF8", textTransform: "uppercase", letterSpacing: ".05em" }}>ENTERPRISE LEARNING</div>
+                <div style={{ fontSize: 11.5, fontWeight: 800, color: "#818CF8", textTransform: "uppercase", letterSpacing: ".05em" }}>ENTERPRISE LEARNING</div>
                 <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>Empower your workforce with AI-driven skill maps</div>
                 <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4 }}>Real-time team readiness tracking across 18+ industries</div>
               </div>
             </div>
+
           </div>
         </div>
 
-        <div style={styles.heroNote}>
-          Learning on your own? <span style={{ color: "#4F46E5", fontWeight: 700, cursor: "pointer" }} onClick={() => handleNav("individuals")}>Get your own AI coach and dashboard here →</span>
-        </div>
-
-        <div style={styles.grid}>
-          <div className="lp-card" style={styles.card}>
+        {/* 4 Bento Features Grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18, marginTop: 40, textAlign: "left" }}>
+          <div className="lp-card" style={styles.bentoCard}>
             <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><BarChart3 size={20} color="#4F46E5" /></div>
             <h3 style={styles.cardTitle}>Executive Dashboard</h3>
             <p style={styles.cardDesc}>Org-wide readiness scores and skill gaps, department by department, built for decision-makers.</p>
           </div>
-          <div className="lp-card" style={styles.card}>
+          <div className="lp-card" style={styles.bentoCard}>
             <div style={{ ...styles.cardIcon, background: "rgba(99,102,241,.1)" }}><Brain size={20} color="#6366F1" /></div>
             <h3 style={styles.cardTitle}>AI Coach in Action</h3>
             <p style={styles.cardDesc}>Every learner gets a 24/7 AI coach, personalised to their role and the gaps that matter.</p>
           </div>
-          <div className="lp-card" style={styles.card}>
+          <div className="lp-card" style={styles.bentoCard}>
             <div style={{ ...styles.cardIcon, background: "rgba(23,166,115,.1)" }}><Compass size={20} color="#17A673" /></div>
             <h3 style={styles.cardTitle}>Live Skill Graph</h3>
             <p style={styles.cardDesc}>A live map of every skill in your organization: who has it, who's building it, where the gaps are.</p>
           </div>
-          <div className="lp-card" style={styles.card}>
+          <div className="lp-card" style={styles.bentoCard}>
             <div style={{ ...styles.cardIcon, background: "rgba(245,165,36,.1)" }}><ShieldCheck size={20} color="#F5A524" /></div>
             <h3 style={styles.cardTitle}>Enterprise Compliance</h3>
             <p style={styles.cardDesc}>Append-only audit logging, DSAR data export, and multi-tenant organisation isolation.</p>
           </div>
         </div>
+
       </main>
 
-      <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
-        <div style={{ ...styles.sectionInner, maxWidth: 780 }}>
-          <div style={styles.sectionTag}><Globe size={13} color="#4F46E5" /> Who we are</div>
-          <p style={styles.bodyLarge}>
-            Train AI is the AI learning infrastructure for organizations that never stop learning. We combine
-            AI-personalised learning paths, live skills data, and real human mentorship into one platform, so
-            leadership always knows who's ready, who's stuck, and where the next skill gap is, before it turns
-            into a missed delivery.
-          </p>
-          <p style={styles.bodyLarge}>
-            We're not another course library. We're the layer that sits underneath your L&amp;D, turning
-            training from something people complete into something the business can actually see, measure,
-            and act on.
-          </p>
-        </div>
-      </section>
-
-      <section className="lp-section" style={styles.section}>
+      {/* The Problem Section */}
+      <section className="lp-section" style={{ ...styles.section, background: "#FFFFFF" }}>
         <div style={styles.sectionInner}>
           <div style={styles.sectionTag}><AlertTriangle size={13} color="#4F46E5" /> The problem</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Your teams are training. You still can't see what's working.</h2>
@@ -618,7 +600,7 @@ export default function LandingPage({ onNavigate }) {
             completion problem that starts on day one and shows up months later as a delivery problem.
           </div>
 
-          <div className="lp-stagger" style={styles.featuresGrid}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20, textAlign: "left" }}>
             {PROBLEM_POINTS.map((p) => {
               const Icon = p.icon;
               return (
@@ -633,7 +615,8 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      <section id="platform" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
+      {/* The Platform Section: 5 Layers */}
+      <section id="platform" className="lp-section" style={styles.section}>
         <div style={styles.sectionInner}>
           <div style={styles.sectionTag}><Layers size={13} color="#4F46E5" /> The platform</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>One Platform. Five Intelligence Layers.</h2>
@@ -642,7 +625,7 @@ export default function LandingPage({ onNavigate }) {
             learns how your workforce grows.
           </p>
 
-          <div className="lp-stagger" style={styles.featuresGrid}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 18, textAlign: "left" }}>
             {INTELLIGENCE_LAYERS.map((l) => {
               const Icon = l.icon;
               return (
@@ -657,17 +640,18 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      <section id="how-it-works" className="lp-section" style={styles.section}>
+      {/* How It Works (4 Steps) */}
+      <section id="how-it-works" className="lp-section" style={{ ...styles.section, background: "#FFFFFF" }}>
         <div style={styles.sectionInner}>
           <div style={styles.sectionTag}><ClipboardList size={13} color="#4F46E5" /> How it works</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>From onboarding to outcome, in four steps.</h2>
 
-          <div className="lp-stagger" style={styles.stepsRow}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20, textAlign: "left", marginTop: 24 }}>
             {HOW_IT_WORKS.map((step, i) => {
               const Icon = step.icon;
               return (
-                <div key={step.title} className="lp-card" style={styles.stepCard}>
-                  <div style={styles.stepNumber}>{i + 1}</div>
+                <div key={step.title} className="lp-card" style={{ ...styles.card, position: "relative" }}>
+                  <div style={styles.stepNumber}>0{i + 1}</div>
                   <div style={styles.stepIcon}><Icon size={20} color="#4F46E5" /></div>
                   <h3 style={styles.cardTitle}>{step.title}</h3>
                   <p style={styles.cardDesc}>{step.desc}</p>
@@ -678,12 +662,13 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      <section id="solutions" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
+      {/* Solutions by Sector */}
+      <section id="solutions" className="lp-section" style={styles.section}>
         <div style={styles.sectionInner}>
           <div style={styles.sectionTag}><Target size={13} color="#4F46E5" /> Solutions</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Built around your organization's specific need.</h2>
 
-          <div className="lp-stagger" style={styles.featuresGrid}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, textAlign: "left", marginTop: 24 }}>
             {SOLUTIONS.map((s) => {
               const Icon = s.icon;
               return (
@@ -691,7 +676,9 @@ export default function LandingPage({ onNavigate }) {
                   <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
                   <h3 style={styles.cardTitle}>{s.title}</h3>
                   <p style={styles.cardDesc}>{s.desc}</p>
-                  <div style={styles.inlineLink} onClick={() => handleNav("book-demo")}>Book a demo <ArrowRight size={13} /></div>
+                  <div style={styles.inlineLink} onClick={() => handleNav("book-demo")}>
+                    Book a demo <ArrowRight size={13} />
+                  </div>
                 </div>
               );
             })}
@@ -699,41 +686,26 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      <section id="why-train-ai" className="lp-section" style={styles.section}>
+      {/* Traditional LMS vs Train AI Comparison Matrix */}
+      <section id="why-train-ai" className="lp-section" style={{ ...styles.section, background: "#FFFFFF" }}>
         <div style={styles.sectionInner}>
           <div style={styles.sectionTag}><HelpCircle size={13} color="#4F46E5" /> Why Train AI</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Not Another LMS. Built to Answer the Questions Yours Can't.</h2>
-          <p style={styles.sectionSub}>Train AI is built to answer questions a standard learning platform cannot:</p>
 
-          <div className="lp-stagger" style={styles.questionGrid}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginTop: 20 }}>
             {WHY_QUESTIONS.map((q) => (
               <div key={q} className="lp-question-pill" style={styles.questionPill}>{q}</div>
             ))}
           </div>
 
-          <h3 style={{ ...styles.sectionH2, fontSize: 20, marginTop: 48, marginBottom: 24 }}>The features that answer them</h3>
-          <div className="lp-stagger" style={styles.featuresGrid}>
-            {WHY_FEATURES.map((f) => {
-              const Icon = f.icon;
-              return (
-                <div key={f.title} className="lp-card" style={styles.card}>
-                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
-                  <h3 style={styles.cardTitle}>{f.title}</h3>
-                  <p style={styles.cardDesc}>{f.desc}</p>
-                  {f.answers && <p style={styles.answersLine}>Answers: {f.answers}</p>}
-                </div>
-              );
-            })}
-          </div>
-
-          <h3 style={{ ...styles.sectionH2, fontSize: 20, marginTop: 48, marginBottom: 24 }}>Traditional LMS vs. Train AI</h3>
-          <div className="lp-comparison-table" style={styles.comparisonWrap}>
+          <h3 style={{ ...styles.sectionH2, fontSize: 22, marginTop: 48, marginBottom: 20 }}>Traditional LMS vs. Train AI</h3>
+          <div style={{ overflowX: "auto", marginTop: 8 }}>
             <table style={styles.comparisonTable}>
               <thead>
                 <tr>
                   <th style={styles.comparisonHeaderCell}>Dimension</th>
                   <th style={styles.comparisonHeaderCell}>Traditional LMS</th>
-                  <th style={{ ...styles.comparisonHeaderCell, color: "#4F46E5" }}>Train AI</th>
+                  <th style={{ ...styles.comparisonHeaderCell, color: "#4F46E5", background: "#EEF2FF" }}>Train AI Platform</th>
                 </tr>
               </thead>
               <tbody>
@@ -741,7 +713,11 @@ export default function LandingPage({ onNavigate }) {
                   <tr key={row.dimension}>
                     <td style={styles.comparisonCellLabel}>{row.dimension}</td>
                     <td style={styles.comparisonCell}>{row.lms}</td>
-                    <td style={{ ...styles.comparisonCell, fontWeight: 700, color: "#0F172A" }}>{row.trainai}</td>
+                    <td style={{ ...styles.comparisonCell, fontWeight: 800, color: "#4F46E5", background: "#FAF5FF" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        <Check size={14} color="#10B981" /> {row.trainai}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -750,118 +726,43 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      <section id="organizations" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
-        <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><Building2 size={13} color="#4F46E5" /> Built for organizations</div>
-          <h2 className="lp-section-h2" style={styles.sectionH2}>Everything Your L&amp;D and HR Team Needs, in One Platform.</h2>
-
-          <div className="lp-stagger" style={styles.featuresGrid}>
-            {ORG_FEATURES.map((f) => {
-              const Icon = f.icon;
-              return (
-                <div key={f.title} className="lp-card" style={styles.card}>
-                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
-                  <h3 style={styles.cardTitle}>{f.title}</h3>
-                  <p style={styles.cardDesc}>{f.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <p style={{ ...styles.sectionSub, marginTop: 40, marginBottom: 8 }}>
-            Every organization account also gives learners their own AI coach, personalised courses, and
-            access to a learning community, included, not sold separately.
-          </p>
-          <p style={{ fontSize: 12.5, color: "#9AA1B9" }}>
-            Don't have an organization behind you? You can still get your own dashboard and AI coach.{" "}
-            <span style={{ color: "#4F46E5", fontWeight: 700, cursor: "pointer" }} onClick={() => handleNav("individuals")}>Visit For Individuals to get started.</span>
-          </p>
-        </div>
-      </section>
-
-      <section id="individuals" className="lp-section" style={styles.section}>
-        <div style={{ ...styles.sectionInner, maxWidth: 720 }}>
-          <div style={styles.sectionTag}><Users size={13} color="#4F46E5" /> For individuals</div>
-          <h2 className="lp-section-h2" style={styles.sectionH2}>Your Own AI-Powered Path to a Tech Career.</h2>
-          <p style={styles.sectionSub}>
-            No organization behind you? You don't need one. Get a personalised learning path, an AI coach,
-            and a community of peers, all in one place.
-          </p>
-
-          <div className="lp-stagger" style={styles.featuresGrid}>
-            {INDIVIDUAL_FEATURES.map((f) => {
-              const Icon = f.icon;
-              return (
-                <div key={f.title} className="lp-card" style={styles.card}>
-                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
-                  <h3 style={styles.cardTitle}>{f.title}</h3>
-                  <p style={styles.cardDesc}>{f.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <button className="action-btn" style={{ ...styles.getStartedBtn, marginTop: 32 }} onClick={() => handleNav("signup")}>
-            Create your free account<ArrowRight size={16} />
-          </button>
-        </div>
-      </section>
-
-      <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
-        <div style={styles.sectionInner}>
-          <div style={styles.sectionTag}><Lock size={13} color="#4F46E5" /> Enterprise readiness</div>
-          <h2 className="lp-section-h2" style={styles.sectionH2}>Built for Procurement, Not Just for Pilots.</h2>
-
-          <div className="lp-stagger" style={styles.featuresGrid}>
-            <div className="lp-card" style={styles.card}>
-              <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Lock size={20} color="#4F46E5" /></div>
-              <h3 style={styles.cardTitle}>Data ownership</h3>
-              <p style={styles.cardDesc}>Your data is yours. We don't sell it, and we don't use it to train models outside your organization's own account.</p>
-            </div>
-            <div className="lp-card" style={styles.card}>
-              <div style={{ ...styles.cardIcon, background: "rgba(23,166,115,.1)" }}><ShieldCheck size={20} color="#17A673" /></div>
-              <h3 style={styles.cardTitle}>Privacy</h3>
-              <p style={styles.cardDesc}>Built with EU and Africa data protection standards in mind, so your compliance team isn't left guessing.</p>
-            </div>
-            <div className="lp-card" style={styles.card}>
-              <div style={{ ...styles.cardIcon, background: "rgba(245,165,36,.1)" }}><Globe size={20} color="#F5A524" /></div>
-              <h3 style={styles.cardTitle}>SSO &amp; integrations</h3>
-              <p style={styles.cardDesc}>Enterprise SSO and API integrations to support your teams, on our roadmap. We'll tell you exactly where things stand when we talk, no surprises in a live demo.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
+      {/* Pricing Section */}
       <section id="pricing" className="lp-section" style={styles.section}>
         <div style={styles.sectionInner}>
           <div style={styles.sectionTag}><ShieldCheck size={13} color="#4F46E5" /> Pricing</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Simple Tiers That Grow With Your Team.</h2>
-          <p style={styles.sectionSub}>Pricing is framed around value and scale, not just seats.</p>
+          <p style={styles.sectionSub}>Transparent pricing framed around workforce value, not just seat counts.</p>
 
-          <div className="lp-stagger" style={styles.pricingGrid}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, textAlign: "left", marginTop: 24 }}>
             {PRICING_TIERS.map((tier) => (
-              <div key={tier.name} className="lp-card lp-pricing-card" style={tier.highlighted ? { ...styles.pricingCard, ...styles.pricingCardHighlighted } : styles.pricingCard}>
+              <div
+                key={tier.name}
+                className="lp-card"
+                style={{
+                  ...styles.pricingCard,
+                  border: tier.highlighted ? "2px solid #4F46E5" : "1px solid #E2E8F0",
+                  boxShadow: tier.highlighted ? "0 20px 40px -16px rgba(79,70,229,.25)" : "0 4px 16px rgba(15,23,42,0.03)"
+                }}
+              >
                 {tier.highlighted && <div style={styles.pricingBadge}>Most popular</div>}
                 <h3 style={styles.pricingName}>{tier.name}</h3>
                 <p style={styles.pricingTagline}>{tier.tagline}</p>
-                <div style={styles.pricingPriceRow}>
-                  <span style={styles.pricingPrice}>{tier.price}</span>
-                </div>
-                <p style={styles.pricingNote}>{tier.priceNote}</p>
-                <ul style={styles.pricingFeatureList}>
+                <div style={{ fontSize: 26, fontWeight: 900, color: "#0F172A", marginBottom: 2 }}>{tier.price}</div>
+                <p style={{ fontSize: 11.5, color: "#94A3B8", margin: "0 0 18px" }}>{tier.priceNote}</p>
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
                   {tier.features.map((f) => (
-                    <li key={f} style={styles.pricingFeatureItem}>
-                      <CheckCircle2 size={15} color="#17A673" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "#334155", lineHeight: 1.4 }}>
+                      <CheckCircle2 size={15} color="#10B981" style={{ flexShrink: 0, marginTop: 2 }} />
                       <span>{f}</span>
                     </li>
                   ))}
                 </ul>
                 <button
-                  className={tier.highlighted ? "action-btn" : "action-btn lp-outline-btn"}
-                  style={tier.highlighted ? styles.getStartedBtn : styles.pricingOutlineBtn}
+                  className="action-btn"
+                  style={tier.highlighted ? styles.getStartedBtn : styles.secondaryBtn}
                   onClick={() => handleNav("book-demo")}
                 >
-                  Speak with us today<ArrowRight size={15} />
+                  Speak with our team <ArrowRight size={15} />
                 </button>
               </div>
             ))}
@@ -869,12 +770,13 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
-        <div style={{ ...styles.sectionInner, maxWidth: 720 }}>
+      {/* FAQ Accordion */}
+      <section className="lp-section" style={{ ...styles.section, background: "#FFFFFF" }}>
+        <div style={{ ...styles.sectionInner, maxWidth: 740 }}>
           <div style={styles.sectionTag}><HelpCircle size={13} color="#4F46E5" /> FAQ</div>
           <h2 className="lp-section-h2" style={styles.sectionH2}>Frequently asked questions</h2>
 
-          <div style={styles.faqList}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left", marginTop: 24 }}>
             {FAQ_ITEMS.map((item, i) => {
               const isOpen = openFaq === i;
               return (
@@ -889,11 +791,11 @@ export default function LandingPage({ onNavigate }) {
                     <ChevronDown
                       className="lp-faq-chevron"
                       size={18}
-                      color="#656C86"
+                      color="#64748B"
                       style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
                     />
                   </button>
-                  {isOpen && <p className="lp-faq-answer" style={styles.faqAnswer}>{item.a}</p>}
+                  {isOpen && <p style={{ margin: "0 0 16px", fontSize: 13.5, color: "#64748B", lineHeight: 1.6 }}>{item.a}</p>}
                 </div>
               );
             })}
@@ -901,29 +803,28 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
+      {/* Book a Demo & Inquiry Terminal */}
       <section id="book-demo" className="lp-section" style={styles.ctaSection}>
-        <div style={styles.sectionInner}>
-          <h2 className="lp-section-h2" style={{ ...styles.sectionH2, color: "#fff" }}>
-            {contactMode === "demo" ? "Stop Measuring Learning. Start Measuring Workforce Readiness." : "Not ready for a demo yet?"}
+        <div style={{ ...styles.sectionInner, maxWidth: 640 }}>
+          <h2 className="lp-section-h2" style={{ ...styles.sectionH2, color: "#FFFFFF" }}>
+            {contactMode === "demo" ? "Stop Measuring Learning. Start Measuring Workforce Readiness." : "Organisation Inquiry"}
           </h2>
-          <p style={{ ...styles.sectionSub, color: "rgba(255,255,255,.75)" }}>
+          <p style={{ ...styles.sectionSub, color: "rgba(255,255,255,0.85)", marginBottom: 28 }}>
             {contactMode === "demo"
-              ? "Book a demo and see your organization's skills, gaps, and readiness, mapped in real time."
-              : "Send us your procurement, partnership, or custom requirements question."}
+              ? "Book a demo and see your organization's skills, gaps, and readiness mapped in real time."
+              : "Tell us about your team's goals, custom requirements, or procurement timelines."}
           </p>
 
-          <div className="lp-contact-toggle" style={styles.contactModeToggle}>
+          <div style={styles.contactModeToggle}>
             <button
               type="button"
-              className="lp-contact-toggle-btn"
               style={contactMode === "demo" ? styles.contactModeBtnActive : styles.contactModeBtn}
               onClick={() => setContactMode("demo")}
             >
-              Book a Demo
+              Book a Live Demo
             </button>
             <button
               type="button"
-              className="lp-contact-toggle-btn"
               style={contactMode === "inquiry" ? styles.contactModeBtnActive : styles.contactModeBtn}
               onClick={() => setContactMode("inquiry")}
             >
@@ -935,14 +836,14 @@ export default function LandingPage({ onNavigate }) {
             {contactMode === "demo" ? (
               demoSubmitted ? (
                 <div style={styles.successBox}>
-                  <CheckCircle2 size={20} color="#17A673" />
-                  <span>Thanks! We'll reach out to schedule your demo shortly.</span>
+                  <CheckCircle2 size={22} color="#10B981" />
+                  <span>Thank you! We will reach out to schedule your personalized live demo shortly.</span>
                 </div>
               ) : (
                 <form onSubmit={handleDemoSubmit} className="lp-demo-form" style={styles.demoForm}>
-                  <div className="lp-demo-form-row" style={styles.demoFormRow}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
                     <div style={styles.demoInputWrap}>
-                      <Users size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <Users size={14} color="#94A3B8" style={styles.demoInputIcon} />
                       <input
                         required placeholder="Full name" value={demoName}
                         onChange={(e) => setDemoName(e.target.value)}
@@ -950,7 +851,7 @@ export default function LandingPage({ onNavigate }) {
                       />
                     </div>
                     <div style={styles.demoInputWrap}>
-                      <Building2 size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <Building2 size={14} color="#94A3B8" style={styles.demoInputIcon} />
                       <input
                         required placeholder="Company name" value={demoCompany}
                         onChange={(e) => setDemoCompany(e.target.value)}
@@ -958,47 +859,46 @@ export default function LandingPage({ onNavigate }) {
                       />
                     </div>
                   </div>
-                  <div className="lp-demo-form-row" style={styles.demoFormRow}>
-                    <div style={{ ...styles.demoInputWrap, flex: 2 }}>
-                      <Globe size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+                    <div style={styles.demoInputWrap}>
+                      <Globe size={14} color="#94A3B8" style={styles.demoInputIcon} />
                       <input
                         type="email" required placeholder="Work email" value={demoEmail}
                         onChange={(e) => setDemoEmail(e.target.value)}
                         style={styles.demoInput}
                       />
                     </div>
-                    <div style={{ ...styles.demoInputWrap, flex: 1 }}>
-                      <Users size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                    <div style={styles.demoInputWrap}>
                       <select
                         value={demoTeamSize} onChange={(e) => setDemoTeamSize(e.target.value)}
-                        style={{ ...styles.demoInput, paddingLeft: 34, appearance: "none" }}
+                        style={{ ...styles.demoInput, paddingLeft: 14 }}
                       >
-                        {TEAM_SIZE_OPTIONS.map((t) => <option key={t} value={t}>{t} people</option>)}
+                        {TEAM_SIZE_OPTIONS.map((t) => <option key={t} value={t}>{t} employees</option>)}
                       </select>
                     </div>
                   </div>
                   <textarea
-                    placeholder="What else would you like to tell us? (optional)"
+                    placeholder="Tell us about your team's learning goals or challenges (optional)"
                     value={demoMessage} onChange={(e) => setDemoMessage(e.target.value)}
                     rows={2} style={styles.demoTextarea}
                   />
-                  <button type="submit" disabled={submitting} className="action-btn" style={{ ...styles.waitlistBtn, width: "100%", justifyContent: "center", opacity: submitting ? 0.75 : 1 }}>
-                    {submitting ? "Submitting..." : "Book a Demo"} <ArrowRight size={16} />
+                  <button type="submit" disabled={submitting} className="action-btn" style={styles.submitBtn}>
+                    {submitting ? "Submitting..." : "Schedule Live Demo"} <ArrowRight size={16} />
                   </button>
-                  {demoError && <div style={styles.waitlistErrorText}>{demoError}</div>}
+                  {demoError && <div style={styles.errorText}>{demoError}</div>}
                 </form>
               )
             ) : (
               inquirySubmitted ? (
                 <div style={styles.successBox}>
-                  <CheckCircle2 size={20} color="#17A673" />
-                  <span>Thanks! Our sales team will follow up on your inquiry shortly.</span>
+                  <CheckCircle2 size={22} color="#10B981" />
+                  <span>Thank you! Our enterprise partnership team will respond within 24 hours.</span>
                 </div>
               ) : (
                 <form onSubmit={handleInquirySubmit} className="lp-demo-form" style={styles.demoForm}>
-                  <div className="lp-demo-form-row" style={styles.demoFormRow}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
                     <div style={styles.demoInputWrap}>
-                      <Users size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <Users size={14} color="#94A3B8" style={styles.demoInputIcon} />
                       <input
                         required placeholder="Full name" value={demoName}
                         onChange={(e) => setDemoName(e.target.value)}
@@ -1006,7 +906,7 @@ export default function LandingPage({ onNavigate }) {
                       />
                     </div>
                     <div style={styles.demoInputWrap}>
-                      <Building2 size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <Building2 size={14} color="#94A3B8" style={styles.demoInputIcon} />
                       <input
                         required placeholder="Company name" value={demoCompany}
                         onChange={(e) => setDemoCompany(e.target.value)}
@@ -1014,34 +914,33 @@ export default function LandingPage({ onNavigate }) {
                       />
                     </div>
                   </div>
-                  <div className="lp-demo-form-row" style={styles.demoFormRow}>
-                    <div style={{ ...styles.demoInputWrap, flex: 2 }}>
-                      <Globe size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
+                    <div style={styles.demoInputWrap}>
+                      <Globe size={14} color="#94A3B8" style={styles.demoInputIcon} />
                       <input
                         type="email" required placeholder="Work email" value={demoEmail}
                         onChange={(e) => setDemoEmail(e.target.value)}
                         style={styles.demoInput}
                       />
                     </div>
-                    <div style={{ ...styles.demoInputWrap, flex: 1 }}>
-                      <ClipboardList size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                    <div style={styles.demoInputWrap}>
                       <select
                         value={inquiryType} onChange={(e) => setInquiryType(e.target.value)}
-                        style={{ ...styles.demoInput, paddingLeft: 34, appearance: "none" }}
+                        style={{ ...styles.demoInput, paddingLeft: 14 }}
                       >
                         {INQUIRY_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
                     </div>
                   </div>
                   <textarea
-                    placeholder="What else would you like to tell us?"
+                    placeholder="Provide details on your inquiry or specific procurement needs"
                     value={demoMessage} onChange={(e) => setDemoMessage(e.target.value)}
                     rows={2} style={styles.demoTextarea}
                   />
-                  <button type="submit" disabled={submitting} className="action-btn" style={{ ...styles.waitlistBtn, width: "100%", justifyContent: "center", opacity: submitting ? 0.75 : 1 }}>
-                    {submitting ? "Submitting..." : "Send Inquiry"} <ArrowRight size={16} />
+                  <button type="submit" disabled={submitting} className="action-btn" style={styles.submitBtn}>
+                    {submitting ? "Sending..." : "Send Enterprise Inquiry"} <ArrowRight size={16} />
                   </button>
-                  {inquiryError && <div style={styles.waitlistErrorText}>{inquiryError}</div>}
+                  {inquiryError && <div style={styles.errorText}>{inquiryError}</div>}
                 </form>
               )
             )}
@@ -1049,160 +948,102 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
+      {/* Modern Footer */}
       <footer style={styles.footer}>
-        <div className="lp-footer-inner" style={styles.footerInner}>
-          <div style={{ minWidth: 180 }}>
-            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 38, width: "auto", objectFit: "contain", display: "block", marginBottom: 8 }} />
-            <div style={{ fontSize: 12, color: "#656C86", marginTop: 4 }}>Train AI Limited · Lagos · London</div>
-            <div style={{ fontSize: 12, color: "#656C86", marginTop: 8 }}>info@trainailtd.com</div>
-            <div style={{ fontSize: 12, color: "#656C86" }}>+44 7435126104 · +234 9076664049</div>
+        <div style={styles.footerInner}>
+          <div style={{ minWidth: 200 }}>
+            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 40, width: "auto", objectFit: "contain", display: "block", marginBottom: 10 }} />
+            <div style={{ fontSize: 12.5, color: "#64748B" }}>Train AI Limited · Lagos · London</div>
+            <div style={{ fontSize: 12.5, color: "#64748B", marginTop: 4 }}>info@trainailtd.com</div>
+            <div style={{ fontSize: 12.5, color: "#64748B", marginTop: 2 }}>+44 7435126104 · +234 9076664049</div>
           </div>
-          <div style={styles.footerSitemap}>
-            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("about")}>About</span>
-            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("platform")}>Platform</span>
-            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("solutions")}>Solutions</span>
-            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
-            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("pricing")}>Pricing</span>
-            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("organizations")}>For Organisations</span>
-            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("individuals")}>For Individuals</span>
-            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("book-demo")}>Contact</span>
+          
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
+            <strong style={{ color: "#0F172A", marginBottom: 4 }}>Platform</strong>
+            <span className="lp-footer-link" onClick={() => handleNav("platform")}>Workforce Intelligence</span>
+            <span className="lp-footer-link" onClick={() => handleNav("solutions")}>Solutions &amp; Tracks</span>
+            <span className="lp-footer-link" onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
+            <span className="lp-footer-link" onClick={() => handleNav("pricing")}>Pricing Plans</span>
           </div>
-          <div className="lp-legal-links" style={{ display: "flex", gap: 16, fontSize: 12.5, color: "#656C86" }}>
-            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("privacy")}>Privacy Policy</span>
-            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("terms")}>Terms of Service</span>
-            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("cookie")}>Cookie Policy</span>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 13 }}>
+            <strong style={{ color: "#0F172A", marginBottom: 4 }}>Company &amp; Legal</strong>
+            <span className="lp-footer-link" onClick={() => handleNav("about")}>About Us</span>
+            <span className="lp-footer-link" onClick={() => handleNav("privacy")}>Privacy Policy</span>
+            <span className="lp-footer-link" onClick={() => handleNav("terms")}>Terms of Service</span>
+            <span className="lp-footer-link" onClick={() => handleNav("cookie")}>Cookie Policy</span>
           </div>
         </div>
       </footer>
 
+      {/* Legal Modals */}
       {activeModal && (
         <div style={styles.modalOverlay} onClick={() => setActiveModal(null)} role="presentation">
-          <div
-            style={styles.modalCard}
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="lp-modal-title"
-          >
-            <div style={styles.modalHeader}>
-              <h3 id="lp-modal-title" style={styles.modalTitle}>{LEGAL_CONTENT[activeModal].title}</h3>
+          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: 0 }}>{LEGAL_CONTENT[activeModal].title}</h3>
               <button style={styles.modalClose} onClick={() => setActiveModal(null)} aria-label="Close">
                 <X size={18} />
               </button>
             </div>
-            <p style={styles.modalBody}>{LEGAL_CONTENT[activeModal].body}</p>
+            <p style={{ fontSize: 13.5, color: "#475569", lineHeight: 1.6, margin: 0 }}>{LEGAL_CONTENT[activeModal].body}</p>
           </div>
         </div>
       )}
+
     </div>
   );
 }
 
 const styles = {
-  outer: { minHeight: "100vh", background: "#F4F6FC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
-  header: { background: "#fff", borderBottom: "1px solid #E6E9F5", position: "sticky", top: 0, zIndex: 50 },
-  headerInner: { maxWidth: 1140, margin: "0 auto", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" },
-  brandRow: { display: "flex", alignItems: "center", gap: 10 },
-  brandName: { fontWeight: 800, fontSize: 16, color: "#10142A", lineHeight: 1.1 },
-  brandSub: { fontSize: 10.5, fontWeight: 700, color: "#4F46E5", textTransform: "uppercase", letterSpacing: ".06em" },
-  navLinks: { display: "flex", gap: 24, alignItems: "center" },
-  navLink: { fontSize: 13.5, fontWeight: 600, color: "#656C86", cursor: "pointer" },
-  navLinkQuiet: { fontSize: 12.5, fontWeight: 500, color: "#9AA1B9", cursor: "pointer" },
-  signInBtn: { border: "1.5px solid #E2E8F0", background: "transparent", padding: "8px 16px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" },
-  getStartedBtn: { border: "none", background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", color: "#fff", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 14px rgba(79,70,229,0.3)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 },
-  heroSection: { maxWidth: 1080, margin: "0 auto", padding: "60px 20px 80px", textAlign: "center" },
-  heroH1: { fontSize: 42, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 16px", lineHeight: 1.15 },
-  heroSub: { fontSize: 16.5, color: "#475569", maxWidth: 700, margin: "0 auto 10px", lineHeight: 1.5 },
-  heroSubBold: { fontSize: 15, color: "#0F172A", fontWeight: 700, maxWidth: 680, margin: "0 auto 30px", lineHeight: 1.5 },
-  heroCtaRow: { display: "flex", gap: 12, justifyContent: "center", marginBottom: 14 },
-  heroSecondaryBtn: { border: "1.5px solid #E2E8F0", background: "#fff", color: "#0F172A", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" },
-  heroNote: { fontSize: 12.5, color: "#64748B", fontWeight: 600, marginBottom: 36 },
-  waitlistCard: { maxWidth: 560, margin: "0 auto", background: "#fff", padding: 20, borderRadius: 16, border: "1px solid #E2E8F0", boxShadow: "0 20px 40px -16px rgba(15,23,42,.08)" },
-  demoForm: { display: "flex", flexDirection: "column", gap: 10 },
-  demoFormRow: { display: "flex", gap: 10 },
+  outer: { minHeight: "100vh", background: "#F8FAFC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" },
+  header: { background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid #E2E8F0", position: "sticky", top: 0, zIndex: 60 },
+  headerInner: { maxWidth: 1140, margin: "0 auto", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  navLink: { fontSize: 14, fontWeight: 600, color: "#334155" },
+  signInBtn: { border: "1.5px solid #E2E8F0", background: "#FFFFFF", padding: "8px 16px", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: "pointer", color: "#0F172A" },
+  getStartedBtn: { border: "none", background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", color: "#FFFFFF", padding: "9px 18px", borderRadius: 10, fontWeight: 800, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 14px rgba(79,70,229,0.35)", display: "inline-flex", alignItems: "center", gap: 6 },
+  secondaryBtn: { border: "1.5px solid #E2E8F0", background: "#FFFFFF", color: "#0F172A", padding: "9px 18px", borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 },
+  section: { padding: "70px 20px" },
+  sectionInner: { maxWidth: 1100, margin: "0 auto", textAlign: "center" },
+  sectionTag: { display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 99, background: "#EEF2FF", color: "#4F46E5", fontSize: 12, fontWeight: 800, marginBottom: 16 },
+  sectionH2: { fontSize: 30, fontWeight: 900, letterSpacing: "-0.025em", color: "#0F172A", margin: "0 0 10px", lineHeight: 1.2 },
+  sectionSub: { fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 auto 36px", lineHeight: 1.55 },
+  statBanner: { maxWidth: 680, margin: "0 auto 36px", padding: "16px 20px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 14, fontSize: 14, color: "#991B1B", lineHeight: 1.5 },
+  card: { background: "#FFFFFF", padding: 22, borderRadius: 18, border: "1px solid #E2E8F0" },
+  bentoCard: { background: "#FFFFFF", padding: 20, borderRadius: 18, border: "1px solid #E2E8F0" },
+  cardIcon: { width: 40, height: 40, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  cardTitle: { fontSize: 15.5, fontWeight: 800, margin: "0 0 6px", color: "#0F172A" },
+  cardDesc: { fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.45 },
+  inlineLink: { fontSize: 12.5, fontWeight: 800, color: "#4F46E5", marginTop: 12, display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer" },
+  stepNumber: { position: "absolute", top: 16, right: 18, fontSize: 14, fontWeight: 900, color: "#A5B4FC" },
+  stepIcon: { width: 40, height: 40, borderRadius: 12, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  questionPill: { background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 99, padding: "8px 16px", fontSize: 12.5, fontWeight: 700, color: "#0F172A" },
+  comparisonTable: { width: "100%", borderCollapse: "collapse", background: "#FFFFFF", borderRadius: 14, overflow: "hidden", border: "1px solid #E2E8F0" },
+  comparisonHeaderCell: { textAlign: "left", padding: "14px 18px", fontSize: 13, fontWeight: 800, color: "#64748B", borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" },
+  comparisonCellLabel: { textAlign: "left", padding: "14px 18px", fontSize: 13.5, fontWeight: 700, color: "#0F172A", borderBottom: "1px solid #E2E8F0" },
+  comparisonCell: { textAlign: "left", padding: "14px 18px", fontSize: 13, color: "#64748B", borderBottom: "1px solid #E2E8F0" },
+  pricingCard: { position: "relative", background: "#FFFFFF", padding: 26, borderRadius: 20, display: "flex", flexDirection: "column" },
+  pricingBadge: { position: "absolute", top: -12, left: 20, background: "linear-gradient(135deg, #4338CA, #6366F1)", color: "#FFFFFF", fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 99 },
+  pricingName: { fontSize: 19, fontWeight: 800, margin: "6px 0 4px", color: "#0F172A" },
+  pricingTagline: { fontSize: 13, color: "#64748B", margin: "0 0 16px", lineHeight: 1.45, minHeight: 48 },
+  faqItem: { background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 14, padding: "4px 18px" },
+  faqQuestion: { width: "100%", border: "none", background: "transparent", cursor: "pointer", padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, fontSize: 14.5, fontWeight: 800, color: "#0F172A", textAlign: "left" },
+  ctaSection: { padding: "70px 20px", background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)" },
+  contactModeToggle: { display: "inline-flex", background: "rgba(255,255,255,.14)", borderRadius: 12, padding: 4, gap: 4, marginBottom: 20 },
+  contactModeBtn: { border: "none", background: "transparent", color: "rgba(255,255,255,.8)", padding: "8px 16px", borderRadius: 9, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+  contactModeBtnActive: { border: "none", background: "#FFFFFF", color: "#0F172A", padding: "8px 16px", borderRadius: 9, fontWeight: 800, fontSize: 12.5, cursor: "pointer" },
+  waitlistCard: { background: "#FFFFFF", padding: 24, borderRadius: 20, border: "1px solid #E2E8F0", boxShadow: "0 20px 40px -16px rgba(15,23,42,.12)" },
+  demoForm: { display: "flex", flexDirection: "column", gap: 12 },
   demoInputWrap: { position: "relative", flex: 1 },
   demoInputIcon: { position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" },
-  demoInput: {
-    width: "100%", border: "1.5px solid #E2E8F0", padding: "11px 13px 11px 34px", fontSize: 13.5,
-    borderRadius: 11, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#fff",
-  },
-  demoTextarea: {
-    width: "100%", border: "1.5px solid #E2E8F0", padding: "11px 13px", fontSize: 13.5,
-    borderRadius: 11, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit",
-  },
-  waitlistBtn: { border: "none", background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", color: "#fff", padding: "12px 20px", borderRadius: 11, fontWeight: 700, fontSize: 13.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", boxShadow: "0 4px 14px rgba(79,70,229,0.3)" },
-  waitlistErrorText: { padding: "0 2px", fontSize: 12, color: "#EF4444", fontWeight: 600, textAlign: "left" },
-  successBox: { display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", fontSize: 13.5, fontWeight: 600, color: "#10B981" },
-  grid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
-  card: { flex: "1 1 220px", maxWidth: 340, background: "#fff", padding: 22, borderRadius: 18, border: "1px solid #E2E8F0" },
-  cardIcon: { width: 42, height: 42, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 },
-  cardTitle: { fontSize: 15, fontWeight: 800, margin: "0 0 6px", color: "#0F172A" },
-  cardDesc: { fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.45 },
-  inlineLink: { fontSize: 12, fontWeight: 700, color: "#4F46E5", marginTop: 12, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" },
-  bodyLarge: { fontSize: 15.5, color: "#334155", lineHeight: 1.65, marginBottom: 18 },
-  answersLine: { fontSize: 11.5, color: "#94A3B8", fontStyle: "italic", marginTop: 10 },
-
-  section: { padding: "72px 20px" },
-  sectionInner: { maxWidth: 1100, margin: "0 auto", textAlign: "center" },
-  sectionTag: { display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 99, background: "#EEF2FF", color: "#4F46E5", fontSize: 12, fontWeight: 700, marginBottom: 16 },
-  sectionH2: { fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", color: "#0F172A", margin: "0 0 10px", lineHeight: 1.2 },
-  sectionSub: { fontSize: 14.5, color: "#64748B", maxWidth: 640, margin: "0 auto 40px", lineHeight: 1.55 },
-
-  statBanner: { maxWidth: 680, margin: "0 auto 40px", padding: "18px 24px", background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 14, fontSize: 14, color: "#991B1B", lineHeight: 1.5 },
-
-  stepsRow: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
-  stepCard: { flex: "1 1 240px", maxWidth: 320, position: "relative", background: "#fff", padding: "26px 22px 22px", borderRadius: 18, border: "1px solid #E2E8F0" },
-  stepNumber: { position: "absolute", top: 16, right: 18, fontSize: 12, fontWeight: 800, color: "#C7D2FE" },
-  stepIcon: { width: 42, height: 42, borderRadius: 12, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 },
-
-  featuresGrid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
-
-  questionGrid: { display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginTop: 20 },
-  questionPill: { background: "#fff", border: "1px solid #E2E8F0", borderRadius: 99, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "#0F172A" },
-
-  comparisonWrap: { overflowX: "auto", marginTop: 8 },
-  comparisonTable: { width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 14, overflow: "hidden", border: "1px solid #E2E8F0" },
-  comparisonHeaderCell: { textAlign: "left", padding: "12px 18px", fontSize: 12.5, fontWeight: 800, color: "#64748B", borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" },
-  comparisonCellLabel: { textAlign: "left", padding: "12px 18px", fontSize: 13, fontWeight: 700, color: "#0F172A", borderBottom: "1px solid #E2E8F0" },
-  comparisonCell: { textAlign: "left", padding: "12px 18px", fontSize: 13, color: "#64748B", borderBottom: "1px solid #E2E8F0" },
-
-  pricingGrid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left", marginTop: 12 },
-  pricingCard: { flex: "1 1 280px", maxWidth: 360, position: "relative", background: "#fff", padding: 26, borderRadius: 18, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" },
-  pricingCardHighlighted: { border: "2px solid #4F46E5", boxShadow: "0 20px 40px -16px rgba(79,70,229,.25)" },
-  pricingBadge: { position: "absolute", top: -12, left: 24, background: "linear-gradient(135deg, #4338CA, #6366F1)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 99 },
-  pricingName: { fontSize: 18, fontWeight: 800, margin: "6px 0 4px", color: "#0F172A" },
-  pricingTagline: { fontSize: 12.5, color: "#64748B", margin: "0 0 16px", lineHeight: 1.4, minHeight: 54 },
-  pricingPriceRow: { display: "flex", alignItems: "baseline", gap: 6 },
-  pricingPrice: { fontSize: 26, fontWeight: 800, color: "#0F172A" },
-  pricingNote: { fontSize: 11.5, color: "#94A3B8", margin: "2px 0 18px" },
-  pricingFeatureList: { listStyle: "none", padding: 0, margin: "0 0 22px", display: "flex", flexDirection: "column", gap: 10, flex: 1 },
-  pricingFeatureItem: { display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "#334155", lineHeight: 1.4 },
-  pricingOutlineBtn: { border: "1.5px solid #4F46E5", background: "#fff", color: "#4F46E5", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 },
-
-  contactModeToggle: { display: "inline-flex", background: "rgba(255,255,255,.12)", borderRadius: 12, padding: 4, gap: 4, marginBottom: 20 },
-  contactModeBtn: { border: "none", background: "transparent", color: "rgba(255,255,255,.75)", padding: "8px 16px", borderRadius: 9, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
-  contactModeBtnActive: { border: "none", background: "#fff", color: "#0F172A", padding: "8px 16px", borderRadius: 9, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
-
-  faqList: { display: "flex", flexDirection: "column", gap: 10, textAlign: "left" },
-  faqItem: { background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 14, padding: "4px 18px" },
-  faqQuestion: {
-    width: "100%", border: "none", background: "transparent", cursor: "pointer", padding: "14px 0",
-    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-    fontSize: 14, fontWeight: 700, color: "#0F172A", textAlign: "left"
-  },
-  faqAnswer: { margin: "0 0 16px", fontSize: 13, color: "#64748B", lineHeight: 1.55 },
-
-  ctaSection: { padding: "72px 20px", background: "linear-gradient(135deg, #0F172A 0%, #312E81 50%, #4338CA 100%)" },
-
-  footer: { borderTop: "1px solid #E2E8F0", background: "#fff", padding: "32px 20px" },
-  footerInner: { maxWidth: 1140, margin: "0 auto", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 24 },
-  footerSitemap: { display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5 },
-  footerLink: { color: "#64748B", cursor: "pointer" },
-
-  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100, overflowY: "auto", boxSizing: "border-box" },
-  modalCard: { background: "#fff", borderRadius: 18, padding: 24, maxWidth: 460, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 60px -24px rgba(15,23,42,.35)" },
-  modalHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  modalTitle: { fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 },
-  modalClose: { border: "none", background: "#F8FAFC", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex" },
-  modalBody: { fontSize: 13.5, color: "#64748B", lineHeight: 1.55, margin: 0 }
+  demoInput: { width: "100%", border: "1.5px solid #E2E8F0", padding: "10px 14px 10px 34px", fontSize: 13.5, borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#F8FAFC" },
+  demoTextarea: { width: "100%", border: "1.5px solid #E2E8F0", padding: "10px 14px", fontSize: 13.5, borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit", background: "#F8FAFC" },
+  submitBtn: { border: "none", background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", color: "#FFFFFF", padding: "12px 20px", borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: "0 4px 14px rgba(79,70,229,0.35)" },
+  errorText: { fontSize: 12, color: "#EF4444", fontWeight: 700, textAlign: "left" },
+  successBox: { display: "flex", alignItems: "center", gap: 10, padding: "16px", fontSize: 14, fontWeight: 700, color: "#10B981", background: "#ECFDF5", borderRadius: 12 },
+  footer: { borderTop: "1px solid #E2E8F0", background: "#FFFFFF", padding: "36px 20px" },
+  footerInner: { maxWidth: 1140, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32 },
+  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100 },
+  modalCard: { background: "#FFFFFF", borderRadius: 20, padding: 26, maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 60px -24px rgba(15,23,42,.35)" },
+  modalClose: { border: "none", background: "#F1F5F9", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex", color: "#64748B" }
 };
