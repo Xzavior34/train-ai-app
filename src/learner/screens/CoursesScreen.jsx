@@ -8,6 +8,7 @@ import {
   Flame, Zap, Laptop, FileText, Check
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
+import { isMockDataEnabled, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
 
 const CATEGORIES = [
   { id: "all", label: "All Topics" },
@@ -120,6 +121,11 @@ export function CoursesScreen({
   const [sortBy, setSortBy] = useState("popular");
   const [activeSpecialization, setActiveSpecialization] = useState(null);
   const [bookmarkedIds, setBookmarkedIds] = useState({});
+  const [mockEnabled, setMockEnabled] = useState(() => isMockDataEnabled());
+
+  useEffect(() => {
+    return subscribeToMockDataChanges((enabled) => setMockEnabled(enabled));
+  }, []);
 
   function toggleLocalBookmark(e, courseId) {
     e.stopPropagation();
@@ -272,22 +278,30 @@ export function CoursesScreen({
     }
   ];
 
-  const allAvailableCourses = (courses && courses.length > 0) ? courses.map((c, idx) => {
-    const fallback = defaultCourses[idx % defaultCourses.length];
-    return {
-      ...fallback,
-      ...c,
-      coverImageUrl: c.coverImageUrl || fallback.coverImageUrl,
-      rating: c.rating || fallback.rating,
-      reviewsCount: c.reviewsCount || fallback.reviewsCount,
-      studentsCount: c.studentsCount || fallback.studentsCount,
-      hours: c.hours || fallback.hours,
-      lessonsCount: c.lessonsCount || fallback.lessonsCount,
-      instructor: c.instructor || fallback.instructor,
-      instructorRole: c.instructorRole || fallback.instructorRole,
-      instructorAvatar: c.instructorAvatar || fallback.instructorAvatar
-    };
-  }) : defaultCourses;
+  const allAvailableCourses = (() => {
+    if (!mockEnabled) {
+      return courses || [];
+    }
+    if (courses && courses.length > 0) {
+      return courses.map((c, idx) => {
+        const fallback = defaultCourses[idx % defaultCourses.length];
+        return {
+          ...fallback,
+          ...c,
+          coverImageUrl: c.coverImageUrl || fallback.coverImageUrl,
+          rating: c.rating || fallback.rating,
+          reviewsCount: c.reviewsCount || fallback.reviewsCount,
+          studentsCount: c.studentsCount || fallback.studentsCount,
+          hours: c.hours || fallback.hours,
+          lessonsCount: c.lessonsCount || fallback.lessonsCount,
+          instructor: c.instructor || fallback.instructor,
+          instructorRole: c.instructorRole || fallback.instructorRole,
+          instructorAvatar: c.instructorAvatar || fallback.instructorAvatar
+        };
+      });
+    }
+    return defaultCourses;
+  })();
 
   const enrolledList = allAvailableCourses.filter(c => c.enrolled);
 
@@ -428,21 +442,22 @@ export function CoursesScreen({
       {/* =========================================================================
           DYNAMIC MOVING SPOTLIGHT CAROUSEL (Multi-Course Learning Simulation)
           ========================================================================= */}
-      <div
-        onMouseEnter={() => setIsCarouselPaused(true)}
-        onMouseLeave={() => setIsCarouselPaused(false)}
-        style={{
-          position: "relative",
-          borderRadius: 20,
-          overflow: "hidden",
-          background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(18px, 3vw, 26px)",
-          boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
-          border: "1px solid rgba(99, 102, 241, 0.35)",
-          transition: "all 0.3s ease"
-        }}
-      >
+      {mockEnabled && (
+        <div
+          onMouseEnter={() => setIsCarouselPaused(true)}
+          onMouseLeave={() => setIsCarouselPaused(false)}
+          style={{
+            position: "relative",
+            borderRadius: 20,
+            overflow: "hidden",
+            background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)",
+            color: "#FFFFFF",
+            padding: "clamp(18px, 3vw, 26px)",
+            boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
+            border: "1px solid rgba(99, 102, 241, 0.35)",
+            transition: "all 0.3s ease"
+          }}
+        >
         {/* Hero Background Cover Image with Dark Overlay */}
         <img
           key={currentSpotlight.id + "-bg"}
@@ -652,6 +667,7 @@ export function CoursesScreen({
           ))}
         </div>
       </div>
+      )}
 
       <div className="tai-col tai-gap16">
         {/* Prominent High-Priority Category & Source Filters */}
@@ -958,155 +974,159 @@ export function CoursesScreen({
         }))}
       </div>
 
-      <div>
-        <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
+      {mockEnabled && (
+        <>
           <div>
-            <div className="tai-row tai-gap8">
-              <Award size={20} color="var(--primary)" />
-              <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
-                Professional Certificates &amp; Specializations
-              </h2>
-            </div>
-            <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
-              Comprehensive multi-course career tracks accredited by Train AI
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-          {SPECIALIZATIONS.map((spec) => (
-            <div
-              key={spec.id}
-              className="tai-card-hover"
-              onClick={() => setActiveSpecialization(spec)}
-              style={{
-                background: "var(--surface)",
-                borderRadius: 18,
-                border: "1px solid var(--border)",
-                padding: 24,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                boxShadow: "0 4px 16px rgba(15,23,42,0.04)"
-              }}
-            >
+            <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
               <div>
-                <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-                  <span style={{ background: spec.badgeBg, color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 6 }}>
-                    {spec.badge}
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>
-                    {spec.coursesCount} Course Series
-                  </span>
+                <div className="tai-row tai-gap8">
+                  <Award size={20} color="var(--primary)" />
+                  <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
+                    Professional Certificates &amp; Specializations
+                  </h2>
                 </div>
-
-                <h3 style={{ fontSize: 17, fontWeight: 800, margin: "0 0 8px", color: "var(--text)", lineHeight: 1.3 }}>
-                  {spec.title}
-                </h3>
-
-                <p style={{ fontSize: 13, color: "var(--text-3)", margin: "0 0 16px", lineHeight: 1.5 }}>
-                  {spec.description}
+                <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
+                  Comprehensive multi-course career tracks accredited by Train AI
                 </p>
-
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
-                  {spec.skills.map((skill, idx) => (
-                    <span key={idx} style={{ background: "var(--surface-3)", border: "1px solid var(--border)", color: "var(--text-2)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>
-                      {skill}
-                    </span>
-                  ))}
-                </div>
               </div>
+            </div>
 
-              <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-                <div className="tai-col">
-                  <span style={{ fontSize: 11, color: "var(--text-3)" }}>Duration: {spec.months}</span>
-                  <span className="tai-row tai-gap4" style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
-                    <Star size={13} fill="#F59E0B" color="#F59E0B" /> {spec.rating} ({spec.reviews})
-                  </span>
-                </div>
-
-                <button
-                  className="tai-btn tai-btn-outline tai-btn-sm"
-                  style={{ fontWeight: 700 }}
-                  onClick={(e) => { e.stopPropagation(); setActiveSpecialization(spec); }}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+              {SPECIALIZATIONS.map((spec) => (
+                <div
+                  key={spec.id}
+                  className="tai-card-hover"
+                  onClick={() => setActiveSpecialization(spec)}
+                  style={{
+                    background: "var(--surface)",
+                    borderRadius: 18,
+                    border: "1px solid var(--border)",
+                    padding: 24,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    boxShadow: "0 4px 16px rgba(15,23,42,0.04)"
+                  }}
                 >
-                  View Track Details →
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+                  <div>
+                    <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
+                      <span style={{ background: spec.badgeBg, color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 6 }}>
+                        {spec.badge}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>
+                        {spec.coursesCount} Course Series
+                      </span>
+                    </div>
 
-      <div>
-        <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
-          <div>
-            <div className="tai-row tai-gap8">
-              <Video size={20} color="var(--primary)" />
-              <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
-                Live Workshop &amp; Studio Replays
-              </h2>
+                    <h3 style={{ fontSize: 17, fontWeight: 800, margin: "0 0 8px", color: "var(--text)", lineHeight: 1.3 }}>
+                      {spec.title}
+                    </h3>
+
+                    <p style={{ fontSize: 13, color: "var(--text-3)", margin: "0 0 16px", lineHeight: 1.5 }}>
+                      {spec.description}
+                    </p>
+
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
+                      {spec.skills.map((skill, idx) => (
+                        <span key={idx} style={{ background: "var(--surface-3)", border: "1px solid var(--border)", color: "var(--text-2)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+                    <div className="tai-col">
+                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>Duration: {spec.months}</span>
+                      <span className="tai-row tai-gap4" style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
+                        <Star size={13} fill="#F59E0B" color="#F59E0B" /> {spec.rating} ({spec.reviews})
+                      </span>
+                    </div>
+
+                    <button
+                      className="tai-btn tai-btn-outline tai-btn-sm"
+                      style={{ fontWeight: 700 }}
+                      onClick={(e) => { e.stopPropagation(); setActiveSpecialization(spec); }}
+                    >
+                      View Track Details →
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
-              Missed a live studio session? Watch recorded breakdowns with full transcripts
-            </p>
           </div>
-        </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
-          {RECENT_RECORDINGS.map((rec) => (
-            <div
-              key={rec.id}
-              className="tai-card-hover"
-              onClick={() => setActiveRecording(rec)}
-              style={{
-                background: "var(--surface)",
-                borderRadius: 16,
-                border: "1px solid var(--border)",
-                overflow: "hidden",
-                cursor: "pointer",
-                display: "flex",
-                flexDirection: "column"
-              }}
-            >
-              <div style={{ position: "relative", height: 140, width: "100%" }}>
-                <img src={rec.thumbnail} alt={rec.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.7) 0%, transparent 60%)" }} />
-
-                <span style={{ position: "absolute", top: 10, left: 10, background: rec.badgeColor, color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>
-                  {rec.badge}
-                </span>
-
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                    <Play size={16} color="var(--primary)" fill="var(--primary)" style={{ marginLeft: 2 }} />
-                  </div>
+          <div>
+            <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
+              <div>
+                <div className="tai-row tai-gap8">
+                  <Video size={20} color="var(--primary)" />
+                  <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
+                    Live Workshop &amp; Studio Replays
+                  </h2>
                 </div>
-
-                <span style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>
-                  {rec.duration}
-                </span>
-              </div>
-
-              <div style={{ padding: 14, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <h4 style={{ fontSize: 13.5, fontWeight: 800, margin: "0 0 4px", color: "var(--text)", lineHeight: 1.35 }}>
-                    {rec.title}
-                  </h4>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
-                    {rec.instructor} • {rec.role}
-                  </div>
-                </div>
-
-                <div className="tai-row tai-between" style={{ marginTop: 10, fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>
-                  <span>{rec.date}</span>
-                  <span>{rec.views}</span>
-                </div>
+                <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
+                  Missed a live studio session? Watch recorded breakdowns with full transcripts
+                </p>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+              {RECENT_RECORDINGS.map((rec) => (
+                <div
+                  key={rec.id}
+                  className="tai-card-hover"
+                  onClick={() => setActiveRecording(rec)}
+                  style={{
+                    background: "var(--surface)",
+                    borderRadius: 16,
+                    border: "1px solid var(--border)",
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column"
+                  }}
+                >
+                  <div style={{ position: "relative", height: 140, width: "100%" }}>
+                    <img src={rec.thumbnail} alt={rec.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.7) 0%, transparent 60%)" }} />
+
+                    <span style={{ position: "absolute", top: 10, left: 10, background: rec.badgeColor, color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>
+                      {rec.badge}
+                    </span>
+
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                        <Play size={16} color="var(--primary)" fill="var(--primary)" style={{ marginLeft: 2 }} />
+                      </div>
+                    </div>
+
+                    <span style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>
+                      {rec.duration}
+                    </span>
+                  </div>
+
+                  <div style={{ padding: 14, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                    <div>
+                      <h4 style={{ fontSize: 13.5, fontWeight: 800, margin: "0 0 4px", color: "var(--text)", lineHeight: 1.35 }}>
+                        {rec.title}
+                      </h4>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                        {rec.instructor} • {rec.role}
+                      </div>
+                    </div>
+
+                    <div className="tai-row tai-between" style={{ marginTop: 10, fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>
+                      <span>{rec.date}</span>
+                      <span>{rec.views}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* =========================================================================
           VIDEO PLAYER MODAL (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
