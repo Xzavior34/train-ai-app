@@ -6,8 +6,8 @@ import {
   GitCompare, Table, School, Handshake, Briefcase, Zap, Flame, Menu, Check,
   Play, MessageSquare, Laptop, Award, Star, Activity, ArrowUpRight, Gauge, Database,
   Home, Bot, MessageCircle, Mail, Download, Wifi, Accessibility, Bell, Send,
-  Facebook, Twitter, Instagram, Linkedin, Search, RefreshCw, ChevronRight, PlayCircle,
-  Battery, Wifi as WifiIcon, Phone
+  Facebook, Twitter, Instagram, Linkedin, Search, RefreshCw, ChevronRight, ChevronLeft,
+  PlayCircle, Pin, Sparkles, Megaphone, Palette
 } from "lucide-react";
 import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
@@ -126,7 +126,7 @@ export default function LandingPage({ onNavigate }) {
     if (ref) trackReferralClickIfPresent(ref);
   }, []);
 
-  const [mobileLearnerTab, setMobileLearnerTab] = useState("home"); // "home" | "ai" | "courses" | "community"
+  const [mobileLearnerTab, setMobileLearnerTab] = useState("home"); // "home" | "courses" | "ai" | "community"
   const [demoName, setDemoName] = useState("");
   const [demoEmail, setDemoEmail] = useState("");
   const [demoCompany, setDemoCompany] = useState("");
@@ -199,7 +199,7 @@ export default function LandingPage({ onNavigate }) {
       setActiveModal(target);
       return;
     }
-    if (["platform", "intelligence", "learners", "organisation", "faq", "how-it-works", "trust"].includes(target)) {
+    if (["intelligence", "learners", "organisation", "faq", "how-it-works", "trust"].includes(target)) {
       scrollToId(target);
       return;
     }
@@ -213,12 +213,19 @@ export default function LandingPage({ onNavigate }) {
   return (
     <div style={styles.outer}>
       <style>{`
+        @keyframes floatSlow { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
+        @keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.35); opacity: 0.6; } }
+        @keyframes fillBar1 { from { width: 0%; } to { width: 82%; } }
+        @keyframes fillBar2 { from { width: 0%; } to { width: 74%; } }
+        @keyframes fillBar3 { from { width: 0%; } to { width: 61%; } }
+        @keyframes fillBar4 { from { width: 0%; } to { width: 55%; } }
+
         .lp-card-hover {
           transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .22s ease, border-color .22s ease;
         }
         .lp-card-hover:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 14px 28px -6px rgba(15, 23, 42, 0.08);
+          transform: translateY(-4px);
+          box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.08);
           border-color: #CBD5E1 !important;
         }
 
@@ -226,8 +233,8 @@ export default function LandingPage({ onNavigate }) {
           transition: all .22s ease;
         }
         .lp-step-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 16px 32px -6px rgba(79, 70, 229, 0.12);
+          transform: translateY(-4px);
+          box-shadow: 0 18px 36px -8px rgba(79, 70, 229, 0.12);
           border-color: #C7D2FE !important;
         }
 
@@ -280,6 +287,13 @@ export default function LandingPage({ onNavigate }) {
           transform: translateY(-1px);
         }
 
+        .lp-float-card { animation: floatSlow 5s ease-in-out infinite; }
+        .lp-pulse-live { animation: pulseDot 2s ease-in-out infinite; }
+        .lp-bar-1 { animation: fillBar1 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .lp-bar-2 { animation: fillBar2 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .lp-bar-3 { animation: fillBar3 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .lp-bar-4 { animation: fillBar4 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
         .lp-footer-link {
           color: #94A3B8;
           text-decoration: none;
@@ -310,13 +324,24 @@ export default function LandingPage({ onNavigate }) {
           border-color: #4F46E5;
         }
 
-        .phone-tab-btn {
-          transition: all .14s ease;
+        /* Interactive Phone Nav Pill Tabs */
+        .phone-nav-item {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          padding: 6px 12px;
+          border-radius: 99px;
+          font-size: 11px;
+          font-weight: 700;
+          color: #64748B;
           cursor: pointer;
+          transition: all .16s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .phone-tab-btn.active {
-          color: #4F46E5 !important;
-          font-weight: 800 !important;
+        .phone-nav-item.active {
+          background: #4F46E5;
+          color: #FFFFFF !important;
+          box-shadow: 0 3px 10px rgba(79, 70, 229, 0.35);
         }
 
         @media (max-width: 960px) {
@@ -348,7 +373,7 @@ export default function LandingPage({ onNavigate }) {
       <header style={styles.header}>
         <div style={styles.headerInner}>
           
-          {/* Logo (Same size as Learner role header: height 24px) */}
+          {/* Logo (Identical 24px size to Learner Header) */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", flexShrink: 0 }} onClick={() => handleNav("home")}>
             <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 24, width: "auto", objectFit: "contain", display: "block" }} />
           </div>
@@ -415,7 +440,7 @@ export default function LandingPage({ onNavigate }) {
       </header>
 
       {/* =========================================================================
-          SECTION 1: HERO SECTION
+          SECTION 1: HERO SECTION WITH MOVING TELEMETRY
           ========================================================================= */}
       <section style={{ maxWidth: 1180, margin: "0 auto", padding: "50px 24px 70px", position: "relative" }}>
         <div className="lp-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 36, alignItems: "center" }}>
@@ -498,8 +523,8 @@ export default function LandingPage({ onNavigate }) {
               />
             </div>
 
-            {/* Live Workforce Card */}
-            <div style={{
+            {/* Live Workforce Card with Moving Progress Bars */}
+            <div className="lp-float-card" style={{
               position: "relative", zIndex: 2, width: "100%", maxWidth: 440,
               background: "#FFFFFF", borderRadius: 18, padding: "20px 22px",
               border: "1px solid #E2E8F0", boxShadow: "0 18px 40px -10px rgba(15,23,42,0.12)",
@@ -512,7 +537,7 @@ export default function LandingPage({ onNavigate }) {
                   <div style={{ fontSize: 15.5, fontWeight: 800, color: "#0F172A", marginTop: 2 }}>Readiness by team</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#4F46E5", background: "#EEF2FF", padding: "2px 7px", borderRadius: 99 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} />
+                  <span className="lp-pulse-live" style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} />
                   <span>Live</span>
                 </div>
               </div>
@@ -531,7 +556,7 @@ export default function LandingPage({ onNavigate }) {
                     <span style={{ color: "#4F46E5", fontWeight: 800 }}>82 (+6)</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
-                    <div style={{ width: "82%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
+                    <div className="lp-bar-1" style={{ height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
 
@@ -541,7 +566,7 @@ export default function LandingPage({ onNavigate }) {
                     <span style={{ color: "#4F46E5", fontWeight: 800 }}>74 (+3)</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
-                    <div style={{ width: "74%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
+                    <div className="lp-bar-2" style={{ height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
 
@@ -551,7 +576,7 @@ export default function LandingPage({ onNavigate }) {
                     <span style={{ color: "#4F46E5", fontWeight: 800 }}>61 (-2)</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
-                    <div style={{ width: "61%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
+                    <div className="lp-bar-3" style={{ height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
 
@@ -561,7 +586,7 @@ export default function LandingPage({ onNavigate }) {
                     <span style={{ color: "#4F46E5", fontWeight: 800 }}>55 (+9)</span>
                   </div>
                   <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
-                    <div style={{ width: "55%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
+                    <div className="lp-bar-4" style={{ height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
               </div>
@@ -669,7 +694,7 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 4: SIGNALS FEEDING THE MODEL & REAL LIVE MOBILE LEARNER PREVIEW
+          SECTION 4: THE LEARNER APP (1-TO-1 EXACT MATCH WITH USER SCREENSHOTS)
           ========================================================================= */}
       <section id="learners" style={{ maxWidth: 1180, margin: "0 auto", padding: "20px 24px 65px" }}>
         
@@ -697,7 +722,7 @@ export default function LandingPage({ onNavigate }) {
         </h2>
 
         <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 32px", lineHeight: 1.55, textAlign: "left" }}>
-          Learners get a focused workspace with primary navigation at the bottom of the screen: Home, AI, Courses and Community. Experience the live interactive mobile simulator below.
+          Learners get a focused workspace with primary navigation at the bottom of the screen: Home, Courses, AI Coach, and Community. Tap the buttons in the live phone simulator below to explore.
         </p>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 32, alignItems: "center" }}>
@@ -717,23 +742,7 @@ export default function LandingPage({ onNavigate }) {
               <Home size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
               <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>Home</h3>
               <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Current course progress, active cohorts and an AI insight summary — the learner always knows the next action.
-              </p>
-            </div>
-
-            <div
-              className="lp-card-hover"
-              onClick={() => setMobileLearnerTab("ai")}
-              style={{
-                background: "#FFFFFF", padding: 18, borderRadius: 16,
-                border: mobileLearnerTab === "ai" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
-                cursor: "pointer"
-              }}
-            >
-              <Bot size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
-              <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>AI Coach</h3>
-              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Three tools: AI Coach for questions, AI Insights for strengths and gaps, and a Quiz Generator for practice.
+                Current sprint progress, career roadmap, active cohorts and daily streak tracker.
               </p>
             </div>
 
@@ -749,7 +758,23 @@ export default function LandingPage({ onNavigate }) {
               <BookOpen size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
               <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>Courses</h3>
               <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Assigned paths, organisation courses and partner content, with structured modules and progress tracking.
+                Executive masterclasses, spotlight carousels, assigned tracks, and video trailers.
+              </p>
+            </div>
+
+            <div
+              className="lp-card-hover"
+              onClick={() => setMobileLearnerTab("ai")}
+              style={{
+                background: "#FFFFFF", padding: 18, borderRadius: 16,
+                border: mobileLearnerTab === "ai" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
+                cursor: "pointer"
+              }}
+            >
+              <Zap size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>AI Coach</h3>
+              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+                AI Learning Coach, custom adaptive assessment generator, and debugging assistant.
               </p>
             </div>
 
@@ -765,217 +790,342 @@ export default function LandingPage({ onNavigate }) {
               <Users size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
               <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>Community</h3>
               <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Cohort feed, announcements and study groups — peer learning built into the daily experience.
+                Community hub, pinned faculty announcements, live critique studios, and spaces.
               </p>
             </div>
 
           </div>
 
-          {/* Right Side: REAL LIVE MOBILE PHONE DEVICE PREVIEW */}
+          {/* Right Side: EXACT 1-TO-1 MATCHING LIVE MOBILE PHONE PREVIEW */}
           <div style={{ display: "flex", justifyContent: "center" }}>
             
-            {/* Realistic Mobile Device Chassis */}
+            {/* Phone Chassis */}
             <div style={{
-              width: 320, height: 570, background: "#0F172A", borderRadius: 40,
-              padding: 9, boxShadow: "0 22px 55px -15px rgba(15,23,42,0.3)",
-              border: "2.5px solid #334155", position: "relative", display: "flex", flexDirection: "column"
+              width: 320, height: 600, background: "#0F172A", borderRadius: 40,
+              padding: 8, boxShadow: "0 24px 60px -15px rgba(15,23,42,0.35)",
+              border: "2px solid #334155", position: "relative", display: "flex", flexDirection: "column"
             }}>
               
-              {/* Top Speaker Notch & Dynamic Pill */}
-              <div style={{
-                position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)",
-                width: 90, height: 16, background: "#0F172A", borderRadius: 20, zIndex: 10,
-                display: "flex", alignItems: "center", justifyContent: "center"
-              }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#1E293B", marginRight: 6 }} />
-                <div style={{ width: 32, height: 3.5, borderRadius: 99, background: "#1E293B" }} />
-              </div>
-
-              {/* Internal Screen Content Container */}
+              {/* Internal Screen Container */}
               <div style={{
                 flex: 1, background: "#F8FAFC", borderRadius: 32, overflow: "hidden",
                 display: "flex", flexDirection: "column", position: "relative"
               }}>
                 
-                {/* Mobile Status Bar */}
-                <div style={{ padding: "10px 16px 4px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 10.5, fontWeight: 700, color: "#0F172A" }}>
-                  <span>9:41</span>
-                  <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                    <WifiIcon size={11} color="#0F172A" />
-                    <Battery size={12} color="#0F172A" />
-                  </div>
-                </div>
-
-                {/* Real Mini Header (Matches LearnerHeader) */}
-                <div style={{ padding: "6px 12px 8px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #E2E8F0", background: "#FFFFFF" }}>
-                  <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 18, width: "auto" }} />
+                {/* Real Mini Header (Matches exact screenshot header) */}
+                <div style={{ padding: "10px 14px 8px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#FFFFFF", borderBottom: "1px solid #F1F5F9" }}>
+                  <img src="/train-ai-logo.png" alt="TRAIN.AI" style={{ height: 18, width: "auto" }} />
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 3, background: "#FFF7ED", padding: "2px 6px", borderRadius: 99, fontSize: 9.5, fontWeight: 800, color: "#EA580C" }}>
-                      <Flame size={11} color="#EA580C" /> 8d
+                    <div style={{ display: "flex", alignItems: "center", gap: 3, background: "#FFF7ED", padding: "2px 6px", borderRadius: 99, fontSize: 10, fontWeight: 800, color: "#EA580C" }}>
+                      <Flame size={11} color="#EA580C" /> 1
                     </div>
-                    <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#EEF2FF", color: "#4F46E5", fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      AA
+                    <div style={{ width: 24, height: 24, borderRadius: 8, background: "#F1F5F9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748B" }}>
+                      <Bell size={12} />
+                    </div>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#4F46E5", color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      I
                     </div>
                   </div>
                 </div>
 
-                {/* Dynamic Screen Viewport based on tab */}
-                <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", textAlign: "left" }}>
+                {/* Dynamic Screen Body based on tab */}
+                <div style={{ flex: 1, overflowY: "auto", padding: "10px 10px", textAlign: "left" }}>
                   
-                  {/* TAB 1: HOME SCREEN (Matches real HomeScreen.jsx) */}
+                  {/* =========================================================
+                      TAB 1: HOME (Exact match to Screenshot 1)
+                      ========================================================= */}
                   {mobileLearnerTab === "home" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       
-                      {/* Continue Learning Card */}
-                      <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", padding: 10 }}>
-                        <div style={{ fontSize: 9.5, fontWeight: 800, color: "#64748B", textTransform: "uppercase" }}>IN PROGRESS</div>
-                        <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A", marginTop: 2 }}>Full-Stack AI Engineering</div>
-                        <div style={{ fontSize: 10.5, color: "#4F46E5", fontWeight: 700, marginTop: 3 }}>Lesson 8 of 12 (74%)</div>
-                        
-                        <div style={{ height: 4, borderRadius: 99, background: "#EEF2FF", overflow: "hidden", margin: "6px 0 8px" }}>
-                          <div style={{ width: "74%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
+                      {/* Dark Welcome Card with Sprint Goal */}
+                      <div style={{
+                        background: "linear-gradient(135deg, #111827 0%, #1E1B4B 100%)",
+                        borderRadius: 16, padding: "12px 14px", color: "#FFFFFF", position: "relative"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 800 }}>Welcome back,</div>
+                            <div style={{ fontSize: 13, fontWeight: 900, color: "#FFFFFF" }}>inememmanuel360</div>
+                          </div>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#4F46E5", fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>I</div>
+                            <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}><Bell size={10} /></div>
+                          </div>
                         </div>
 
-                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 6, padding: "6px 8px", fontSize: 10.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
-                          <Play size={10} fill="#fff" /> Resume Lesson
+                        <div style={{ fontSize: 10.5, color: "#94A3B8", marginTop: 4, lineHeight: 1.3 }}>
+                          0 of 5 weekly lessons done. Continue in <span style={{ color: "#818CF8", fontWeight: 700 }}>AI Fundamentals</span>.
+                        </div>
+
+                        {/* Weekly Sprint Goal Bar */}
+                        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 10, padding: "6px 8px", marginTop: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 9.5, fontWeight: 800, marginBottom: 4 }}>
+                            <span style={{ color: "#E2E8F0" }}>🎯 Weekly Sprint Goal (0/5)</span>
+                            <span style={{ color: "#34D399" }}>0% Completed</span>
+                          </div>
+                          <div style={{ height: 4, borderRadius: 99, background: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
+                            <div style={{ width: "8%", height: "100%", background: "#34D399", borderRadius: 99 }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* No Active Course Card */}
+                      <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #E2E8F0", padding: "12px", textAlign: "center" }}>
+                        <div style={{ fontSize: 11, color: "#475569" }}>No active course yet. Browse the catalog to get started.</div>
+                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 10, padding: "8px 12px", fontSize: 11.5, fontWeight: 800, marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                          <BookOpen size={13} /> Browse courses
                         </button>
                       </div>
 
-                      {/* AI Insights Card */}
-                      <div style={{ background: "#EEF2FF", borderRadius: 10, border: "1px solid #C7D2FE", padding: 9 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 800, color: "#4F46E5" }}>
-                          <Bot size={11} /> AI RECOMMENDATION
+                      {/* Your Cohort Card */}
+                      <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #E2E8F0", padding: "10px 12px", display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <Users size={14} color="#4F46E5" />
                         </div>
-                        <div style={{ fontSize: 11, color: "#1E1B4B", lineHeight: 1.35, marginTop: 3 }}>
-                          Strong on Vector Databases (94%). Practice LLM Evaluation next.
+                        <div>
+                          <div style={{ fontSize: 9, fontWeight: 800, color: "#64748B", textTransform: "uppercase" }}>YOUR COHORT</div>
+                          <div style={{ fontSize: 11, color: "#334155", fontWeight: 600 }}>Not part of a cohort yet</div>
                         </div>
                       </div>
 
-                      {/* Cohort Card */}
-                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: 9 }}>
-                        <div style={{ fontSize: 9.5, fontWeight: 800, color: "#64748B" }}>COHORT SESSION</div>
-                        <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A", marginTop: 1 }}>Thursday • 15:00 UTC with Dr. Chen</div>
+                      {/* Your Career Roadmap Card */}
+                      <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #E2E8F0", padding: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, color: "#4F46E5", fontSize: 11, fontWeight: 800 }}>
+                          <TrendingUp size={13} /> Your Career Roadmap • UX &amp; AI Designer
+                        </div>
+                        <div style={{ fontSize: 10, color: "#64748B", marginTop: 2 }}>
+                          Current Level: <span style={{ fontWeight: 700, color: "#0F172A" }}>Junior Designer</span> (Next: Middle UI Designer)
+                        </div>
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: "#4F46E5", marginTop: 4 }}>Level 2 of 4</div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 4, marginTop: 6 }}>
+                          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "4px 2px", textAlign: "center" }}>
+                            <CheckCircle2 size={10} color="#10B981" style={{ margin: "0 auto" }} />
+                            <div style={{ fontSize: 8.5, fontWeight: 800, color: "#0F172A" }}>Junior UI</div>
+                            <div style={{ fontSize: 7.5, color: "#64748B" }}>Completed</div>
+                          </div>
+                          <div style={{ background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: 6, padding: "4px 2px", textAlign: "center" }}>
+                            <Zap size={10} color="#4F46E5" style={{ margin: "0 auto" }} />
+                            <div style={{ fontSize: 8.5, fontWeight: 800, color: "#4F46E5" }}>Tokens</div>
+                            <div style={{ fontSize: 7.5, color: "#4F46E5" }}>In Progress</div>
+                          </div>
+                          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "4px 2px", textAlign: "center" }}>
+                            <Lock size={10} color="#94A3B8" style={{ margin: "0 auto" }} />
+                            <div style={{ fontSize: 8.5, fontWeight: 800, color: "#64748B" }}>Spatial UI</div>
+                            <div style={{ fontSize: 7.5, color: "#94A3B8" }}>Next Up</div>
+                          </div>
+                          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "4px 2px", textAlign: "center" }}>
+                            <Lock size={10} color="#94A3B8" style={{ margin: "0 auto" }} />
+                            <div style={{ fontSize: 8.5, fontWeight: 800, color: "#64748B" }}>Senior Lead</div>
+                            <div style={{ fontSize: 7.5, color: "#94A3B8" }}>Locked</div>
+                          </div>
+                        </div>
                       </div>
 
                     </div>
                   )}
 
-                  {/* TAB 2: AI COACH SCREEN (Matches real AiCoachScreen.jsx) */}
-                  {mobileLearnerTab === "ai" && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A" }}>AI Neural Tutor</div>
-                      
-                      {/* User message */}
-                      <div style={{ alignSelf: "flex-end", background: "#4F46E5", color: "#fff", padding: "6px 10px", borderRadius: "10px 10px 2px 10px", fontSize: 10.5, maxWidth: "85%" }}>
-                        How do vector embeddings work in RAG?
-                      </div>
-
-                      {/* AI Response */}
-                      <div style={{ alignSelf: "flex-start", background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#1E293B", padding: "7px 10px", borderRadius: "10px 10px 10px 2px", fontSize: 10.5, maxWidth: "90%", lineHeight: 1.35 }}>
-                        Embeddings map text to multidimensional vectors so similar semantic ideas cluster together!
-                      </div>
-
-                      {/* Interactive Action */}
-                      <div style={{ background: "#EEF2FF", borderRadius: 8, padding: 8, border: "1px solid #C7D2FE", marginTop: 4 }}>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: "#4F46E5" }}>Quick Practice Quiz (3 questions)</div>
-                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 5, padding: "5px", fontSize: 10.5, fontWeight: 800, marginTop: 4 }}>
-                          Start AI Quiz →
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* TAB 3: COURSES SCREEN (Matches real CoursesScreen.jsx) */}
+                  {/* =========================================================
+                      TAB 2: COURSES (Exact match to Screenshot 4)
+                      ========================================================= */}
                   {mobileLearnerTab === "courses" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A" }}>Assigned Courses</div>
                       
-                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: 8, display: "flex", gap: 8 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <BookOpen size={15} color="#4F46E5" />
+                      {/* Spotlight Masterclass Card */}
+                      <div style={{
+                        background: "linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)",
+                        borderRadius: 16, padding: "12px 14px", color: "#FFFFFF"
+                      }}>
+                        <div style={{ fontSize: 8.5, fontWeight: 800, color: "#C7D2FE", background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: 4, display: "inline-block" }}>
+                          Executive Masterclass • NEW SPOTLIGHT
                         </div>
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 800, color: "#0F172A" }}>Design Systems with AI</div>
-                          <div style={{ fontSize: 9.5, color: "#64748B" }}>14 lessons • 4.9 ★</div>
+
+                        <div style={{ fontSize: 13, fontWeight: 900, marginTop: 6, lineHeight: 1.25 }}>
+                          Spatial Computing &amp; VisionOS Design Foundations
                         </div>
+
+                        <div style={{ fontSize: 9.5, color: "#CBD5E1", marginTop: 4, lineHeight: 1.3 }}>
+                          Immersive 3D spatial user experiences, depth layering, and spatial ergonomics.
+                        </div>
+
+                        <div style={{ fontSize: 9, color: "#FCD34D", marginTop: 6, fontWeight: 700 }}>
+                          ⭐ 5 (640) • 👥 4,100+ Enrolled • 🛡️ Guaranteed
+                        </div>
+
+                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 8, padding: "7px 10px", fontSize: 11, fontWeight: 800, marginTop: 8 }}>
+                          Explore Masterclass →
+                        </button>
+                        <button style={{ width: "100%", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, padding: "5px 10px", fontSize: 10, fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                          <Play size={10} fill="#fff" /> Watch Trailer
+                        </button>
                       </div>
 
-                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: 8, display: "flex", gap: 8 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <ShieldCheck size={15} color="#4F46E5" />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 11, fontWeight: 800, color: "#0F172A" }}>Data Privacy (GDPR)</div>
-                          <div style={{ fontSize: 9.5, color: "#64748B" }}>8 lessons • Assigned</div>
-                        </div>
+                      {/* Course Filters */}
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <span style={{ background: "#4F46E5", color: "#fff", padding: "3px 10px", borderRadius: 99, fontSize: 10, fontWeight: 800 }}>All Courses (49)</span>
+                        <span style={{ background: "#FFFFFF", color: "#64748B", border: "1px solid #E2E8F0", padding: "3px 10px", borderRadius: 99, fontSize: 10, fontWeight: 700 }}>Assigned (0)</span>
                       </div>
+
+                      {/* Search Bar */}
+                      <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 10, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: "#94A3B8" }}>
+                        <Search size={12} /> Search masterclasses, skills...
+                      </div>
+
                     </div>
                   )}
 
-                  {/* TAB 4: COMMUNITY SCREEN (Matches real CommunityScreen.jsx) */}
-                  {mobileLearnerTab === "community" && (
+                  {/* =========================================================
+                      TAB 3: AI COACH (Exact match to Screenshot 3)
+                      ========================================================= */}
+                  {mobileLearnerTab === "ai" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A" }}>Cohort Discussion</div>
                       
-                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: 8 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#4F46E5", color: "#fff", fontSize: 8, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>MK</div>
-                          <span style={{ fontSize: 10.5, fontWeight: 800, color: "#0F172A" }}>Marcus K.</span>
-                          <span style={{ fontSize: 9, color: "#94A3B8", marginLeft: "auto" }}>2h ago</span>
+                      {/* Top Header Card */}
+                      <div style={{
+                        background: "linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)",
+                        borderRadius: 16, padding: "12px 14px", color: "#FFFFFF"
+                      }}>
+                        <div style={{ fontSize: 13, fontWeight: 900 }}>AI Learning Coach</div>
+                        <div style={{ fontSize: 9.5, color: "#CBD5E1", marginTop: 2 }}>
+                          Ask questions, debug code, and take interactive practice quizzes.
                         </div>
-                        <div style={{ fontSize: 10.5, color: "#334155", marginTop: 4, lineHeight: 1.3 }}>
-                          Just finished the LLM benchmarking lab! Great insights.
+
+                        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                          <span style={{ background: "rgba(255,255,255,0.12)", color: "#C7D2FE", padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800 }}>✦ 10 credits</span>
+                          <span style={{ background: "#F97316", color: "#fff", padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800 }}>+ Get Credits</span>
                         </div>
                       </div>
 
-                      <div style={{ background: "#EEF2FF", borderRadius: 8, padding: 6, fontSize: 10, fontWeight: 700, color: "#4F46E5", textAlign: "center" }}>
-                        + Post Discussion Topic
+                      {/* Sub-Filters */}
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <span style={{ background: "#FFFFFF", color: "#475569", border: "1px solid #E2E8F0", padding: "3px 8px", borderRadius: 8, fontSize: 9.5, fontWeight: 700 }}>💬 Coach &amp; Tutor</span>
+                        <span style={{ background: "#EEF2FF", color: "#4F46E5", border: "1px solid #C7D2FE", padding: "3px 8px", borderRadius: 8, fontSize: 9.5, fontWeight: 800 }}>⚡ Adaptive Quizzes</span>
                       </div>
+
+                      {/* Adaptive Generator Card */}
+                      <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #E2E8F0", padding: "12px" }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A" }}>AI Adaptive Assessment Generator</div>
+                        <div style={{ fontSize: 9.5, color: "#64748B", marginBottom: 6 }}>Generate custom quizzes tuned to your target skillset</div>
+
+                        <div style={{ fontSize: 9.5, fontWeight: 700, color: "#334155", marginBottom: 2 }}>Topic or Skill</div>
+                        <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "5px 8px", fontSize: 10, color: "#475569", marginBottom: 6 }}>
+                          e.g. Figma Variables, LangChain RAG
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 8 }}>
+                          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "4px 6px", fontSize: 9.5, color: "#0F172A", fontWeight: 600 }}>Intermediate ▾</div>
+                          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 6, padding: "4px 6px", fontSize: 9.5, color: "#0F172A", fontWeight: 600 }}>5 Questions ▾</div>
+                        </div>
+
+                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 8, padding: "7px 10px", fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                          ⚡ Generate &amp; Start Quiz
+                        </button>
+                      </div>
+
+                      {/* Assessment Daily Goal */}
+                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: "8px 10px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9.5, fontWeight: 800 }}>
+                          <span style={{ color: "#0F172A" }}>Assessment Daily Goal</span>
+                          <span style={{ color: "#4F46E5" }}>1 of 3 Done</span>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 99, background: "#EEF2FF", overflow: "hidden", marginTop: 4 }}>
+                          <div style={{ width: "33%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
+
+                  {/* =========================================================
+                      TAB 4: COMMUNITY (Exact match to Screenshot 2)
+                      ========================================================= */}
+                  {mobileLearnerTab === "community" && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      
+                      {/* Top Header Card */}
+                      <div style={{
+                        background: "linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)",
+                        borderRadius: 16, padding: "12px 14px", color: "#FFFFFF"
+                      }}>
+                        <div style={{ fontSize: 13, fontWeight: 900 }}>Train AI Community Hub</div>
+                        <div style={{ fontSize: 9.5, color: "#CBD5E1", marginTop: 2 }}>
+                          Share projects, ask questions, and collaborate with peers and mentors.
+                        </div>
+                        <button style={{ background: "#4F46E5", color: "#fff", border: "none", borderRadius: 6, padding: "5px 10px", fontSize: 10, fontWeight: 800, marginTop: 8 }}>
+                          + Share or Ask Question
+                        </button>
+                      </div>
+
+                      {/* Sub-Filters */}
+                      <div style={{ display: "flex", gap: 6, overflowX: "auto" }}>
+                        <span style={{ background: "#EEF2FF", color: "#4F46E5", border: "1px solid #C7D2FE", padding: "3px 8px", borderRadius: 8, fontSize: 9.5, fontWeight: 800, whiteSpace: "nowrap" }}>💬 Community Feed</span>
+                        <span style={{ background: "#FFFFFF", color: "#475569", border: "1px solid #E2E8F0", padding: "3px 8px", borderRadius: 8, fontSize: 9.5, fontWeight: 700, whiteSpace: "nowrap" }}>🎓 Instructors</span>
+                      </div>
+
+                      {/* Pinned Announcement Card */}
+                      <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #E2E8F0", padding: "10px 12px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                          <div style={{ display: "flex", gap: 4 }}>
+                            <span style={{ background: "#FEF3C7", color: "#B45309", fontSize: 7.5, fontWeight: 800, padding: "1px 5px", borderRadius: 4 }}>📌 PINNED</span>
+                            <span style={{ background: "#EEF2FF", color: "#4F46E5", fontSize: 7.5, fontWeight: 800, padding: "1px 5px", borderRadius: 4 }}>Announcements</span>
+                          </div>
+                          <span style={{ fontSize: 8.5, color: "#94A3B8" }}>2 hours ago</span>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#4F46E5", color: "#fff", fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>AL</div>
+                          <div>
+                            <div style={{ fontSize: 10.5, fontWeight: 800, color: "#0F172A" }}>Astrid Larsson <span style={{ background: "#4F46E5", color: "#fff", fontSize: 7.5, padding: "1px 4px", borderRadius: 4 }}>INSTRUCTOR</span></div>
+                            <div style={{ fontSize: 8.5, color: "#64748B" }}>Lead AI Design Instructor</div>
+                          </div>
+                        </div>
+
+                        <div style={{ fontSize: 11, fontWeight: 800, color: "#0F172A", marginTop: 4, lineHeight: 1.25 }}>
+                          Live Critique Studio Tomorrow: Bring Your Spatial UI &amp; Token Systems
+                        </div>
+                      </div>
+
                     </div>
                   )}
 
                 </div>
 
-                {/* Real Interactive Mobile Bottom Navigation Bar */}
+                {/* Real Exact Interactive Mobile Bottom Navigation Bar */}
                 <div style={{
                   height: 48, background: "#FFFFFF", borderTop: "1px solid #E2E8F0",
-                  display: "grid", gridTemplateColumns: "repeat(4, 1fr)", alignItems: "center",
-                  padding: "0 4px"
+                  display: "flex", alignItems: "center", justifyContent: "space-around",
+                  padding: "0 6px"
                 }}>
                   <div
-                    className={`phone-tab-btn ${mobileLearnerTab === "home" ? "active" : ""}`}
+                    className={`phone-nav-item ${mobileLearnerTab === "home" ? "active" : ""}`}
                     onClick={() => setMobileLearnerTab("home")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "home" ? "#4F46E5" : "#64748B", fontSize: 9 }}
                   >
                     <Home size={14} />
-                    <span>Home</span>
+                    {mobileLearnerTab === "home" && <span>Home</span>}
                   </div>
 
                   <div
-                    className={`phone-tab-btn ${mobileLearnerTab === "ai" ? "active" : ""}`}
-                    onClick={() => setMobileLearnerTab("ai")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "ai" ? "#4F46E5" : "#64748B", fontSize: 9 }}
-                  >
-                    <Bot size={14} />
-                    <span>AI</span>
-                  </div>
-
-                  <div
-                    className={`phone-tab-btn ${mobileLearnerTab === "courses" ? "active" : ""}`}
+                    className={`phone-nav-item ${mobileLearnerTab === "courses" ? "active" : ""}`}
                     onClick={() => setMobileLearnerTab("courses")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "courses" ? "#4F46E5" : "#64748B", fontSize: 9 }}
                   >
                     <BookOpen size={14} />
-                    <span>Courses</span>
+                    {mobileLearnerTab === "courses" && <span>Courses</span>}
                   </div>
 
                   <div
-                    className={`phone-tab-btn ${mobileLearnerTab === "community" ? "active" : ""}`}
+                    className={`phone-nav-item ${mobileLearnerTab === "ai" ? "active" : ""}`}
+                    onClick={() => setMobileLearnerTab("ai")}
+                  >
+                    <Zap size={14} />
+                    {mobileLearnerTab === "ai" && <span>AI Coach</span>}
+                  </div>
+
+                  <div
+                    className={`phone-nav-item ${mobileLearnerTab === "community" ? "active" : ""}`}
                     onClick={() => setMobileLearnerTab("community")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "community" ? "#4F46E5" : "#64748B", fontSize: 9 }}
                   >
                     <Users size={14} />
-                    <span>Community</span>
+                    {mobileLearnerTab === "community" && <span>Community</span>}
                   </div>
                 </div>
 
