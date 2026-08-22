@@ -197,56 +197,40 @@ results = vector_store.similarity_search(query, k=4)`
     filteredNotes.length);
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       
       {/* =========================================================================
           HERO BANNER: Dedicated Bookmarks & Study Library
           ========================================================================= */}
       <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
+        borderRadius: 10,
+        background: "#0F172A",
         color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
+        padding: "clamp(16px, 2.5vw, 22px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* Background Stock Image with Gradient Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
-          zIndex: 0
-        }} />
-
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
               Saved Library &amp; Bookmarks
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               Quick access to your bookmarked masterclasses, core video lessons, reusable code snippets, and personalized study notes.
             </p>
           </div>
 
           <button
-            className="tai-btn"
-            onClick={() => push("courses")}
+            className="tai-btn tai-btn-primary"
+            onClick={() => setActiveTab("snippets")}
             style={{
-              background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13.5,
-              padding: "12px 22px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
-              boxShadow: "0 6px 20px rgba(79, 70, 229, 0.45)", flexShrink: 0
+              padding: "8px 14px", borderRadius: 8, fontWeight: 700,
+              display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
             }}
           >
-            Explore Catalog →
+            <Plus size={15} /> Add Note / Snippet
           </button>
         </div>
       </div>

@@ -285,29 +285,15 @@ export function LearningPathsScreen({ push, back }) {
       <div
         style={{
           position: "relative",
-          borderRadius: 20,
+          borderRadius: 10,
           overflow: "hidden",
-          background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 55%, #312E81 100%)",
+          background: "#0F172A",
           color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 32px)",
-          boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
-          border: "1px solid rgba(99, 102, 241, 0.35)"
+          padding: "clamp(16px, 2.5vw, 24px)",
+          boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+          border: "1px solid #1E293B"
         }}
       >
-        <img
-          src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.28, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 55%, rgba(15,23,42,0.7) 100%)",
-          zIndex: 0
-        }} />
-
         <div style={{ position: "relative", zIndex: 1 }}>
           <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
             <span style={{
@@ -406,7 +392,7 @@ export function LearningPathsScreen({ push, back }) {
             className="tai-card tai-card-hover"
             style={{
               padding: 0,
-              borderRadius: 20,
+              borderRadius: 10,
               background: "var(--surface)",
               border: "1px solid var(--border)",
               overflow: "hidden",

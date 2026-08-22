@@ -106,19 +106,6 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
             PEOPLE & ACCESS HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -164,7 +151,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
               </div>
             </div>
 
-            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
               <div className="ta-row ta-gap12" style={{ flex: "1 1 260px", minWidth: 0, flexWrap: "wrap" }}>
                 <div className="ta-search" style={{ flex: "1 1 180px", minWidth: 0, width: "auto" }}>

@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { TopBar, Tag, Avatar, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Trophy, Medal, Crown, Flame, Award, ArrowUp, ArrowDown, Minus,
@@ -150,29 +150,15 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           TOP 3 PODIUM HERO SECTION
           ========================================================================= */}
       <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.92) 100%)",
+        borderRadius: 10,
+        background: "#0F172A",
         color: "#FFFFFF",
-        padding: "clamp(18px, 3vw, 28px)",
-        boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.45)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
+        padding: "clamp(16px, 2.5vw, 24px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
         position: "relative",
         overflow: "hidden"
       }}>
-        <img
-          src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.25, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 55%, rgba(15,23,42,0.7) 100%)",
-          zIndex: 0
-        }} />
-
         <div style={{ position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             <div style={{
@@ -355,9 +341,9 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           STICKY CURRENT USER RANK BAR
           ========================================================================= */}
       <div className="tai-card" style={{
-        background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%)",
-        border: "1.5px solid rgba(79, 70, 229, 0.35)",
-        padding: "12px 16px", borderRadius: 14
+        background: "rgba(79, 70, 229, 0.05)",
+        border: "1px solid rgba(79, 70, 229, 0.2)",
+        padding: "10px 14px", borderRadius: 8
       }}>
         <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
           <div className="tai-row tai-gap10">

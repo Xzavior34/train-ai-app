@@ -138,19 +138,6 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
             INSTRUCTOR Q&A HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-          <img
-            src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.28, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -190,7 +177,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
         </div>
 
         {/* Filter and Search Bar Strip */}
-        <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "14px 18px", background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12, alignItems: "center" }}>
             
             {/* Filter Tabs */}
@@ -249,14 +236,10 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
             return (
               <div
                 key={d.id}
-                className="ta-card"
-                style={{
-                  padding: "20px 22px",
-                  borderRadius: 16,
+                className="ta-card" style={{ padding: "20px 22px",
                   background: "var(--surface)",
                   border: d.resolved ? "1px solid var(--border)" : "1.5px solid rgba(99, 102, 241, 0.35)",
-                  boxShadow: "0 2px 12px -2px rgba(15, 23, 42, 0.04)"
-                }}
+                  boxShadow: "0 2px 12px -2px rgba(15, 23, 42, 0.04)" }}
               >
                 {/* Question Header: Student info & Status */}
                 <div className="ta-row ta-between" style={{ alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>

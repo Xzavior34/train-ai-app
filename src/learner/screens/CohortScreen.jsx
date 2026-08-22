@@ -55,91 +55,66 @@ export function CohortScreen({
           HERO BANNER: Dedicated Cohort & Batch Space
           ========================================================================= */}
       <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
+        borderRadius: 10,
+        background: "#0F172A",
         color: "#FFFFFF",
-        padding: "clamp(18px, 3vw, 26px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
+        padding: "clamp(16px, 2.5vw, 22px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
         position: "relative",
         overflow: "hidden"
       }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
-          zIndex: 0
-        }} />
-
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
               {cohort?.name || "AI & Product Design Batch"}
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               {cohort?.description || "Collaborative sprint track with live instructor sessions and peer critique."}
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 12, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{(cohortMembersQuery?.data || []).length} Peers Enrolled</div>
-            <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Active Cohort Track</div>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.06)", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF" }}>{(cohortMembersQuery?.data || []).length} Peers Enrolled</div>
+            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>Active Cohort Track</div>
           </div>
         </div>
 
-        {/* Milestone Progress Bar (High-Contrast Vivid Track) */}
+        {/* Milestone Progress Bar */}
         <div style={{
-          marginTop: 16,
+          marginTop: 14,
           position: "relative",
           zIndex: 1,
-          background: "rgba(15, 23, 42, 0.6)",
-          backdropFilter: "blur(12px)",
-          padding: "12px 16px",
-          borderRadius: 14,
-          border: "1px solid rgba(255, 255, 255, 0.22)",
-          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.25)"
+          background: "#1E293B",
+          padding: "10px 14px",
+          borderRadius: 8,
+          border: "1px solid #334155"
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 800, marginBottom: 8, color: "#FFFFFF", letterSpacing: "0.01em" }}>
+          <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#FFFFFF" }}>
             <div className="tai-row tai-gap6">
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 8px #10B981" }} />
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
               <span>Cohort Pace: Sprint 5 of 12</span>
             </div>
             <span style={{
-              background: "rgba(16, 185, 129, 0.25)",
-              color: "#6EE7B7",
-              padding: "2px 8px",
-              borderRadius: 99,
-              border: "1px solid rgba(16, 185, 129, 0.5)",
+              color: "#34D399",
               fontSize: 11.5,
-              fontWeight: 800
+              fontWeight: 700
             }}>
               42% Completed
             </span>
           </div>
 
           <div style={{
-            height: 12,
-            borderRadius: 99,
-            background: "rgba(255, 255, 255, 0.18)",
-            padding: 2,
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-            overflow: "hidden",
-            boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.3)"
+            height: 6,
+            borderRadius: 3,
+            background: "#334155",
+            overflow: "hidden"
           }}>
             <div style={{
               width: "42%",
               height: "100%",
-              background: "linear-gradient(90deg, #10B981 0%, #34D399 50%, #6366F1 100%)",
-              borderRadius: 99,
-              boxShadow: "0 0 14px rgba(16, 185, 129, 0.8)",
+              background: "#10B981",
+              borderRadius: 3,
               transition: "width 0.4s ease"
             }} />
           </div>

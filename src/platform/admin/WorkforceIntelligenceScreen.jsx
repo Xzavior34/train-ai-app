@@ -64,45 +64,18 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         {/* =========================================================================
             WORKFORCE INTELLIGENCE HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(18px, 3vw, 26px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          <img
-            src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
-
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
-                Workforce Intelligence &amp; Skill Radar
-              </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
-                Map enterprise competencies, skill gaps, and automated upskilling paths.
-              </p>
+        <div className="ta-hero-banner">
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">Workforce Intelligence &amp; Skill Radar</h1>
+              <p className="ta-hero-desc">Map enterprise competencies, skill gaps, and automated upskilling paths.</p>
             </div>
           </div>
         </div>
 
         {/* Top 4 KPI Metrics */}
         <div className="ta-grid ta-grid-4 anim-stagger">
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
               <Brain size={18} color="#4F46E5" />
@@ -111,7 +84,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>&nbsp;</div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Avg Course Completion</span>
               <ClipboardCheck size={18} color="#10B981" />
@@ -120,7 +93,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Across all active tracks</div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Compliance Rate</span>
               <ShieldCheck size={18} color="#F59E0B" />
@@ -129,7 +102,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Audit ready</div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>AI Coach Queries (7d)</span>
               <Bot size={18} color="#8B5CF6" />
@@ -171,7 +144,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         </div>
 
         {/* 4-Tier Career Path Progression Visual */}
-        <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+        <div className="ta-card" style={{ padding: 22 }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Career Path Progression</div>
@@ -218,7 +191,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         <div className="ta-sidebar-layout">
 
           {/* Skill Profile Breakdown */}
-          <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 22 }}>
             <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
               <div>
                 <div className="ta-title" style={{ fontSize: 16 }}>Skill Profile & Radar Assessment</div>
@@ -249,7 +222,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             
             {/* Promotion Criteria Checklist */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Promotion Criteria</div>
@@ -287,12 +260,9 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             </div>
 
             {/* Growth Recommendation Card */}
-            <div className="ta-card" style={{ 
-              padding: 22, 
-              borderRadius: 16, 
+            <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
-              border: "1px solid var(--border)"
-            }}>
+              border: "1px solid var(--border)" }}>
               <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 14 }}>
                 <Brain size={18} />
                 <span>Skill Growth Recommendation</span>

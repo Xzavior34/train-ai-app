@@ -37,26 +37,22 @@ export default function OnboardingPage({ onComplete }) {
   return (
     <div style={styles.outer}>
       <style>{`
-        @keyframes obFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-        .ob-card { animation: obFadeUp .3s ease; }
-        .ob-option { transition: border-color .12s ease, background-color .12s ease, transform .12s ease; }
-        .ob-option:hover { transform: translateY(-1px); border-color: #C7D2FE; }
-        .ob-option:active { transform: scale(.99); }
-        .ob-continue:not(:disabled):hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
-        .ob-continue:not(:disabled):active { transform: scale(.98); }
+        @keyframes obFadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .ob-card { animation: obFadeUp .2s ease; }
+        .ob-option { transition: border-color .12s ease, background-color .12s ease; }
+        .ob-option:hover { border-color: #CBD5E1; }
+        .ob-continue:not(:disabled):hover { background-color: #4338CA !important; }
+        .ob-continue:not(:disabled):active { transform: scale(.99); }
       `}</style>
-
-      <div style={styles.glow} />
 
       <div key={step} className="ob-card" style={styles.card}>
         <div style={styles.brandRow}>
-          <img src="/brand/train-ai-logo.png" alt="Train AI" style={{ width: 30, height: 30, objectFit: "contain", borderRadius: 0, flexShrink: 0 }} />
-          <div style={styles.brandName}>Train AI</div>
+          <img src="/brand/train-ai-logo.png" alt="Train AI" style={{ height: 24, width: "auto", objectFit: "contain", flexShrink: 0 }} />
         </div>
 
         <div style={styles.progressRow}>
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} style={{ ...styles.progressBar, background: i <= step ? "linear-gradient(135deg, #4338CA, #818CF8)" : "#EEF2FF" }} />
+            <div key={i} style={{ ...styles.progressBar, background: i <= step ? "#4F46E5" : "#EEF2FF" }} />
           ))}
         </div>
 
@@ -73,11 +69,11 @@ export default function OnboardingPage({ onComplete }) {
                     key={t.name} className="ob-option" onClick={() => toggleTrack(t.name)}
                     style={{ ...styles.option, ...(active ? styles.optionActive : {}) }}
                   >
-                    <div style={{ ...styles.optionIcon, background: active ? "rgba(79,70,229,.12)" : "#F4F6FC" }}>
-                      <Icon size={16} color={active ? "#4F46E5" : "#656C86"} />
+                    <div style={{ ...styles.optionIcon, background: active ? "rgba(79,70,229,.12)" : "#F1F5F9" }}>
+                      <Icon size={15} color={active ? "#4F46E5" : "#64748B"} />
                     </div>
                     <span style={styles.optionLabel}>{t.name}</span>
-                    {active && <Check size={17} color="#4F46E5" style={{ marginLeft: "auto" }} />}
+                    {active && <Check size={16} color="#4F46E5" style={{ marginLeft: "auto" }} />}
                   </div>
                 );
               })}
@@ -94,9 +90,9 @@ export default function OnboardingPage({ onComplete }) {
                 const active = level === l.key;
                 return (
                   <div key={l.key} className="ob-option" onClick={() => setLevel(l.key)} style={{ ...styles.option, ...(active ? styles.optionActive : {}), alignItems: "flex-start", flexDirection: "column", gap: 2 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
                       <span style={{ ...styles.optionLabel, fontWeight: 700 }}>{l.label}</span>
-                      {active && <Check size={16} color="#4F46E5" style={{ marginLeft: "auto" }} />}
+                      {active && <Check size={15} color="#4F46E5" style={{ marginLeft: "auto" }} />}
                     </div>
                     <span style={styles.optionDesc}>{l.desc}</span>
                   </div>
@@ -110,7 +106,7 @@ export default function OnboardingPage({ onComplete }) {
           onClick={next} disabled={!canContinue} className="ob-continue"
           style={{ ...styles.continue, opacity: canContinue ? 1 : 0.4, cursor: canContinue ? "pointer" : "not-allowed" }}
         >
-          {step === totalSteps - 1 ? "Complete onboarding" : "Continue"} <ArrowRight size={16} />
+          {step === totalSteps - 1 ? "Complete onboarding" : "Continue"} <ArrowRight size={15} />
         </button>
       </div>
     </div>
@@ -119,40 +115,31 @@ export default function OnboardingPage({ onComplete }) {
 
 const styles = {
   outer: {
-    position: "relative", overflow: "hidden", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#F4F6FC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: 20,
-  },
-  glow: {
-    position: "absolute", top: -160, left: "50%", transform: "translateX(-50%)", width: 520, height: 340, borderRadius: "50%",
-    background: "radial-gradient(closest-side, rgba(91,127,255,.2), transparent)", pointerEvents: "none",
+    minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+    background: "#F8FAFC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: 16,
   },
   card: {
-    position: "relative", width: "100%", maxWidth: 420, background: "#fff", borderRadius: 22, padding: 32,
-    border: "1px solid #E6E9F5", boxShadow: "0 1px 2px rgba(16,20,42,.04), 0 30px 60px -24px rgba(16,20,42,.18)",
+    width: "100%", maxWidth: 420, background: "#FFFFFF", borderRadius: 12, padding: 24,
+    border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(15,23,42,.04), 0 8px 24px -6px rgba(15,23,42,.06)",
   },
-  brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 18 },
-  brandMark: {
-    width: 30, height: 30, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center",
-    background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
-  },
-  brandName: { fontWeight: 800, fontSize: 15, color: "#10142A" },
-  progressRow: { display: "flex", gap: 6, marginBottom: 24 },
-  progressBar: { flex: 1, height: 4, borderRadius: 2, transition: "background .2s ease" },
-  h1: { fontSize: 20, fontWeight: 800, margin: "0 0 5px", color: "#10142A", letterSpacing: "-0.01em" },
-  sub: { fontSize: 13, color: "#656C86", margin: "0 0 20px", lineHeight: 1.45 },
-  optionList: { display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 },
+  brandRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 16 },
+  brandName: { fontWeight: 800, fontSize: 15, color: "#0F172A" },
+  progressRow: { display: "flex", gap: 6, marginBottom: 20 },
+  progressBar: { flex: 1, height: 4, borderRadius: 2, transition: "background .15s ease" },
+  h1: { fontSize: 18, fontWeight: 800, margin: "0 0 4px", color: "#0F172A", letterSpacing: "-0.01em" },
+  sub: { fontSize: 12.5, color: "#64748B", margin: "0 0 16px", lineHeight: 1.45 },
+  optionList: { display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 },
   option: {
-    display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 14,
-    border: "1.5px solid #E6E9F5", background: "#fff", cursor: "pointer", userSelect: "none",
+    display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 8,
+    border: "1px solid #E2E8F0", background: "#FFFFFF", cursor: "pointer", userSelect: "none",
   },
-  optionActive: { borderColor: "#4F46E5", background: "#F4F6FC" },
-  optionIcon: { width: 32, height: 32, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  optionLabel: { fontSize: 14, fontWeight: 600, color: "#10142A" },
-  optionDesc: { fontSize: 12, color: "#656C86" },
+  optionActive: { borderColor: "#4F46E5", background: "#EEF2FF" },
+  optionIcon: { width: 28, height: 28, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  optionLabel: { fontSize: 13, fontWeight: 600, color: "#0F172A" },
+  optionDesc: { fontSize: 11.5, color: "#64748B" },
   continue: {
-    width: "100%", border: "none", borderRadius: 13, padding: "13px 16px", fontWeight: 700, fontSize: 14,
-    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-    background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 55%, #818CF8 100%)",
-    boxShadow: "0 10px 22px -8px rgba(79,70,229,.5)", transition: "transform .12s ease, box-shadow .12s ease",
+    width: "100%", border: "none", borderRadius: 8, padding: "10px 16px", fontWeight: 700, fontSize: 13,
+    color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+    background: "#4F46E5", transition: "background-color .15s ease",
   },
 };

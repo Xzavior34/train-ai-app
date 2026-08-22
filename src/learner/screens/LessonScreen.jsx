@@ -287,7 +287,7 @@ export function LessonScreen({
               <div style={{ fontSize: 12, fontWeight: 800, color: "var(--primary)" }}>{courseProgressPercent}%</div>
             </div>
             <div style={{ width: 44, height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ width: `${courseProgressPercent}%`, height: "100%", background: "var(--primary-gradient, linear-gradient(135deg, #4F46E5, #6366F1))", borderRadius: 99 }} />
+              <div style={{ width: `${courseProgressPercent}%`, height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 99 }} />
             </div>
           </div>
 
@@ -384,14 +384,14 @@ export function LessonScreen({
                 <div style={{
                   width: `${(currentTimeSec / totalDurationSec) * 100}%`,
                   height: "100%",
-                  background: "var(--primary-gradient, linear-gradient(90deg, #4F46E5, #818CF8))",
+                  background: "var(--primary, #4F46E5)",
                   borderRadius: 99,
                   position: "relative"
                 }}>
                   <div style={{
                     position: "absolute", right: -4, top: -3.5,
                     width: 12, height: 12, borderRadius: "50%",
-                    background: "#FFFFFF", boxShadow: "0 0 8px rgba(79, 70, 229, 0.8)"
+                    background: "#FFFFFF"
                   }} />
                 </div>
               </div>
@@ -1206,11 +1206,11 @@ export function LessonScreen({
 
             {/* Quick Capstone Project Certificate Unlock Card */}
             <div className="tai-card" style={{
-              background: "linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%)",
-              border: "1px solid rgba(99, 102, 241, 0.3)", padding: 14, borderRadius: 14
+              background: "rgba(79, 70, 229, 0.05)",
+              border: "1px solid rgba(79, 70, 229, 0.2)", padding: 12, borderRadius: 8
             }}>
               <div className="tai-row tai-gap8" style={{ marginBottom: 4 }}>
-                <Award size={16} color="var(--primary)" />
+                <Award size={15} color="var(--primary)" />
                 <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>Official Credential</span>
               </div>
               <div style={{ fontSize: 11.5, color: "var(--text-2)", lineHeight: 1.4 }}>

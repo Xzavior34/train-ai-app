@@ -75,38 +75,11 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
         {/* =========================================================================
             ANALYTICS HUB HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(18px, 3vw, 26px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          <img
-            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
-
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
-                Institutional Analytics &amp; AI Usage
-              </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
-                Track completion pacing, study time distribution, and AI usage metrics.
-              </p>
+        <div className="ta-hero-banner">
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">Institutional Analytics &amp; AI Usage</h1>
+              <p className="ta-hero-desc">Track completion pacing, study time distribution, and AI usage metrics.</p>
             </div>
           </div>
         </div>

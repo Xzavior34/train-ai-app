@@ -25,20 +25,6 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
             COHORT DASHBOARD HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-          {/* Background Stock Photo with Overlay */}
-          <img
-            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -151,7 +137,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
           {/* Right Side Panel */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {/* Cohort Milestones */}
-            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 15 }}>Cohort Milestones</div>
@@ -178,7 +164,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
             </div>
 
             {/* Assigned Facilitators */}
-            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 15 }}>Lead Instructors</div>

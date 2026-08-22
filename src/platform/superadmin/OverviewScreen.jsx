@@ -157,7 +157,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
         
         {/* Card 1 */}
-        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Organizations</span>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -176,7 +176,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 2 */}
-        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Platform Users</span>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(79, 70, 229, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -195,7 +195,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 3 */}
-        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Published Courses</span>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -214,7 +214,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 4 */}
-        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Weekly Active Users (7d)</span>
             <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -435,7 +435,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             ========================================================================= */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
 
-          <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-gap8" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
               <Activity size={16} color={healthQuery.data?.ok ? "var(--success)" : "var(--danger)"} />
               <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Platform Health</div>
@@ -452,7 +452,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-gap8" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
               <TrendingDown size={16} color="var(--danger)" />
               <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Tenant Churn History</div>
@@ -467,7 +467,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-gap8" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
               <Megaphone size={16} color="var(--primary)" />
               <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Campaign Attribution</div>
