@@ -85,10 +85,19 @@ export function SupportQueueScreen({ currentUserId }) {
 
               <div className="ta-col ta-gap8 ta-mt12 anim-stagger">
                 {(messagesQuery.data || []).map((m) => (
-                  <div key={m.id} style={{ padding: "8px 10px", borderRadius: 8, background: m.is_internal_note ? "#FEF3C7" : "var(--surface-2)" }}>
-                    <div style={{ fontSize: 12 }}>{m.message}</div>
-                    <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 4 }}>
-                      {m.user_profiles?.display_name || "Support"} - {new Date(m.created_at).toLocaleString()} {m.is_internal_note && "- internal note (org cannot see this)"}
+                  <div
+                    key={m.id}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      background: m.is_internal_note ? "var(--warning-bg, #FEF3C7)" : "var(--surface-2)",
+                      border: `1px solid ${m.is_internal_note ? "var(--warning-border, #FDE68A)" : "var(--border)"}`,
+                      color: m.is_internal_note ? "var(--text)" : "var(--text)"
+                    }}
+                  >
+                    <div style={{ fontSize: 12.5, lineHeight: 1.4 }}>{m.message}</div>
+                    <div style={{ fontSize: 10.5, color: "var(--text-3)", marginTop: 4, fontWeight: 600 }}>
+                      {m.user_profiles?.display_name || "Support"} • {new Date(m.created_at).toLocaleString()} {m.is_internal_note && "• internal note (org cannot see this)"}
                     </div>
                   </div>
                 ))}
@@ -98,7 +107,7 @@ export function SupportQueueScreen({ currentUserId }) {
                 <input className="ta-input" style={{ flex: 1 }} placeholder="Reply to this ticket..." value={replyText} onChange={(e) => setReplyText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleReply()} />
                 <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleReply}>Send</button>
               </div>
-              <label className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 11.5, cursor: "pointer" }}>
+              <label className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 11.5, cursor: "pointer", color: "var(--text-2)" }}>
                 <input type="checkbox" checked={isInternal} onChange={(e) => setIsInternal(e.target.checked)} />
                 Internal note (never visible to the organization)
               </label>
@@ -107,21 +116,21 @@ export function SupportQueueScreen({ currentUserId }) {
         </div>
 
         <div className="ta-card ta-mt20">
-          <div className="ta-title">General Feedback</div>
-          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>
-            Quick, one-shot feedback submitted from any learner's Profile screen - a real, separate table already existed with no screen ever reading it until now.
+          <div className="ta-title" style={{ fontSize: 16 }}>General Platform Feedback</div>
+          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+            Feedback submitted from learner and organization profile screens.
           </div>
-          <div className="ta-col ta-gap10 ta-mt12 anim-stagger">
-            {feedbackQuery.loading && <div className="ta-empty">Loading...</div>}
+          <div className="ta-col ta-gap10 ta-mt14 anim-stagger">
+            {feedbackQuery.loading && <div className="ta-empty">Loading feedback...</div>}
             {!feedbackQuery.loading && (feedbackQuery.data || []).length === 0 && <div className="ta-empty">No feedback submitted yet.</div>}
             {(feedbackQuery.data || []).map((f) => (
-              <div key={f.id} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12 }}>
-                <div className="ta-row ta-between" style={{ gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ fontWeight: 700, fontSize: 13, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
-                  <Tag>{f.category}</Tag>
+              <div key={f.id} style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                <div className="ta-row ta-between" style={{ gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                  <span style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>{f.name}</span>
+                  <Tag tone="primary">{f.category}</Tag>
                 </div>
-                <div style={{ fontSize: 13, marginTop: 6 }}>{f.message}</div>
-                {f.rating > 0 && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>{f.rating}/5 stars</div>}
+                <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.45 }}>{f.message}</div>
+                {f.rating > 0 && <div style={{ fontSize: 11.5, color: "var(--warning, #D97706)", marginTop: 6, fontWeight: 700 }}>★ {f.rating}/5 stars</div>}
               </div>
             ))}
           </div>
