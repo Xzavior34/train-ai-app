@@ -209,8 +209,8 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
       {/* =========================================================================
           ANALYTICS: 2-COLUMN STUDY TIME & SKILL RADAR
           ========================================================================= */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
-        
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 20 }}>
+
         {/* Weekly Learning Bar Chart */}
         <div className="tai-card" style={{ padding: 22, borderRadius: 18 }}>
           <div className="tai-row tai-between" style={{ marginBottom: 16 }}>

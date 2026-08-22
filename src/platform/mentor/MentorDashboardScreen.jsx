@@ -65,7 +65,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               <Plus size={15} /> Quick action
             </button>
             {quickActionOpen && (
-              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 48, right: 0, width: 220, padding: 8, zIndex: 50 }}>
+              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 48, right: 0, width: "min(220px, calc(100vw - 40px))", padding: 8, zIndex: 50 }}>
                 {[
                   { label: "🔴 Start Live Workshop", go: () => window.open("https://meet.google.com/new", "_blank") },
                   { label: "💬 Message at-risk students", go: () => onNavigate && onNavigate("messages") },

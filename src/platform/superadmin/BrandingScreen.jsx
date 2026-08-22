@@ -60,7 +60,7 @@ export function BrandingScreen() {
     <div className="ta-fade">
       <TopBar title="Branding & White-Label" sub="Customize logos, brand palettes, and theme tokens per tenant" />
       
-      <div className="ta-content" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 24, alignItems: "start" }}>
+      <div className="ta-content" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "start" }}>
         
         {/* Controls Card */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 16 }}>

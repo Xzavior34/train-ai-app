@@ -84,7 +84,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               <Plus size={15} /> Quick action
             </button>
             {quickActionOpen && (
-              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 48, right: 0, width: 210, padding: 8, zIndex: 50 }}>
+              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 48, right: 0, width: 210, maxWidth: "calc(100vw - 48px)", padding: 8, zIndex: 50 }}>
                 <div className="ta-dropdown-item" onClick={() => { setScreen("content"); setQuickActionOpen(false); }}>
                   <BookOpen size={14} /> Create course
                 </div>
@@ -195,7 +195,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)", flexShrink: 0 }}>
                           <Icon size={16} color="var(--primary)" />
                         </div>
-                        <span style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.label}</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.35 }}>{t.label}</span>
                       </div>
                       <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
                         <Tag tone={t.tone === "danger" ? "danger" : t.tone === "warning" ? "warning" : undefined}>
@@ -257,7 +257,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                       <img src={act.avatar} alt={act.user} style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text)" }}>{act.user}</div>
-                        <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{act.action}</div>
+                        <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{act.action}</div>
                       </div>
                     </div>
                     <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600, flexShrink: 0 }}>{act.time}</span>
@@ -390,7 +390,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                         onError={(e) => { e.target.style.display = "none"; }}
                       />
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{s.name}</div>
                         <div style={{ fontSize: 11, color: "var(--text-3)" }}>
                           {s.days === "N/A" ? "No recent activity" : `${s.days} days inactive`}
                         </div>
@@ -428,7 +428,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                         onError={(e) => { e.target.style.display = "none"; }}
                       />
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
+                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{m.name}</div>
                         <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.sessions} session{m.sessions === 1 ? "" : "s"}</div>
                       </div>
                     </div>
@@ -448,7 +448,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && <div className="ta-empty">No recorded activity yet.</div>}
             {(activityLogQuery.data || []).map((a) => (
               <div key={a.id} className="ta-row ta-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)", gap: 10 }}>
-                <span style={{ fontSize: 12.5, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.text}</span>
+                <span style={{ fontSize: 12.5, minWidth: 0, flex: 1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{a.text}</span>
                 <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{a.time}</span>
               </div>
             ))}

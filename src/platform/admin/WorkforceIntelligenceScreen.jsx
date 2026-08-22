@@ -148,11 +148,11 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               </div>
             </div>
 
-            <div className="ta-row ta-gap8">
+            <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-2)" }}>Inspect Learner:</span>
-              <select 
-                className="ta-input" 
-                style={{ minWidth: 200, padding: "6px 12px", borderRadius: 8 }}
+              <select
+                className="ta-input"
+                style={{ minWidth: "min(200px, 100%)", flex: "1 1 auto", padding: "6px 12px", borderRadius: 8 }}
                 value={selectedLearnerId}
                 onChange={(e) => setSelectedLearnerId(e.target.value)}
               >

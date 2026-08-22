@@ -173,7 +173,7 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
         )}
 
         {/* Pre-built Enterprise Connectors Catalog */}
-        <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+        <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 16 }}>
           {[
             { name: "Slack Notifications", category: "Communication", desc: "Push real-time cohort milestones & completion alerts into team channels.", icon: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80", status: "Connected", enabled: true },
             { name: "Zapier Automations", category: "Workflow", desc: "Sync enrolled learners and assessment outcomes with 5,000+ business apps.", icon: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&auto=format&fit=crop&q=80", status: "Active", enabled: true },
@@ -208,7 +208,7 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
         {integrations.length > 0 && (
           <div className="ta-card">
             <div className="ta-title">Custom Webhooks ({integrations.length})</div>
-            <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, marginTop: 14 }}>
+            <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 14, marginTop: 14 }}>
               {integrations.map(i => (
                 <div key={i.id} style={{ padding: 14, background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
                   <div className="ta-row ta-between">
