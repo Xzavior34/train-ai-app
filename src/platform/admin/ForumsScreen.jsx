@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
-import { ArrowLeft, Plus, Trash2, Pencil, MessageSquare } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Pencil, MessageSquare, X } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 import {
   fetchAllForumCategories, createForumCategory, updateForumCategory, deleteForumCategory,
   fetchForumThreadsForModeration, deleteForumPost, fetchCourses,
@@ -95,66 +96,38 @@ export function ForumsScreen({ orgSelector, setScreen }) {
       <div className="ta-content">
         {!selectedForum && (
           <>
-            {formOpen && (
-              <div
-                style={{
-                  position: "fixed",
-                  inset: 0,
-                  zIndex: 300,
-                  background: "rgba(10, 14, 26, 0.65)",
-                  backdropFilter: "blur(6px)",
-                  WebkitBackdropFilter: "blur(6px)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  padding: 20,
-                  overflowY: "auto"
-                }}
-                onClick={() => setFormOpen(false)}
-              >
-                <div
-                  className="ta-card anim-slide-down"
-                  style={{
-                    maxWidth: 520,
-                    width: "100%",
-                    borderRadius: 20,
-                    padding: 24,
-                    background: "var(--surface)",
-                    boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
-                    border: "1px solid var(--border)",
-                    maxHeight: "90vh",
-                    overflowY: "auto"
-                  }}
-                  onClick={e => e.stopPropagation()}
-                >
-                  <div className="ta-row ta-between">
-                    <div className="ta-title" style={{ fontSize: 18 }}>{editingId ? "Edit Category" : "New Forum Category"}</div>
-                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setFormOpen(false)}><X size={16} /></button>
-                  </div>
-                  <div className="ta-grid ta-grid-2 ta-mt16">
-                    <div>
-                      <div className="ta-label">Category Title</div>
-                      <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. LLM Fine-Tuning" autoFocus />
-                    </div>
-                    <div>
-                      <div className="ta-label">Associated Course</div>
-                      <select className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={courseId} onChange={(e) => setCourseId(e.target.value)} disabled={!!editingId}>
-                        <option value="">General (All Topics)</option>
-                        {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-                      </select>
-                    </div>
-                    <div style={{ gridColumn: "1 / -1" }}>
-                      <div className="ta-label">Description (Optional)</div>
-                      <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short overview of discussion themes..." />
-                    </div>
-                  </div>
-                  <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
-                    <button className="ta-btn ta-btn-outline" onClick={() => setFormOpen(false)}>Cancel</button>
-                    <button className="ta-btn ta-btn-primary" onClick={handleSaveCategory} disabled={!title.trim()}>Save Category</button>
-                  </div>
+            <PortalModal
+              isOpen={formOpen}
+              onClose={() => setFormOpen(false)}
+              maxWidth={520}
+              zIndex={9999}
+            >
+              <div className="ta-row ta-between">
+                <div className="ta-title" style={{ fontSize: 18 }}>{editingId ? "Edit Category" : "New Forum Category"}</div>
+                <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setFormOpen(false)}><X size={16} /></button>
+              </div>
+              <div className="ta-grid ta-grid-2 ta-mt16">
+                <div>
+                  <div className="ta-label">Category Title</div>
+                  <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. LLM Fine-Tuning" autoFocus />
+                </div>
+                <div>
+                  <div className="ta-label">Associated Course</div>
+                  <select className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={courseId} onChange={(e) => setCourseId(e.target.value)} disabled={!!editingId}>
+                    <option value="">General (All Topics)</option>
+                    {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  </select>
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div className="ta-label">Description (Optional)</div>
+                  <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short overview of discussion themes..." />
                 </div>
               </div>
-            )}
+              <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
+                <button className="ta-btn ta-btn-outline" onClick={() => setFormOpen(false)}>Cancel</button>
+                <button className="ta-btn ta-btn-primary" onClick={handleSaveCategory} disabled={!title.trim()}>Save Category</button>
+              </div>
+            </PortalModal>
 
             <div className="ta-grid ta-grid-3 ta-mt16 anim-stagger">
               {categoriesQuery.loading && <div className="ta-empty">Loading forum categories...</div>}

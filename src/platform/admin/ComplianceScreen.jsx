@@ -3,6 +3,7 @@ import { TopBar, Tag, ToastContext, ProgressBar, StatCard, exportRowsAsCsv } fro
 import { ShieldCheck, RefreshCw, Download, AlertTriangle, CheckCircle2, Clock, Plus, X, Search, Trash2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail } from "../../lib/api/platform.js";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
@@ -446,90 +447,88 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
       </>
         )}
 
-      {showAssignModal && (
-        <div
-          style={{ position: "fixed", inset: 0, background: "rgba(10,12,25,.55)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
-          onClick={closeAssignModal}
-        >
-          <div className="ta-card" style={{ maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
-            <div className="ta-row ta-between">
-              <div style={{ fontWeight: 800, fontSize: 15 }}>Assign course to learners</div>
-              <button className="ta-iconbtn" onClick={closeAssignModal} aria-label="Close"><X size={16} /></button>
+      <PortalModal
+        isOpen={showAssignModal}
+        onClose={closeAssignModal}
+        maxWidth={500}
+        zIndex={9999}
+      >
+        <div className="ta-row ta-between">
+          <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Assign course to learners</div>
+          <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={closeAssignModal} aria-label="Close"><X size={16} /></button>
+        </div>
+
+        <div className="ta-col ta-gap10 ta-mt14">
+          <div>
+            <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Course</label>
+            <select className="ta-input" style={{ width: "100%" }} value={assignCourseId} onChange={(e) => setAssignCourseId(e.target.value)}>
+              <option value="">Select a published course...</option>
+              {publishedCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+            </select>
+            {publishedCourses.length === 0 && !coursesQuery.loading && (
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>No published courses yet. Publish a course first.</div>
+            )}
+          </div>
+
+          <div className="ta-row ta-gap10" style={{ flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 140 }}>
+              <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Type</label>
+              <select className="ta-input" style={{ width: "100%" }} value={assignType} onChange={(e) => setAssignType(e.target.value)}>
+                <option value="mandatory">Mandatory</option>
+                <option value="recommended">Recommended</option>
+              </select>
             </div>
-
-            <div className="ta-col ta-gap10 ta-mt14">
-              <div>
-                <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Course</label>
-                <select className="ta-input" style={{ width: "100%" }} value={assignCourseId} onChange={(e) => setAssignCourseId(e.target.value)}>
-                  <option value="">Select a published course...</option>
-                  {publishedCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-                </select>
-                {publishedCourses.length === 0 && !coursesQuery.loading && (
-                  <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>No published courses yet. Publish a course first.</div>
-                )}
-              </div>
-
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap" }}>
-                <div style={{ flex: 1, minWidth: 140 }}>
-                  <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Type</label>
-                  <select className="ta-input" style={{ width: "100%" }} value={assignType} onChange={(e) => setAssignType(e.target.value)}>
-                    <option value="mandatory">Mandatory</option>
-                    <option value="recommended">Recommended</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, minWidth: 140 }}>
-                  <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Due date (optional)</label>
-                  <input type="date" className="ta-input" style={{ width: "100%" }} value={assignDueAt} onChange={(e) => setAssignDueAt(e.target.value)} />
-                </div>
-              </div>
-
-              <div>
-                <div className="ta-row ta-between" style={{ marginBottom: 6 }}>
-                  <label style={{ fontSize: 11.5, color: "var(--text-2)" }}>Learners ({selectedLearnerIds.size} selected)</label>
-                  {filteredLearners.length > 0 && (
-                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={toggleAllLearners}>
-                      {selectedLearnerIds.size === filteredLearners.length ? "Deselect all" : "Select all"}
-                    </button>
-                  )}
-                </div>
-                <div className="ta-search" style={{ width: "100%", background: "var(--surface-3)", marginBottom: 8 }}>
-                  <Search size={14} color="var(--text-3)" />
-                  <input
-                    type="text"
-                    placeholder="Search learners..."
-                    value={learnerSearch}
-                    onChange={(e) => setLearnerSearch(e.target.value)}
-                    style={{ border: "none", background: "transparent", width: "100%", fontSize: 12.5, color: "var(--text)", outline: "none" }}
-                  />
-                </div>
-                <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--border)", borderRadius: 8, padding: 6 }}>
-                  {orgUsersQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}>Loading learners...</div>}
-                  {!orgUsersQuery.loading && filteredLearners.length === 0 && (
-                    <div className="ta-empty" style={{ fontSize: 12 }}>No learners found.</div>
-                  )}
-                  {filteredLearners.map(u => (
-                    <label key={u.id} className="ta-row ta-gap8" style={{ padding: "6px 4px", fontSize: 12.5, cursor: "pointer" }}>
-                      <input type="checkbox" checked={selectedLearnerIds.has(u.id)} onChange={() => toggleLearner(u.id)} />
-                      {u.name}
-                    </label>
-                  ))}
-                </div>
-              </div>
+            <div style={{ flex: 1, minWidth: 140 }}>
+              <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Due date (optional)</label>
+              <input type="date" className="ta-input" style={{ width: "100%" }} value={assignDueAt} onChange={(e) => setAssignDueAt(e.target.value)} />
             </div>
+          </div>
 
-            <div className="ta-row ta-gap8 ta-mt16">
-              <button
-                className="ta-btn ta-btn-primary"
-                style={{ flex: 1 }}
-                disabled={!assignCourseId || selectedLearnerIds.size === 0 || assigning}
-                onClick={handleAssignCourse}
-              >
-                {assigning ? "Assigning..." : `Assign to ${selectedLearnerIds.size || 0} learner${selectedLearnerIds.size === 1 ? "" : "s"}`}
-              </button>
+          <div>
+            <div className="ta-row ta-between" style={{ marginBottom: 6 }}>
+              <label style={{ fontSize: 11.5, color: "var(--text-2)" }}>Learners ({selectedLearnerIds.size} selected)</label>
+              {filteredLearners.length > 0 && (
+                <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={toggleAllLearners}>
+                  {selectedLearnerIds.size === filteredLearners.length ? "Deselect all" : "Select all"}
+                </button>
+              )}
+            </div>
+            <div className="ta-search" style={{ width: "100%", background: "var(--surface-3)", marginBottom: 8 }}>
+              <Search size={14} color="var(--text-3)" />
+              <input
+                type="text"
+                placeholder="Search learners..."
+                value={learnerSearch}
+                onChange={(e) => setLearnerSearch(e.target.value)}
+                style={{ border: "none", background: "transparent", width: "100%", fontSize: 12.5, color: "var(--text)", outline: "none" }}
+              />
+            </div>
+            <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--border)", borderRadius: 8, padding: 6 }}>
+              {orgUsersQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}>Loading learners...</div>}
+              {!orgUsersQuery.loading && filteredLearners.length === 0 && (
+                <div className="ta-empty" style={{ fontSize: 12 }}>No learners found.</div>
+              )}
+              {filteredLearners.map(u => (
+                <label key={u.id} className="ta-row ta-gap8" style={{ padding: "6px 4px", fontSize: 12.5, cursor: "pointer" }}>
+                  <input type="checkbox" checked={selectedLearnerIds.has(u.id)} onChange={() => toggleLearner(u.id)} />
+                  {u.name}
+                </label>
+              ))}
             </div>
           </div>
         </div>
-      )}
+
+        <div className="ta-row ta-gap8 ta-mt16">
+          <button
+            className="ta-btn ta-btn-primary"
+            style={{ flex: 1 }}
+            disabled={!assignCourseId || selectedLearnerIds.size === 0 || assigning}
+            onClick={handleAssignCourse}
+          >
+            {assigning ? "Assigning..." : `Assign to ${selectedLearnerIds.size || 0} learner${selectedLearnerIds.size === 1 ? "" : "s"}`}
+          </button>
+        </div>
+      </PortalModal>
     </div>
     </div>
   );

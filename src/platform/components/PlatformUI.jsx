@@ -9,6 +9,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 import { DASHBOARD_META } from "../../lib/roleRouting.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCurrentUserProfile, fetchOrgMembers, fetchUsersInOrg, fetchCourses, fetchCohorts } from "../../lib/api/platform.js";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export const MobileMenuContext = React.createContext(() => {});
 export const ToastContext = React.createContext(() => {});
@@ -431,7 +432,7 @@ export const TOKENS = `
   .ta-input { width: 100%; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); padding: 11px 14px; font-size: 13.5px; color: var(--text); font-family: var(--font); transition: all .15s ease; }
   .ta-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
   .ta-empty { text-align: center; padding: 36px 18px; color: var(--text-2); font-size: 13.5px; }
-  .ta-fade { animation: fadeInScale .2s ease both; }
+  .ta-fade { animation: fadeIn .18s ease-out both; }
   @keyframes taDropdownIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
   .anim-slide-down { animation: taDropdownIn .16s ease both; transform-origin: top; }
   .ta-dropdown-item { padding: 9px 12px; border-radius: 9px; font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; transition: all .14s ease; }
@@ -782,74 +783,48 @@ const DASHBOARD_ICONS = {
 
 export function DashboardSwitcher({ currentDashboard, availableDashboards, roleLabel, onSwitch, onClose }) {
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 999,
-        background: "rgba(10, 14, 26, 0.65)",
-        backdropFilter: "blur(6px)",
-        WebkitBackdropFilter: "blur(6px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-        overflowY: "auto"
-      }}
-      onClick={onClose}
+    <PortalModal
+      isOpen={true}
+      onClose={onClose}
+      maxWidth={480}
+      zIndex={9999}
     >
-      <div
-        className="ta-card anim-slide-down"
-        style={{
-          maxWidth: 480,
-          width: "100%",
-          background: "var(--surface)",
-          borderRadius: 20,
-          padding: 24,
-          boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
-          border: "1px solid var(--border)",
-          maxHeight: "90vh",
-          overflowY: "auto"
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="ta-row ta-between">
-          <div className="ta-row ta-gap8">
-            <Repeat size={18} color="var(--primary)" />
-            <div className="ta-title" style={{ fontSize: 18 }}>Dashboard Switcher</div>
-          </div>
-          <div className="ta-row ta-gap8">
-            {roleLabel && <Tag tone="warning">{roleLabel}</Tag>}
-            <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={onClose}><X size={16} /></button>
-          </div>
+      <div className="ta-row ta-between">
+        <div className="ta-row ta-gap8">
+          <Repeat size={18} color="var(--primary)" />
+          <div className="ta-title" style={{ fontSize: 18 }}>Dashboard Switcher</div>
         </div>
-        <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 18 }}>
-          Switch between your authorized dashboard workspaces without changing your saved account role.
-        </div>
-        <div className="ta-col ta-gap10">
-          {availableDashboards.map((key) => {
-            const Icon = DASHBOARD_ICONS[key];
-            const meta = DASHBOARD_META[key];
-            const isActive = key === currentDashboard;
-            return (
-              <div
-                key={key}
-                className={`ta-ws-item ${isActive ? "active" : ""}`}
-                style={{ padding: "14px 16px", borderRadius: 14, cursor: isActive ? "default" : "pointer" }}
-                onClick={() => { if (!isActive) onSwitch(key); }}
-              >
-                <Icon size={20} />
-                <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3, flex: 1, minWidth: 0 }}>
-                  <span style={{ fontWeight: 700, fontSize: 14.5 }}>{meta.label}</span>
-                  <span style={{ fontSize: 12, opacity: 0.8 }}>{meta.subtitle}</span>
-                </div>
-                {isActive && <Check size={18} />}
-              </div>
-            );
-          })}
+        <div className="ta-row ta-gap8">
+          {roleLabel && <Tag tone="warning">{roleLabel}</Tag>}
+          <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={onClose}><X size={16} /></button>
         </div>
       </div>
-    </div>
+      <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 18 }}>
+        Switch between your authorized dashboard workspaces without changing your saved account role.
+      </div>
+      <div className="ta-col ta-gap10">
+        {availableDashboards.map((key) => {
+          const Icon = DASHBOARD_ICONS[key];
+          const meta = DASHBOARD_META[key];
+          const isActive = key === currentDashboard;
+          return (
+            <div
+              key={key}
+              className={`ta-ws-item ${isActive ? "active" : ""}`}
+              style={{ padding: "14px 16px", borderRadius: 14, cursor: isActive ? "default" : "pointer" }}
+              onClick={() => { if (!isActive) onSwitch(key); }}
+            >
+              <Icon size={20} />
+              <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.3, flex: 1, minWidth: 0 }}>
+                <span style={{ fontWeight: 700, fontSize: 14.5 }}>{meta.label}</span>
+                <span style={{ fontSize: 12, opacity: 0.8 }}>{meta.subtitle}</span>
+              </div>
+              {isActive && <Check size={18} />}
+            </div>
+          );
+        })}
+      </div>
+    </PortalModal>
   );
 }
 

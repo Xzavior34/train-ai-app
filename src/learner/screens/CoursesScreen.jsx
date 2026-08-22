@@ -7,6 +7,7 @@ import {
   BookOpen, ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Heart,
   Flame, Zap, Laptop, FileText, Check
 } from "lucide-react";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 const CATEGORIES = [
   { id: "all", label: "All Topics" },
@@ -1130,19 +1131,17 @@ export function CoursesScreen({
       </div>
 
       {/* =========================================================================
-          VIDEO PLAYER MODAL
+          VIDEO PLAYER MODAL (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
           ========================================================================= */}
-      {activeRecording && (
-        <div
-          className="tai-scrim"
-          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 300, overflowY: "auto", boxSizing: "border-box" }}
-          onClick={() => setActiveRecording(null)}
-        >
-          <div
-            className="tai-card"
-            style={{ maxWidth: 760, width: "100%", maxHeight: "100%", background: "#0F172A", color: "#fff", borderRadius: 20, overflow: "hidden", padding: 0, border: "1px solid rgba(255,255,255,0.15)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
+      <PortalModal
+        isOpen={Boolean(activeRecording)}
+        onClose={() => setActiveRecording(null)}
+        maxWidth={760}
+        zIndex={9999}
+        style={{ background: "#0F172A", color: "#fff", padding: 0, overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}
+      >
+        {activeRecording && (
+          <>
             <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
               <div>
                 <span style={{ fontSize: 11, fontWeight: 800, color: "#818CF8", textTransform: "uppercase" }}>{activeRecording.badge}</span>
@@ -1180,24 +1179,21 @@ export function CoursesScreen({
                 Enroll in Full Track →
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </PortalModal>
 
       {/* =========================================================================
-          SPECIALIZATION MODAL
+          SPECIALIZATION MODAL (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
           ========================================================================= */}
-      {activeSpecialization && (
-        <div
-          className="tai-scrim"
-          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 300, overflowY: "auto", boxSizing: "border-box" }}
-          onClick={() => setActiveSpecialization(null)}
-        >
-          <div
-            className="tai-card"
-            style={{ maxWidth: 640, width: "100%", background: "var(--surface)", borderRadius: 20, padding: "24px 20px", boxSizing: "border-box" }}
-            onClick={(e) => e.stopPropagation()}
-          >
+      <PortalModal
+        isOpen={Boolean(activeSpecialization)}
+        onClose={() => setActiveSpecialization(null)}
+        maxWidth={640}
+        zIndex={9999}
+      >
+        {activeSpecialization && (
+          <>
             <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
               <span style={{ background: activeSpecialization.badgeBg, color: "#fff", fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 8 }}>
                 {activeSpecialization.badge}
@@ -1249,9 +1245,9 @@ export function CoursesScreen({
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </PortalModal>
 
     </div>
   );

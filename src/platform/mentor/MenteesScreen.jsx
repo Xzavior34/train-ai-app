@@ -4,6 +4,7 @@ import { BookOpen, Calendar, CheckCircle2, MessageSquare, X, Search, Filter, Sti
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllPlatformLearners, fetchNotesForLearner, addLearnerFeedbackNote, issueCertificateDirectly, checkEffectiveOrgPermission } from "../../lib/api/platform.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 // Instructor "Feedback for learners (Note section)" - PRD Section 8.1,
 // confirmed unbuilt before this. See 0121_feedback_notes.sql for the real
@@ -351,38 +352,14 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
               </div>
             )}
 
-        {certModalUser && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 300,
-              background: "rgba(10, 14, 26, 0.65)",
-              backdropFilter: "blur(6px)",
-              WebkitBackdropFilter: "blur(6px)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 20,
-              overflowY: "auto"
-            }}
-            onClick={() => setCertModalUser(null)}
-          >
-            <div
-              className="ta-card anim-slide-down"
-              style={{
-                maxWidth: 500,
-                width: "100%",
-                borderRadius: 20,
-                padding: 24,
-                background: "var(--surface)",
-                boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
-                border: "1px solid var(--border)",
-                maxHeight: "90vh",
-                overflowY: "auto"
-              }}
-              onClick={e => e.stopPropagation()}
-            >
+        <PortalModal
+          isOpen={Boolean(certModalUser)}
+          onClose={() => setCertModalUser(null)}
+          maxWidth={500}
+          zIndex={9999}
+        >
+          {certModalUser && (
+            <>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
                 <div className="ta-title" style={{ minWidth: 0, overflowWrap: "break-word", fontSize: 18 }}>Give Certificate to {certModalUser.name || "Learner"}</div>
                 <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setCertModalUser(null)}><X size={16} /></button>
@@ -421,9 +398,9 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                   {issuingCert ? "Issuing..." : "Issue Certificate"}
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </PortalModal>
       </div>
     </div>
   );
