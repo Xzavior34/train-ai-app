@@ -225,11 +225,53 @@ export function useAuth() {
   }, []);
 
   const signOut = useCallback(async () => {
-    if (supabase) {
-      try { await supabase.auth.signOut(); } catch {}
+    try {
+      if (supabase) {
+        await supabase.auth.signOut().catch(() => {});
+      }
+      for (const projectKey of Object.values(SUPABASE_PROJECTS)) {
+        const client = getSupabaseClientForProject(projectKey);
+        if (client && client !== supabase) {
+          await client.auth.signOut().catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.warn("Sign out warning:", e);
     }
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem("trainai_active_session_v1");
+      localStorage.removeItem("trainai_demo_role");
+      
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith("sb-") || key.includes("supabase.auth.token") || key.startsWith("trainai_session"))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+
+      const sessionKeysToRemove = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        if (key && (key.startsWith("sb-") || key.includes("supabase.auth.token"))) {
+          sessionKeysToRemove.push(key);
+        }
+      }
+      sessionKeysToRemove.forEach(k => sessionStorage.removeItem(k));
+    } catch {}
+
     setSession(null);
+
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("portal") || url.searchParams.has("invite") || url.searchParams.has("session_id")) {
+        url.search = "";
+        window.history.replaceState({}, "", url.pathname);
+      }
+    } catch {}
   }, []);
 
   // "Forgot password" - previously there was no way to request a reset
