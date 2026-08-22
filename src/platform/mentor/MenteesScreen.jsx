@@ -352,42 +352,75 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
             )}
 
         {certModalUser && (
-          <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)", maxWidth: 480 }}>
-            <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
-              <div className="ta-title" style={{ minWidth: 0, overflowWrap: "break-word" }}>Give Certificate to {certModalUser.name || "this learner"}</div>
-              <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setCertModalUser(null)}><X size={14} /></button>
-            </div>
-            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-              Issues a certificate directly - independent of the request/approve flow, doesn't require an existing course.
-            </div>
-            <div className="ta-label ta-mt16">Certificate title</div>
-            <input className="ta-input ta-mt6" style={{ width: "100%" }} placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} />
-            <div className="ta-label ta-mt16">Upload certificate file (optional)</div>
-            <FileUploadZone
-              bucket="uploads"
-              pathPrefix={`certificates/${certModalUser.id}`}
-              accept="application/pdf,image/*"
-              onUploaded={(url) => setCertFileUrl(url)}
-              label="Drag and drop a certificate PDF or image, or click to browse"
-            />
-            <div className="ta-row ta-gap8 ta-mt20">
-              <button
-                className="ta-btn ta-btn-primary"
-                disabled={issuingCert || !certTitle.trim()}
-                onClick={async () => {
-                  setIssuingCert(true);
-                  try {
-                    const result = await issueCertificateDirectly(certModalUser.id, orgId, certTitle.trim(), null, certFileUrl || null);
-                    if (!result.success) showToast(result.error);
-                    else { showToast(`Certificate issued to ${certModalUser.name}.`); setCertModalUser(null); }
-                  } finally {
-                    setIssuingCert(false);
-                  }
-                }}
-              >
-                {issuingCert ? "Issuing..." : "Issue Certificate"}
-              </button>
-              <button className="ta-btn ta-btn-outline" onClick={() => setCertModalUser(null)}>Cancel</button>
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 300,
+              background: "rgba(10, 14, 26, 0.65)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 20,
+              overflowY: "auto"
+            }}
+            onClick={() => setCertModalUser(null)}
+          >
+            <div
+              className="ta-card anim-slide-down"
+              style={{
+                maxWidth: 500,
+                width: "100%",
+                borderRadius: 20,
+                padding: 24,
+                background: "var(--surface)",
+                boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
+                border: "1px solid var(--border)",
+                maxHeight: "90vh",
+                overflowY: "auto"
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+                <div className="ta-title" style={{ minWidth: 0, overflowWrap: "break-word", fontSize: 18 }}>Give Certificate to {certModalUser.name || "Learner"}</div>
+                <button className="ta-btn ta-btn-ghost ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setCertModalUser(null)}><X size={16} /></button>
+              </div>
+              <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+                Issues a verified instructor certificate directly to this student.
+              </div>
+              <div className="ta-label ta-mt16">Certificate Title</div>
+              <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} autoFocus />
+              <div className="ta-label ta-mt16">Upload Certificate Document (Optional)</div>
+              <div className="ta-mt6">
+                <FileUploadZone
+                  bucket="uploads"
+                  pathPrefix={`certificates/${certModalUser.id}`}
+                  accept="application/pdf,image/*"
+                  onUploaded={(url) => setCertFileUrl(url)}
+                  label="Drag and drop certificate PDF or image, or click to browse"
+                />
+              </div>
+              <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
+                <button className="ta-btn ta-btn-outline" onClick={() => setCertModalUser(null)}>Cancel</button>
+                <button
+                  className="ta-btn ta-btn-primary"
+                  disabled={issuingCert || !certTitle.trim()}
+                  onClick={async () => {
+                    setIssuingCert(true);
+                    try {
+                      const result = await issueCertificateDirectly(certModalUser.id, orgId, certTitle.trim(), null, certFileUrl || null);
+                      if (!result.success) showToast(result.error);
+                      else { showToast(`Certificate issued to ${certModalUser.name}.`); setCertModalUser(null); }
+                    } finally {
+                      setIssuingCert(false);
+                    }
+                  }}
+                >
+                  {issuingCert ? "Issuing..." : "Issue Certificate"}
+                </button>
+              </div>
             </div>
           </div>
         )}

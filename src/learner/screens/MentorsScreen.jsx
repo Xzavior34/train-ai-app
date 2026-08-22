@@ -124,69 +124,105 @@ export function MentorsScreen({
           BOOKING MODAL / CARD
           ========================================================================= */}
       {requestingSession && sessionMentorChoice && (
-        <div className="tai-card" style={{ borderColor: "var(--primary)", borderWidth: 2, padding: 24, borderRadius: 20, boxShadow: "0 10px 30px rgba(79, 70, 229, 0.15)" }}>
-          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
-            <div style={{ fontWeight: 800, fontSize: 17, color: "var(--text)", minWidth: 0, flex: "1 1 200px" }}>Schedule 1-on-1 Mentorship Session</div>
-            <button className="tai-btn tai-btn-ghost tai-btn-sm" style={{ flexShrink: 0 }} onClick={closeBooking}>Cancel</button>
-          </div>
-
-          <div className="tai-row tai-gap14 tai-mt14">
-            <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={48} />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sessionMentorChoice.name}</div>
-              <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>${sessionMentorChoice.rate}/hr • {sessionMentorChoice.title}</div>
-            </div>
-          </div>
-
-          <div className="tai-label tai-mt16">Topic or Project Goals</div>
-          <input
-            className="tai-input tai-mt6"
-            placeholder="e.g. Figma variables architecture review, code audit for RNN pipeline..."
-            value={sessionTopicInput}
-            onChange={e => setSessionTopicInput(e.target.value)}
-          />
-
-          <div className="tai-label tai-mt16">Select Available Day</div>
-          {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>Loading instructor schedule...</div>}
-          {!mentorAvailabilityQuery?.loading && !hasAvailability && (
-            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>This instructor hasn't published recurring slots yet. Request will be submitted as tentative.</div>
-          )}
-          {hasAvailability && (
-            <div className="tai-scrollx tai-mt8">
-              {availableSlots.map(s => (
-                <div
-                  key={s.id}
-                  className={`tai-pill ${bookingDay === s.day_of_week ? "tai-pill-active" : "tai-pill-inactive"}`}
-                  onClick={() => chooseDay(s)}
-                >
-                  {DAY_NAMES[s.day_of_week]} ({(s.start_time || "09:00").slice(0, 5)})
-                </div>
-              ))}
-            </div>
-          )}
-
-          {hasAvailability && selectedSlot && (
-            <div className="tai-mt14">
-              <div className="tai-label">Preferred Time ({(selectedSlot.start_time || "").slice(0, 5)} - {(selectedSlot.end_time || "").slice(0, 5)})</div>
-              <input
-                className="tai-input tai-mt6"
-                type="time"
-                value={bookingTime}
-                min={(selectedSlot.start_time || "").slice(0, 5)}
-                max={(selectedSlot.end_time || "").slice(0, 5)}
-                onChange={e => setBookingTime(e.target.value)}
-              />
-            </div>
-          )}
-
-          <button
-            className="tai-btn tai-btn-primary tai-mt16"
-            style={{ width: "100%", padding: "13px 20px" }}
-            disabled={!canConfirm}
-            onClick={confirmBooking}
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 300,
+            background: "rgba(10, 14, 26, 0.65)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 20,
+            overflowY: "auto"
+          }}
+          onClick={closeBooking}
+        >
+          <div
+            className="tai-card anim-slide-down"
+            style={{
+              maxWidth: 520,
+              width: "100%",
+              borderRadius: 22,
+              padding: 24,
+              background: "var(--surface)",
+              boxShadow: "0 20px 48px -8px rgba(0,0,0,0.5)",
+              border: "1px solid var(--border)",
+              maxHeight: "90vh",
+              overflowY: "auto"
+            }}
+            onClick={e => e.stopPropagation()}
           >
-            Confirm &amp; Request Session →
-          </button>
+            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
+              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", minWidth: 0, flex: "1 1 200px" }}>Schedule 1-on-1 Mentorship Session</div>
+              <button className="tai-btn tai-btn-ghost tai-btn-sm" style={{ flexShrink: 0 }} onClick={closeBooking}><X size={16} /></button>
+            </div>
+
+            <div className="tai-row tai-gap14 tai-mt14" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 14, border: "1px solid var(--border)" }}>
+              <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={48} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sessionMentorChoice.name}</div>
+                <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>${sessionMentorChoice.rate}/hr • {sessionMentorChoice.title}</div>
+              </div>
+            </div>
+
+            <div className="tai-label tai-mt16">Topic or Project Goals</div>
+            <input
+              className="tai-input tai-mt6"
+              style={{ width: "100%", boxSizing: "border-box" }}
+              placeholder="e.g. Figma variables architecture review, code audit for RNN pipeline..."
+              value={sessionTopicInput}
+              onChange={e => setSessionTopicInput(e.target.value)}
+              autoFocus
+            />
+
+            <div className="tai-label tai-mt16">Select Available Day</div>
+            {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>Loading instructor schedule...</div>}
+            {!mentorAvailabilityQuery?.loading && !hasAvailability && (
+              <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>This instructor hasn't published recurring slots yet. Request will be submitted as tentative.</div>
+            )}
+            {hasAvailability && (
+              <div className="tai-scrollx tai-mt8">
+                {availableSlots.map(s => (
+                  <div
+                    key={s.id}
+                    className={`tai-pill ${bookingDay === s.day_of_week ? "tai-pill-active" : "tai-pill-inactive"}`}
+                    onClick={() => chooseDay(s)}
+                  >
+                    {DAY_NAMES[s.day_of_week]} ({(s.start_time || "09:00").slice(0, 5)})
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {hasAvailability && selectedSlot && (
+              <div className="tai-mt14">
+                <div className="tai-label">Preferred Time ({(selectedSlot.start_time || "").slice(0, 5)} - {(selectedSlot.end_time || "").slice(0, 5)})</div>
+                <input
+                  className="tai-input tai-mt6"
+                  type="time"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  value={bookingTime}
+                  min={(selectedSlot.start_time || "").slice(0, 5)}
+                  max={(selectedSlot.end_time || "").slice(0, 5)}
+                  onChange={e => setBookingTime(e.target.value)}
+                />
+              </div>
+            )}
+
+            <div className="tai-row tai-gap10 tai-mt20" style={{ justifyContent: "flex-end" }}>
+              <button className="tai-btn tai-btn-outline" onClick={closeBooking}>Cancel</button>
+              <button
+                className="tai-btn tai-btn-primary"
+                disabled={!canConfirm}
+                onClick={confirmBooking}
+              >
+                Confirm &amp; Request Session →
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
