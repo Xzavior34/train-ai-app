@@ -47,8 +47,8 @@ export const TOKENS = `
     --primary-dark: #4338CA;
     --primary-light: #6366F1;
     --primary-tint: #EEF2FF;
-    --grad: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
-    --grad-subtle: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+    --grad: #4F46E5;
+    --grad-subtle: #EEF2FF;
     --text: #0F172A;
     --text-2: #475569;
     --text-3: #94A3B8;
@@ -64,11 +64,11 @@ export const TOKENS = `
     --danger-bg: #FEF2F2;
     --danger-border: #FECACA;
     --sidebar-w: 260px;
-    --radius: 16px;
-    --radius-sm: 10px;
-    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
-    --shadow-hover: 0 8px 24px -4px rgba(79, 70, 229, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-    --shadow-btn: 0 4px 14px -2px rgba(79, 70, 229, 0.32);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.02);
+    --shadow-hover: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+    --shadow-btn: none;
     --font: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-family: var(--font);
     color: var(--text);
@@ -115,29 +115,18 @@ export const TOKENS = `
     background: #121829;
   }
   .ta-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
-  /* position: fixed rather than sticky - sticky depends on none of its
-     ancestors setting transform/filter/contain/overflow in a way that
-     creates a new containing block, which is easy to accidentally trip
-     with this many shared style layers in play, and empirically has (see
-     the DashboardSwitcher note below) actually resolved to position: static
-     when this app, the learner app, and the owner app are all mounted at
-     once (App.jsx keeps all three mounted, toggling display none/block).
-     Fixed is anchored to the viewport unconditionally, so it can't be
-     broken the same way - this is what keeps the sidebar "long" (always
-     the full viewport height) and never scrolling with the page. .ta-main
-     below carries the matching margin-left. */
   .ta-sidebar {
     width: var(--sidebar-w); flex-shrink: 0;
     background: #FFFFFF;
     border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 20px 14px;
+    display: flex; flex-direction: column; padding: 18px 12px;
     position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh;
-    color: var(--text); box-shadow: 2px 0 16px -8px rgba(15,23,42,0.04);
+    color: var(--text); box-shadow: 1px 0 6px rgba(15,23,42,0.02);
     transition: width .2s ease, padding .2s ease;
     z-index: 30;
   }
   .ta-sidebar.ta-sidebar-minimized {
-    width: 76px; padding: 20px 8px;
+    width: 72px; padding: 18px 6px;
   }
   .ta-sidebar.ta-sidebar-minimized .ta-brand-name,
   .ta-sidebar.ta-sidebar-minimized .ta-brand-tag,
@@ -152,22 +141,21 @@ export const TOKENS = `
     justify-content: center; padding: 10px 0; gap: 0;
   }
   .ta-sidebar.ta-sidebar-minimized .ta-brand {
-    justify-content: center; padding: 0 0 16px;
+    justify-content: center; padding: 0 0 14px;
   }
-  .ta-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 16px; }
+  .ta-brand { display: flex; align-items: center; gap: 10px; padding: 4px 6px 14px; }
   .ta-brand-mark {
-    width: 36px; height: 36px; border-radius: 10px; background: var(--grad);
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-    box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+    width: 32px; height: 32px; border-radius: 8px; background: #4F46E5;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; color: #fff;
   }
-  .ta-brand-name { font-weight: 800; font-size: 17px; letter-spacing: -0.02em; color: var(--text); }
-  .ta-brand-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; background: var(--primary-tint); color: var(--primary); padding: 3px 8px; border-radius: 6px; }
-  .ta-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y:auto; padding-right: 2px; }
+  .ta-brand-name { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: var(--text); }
+  .ta-brand-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; background: var(--primary-tint); color: var(--primary); padding: 2px 6px; border-radius: 4px; }
+  .ta-nav { display: flex; flex-direction: column; gap: 3px; flex: 1; overflow-y:auto; padding-right: 2px; }
   .ta-nav::-webkit-scrollbar { width: 4px; }
   .ta-nav::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
   .ta-nav-section-title {
     font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3);
-    padding: 14px 10px 6px; margin-top: 4px;
+    padding: 12px 8px 4px; margin-top: 2px;
   }
   /* .ta-iconbtn was already used by admin screens (Learning Paths' reorder and
      delete controls) but was never defined anywhere in TOKENS, so those
@@ -185,57 +173,57 @@ export const TOKENS = `
   .ta-iconbtn:active:not(:disabled) { transform: scale(.94); }
   .ta-iconbtn:disabled { opacity: .4; cursor: not-allowed; }
   .ta-nav-item {
-    display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; cursor: pointer;
-    font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .16s ease;
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--text-2); transition: background-color .15s ease;
   }
-  .ta-nav-item:hover { background: var(--surface-2); color: var(--text); transform: translateX(2px); }
+  .ta-nav-item:hover { background: var(--surface-2); color: var(--text); }
   .ta-nav-item.active {
     background: var(--surface-2);
-    color: var(--primary); font-weight: 700; border-left: 3px solid var(--primary); padding-left: 9px;
+    color: var(--primary); font-weight: 700; border-left: 2.5px solid var(--primary); padding-left: 7.5px;
   }
-  .ta-nav-divider { height: 1px; background: var(--border); margin: 10px 4px; }
+  .ta-nav-divider { height: 1px; background: var(--border); margin: 8px 4px; }
   .ta-workspace-card {
-    background: var(--surface-3); border: 1px solid var(--border); border-radius: 14px; padding: 6px;
-    margin-bottom: 12px; display: flex; flex-direction: column; gap: 3px;
+    background: var(--surface-3); border: 1px solid var(--border); border-radius: 8px; padding: 4px;
+    margin-bottom: 10px; display: flex; flex-direction: column; gap: 2px;
   }
   .ta-ws-item {
-    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
-    font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; cursor: pointer;
+    font-size: 12.5px; font-weight: 600; color: var(--text-2); transition: background-color .14s ease;
   }
   .ta-ws-item:hover { background: var(--surface-2); color: var(--text); }
-  .ta-ws-item.active { background: var(--grad); color: #FFFFFF; font-weight: 700; box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
-  .ta-nav-footer { display:flex; flex-direction:column; gap:4px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); }
+  .ta-ws-item.active { background: #4F46E5; color: #FFFFFF; font-weight: 700; }
+  .ta-nav-footer { display:flex; flex-direction:column; gap:3px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
   .ta-toggle-btn {
-    display: flex; align-items: center; justify-content: center; width: 100%; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; border-radius: 6px;
     border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer;
-    transition: all .15s ease; margin-bottom: 10px;
+    transition: background-color .15s ease; margin-bottom: 8px;
   }
   .ta-toggle-btn:hover { background: var(--surface-3); color: var(--primary); border-color: var(--primary-light); }
   .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
-  .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 76px; }
+  .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 72px; }
   .ta-topbar {
-    height: 58px; min-height: 58px; max-height: 58px; border-bottom: 1px solid var(--border); background: var(--surface);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 28px); position: sticky; top: 0; z-index: 50;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03); box-sizing: border-box; width: 100%;
+    height: 54px; min-height: 54px; max-height: 54px; border-bottom: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 24px); position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02); box-sizing: border-box; width: 100%;
   }
-  .ta-topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; padding-right: 10px; }
-  .ta-topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 10px; padding: 6px 12px; width: clamp(140px, 15vw, 210px); color: var(--text-3); font-size: 12.5px; transition: all .15s ease; flex-shrink: 0; }
-  .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); background: #fff; }
-  .ta-content { padding: 22px clamp(14px, 2vw, 32px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-  .ta-h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); line-height: 1.2; }
+  .ta-topbar-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding-right: 10px; }
+  .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .ta-search { display:flex; align-items:center; gap:6px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; width: clamp(140px, 15vw, 210px); color: var(--text-3); font-size: 12px; transition: border-color .15s ease; flex-shrink: 0; }
+  .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12); background: #fff; }
+  .ta-content { padding: 20px clamp(14px, 2vw, 28px) 64px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+  .ta-h1 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); line-height: 1.2; }
   .ta-sub { font-size: 11.5px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }
   }
   .ta-hero-banner {
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%);
+    border-radius: var(--radius);
+    background: #0F172A;
     color: #FFFFFF;
-    padding: clamp(22px, 2.2vw, 30px) clamp(24px, 2.5vw, 34px);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
-    border: 1px solid rgba(99, 102, 241, 0.4);
+    padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px);
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.2);
+    border: 1px solid #1E293B;
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -256,61 +244,53 @@ export const TOKENS = `
     flex: 1;
   }
   .ta-hero-title {
-    font-size: clamp(22px, 2vw, 28px);
-    font-weight: 900;
+    font-size: clamp(20px, 1.8vw, 24px);
+    font-weight: 800;
     letter-spacing: -0.025em;
-    margin: 0 0 6px;
+    margin: 0 0 4px;
     color: #FFFFFF;
     line-height: 1.25;
   }
   .ta-hero-desc {
-    font-size: clamp(13px, 1vw, 14.5px);
-    color: rgba(255, 255, 255, 0.85);
+    font-size: clamp(12.5px, 1vw, 13.5px);
+    color: #94A3B8;
     margin: 0;
     max-width: 680px;
     line-height: 1.5;
   }
   .ta-hero-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-shrink: 0;
     align-items: center;
   }
 
   @media (max-width: 899px) {
-    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
+    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
-    /* The sidebar is an off-canvas drawer here (translateX(-100%) unless
-       .mobile-open), so content must never be pushed over for it. */
     .ta-main, .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 0; }
-    /* The theme toggle, notifications bell, per-screen quick-action, and
-       Sign Out button all get hidden here rather than shrunk - crammed
-       together as icons they still read as "crowded" no matter how small.
-       Each one (except the purely-decorative bell) is replicated inside the
-       single "more" menu (.ta-header-mobile-only) instead, so nothing is
-       actually lost - it's consolidated into one tap target. */
     .ta-header-full-only { display: none !important; }
     .ta-header-mobile-only { display: block; }
     .ta-topbar {
-      padding: 0 12px; height: 52px; min-height: 52px; max-height: 52px;
+      padding: 0 12px; height: 50px; min-height: 50px; max-height: 50px;
       display: flex; align-items: center; justify-content: space-between;
       box-sizing: border-box; width: 100%; position: sticky; top: 0; z-index: 50; background: var(--surface);
     }
     .ta-topbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; padding-right: 6px; }
     .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .ta-profile-pill { padding: 3px !important; }
-    .ta-content { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
+    .ta-content { padding: 14px 14px calc(80px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
       position: fixed; top: 0; left: 0; z-index: 100;
-      transform: translateX(-100%); transition: transform .22s ease;
-      box-shadow: 6px 0 24px rgba(15,23,42,.18);
+      transform: translateX(-100%); transition: transform .2s ease;
+      box-shadow: 4px 0 18px rgba(15,23,42,.15);
     }
     .ta-sidebar.mobile-open { transform: translateX(0); }
     .ta-sidebar-close {
       display: flex !important; align-items: center; justify-content: center;
-      width: 34px; height: 34px; border-radius: 8px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
+      width: 32px; height: 32px; border-radius: 6px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
     }
-    .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
+    .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
     .ta-h1 { font-size: 14.5px !important; font-weight: 800 !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
@@ -318,7 +298,6 @@ export const TOKENS = `
     .ta-table-wrap .ta-table { min-width: 460px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
-    /* Clean mobile scrolling for tabs and filter pills */
     .ta-tabs, .ta-pills-row {
       overflow-x: auto !important;
       -webkit-overflow-scrolling: touch;
@@ -329,105 +308,94 @@ export const TOKENS = `
     .ta-tabs::-webkit-scrollbar, .ta-pills-row::-webkit-scrollbar { display: none; }
     .ta-tab, .ta-pill { flex-shrink: 0 !important; white-space: nowrap !important; }
 
-    /* Responsive hero layout for all dashboards */
     .ta-hero-banner {
-      padding: 16px 14px !important;
-      border-radius: 16px !important;
+      padding: 14px 12px !important;
+      border-radius: 12px !important;
     }
     .ta-hero-inner {
       flex-direction: column !important;
       align-items: flex-start !important;
-      gap: 12px !important;
+      gap: 10px !important;
     }
     .ta-hero-text {
       width: 100% !important;
       flex: none !important;
     }
     .ta-hero-title {
-      font-size: 18px !important;
+      font-size: 17px !important;
       line-height: 1.3 !important;
-      margin-bottom: 5px !important;
+      margin-bottom: 4px !important;
     }
     .ta-hero-desc {
-      font-size: 12.5px !important;
-      line-height: 1.45 !important;
+      font-size: 12px !important;
+      line-height: 1.4 !important;
       max-width: 100% !important;
     }
     .ta-hero-actions {
       width: 100% !important;
       flex-wrap: wrap !important;
-      gap: 8px !important;
+      gap: 6px !important;
     }
     .ta-hero-actions .ta-btn, .ta-hero-actions button {
-      padding: 8px 16px !important;
-      font-size: 12.5px !important;
-      border-radius: 10px !important;
+      padding: 7px 14px !important;
+      font-size: 12px !important;
+      border-radius: 8px !important;
     }
   }
   @media (max-width: 640px) {
-    .ta-topbar { padding: 0 14px; height: 56px; min-height: 56px; }
-    .ta-content { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
-    .ta-card { padding: 18px 16px; border-radius: 16px; width: 100%; box-sizing: border-box; }
-    .ta-h1 { font-size: 14.5px; }
-    .ta-btn { padding: 8px 14px; font-size: 12.5px; border-radius: 10px; }
-    .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; }
+    .ta-topbar { padding: 0 12px; height: 50px; min-height: 50px; }
+    .ta-content { padding: 12px 12px calc(80px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
+    .ta-card { padding: 16px 14px; border-radius: 10px; width: 100%; box-sizing: border-box; }
+    .ta-h1 { font-size: 14px; }
+    .ta-btn { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
+    .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; }
   }
-  .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
-  .ta-btn:active { transform: scale(.96); }
-  .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32); }
-  .ta-btn-primary:hover { box-shadow: 0 8px 22px -2px rgba(79,70,229,0.48); transform: translateY(-2px); }
-  .ta-btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); }
-  .ta-btn-outline:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-1px); }
+  .ta-btn { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 9px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: background-color .15s ease, border-color .15s ease; font-family: var(--font); }
+  .ta-btn:active { transform: scale(.98); }
+  .ta-btn-primary { background: #4F46E5; color: #fff; }
+  .ta-btn-primary:hover { background: #4338CA; }
+  .ta-btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .ta-btn-outline:hover { background: var(--surface-2); border-color: #CBD5E1; }
   .ta-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
-  .ta-btn-ghost:hover { background: #E0E7FF; transform: translateY(-1px); }
-  .ta-btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 10px; }
+  .ta-btn-ghost:hover { background: #E0E7FF; }
+  .ta-btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
   .ta-btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
   
-  /* Card surface for Platform - no backdrop-filter: this app is dense with
-     stacked/nested cards and tables, and a blur costs real scroll/render
-     performance for near-zero visible benefit on flat backgrounds. */
-  /* Card surface for Platform */
   .ta-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: clamp(16px, 2.5vw, 22px);
-    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
-    transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow .22s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color .2s ease;
+    padding: clamp(16px, 2.5vw, 20px);
+    box-shadow: var(--shadow-card);
+    transition: border-color .15s ease, box-shadow .15s ease;
   }
   .ta.dark .ta-card, html.dark .ta-card, html.dark .ta .ta-card {
     background: var(--surface) !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.45) !important;
   }
   .ta-card-hover {
     cursor: pointer;
   }
   .ta-card-hover:hover {
-    box-shadow: 0 12px 28px -4px rgba(79, 70, 229, 0.12);
-    border-color: rgba(99, 102, 241, 0.35);
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: #CBD5E1;
   }
   .ta.dark .ta-card-hover:hover, html.dark .ta .ta-card-hover:hover {
-    box-shadow: 0 14px 32px -4px rgba(0, 0, 0, 0.6), 0 0 16px -2px rgba(99, 102, 241, 0.2) !important;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6) !important;
     border-color: rgba(129, 140, 248, 0.35) !important;
-    transform: translateY(-2px);
   }
-  .ta-grid { display: grid; gap: 20px; }
+  .ta-grid { display: grid; gap: 16px; }
   .ta-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .ta-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ta-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ta-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (min-width: 641px) and (max-width: 1080px) {
-    .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 16px !important; }
+    .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 14px !important; }
   }
-  /* Main content + sidebar layout: keeps the main column dominant instead of
-     splitting 50/50 once both tracks clear an auto-fit minmax threshold */
-  .ta-sidebar-layout { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
+  .ta-sidebar-layout { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; }
   @media (min-width: 900px) {
-    .ta-sidebar-layout { grid-template-columns: minmax(0, 2fr) minmax(320px, 380px); gap: 24px; }
+    .ta-sidebar-layout { grid-template-columns: minmax(0, 2fr) minmax(300px, 360px); gap: 20px; }
   }
   .ta-row { display: flex; align-items: center; }
   .ta-between { justify-content: space-between; }
@@ -435,13 +403,13 @@ export const TOKENS = `
   .ta-gap4 { gap: 4px; } .ta-gap6 { gap: 6px; } .ta-gap8 { gap: 8px; } .ta-gap10 { gap: 10px; } .ta-gap12 { gap: 12px; } .ta-gap14 { gap: 14px; } .ta-gap16 { gap: 16px; } .ta-gap20 { gap: 20px; } .ta-gap24 { gap: 24px; }
   .ta-mt4 { margin-top: 4px; } .ta-mt6 { margin-top: 6px; } .ta-mt8 { margin-top: 8px; } .ta-mt10 { margin-top: 10px; } .ta-mt12 { margin-top: 12px; } .ta-mt14 { margin-top: 14px; } .ta-mt16 { margin-top: 16px; } .ta-mt18 { margin-top: 18px; } .ta-mt20 { margin-top: 20px; } .ta-mt24 { margin-top: 24px; } .ta-mt28 { margin-top: 28px; }
   .ta-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
-  .ta-title { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
-  .ta-body { font-size: 13.5px; color: var(--text-2); line-height: 1.5; }
-  .ta-avatar { border-radius: 50%; background: var(--grad); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; box-shadow: 0 2px 6px rgba(79,70,229,0.25); }
-  .ta-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700; background: var(--surface-2); color: var(--primary); display:inline-flex; align-items:center; gap:4px; }
-  .ta-divider { height: 1px; background: var(--border); border: none; margin: 16px 0; }
+  .ta-title { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
+  .ta-body { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+  .ta-avatar { border-radius: 50%; background: #4F46E5; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .ta-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--surface-2); color: var(--primary); display:inline-flex; align-items:center; gap:4px; }
+  .ta-divider { height: 1px; background: var(--border); border: none; margin: 14px 0; }
   .ta-table { width: 100%; border-collapse: collapse; }
-  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
+  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); }
   .ta-table-wrap .ta-table { min-width: 560px; }
   .ta-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 700; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-3); }
   .ta-table td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text); }
