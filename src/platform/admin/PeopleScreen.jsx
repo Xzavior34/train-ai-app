@@ -65,6 +65,15 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
   const pendingDsarCount = dsarRequests.filter(r => r.status === "pending").length;
   const progressRows = progressQuery.data || [];
   const behindCount = progressRows.filter(r => r.pace === "behind").length;
+  // Directory tab's "Course Progress" column used to be entirely fabricated
+  // (a fixed 95/68/32 pattern keyed off each row's index, so it looked
+  // "real" but was identical for every org and never moved). This screen
+  // already fetches real per-learner progress for the separate Progress
+  // tab (fetchOrgLearnerProgressOverview) - reuse that instead of a second
+  // fake number. There's no real attendance/session-checkin data anywhere
+  // in the schema, so that column is left honestly blank ("N/A") rather
+  // than inventing a number for it too.
+  const progressByMemberId = Object.fromEntries(progressRows.map(r => [r.id, r.avgProgress]));
 
   // Behind sorts first by default - that's the point of this tab (surface
   // who needs attention without opening each learner's record).
@@ -228,10 +237,11 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                   {!membersQuery.loading && filteredMembers.length === 0 && <tr><td colSpan={7} className="ta-empty">No students found matching your filter.</td></tr>}
                   {filteredMembers.map((m, idx) => {
                     const avatarUrl = m.avatar_url || `https://images.unsplash.com/photo-${1534528741775 + (idx * 10000)}?w=150&auto=format&fit=crop&q=80`;
-                    const progress = m.progress ?? (idx % 3 === 0 ? 95 : idx % 2 === 0 ? 68 : 32);
-                    const attendance = m.attendance ?? (idx % 3 === 0 ? 98 : idx % 2 === 0 ? 84 : 52);
-                    const riskTone = progress >= 70 ? "success" : progress >= 40 ? "warning" : "danger";
-                    const riskLabel = progress >= 70 ? "On Track" : progress >= 40 ? "Needs Attention" : "High Risk";
+                    const hasProgress = Object.prototype.hasOwnProperty.call(progressByMemberId, m.id);
+                    const progress = hasProgress ? progressByMemberId[m.id] : 0;
+                    const attendance = null; // no real attendance/session-checkin data exists in the schema yet
+                    const riskTone = !hasProgress ? "default" : progress >= 70 ? "success" : progress >= 40 ? "warning" : "danger";
+                    const riskLabel = !hasProgress ? "No enrollments" : progress >= 70 ? "On Track" : progress >= 40 ? "Needs Attention" : "High Risk";
 
                     return (
                       <tr key={m.id}>
@@ -266,8 +276,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                           </span>
                         </td>
                         <td>
-                          <span style={{ fontWeight: 600, fontSize: 12.5, color: attendance >= 80 ? "var(--success)" : "var(--danger)" }}>
-                            {attendance}%
+                          <span style={{ fontWeight: 600, fontSize: 12.5, color: "var(--text-3)" }}>
+                            {attendance == null ? "N/A" : `${attendance}%`}
                           </span>
                         </td>
                         <td>
@@ -293,7 +303,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                             >
                               <Award size={13} />
                             </button>
-                            <button 
+                            <button
                               className="ta-btn ta-btn-outline ta-btn-sm"
                               onClick={async () => {
                                 await updateOrgMemberStatus(m.id, orgId, m.status === "active" ? "suspended" : "active");
@@ -302,6 +312,20 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                               }}
                             >
                               {m.status === "active" ? "Suspend" : "Activate"}
+                            </button>
+                            <button
+                              className="ta-btn ta-btn-outline ta-btn-sm"
+                              title="Download this user's data as JSON"
+                              onClick={async () => {
+                                try {
+                                  await downloadUserDataExport(m.id, m.display_name || m.id);
+                                  showToast(`Data export downloaded for ${m.display_name || "user"}`);
+                                } catch (e) {
+                                  showToast(e?.message || "Could not export this user's data");
+                                }
+                              }}
+                            >
+                              <Download size={13} />
                             </button>
                           </div>
                         </td>

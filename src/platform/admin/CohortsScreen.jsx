@@ -80,7 +80,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.75) 100%)" }} />
                       <div style={{ position: "absolute", top: 10, left: 10, right: 10, display: "flex", justifyContent: "space-between" }}>
-                        <Tag tone="primary">{c.courses || 2} course{c.courses === 1 ? "" : "s"}</Tag>
+                        <Tag tone="primary">{c.courses || 0} course{c.courses === 1 ? "" : "s"}</Tag>
                         <Tag tone={isCompleted ? "warning" : "success"}>{isCompleted ? "Completed" : "Active Batch"}</Tag>
                       </div>
                       <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 15, textShadow: "0 2px 4px rgba(0,0,0,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -90,10 +90,10 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
 
                     <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
                       <div className="ta-row ta-between" style={{ fontSize: 12, color: "var(--text-2)" }}>
-                        <span className="ta-row ta-gap6"><Users size={13} color="var(--primary)" /> {c.members ?? c.learner_count ?? 48} active members</span>
-                        <span style={{ fontWeight: 700, color: "var(--primary)" }}>{c.progress || 68}%</span>
+                        <span className="ta-row ta-gap6"><Users size={13} color="var(--primary)" /> {c.members ?? c.learner_count ?? 0} active members</span>
+                        <span style={{ fontWeight: 700, color: "var(--primary)" }}>{c.progress || 0}%</span>
                       </div>
-                      <div className="ta-mt8"><ProgressBar value={c.progress || 68} /></div>
+                      <div className="ta-mt8"><ProgressBar value={c.progress || 0} /></div>
                       <div className="ta-row ta-between ta-mt12" style={{ paddingTop: 10, borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)" }}>
                         <span>Schedule: Active</span>
                         <span style={{ fontWeight: 700, color: "var(--primary)", display: "flex", alignItems: "center", gap: 3 }}>Manage Batch <ArrowRight size={12} /></span>

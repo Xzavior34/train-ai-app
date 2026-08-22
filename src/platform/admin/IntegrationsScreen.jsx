@@ -205,6 +205,9 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
           ))}
         </div>
 
+        {integrationsQuery.loading && <div className="ta-empty">Loading integrations...</div>}
+        {integrationsQuery.error && <div className="ta-empty">Couldn't load integrations: {integrationsQuery.error}</div>}
+
         {integrations.length > 0 && (
           <div className="ta-card">
             <div className="ta-title">Custom Webhooks ({integrations.length})</div>

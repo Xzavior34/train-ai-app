@@ -305,7 +305,11 @@ export function CoursesScreen({
 
   const enrolledList = allAvailableCourses.filter(c => c.enrolled);
 
-  const filteredCatalog = allAvailableCourses.filter(c => {
+  // External partner courses are meant to be a small, curated selection
+  // (3-5 courses), not an open marketplace listing.
+  const EXTERNAL_COURSE_LIMIT = 5;
+
+  const filteredCatalogUnsorted = allAvailableCourses.filter(c => {
     if (showMyCoursesOnly && !c.enrolled) return false;
     if (courseSourceTab === "assigned") {
       if (!c.assigned && !c.enrolled && c.source !== "assigned") return false;
@@ -333,7 +337,17 @@ export function CoursesScreen({
       }
     }
     return true;
+  }).sort((a, b) => {
+    // Bookmarked courses surface first; otherwise preserve existing order.
+    const aBm = !!bookmarkedIds[a.id];
+    const bBm = !!bookmarkedIds[b.id];
+    if (aBm === bBm) return 0;
+    return aBm ? -1 : 1;
   });
+
+  const filteredCatalog = courseSourceTab === "partners"
+    ? filteredCatalogUnsorted.slice(0, EXTERNAL_COURSE_LIMIT)
+    : filteredCatalogUnsorted;
 
   // Dynamic Moving Multi-Course Spotlight Carousel
   const SPOTLIGHT_SLIDES = [
@@ -797,6 +811,7 @@ export function CoursesScreen({
         <div className="tai-row tai-between" style={{ paddingBottom: 4, marginTop: 2 }}>
           <span style={{ fontSize: 12.5, color: "var(--text-3)", fontWeight: 600 }}>
             Showing {filteredCatalog.length} curated masterclasses
+            {courseSourceTab === "partners" && filteredCatalogUnsorted.length > EXTERNAL_COURSE_LIMIT ? " (curated selection)" : ""}
           </span>
         </div>
       </div>
@@ -895,7 +910,7 @@ export function CoursesScreen({
 
                 {isEnrolled && (
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 5, background: "rgba(255,255,255,0.3)" }}>
-                    <div style={{ height: "100%", width: `${course.progress || 50}%`, background: isCompleted ? "#10B981" : "#4F46E5" }} />
+                    <div style={{ height: "100%", width: `${course.progress || 0}%`, background: isCompleted ? "#10B981" : "#4F46E5" }} />
                   </div>
                 )}
               </div>
@@ -930,9 +945,9 @@ export function CoursesScreen({
                       <Star size={14} fill="#F59E0B" color="#F59E0B" />
                       <span>{course.rating}</span>
                     </div>
-                    <span style={{ color: "var(--text-3)" }}>({course.reviewsCount || 1200})</span>
+                    <span style={{ color: "var(--text-3)" }}>({course.reviewsCount || 0})</span>
                     <span style={{ color: "var(--text-3)" }}>•</span>
-                    <span style={{ color: "var(--text-3)", fontWeight: 600 }}>{course.studentsCount || "8.5k"} students</span>
+                    <span style={{ color: "var(--text-3)", fontWeight: 600 }}>{course.studentsCount || "0"} students</span>
                   </div>
                 </div>
 

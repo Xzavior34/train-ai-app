@@ -13,6 +13,7 @@ export function useAuth() {
     return undefined;
   });
   const [authError, setAuthError] = useState(null);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -32,7 +33,15 @@ export function useAuth() {
       setSession(saved ? JSON.parse(saved) : null);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
+      // Clicking the "reset your password" email link lands back here with
+      // a real (temporary) session already established by Supabase and this
+      // event fired - previously nothing distinguished that from a normal
+      // sign-in, so the app would just drop the visitor straight into their
+      // dashboard with no prompt to actually set a new password.
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+      }
       if (newSession) {
         setSession(newSession);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
@@ -223,6 +232,44 @@ export function useAuth() {
     setSession(null);
   }, []);
 
+  // "Forgot password" - previously there was no way to request a reset
+  // email at all. Resolves the same project a sign-in for this email would
+  // use (see signIn above), matching the multi-project routing everywhere
+  // else in this file. Always reports success regardless of whether the
+  // email actually has an account (Supabase's own behavior too) - this is
+  // deliberate, not a bug: it avoids leaking which emails are registered.
+  const sendPasswordReset = useCallback(async (email) => {
+    if (!supabase) {
+      // Demo mode: no real email can be sent. Still returns success so the
+      // UI behaves the same way as the real path (no enumeration signal),
+      // rather than exposing that this environment has no backend.
+      return { success: true };
+    }
+    try {
+      const targetProject = resolveProjectForSignIn(email);
+      const client = getSupabaseClientForProject(targetProject) || supabase;
+      await client.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    } catch (e) {
+      console.warn("Password reset request warning:", e);
+    }
+    return { success: true };
+  }, []);
+
+  // Completes the flow above once the visitor has followed the emailed
+  // link back (isPasswordRecovery below turns true) and chosen a new
+  // password.
+  const completePasswordReset = useCallback(async (newPassword) => {
+    if (!supabase) return { success: false, error: "Not available in demo mode." };
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) return { success: false, error: error.message };
+      setIsPasswordRecovery(false);
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e?.message || "Could not update your password." };
+    }
+  }, []);
+
   return {
     session,
     loading: session === undefined,
@@ -231,5 +278,9 @@ export function useAuth() {
     signIn,
     signUp,
     signOut,
+    isPasswordRecovery,
+    sendPasswordReset,
+    completePasswordReset,
+    cancelPasswordRecovery: () => setIsPasswordRecovery(false),
   };
 }

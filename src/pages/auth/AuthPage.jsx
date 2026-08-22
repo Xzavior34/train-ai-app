@@ -1,10 +1,27 @@
-import React, { useState } from "react";
-import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2 } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
-import { registerOrganization, joinDefaultOrganization } from "../../lib/api/organizations.js";
+import { registerOrganization, joinDefaultOrganization, attributeReferralSignupIfPending } from "../../lib/api/organizations.js";
 
-export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail = "" }) {
+export default function AuthPage({
+  onSignIn, onSignUp, authError, initialEmail = "",
+  onForgotPassword, recoveryMode = false, onCompletePasswordReset,
+}) {
   const [mode, setMode] = useState("signin");
+  // A password-recovery link click lands here with a real (temporary)
+  // session already established - App.jsx flags that via recoveryMode so
+  // this screen jumps straight to "set a new password" instead of showing
+  // the normal sign-in form (which the visitor is, confusingly, already
+  // authenticated past at that point).
+  useEffect(() => {
+    if (recoveryMode) setMode("recovery");
+  }, [recoveryMode]);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
   // Prefilled when this screen is reached right after accepting an org
   // invitation (see AcceptInvitationScreen -> App.jsx's onNeedsSignIn) so the
   // user doesn't have to retype the email their invite was sent to.
@@ -45,6 +62,40 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
     }
   }
 
+  async function handleForgotPasswordSubmit(e) {
+    e.preventDefault();
+    if (!email.trim() || sendingReset) return;
+    setSendingReset(true);
+    try {
+      await onForgotPassword?.(email.trim());
+    } finally {
+      setSendingReset(false);
+      setResetEmailSent(true);
+    }
+  }
+
+  async function handleSetNewPasswordSubmit(e) {
+    e.preventDefault();
+    setResetError("");
+    if (newPassword.length < 8) {
+      setResetError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== newPasswordConfirm) {
+      setResetError("Passwords don't match.");
+      return;
+    }
+    setResettingPassword(true);
+    try {
+      const result = await onCompletePasswordReset?.(newPassword);
+      if (!result?.success) {
+        setResetError(result?.error || "Could not update your password. The reset link may have expired - request a new one.");
+      }
+    } finally {
+      setResettingPassword(false);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
@@ -65,6 +116,13 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
       // unchanged from before.
       const signupRole = "learner"; // Manager/Admin/Instructor are always assigned after login via org invitation, never chosen at signup
       const result = await onSignUp(email, password, signupRole, accountType);
+
+      // Attribute this signup to whoever's referral link brought them here
+      // (captured earlier on LandingPage, if any) - best-effort, never
+      // blocks or affects the signup flow itself either way.
+      if (!result?.error && result?.data?.user?.id) {
+        attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
+      }
 
       if (accountType === "organization" && !result?.error) {
         const orgResult = await registerOrganization(orgName);
@@ -127,11 +185,82 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
       <div style={styles.glowTop} />
       <div style={styles.glowBottom} />
 
-      <form onSubmit={handleSubmit} className="auth-card" style={styles.card}>
+      <form
+        onSubmit={mode === "forgot" ? handleForgotPasswordSubmit : mode === "recovery" ? handleSetNewPasswordSubmit : handleSubmit}
+        className="auth-card" style={styles.card}
+      >
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
           <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 48, width: "auto", objectFit: "contain", display: "block" }} />
         </div>
 
+        {mode === "forgot" && (
+          <>
+            <h1 style={styles.h1}>Reset your password</h1>
+            {resetEmailSent ? (
+              <>
+                <p style={styles.sub}>
+                  <CheckCircle2 size={15} color="#16A34A" style={{ verticalAlign: -2, marginRight: 6 }} />
+                  If an account exists for <strong>{email}</strong>, we've sent a link to reset your password. Check your inbox.
+                </p>
+                <div style={styles.switchRow}>
+                  <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); setResetEmailSent(false); }}>Back to sign in</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={styles.sub}>Enter the email address on your account and we'll send you a link to reset your password.</p>
+                <label style={styles.label}>Email Address</label>
+                <div style={styles.inputWrap}>
+                  <Mail size={15} color="#9AA1B9" style={styles.inputIcon} />
+                  <input
+                    type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                    className="auth-input" style={styles.input} placeholder="you@example.com"
+                  />
+                </div>
+                <button type="submit" disabled={sendingReset} className="auth-submit" style={{ ...styles.submit, opacity: sendingReset ? .75 : 1 }}>
+                  {sendingReset ? "Sending..." : "Send reset link"}
+                </button>
+                <div style={styles.switchRow}>
+                  <span className="auth-switch" style={styles.switchLink} onClick={() => setMode("signin")}>Back to sign in</span>
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {mode === "recovery" && (
+          <>
+            <h1 style={styles.h1}>Choose a new password</h1>
+            <p style={styles.sub}>You followed a password reset link. Set a new password for your account below.</p>
+
+            <label style={styles.label}>New Password</label>
+            <div style={styles.inputWrap}>
+              <Lock size={15} color="#9AA1B9" style={styles.inputIcon} />
+              <input
+                type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                className="auth-input" style={styles.input} placeholder="At least 8 characters"
+              />
+            </div>
+
+            <label style={{ ...styles.label, marginTop: 14 }}>Confirm New Password</label>
+            <div style={styles.inputWrap}>
+              <Lock size={15} color="#9AA1B9" style={styles.inputIcon} />
+              <input
+                type="password" required value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                className="auth-input" style={styles.input} placeholder="••••••••"
+              />
+            </div>
+
+            {resetError && <div style={styles.errorBox}>{resetError}</div>}
+
+            <button type="submit" disabled={resettingPassword} className="auth-submit" style={{ ...styles.submit, opacity: resettingPassword ? .75 : 1 }}>
+              {resettingPassword ? "Updating..." : "Update password"}
+            </button>
+          </>
+        )}
+
+        {(mode === "signin" || mode === "signup") && (
+        <>
         <h1 style={styles.h1}>{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
         <p style={styles.sub}>
           {mode === "signin" ? "Sign in with your email and password." : "Join Train AI to start your personalized learning path."}
@@ -211,7 +340,12 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
           />
         </div>
 
-        <label style={{ ...styles.label, marginTop: 14 }}>Password</label>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
+          <label style={styles.label}>Password</label>
+          {mode === "signin" && (
+            <span className="auth-switch" style={{ ...styles.switchLink, fontSize: 12 }} onClick={() => setMode("forgot")}>Forgot password?</span>
+          )}
+        </div>
         <div style={styles.inputWrap}>
           <Lock size={15} color="#9AA1B9" style={styles.inputIcon} />
           <input
@@ -246,6 +380,8 @@ export default function AuthPage({ onSignIn, onSignUp, authError, initialEmail =
             <>Already have an account? <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); setBreachWarning(false); }}>Sign in</span></>
           )}
         </div>
+        </>
+        )}
       </form>
     </div>
   );

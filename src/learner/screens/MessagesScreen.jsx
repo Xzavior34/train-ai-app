@@ -12,90 +12,27 @@ function useIsNarrow(breakpoint = 640) {
   return narrow;
 }
 
-const DEFAULT_THREADS = [
-  {
-    counterpartId: "mentor-astrid",
-    name: "Astrid Larsson",
-    title: "Senior UI/UX & Design Systems Lead",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-    last: "Great job on the Module 4 auto-layout assignment! Let's review tokens tonight.",
-    unread: 1,
-    history: [
-      { id: "m-1", sender_id: "mentor-astrid", content: "Hi there! I reviewed your Figma auto-layout project. The nested auto-layouts are very clean." },
-      { id: "m-2", sender_id: "me", content: "Thank you Astrid! I had a quick question regarding component variants vs boolean variables." },
-      { id: "m-3", sender_id: "mentor-astrid", content: "Great question! Boolean variables are ideal for visibility toggles, whereas variants are better for distinct layout state changes." },
-      { id: "m-4", sender_id: "mentor-astrid", content: "Great job on the Module 4 auto-layout assignment! Let's review tokens tonight." }
-    ]
-  },
-  {
-    counterpartId: "mentor-alex",
-    name: "Alex Rivera",
-    title: "AI Engineer & Full-Stack Architect",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-    last: "Shared the updated vector embedding architecture template in the resources tab.",
-    unread: 0,
-    history: [
-      { id: "m-1", sender_id: "mentor-alex", content: "Welcome to the Full-Stack GenAI track! Feel free to ping me if you encounter any vector DB index errors." },
-      { id: "m-2", sender_id: "mentor-alex", content: "Shared the updated vector embedding architecture template in the resources tab." }
-    ]
-  },
-  {
-    counterpartId: "mentor-marcus",
-    name: "Marcus Vance",
-    title: "Autonomous Agent Specialist",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-    last: "Let me know when you finish the Prompt Engineering quiz!",
-    unread: 0,
-    history: [
-      { id: "m-1", sender_id: "mentor-marcus", content: "Hey! Ready to dive into Axon AI autonomous agent workflows?" },
-      { id: "m-2", sender_id: "mentor-marcus", content: "Let me know when you finish the Prompt Engineering quiz!" }
-    ]
-  }
-];
-
 export function MessagesScreen({
   activeMentorThread, setActiveMentorThread, messageInput, setMessageInput,
   messageThreads = [], threadsLoading, conversationMessages = [], conversationLoading,
   session, back, handleSendMessage
 }) {
   const isNarrow = useIsNarrow();
-  const [localCustomThreads, setLocalCustomThreads] = useState(DEFAULT_THREADS);
   const [localInput, setLocalInput] = useState("");
 
-  const effectiveThreads = (messageThreads && messageThreads.length > 0) ? messageThreads : localCustomThreads;
-  const currentThread = activeMentorThread || effectiveThreads[0];
+  const currentThread = activeMentorThread;
 
   const showThreadList = !isNarrow || !activeMentorThread;
   const showConversation = !isNarrow || !!activeMentorThread;
 
-  const currentMessages = (conversationMessages && conversationMessages.length > 0)
-    ? conversationMessages
-    : (currentThread?.history || []);
+  const currentMessages = conversationMessages || [];
 
   function handleSendLocal() {
-    const text = messageInput || localInput;
+    const text = messageInput !== undefined ? messageInput : localInput;
     if (!text || !text.trim()) return;
 
     if (handleSendMessage) {
       handleSendMessage();
-    }
-
-    if (currentThread) {
-      const newMsg = {
-        id: `msg-${Date.now()}`,
-        sender_id: session?.user?.id || "me",
-        content: text.trim()
-      };
-      setLocalCustomThreads(prev => prev.map(t => {
-        if (t.counterpartId === currentThread.counterpartId) {
-          return {
-            ...t,
-            last: text.trim(),
-            history: [...(t.history || []), newMsg]
-          };
-        }
-        return t;
-      }));
     }
 
     if (setMessageInput) setMessageInput("");
@@ -111,7 +48,12 @@ export function MessagesScreen({
         {showThreadList && (
         <div style={{ borderRight: isNarrow ? "none" : "1px solid var(--border)", background: "var(--surface-2)", overflowY: "auto" }}>
           {threadsLoading && <div className="tai-empty" style={{ padding: 16, fontSize: 12.5 }}>Loading...</div>}
-          {effectiveThreads.map(t => {
+          {!threadsLoading && messageThreads.length === 0 && (
+            <div className="tai-empty" style={{ padding: 16, fontSize: 12.5 }}>
+              No conversations yet. Message an instructor from Community or Instructors to start one.
+            </div>
+          )}
+          {messageThreads.map(t => {
             const isActive = currentThread?.counterpartId === t.counterpartId;
             return (
               <div
@@ -170,6 +112,7 @@ export function MessagesScreen({
 
               <div style={{ flex: 1, overflowY: "auto", padding: 18 }} className="tai-col tai-gap12">
                 {conversationLoading && <div className="tai-empty">Loading messages...</div>}
+                {!conversationLoading && currentMessages.length === 0 && <div className="tai-empty">No messages in this conversation yet. Say hello!</div>}
                 {currentMessages.map((m, idx) => {
                   const isMe = m.sender_id === session?.user?.id || m.sender_id === "me";
                   return (

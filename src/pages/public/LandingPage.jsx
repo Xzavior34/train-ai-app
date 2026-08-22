@@ -6,6 +6,7 @@ import {
   GitCompare, Table, School, Handshake, Briefcase, Zap, Sparkles, Flame
 } from "lucide-react";
 import { submitDemoRequest, submitOrganizationInquiry, captureAttributionFromURL } from "../../lib/api/waitlist.js";
+import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
 
 // ============================================================================
 // Copy source: "TRAIN AI - Website Copy & Structure - Master Draft" (New
@@ -205,6 +206,15 @@ export default function LandingPage({ onNavigate }) {
   // this single-page app.
   useEffect(() => { captureAttributionFromURL(); }, []);
 
+  // Referral link clicks (the "Invite & Earn" panel in ProfileScreen) -
+  // same "capture once on mount before it's lost" reasoning as the UTM
+  // capture above, kept as a separate call since it's a distinct feature
+  // with its own storage key.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) trackReferralClickIfPresent(ref);
+  }, []);
+
   const [demoName, setDemoName] = useState("");
   const [demoEmail, setDemoEmail] = useState("");
   const [demoCompany, setDemoCompany] = useState("");
@@ -215,6 +225,15 @@ export default function LandingPage({ onNavigate }) {
   const [submitting, setSubmitting] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [openFaq, setOpenFaq] = useState(0);
+
+  useEffect(() => {
+    if (!activeModal) return;
+    function handleKeyDown(e) {
+      if (e.key === "Escape") setActiveModal(null);
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [activeModal]);
 
   const [contactMode, setContactMode] = useState("demo");
   const [inquiryType, setInquiryType] = useState(INQUIRY_TYPE_OPTIONS[0].value);
@@ -722,7 +741,7 @@ export default function LandingPage({ onNavigate }) {
                   <tr key={row.dimension}>
                     <td style={styles.comparisonCellLabel}>{row.dimension}</td>
                     <td style={styles.comparisonCell}>{row.lms}</td>
-                    <td style={{ ...styles.comparisonCell, fontWeight: 700, color: "#10142A" }}>{row.trainai}</td>
+                    <td style={{ ...styles.comparisonCell, fontWeight: 700, color: "#0F172A" }}>{row.trainai}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1057,10 +1076,16 @@ export default function LandingPage({ onNavigate }) {
       </footer>
 
       {activeModal && (
-        <div style={styles.modalOverlay} onClick={() => setActiveModal(null)}>
-          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        <div style={styles.modalOverlay} onClick={() => setActiveModal(null)} role="presentation">
+          <div
+            style={styles.modalCard}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lp-modal-title"
+          >
             <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>{LEGAL_CONTENT[activeModal].title}</h3>
+              <h3 id="lp-modal-title" style={styles.modalTitle}>{LEGAL_CONTENT[activeModal].title}</h3>
               <button style={styles.modalClose} onClick={() => setActiveModal(null)} aria-label="Close">
                 <X size={18} />
               </button>

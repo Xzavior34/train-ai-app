@@ -33,6 +33,23 @@ export function CommunityScreen({
   const [posting, setPosting] = useState(false);
 
   const [expandedCommentsPostId, setExpandedCommentsPostId] = useState(initialExpandedPostId || null);
+
+  // Deep-link support: when the learner arrives here from a universal-search
+  // "Community" result (see TrainAILearnerApp's onOpenPost -> push("community",
+  // { postId })), expand that post's comments and scroll it into view instead
+  // of just dumping them on top of the feed. Runs on every change (not just
+  // mount) since this screen can stay mounted across repeated deep links, and
+  // also makes sure we're on the feed tab where the post actually renders.
+  useEffect(() => {
+    if (!initialExpandedPostId) return;
+    setActiveTab("feed");
+    setExpandedCommentsPostId(initialExpandedPostId);
+    const t = setTimeout(() => {
+      const el = document.getElementById(`community-post-${initialExpandedPostId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [initialExpandedPostId]);
   const [replyInput, setReplyInput] = useState({});
   const [userReactions, setUserReactions] = useState({});
   const [activeTab, setActiveTab] = useState("feed"); // feed | events | circles | leaderboard
@@ -260,24 +277,29 @@ export const chartColors = {
       return;
     }
 
+    // Compute nextActive from the functional (guaranteed fresh) previous
+    // state and reuse that same value for the count update below, instead of
+    // reading `userReactions` from the render closure - two rapid clicks
+    // before a re-render used to read stale data and could double-apply (or
+    // miss) the like/fire/insight delta.
     setUserReactions(prev => {
       const current = prev[postId] || {};
       const nextActive = !current[type];
+
+      setFeedPosts(fp => fp.map(p => {
+        if (p.id !== postId) return p;
+        const delta = nextActive ? 1 : -1;
+        if (type === "like") return { ...p, likes: Math.max(0, p.likes + delta) };
+        if (type === "fire") return { ...p, fires: Math.max(0, p.fires + delta) };
+        if (type === "insight") return { ...p, insights: Math.max(0, p.insights + delta) };
+        return p;
+      }));
+
       return {
         ...prev,
         [postId]: { ...current, [type]: nextActive }
       };
     });
-
-    setFeedPosts(prev => prev.map(p => {
-      if (p.id !== postId) return p;
-      const isAlreadyActive = userReactions[postId]?.[type];
-      const delta = isAlreadyActive ? -1 : 1;
-      if (type === "like") return { ...p, likes: Math.max(0, p.likes + delta) };
-      if (type === "fire") return { ...p, fires: Math.max(0, p.fires + delta) };
-      if (type === "insight") return { ...p, insights: Math.max(0, p.insights + delta) };
-      return p;
-    }));
   }
 
   async function handleAddComment(postId) {
@@ -367,7 +389,7 @@ export const chartColors = {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       const matchesTitle = p.title ? p.title.toLowerCase().includes(q) : false;
-      if (!matchesTitle && !p.content.toLowerCase().includes(q)) return false;
+      if (!matchesTitle && !(p.content || "").toLowerCase().includes(q)) return false;
     }
     return true;
   });
