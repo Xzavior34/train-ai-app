@@ -67,8 +67,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
   const effectiveActiveInWeek = stats?.activeInWeek || 4120;
 
   return (
-    <div className="ta-fade" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      
+    <div className="ta-fade">
       {/* =========================================================================
           TOP EXECUTIVE CONTROL BAR
           ========================================================================= */}
@@ -88,10 +87,11 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         }
       />
 
-      {/* =========================================================================
-          EXECUTIVE HERO TELEMETRY BANNER
-          ========================================================================= */}
-      <div className="ta-hero-banner">
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            EXECUTIVE HERO TELEMETRY BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner">
         {/* Background Network Tech Photo with Overlay */}
         <img
           src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1400&auto=format&fit=crop&q=85"
@@ -422,6 +422,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
