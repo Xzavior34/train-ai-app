@@ -196,7 +196,7 @@ export function HomeScreen({
                       <Tag tone="primary">{continueCourse.category || "Technology"}</Tag>
                       <span style={{ fontSize: 11, color: "var(--text-3)" }}>12 hrs</span>
                     </div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", lineHeight: 1.35, wordBreak: "break-word" }}>
                       {continueCourse.title}
                     </div>
                   </div>
@@ -239,7 +239,7 @@ export function HomeScreen({
                   <Users size={17} color="var(--primary)" />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", lineHeight: 1.35, wordBreak: "break-word" }}>
                     {cohort?.name || "Q1 Onboarding Cohort"}
                   </div>
                   <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>

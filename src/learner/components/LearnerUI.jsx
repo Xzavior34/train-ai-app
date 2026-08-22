@@ -948,7 +948,7 @@ export function CourseCard({ course, onClick, onEnroll, onToggleBookmark }) {
           <div className="tai-row tai-between" style={{ paddingRight: onToggleBookmark ? 24 : 0 }}>
             <Tag>{course.category}</Tag>
           </div>
-          <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4, lineHeight: 1.35, wordBreak: "break-word", color: "var(--text)" }}>
             {course.title}
           </div>
           <div className="tai-row tai-gap12 tai-mt8" style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 500 }}>

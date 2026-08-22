@@ -178,7 +178,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                     </div>
                   </div>
 
-                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center" }}>
+                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center", width: "auto", maxWidth: "100%" }}>
                     <Tag tone={s.status === "completed" ? "success" : s.status === "cancelled" ? "danger" : s.status === "requested" ? "warning" : "primary"}>
                       {s.status.toUpperCase()}
                     </Tag>
@@ -193,7 +193,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                     )}
 
                     {s.status === "confirmed" && (
-                      <>
+                      <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center" }}>
                         {s.meeting_url ? (
                           <a
                             href={s.meeting_url}
@@ -219,7 +219,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                         >
                           <Clock size={13} /> Reschedule
                         </button>
-                      </>
+                      </div>
                     )}
 
                     {completingSessionId === s.id && (
