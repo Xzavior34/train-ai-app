@@ -574,14 +574,33 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         title="People & Access" sub="Directory, member records, roles & invitations"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={<button className="ta-btn ta-btn-primary" onClick={() => setInviteOpen(true)}><UserPlus size={15} /> Invite user</button>}
+        right={
+          <button
+            className="ta-btn ta-btn-primary"
+            style={{
+              height: 34,
+              padding: "0 12px",
+              borderRadius: 8,
+              background: "#4F46E5",
+              color: "#FFFFFF",
+              fontWeight: 700,
+              fontSize: 12.5,
+              border: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5
+            }}
+            onClick={() => setInviteOpen(true)}
+          >
+            <UserPlus size={14} /> Invite user
+          </button>
+        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
             PEOPLE & ACCESS HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
@@ -610,34 +629,29 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
 
         {tab === "all" && (
           <div className="ta-col ta-gap16">
-            {/* KPI row. "Avg. Attendance 92%" and "Top Achievers 24" used to be
-                literal hardcoded strings - identical for every organization and
-                never moving. Three of these four are now real reads
-                (fetchOrgPeopleKpis); attendance has no source table anywhere in
-                this schema, so it reports that honestly instead of inventing a
-                number that looks authoritative. */}
+            {/* KPI row */}
             <div className="ta-grid ta-grid-4 anim-stagger">
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Members</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Total Members</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>{kpis?.totalMembers ?? members.length}</div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
                   {kpis ? `${kpis.activeMembers} active • ${kpis.suspendedMembers} suspended` : `${invitations.length} invite${invitations.length === 1 ? "" : "s"} pending`}
                 </div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>At Risk Learners</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>At Risk Learners</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: behindCount > 0 ? "#EF4444" : "var(--text)", marginTop: 4 }}>{behindCount}</div>
                 <div style={{ fontSize: 11, color: behindCount > 0 ? "#EF4444" : "var(--text-3)", marginTop: 2 }}>{behindCount > 0 ? "Needs intervention" : "All learners on pace"}</div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Avg. Course Progress</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Avg. Course Progress</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#10B981", marginTop: 4 }}>
                   {kpisQuery.loading ? "..." : `${kpis?.avgCompletion ?? 0}%`}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Across every enrollment</div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
-                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Point Earners</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Point Earners</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#4F46E5", marginTop: 4 }}>
                   {kpisQuery.loading ? "..." : (kpis?.topAchievers ?? 0)}
                 </div>

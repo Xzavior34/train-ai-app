@@ -59,7 +59,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                   <div
                     key={c.id || c.name}
                     className="ta-card ta-card-hover"
-                    style={{ cursor: onOpenCohort ? "pointer" : "default", borderRadius: 16, padding: 0, overflow: "hidden", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column" }}
+                    style={{ cursor: onOpenCohort ? "pointer" : "default", borderRadius: 10, padding: 0, overflow: "hidden", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column" }}
                     onClick={() => onOpenCohort?.(c.id)}
                   >
                     <div style={{ position: "relative", width: "100%", height: 120, overflow: "hidden" }}>

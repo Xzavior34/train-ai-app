@@ -448,35 +448,36 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               {/* Dark Live Hero Stream Card */}
               <div style={{ 
                 marginTop: 16,
-                padding: 18, 
-                borderRadius: 14, 
-                background: "linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)",
+                padding: 16, 
+                borderRadius: 10, 
+                background: "#0F172A",
                 color: "#FFFFFF",
-                boxShadow: "0 8px 24px rgba(49, 46, 129, 0.25)"
+                border: "1px solid #1E293B",
+                boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)"
               }}>
                 <div className="ta-row ta-between">
-                  <div className="ta-row ta-gap6" style={{ background: "rgba(239, 68, 68, 0.2)", padding: "4px 10px", borderRadius: 20, color: "#FCA5A5", fontSize: 11, fontWeight: 700 }}>
-                    <Radio size={12} className="anim-pulse" /> LIVE NOW
+                  <div className="ta-row ta-gap6" style={{ background: "rgba(239, 68, 68, 0.2)", padding: "3px 8px", borderRadius: 4, color: "#FCA5A5", fontSize: 10.5, fontWeight: 700 }}>
+                    <Radio size={11} className="anim-pulse" /> LIVE NOW
                   </div>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>60 mins • 28 joined</span>
+                  <span style={{ fontSize: 11, color: "#94A3B8" }}>60 mins • 28 joined</span>
                 </div>
 
-                <div style={{ fontSize: 15, fontWeight: 800, marginTop: 12, lineHeight: 1.35 }}>
-                  Spatial UI & Design Systems Critique
+                <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 10, lineHeight: 1.35 }}>
+                  Spatial UI &amp; Design Systems Critique
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>
                   Cohort Batch 4 interactive portfolio review session
                 </div>
 
-                <div className="ta-row ta-between ta-mt16">
+                <div className="ta-row ta-between ta-mt14">
                   <button 
-                    className="ta-btn ta-btn-primary" 
-                    style={{ background: "#4F46E5", border: "none", color: "#FFFFFF", fontWeight: 700 }}
+                    className="ta-btn ta-btn-primary ta-btn-sm" 
+                    style={{ background: "#4F46E5", border: "none", color: "#FFFFFF", fontWeight: 700, borderRadius: 6 }}
                     onClick={() => window.open("https://meet.google.com/demo-room-ai", "_blank")}
                   >
-                    <Video size={14} /> Join Studio
+                    <Video size={13} /> Join Studio
                   </button>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>Room #082</span>
+                  <span style={{ fontSize: 11, color: "#64748B" }}>Room #082</span>
                 </div>
               </div>
 

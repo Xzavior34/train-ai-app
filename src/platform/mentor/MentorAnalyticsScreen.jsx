@@ -211,8 +211,8 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
                   <span style={{ width: 44, fontSize: 12, fontWeight: 700, color: "var(--text-2)", display: "flex", alignItems: "center", gap: 4 }}>
                     {r.stars} <Star size={11} fill="#F59E0B" color="#F59E0B" />
                   </span>
-                  <div style={{ flex: 1, height: 8, background: "var(--surface-3)", borderRadius: 6, overflow: "hidden" }}>
-                    <div style={{ width: `${r.pct}%`, height: "100%", background: "linear-gradient(90deg, #F59E0B, #FBBF24)", borderRadius: 6 }} />
+                  <div style={{ flex: 1, height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+                    <div style={{ width: `${r.pct}%`, height: "100%", background: "#F59E0B", borderRadius: 3 }} />
                   </div>
                   <span style={{ width: 36, fontSize: 11.5, color: "var(--text-3)", fontWeight: 600, textAlign: "right" }}>
                     {r.pct}%
@@ -221,9 +221,9 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
               ))}
             </div>
 
-            <div className="ta-row ta-between ta-mt20" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 12, border: "1px solid var(--border)" }}>
+            <div className="ta-row ta-between ta-mt20" style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
               <div className="ta-row ta-gap8">
-                <Sparkles size={16} color="var(--primary)" />
+                <Sparkles size={15} color="var(--primary)" />
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)" }}>AI Teaching Feedback Summary</span>
               </div>
               <span style={{ fontSize: 11.5, color: "var(--success)", fontWeight: 700 }}>Exceptional Clarity</span>
@@ -231,10 +231,10 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
           </div>
 
           {/* Instructor Benchmarks */}
-          <div className="ta-card" style={{ padding: "22px 24px", background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10 }}>
+            <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
               <div>
-                <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Teaching Benchmarks &amp; Health</div>
+                <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Teaching Benchmarks &amp; Health</div>
                 <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Metrics tracked against top global academy standards</div>
               </div>
               <Tag tone="success">Top 5%</Tag>
@@ -242,32 +242,32 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
 
             <div className="ta-col ta-gap14 ta-mt16">
               <div>
-                <div className="ta-row ta-between" style={{ fontSize: 12.5, marginBottom: 6 }}>
+                <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 5 }}>
                   <span style={{ color: "var(--text)", fontWeight: 600 }}>Course Completion Trajectory</span>
-                  <span style={{ fontWeight: 800, color: "var(--primary)" }}>94.2% (Industry Avg: 68%)</span>
+                  <span style={{ fontWeight: 700, color: "var(--primary)" }}>94.2% (Industry Avg: 68%)</span>
                 </div>
-                <div style={{ height: 8, background: "var(--surface-3)", borderRadius: 6, overflow: "hidden" }}>
-                  <div style={{ width: "94.2%", height: "100%", background: "var(--primary)", borderRadius: 6 }} />
+                <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ width: "94.2%", height: "100%", background: "#4F46E5", borderRadius: 3 }} />
                 </div>
               </div>
 
               <div>
-                <div className="ta-row ta-between" style={{ fontSize: 12.5, marginBottom: 6 }}>
+                <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 5 }}>
                   <span style={{ color: "var(--text)", fontWeight: 600 }}>Q&amp;A Response Time</span>
-                  <span style={{ fontWeight: 800, color: "var(--success)" }}>1.4 hrs avg (&lt; 24h target)</span>
+                  <span style={{ fontWeight: 700, color: "var(--success)" }}>1.4 hrs avg (&lt; 24h target)</span>
                 </div>
-                <div style={{ height: 8, background: "var(--surface-3)", borderRadius: 6, overflow: "hidden" }}>
-                  <div style={{ width: "88%", height: "100%", background: "#10B981", borderRadius: 6 }} />
+                <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ width: "88%", height: "100%", background: "#10B981", borderRadius: 3 }} />
                 </div>
               </div>
 
               <div>
-                <div className="ta-row ta-between" style={{ fontSize: 12.5, marginBottom: 6 }}>
+                <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 5 }}>
                   <span style={{ color: "var(--text)", fontWeight: 600 }}>Student Project Approval Rate</span>
-                  <span style={{ fontWeight: 800, color: "var(--primary)" }}>91.5% on 1st submission</span>
+                  <span style={{ fontWeight: 700, color: "var(--primary)" }}>91.5% on 1st submission</span>
                 </div>
-                <div style={{ height: 8, background: "var(--surface-3)", borderRadius: 6, overflow: "hidden" }}>
-                  <div style={{ width: "91.5%", height: "100%", background: "linear-gradient(90deg, #6366F1, #818CF8)", borderRadius: 6 }} />
+                <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ width: "91.5%", height: "100%", background: "#4F46E5", borderRadius: 3 }} />
                 </div>
               </div>
 

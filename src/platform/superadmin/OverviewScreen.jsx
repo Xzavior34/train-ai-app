@@ -94,21 +94,6 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             EXECUTIVE HERO TELEMETRY BANNER
             ========================================================================= */}
         <div className="ta-hero-banner">
-        {/* Background Network Tech Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1400&auto=format&fit=crop&q=85"
-          alt=""
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.28, zIndex: 0
-          }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
-          zIndex: 0
-        }} />
-
         <div className="ta-hero-inner">
           <div className="ta-hero-text">
             <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
@@ -277,10 +262,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                       width: "100%", maxWidth: 36,
                       height: `${item.heightPct}%`,
                       background: idx === MONTHLY_GROWTH_DATA.length - 1
-                        ? "linear-gradient(180deg, #4F46E5 0%, #6366F1 100%)"
-                        : "linear-gradient(180deg, rgba(99, 102, 241, 0.4) 0%, rgba(99, 102, 241, 0.15) 100%)",
-                      borderRadius: "6px 6px 0 0",
-                      transition: "all 0.3s ease"
+                        ? "#4F46E5"
+                        : "var(--surface-3)",
+                      borderRadius: "4px 4px 0 0",
+                      transition: "all 0.2s ease"
                     }}
                   />
                   <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 8, fontWeight: 600 }}>
