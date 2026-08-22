@@ -129,7 +129,7 @@ export default function MfaSetupScreen({ onClose }) {
         onClick={(e) => e.stopPropagation()}
         className="mfa2-card"
         style={{
-          width: "100%", maxWidth: 440, background: "#FFFFFF", borderRadius: 20,
+          width: "100%", maxWidth: 440, background: "#FFFFFF", borderRadius: 10,
           boxShadow: "0 20px 60px -15px rgba(16,20,42,.4)", padding: 20,
           maxHeight: "88vh", overflowY: "auto",
         }}
@@ -168,7 +168,7 @@ export default function MfaSetupScreen({ onClose }) {
             aria-label="Close"
             className="mfa2-close-btn"
             style={{
-              width: 32, height: 32, borderRadius: 10, border: "1px solid #E6E9F5", background: "#FFFFFF",
+              width: 32, height: 32, borderRadius: 8, border: "1px solid #E6E9F5", background: "#FFFFFF",
               display: "flex", alignItems: "center", justifyContent: "center", cursor: busy ? "default" : "pointer", color: "#656C86",
             }}
           >
@@ -216,56 +216,59 @@ export default function MfaSetupScreen({ onClose }) {
 
             <div style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-              border: "1px solid #E6E9F5", borderRadius: 14, background: "#F7F9FF", padding: 16,
+              border: "1px solid #E6E9F5", borderRadius: 8, background: "#F7F9FF", padding: 16,
             }}>
-              {view.qrCodeDataUri ? (
-                <div style={{ background: "#fff", padding: 10, borderRadius: 10 }}>
-                  <img src={view.qrCodeDataUri} alt="Scan with your authenticator app" width={160} height={160} />
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, color: "#656C86", fontSize: 11.5, padding: 10 }}>
-                  <Smartphone size={20} />
-                  <span>QR unavailable. Cancel and try again.</span>
-                </div>
+              {view.qrCodeDataUri && (
+                <img
+                  src={view.qrCodeDataUri}
+                  alt="MFA QR Code"
+                  style={{ width: 176, height: 176, borderRadius: 8, border: "1px solid #D8DEF5", background: "#fff", padding: 8 }}
+                />
               )}
 
               {view.secret && (
-                <details style={{ width: "100%", fontSize: 11.5, color: "#656C86" }}>
-                  <summary style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                    <Smartphone size={12} /> Can't scan? Enter setup key manually
-                  </summary>
+                <div style={{ width: "100%", textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "#656C86", textTransform: "uppercase", letterSpacing: ".06em", fontWeight: 700 }}>
+                    Manual secret key
+                  </div>
                   <code style={{
-                    display: "block", marginTop: 8, wordBreak: "break-all", borderRadius: 8,
-                    background: "#fff", border: "1px solid #E6E9F5", padding: 8, fontSize: 11, fontFamily: "monospace",
+                    display: "inline-block", marginTop: 4, padding: "4px 8px", background: "#fff",
+                    border: "1px solid #D8DEF5", borderRadius: 6, fontSize: 12, color: "#4F46E5",
+                    fontFamily: "ui-monospace, Menlo, Monaco, monospace", wordBreak: "break-all",
                   }}>
                     {view.secret}
                   </code>
-                </details>
+                </div>
               )}
             </div>
 
-            <label style={{ display: "block", marginTop: 16, fontSize: 11, fontWeight: 700, color: "#656C86", textTransform: "uppercase", letterSpacing: ".06em" }}>
-              6-digit code
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="000000"
-              style={{
-                width: "100%", marginTop: 6, padding: "11px 13px", borderRadius: 12, border: "1.5px solid #E6E9F5",
-                fontSize: 18, letterSpacing: "0.4em", textAlign: "center", color: "#10142A", boxSizing: "border-box",
-                fontFamily: "monospace",
-              }}
-            />
+            <div style={{ marginTop: 14 }}>
+              <label htmlFor="mfa2-code-input" style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#656C86", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                6-digit verification code
+              </label>
+              <input
+                id="mfa2-code-input"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                autoComplete="one-time-code"
+                autoFocus
+                placeholder="123456"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                style={{
+                  width: "100%", marginTop: 6, boxSizing: "border-box", padding: "10px 14px",
+                  borderRadius: 8, border: "1.5px solid #D8DEF5", fontSize: 18, fontWeight: 700,
+                  letterSpacing: ".25em", textAlign: "center", color: "#10142A", background: "#fff",
+                }}
+              />
+            </div>
 
             {error && (
               <div style={{
                 display: "flex", gap: 8, background: "#FDECEC", color: "#EF4444", fontSize: 12,
-                padding: "10px 12px", borderRadius: 11, marginTop: 12, lineHeight: 1.4, fontWeight: 500,
+                padding: "10px 12px", borderRadius: 8, marginTop: 12, lineHeight: 1.4, fontWeight: 500,
               }}>
                 <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
                 <span>{error}</span>
@@ -279,8 +282,8 @@ export default function MfaSetupScreen({ onClose }) {
                 disabled={busy}
                 className="mfa2-outline-btn"
                 style={{
-                  flex: 1, padding: "12px 14px", borderRadius: 13, border: "1.5px solid #E6E9F5", background: "#fff",
-                  color: "#656C86", fontWeight: 700, fontSize: 13.5, cursor: busy ? "default" : "pointer",
+                  flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid #D8DEF5", background: "#fff",
+                  color: "#656C86", fontWeight: 700, fontSize: 13, cursor: busy ? "default" : "pointer",
                 }}
               >
                 Cancel
@@ -290,10 +293,9 @@ export default function MfaSetupScreen({ onClose }) {
                 disabled={busy || code.length !== 6}
                 className="mfa2-primary-btn"
                 style={{
-                  flex: 1.4, border: "none", cursor: busy || code.length !== 6 ? "default" : "pointer", borderRadius: 8,
-                  fontWeight: 700, fontSize: 13.5, padding: "10px 14px", color: "#fff",
-                  opacity: busy || code.length !== 6 ? 0.6 : 1,
-                  background: "#4F46E5",
+                  flex: 1.4, border: "none", cursor: (busy || code.length !== 6) ? "default" : "pointer",
+                  borderRadius: 8, fontWeight: 700, fontSize: 13.5, padding: "10px 16px", color: "#fff",
+                  background: "#4F46E5", opacity: (busy || code.length !== 6) ? 0.6 : 1,
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 }}
               >
@@ -308,7 +310,7 @@ export default function MfaSetupScreen({ onClose }) {
           <div style={{ marginTop: 14 }}>
             <div style={{
               display: "flex", alignItems: "center", gap: 10, background: "#F0FDF4", border: "1px solid #BBF7D0",
-              borderRadius: 14, padding: 14, marginBottom: 14,
+              borderRadius: 8, padding: 14, marginBottom: 14,
             }}>
               <ShieldCheck size={20} color="#16A34A" style={{ flexShrink: 0 }} />
               <div style={{ fontSize: 12.5, color: "#166534", lineHeight: 1.45 }}>
@@ -320,7 +322,7 @@ export default function MfaSetupScreen({ onClose }) {
             {error && (
               <div style={{
                 display: "flex", gap: 8, background: "#FDECEC", color: "#EF4444", fontSize: 12,
-                padding: "10px 12px", borderRadius: 11, marginBottom: 14, lineHeight: 1.4, fontWeight: 500,
+                padding: "10px 12px", borderRadius: 8, marginBottom: 14, lineHeight: 1.4, fontWeight: 500,
               }}>
                 <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
                 <span>{error}</span>
@@ -333,7 +335,7 @@ export default function MfaSetupScreen({ onClose }) {
               disabled={busy}
               className="mfa2-danger-btn"
               style={{
-                width: "100%", padding: "12px 14px", borderRadius: 13, border: "1.5px solid #FCA5A5", background: "#fff",
+                width: "100%", padding: "12px 14px", borderRadius: 8, border: "1.5px solid #FCA5A5", background: "#fff",
                 color: "#EF4444", fontWeight: 700, fontSize: 13.5, cursor: busy ? "default" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}
@@ -347,7 +349,7 @@ export default function MfaSetupScreen({ onClose }) {
         {error && view.kind === "not_started" && (
           <div style={{
             display: "flex", gap: 8, background: "#FDECEC", color: "#EF4444", fontSize: 12,
-            padding: "10px 12px", borderRadius: 11, marginTop: 14, lineHeight: 1.4, fontWeight: 500,
+            padding: "10px 12px", borderRadius: 8, marginTop: 14, lineHeight: 1.4, fontWeight: 500,
           }}>
             <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} />
             <span>{error}</span>

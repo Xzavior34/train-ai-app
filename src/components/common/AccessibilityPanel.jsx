@@ -96,22 +96,22 @@ export default function AccessibilityPanel({ onClose }) {
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: "100%", maxWidth: 440, background: "#FFFFFF", borderRadius: 20,
+          width: "100%", maxWidth: 440, background: "#FFFFFF", borderRadius: 10,
           boxShadow: "0 20px 60px -15px rgba(16,20,42,.4)", padding: 20,
-          maxHeight: "85vh", overflowY: "auto"
+          maxHeight: "88vh", overflowY: "auto"
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Accessibility size={18} color="#4F46E5" />
-            <div style={{ fontWeight: 800, fontSize: 15.5, color: "#10142A" }}>Accessibility</div>
+            <div style={{ fontWeight: 800, fontSize: 15.5, color: "#10142A" }}>Accessibility options</div>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
             style={{
-              width: 32, height: 32, borderRadius: 10, border: "1px solid #E6E9F5", background: "#FFFFFF",
+              width: 32, height: 32, borderRadius: 8, border: "1px solid #E6E9F5", background: "#FFFFFF",
               display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#656C86"
             }}
           >
@@ -123,10 +123,10 @@ export default function AccessibilityPanel({ onClose }) {
         </p>
 
         <div style={{ marginTop: 18 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, fontWeight: 700, color: "#656C86", textTransform: "uppercase", letterSpacing: ".06em" }}>
-            <Type size={13} /> Font size
+          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, color: "#10142A" }}>
+            <Type size={14} color="#4F46E5" /> Text size
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
             {FONT_SIZES.map(({ key, label }) => {
               const active = prefs.fontSize === key;
               return (
@@ -135,7 +135,7 @@ export default function AccessibilityPanel({ onClose }) {
                   type="button"
                   onClick={() => update({ fontSize: key })}
                   style={{
-                    flex: 1, padding: "9px 10px", borderRadius: 12, fontSize: 12.5, fontWeight: 700,
+                    flex: 1, padding: "9px 10px", borderRadius: 8, fontSize: 12.5, fontWeight: 700,
                     cursor: "pointer", border: active ? "1.5px solid #4F46E5" : "1.5px solid #E6E9F5",
                     background: active ? "#EEF2FF" : "#FFFFFF", color: active ? "#4F46E5" : "#10142A"
                   }}

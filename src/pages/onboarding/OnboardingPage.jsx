@@ -116,10 +116,10 @@ export default function OnboardingPage({ onComplete }) {
 const styles = {
   outer: {
     minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#F8FAFC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: 16,
+    background: "#F8FAFC", fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: 16,
   },
   card: {
-    width: "100%", maxWidth: 420, background: "#FFFFFF", borderRadius: 12, padding: 24,
+    width: "100%", maxWidth: 420, background: "#FFFFFF", borderRadius: 10, padding: 24,
     border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(15,23,42,.04), 0 8px 24px -6px rgba(15,23,42,.06)",
   },
   brandRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 16 },

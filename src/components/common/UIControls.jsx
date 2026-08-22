@@ -66,9 +66,9 @@ export function Switch({ on, onChange }) {
 export function StatCard({ stat }) {
   const Icon = stat.icon;
   return (
-    <div style={{ background: "#fff", border: "1px solid #E6E9F5", borderRadius: 16, padding: 18, boxShadow: "0 1px 2px rgba(16,20,42,.03)" }}>
+    <div style={{ background: "#fff", border: "1px solid #E6E9F5", borderRadius: 10, padding: 18, boxShadow: "0 1px 2px rgba(16,20,42,.03)" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 34, height: 34, borderRadius: 8, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
           {Icon && <Icon size={16} color="#4F46E5" />}
         </div>
         {stat.delta && (

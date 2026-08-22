@@ -100,18 +100,42 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
   }
 
   return (
-    <div className="tai-fade-in">
-      <TopBar
-        title={isCourseMode ? "Course checkout" : "Buy AI Credits"}
-        sub={isCourseMode ? params?.courseTitle : "Pick a package and pay securely"}
-        onBack={back}
-      />
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 680, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+      {/* =========================================================================
+          HERO BANNER: Unified Checkout Header
+          ========================================================================= */}
+      <div style={{
+        borderRadius: 10,
+        background: "#0F172A",
+        color: "#FFFFFF",
+        padding: "clamp(16px, 2.5vw, 22px)",
+        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
+        border: "1px solid #1E293B",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
+              {isCourseMode ? "Course Checkout" : "Buy AI Credits"}
+            </h1>
+            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, lineHeight: 1.45 }}>
+              {isCourseMode ? (params?.courseTitle || "Enrollment Fee") : "Select a credit tier for unlimited AI simulations, code reviews, and mock interviews."}
+            </p>
+          </div>
 
-      <div style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.06)", padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF" }}>{formatAmount(amount, currency)}</div>
+            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>Total Due</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ width: "100%" }}>
 
       {!isCourseMode && (
         <>
-          <div className="tai-scrollx tai-mt16">
+          <div className="tai-scrollx" style={{ paddingBottom: 2 }}>
             {CREDITS_CURRENCIES.map((c) => (
               <div
                 key={c}
@@ -132,6 +156,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
                   className="tai-card tai-card-hover"
                   style={{
                     cursor: "pointer",
+                    borderRadius: 10,
                     borderColor: isSelected ? "var(--primary)" : "var(--border)",
                     background: isSelected ? "var(--surface-2)" : "var(--surface)",
                   }}

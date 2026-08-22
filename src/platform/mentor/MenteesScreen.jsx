@@ -278,8 +278,8 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                   <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 220px" }}>
                     <Avatar initials={selectedMentee.initials} size={42} />
                     <div style={{ minWidth: 0 }}>
-                      <div className="ta-title" style={{ fontSize: 16, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedMentee.name}: Progress Report</div>
-                      <div style={{ fontSize: 12, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div className="ta-title" style={{ fontSize: 16, fontWeight: 700 }}>{selectedMentee.name}: Progress Report</div>
+                      <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
                         {selectedMentee.courses && selectedMentee.courses.length > 0 ? selectedMentee.courses.join(", ") : "Not enrolled in any course"}
                       </div>
                     </div>

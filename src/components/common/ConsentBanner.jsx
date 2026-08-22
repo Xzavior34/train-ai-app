@@ -131,7 +131,7 @@ export default function ConsentBanner({ session }) {
       <div
         style={{
           pointerEvents: "auto", width: "100%", maxWidth: 480, background: "#FFFFFF",
-          border: "1px solid #E6E9F5", borderRadius: 20, boxShadow: "0 20px 50px -15px rgba(16,20,42,.35)",
+          border: "1px solid #E6E9F5", borderRadius: 10, boxShadow: "0 20px 50px -15px rgba(16,20,42,.35)",
           padding: 18
         }}
       >
@@ -152,7 +152,7 @@ export default function ConsentBanner({ session }) {
             {showPrefs && (
               <div style={{
                 marginTop: 12, display: "flex", flexDirection: "column", gap: 10,
-                border: "1px solid #E6E9F5", borderRadius: 12, padding: 12
+                border: "1px solid #E6E9F5", borderRadius: 8, padding: 12
               }}>
                 {ROWS.map((row) => (
                   <div key={row.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>

@@ -144,12 +144,12 @@ export default function MfaChallengeScreen({ onVerified, onSignOut }) {
 const styles = {
   outer: {
     position: "relative", overflow: "hidden", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#F4F6FC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: 20,
+    background: "#F4F6FC", fontFamily: "var(--font-sans, 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)", padding: 20,
   },
   glowTop: { display: "none" },
   glowBottom: { display: "none" },
   card: {
-    position: "relative", width: "100%", maxWidth: 400, background: "#fff", borderRadius: 12, padding: 32,
+    position: "relative", width: "100%", maxWidth: 400, background: "#fff", borderRadius: 10, padding: 32,
     border: "1px solid #E2E8F0", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.06)",
   },
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 },

@@ -71,7 +71,7 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0F172A" }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0F172A", fontFamily: "var(--font-sans, 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)" }}>
       <style>{`
         @keyframes ownerFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         .owner-card { animation: ownerFadeUp .3s ease; }
@@ -84,7 +84,7 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
         .owner-preview-btn:hover { background: #F8FAFC; }
         .owner-preview-btn:active { transform: scale(.98); }
       `}</style>
-      <form onSubmit={handleSignIn} className="owner-card" style={{ maxWidth: 360, width: "100%", padding: 32, background: "#fff", borderRadius: 16, margin: 16 }}>
+      <form onSubmit={handleSignIn} className="owner-card" style={{ maxWidth: 360, width: "100%", padding: 32, background: "#fff", borderRadius: 10, margin: 16 }}>
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#EF4444", textTransform: "uppercase" }}>Train AI Internal</div>
         <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4 }}>Platform Owner Access</div>
         <div style={{ fontSize: 12.5, color: "#656C86", marginTop: 6, marginBottom: 20 }}>

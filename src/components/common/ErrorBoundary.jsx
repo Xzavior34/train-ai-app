@@ -17,7 +17,7 @@ export default class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ minHeight: "100vh", background: "#0F172A", color: "#F8FAFC", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "sans-serif" }}>
+        <div style={{ minHeight: "100vh", background: "#0F172A", color: "#F8FAFC", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 20, fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
           <h2 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 10px", color: "#EF4444" }}>Something went wrong</h2>
           <p style={{ fontSize: 14, color: "#94A3B8", maxWidth: 400, textAlign: "center", margin: "0 0 20px" }}>
             {this.state.error?.message || "An unexpected error occurred while loading the application."}
@@ -27,7 +27,7 @@ export default class ErrorBoundary extends React.Component {
               localStorage.clear();
               window.location.reload();
             }}
-            style={{ padding: "10px 18px", borderRadius: 10, border: "none", background: "#4F46E5", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+            style={{ padding: "10px 18px", borderRadius: 8, border: "none", background: "#4F46E5", color: "#fff", fontWeight: 700, cursor: "pointer" }}
           >
             Reset Session &amp; Reload
           </button>

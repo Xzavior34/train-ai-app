@@ -268,18 +268,12 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
 const styles = {
   outer: {
     position: "relative", overflow: "hidden", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#F4F6FC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", padding: 20,
+    background: "#F8FAFC", fontFamily: "var(--font-sans, 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)", padding: 20,
   },
-  glowTop: {
-    position: "absolute", top: -180, left: "50%", transform: "translateX(-50%)", width: 560, height: 360, borderRadius: "50%",
-    background: "radial-gradient(closest-side, rgba(91,127,255,.22), transparent)", pointerEvents: "none",
-  },
-  glowBottom: {
-    position: "absolute", bottom: -200, right: -120, width: 480, height: 380, borderRadius: "50%",
-    background: "radial-gradient(closest-side, rgba(44,70,214,.14), transparent)", pointerEvents: "none",
-  },
+  glowTop: { display: "none" },
+  glowBottom: { display: "none" },
   card: {
-    position: "relative", width: "100%", maxWidth: 420, background: "#fff", borderRadius: 12, padding: 32,
+    position: "relative", width: "100%", maxWidth: 420, background: "#fff", borderRadius: 10, padding: 32,
     border: "1px solid #E2E8F0", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.06)",
   },
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 },

@@ -108,7 +108,7 @@ function FileUploadZone({
         }}
         style={{
           border: `2px dashed ${dragOver ? "var(--primary)" : "var(--border)"}`,
-          borderRadius: 12,
+          borderRadius: 10,
           padding: "22px 16px",
           textAlign: "center",
           cursor: disabled ? "not-allowed" : "pointer",

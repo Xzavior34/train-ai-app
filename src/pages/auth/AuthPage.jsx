@@ -339,10 +339,10 @@ export default function AuthPage({
 const styles = {
   outer: {
     minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#F8FAFC", fontFamily: "var(--font-sans)", padding: 20,
+    background: "#F8FAFC", fontFamily: "var(--font-sans, 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)", padding: 20,
   },
   card: {
-    width: "100%", maxWidth: 400, background: "#FFFFFF", borderRadius: 12, padding: "32px 28px",
+    width: "100%", maxWidth: 400, background: "#FFFFFF", borderRadius: 10, padding: "32px 28px",
     border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(15,23,42,0.04), 0 6px 18px -3px rgba(15,23,42,0.03)",
   },
   h1: { fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: "#0F172A", letterSpacing: "-0.02em" },
