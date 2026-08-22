@@ -4,20 +4,23 @@ import { Plus } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchPlatformSettings, upsertPlatformSetting } from "../../lib/api/platform.js";
 
-import { Database, Trash2, RefreshCw, CheckCircle2, Sparkles } from "lucide-react";
+import { Database, Trash2, RefreshCw, CheckCircle2, Sparkles, Server } from "lucide-react";
 import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
+import { SUPABASE_PROJECTS } from "../../services/supabaseClient.js";
+
+const PROJECT_LABELS = {
+  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Sara Foundation",
+  [SUPABASE_PROJECTS.DIGITAL_TRAINING]: "Digital Training Org (+ Super Admin)",
+  [SUPABASE_PROJECTS.B2B]: "B2B Organizations",
+};
 
 // Real `platform_settings` table (setting_key unique, setting_value text,
 // setting_type, description, is_public) - see 0004_community_gamification_admin.sql:638
 // and the ps_write_super_admin RLS policy in 0006_rls_policies.sql (super
-// admin only, which is exactly who reaches this screen). Previously this
-// screen only held a local useState checkbox that never read or wrote this
-// table - "Save global settings" just fired a toast. Now every toggle here
-// reads its current value from a real row and Save persists it via
-// upsertPlatformSetting.
+// admin only, which is exactly who reaches this screen).
 const ALLOW_REGISTRATION_KEY = "allow_self_registration";
 
-export function PlatformSettingsScreen() {
+export function PlatformSettingsScreen({ activeProject, projectSessionStatus, onSwitchProject }) {
   const showToast = useContext(ToastContext);
   const settingsQuery = useSupabaseQuery(async () => fetchPlatformSettings(), []);
   const settings = settingsQuery.data || [];
@@ -143,6 +146,46 @@ export function PlatformSettingsScreen() {
                   {mockDataActive ? "DEMO MODE (MOCK ACTIVE)" : "LIVE DATABASE MODE"}
                 </span>
               </div>
+
+              {/* Active Supabase Multi-Project Switcher */}
+              {onSwitchProject && (
+                <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                  <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                      Active Supabase Project
+                    </div>
+                  </div>
+                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                    {Object.values(SUPABASE_PROJECTS).map((key) => {
+                      const status = projectSessionStatus?.[key];
+                      const isActive = key === activeProject;
+                      return (
+                        <button
+                          key={key}
+                          className={isActive ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
+                          style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
+                          onClick={() => !isActive && onSwitchProject(key)}
+                          title={
+                            status === "not_configured" ? "No real project connected yet - demo mode"
+                            : status === "authenticated" ? "You have an active session here"
+                            : "Configured, but you are not signed in here yet"
+                          }
+                        >
+                          {PROJECT_LABELS[key]}
+                          {status === "not_configured" && " (demo)"}
+                          {status === "no_session" && " (not signed in)"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {projectSessionStatus?.[activeProject] === "no_session" && (
+                    <div style={{ fontSize: 11.5, color: "var(--warning, #D97706)", marginTop: 8, lineHeight: 1.4 }}>
+                      This project is configured, but you don't have a session here yet - sign in with an account that has
+                      super_admin access in this specific project to see its real data.
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div style={{ marginTop: 16 }}>
                 <div className="ta-row ta-between" style={{ alignItems: "center" }}>

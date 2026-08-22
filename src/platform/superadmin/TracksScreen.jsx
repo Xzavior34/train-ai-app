@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { TopBar } from "../components/PlatformUI.jsx";
-import { Map, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { TopBar, Tag } from "../components/PlatformUI.jsx";
+import { Map, Users, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchLearningTracksSummary } from "../../lib/api/platform.js";
 
@@ -28,23 +28,46 @@ export function TracksScreen() {
           {tracks.map((t) => {
             const isOpen = expanded === t.id;
             return (
-              <div key={t.id} className="ta-card ta-card-hover" style={{ cursor: "pointer" }} onClick={() => setExpanded(isOpen ? null : t.id)}>
-                <div className="ta-row ta-between" style={{ gap: 8 }}>
-                  <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
-                    <Map size={20} color="var(--primary)" style={{ flexShrink: 0 }} />
-                    <div style={{ fontWeight: 800, fontSize: 16, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</div>
+              <div
+                key={t.id}
+                className="ta-card ta-card-hover"
+                style={{ cursor: "pointer", padding: "18px 20px", borderRadius: 16, border: "1px solid var(--border)" }}
+                onClick={() => setExpanded(isOpen ? null : t.id)}
+              >
+                <div className="ta-row ta-between" style={{ gap: 8, alignItems: "center" }}>
+                  <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Map size={18} color="var(--primary)" />
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 800, fontSize: 15.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--text)" }}>
+                        {t.name}
+                      </div>
+                      <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, fontWeight: 500 }}>
+                        {t.courses || 0} associated course{t.courses === 1 ? "" : "s"}
+                      </div>
+                    </div>
                   </div>
-                  {isOpen ? <ChevronUp size={16} color="var(--text-2)" style={{ flexShrink: 0 }} /> : <ChevronDown size={16} color="var(--text-2)" style={{ flexShrink: 0 }} />}
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {isOpen ? <ChevronUp size={15} color="var(--text-2)" /> : <ChevronDown size={15} color="var(--text-2)" />}
+                  </div>
                 </div>
-                <div className="ta-body ta-mt8">{t.courses || 0} associated course{t.courses === 1 ? "" : "s"}</div>
-                <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>
-                  <Users size={13} /> {t.learners || 0} enrollment{t.learners === 1 ? "" : "s"}
+
+                <div className="ta-row ta-between ta-mt14" style={{ alignItems: "center" }}>
+                  <span className="ta-row ta-gap6" style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600 }}>
+                    <Users size={13} color="var(--primary)" /> {t.learners || 0} enrollment{t.learners === 1 ? "" : "s"}
+                  </span>
+                  <Tag tone="primary">{t.courses || 0} Courses</Tag>
                 </div>
+
                 {isOpen && (
-                  <div className="ta-col ta-gap6 ta-mt12 anim-slide-down" style={{ borderTop: "1px solid var(--border)", paddingTop: 10 }}>
-                    {(t.courseTitles || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-2)" }}>No course titles available.</div>}
+                  <div className="ta-col ta-gap8 ta-mt14 anim-slide-down" style={{ borderTop: "1px solid var(--border)", paddingTop: 12 }}>
+                    {(t.courseTitles || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No course titles available.</div>}
                     {(t.courseTitles || []).map((title, i) => (
-                      <div key={i} style={{ fontSize: 12.5 }}>• {title}</div>
+                      <div key={i} className="ta-row ta-gap8" style={{ fontSize: 12.5, color: "var(--text)" }}>
+                        <BookOpen size={12} color="var(--primary)" style={{ flexShrink: 0 }} />
+                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>
+                      </div>
                     ))}
                   </div>
                 )}

@@ -64,8 +64,8 @@ export const TOKENS = `
     --danger-bg: #FEF2F2;
     --danger-border: #FECACA;
     --sidebar-w: 260px;
-    --radius: 18px;
-    --radius-sm: 12px;
+    --radius: 16px;
+    --radius-sm: 10px;
     --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
     --shadow-hover: 0 8px 24px -4px rgba(79, 70, 229, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
     --shadow-btn: 0 4px 14px -2px rgba(79, 70, 229, 0.32);
@@ -84,8 +84,8 @@ export const TOKENS = `
     --text: #F8FAFC;
     --text-2: #94A3B8;
     --text-3: #64748B;
-    --border: rgba(255, 255, 255, 0.1);
-    --border-subtle: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(255, 255, 255, 0.05);
     --success-bg: rgba(16, 185, 129, 0.18);
     --success-border: rgba(16, 185, 129, 0.35);
     --warning-bg: rgba(245, 158, 11, 0.18);
@@ -376,30 +376,29 @@ export const TOKENS = `
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 22px;
-    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
-    transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow .24s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color .24s ease,
-                background .2s ease;
+    padding: clamp(16px, 2.5vw, 22px);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
+    transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow .22s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color .2s ease;
   }
   .ta.dark .ta-card, html.dark .ta-card, html.dark .ta .ta-card {
     background: var(--surface) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.05) !important;
   }
   .ta-card-hover {
     cursor: pointer;
   }
   .ta-card-hover:hover {
-    box-shadow: 0 16px 36px -6px rgba(79, 70, 229, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    box-shadow: 0 12px 28px -4px rgba(79, 70, 229, 0.12);
     border-color: rgba(99, 102, 241, 0.35);
-    transform: translateY(-3px) scale(1.006);
+    transform: translateY(-2px);
   }
   .ta.dark .ta-card-hover:hover, html.dark .ta .ta-card-hover:hover {
-    box-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 14px 32px -4px rgba(0, 0, 0, 0.6), 0 0 16px -2px rgba(99, 102, 241, 0.2) !important;
     border-color: rgba(129, 140, 248, 0.35) !important;
-    transform: translateY(-3px) scale(1.006);
+    transform: translateY(-2px);
   }
   .ta-grid { display: grid; gap: 20px; }
   .ta-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }

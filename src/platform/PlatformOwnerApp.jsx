@@ -149,11 +149,6 @@ export default function PlatformOwnerApp({ onSwitchDashboard, userRoles: userRol
               />
 
               <div className="ta-main">
-                <ProjectSwitcherBanner
-                  activeProject={activeProject}
-                  projectSessionStatus={projectSessionStatus}
-                  onSwitch={(key) => { setActiveSupabaseProject(key); setSuperAdminSelectedOrgId(""); window.location.reload(); }}
-                />
                 {screen === "overview" && <OverviewScreen orgSelector={orgSelector} />}
                 {screen === "orgs" && (
                   <OrganizationsScreen
@@ -172,7 +167,14 @@ export default function PlatformOwnerApp({ onSwitchDashboard, userRoles: userRol
                   />
                 )}
                 {screen === "branding" && <BrandingScreen orgSelector={orgSelector} />}
-                {screen === "settings" && <PlatformSettingsScreen orgSelector={orgSelector} />}
+                {screen === "settings" && (
+                  <PlatformSettingsScreen
+                    orgSelector={orgSelector}
+                    activeProject={activeProject}
+                    projectSessionStatus={projectSessionStatus}
+                    onSwitchProject={(key) => { setActiveSupabaseProject(key); setSuperAdminSelectedOrgId(""); window.location.reload(); }}
+                  />
+                )}
                 {screen === "tracks" && <TracksScreen orgSelector={orgSelector} />}
                 {screen === "emails" && <EmailsScreen orgSelector={orgSelector} />}
                 {screen === "support" && <SupportQueueScreen currentUserId={session?.user?.id} />}
