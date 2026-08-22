@@ -68,19 +68,23 @@ export function BrandingScreen() {
           
           <div className="ta-mt16">
             <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Select Tenant Organization</label>
-            <div className="ta-row ta-gap10">
-              <Building2 size={18} color="var(--primary)" />
-              <select
-                className="ta-input"
-                style={{ flex: 1 }}
-                value={selectedOrgId}
-                onChange={(e) => setSelectedOrgId(e.target.value)}
-              >
-                {orgs.map((o) => (
-                  <option key={o.id} value={o.id}>{o.name}</option>
-                ))}
-              </select>
-            </div>
+            {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
+            {!orgsQuery.loading && orgs.length === 0 && <div className="ta-empty">No organizations created yet.</div>}
+            {orgs.length > 0 && (
+              <div className="ta-row ta-gap10">
+                <Building2 size={18} color="var(--primary)" />
+                <select
+                  className="ta-input"
+                  style={{ flex: 1 }}
+                  value={selectedOrgId}
+                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                >
+                  {orgs.map((o) => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="ta-mt20">

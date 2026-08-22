@@ -62,15 +62,15 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
           <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Active Study Groups</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
-              {groups.length || 12}
+              {groups.length}
             </div>
-            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4, fontWeight: 600 }}>+3 created this week</div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4, fontWeight: 600 }}>In your organization</div>
           </div>
 
           <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Peer Learners</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
-              {groups.reduce((sum, g) => sum + (g.study_group_members?.[0]?.count ?? 6), 0) || 84}
+              {groups.reduce((sum, g) => sum + (g.study_group_members?.[0]?.count ?? 0), 0)}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4, fontWeight: 600 }}>Collaborative pods</div>
           </div>
@@ -78,7 +78,7 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
           <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Courses Supported</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
-              {new Set(groups.map(g => g.course_id).filter(Boolean)).size || 8}
+              {new Set(groups.map(g => g.course_id).filter(Boolean)).size}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4, fontWeight: 600 }}>Active syllabi linked</div>
           </div>
@@ -86,7 +86,7 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
           <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Avg Pod Size</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
-              {groups.length ? Math.round(groups.reduce((sum, g) => sum + (g.study_group_members?.[0]?.count ?? 6), 0) / groups.length) : 7} members
+              {groups.length ? Math.round(groups.reduce((sum, g) => sum + (g.study_group_members?.[0]?.count ?? 0), 0) / groups.length) : 0} members
             </div>
             <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4, fontWeight: 600 }}>Optimal peer capacity</div>
           </div>

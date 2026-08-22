@@ -2,10 +2,10 @@ import React, { useState, useContext } from "react";
 import { TopBar, StatCard, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { 
-  Users, Layers, CheckCircle2, Calendar, Radio, Star, 
-  Sparkles, ArrowRight, Video, Clock, AlertTriangle, 
+  Users, Layers, CheckCircle2, Calendar, Radio, Star,
+  Sparkles, ArrowRight, Video, Clock, AlertTriangle,
   CheckSquare, Square, MessageSquare, ExternalLink, Plus,
-  TrendingUp, BookOpen, Brain
+  TrendingUp, BookOpen, Brain, DollarSign
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHelper.js";
@@ -26,10 +26,20 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
   const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
   const activeCohortsQuery = useSupabaseQuery(async () => currentUserId ? fetchMentorActiveCohorts(currentUserId) : [], [currentUserId]);
+  const earningsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorEarnings(mentorId) : [], [mentorId]);
   const mentorSessions = sessionsQuery.data || [];
   const activeCohorts = activeCohortsQuery.data || [];
   const activeLearnerCount = new Set(mentorSessions.map((s) => s.learner_id).filter(Boolean)).size;
   const cohortsEndingSoonCount = activeCohorts.filter((c) => c.ends_at && new Date(c.ends_at).getTime() - Date.now() < 14 * 86400000).length;
+  // fetchMentorEarnings returns raw mentor_earnings rows, not a pre-aggregated
+  // {total, pending} object - sum them here (restored from the earlier
+  // reference dashboard, which computed real rating/earnings stats).
+  const ratedSessions = mentorSessions.filter((s) => typeof s.rating === "number");
+  const avgRating = ratedSessions.length
+    ? (ratedSessions.reduce((sum, s) => sum + s.rating, 0) / ratedSessions.length).toFixed(1)
+    : null;
+  const earningsRows = earningsQuery.data || [];
+  const totalEarnings = earningsRows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
   const toggleTask = (id) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
@@ -232,6 +242,32 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>89%</div>
             <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--success)" }}>
               <span>+4% vs last batch</span>
+            </div>
+          </div>
+
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+            <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Instructor Rating</span>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Star size={18} />
+              </div>
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{sessionsQuery.loading ? "…" : (avgRating ?? "N/A")}</div>
+            <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>
+              <span>Across rated sessions</span>
+            </div>
+          </div>
+
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+            <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Total Earnings</span>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <DollarSign size={18} />
+              </div>
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{earningsQuery.loading ? "…" : `$${totalEarnings.toFixed(2)}`}</div>
+            <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>
+              <span>Lifetime instructor earnings</span>
             </div>
           </div>
         </div>

@@ -293,7 +293,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                             >
                               <Award size={13} />
                             </button>
-                            <button 
+                            <button
                               className="ta-btn ta-btn-outline ta-btn-sm"
                               onClick={async () => {
                                 await updateOrgMemberStatus(m.id, orgId, m.status === "active" ? "suspended" : "active");
@@ -302,6 +302,20 @@ export function PeopleScreen({ orgId, orgSelector, setScreen }) {
                               }}
                             >
                               {m.status === "active" ? "Suspend" : "Activate"}
+                            </button>
+                            <button
+                              className="ta-btn ta-btn-outline ta-btn-sm"
+                              title="Download this user's data as JSON"
+                              onClick={async () => {
+                                try {
+                                  await downloadUserDataExport(m.id, m.display_name || m.id);
+                                  showToast(`Data export downloaded for ${m.display_name || "user"}`);
+                                } catch (e) {
+                                  showToast(e?.message || "Could not export this user's data");
+                                }
+                              }}
+                            >
+                              <Download size={13} />
                             </button>
                           </div>
                         </td>

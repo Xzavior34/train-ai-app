@@ -1217,10 +1217,14 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 <div className="ta-row ta-gap8 ta-mt12">
                   <button className="ta-btn ta-btn-primary" onClick={async () => {
                     if (!newTitle.trim()) return;
-                    await createCourse({ organizationId: orgId, title: newTitle.trim(), category: newCategory.trim(), status: "published", coverImageUrl: newCoverImageUrl || undefined }, currentUserId);
-                    setNewCourseOpen(false); setNewTitle(""); setNewCoverImageUrl("");
-                    coursesQuery.refetch();
-                    showToast("Course created successfully!");
+                    try {
+                      await createCourse({ organizationId: orgId, title: newTitle.trim(), category: newCategory.trim(), status: "published", coverImageUrl: newCoverImageUrl || undefined }, currentUserId);
+                      setNewCourseOpen(false); setNewTitle(""); setNewCoverImageUrl("");
+                      coursesQuery.refetch();
+                      showToast("Course created successfully!");
+                    } catch (err) {
+                      showToast("Failed to create course: " + (err?.message || "Unknown error"));
+                    }
                   }}>Save & Publish Course</button>
                   <button className="ta-btn ta-btn-outline" onClick={() => setNewCourseOpen(false)}>Cancel</button>
                 </div>

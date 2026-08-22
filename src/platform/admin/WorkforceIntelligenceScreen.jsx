@@ -55,6 +55,12 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
       />
       
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {wiQuery.loading && <div className="ta-card ta-empty">Loading workforce intelligence...</div>}
+        {!wiQuery.loading && (!wi || wi.learnerCount === 0) && (
+          <div className="ta-card ta-empty">No learners in this organization yet - readiness and skill data will appear once there's real activity to summarize.</div>
+        )}
+        {!wiQuery.loading && wi && wi.learnerCount > 0 && (
+        <>
         {/* =========================================================================
             WORKFORCE INTELLIGENCE HERO BANNER
             ========================================================================= */}
@@ -101,8 +107,8 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
               <Brain size={18} color="#4F46E5" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi?.readinessScore ?? 84}%</div>
-            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>+6% vs last quarter</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.readinessScore}%</div>
+            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>&nbsp;</div>
           </div>
 
           <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
@@ -110,7 +116,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Avg Course Completion</span>
               <ClipboardCheck size={18} color="#10B981" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi?.avgCompletion ?? 78}%</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.avgCompletion}%</div>
             <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Across all active tracks</div>
           </div>
 
@@ -119,7 +125,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Compliance Rate</span>
               <ShieldCheck size={18} color="#F59E0B" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi?.complianceRate ?? 92}%</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.complianceRate === null ? "N/A" : `${wi.complianceRate}%`}</div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Audit ready</div>
           </div>
 
@@ -128,7 +134,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>AI Coach Queries (7d)</span>
               <Bot size={18} color="#8B5CF6" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi?.aiUsageCount7d ?? 482}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.aiUsageCount7d}</div>
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4 }}>Active learning adoption</div>
           </div>
         </div>
@@ -323,6 +329,43 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
           </div>
 
         </div>
+
+        <div className="ta-card">
+          <div className="ta-row ta-gap8"><Sparkles size={16} color="var(--primary)" /><div className="ta-title">Skill gaps by department</div></div>
+          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+            Real course-category completion, broken down by department - the lowest scores are the closest thing this data supports to "where the gaps are."
+          </div>
+          <div className="ta-col ta-gap10 ta-mt12">
+            {wi.departmentBreakdown.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No department data yet.</div>}
+            {wi.departmentBreakdown.map((d) => (
+              <div key={d.department}>
+                <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                  <span style={{ fontWeight: 600 }}>{d.department}</span>
+                  <span>{d.avgProgress}% avg ({d.count} enrollments)</span>
+                </div>
+                <ProgressBar value={d.avgProgress} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ta-card">
+          <div className="ta-row ta-gap8"><ClipboardCheck size={16} color="var(--primary)" /><div className="ta-title">Completion by course category</div></div>
+          <div className="ta-col ta-gap10 ta-mt12">
+            {wi.categoryBreakdown.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No course activity yet.</div>}
+            {wi.categoryBreakdown.map((c) => (
+              <div key={c.category}>
+                <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                  <span style={{ fontWeight: 600 }}>{c.category}</span>
+                  <span>{c.avgProgress}% avg ({c.count} enrollments)</span>
+                </div>
+                <ProgressBar value={c.avgProgress} />
+              </div>
+            ))}
+          </div>
+        </div>
+        </>
+        )}
 
       </div>
     </div>

@@ -65,7 +65,7 @@ export function ProfileScreen({
     if (!userId) return;
     fetchUserDSARRequests(userId).then((rows) => {
       if (!cancelled) setDsarRequests(rows);
-    });
+    }).catch(() => {});
     return () => { cancelled = true; };
   }, [userId]);
 
@@ -74,15 +74,26 @@ export function ProfileScreen({
     if (!userId) return;
     fetchNotificationPreferences(userId).then((prefs) => {
       if (!cancelled) setNotifPrefs(prefs || { email_enabled: true, push_enabled: true, in_app_enabled: true });
-    });
+    }).catch(() => {});
     return () => { cancelled = true; };
   }, [userId]);
 
   async function handleToggleNotifPref(field) {
+    const prev = notifPrefs;
     const next = { ...notifPrefs, [field]: !notifPrefs[field] };
     setNotifPrefs(next);
-    await upsertNotificationPreferences(userId, next);
-    notify("Notification preferences updated.");
+    try {
+      const result = await upsertNotificationPreferences(userId, next);
+      if (result && result.success === false) {
+        setNotifPrefs(prev);
+        notify(result.error || "Could not update notification preferences.");
+      } else {
+        notify("Notification preferences updated.");
+      }
+    } catch (e) {
+      setNotifPrefs(prev);
+      notify(e?.message || "Could not update notification preferences.");
+    }
   }
 
   const pendingErasureRequest = dsarRequests.find((r) => r.request_type === "erasure" && r.status === "pending");
@@ -700,6 +711,7 @@ export function ProfileScreen({
                     if (!result.success) notify(result.error);
                     else {
                       setFeedbackText("");
+                      setFeedbackRating(5);
                       notify("Thank you! Your feedback has been delivered.");
                     }
                   } finally {

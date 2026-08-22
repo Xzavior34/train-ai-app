@@ -136,7 +136,14 @@ export async function fetchOrgMembers(organizationId) {
 }
 
 export async function fetchUsersInOrg(organizationId) {
-  if (!supabase || !organizationId) return [];
+  if (!supabase) {
+    return [
+      ...DEMO_LEARNERS.map((l) => ({ id: l.id, name: l.name, initials: l.initials })),
+      ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, name: i.name, initials: i.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() })),
+      { id: "demo-manager-id", name: "Demo Manager", initials: "DM" },
+    ];
+  }
+  if (!organizationId) return [];
   const { data, error } = await supabase
     .from("user_profiles")
     .select("id, display_name")
@@ -2362,7 +2369,7 @@ export async function createAgreementForMentee(mentorId, learnerName, agreementT
   if (!learner) throw new Error(`No learner found named "${learnerName}"`);
   const { data, error } = await supabase
     .from("mentorship_agreements")
-    .insert({ mentor_id: mentorId, learner_id: learner.user_id, agreement_type: agreementType, status: "pending learner signature" })
+    .insert({ mentor_id: mentorId, learner_id: learner.id, agreement_type: agreementType, status: "pending learner signature" })
     .select()
     .single();
   if (error) throw error;

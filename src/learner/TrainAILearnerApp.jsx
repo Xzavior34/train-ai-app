@@ -86,6 +86,14 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     setToast(message);
     toastTimerRef.current = setTimeout(() => setToast(null), 2200);
   }
+  // Pending toast timeout was never cleared on unmount, so a toast fired
+  // shortly before navigating away/unmounting would call setToast() on an
+  // unmounted component.
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   async function handleSignOut() {
     try {

@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
-import { Plus, Users, Layers, BookOpen, GraduationCap, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Building2, Brain } from "lucide-react";
+import { Plus, Users, Layers, BookOpen, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Brain } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
@@ -466,6 +466,32 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                       </div>
                     </div>
                     <Tag tone="success"><Star size={11} /> {typeof m.rating === "number" ? m.rating.toFixed(1) : m.rating}</Tag>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Upcoming Sessions */}
+            <div className="ta-card">
+              <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
+                <div>
+                  <div className="ta-title">Upcoming sessions</div>
+                  <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Live &amp; confirmed instructor sessions</div>
+                </div>
+                <CalendarClock size={16} color="var(--text-3)" />
+              </div>
+              <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
+                {sessionsQuery.loading && <div className="ta-empty">Loading...</div>}
+                {!sessionsQuery.loading && (sessionsQuery.data || []).length === 0 && (
+                  <div className="ta-empty">No upcoming sessions scheduled.</div>
+                )}
+                {(sessionsQuery.data || []).map((s, i) => (
+                  <div key={i} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{s.title}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)" }}>{s.mentor} • {s.time}</div>
+                    </div>
+                    <Tag tone={s.status === "live" ? "danger" : undefined}>{s.status}</Tag>
                   </div>
                 ))}
               </div>

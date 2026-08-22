@@ -582,14 +582,22 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           </h3>
 
           <div className="tai-col tai-gap8">
-            {[
-              { date: "Today, Aug 21", action: "Completed 2 lessons in Full-Stack AI", xp: "+120 XP" },
-              { date: "Yesterday, Aug 20", action: "Scored 100% on Spatial UI Quiz", xp: "+150 XP" },
-              { date: "Aug 19, 2026", action: "Earned 3-Day Streak Runner badge", xp: "+100 XP" },
-              { date: "Aug 18, 2026", action: "Attended Studio Masterclass with Dr. Vance", xp: "+80 XP" },
-              { date: "Aug 17, 2026", action: "Participated in Cohort Study Group", xp: "+50 XP" },
-            ].map((row, idx) => (
-              <div key={idx} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+            {(streakActivity.length > 0
+              ? streakActivity.map((row, idx) => ({
+                  key: row.id || idx,
+                  date: formatDate(row.activity_date) || "N/A",
+                  action: `${row.lessons_completed || 0} lesson${row.lessons_completed === 1 ? "" : "s"} completed`,
+                  xp: `+${row.points_earned || 0} XP`,
+                }))
+              : [
+                  { key: 0, date: "Today, Aug 21", action: "Completed 2 lessons in Full-Stack AI", xp: "+120 XP" },
+                  { key: 1, date: "Yesterday, Aug 20", action: "Scored 100% on Spatial UI Quiz", xp: "+150 XP" },
+                  { key: 2, date: "Aug 19, 2026", action: "Earned 3-Day Streak Runner badge", xp: "+100 XP" },
+                  { key: 3, date: "Aug 18, 2026", action: "Attended Studio Masterclass with Dr. Vance", xp: "+80 XP" },
+                  { key: 4, date: "Aug 17, 2026", action: "Participated in Cohort Study Group", xp: "+50 XP" },
+                ]
+            ).map((row) => (
+              <div key={row.key} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
                 <div>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>{row.action}</div>
                   <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>{row.date}</div>

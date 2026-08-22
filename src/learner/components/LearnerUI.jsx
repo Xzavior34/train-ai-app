@@ -3,7 +3,7 @@ import {
   Home, BookOpen, Zap, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
   Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Sparkles, Flame, MessageSquare, Calendar,
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
-  PanelLeftClose, PanelLeftOpen
+  PanelLeftClose, PanelLeftOpen, Video
 } from "lucide-react";
 
 // Lets any screen's shared TopBar show a real unread-notifications bell

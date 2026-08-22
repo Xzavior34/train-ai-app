@@ -1,62 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { TopBar } from "../components/LearnerUI.jsx";
 import {
   Bell, BookOpen, Video, Trophy, Sparkles, CheckCheck, Trash2,
   Search, ArrowRight, MessageSquare, ShieldAlert, Check, X, Filter
 } from "lucide-react";
-
-const DEFAULT_NOTIFICATIONS = [
-  {
-    id: "notif-1",
-    title: "Live Critique Session in 15 Minutes",
-    message: "UI Critique & System Architecture Review with Astrid Larsson is about to start. Click to join the live studio stream.",
-    type: "live",
-    time: "15 min ago",
-    read: false,
-    actionUrl: "cohort",
-    actionLabel: "Join Live Stream"
-  },
-  {
-    id: "notif-2",
-    title: "New Assignment Assigned: Design Tokens",
-    message: "Your instructor posted Module 4 deliverables in 'Master Design Systems in Figma'. Due in 3 days.",
-    type: "assignment",
-    time: "2 hours ago",
-    read: false,
-    actionUrl: "courses",
-    actionLabel: "Open Assignment"
-  },
-  {
-    id: "notif-3",
-    title: "Quiz Completed: +50 XP Awarded",
-    message: "You scored 100% on the Prompt Engineering quiz! You're now ranked in the Top 3 of your weekly cohort.",
-    type: "achievement",
-    time: "Yesterday",
-    read: true,
-    actionUrl: "achievements",
-    actionLabel: "View Leaderboard"
-  },
-  {
-    id: "notif-4",
-    title: "Mentor Feedback Received",
-    message: "David Kim left detailed comments on your Capstone Project wireframes.",
-    type: "mentor",
-    time: "Yesterday",
-    read: true,
-    actionUrl: "mentors",
-    actionLabel: "Read Feedback"
-  },
-  {
-    id: "notif-5",
-    title: "Weekly Learning Summary Ready",
-    message: "Your weekly study streak report and personalized skill recommendations are ready in your AI tab.",
-    type: "ai",
-    time: "2 days ago",
-    read: true,
-    actionUrl: "ai-quiz",
-    actionLabel: "Explore Recommendations"
-  }
-];
 
 export function NotificationsScreen({
   notifications = [],
@@ -67,9 +14,16 @@ export function NotificationsScreen({
 }) {
   const [filterTab, setFilterTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [localNotifs, setLocalNotifs] = useState(DEFAULT_NOTIFICATIONS);
+  const [localNotifs, setLocalNotifs] = useState(notifications);
 
-  const baseNotifs = (notifications && notifications.length > 0) ? notifications : localNotifs;
+  // Keep the local read/delete overlay in sync with the real notifications
+  // feed as it loads/updates, instead of ever falling back to fabricated
+  // placeholder data.
+  useEffect(() => {
+    setLocalNotifs(notifications);
+  }, [notifications]);
+
+  const baseNotifs = localNotifs;
 
   const unreadCount = useMemo(() => baseNotifs.filter(n => !n.read).length, [baseNotifs]);
 

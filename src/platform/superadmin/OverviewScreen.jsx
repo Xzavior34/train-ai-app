@@ -42,6 +42,8 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
   const activityQuery = useSupabaseQuery(async () => fetchRecentPlatformActivity(8), []);
   const aiUsageQuery = useSupabaseQuery(async () => fetchAIUsageStats(), []);
   const websiteStatsQuery = useSupabaseQuery(async () => fetchWebsitePerformanceStats(), []);
+  const churnQuery = useSupabaseQuery(async () => fetchChurnSummary(), []);
+  const campaignQuery = useSupabaseQuery(async () => fetchCampaignAttribution(), []);
   const healthQuery = useSupabaseQuery(async () => checkPlatformHealth(), []);
 
   const aiUsage = aiUsageQuery.data;
@@ -354,7 +356,8 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               </thead>
               <tbody>
                 {orgsQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading organizations...</td></tr>}
-                {!orgsQuery.loading && orgs.length === 0 && (
+                {orgsQuery.error && <tr><td colSpan={4} className="ta-empty">Couldn't load organizations: {orgsQuery.error}</td></tr>}
+                {!orgsQuery.loading && !orgsQuery.error && orgs.length === 0 && (
                   <tr><td colSpan={4} className="ta-empty">No organizations registered yet.</td></tr>
                 )}
                 {orgs.map((o) => (
@@ -401,6 +404,9 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           </div>
 
           <div className="ta-col ta-gap12 anim-stagger" style={{ marginTop: 14 }}>
+            {activityQuery.error && (
+              <div className="ta-empty">Couldn't load recent activity: {activityQuery.error}</div>
+            )}
             {(activity.length > 0 ? activity : [
               { text: "Sara Foundation provisioned 45 new learner seats for AI Sprint", time: "3m ago" },
               { text: "Digital Training Org published module 'Spatial UI & VisionOS Tokens'", time: "14m ago" },
@@ -418,6 +424,63 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700, flexShrink: 0, marginLeft: 10 }}>
                   {a.time}
                 </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          LIVE DATABASE HEALTH, CHURN & CAMPAIGN ATTRIBUTION (real data)
+          ========================================================================= */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
+
+        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
+          <div className="ta-row ta-gap8" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+            <Activity size={16} color={healthQuery.data?.ok ? "var(--success)" : "var(--danger)"} />
+            <div className="ta-title" style={{ fontSize: 16 }}>Platform Health</div>
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 10 }}>
+            A real, live check against this database, run when this page loads - not a fabricated uptime percentage.
+          </div>
+          <div className="ta-row ta-gap10" style={{ marginTop: 14, flexWrap: "wrap" }}>
+            <Tag tone={healthQuery.data?.ok ? "success" : "danger"}>{healthQuery.loading ? "Checking..." : healthQuery.data?.ok ? "Database reachable" : "Database unreachable"}</Tag>
+            {healthQuery.data?.latencyMs != null && <span style={{ fontSize: 12, color: "var(--text-2)" }}>{healthQuery.data.latencyMs}ms round trip</span>}
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 8 }}>
+            Last checked: {healthQuery.data?.checkedAt ? new Date(healthQuery.data.checkedAt).toLocaleTimeString() : "-"}
+          </div>
+        </div>
+
+        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
+          <div className="ta-row ta-gap8" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+            <TrendingDown size={16} color="var(--danger)" />
+            <div className="ta-title" style={{ fontSize: 16 }}>Churn</div>
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 10 }}>
+            Built from the real organization suspension history (admin_audit_log).
+          </div>
+          <div className="ta-row ta-gap16" style={{ marginTop: 14 }}>
+            <div><div style={{ fontSize: 22, fontWeight: 800 }}>{churnQuery.data?.suspendedLast30d ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Suspended, last 30d</div></div>
+            <div><div style={{ fontSize: 22, fontWeight: 800 }}>{churnQuery.data?.suspendedLast90d ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Suspended, last 90d</div></div>
+            <div><div style={{ fontSize: 22, fontWeight: 800 }}>{churnQuery.data?.totalActive ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-2)" }}>Currently active</div></div>
+          </div>
+        </div>
+
+        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
+          <div className="ta-row ta-gap8" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+            <Megaphone size={16} color="var(--primary)" />
+            <div className="ta-title" style={{ fontSize: 16 }}>Campaign Attribution</div>
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 10 }}>
+            Demo requests and organisation inquiries, grouped by the real utm_campaign/utm_source captured at signup.
+          </div>
+          <div className="ta-col ta-gap6" style={{ marginTop: 14 }}>
+            {(campaignQuery.data || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No campaign-tagged leads yet.</div>}
+            {(campaignQuery.data || []).slice(0, 5).map((c) => (
+              <div key={c.campaign} className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                <span>{c.campaign}</span>
+                <span style={{ fontWeight: 700 }}>{c.count}</span>
               </div>
             ))}
           </div>

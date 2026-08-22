@@ -61,6 +61,7 @@ body {
   box-sizing: border-box;
   overflow-x: clip;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none; /* stop the whole page rubber-banding/pull-to-refresh in the wrapped app */
 }
 
 #root {
