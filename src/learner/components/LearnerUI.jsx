@@ -601,27 +601,29 @@ export function LearnerHeader({
 
   return (
     <header className="tai-global-header">
-      <div className="tai-header-left">
-        <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+      <div className="tai-header-left" style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+        <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}>
           <img
             src={brandLogoUrl || defaultLogo}
             alt="Train AI"
             className="tai-header-logo"
-            style={{ height: 22, width: "auto", maxWidth: 100, objectFit: "contain", display: "block" }}
+            style={{ height: 24, width: "auto", minWidth: 70, objectFit: "contain", display: "block", flexShrink: 0 }}
           />
         </div>
-        {searchComponent}
+        <div className="tai-desktop-only">
+          {searchComponent}
+        </div>
       </div>
 
-      <div className="tai-header-right">
+      <div className="tai-header-right" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
         {/* Streak Pill */}
         <div className="tai-streak-pill" onClick={() => go?.("achievements")} title="Active Streak">
           <Flame size={14} color="#EA580C" />
-          <span>{user?.streak || 8} <span className="tai-pill-unit">days</span></span>
+          <span>{user?.streak || 8} <span className="tai-pill-unit tai-desktop-only">days</span></span>
         </div>
 
-        {/* AI Credits Pill */}
-        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
+        {/* AI Credits Pill (Desktop only to prevent mobile crowding) */}
+        <div className="tai-credits-pill tai-desktop-only" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
           <Sparkles size={13} color="#4F46E5" />
           <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
         </div>
@@ -642,13 +644,13 @@ export function LearnerHeader({
             aria-label="Notifications"
             style={{ position: "relative" }}
           >
-            <Bell size={17} />
+            <Bell size={16} />
             {unreadNotifs > 0 && (
               <span style={{
-                position: "absolute", top: 5, right: 5, minWidth: 15, height: 15,
+                position: "absolute", top: 4, right: 4, minWidth: 14, height: 14,
                 borderRadius: 99, background: "var(--danger)", color: "#fff",
-                fontSize: 9.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center",
-                padding: "0 3px", border: "2px solid #fff"
+                fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "0 2px", border: "1.5px solid #fff"
               }}>
                 {unreadNotifs}
               </span>
@@ -664,15 +666,15 @@ export function LearnerHeader({
         >
           <Avatar
             initials={initialsOf(user?.name || user?.email || "Learner")}
-            size={34}
+            size={32}
             src={user?.avatarUrl}
           />
         </div>
 
-        {/* Sign Out Button */}
+        {/* Sign Out Button (Desktop only) */}
         {onSignOut && (
           <button
-            className="tai-iconbtn"
+            className="tai-iconbtn tai-desktop-only"
             onClick={onSignOut}
             title="Sign out"
             style={{ color: "var(--danger)" }}

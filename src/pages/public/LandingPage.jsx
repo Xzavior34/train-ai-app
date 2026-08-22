@@ -126,7 +126,6 @@ export default function LandingPage({ onNavigate }) {
     if (ref) trackReferralClickIfPresent(ref);
   }, []);
 
-  const [activeShowcaseTab, setActiveShowcaseTab] = useState("intelligence");
   const [mobileLearnerTab, setMobileLearnerTab] = useState("home"); // "home" | "ai" | "courses" | "community"
   const [demoName, setDemoName] = useState("");
   const [demoEmail, setDemoEmail] = useState("");
@@ -218,8 +217,8 @@ export default function LandingPage({ onNavigate }) {
           transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .22s ease, border-color .22s ease;
         }
         .lp-card-hover:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.08);
+          transform: translateY(-3px);
+          box-shadow: 0 14px 28px -6px rgba(15, 23, 42, 0.08);
           border-color: #CBD5E1 !important;
         }
 
@@ -227,8 +226,8 @@ export default function LandingPage({ onNavigate }) {
           transition: all .22s ease;
         }
         .lp-step-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 18px 36px -8px rgba(79, 70, 229, 0.12);
+          transform: translateY(-3px);
+          box-shadow: 0 16px 32px -6px rgba(79, 70, 229, 0.12);
           border-color: #C7D2FE !important;
         }
 
@@ -284,7 +283,7 @@ export default function LandingPage({ onNavigate }) {
         .lp-footer-link {
           color: #94A3B8;
           text-decoration: none;
-          font-size: 13.5px;
+          font-size: 13px;
           transition: color .15s ease;
           cursor: pointer;
         }
@@ -293,8 +292,8 @@ export default function LandingPage({ onNavigate }) {
         }
 
         .lp-social-btn {
-          width: 36px;
-          height: 36px;
+          width: 34px;
+          height: 34px;
           border-radius: 50%;
           background: #1E293B;
           border: 1px solid #334155;
@@ -323,7 +322,7 @@ export default function LandingPage({ onNavigate }) {
         @media (max-width: 960px) {
           .lp-desktop-nav { display: none !important; }
           .lp-mobile-menu-btn { display: flex !important; }
-          .lp-hero-grid { grid-template-columns: 1fr !important; gap: 40px !important; text-align: center !important; }
+          .lp-hero-grid { grid-template-columns: 1fr !important; gap: 36px !important; text-align: center !important; }
           .lp-hero-left { margin: 0 auto !important; max-width: 600px !important; }
           .lp-hero-ctas { justify-content: center !important; }
           .lp-hero-pills { justify-content: center !important; }
@@ -335,9 +334,11 @@ export default function LandingPage({ onNavigate }) {
           .lp-mobile-menu-btn { display: none !important; }
         }
         @media (max-width: 640px) {
-          .lp-hero-h1 { font-size: 36px !important; }
-          .lp-section-h2 { font-size: 26px !important; }
-          .lp-section { padding: 44px 16px !important; }
+          .lp-hero-h1 { font-size: 32px !important; line-height: 1.15 !important; }
+          .lp-section-h2 { font-size: 24px !important; }
+          .lp-section { padding: 40px 16px !important; }
+          .lp-hero-pill-wrap { flex-direction: column !important; width: 100% !important; }
+          .lp-hero-pill-wrap > div { width: 100% !important; justify-content: center !important; }
         }
       `}</style>
 
@@ -347,15 +348,14 @@ export default function LandingPage({ onNavigate }) {
       <header style={styles.header}>
         <div style={styles.headerInner}>
           
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={() => handleNav("home")}>
-            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 40, width: "auto", objectFit: "contain", display: "block" }} />
+          {/* Logo (Same size as Learner role header: height 24px) */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", flexShrink: 0 }} onClick={() => handleNav("home")}>
+            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 24, width: "auto", objectFit: "contain", display: "block" }} />
           </div>
 
           {/* Center Navigation Links */}
-          <nav className="lp-desktop-nav" style={{ display: "flex", gap: 28, alignItems: "center" }}>
+          <nav className="lp-desktop-nav" style={{ display: "flex", gap: 26, alignItems: "center" }}>
             <span className="lp-nav-link" onClick={() => handleNav("home")}>Home</span>
-            <span className="lp-nav-link" onClick={() => handleNav("platform")}>Platform</span>
             <span className="lp-nav-link" onClick={() => handleNav("intelligence")}>Intelligence</span>
             <span className="lp-nav-link" onClick={() => handleNav("learners")}>Learners</span>
             <span className="lp-nav-link" onClick={() => handleNav("organisation")}>Organisation</span>
@@ -363,7 +363,7 @@ export default function LandingPage({ onNavigate }) {
           </nav>
 
           {/* Action CTAs */}
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <button
               style={styles.signInBtn}
               onClick={() => handleNav("signin")}
@@ -390,13 +390,13 @@ export default function LandingPage({ onNavigate }) {
               className="lp-mobile-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{
-                width: 38, height: 38, borderRadius: 10, border: "1px solid #E2E8F0",
+                width: 36, height: 36, borderRadius: 10, border: "1px solid #E2E8F0",
                 background: "#F8FAFC", display: "none", alignItems: "center", justifyContent: "center",
                 cursor: "pointer", color: "#0F172A"
               }}
               aria-label="Toggle Mobile Navigation"
             >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
 
@@ -406,7 +406,6 @@ export default function LandingPage({ onNavigate }) {
         {mobileMenuOpen && (
           <div className="lp-mobile-drawer" style={{ background: "#FFFFFF", borderTop: "1px solid #E2E8F0", padding: "16px 20px 24px", display: "flex", flexDirection: "column", gap: 14, boxShadow: "0 10px 25px rgba(0,0,0,0.06)" }}>
             <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700 }} onClick={() => handleNav("home")}>Home</span>
-            <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700 }} onClick={() => handleNav("platform")}>Platform</span>
             <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700 }} onClick={() => handleNav("intelligence")}>Intelligence</span>
             <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700 }} onClick={() => handleNav("learners")}>Learners</span>
             <span className="lp-nav-link" style={{ fontSize: 15, fontWeight: 700 }} onClick={() => handleNav("organisation")}>Organisation</span>
@@ -418,7 +417,7 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 1: HERO SECTION
           ========================================================================= */}
-      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "60px 24px 75px", position: "relative" }}>
+      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "50px 24px 70px", position: "relative" }}>
         <div className="lp-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 36, alignItems: "center" }}>
           
           {/* Left Column */}
@@ -426,16 +425,16 @@ export default function LandingPage({ onNavigate }) {
             
             {/* Pill Tag */}
             <div style={{
-              display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: 99,
+              display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 12px", borderRadius: 99,
               background: "#EEF2FF", border: "1px solid #C7D2FE",
-              color: "#4F46E5", fontSize: 12, fontWeight: 800, marginBottom: 22, letterSpacing: ".02em"
+              color: "#4F46E5", fontSize: 11.5, fontWeight: 800, marginBottom: 20, letterSpacing: ".02em"
             }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} />
               <span>AI WORKFORCE INTELLIGENCE PLATFORM</span>
             </div>
 
             {/* Headline */}
-            <h1 className="lp-hero-h1" style={{ fontSize: "clamp(38px, 4.4vw, 56px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0F172A", margin: "0 0 18px", lineHeight: 1.1 }}>
+            <h1 className="lp-hero-h1" style={{ fontSize: "clamp(34px, 4.2vw, 54px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0F172A", margin: "0 0 16px", lineHeight: 1.1 }}>
               Measure<br />
               readiness,<br />
               <span style={{ color: "#4F46E5" }}>
@@ -444,12 +443,12 @@ export default function LandingPage({ onNavigate }) {
             </h1>
 
             {/* Subtitle */}
-            <p style={{ fontSize: 16, color: "#475569", lineHeight: 1.6, margin: "0 0 28px", maxWidth: 520 }}>
+            <p style={{ fontSize: 15.5, color: "#475569", lineHeight: 1.6, margin: "0 0 26px", maxWidth: 520 }}>
               Train AI turns learning activity into decision-ready intelligence about workforce readiness, skill coverage and team capability — so leaders know who is ready, who is stuck, and where the gaps are.
             </p>
 
             {/* Dual CTAs */}
-            <div className="lp-hero-ctas" style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 34 }}>
+            <div className="lp-hero-ctas" style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 30 }}>
               <button className="action-btn-primary" style={styles.startOrgBtn} onClick={() => handleNav("signin")}>
                 Start with your organisation <ArrowRight size={15} />
               </button>
@@ -459,11 +458,11 @@ export default function LandingPage({ onNavigate }) {
             </div>
 
             {/* 3 Metric Pills in a Row */}
-            <div className="lp-hero-pills" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("platform")}>
+            <div className="lp-hero-pills lp-hero-pill-wrap" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
                 <Layers size={16} color="#4F46E5" />
                 <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: "#0F172A" }}>Skill Graph</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Skill Graph</div>
                   <div style={{ fontSize: 11, color: "#64748B" }}>Held • developing • missing</div>
                 </div>
               </div>
@@ -471,7 +470,7 @@ export default function LandingPage({ onNavigate }) {
               <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
                 <Gauge size={16} color="#4F46E5" />
                 <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: "#0F172A" }}>Readiness Score</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Readiness Score</div>
                   <div style={{ fontSize: 11, color: "#64748B" }}>Team • function • org</div>
                 </div>
               </div>
@@ -479,7 +478,7 @@ export default function LandingPage({ onNavigate }) {
               <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("learners")}>
                 <Activity size={16} color="#4F46E5" />
                 <div>
-                  <div style={{ fontSize: 12.5, fontWeight: 800, color: "#0F172A" }}>Live Signals</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Live Signals</div>
                   <div style={{ fontSize: 11, color: "#64748B" }}>Assessments • progress</div>
                 </div>
               </div>
@@ -491,95 +490,95 @@ export default function LandingPage({ onNavigate }) {
           <div className="lp-hero-right" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
             
             {/* Real Professional Team Visual */}
-            <div style={{ width: "100%", maxWidth: 360, marginBottom: -40, position: "relative", zIndex: 1 }}>
+            <div style={{ width: "100%", maxWidth: 360, marginBottom: -36, position: "relative", zIndex: 1 }}>
               <img
                 src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80"
                 alt="Train AI Professional Team"
-                style={{ width: "100%", height: 310, objectFit: "cover", borderRadius: 24, boxShadow: "0 16px 36px -12px rgba(15,23,42,0.15)" }}
+                style={{ width: "100%", height: 300, objectFit: "cover", borderRadius: 20, boxShadow: "0 16px 36px -12px rgba(15,23,42,0.15)" }}
               />
             </div>
 
             {/* Live Workforce Card */}
             <div style={{
               position: "relative", zIndex: 2, width: "100%", maxWidth: 440,
-              background: "#FFFFFF", borderRadius: 20, padding: "22px 24px",
+              background: "#FFFFFF", borderRadius: 18, padding: "20px 22px",
               border: "1px solid #E2E8F0", boxShadow: "0 18px 40px -10px rgba(15,23,42,0.12)",
               textAlign: "left"
             }}>
               
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
-                  <div style={{ fontSize: 10.5, fontWeight: 800, color: "#64748B", textTransform: "uppercase", letterSpacing: ".04em" }}>WORKFORCE INTELLIGENCE</div>
-                  <div style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", marginTop: 2 }}>Readiness by team</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: "#64748B", textTransform: "uppercase", letterSpacing: ".04em" }}>WORKFORCE INTELLIGENCE</div>
+                  <div style={{ fontSize: 15.5, fontWeight: 800, color: "#0F172A", marginTop: 2 }}>Readiness by team</div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#4F46E5", background: "#EEF2FF", padding: "3px 8px", borderRadius: 99 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 800, color: "#4F46E5", background: "#EEF2FF", padding: "2px 7px", borderRadius: 99 }}>
                   <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} />
                   <span>Live</span>
                 </div>
               </div>
 
-              <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
-                <span style={{ fontSize: 36, fontWeight: 900, color: "#0F172A", letterSpacing: "-0.03em" }}>71</span>
-                <span style={{ fontSize: 12.5, color: "#64748B", fontWeight: 600 }}>Organisation readiness</span>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: "#16A34A" }}>+4 this month</span>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 14 }}>
+                <span style={{ fontSize: 34, fontWeight: 900, color: "#0F172A", letterSpacing: "-0.03em" }}>71</span>
+                <span style={{ fontSize: 12, color: "#64748B", fontWeight: 600 }}>Organisation readiness</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#16A34A" }}>+4 this month</span>
               </div>
 
               {/* Progress Bars */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 11, marginBottom: 18 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, fontWeight: 700, marginBottom: 3 }}>
                     <span style={{ color: "#334155" }}>Engineering</span>
                     <span style={{ color: "#4F46E5", fontWeight: 800 }}>82 (+6)</span>
                   </div>
-                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                  <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
                     <div style={{ width: "82%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, fontWeight: 700, marginBottom: 3 }}>
                     <span style={{ color: "#334155" }}>Operations</span>
                     <span style={{ color: "#4F46E5", fontWeight: 800 }}>74 (+3)</span>
                   </div>
-                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                  <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
                     <div style={{ width: "74%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, fontWeight: 700, marginBottom: 3 }}>
                     <span style={{ color: "#334155" }}>Compliance</span>
                     <span style={{ color: "#4F46E5", fontWeight: 800 }}>61 (-2)</span>
                   </div>
-                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                  <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
                     <div style={{ width: "61%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
 
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, fontWeight: 700, marginBottom: 3 }}>
                     <span style={{ color: "#334155" }}>Sales</span>
                     <span style={{ color: "#4F46E5", fontWeight: 800 }}>55 (+9)</span>
                   </div>
-                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                  <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
                     <div style={{ width: "55%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
               </div>
 
               {/* Bottom 3 Numbers */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, paddingTop: 14, borderTop: "1px solid #F1F5F9" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, paddingTop: 12, borderTop: "1px solid #F1F5F9" }}>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: "#0F172A" }}>12</div>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>Skill gaps</div>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: "#0F172A" }}>12</div>
+                  <div style={{ fontSize: 10.5, color: "#64748B" }}>Skill gaps</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: "#0F172A" }}>38</div>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>Compliance due</div>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: "#0F172A" }}>38</div>
+                  <div style={{ fontSize: 10.5, color: "#64748B" }}>Compliance due</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: "#0F172A" }}>6</div>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>Cohorts active</div>
+                  <div style={{ fontSize: 17, fontWeight: 900, color: "#0F172A" }}>6</div>
+                  <div style={{ fontSize: 10.5, color: "#64748B" }}>Cohorts active</div>
                 </div>
               </div>
 
@@ -593,19 +592,19 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 2: HOW WE BUILD IT
           ========================================================================= */}
-      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "30px 24px 60px" }}>
+      <section style={{ maxWidth: 1180, margin: "0 auto", padding: "20px 24px 60px" }}>
         
-        <div style={{ textAlign: "left", marginBottom: 20 }}>
+        <div style={{ textAlign: "left", marginBottom: 18 }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4F46E5", letterSpacing: ".06em" }}>HOW WE BUILD IT</span>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 18, textAlign: "left" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, textAlign: "left" }}>
           {HOW_WE_BUILD_IT.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "22px 24px", borderRadius: 18, border: "1px solid #E2E8F0" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                  <Icon size={18} color="#4F46E5" />
+              <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 22px", borderRadius: 16, border: "1px solid #E2E8F0" }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                  <Icon size={17} color="#4F46E5" />
                 </div>
                 <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>{item.title}</h3>
                 <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
@@ -619,48 +618,48 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 3: THE WORKFORCE INTELLIGENCE LAYER
           ========================================================================= */}
-      <section id="intelligence" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 70px", textAlign: "left" }}>
+      <section id="intelligence" style={{ maxWidth: 1180, margin: "0 auto", padding: "30px 24px 65px", textAlign: "left" }}>
         
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 10 }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4F46E5", letterSpacing: ".06em" }}>THE WORKFORCE INTELLIGENCE LAYER</span>
         </div>
 
-        <h2 className="lp-section-h2" style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 12px" }}>
+        <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 10px" }}>
           Understand what your people<br />can actually do
         </h2>
 
-        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 32px", lineHeight: 1.55 }}>
+        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 30px", lineHeight: 1.55 }}>
           Available to admins and managers as an overview, the intelligence layer combines every available signal into outputs you can act on — never completion alone.
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
           
-          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "28px 24px", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-              <Brain size={22} color="#4F46E5" />
+          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "24px 22px", borderRadius: 18, border: "1px solid #E2E8F0" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+              <Brain size={20} color="#4F46E5" />
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>AI Skill Graph</h3>
-            <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>AI Skill Graph</h3>
+            <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
               A live view of capability across a learner, team or organisation — what skills exist, what is developing, where the gaps are, and how capability grows over time.
             </p>
           </div>
 
-          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "28px 24px", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-              <Gauge size={22} color="#4F46E5" />
+          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "24px 22px", borderRadius: 18, border: "1px solid #E2E8F0" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+              <Gauge size={20} color="#4F46E5" />
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>Workforce Readiness Score</h3>
-            <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>Workforce Readiness Score</h3>
+            <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
               One readiness indicator per team, function and organisation, so leadership can answer: are we ready, which team is strongest, which team needs support now?
             </p>
           </div>
 
-          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "28px 24px", borderRadius: 20, border: "1px solid #E2E8F0" }}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-              <BarChart3 size={22} color="#4F46E5" />
+          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "24px 22px", borderRadius: 18, border: "1px solid #E2E8F0" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+              <BarChart3 size={20} color="#4F46E5" />
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>Intelligence Dashboard</h3>
-            <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>Intelligence Dashboard</h3>
+            <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
               A summary view built for decisions: skill gaps by department, readiness by team, progress and activity trends, plus high-level organisational insights.
             </p>
           </div>
@@ -672,16 +671,16 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 4: SIGNALS FEEDING THE MODEL & REAL LIVE MOBILE LEARNER PREVIEW
           ========================================================================= */}
-      <section id="learners" style={{ maxWidth: 1180, margin: "0 auto", padding: "30px 24px 70px" }}>
+      <section id="learners" style={{ maxWidth: 1180, margin: "0 auto", padding: "20px 24px 65px" }}>
         
         {/* Signals Pill Bar */}
-        <div style={{ background: "#FFFFFF", padding: "20px 24px", borderRadius: 20, border: "1px solid #E2E8F0", marginBottom: 48 }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: "#64748B", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 12, textAlign: "left" }}>
+        <div style={{ background: "#FFFFFF", padding: "18px 22px", borderRadius: 18, border: "1px solid #E2E8F0", marginBottom: 44 }}>
+          <div style={{ fontSize: 10.5, fontWeight: 800, color: "#64748B", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 12, textAlign: "left" }}>
             SIGNALS FEEDING THE MODEL
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {SIGNALS.map((sig) => (
-              <span key={sig} className="lp-pill-hover" style={{ background: "#EEF2FF", color: "#4F46E5", fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 99, border: "1px solid #C7D2FE" }}>
+              <span key={sig} className="lp-pill-hover" style={{ background: "#EEF2FF", color: "#4F46E5", fontSize: 11.5, fontWeight: 700, padding: "5px 13px", borderRadius: 99, border: "1px solid #C7D2FE" }}>
                 {sig}
               </span>
             ))}
@@ -689,35 +688,35 @@ export default function LandingPage({ onNavigate }) {
         </div>
 
         {/* The Learner App Grid */}
-        <div style={{ textAlign: "left", marginBottom: 12 }}>
+        <div style={{ textAlign: "left", marginBottom: 10 }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4F46E5", letterSpacing: ".06em" }}>THE LEARNER APP</span>
         </div>
 
-        <h2 className="lp-section-h2" style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 12px", textAlign: "left" }}>
+        <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 10px", textAlign: "left" }}>
           Four places. Zero<br />confusion.
         </h2>
 
-        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 36px", lineHeight: 1.55, textAlign: "left" }}>
+        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 32px", lineHeight: 1.55, textAlign: "left" }}>
           Learners get a focused workspace with primary navigation at the bottom of the screen: Home, AI, Courses and Community. Experience the live interactive mobile simulator below.
         </p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 36, alignItems: "center" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 32, alignItems: "center" }}>
           
           {/* 2x2 Feature Description Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 18, textAlign: "left" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, textAlign: "left" }}>
             
             <div
               className="lp-card-hover"
               onClick={() => setMobileLearnerTab("home")}
               style={{
-                background: "#FFFFFF", padding: 22, borderRadius: 18,
+                background: "#FFFFFF", padding: 18, borderRadius: 16,
                 border: mobileLearnerTab === "home" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
                 cursor: "pointer"
               }}
             >
-              <Home size={20} color="#4F46E5" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Home</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+              <Home size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>Home</h3>
+              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
                 Current course progress, active cohorts and an AI insight summary — the learner always knows the next action.
               </p>
             </div>
@@ -726,14 +725,14 @@ export default function LandingPage({ onNavigate }) {
               className="lp-card-hover"
               onClick={() => setMobileLearnerTab("ai")}
               style={{
-                background: "#FFFFFF", padding: 22, borderRadius: 18,
+                background: "#FFFFFF", padding: 18, borderRadius: 16,
                 border: mobileLearnerTab === "ai" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
                 cursor: "pointer"
               }}
             >
-              <Bot size={20} color="#4F46E5" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>AI Coach</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+              <Bot size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>AI Coach</h3>
+              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
                 Three tools: AI Coach for questions, AI Insights for strengths and gaps, and a Quiz Generator for practice.
               </p>
             </div>
@@ -742,14 +741,14 @@ export default function LandingPage({ onNavigate }) {
               className="lp-card-hover"
               onClick={() => setMobileLearnerTab("courses")}
               style={{
-                background: "#FFFFFF", padding: 22, borderRadius: 18,
+                background: "#FFFFFF", padding: 18, borderRadius: 16,
                 border: mobileLearnerTab === "courses" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
                 cursor: "pointer"
               }}
             >
-              <BookOpen size={20} color="#4F46E5" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Courses</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+              <BookOpen size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>Courses</h3>
+              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
                 Assigned paths, organisation courses and partner content, with structured modules and progress tracking.
               </p>
             </div>
@@ -758,14 +757,14 @@ export default function LandingPage({ onNavigate }) {
               className="lp-card-hover"
               onClick={() => setMobileLearnerTab("community")}
               style={{
-                background: "#FFFFFF", padding: 22, borderRadius: 18,
+                background: "#FFFFFF", padding: 18, borderRadius: 16,
                 border: mobileLearnerTab === "community" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
                 cursor: "pointer"
               }}
             >
-              <Users size={20} color="#4F46E5" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Community</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+              <Users size={18} color="#4F46E5" style={{ marginBottom: 10 }} />
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>Community</h3>
+              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
                 Cohort feed, announcements and study groups — peer learning built into the daily experience.
               </p>
             </div>
@@ -775,94 +774,87 @@ export default function LandingPage({ onNavigate }) {
           {/* Right Side: REAL LIVE MOBILE PHONE DEVICE PREVIEW */}
           <div style={{ display: "flex", justifyContent: "center" }}>
             
-            {/* Realistic iPhone Bezel Chassis */}
+            {/* Realistic Mobile Device Chassis */}
             <div style={{
-              width: 340, height: 600, background: "#0F172A", borderRadius: 44,
-              padding: 10, boxShadow: "0 25px 60px -15px rgba(15,23,42,0.35)",
-              border: "3px solid #334155", position: "relative", display: "flex", flexDirection: "column"
+              width: 320, height: 570, background: "#0F172A", borderRadius: 40,
+              padding: 9, boxShadow: "0 22px 55px -15px rgba(15,23,42,0.3)",
+              border: "2.5px solid #334155", position: "relative", display: "flex", flexDirection: "column"
             }}>
               
               {/* Top Speaker Notch & Dynamic Pill */}
               <div style={{
-                position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)",
-                width: 96, height: 18, background: "#0F172A", borderRadius: 20, zIndex: 10,
+                position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)",
+                width: 90, height: 16, background: "#0F172A", borderRadius: 20, zIndex: 10,
                 display: "flex", alignItems: "center", justifyContent: "center"
               }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#1E293B", marginRight: 8 }} />
-                <div style={{ width: 36, height: 4, borderRadius: 99, background: "#1E293B" }} />
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#1E293B", marginRight: 6 }} />
+                <div style={{ width: 32, height: 3.5, borderRadius: 99, background: "#1E293B" }} />
               </div>
 
               {/* Internal Screen Content Container */}
               <div style={{
-                flex: 1, background: "#F8FAFC", borderRadius: 34, overflow: "hidden",
+                flex: 1, background: "#F8FAFC", borderRadius: 32, overflow: "hidden",
                 display: "flex", flexDirection: "column", position: "relative"
               }}>
                 
                 {/* Mobile Status Bar */}
-                <div style={{ padding: "12px 18px 6px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, fontWeight: 700, color: "#0F172A" }}>
+                <div style={{ padding: "10px 16px 4px", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 10.5, fontWeight: 700, color: "#0F172A" }}>
                   <span>9:41</span>
-                  <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
-                    <WifiIcon size={12} color="#0F172A" />
-                    <Battery size={13} color="#0F172A" />
+                  <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                    <WifiIcon size={11} color="#0F172A" />
+                    <Battery size={12} color="#0F172A" />
                   </div>
                 </div>
 
-                {/* Real Mini Header */}
-                <div style={{ padding: "6px 14px 10px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #E2E8F0", background: "#FFFFFF" }}>
-                  <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 22, width: "auto" }} />
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#EEF2FF", color: "#4F46E5", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {/* Real Mini Header (Matches LearnerHeader) */}
+                <div style={{ padding: "6px 12px 8px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #E2E8F0", background: "#FFFFFF" }}>
+                  <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 18, width: "auto" }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 3, background: "#FFF7ED", padding: "2px 6px", borderRadius: 99, fontSize: 9.5, fontWeight: 800, color: "#EA580C" }}>
+                      <Flame size={11} color="#EA580C" /> 8d
+                    </div>
+                    <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#EEF2FF", color: "#4F46E5", fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       AA
                     </div>
                   </div>
                 </div>
 
                 {/* Dynamic Screen Viewport based on tab */}
-                <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px", textAlign: "left" }}>
+                <div style={{ flex: 1, overflowY: "auto", padding: "10px 12px", textAlign: "left" }}>
                   
                   {/* TAB 1: HOME SCREEN (Matches real HomeScreen.jsx) */}
                   {mobileLearnerTab === "home" && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                       
-                      {/* Streak Pill */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#EEF2FF", padding: "6px 12px", borderRadius: 10 }}>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", display: "flex", alignItems: "center", gap: 4 }}>
-                          <Flame size={13} color="#F97316" /> 4-Day Streak
-                        </div>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5" }}>
-                          1,420 XP
-                        </div>
-                      </div>
-
                       {/* Continue Learning Card */}
-                      <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #E2E8F0", padding: 12 }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: "#64748B", textTransform: "uppercase" }}>IN PROGRESS</div>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", marginTop: 2 }}>Full-Stack AI Application Engineering</div>
-                        <div style={{ fontSize: 11, color: "#4F46E5", fontWeight: 700, marginTop: 4 }}>Lesson 8 of 12 (74%)</div>
+                      <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", padding: 10 }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: "#64748B", textTransform: "uppercase" }}>IN PROGRESS</div>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A", marginTop: 2 }}>Full-Stack AI Engineering</div>
+                        <div style={{ fontSize: 10.5, color: "#4F46E5", fontWeight: 700, marginTop: 3 }}>Lesson 8 of 12 (74%)</div>
                         
-                        <div style={{ height: 5, borderRadius: 99, background: "#EEF2FF", overflow: "hidden", margin: "6px 0 10px" }}>
+                        <div style={{ height: 4, borderRadius: 99, background: "#EEF2FF", overflow: "hidden", margin: "6px 0 8px" }}>
                           <div style={{ width: "74%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                         </div>
 
-                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 8, padding: "7px 10px", fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                          <Play size={12} fill="#fff" /> Resume: Custom RAG Pipelines
+                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 6, padding: "6px 8px", fontSize: 10.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                          <Play size={10} fill="#fff" /> Resume Lesson
                         </button>
                       </div>
 
                       {/* AI Insights Card */}
-                      <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #E2E8F0", padding: 12 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, fontWeight: 800, color: "#4F46E5" }}>
-                          <Bot size={13} /> AI RECOMMENDATION
+                      <div style={{ background: "#EEF2FF", borderRadius: 10, border: "1px solid #C7D2FE", padding: 9 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontWeight: 800, color: "#4F46E5" }}>
+                          <Bot size={11} /> AI RECOMMENDATION
                         </div>
-                        <div style={{ fontSize: 11.5, color: "#334155", lineHeight: 1.4, marginTop: 4 }}>
+                        <div style={{ fontSize: 11, color: "#1E1B4B", lineHeight: 1.35, marginTop: 3 }}>
                           Strong on Vector Databases (94%). Practice LLM Evaluation next.
                         </div>
                       </div>
 
                       {/* Cohort Card */}
-                      <div style={{ background: "#FFFFFF", borderRadius: 14, border: "1px solid #E2E8F0", padding: 12 }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: "#64748B" }}>COHORT LIVE SESSION</div>
-                        <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A", marginTop: 2 }}>Thursday • 15:00 UTC with Dr. Chen</div>
+                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: 9 }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: "#64748B" }}>COHORT SESSION</div>
+                        <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A", marginTop: 1 }}>Thursday • 15:00 UTC with Dr. Chen</div>
                       </div>
 
                     </div>
@@ -870,23 +862,23 @@ export default function LandingPage({ onNavigate }) {
 
                   {/* TAB 2: AI COACH SCREEN (Matches real AiCoachScreen.jsx) */}
                   {mobileLearnerTab === "ai" && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>AI Neural Tutor</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A" }}>AI Neural Tutor</div>
                       
                       {/* User message */}
-                      <div style={{ alignSelf: "flex-end", background: "#4F46E5", color: "#fff", padding: "8px 12px", borderRadius: "12px 12px 2px 12px", fontSize: 11.5, maxWidth: "85%" }}>
+                      <div style={{ alignSelf: "flex-end", background: "#4F46E5", color: "#fff", padding: "6px 10px", borderRadius: "10px 10px 2px 10px", fontSize: 10.5, maxWidth: "85%" }}>
                         How do vector embeddings work in RAG?
                       </div>
 
                       {/* AI Response */}
-                      <div style={{ alignSelf: "flex-start", background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#1E293B", padding: "8px 12px", borderRadius: "12px 12px 12px 2px", fontSize: 11.5, maxWidth: "90%", lineHeight: 1.4 }}>
+                      <div style={{ alignSelf: "flex-start", background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#1E293B", padding: "7px 10px", borderRadius: "10px 10px 10px 2px", fontSize: 10.5, maxWidth: "90%", lineHeight: 1.35 }}>
                         Embeddings map text to multidimensional vectors so similar semantic ideas cluster together!
                       </div>
 
                       {/* Interactive Action */}
-                      <div style={{ background: "#EEF2FF", borderRadius: 10, padding: 10, border: "1px solid #C7D2FE", marginTop: 6 }}>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5" }}>Quick Practice Quiz (3 questions)</div>
-                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 6, padding: "6px", fontSize: 11, fontWeight: 800, marginTop: 6 }}>
+                      <div style={{ background: "#EEF2FF", borderRadius: 8, padding: 8, border: "1px solid #C7D2FE", marginTop: 4 }}>
+                        <div style={{ fontSize: 10.5, fontWeight: 800, color: "#4F46E5" }}>Quick Practice Quiz (3 questions)</div>
+                        <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 5, padding: "5px", fontSize: 10.5, fontWeight: 800, marginTop: 4 }}>
                           Start AI Quiz →
                         </button>
                       </div>
@@ -895,26 +887,26 @@ export default function LandingPage({ onNavigate }) {
 
                   {/* TAB 3: COURSES SCREEN (Matches real CoursesScreen.jsx) */}
                   {mobileLearnerTab === "courses" && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Enrolled &amp; Assigned Courses</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A" }}>Assigned Courses</div>
                       
-                      <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", padding: 10, display: "flex", gap: 10 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 8, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <BookOpen size={18} color="#4F46E5" />
+                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: 8, display: "flex", gap: 8 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <BookOpen size={15} color="#4F46E5" />
                         </div>
                         <div>
-                          <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Master Design Systems with AI</div>
-                          <div style={{ fontSize: 10, color: "#64748B" }}>14 lessons • 4.9 ★</div>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: "#0F172A" }}>Design Systems with AI</div>
+                          <div style={{ fontSize: 9.5, color: "#64748B" }}>14 lessons • 4.9 ★</div>
                         </div>
                       </div>
 
-                      <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", padding: 10, display: "flex", gap: 10 }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 8, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <ShieldCheck size={18} color="#4F46E5" />
+                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: 8, display: "flex", gap: 8 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <ShieldCheck size={15} color="#4F46E5" />
                         </div>
                         <div>
-                          <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Enterprise Data Privacy (GDPR)</div>
-                          <div style={{ fontSize: 10, color: "#64748B" }}>8 lessons • Assigned</div>
+                          <div style={{ fontSize: 11, fontWeight: 800, color: "#0F172A" }}>Data Privacy (GDPR)</div>
+                          <div style={{ fontSize: 9.5, color: "#64748B" }}>8 lessons • Assigned</div>
                         </div>
                       </div>
                     </div>
@@ -922,22 +914,22 @@ export default function LandingPage({ onNavigate }) {
 
                   {/* TAB 4: COMMUNITY SCREEN (Matches real CommunityScreen.jsx) */}
                   {mobileLearnerTab === "community" && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Cohort Feed &amp; Study Groups</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#0F172A" }}>Cohort Discussion</div>
                       
-                      <div style={{ background: "#FFFFFF", borderRadius: 12, border: "1px solid #E2E8F0", padding: 10 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#4F46E5", color: "#fff", fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>MK</div>
-                          <span style={{ fontSize: 11, fontWeight: 800, color: "#0F172A" }}>Marcus K.</span>
-                          <span style={{ fontSize: 9.5, color: "#94A3B8", marginLeft: "auto" }}>2h ago</span>
+                      <div style={{ background: "#FFFFFF", borderRadius: 10, border: "1px solid #E2E8F0", padding: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                          <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#4F46E5", color: "#fff", fontSize: 8, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>MK</div>
+                          <span style={{ fontSize: 10.5, fontWeight: 800, color: "#0F172A" }}>Marcus K.</span>
+                          <span style={{ fontSize: 9, color: "#94A3B8", marginLeft: "auto" }}>2h ago</span>
                         </div>
-                        <div style={{ fontSize: 11, color: "#334155", marginTop: 6, lineHeight: 1.35 }}>
-                          Just finished the LLM benchmarking lab! Anyone free for a study group session?
+                        <div style={{ fontSize: 10.5, color: "#334155", marginTop: 4, lineHeight: 1.3 }}>
+                          Just finished the LLM benchmarking lab! Great insights.
                         </div>
                       </div>
 
-                      <div style={{ background: "#EEF2FF", borderRadius: 10, padding: 8, fontSize: 11, fontWeight: 700, color: "#4F46E5", textAlign: "center" }}>
-                        + Create Discussion Topic
+                      <div style={{ background: "#EEF2FF", borderRadius: 8, padding: 6, fontSize: 10, fontWeight: 700, color: "#4F46E5", textAlign: "center" }}>
+                        + Post Discussion Topic
                       </div>
                     </div>
                   )}
@@ -946,43 +938,43 @@ export default function LandingPage({ onNavigate }) {
 
                 {/* Real Interactive Mobile Bottom Navigation Bar */}
                 <div style={{
-                  height: 52, background: "#FFFFFF", borderTop: "1px solid #E2E8F0",
+                  height: 48, background: "#FFFFFF", borderTop: "1px solid #E2E8F0",
                   display: "grid", gridTemplateColumns: "repeat(4, 1fr)", alignItems: "center",
-                  padding: "0 6px"
+                  padding: "0 4px"
                 }}>
                   <div
                     className={`phone-tab-btn ${mobileLearnerTab === "home" ? "active" : ""}`}
                     onClick={() => setMobileLearnerTab("home")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "home" ? "#4F46E5" : "#64748B", fontSize: 10 }}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "home" ? "#4F46E5" : "#64748B", fontSize: 9 }}
                   >
-                    <Home size={15} />
+                    <Home size={14} />
                     <span>Home</span>
                   </div>
 
                   <div
                     className={`phone-tab-btn ${mobileLearnerTab === "ai" ? "active" : ""}`}
                     onClick={() => setMobileLearnerTab("ai")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "ai" ? "#4F46E5" : "#64748B", fontSize: 10 }}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "ai" ? "#4F46E5" : "#64748B", fontSize: 9 }}
                   >
-                    <Bot size={15} />
+                    <Bot size={14} />
                     <span>AI</span>
                   </div>
 
                   <div
                     className={`phone-tab-btn ${mobileLearnerTab === "courses" ? "active" : ""}`}
                     onClick={() => setMobileLearnerTab("courses")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "courses" ? "#4F46E5" : "#64748B", fontSize: 10 }}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "courses" ? "#4F46E5" : "#64748B", fontSize: 9 }}
                   >
-                    <BookOpen size={15} />
+                    <BookOpen size={14} />
                     <span>Courses</span>
                   </div>
 
                   <div
                     className={`phone-tab-btn ${mobileLearnerTab === "community" ? "active" : ""}`}
                     onClick={() => setMobileLearnerTab("community")}
-                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "community" ? "#4F46E5" : "#64748B", fontSize: 10 }}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: mobileLearnerTab === "community" ? "#4F46E5" : "#64748B", fontSize: 9 }}
                   >
-                    <Users size={15} />
+                    <Users size={14} />
                     <span>Community</span>
                   </div>
                 </div>
@@ -1000,31 +992,31 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 5: THE ORGANISATION APP (Three Views)
           ========================================================================= */}
-      <section id="organisation" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 70px", textAlign: "left" }}>
+      <section id="organisation" style={{ maxWidth: 1180, margin: "0 auto", padding: "30px 24px 65px", textAlign: "left" }}>
         
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 10 }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4F46E5", letterSpacing: ".06em" }}>THE ORGANISATION APP</span>
         </div>
 
-        <h2 className="lp-section-h2" style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 12px" }}>
+        <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 10px" }}>
           One workspace, three views
         </h2>
 
-        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 680, margin: "0 0 36px", lineHeight: 1.55 }}>
+        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 680, margin: "0 0 32px", lineHeight: 1.55 }}>
           Instructors, managers and admins work in the same organisation app. Each person sees only the view their role allows — no separate dashboards to maintain.
         </p>
 
         {/* 3 Column Role Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18, marginBottom: 18 }}>
           
           {/* Instructor View */}
-          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: 26, borderRadius: 20, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <GraduationCap size={18} color="#4F46E5" />
+          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "22px 24px", borderRadius: 18, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <GraduationCap size={17} color="#4F46E5" />
               <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", letterSpacing: ".05em" }}>INSTRUCTOR VIEW</span>
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 16px" }}>Run programmes, not spreadsheets</h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: "#475569" }}>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 14px" }}>Run programmes, not spreadsheets</h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9, fontSize: 13, color: "#475569" }}>
               <li style={{ display: "flex", gap: 8 }}>• <span>Cohort creation, control and adjustment</span></li>
               <li style={{ display: "flex", gap: 8 }}>• <span>Session scheduling and resources</span></li>
               <li style={{ display: "flex", gap: 8 }}>• <span>Assessment creation and grading</span></li>
@@ -1034,13 +1026,13 @@ export default function LandingPage({ onNavigate }) {
           </div>
 
           {/* Manager View */}
-          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: 26, borderRadius: 20, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <TrendingUp size={18} color="#4F46E5" />
+          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "22px 24px", borderRadius: 18, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <TrendingUp size={17} color="#4F46E5" />
               <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", letterSpacing: ".05em" }}>MANAGER VIEW</span>
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 16px" }}>See who is ready and who needs support</h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: "#475569" }}>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 14px" }}>See who is ready and who needs support</h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9, fontSize: 13, color: "#475569" }}>
               <li style={{ display: "flex", gap: 8 }}>• <span>Direct report progress</span></li>
               <li style={{ display: "flex", gap: 8 }}>• <span>Team summary</span></li>
               <li style={{ display: "flex", gap: 8 }}>• <span>Team readiness score</span></li>
@@ -1050,13 +1042,13 @@ export default function LandingPage({ onNavigate }) {
           </div>
 
           {/* Admin View */}
-          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: 26, borderRadius: 20, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <ShieldCheck size={18} color="#4F46E5" />
+          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "22px 24px", borderRadius: 18, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <ShieldCheck size={17} color="#4F46E5" />
               <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", letterSpacing: ".05em" }}>ADMIN VIEW</span>
             </div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 16px" }}>Manage learning at scale</h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: "#475569" }}>
+            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 14px" }}>Manage learning at scale</h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9, fontSize: 13, color: "#475569" }}>
               <li style={{ display: "flex", gap: 8 }}>• <span>Bulk onboarding and offboarding</span></li>
               <li style={{ display: "flex", gap: 8 }}>• <span>Learning track and course assignment</span></li>
               <li style={{ display: "flex", gap: 8 }}>• <span>Compliance tracking and organisation dashboard</span></li>
@@ -1068,24 +1060,24 @@ export default function LandingPage({ onNavigate }) {
         </div>
 
         {/* Bottom 2 Connected Architecture Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 18 }}>
           
-          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 24px", borderRadius: 16, border: "1px solid #E2E8F0" }}>
+          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "18px 22px", borderRadius: 16, border: "1px solid #E2E8F0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <Users size={18} color="#4F46E5" />
-              <h4 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: 0 }}>Learner side, connected</h4>
+              <Users size={17} color="#4F46E5" />
+              <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "#0F172A", margin: 0 }}>Learner side, connected</h4>
             </div>
-            <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
               Assigned courses, cohort sessions and instructor messages appear straight in the learner app, with notifications and reminders attached.
             </p>
           </div>
 
-          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 24px", borderRadius: 16, border: "1px solid #E2E8F0" }}>
+          <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "18px 22px", borderRadius: 16, border: "1px solid #E2E8F0" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <Database size={18} color="#4F46E5" />
-              <h4 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: 0 }}>Multi-tenant by design</h4>
+              <Database size={17} color="#4F46E5" />
+              <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "#0F172A", margin: 0 }}>Multi-tenant by design</h4>
             </div>
-            <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
               Every organisation's data is separated and permission-enforced, with audit logging and export controls built in.
             </p>
           </div>
@@ -1097,49 +1089,49 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 6: HOW IT WORKS
           ========================================================================= */}
-      <section id="how-it-works" style={{ maxWidth: 1180, margin: "0 auto", padding: "50px 24px 70px", textAlign: "center" }}>
+      <section id="how-it-works" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 65px", textAlign: "center" }}>
         
-        <h2 className="lp-section-h2" style={{ fontSize: 36, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 10px" }}>
+        <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
           How It Works
         </h2>
-        <p style={{ fontSize: 15.5, color: "#64748B", maxWidth: 540, margin: "0 auto 40px" }}>
+        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 540, margin: "0 auto 36px" }}>
           Move from onboarding to measurable workforce readiness
         </p>
 
         {/* 3 Step Connected Grid */}
         <div style={{ position: "relative" }}>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, textAlign: "left", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20, textAlign: "left", position: "relative", zIndex: 1 }}>
             
             {/* Step 1 */}
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 22, padding: "32px 26px", border: "1px solid #E2E8F0", position: "relative" }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 20 }}>
-                <UserPlus size={22} />
+            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 18, padding: "28px 24px", border: "1px solid #E2E8F0", position: "relative" }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 16 }}>
+                <UserPlus size={20} />
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>1. Onboard Your People</h3>
-              <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+              <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>1. Onboard Your People</h3>
+              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
                 Invite learners, instructors and managers, then organise them by team, cohort and learning need.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 22, padding: "32px 26px", border: "1px solid #E2E8F0", position: "relative" }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 20 }}>
-                <BookOpen size={22} />
+            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 18, padding: "28px 24px", border: "1px solid #E2E8F0", position: "relative" }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 16 }}>
+                <BookOpen size={20} />
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>2. Assign &amp; Develop</h3>
-              <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+              <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>2. Assign &amp; Develop</h3>
+              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
                 Build or curate courses, assign required learning and support progress through instructors and AI tools.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 22, padding: "32px 26px", border: "1px solid #E2E8F0", position: "relative" }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 20 }}>
-                <TrendingUp size={22} />
+            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 18, padding: "28px 24px", border: "1px solid #E2E8F0", position: "relative" }}>
+              <div style={{ width: 42, height: 42, borderRadius: 12, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 16 }}>
+                <TrendingUp size={20} />
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>3. Measure Readiness</h3>
-              <p style={{ fontSize: 13.5, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
+              <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: "0 0 8px" }}>3. Measure Readiness</h3>
+              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.55 }}>
                 Track skills, assessments, compliance, certificates and workforce readiness from live business dashboards.
               </p>
             </div>
@@ -1153,31 +1145,31 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 7: ENTERPRISE TRUST & DATA SECURITY
           ========================================================================= */}
-      <section id="trust" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 70px", textAlign: "left" }}>
+      <section id="trust" style={{ maxWidth: 1180, margin: "0 auto", padding: "30px 24px 65px", textAlign: "left" }}>
         
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 10 }}>
           <span style={{ fontSize: 11.5, fontWeight: 800, color: "#4F46E5", letterSpacing: ".06em" }}>ENTERPRISE TRUST</span>
         </div>
 
-        <h2 className="lp-section-h2" style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 12px" }}>
+        <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 10px" }}>
           Trust is part of the product
         </h2>
 
-        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 36px", lineHeight: 1.55 }}>
+        <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 0 30px", lineHeight: 1.55 }}>
           Permissions, privacy, auditability and data ownership are built in — not added later.
         </p>
 
         {/* 6 Grid Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
           {TRUST_FEATURES.map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "24px 22px", borderRadius: 18, border: "1px solid #E2E8F0" }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                  <Icon size={18} color="#4F46E5" />
+              <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "22px 20px", borderRadius: 16, border: "1px solid #E2E8F0" }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                  <Icon size={17} color="#4F46E5" />
                 </div>
-                <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>{item.title}</h3>
-                <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
+                <h3 style={{ fontSize: 15.5, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>{item.title}</h3>
+                <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
               </div>
             );
           })}
@@ -1188,10 +1180,10 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 8: FAQ ACCORDION
           ========================================================================= */}
-      <section id="faq" style={{ maxWidth: 840, margin: "0 auto", padding: "40px 24px 80px", textAlign: "left" }}>
+      <section id="faq" style={{ maxWidth: 840, margin: "0 auto", padding: "30px 24px 70px", textAlign: "left" }}>
         
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h2 className="lp-section-h2" style={{ fontSize: 34, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
             Frequently Asked Questions
           </h2>
           <p style={{ fontSize: 15, color: "#64748B", margin: 0 }}>
@@ -1199,11 +1191,11 @@ export default function LandingPage({ onNavigate }) {
           </p>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {FAQ_ITEMS.map((item, i) => {
             const isOpen = openFaq === i;
             return (
-              <div key={item.q} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 16, padding: "4px 20px" }}>
+              <div key={item.q} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 14, padding: "4px 18px" }}>
                 <button
                   type="button"
                   style={{
@@ -1232,43 +1224,43 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 9: PRE-FOOTER CTA CARD
           ========================================================================= */}
-      <section style={{ maxWidth: 1180, margin: "0 auto 60px", padding: "0 24px" }}>
+      <section style={{ maxWidth: 1180, margin: "0 auto 50px", padding: "0 24px" }}>
         <div style={{
           background: "#4F46E5",
-          borderRadius: 28, padding: "54px 32px", textAlign: "center",
-          boxShadow: "0 20px 45px -12px rgba(79,70,229,0.3)"
+          borderRadius: 24, padding: "48px 28px", textAlign: "center",
+          boxShadow: "0 18px 40px -12px rgba(79,70,229,0.3)"
         }}>
-          <h2 style={{ fontSize: "clamp(26px, 3.8vw, 42px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 14px", color: "#FFFFFF", lineHeight: 1.15 }}>
+          <h2 style={{ fontSize: "clamp(24px, 3.6vw, 38px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 12px", color: "#FFFFFF", lineHeight: 1.15 }}>
             Ready to Build a Workforce That Is Ready for<br />What's Next?
           </h2>
           
-          <p style={{ fontSize: 16, color: "#EEF2FF", maxWidth: 620, margin: "0 auto 30px", lineHeight: 1.55 }}>
+          <p style={{ fontSize: 15.5, color: "#EEF2FF", maxWidth: 620, margin: "0 auto 26px", lineHeight: 1.55 }}>
             Bring courses, cohorts, compliance and workforce intelligence together in one business LMS.
           </p>
 
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 28 }}>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 24 }}>
             <button
               className="action-btn-primary"
-              style={{ background: "#FFFFFF", color: "#4F46E5", fontWeight: 800, padding: "12px 26px", borderRadius: 99, border: "none", cursor: "pointer", fontSize: 14, boxShadow: "0 4px 14px rgba(0,0,0,0.1)", display: "inline-flex", alignItems: "center", gap: 6 }}
+              style={{ background: "#FFFFFF", color: "#4F46E5", fontWeight: 800, padding: "12px 24px", borderRadius: 99, border: "none", cursor: "pointer", fontSize: 14, boxShadow: "0 4px 14px rgba(0,0,0,0.1)", display: "inline-flex", alignItems: "center", gap: 6 }}
               onClick={() => handleNav("signin")}
             >
               Get Started <ArrowRight size={15} />
             </button>
             <button
-              style={{ background: "rgba(255,255,255,0.12)", color: "#FFFFFF", fontWeight: 700, padding: "12px 24px", borderRadius: 99, border: "1.5px solid rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14 }}
+              style={{ background: "rgba(255,255,255,0.12)", color: "#FFFFFF", fontWeight: 700, padding: "12px 22px", borderRadius: 99, border: "1.5px solid rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14 }}
               onClick={() => handleNav("signin")}
             >
               Sign In to Train AI
             </button>
             <button
-              style={{ background: "transparent", color: "#FFFFFF", fontWeight: 700, padding: "12px 24px", borderRadius: 99, border: "1.5px solid rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 14 }}
+              style={{ background: "transparent", color: "#FFFFFF", fontWeight: 700, padding: "12px 22px", borderRadius: 99, border: "1.5px solid rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 14 }}
               onClick={() => handleNav("demo")}
             >
               Request a demo
             </button>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap", fontSize: 12.5, color: "#EEF2FF", fontWeight: 700 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 18, flexWrap: "wrap", fontSize: 12, color: "#EEF2FF", fontWeight: 700 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34D399" }} />
               Role-based access
@@ -1286,31 +1278,31 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 10: DARK ENTERPRISE FOOTER
+          SECTION 10: DARK ENTERPRISE FOOTER (Uses /logo-dark.png)
           ========================================================================= */}
-      <footer style={{ background: "#0B1120", color: "#FFFFFF", paddingTop: 50, paddingBottom: 40, borderTop: "1px solid #1E293B" }}>
+      <footer style={{ background: "#0B1120", color: "#FFFFFF", paddingTop: 46, paddingBottom: 36, borderTop: "1px solid #1E293B" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 24px" }}>
           
           {/* Newsletter Box */}
           <div style={{
-            background: "#131C31", borderRadius: 20, padding: "36px 32px",
-            border: "1px solid #1E293B", textAlign: "center", marginBottom: 56,
+            background: "#131C31", borderRadius: 18, padding: "32px 28px",
+            border: "1px solid #1E293B", textAlign: "center", marginBottom: 50,
             boxShadow: "0 10px 30px rgba(0,0,0,0.3)"
           }}>
-            <h3 style={{ fontSize: 22, fontWeight: 800, color: "#FFFFFF", margin: "0 0 8px" }}>
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: "#FFFFFF", margin: "0 0 6px" }}>
               Stay Updated
             </h3>
-            <p style={{ fontSize: 14, color: "#94A3B8", margin: "0 0 22px" }}>
+            <p style={{ fontSize: 13.5, color: "#94A3B8", margin: "0 0 20px" }}>
               Get the latest courses, features, and learning tips delivered to your inbox.
             </p>
 
             {newsletterSubscribed ? (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "rgba(16,185,129,0.15)", color: "#34D399", borderRadius: 99, fontWeight: 700, fontSize: 13.5 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 18px", background: "rgba(16,185,129,0.15)", color: "#34D399", borderRadius: 99, fontWeight: 700, fontSize: 13 }}>
                 <CheckCircle2 size={16} />
                 <span>Thank you for subscribing! We will keep you updated.</span>
               </div>
             ) : (
-              <form onSubmit={handleNewsletterSubmit} style={{ display: "flex", maxWidth: 460, margin: "0 auto", gap: 8, flexWrap: "wrap" }}>
+              <form onSubmit={handleNewsletterSubmit} style={{ display: "flex", maxWidth: 440, margin: "0 auto", gap: 8, flexWrap: "wrap" }}>
                 <input
                   type="email"
                   required
@@ -1318,45 +1310,45 @@ export default function LandingPage({ onNavigate }) {
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   style={{
-                    flex: 1, minWidth: 220, padding: "11px 16px", borderRadius: 99,
+                    flex: 1, minWidth: 200, padding: "10px 14px", borderRadius: 99,
                     border: "1px solid #334155", background: "#0B1120", color: "#FFFFFF",
-                    fontSize: 13.5, outline: "none"
+                    fontSize: 13, outline: "none"
                   }}
                 />
                 <button
                   type="submit"
                   className="action-btn-primary"
                   style={{
-                    border: "none", padding: "11px 22px", borderRadius: 99, fontWeight: 800, fontSize: 13.5,
+                    border: "none", padding: "10px 20px", borderRadius: 99, fontWeight: 800, fontSize: 13,
                     cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6
                   }}
                 >
-                  <Mail size={15} /> Subscribe
+                  <Mail size={14} /> Subscribe
                 </button>
               </form>
             )}
           </div>
 
           {/* Footer Navigation Columns */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40, marginBottom: 48, textAlign: "left" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 36, marginBottom: 44, textAlign: "left" }}>
             
-            {/* Brand column */}
+            {/* Brand column with Dark Mode Logo */}
             <div>
-              <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 38, width: "auto", objectFit: "contain", display: "block", marginBottom: 14 }} />
-              <p style={{ fontSize: 13, color: "#94A3B8", lineHeight: 1.6, margin: "0 0 20px", maxWidth: 280 }}>
+              <img src="/logo-dark.png" alt="Train AI" style={{ height: 24, width: "auto", objectFit: "contain", display: "block", marginBottom: 12 }} />
+              <p style={{ fontSize: 12.5, color: "#94A3B8", lineHeight: 1.55, margin: "0 0 18px", maxWidth: 280 }}>
                 AI-powered workforce learning and intelligence for modern businesses.
               </p>
-              <div style={{ display: "flex", gap: 10 }}>
-                <div className="lp-social-btn" aria-label="Facebook"><Facebook size={16} /></div>
-                <div className="lp-social-btn" aria-label="Twitter"><Twitter size={16} /></div>
-                <div className="lp-social-btn" aria-label="Instagram"><Instagram size={16} /></div>
-                <div className="lp-social-btn" aria-label="LinkedIn"><Linkedin size={16} /></div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div className="lp-social-btn" aria-label="Facebook"><Facebook size={15} /></div>
+                <div className="lp-social-btn" aria-label="Twitter"><Twitter size={15} /></div>
+                <div className="lp-social-btn" aria-label="Instagram"><Instagram size={15} /></div>
+                <div className="lp-social-btn" aria-label="LinkedIn"><Linkedin size={15} /></div>
               </div>
             </div>
 
             {/* Product column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "#FFFFFF", marginBottom: 4 }}>Product</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: "#FFFFFF", marginBottom: 2 }}>Product</div>
               <span className="lp-footer-link" onClick={() => scrollToId("intelligence")}>Features</span>
               <span className="lp-footer-link" onClick={() => scrollToId("how-it-works")}>How It Works</span>
               <span className="lp-footer-link" onClick={() => handleNav("signup")}>Sign Up</span>
@@ -1364,8 +1356,8 @@ export default function LandingPage({ onNavigate }) {
             </div>
 
             {/* For Users column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "#FFFFFF", marginBottom: 4 }}>For Users</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, color: "#FFFFFF", marginBottom: 2 }}>For Users</div>
               <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Learner Dashboard</span>
               <span className="lp-footer-link" onClick={() => scrollToId("organisation")}>Instructor Workspace</span>
               <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Community</span>
@@ -1375,11 +1367,11 @@ export default function LandingPage({ onNavigate }) {
           </div>
 
           {/* Bottom Copyright & Legal Links */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16, paddingTop: 24, borderTop: "1px solid #1E293B", fontSize: 12.5, color: "#64748B" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14, paddingTop: 20, borderTop: "1px solid #1E293B", fontSize: 12, color: "#64748B" }}>
             <div>
               © 2025 Train AI Ltd. All rights reserved. Headquartered in London, United Kingdom
             </div>
-            <div style={{ display: "flex", gap: 20 }}>
+            <div style={{ display: "flex", gap: 18 }}>
               <span className="lp-footer-link" onClick={() => handleNav("about")}>About Us</span>
               <span className="lp-footer-link" onClick={() => handleNav("privacy")}>Privacy Policy</span>
               <span className="lp-footer-link" onClick={() => handleNav("terms")}>Terms of Service</span>
@@ -1396,7 +1388,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={styles.modalCard} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <div>
-                <h3 style={{ fontSize: 19, fontWeight: 900, color: "#0F172A", margin: 0 }}>Request a Live Demo</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: "#0F172A", margin: 0 }}>Request a Live Demo</h3>
                 <p style={{ fontSize: 12.5, color: "#64748B", margin: "2px 0 0" }}>Experience the workforce intelligence platform tailored to your team.</p>
               </div>
               <button style={styles.modalClose} onClick={() => setDemoModalOpen(false)} aria-label="Close">
@@ -1405,12 +1397,12 @@ export default function LandingPage({ onNavigate }) {
             </div>
 
             {demoSubmitted ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 16, background: "#ECFDF5", color: "#059669", borderRadius: 12, fontWeight: 700, fontSize: 14 }}>
-                <CheckCircle2 size={20} />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: 14, background: "#ECFDF5", color: "#059669", borderRadius: 10, fontWeight: 700, fontSize: 13.5 }}>
+                <CheckCircle2 size={18} />
                 <span>Thank you! We will reach out to schedule your demo shortly.</span>
               </div>
             ) : (
-              <form onSubmit={handleDemoSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <form onSubmit={handleDemoSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <input
                     required placeholder="Full name" value={demoName} onChange={(e) => setDemoName(e.target.value)}
@@ -1439,7 +1431,7 @@ export default function LandingPage({ onNavigate }) {
                   rows={2} style={styles.formTextarea}
                 />
                 <button type="submit" disabled={submitting} className="action-btn-primary" style={styles.modalSubmitBtn}>
-                  {submitting ? "Submitting..." : "Schedule Live Demo"} <ArrowRight size={15} />
+                  {submitting ? "Submitting..." : "Schedule Live Demo"} <ArrowRight size={14} />
                 </button>
                 {demoError && <div style={{ fontSize: 12, color: "#EF4444", fontWeight: 700 }}>{demoError}</div>}
               </form>
@@ -1452,13 +1444,13 @@ export default function LandingPage({ onNavigate }) {
       {activeModal && (
         <div style={styles.modalOverlay} onClick={() => setActiveModal(null)} role="presentation">
           <div style={styles.modalCard} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0F172A", margin: 0 }}>{LEGAL_CONTENT[activeModal].title}</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 }}>{LEGAL_CONTENT[activeModal].title}</h3>
               <button style={styles.modalClose} onClick={() => setActiveModal(null)} aria-label="Close">
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
-            <p style={{ fontSize: 13.5, color: "#475569", lineHeight: 1.6, margin: 0 }}>{LEGAL_CONTENT[activeModal].body}</p>
+            <p style={{ fontSize: 13, color: "#475569", lineHeight: 1.6, margin: 0 }}>{LEGAL_CONTENT[activeModal].body}</p>
           </div>
         </div>
       )}
@@ -1468,19 +1460,19 @@ export default function LandingPage({ onNavigate }) {
 }
 
 const styles = {
-  outer: { minHeight: "100vh", background: "#F8FAFC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" },
+  outer: { minHeight: "100vh", background: "#F8FAFC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflowX: "hidden" },
   header: { background: "rgba(255,255,255,0.96)", backdropFilter: "blur(12px)", borderBottom: "1px solid #E2E8F0", position: "sticky", top: 0, zIndex: 60 },
-  headerInner: { maxWidth: 1180, margin: "0 auto", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
-  signInBtn: { border: "none", background: "transparent", padding: "8px 12px", fontWeight: 700, fontSize: 13.5, cursor: "pointer", color: "#334155" },
-  requestDemoBtn: { padding: "8px 18px", borderRadius: 99, fontWeight: 700, fontSize: 13, cursor: "pointer" },
-  getStartedBtn: { border: "none", padding: "8px 20px", borderRadius: 99, fontWeight: 800, fontSize: 13, cursor: "pointer" },
-  startOrgBtn: { border: "none", padding: "12px 24px", borderRadius: 99, fontWeight: 800, fontSize: 14, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 },
-  requestDemoOutlineBtn: { padding: "12px 24px", borderRadius: 99, fontWeight: 700, fontSize: 14, cursor: "pointer" },
-  heroPill: { background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "8px 16px", borderRadius: 14, display: "flex", alignItems: "center", gap: 10, boxShadow: "0 2px 6px rgba(15,23,42,0.03)" },
-  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100 },
-  modalCard: { background: "#FFFFFF", borderRadius: 20, padding: 26, maxWidth: 500, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 60px -24px rgba(15,23,42,.35)" },
+  headerInner: { maxWidth: 1180, margin: "0 auto", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  signInBtn: { border: "none", background: "transparent", padding: "7px 12px", fontWeight: 700, fontSize: 13.5, cursor: "pointer", color: "#334155" },
+  requestDemoBtn: { padding: "7px 16px", borderRadius: 99, fontWeight: 700, fontSize: 13, cursor: "pointer" },
+  getStartedBtn: { border: "none", padding: "7px 18px", borderRadius: 99, fontWeight: 800, fontSize: 13, cursor: "pointer" },
+  startOrgBtn: { border: "none", padding: "11px 22px", borderRadius: 99, fontWeight: 800, fontSize: 13.5, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 },
+  requestDemoOutlineBtn: { padding: "11px 22px", borderRadius: 99, fontWeight: 700, fontSize: 13.5, cursor: "pointer" },
+  heroPill: { background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "7px 14px", borderRadius: 12, display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 4px rgba(15,23,42,0.03)" },
+  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 100 },
+  modalCard: { background: "#FFFFFF", borderRadius: 18, padding: 22, maxWidth: 480, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 25px 50px -20px rgba(15,23,42,.3)" },
   modalClose: { border: "none", background: "#F1F5F9", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex", color: "#64748B" },
-  formInput: { width: "100%", border: "1.5px solid #E2E8F0", padding: "10px 14px", fontSize: 13, borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#F8FAFC" },
-  formTextarea: { width: "100%", border: "1.5px solid #E2E8F0", padding: "10px 14px", fontSize: 13, borderRadius: 10, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit", background: "#F8FAFC" },
-  modalSubmitBtn: { border: "none", padding: "12px 20px", borderRadius: 10, fontWeight: 800, fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }
+  formInput: { width: "100%", border: "1.5px solid #E2E8F0", padding: "9px 12px", fontSize: 12.5, borderRadius: 8, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#F8FAFC" },
+  formTextarea: { width: "100%", border: "1.5px solid #E2E8F0", padding: "9px 12px", fontSize: 12.5, borderRadius: 8, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit", background: "#F8FAFC" },
+  modalSubmitBtn: { border: "none", padding: "11px 18px", borderRadius: 8, fontWeight: 800, fontSize: 13.5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }
 };
