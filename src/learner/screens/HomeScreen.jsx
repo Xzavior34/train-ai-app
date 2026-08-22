@@ -4,7 +4,7 @@ import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
 import { fetchAIInsights } from "../../lib/api/schemaHelper.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
-  Bell, GraduationCap, Play, BookOpen, Users, Zap, ChevronRight, Layers, Trophy, Clock, Sparkles, Flame, Target,
+  Bell, GraduationCap, Play, BookOpen, Users, Zap, ChevronRight, Layers, Trophy, Clock, Flame, Target,
   Calendar, CheckCircle2, TrendingUp, BarChart3, AlertCircle, ArrowUpRight, Video, Award, Star, Palette, Lock, Radio,
   Bookmark
 } from "lucide-react";
@@ -352,7 +352,7 @@ export function HomeScreen({
           <div className="tai-card" style={{ padding: 20, borderRadius: 16 }}>
             <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
               <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 14 }}>
-                <Sparkles size={16} color="var(--primary)" />
+                <Zap size={16} color="var(--primary)" />
                 <span>Recommended Courses</span>
               </div>
               <span className="tai-link" style={{ fontSize: 12 }} onClick={() => goTab("courses")}>View Catalog</span>

@@ -3,7 +3,7 @@ import { TopBar, ProgressBar, Tag, Avatar } from "../components/LearnerUI.jsx";
 import {
   Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize2, Minimize2,
   CheckCircle2, ChevronRight, ChevronLeft, PlusCircle, ThumbsUp, ThumbsDown,
-  Clock, Video, BookOpen, Sparkles, Download, Share2, HelpCircle, FileText,
+  Clock, Video, BookOpen, Zap, Download, Share2, HelpCircle, FileText,
   Code2, Award, Star, MessageSquare, Send, Search, Check, X, ShieldCheck,
   Bookmark, Heart, Layers, RefreshCw, PanelRightClose, PanelRightOpen,
   Sliders, ExternalLink, Bot, Terminal, Copy, Paperclip
@@ -39,7 +39,7 @@ const LESSON_RESOURCES = [
   { id: "res-1", title: "Starter Code Repository (GitHub)", type: "GitHub Repo", size: "ZIP • 4.2 MB", icon: Code2, url: "https://github.com" },
   { id: "res-2", title: "Complete Figma Design Tokens & Variables Kit", type: "Figma File", size: "FIG • 18.5 MB", icon: Layers, url: "https://figma.com" },
   { id: "res-3", title: "Masterclass Slide Deck & Architecture Diagrams", type: "PDF Document", size: "PDF • 8.1 MB", icon: FileText, url: "#" },
-  { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: Sparkles, url: "#" }
+  { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: Zap, url: "#" }
 ];
 
 // Lesson Q&A Discussions

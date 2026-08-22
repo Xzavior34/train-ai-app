@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TopBar, StatCard, Tag, exportRowsAsCsv, ProgressBar } from "../components/PlatformUI.jsx";
 import {
-  Building2, Users, Layers, Activity, Download, Clock, Sparkles,
+  Building2, Users, Layers, Activity, Download, Clock,
   Globe, TrendingUp, TrendingDown, Megaphone, ShieldCheck, Zap,
   Server, Database, ArrowUpRight, CheckCircle2, ChevronRight, Plus,
   DollarSign, BarChart2, Radio, Play

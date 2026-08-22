@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { TopBar, Tag } from "../components/LearnerUI.jsx";
-import { Sparkles, ShieldCheck, Loader2, CreditCard } from "lucide-react";
+import { Zap, ShieldCheck, Loader2, CreditCard } from "lucide-react";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "../../lib/api/payments.js";
 
 const PACKAGES = [
@@ -142,7 +142,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
                     {p.highlight && <Tag tone="warning">POPULAR</Tag>}
                   </div>
                   <div className="tai-row tai-gap6 tai-mt8">
-                    <Sparkles size={16} color="var(--primary)" />
+                    <Zap size={16} color="var(--primary)" />
                     <span style={{ fontSize: 20, fontWeight: 800 }}>{p.credits}</span>
                     <span style={{ fontSize: 12, color: "var(--text-2)" }}>credits</span>
                   </div>

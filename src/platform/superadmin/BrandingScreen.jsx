@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { TopBar, ToastContext, Tag } from "../components/PlatformUI.jsx";
-import { Building2, Palette, Sparkles, Check, Sun, Moon, Eye } from "lucide-react";
+import { Building2, Palette, Check, Sun, Moon, Eye } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllOrganizations, fetchOrgBranding, upsertOrgBranding } from "../../lib/api/platform.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";

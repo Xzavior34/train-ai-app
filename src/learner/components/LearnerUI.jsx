@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import {
   Home, BookOpen, Zap, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
-  Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Sparkles, Flame, MessageSquare, Calendar,
+  Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Flame, MessageSquare, Calendar,
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
   PanelLeftClose, PanelLeftOpen, Video
 } from "lucide-react";
@@ -239,39 +239,57 @@ export const TOKENS = `
   .tai-avatar { border-radius:50%; background: #4F46E5; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; }
   .tai-divider { height:1px; background: var(--border); border:none; margin: 12px 0; }
   
-  /* Full-width attached bottom navigation on mobile - clean, solid, accessible */
+  /* Full-width attached bottom navigation on mobile with dynamic expanding pill motion */
   .tai-navbar {
     position: fixed; left: 0; right: 0; bottom: 0; width: 100vw; max-width: 100%;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(226, 232, 240, 0.85);
     display: flex; justify-content: space-around; align-items: center;
-    padding: 6px 12px max(8px, env(safe-area-inset-bottom)); z-index: 100;
-    box-shadow: 0 -2px 10px rgba(15, 23, 42, 0.04);
+    padding: 8px 14px max(10px, env(safe-area-inset-bottom)); z-index: 100;
+    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
   .tai.dark .tai-navbar {
-    background: #0D1222;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(13, 18, 34, 0.94);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   }
   .tai-navitem {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    cursor: pointer; color: var(--text-3); padding: 4px 8px; border-radius: 6px;
-    background: transparent; border: none; outline: none; gap: 3px;
-    transition: color .15s ease;
+    display: flex; flex-direction: row; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-3); padding: 8px 14px; border-radius: 999px;
+    background: transparent; border: none; outline: none;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .tai-navitem:hover {
     color: var(--text);
   }
   .tai-navitem-icon-wrap {
     display: flex; align-items: center; justify-content: center;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .tai-navitem-label {
-    font-size: 10.5px; font-weight: 700; letter-spacing: 0.01em; color: var(--text-3);
+    max-width: 0; opacity: 0; transform: scale(0.7);
+    overflow: hidden; white-space: nowrap; margin-left: 0;
+    font-size: 12px; font-weight: 800; letter-spacing: 0.02em;
+    transition: max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+                margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   }
+  /* Active dynamic pill state */
   .tai-navitem.active {
-    color: #4F46E5;
+    background: #4F46E5; color: #FFFFFF;
+    padding: 8px 18px;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+    transform: translateY(-2px);
+  }
+  .tai-navitem.active .tai-navitem-icon-wrap {
+    transform: scale(1.05);
   }
   .tai-navitem.active .tai-navitem-label {
-    color: #4F46E5; font-weight: 800;
+    max-width: 90px; opacity: 1; transform: scale(1);
+    margin-left: 7px; color: #FFFFFF;
   }
   .tai-input { width:100%; border-radius:8px; border:1px solid var(--border); background: var(--surface); padding: 10px 14px;
     font-size:13px; color: var(--text); font-family: var(--font); transition: border-color .15s ease; }
@@ -570,7 +588,7 @@ export function LearnerHeader({
 
         {/* AI Credits Pill (Desktop only to prevent mobile crowding) */}
         <div className="tai-credits-pill tai-desktop-only" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
-          <Sparkles size={13} color="#4F46E5" />
+          <Zap size={13} color="#4F46E5" />
           <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
         </div>
 

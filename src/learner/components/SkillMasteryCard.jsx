@@ -1,6 +1,6 @@
 import React from "react";
 import { ProgressBar } from "./LearnerUI.jsx";
-import { Sparkles } from "lucide-react";
+import { Zap } from "lucide-react";
 
 // There is no dedicated skills/mastery table in the shared schema (no
 // `skills`, `course_skills`, or `user_skill_progress` table - confirmed by
@@ -33,7 +33,7 @@ export function SkillMasteryCard({ courses = [] }) {
   return (
     <div className="tai-card tai-mt12">
       <div className="tai-row tai-gap8">
-        <Sparkles size={16} color="var(--primary)" />
+        <Zap size={16} color="var(--primary)" />
         <div className="tai-title-sm">Skill mastery</div>
       </div>
       <div className="tai-col tai-gap10 tai-mt10">

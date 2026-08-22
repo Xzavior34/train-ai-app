@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TopBar, StatTile, Avatar, optionLabel, optionValue, initialsOf, Tag, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight,
-  GraduationCap, Sparkles, Send, Bot, MessageSquare, BookOpen, Lightbulb,
+  GraduationCap, Send, Bot, MessageSquare, BookOpen, Lightbulb,
   Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck,
   History, MessageSquarePlus, Clock, ChevronDown, ChevronUp
 } from "lucide-react";
@@ -204,7 +204,7 @@ export function AIQuizScreen({
                 border: "1px solid rgba(255,255,255,0.1)", padding: "6px 10px", borderRadius: 8,
                 display: "inline-flex", alignItems: "center", gap: 6
               }}>
-                <Sparkles size={13} color="#818CF8" />
+                <Zap size={13} color="#818CF8" />
                 <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{credits} credits</span>
               </div>
             )}
@@ -233,7 +233,7 @@ export function AIQuizScreen({
           { k: "coach", label: "AI Coach & Tutor", icon: MessageSquare },
           { k: "quiz", label: "Adaptive Quizzes", icon: Zap },
           { k: "history", label: "Session History", icon: BookOpen },
-          { k: "insights", label: "Performance Insights", icon: Sparkles },
+          { k: "insights", label: "Performance Insights", icon: Zap },
         ].map(t => {
           const Icon = t.icon;
           const isActive = aiTab === t.k;
@@ -429,7 +429,7 @@ export function AIQuizScreen({
             {!coachMessagesLoading && coachMessages.length === 0 && (
               <div style={{ textAlign: "center", margin: "auto", maxWidth: 460, padding: 30 }}>
                 <div style={{ width: 64, height: 64, borderRadius: 20, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                  <Sparkles size={28} color="var(--primary)" />
+                  <Zap size={28} color="var(--primary)" />
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
                   How can I assist your learning today?
@@ -561,7 +561,7 @@ export function AIQuizScreen({
                       Generate custom quizzes tuned to your target skillset
                     </p>
                   </div>
-                  <Sparkles size={18} color="var(--primary)" />
+                  <Zap size={18} color="var(--primary)" />
                 </div>
 
                 <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>

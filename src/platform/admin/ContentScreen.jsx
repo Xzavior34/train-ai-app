@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
-import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
+import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown, Zap } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCourses, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial, fetchCourseQualityReview, submitCourseQualityReview } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
@@ -597,7 +597,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       setEditLessons(prev => [...prev, ...newGenerated]);
                       showToast("AI generated 4 new structured lessons!");
                     }}>
-                      <Sparkles size={14} /> Auto-Generate with AI
+                      <Zap size={14} /> Auto-Generate with AI
                     </button>
                     <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddLesson}>
                       <Plus size={14} /> Add New Lesson
@@ -618,7 +618,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   gap: 12
                 }}>
                   <div className="ta-row ta-gap10">
-                    <Sparkles size={18} color="#4F46E5" />
+                    <Zap size={18} color="#4F46E5" />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>AI-Powered Curriculum Builder</div>
                       <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Generate modules, lesson outlines, and quizzes aligned with industry benchmarks in 1 click.</div>

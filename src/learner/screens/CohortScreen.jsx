@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Layers, Video, Calendar, FileText, Link2, ExternalLink, Flame, Users,
-  CheckCircle2, Clock, Play, ArrowRight, BookOpen, Star, Sparkles, MessageCircle, Heart, GraduationCap
+  CheckCircle2, Clock, Play, ArrowRight, BookOpen, Star, MessageCircle, Heart, GraduationCap
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";

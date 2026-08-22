@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { 
-  CheckCircle2, MessageCircle, Search, Filter, Sparkles, 
+  CheckCircle2, MessageCircle, Search, Filter, Zap, 
   Send, ThumbsUp, HelpCircle, BookOpen, Clock, ChevronDown, 
   ChevronUp, Check, MessageSquareQuote, UserCheck
 } from "lucide-react";
@@ -342,7 +342,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
                           onClick={() => handleAiDraft(d.id, d)}
                           style={{ fontSize: 11, padding: "4px 8px", background: "var(--surface)", display: "flex", alignItems: "center", gap: 5 }}
                         >
-                          <Sparkles size={13} color="var(--primary)" />
+                          <Zap size={13} color="var(--primary)" />
                           {aiDrafting === d.id ? "Drafting..." : "AI Answer Co-Pilot"}
                         </button>
                       </div>

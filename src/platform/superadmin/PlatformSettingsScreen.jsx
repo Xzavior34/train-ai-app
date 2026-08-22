@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchPlatformSettings, upsertPlatformSetting } from "../../lib/api/platform.js";
 
-import { Database, Trash2, RefreshCw, CheckCircle2, Sparkles, Server } from "lucide-react";
+import { Database, Trash2, RefreshCw, CheckCircle2, Server } from "lucide-react";
 import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
 import { SUPABASE_PROJECTS } from "../../services/supabaseClient.js";
 

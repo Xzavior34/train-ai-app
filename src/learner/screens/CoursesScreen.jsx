@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, CourseCard, ProgressBar, Tag } from "../components/LearnerUI.jsx";
 import {
-  Search, Play, Clock, Sparkles, Video, Eye,
+  Search, Play, Clock, Video, Eye,
   ArrowRight, ExternalLink, Bookmark, CheckCircle2,
   Calendar, Layers, Filter, X, Star, Award, Users,
   BookOpen, ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Heart,

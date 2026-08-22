@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail,
-  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy,
+  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Zap, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy,
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
@@ -576,7 +576,7 @@ const ADMIN_NAV = [
     section: "Learning",
     items: [
       { key: "content", label: "Courses", icon: BookOpen },
-      { key: "coursebuilder", label: "Course Builder", icon: Sparkles },
+      { key: "coursebuilder", label: "Course Builder", icon: Zap },
       { key: "paths", label: "Learning Paths", icon: Map },
       { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
       { key: "compliance", label: "Learner Progress", icon: ShieldCheck },

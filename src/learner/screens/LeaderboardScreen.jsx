@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TopBar, Tag, Avatar, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Trophy, Medal, Crown, Flame, Award, ArrowUp, ArrowDown, Minus,
-  Search, Filter, Users, Sparkles, TrendingUp, ChevronRight, CheckCircle2
+  Search, Filter, Users, TrendingUp, ChevronRight, CheckCircle2
 } from "lucide-react";
 
 export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, push }) {

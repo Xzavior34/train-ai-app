@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { 
-  Brain, Sparkles, ClipboardCheck, AlertTriangle, Bot, 
+  Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
   Award, ShieldCheck, ChevronRight, Zap, Target, BookOpen
 } from "lucide-react";
@@ -301,7 +301,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         </div>
 
         <div className="ta-card">
-          <div className="ta-row ta-gap8"><Sparkles size={16} color="var(--primary)" /><div className="ta-title">Skill gaps by department</div></div>
+          <div className="ta-row ta-gap8"><Zap size={16} color="var(--primary)" /><div className="ta-title">Skill gaps by department</div></div>
           <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
             Real course-category completion, broken down by department - the lowest scores are the closest thing this data supports to "where the gaps are."
           </div>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, ProgressBar, StatTile } from "../components/LearnerUI.jsx";
 import {
   BarChart3, BookOpen, Clock, Trophy, Flame, GraduationCap, CheckCircle2,
-  Calendar, ArrowRight, Play, Star, Sparkles, Target, Award, ShieldCheck,
+  Calendar, ArrowRight, Play, Star, Target, Award, ShieldCheck,
   TrendingUp, Check, ExternalLink
 } from "lucide-react";
 

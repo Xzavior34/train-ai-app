@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Gift, Sparkles, X } from "lucide-react";
+import { Gift, Zap, X } from "lucide-react";
 import { DAILY_LOGIN_REWARD_LADDER, fetchDailyLoginRewardState, claimDailyLoginReward } from "../../../lib/api/retention.js";
 
 const STORAGE_PREFIX = "trainai_daily_login_seen";
@@ -135,7 +135,7 @@ export function DailyLoginReward({ session, onClaimed }) {
             disabled={claiming}
             onClick={handleClaim}
           >
-            <Sparkles size={15} />
+            <Zap size={15} />
             {claiming ? "Claiming..." : `Claim +${Math.min(DAILY_LOGIN_REWARD_LADDER[state.nextDay - 1].points, 20)} XP`}
           </button>
         </>

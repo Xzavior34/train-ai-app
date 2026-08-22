@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sparkles, ArrowRight, X } from "lucide-react";
+import { Zap, ArrowRight, X } from "lucide-react";
 
 function dismissKey(userId) {
   return `trainai_comeback_dismissed:${userId}:${new Date().toISOString().split("T")[0]}`;
@@ -49,7 +49,7 @@ export function ComebackBanner({ userId, daysAway, course, onContinue, onBrowse 
       </button>
       <div className="tai-row tai-gap12">
         <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(255,255,255,.18)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Sparkles size={18} />
+          <Zap size={18} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 800, fontSize: 15 }}>Welcome back!</div>

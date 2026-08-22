@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
-  MessageCircle, Heart, Flame, Sparkles, Rocket, Users, Share2, Send, Plus,
+  MessageCircle, Heart, Flame, Compass, Rocket, Users, Share2, Send, Plus,
   Search, Bookmark, ExternalLink, Calendar, CheckCircle2, Megaphone, Radio,
   Filter, Pin, ThumbsUp, Code2, Award, ChevronRight, Layers, Play, Clock,
   ArrowUpRight, MoreHorizontal, Check, X, HelpCircle, Image as ImageIcon,
@@ -56,7 +56,7 @@ export function CommunityScreen({
 
   // Rich Community Spaces (Disco LMS Architecture with Professional Icons)
   const SPACES = [
-    { id: "all", label: "All Spaces", icon: Sparkles, count: 28 },
+    { id: "all", label: "All Spaces", icon: Compass, count: 28 },
     { id: "announcements", label: "Announcements", icon: Megaphone, count: 4 },
     { id: "design-critique", label: "Design & UI Critique", icon: Palette, count: 9 },
     { id: "ai-engineering", label: "AI & Full-Stack", icon: Zap, count: 8 },

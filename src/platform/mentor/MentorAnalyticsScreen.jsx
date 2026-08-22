@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar } from "../components/PlatformUI.jsx";
 import { 
   Star, Users, Calendar, DollarSign, TrendingUp, Clock, 
-  MessageCircle, CheckCircle2, Award, Sparkles, ThumbsUp,
+  MessageCircle, CheckCircle2, Award, Zap, ThumbsUp,
   BarChart3, ShieldCheck, ArrowUpRight, BookOpen
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
@@ -223,7 +223,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
 
             <div className="ta-row ta-between ta-mt20" style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
               <div className="ta-row ta-gap8">
-                <Sparkles size={15} color="var(--primary)" />
+                <Zap size={15} color="var(--primary)" />
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)" }}>AI Teaching Feedback Summary</span>
               </div>
               <span style={{ fontSize: 11.5, color: "var(--success)", fontWeight: 700 }}>Exceptional Clarity</span>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { TopBar } from "../components/LearnerUI.jsx";
 import {
-  Bell, BookOpen, Video, Trophy, Sparkles, CheckCheck, Trash2,
+  Bell, BookOpen, Video, Trophy, CheckCheck, Trash2,
   Search, ArrowRight, MessageSquare, ShieldAlert, Check, X, Filter
 } from "lucide-react";
 

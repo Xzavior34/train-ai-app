@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { 
-  Users, BookOpen, X, StickyNote, Plus, Video, Sparkles, 
+  Users, BookOpen, X, StickyNote, Plus, Video, 
   MessageCircle, Calendar, ShieldCheck, ChevronRight, UserPlus 
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";

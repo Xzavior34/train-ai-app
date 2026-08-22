@@ -3,7 +3,7 @@ import { TopBar, StatCard, Tag, ToastContext } from "../components/PlatformUI.js
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { 
   Users, Layers, CheckCircle2, Calendar, Radio, Star,
-  Sparkles, ArrowRight, Video, Clock, AlertTriangle,
+  ArrowRight, Video, Clock, AlertTriangle,
   CheckSquare, Square, MessageSquare, ExternalLink, Plus,
   TrendingUp, BookOpen, Brain, DollarSign
 } from "lucide-react";
