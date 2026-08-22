@@ -115,13 +115,26 @@ export const TOKENS = `
     background: #121829;
   }
   .ta-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
+  /* position: fixed rather than sticky - sticky depends on none of its
+     ancestors setting transform/filter/contain/overflow in a way that
+     creates a new containing block, which is easy to accidentally trip
+     with this many shared style layers in play, and empirically has (see
+     the DashboardSwitcher note below) actually resolved to position: static
+     when this app, the learner app, and the owner app are all mounted at
+     once (App.jsx keeps all three mounted, toggling display none/block).
+     Fixed is anchored to the viewport unconditionally, so it can't be
+     broken the same way - this is what keeps the sidebar "long" (always
+     the full viewport height) and never scrolling with the page. .ta-main
+     below carries the matching margin-left. */
   .ta-sidebar {
     width: var(--sidebar-w); flex-shrink: 0;
     background: #FFFFFF;
     border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 20px 14px; position: sticky; top: 0; height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column; padding: 20px 14px;
+    position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh;
     color: var(--text); box-shadow: 2px 0 16px -8px rgba(15,23,42,0.04);
     transition: width .2s ease, padding .2s ease;
+    z-index: 30;
   }
   .ta-sidebar.ta-sidebar-minimized {
     width: 76px; padding: 20px 8px;
@@ -183,7 +196,8 @@ export const TOKENS = `
     transition: all .15s ease; margin-bottom: 10px;
   }
   .ta-toggle-btn:hover { background: var(--surface-3); color: var(--primary); border-color: var(--primary-light); }
-  .ta-main { flex: 1; min-width: 0; }
+  .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
+  .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 76px; }
   .ta-topbar {
     height: 72px; border-bottom: 1px solid var(--border); background: var(--surface);
     display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(20px, 2.5vw, 32px); position: sticky; top:0; z-index: 20;
@@ -251,6 +265,9 @@ export const TOKENS = `
   @media (max-width: 899px) {
     .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
+    /* The sidebar is an off-canvas drawer here (translateX(-100%) unless
+       .mobile-open), so content must never be pushed over for it. */
+    .ta-main, .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 0; }
     /* The theme toggle, notifications bell, per-screen quick-action, and
        Sign Out button all get hidden here rather than shrunk - crammed
        together as icons they still read as "crowded" no matter how small.

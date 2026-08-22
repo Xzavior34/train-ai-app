@@ -470,14 +470,18 @@ function CertificateCard({ template, myAttempt, myCertificate, onRequest, brandi
 function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit }) {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  // Was declared after the loading early-return below, so this component
+  // called a different number of hooks depending on questionsQuery/
+  // myAttemptQuery's loading state - a real Rules-of-Hooks violation that
+  // corrupts hook state (or throws) the moment either query finishes
+  // loading during the same mount.
+  const [localScore, setLocalScore] = useState(null);
   const questions = questionsQuery?.data || [];
   const myAttempt = myAttemptQuery?.data;
 
   if (questionsQuery?.loading || myAttemptQuery?.loading) {
     return <div className="tai-mt16 tai-empty">Loading assessment...</div>;
   }
-
-  const [localScore, setLocalScore] = useState(null);
 
   const DEFAULT_QUESTIONS = [
     {
