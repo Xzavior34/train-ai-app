@@ -110,12 +110,16 @@ function readStoredActiveProject() {
   }
 }
 
-// The live binding every existing file that does
-// `import { supabase } from ...` already depends on. `let`, not `const` -
-// ES module bindings are live, so reassigning this here is visible to every
-// other module that imported it, without needing to touch any of their
-// import statements.
-export let activeProject = readStoredActiveProject() || SUPABASE_PROJECTS.DIGITAL_TRAINING;
+function getInitialActiveProject() {
+  const stored = readStoredActiveProject();
+  if (stored && CLIENTS_BY_PROJECT[stored]) return stored;
+  if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.SARA_FOUNDATION]) return SUPABASE_PROJECTS.SARA_FOUNDATION;
+  if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.DIGITAL_TRAINING]) return SUPABASE_PROJECTS.DIGITAL_TRAINING;
+  if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.B2B]) return SUPABASE_PROJECTS.B2B;
+  return SUPABASE_PROJECTS.SARA_FOUNDATION;
+}
+
+export let activeProject = getInitialActiveProject();
 export let supabase = CLIENTS_BY_PROJECT[activeProject] || null;
 export let isSupabaseConfigured = !!supabase;
 
