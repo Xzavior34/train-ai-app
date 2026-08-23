@@ -455,15 +455,28 @@ export default function LandingPage({ onNavigate }) {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lp-mobile-drawer" style={{ background: "#FFFFFF", borderTop: "1px solid #E2E8F0", padding: "14px 18px 20px", display: "flex", flexDirection: "column", gap: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("home")}>Home</span>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("intelligence")}>Intelligence</span>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("learners")}>Learners</span>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("organisation")}>Organisation</span>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("faq")}>FAQ</span>
+          <div
+            className="lp-mobile-drawer anim-fluid-entrance"
+            style={{
+              background: "rgba(255, 255, 255, 0.95)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              borderTop: "1px solid rgba(226, 232, 240, 0.9)",
+              padding: "16px 20px 24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              boxShadow: "0 16px 40px -10px rgba(15, 23, 42, 0.15)"
+            }}
+          >
+            <span className="lp-nav-link anim-stagger-1" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("home")}>Home</span>
+            <span className="lp-nav-link anim-stagger-2" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("intelligence")}>Intelligence</span>
+            <span className="lp-nav-link anim-stagger-3" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("learners")}>Learners</span>
+            <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("organisation")}>Organisation</span>
+            <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("faq")}>FAQ</span>
             <button
               className="action-btn-outline"
-              style={{ width: "100%", padding: "9px", borderRadius: 6, fontWeight: 700, marginTop: 4, fontSize: 13 }}
+              style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, marginTop: 6, fontSize: 13 }}
               onClick={() => handleNav("demo")}
             >
               Request a demo
@@ -475,7 +488,7 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 1: HERO SECTION
           ========================================================================= */}
-      <section className="lp-bg-hero" style={{ width: "100%", position: "relative", borderBottom: "1px solid #E2E8F0" }}>
+      <section className="lp-bg-hero ambient-mesh-glow" style={{ width: "100%", position: "relative", borderBottom: "1px solid #E2E8F0" }}>
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 64px" }}>
           <div className="lp-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 36, alignItems: "center" }}>
             
@@ -1422,11 +1435,22 @@ export default function LandingPage({ onNavigate }) {
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {FAQ_ITEMS.map((item, i) => {
               const isOpen = openFaq === i;
               return (
-                <div key={item.q} style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 8, padding: "2px 18px" }}>
+                <div
+                  key={item.q}
+                  className="tai-card tai-card-hover"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.88)",
+                    backdropFilter: "blur(14px)",
+                    WebkitBackdropFilter: "blur(14px)",
+                    border: "1px solid rgba(226, 232, 240, 0.85)",
+                    borderRadius: 10,
+                    padding: "2px 20px"
+                  }}
+                >
                   <button
                     type="button"
                     style={{
@@ -1441,10 +1465,11 @@ export default function LandingPage({ onNavigate }) {
                     <ChevronDown
                       size={16}
                       color="#64748B"
-                      style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform .18s ease" }}
+                      className={`rotator-chevron ${isOpen ? "rotator-chevron-open" : ""}`}
+                      style={{ flexShrink: 0 }}
                     />
                   </button>
-                  {isOpen && <p style={{ margin: "0 0 14px", fontSize: 13, color: "#64748B", lineHeight: 1.55 }}>{item.a}</p>}
+                  {isOpen && <p className="anim-fluid-entrance" style={{ margin: "0 0 14px", fontSize: 13, color: "#64748B", lineHeight: 1.55 }}>{item.a}</p>}
                 </div>
               );
             })}
