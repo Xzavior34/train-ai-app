@@ -573,15 +573,15 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
         {/* =========================================================================
             LEARNING PATHS HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
-
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-purple" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
                 Curriculum Tracks &amp; Learning Paths
               </h1>
               <p className="ta-hero-desc">
-                Design progressive career roadmaps and module sequence flows.
+                Design progressive career roadmaps, sequenced multi-course modules, and milestone requirements.
               </p>
             </div>
 

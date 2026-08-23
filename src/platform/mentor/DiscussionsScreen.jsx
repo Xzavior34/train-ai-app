@@ -138,8 +138,8 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
         {/* =========================================================================
             INSTRUCTOR Q&A HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
-
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-violet" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">

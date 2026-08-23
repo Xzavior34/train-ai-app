@@ -84,11 +84,12 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         {/* =========================================================================
             WORKFORCE INTELLIGENCE HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cobalt" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Workforce Intelligence &amp; Skill Radar</h1>
-              <p className="ta-hero-desc">Map enterprise competencies, skill gaps, and automated upskilling paths.</p>
+              <p className="ta-hero-desc">Map enterprise competencies, skill gaps, readiness trajectories, and automated upskilling paths.</p>
             </div>
           </div>
         </div>

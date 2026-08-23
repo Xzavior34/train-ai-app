@@ -600,6 +600,40 @@ html.tai-high-contrast .ta-card {
   color: #FFFFFF !important;
 }
 
+/* Ambient Glowing Corner Halos */
+.tai-glow-purple {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-amber {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-emerald {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-cyan {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-violet {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-rose {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-cobalt {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-magenta {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(217, 70, 239, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+
 /* In Dark Mode: ALL hero cards seamlessly adapt to the sleek frosted theme */
 .dark .tai-hero-card,
 .dark .ta-hero-banner,

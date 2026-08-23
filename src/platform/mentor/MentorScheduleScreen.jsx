@@ -113,11 +113,8 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
       <TopBar title="Availability & Sessions" sub="Manage 1:1 sessions, student requests & recurring weekly availability" orgSelector={orgSelector} />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
-        {/* =========================================================================
-            SCHEDULING HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner">
-
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-emerald" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">

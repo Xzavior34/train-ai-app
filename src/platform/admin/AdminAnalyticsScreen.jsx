@@ -81,11 +81,12 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
         {/* =========================================================================
             ANALYTICS HUB HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-amber" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Institutional Analytics &amp; AI Usage</h1>
-              <p className="ta-hero-desc">Track completion pacing, study time distribution, and AI usage metrics.</p>
+              <p className="ta-hero-desc">Track completion pacing, study time distribution, retention curves, and AI usage metrics.</p>
             </div>
           </div>
         </div>

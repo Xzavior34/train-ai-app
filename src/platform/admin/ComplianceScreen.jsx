@@ -184,18 +184,15 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
         }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            LEARNER PROGRESS & COMPLIANCE HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner">
-
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-amber" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
                 Progress &amp; Compliance Hub
               </h1>
               <p className="ta-hero-desc">
-                Track student progress, mandatory certifications, and audit reports.
+                Track student progress, mandatory certifications, regulatory audit readiness, and automated status reports.
               </p>
             </div>
           </div>

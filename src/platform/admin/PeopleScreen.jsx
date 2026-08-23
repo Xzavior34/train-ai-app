@@ -600,14 +600,15 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         {/* =========================================================================
             PEOPLE & ACCESS HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-emerald" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
                 Member &amp; Role Management
               </h1>
               <p className="ta-hero-desc">
-                Invite instructors, manage permissions, and track student seat allocations.
+                Invite instructors, manage role permissions, and track organization student seat allocations.
               </p>
             </div>
           </div>

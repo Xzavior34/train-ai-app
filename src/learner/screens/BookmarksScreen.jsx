@@ -214,18 +214,7 @@ results = vector_store.similarity_search(query, k=4)`
           overflow: "hidden"
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 180,
-            height: 180,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
-            pointerEvents: "none"
-          }}
-        />
+        <div className="tai-glow-rose" />
 
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>

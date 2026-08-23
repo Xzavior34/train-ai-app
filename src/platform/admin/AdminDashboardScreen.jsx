@@ -147,14 +147,15 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
         {/* =========================================================================
             ADMIN DASHBOARD HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cobalt" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
                 Welcome back, {profileQuery?.data?.display_name || profileQuery?.data?.email?.split("@")[0] || "Admin"}
               </h1>
               <p className="ta-hero-desc">
-                Monitor active learner cohorts, completion rates, and curriculum deployments.
+                Monitor active learner cohorts, completion rates, and curriculum deployments across your enterprise workspace.
               </p>
             </div>
 

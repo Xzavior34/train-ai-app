@@ -32,15 +32,15 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
         {/* =========================================================================
             COHORT DASHBOARD HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
-
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cyan" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
                 Cohort Governance &amp; Pacing
               </h1>
               <p className="ta-hero-desc">
-                Manage batch schedules, enrollment windows, and student milestones.
+                Manage batch schedules, enrollment windows, synchronous sessions, and student milestone pacing.
               </p>
             </div>
           </div>

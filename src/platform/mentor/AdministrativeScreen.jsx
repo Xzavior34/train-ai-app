@@ -100,8 +100,8 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
       <TopBar title="Earnings & Payouts" sub="Track teaching revenue, automated withdrawals, and dispute resolutions" />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
-        <div className="ta-hero-banner">
-
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-emerald" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
