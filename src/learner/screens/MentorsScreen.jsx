@@ -83,13 +83,10 @@ export function MentorsScreen({
           HERO BANNER: Expert Mentors & 1-on-1 Office Hours (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
-        className="tai-card anim-fluid-entrance"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
           borderRadius: 14,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           padding: "clamp(18px, 2.5vw, 24px)",
-          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "hidden"
         }}
@@ -102,7 +99,7 @@ export function MentorsScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -111,39 +108,36 @@ export function MentorsScreen({
           <div style={{ minWidth: 0, flex: 1 }}>
             <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
               <span style={{
-                background: "var(--primary-tint)", color: "var(--primary)",
-                border: "1px solid var(--border)",
+                background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC",
+                border: "1px solid rgba(165, 180, 252, 0.4)",
                 fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
                 display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
               }}>
-                <Video size={13} color="var(--primary)" /> 1-ON-1 INSTRUCTOR SESSIONS
+                <Video size={13} color="#A5B4FC" /> 1-ON-1 INSTRUCTOR SESSIONS
               </span>
               <span style={{
-                background: "rgba(16, 185, 129, 0.12)", color: "#10B981",
-                border: "1px solid rgba(16, 185, 129, 0.3)",
+                background: "rgba(16, 185, 129, 0.2)", color: "#34D399",
+                border: "1px solid rgba(16, 185, 129, 0.4)",
                 fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
               }}>
                 {mentorsList.length} ACTIVE INSTRUCTOR{mentorsList.length === 1 ? "" : "S"}
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "var(--text)", lineHeight: 1.2 }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.2 }}>
               Expert Instructors &amp; 1-on-1 Mentorship
             </h1>
-            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
               Book dedicated 1-on-1 sessions for portfolio reviews, code architecture deep-dives, design token audits, and career guidance.
             </p>
           </div>
 
-          <div style={{
-            background: "var(--surface-2)",
-            border: "1px solid var(--border)",
+          <div className="tai-hero-subcard" style={{
             borderRadius: 10,
             padding: "10px 16px",
-            flexShrink: 0,
-            boxShadow: "var(--glass-shadow)"
+            flexShrink: 0
           }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)" }}>{mentorsList.length} Active Instructors</div>
-            <div style={{ fontSize: 12, color: "#D97706", marginTop: 2, fontWeight: 700 }}>Average Rating: 4.9 ★</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
+            <div style={{ fontSize: 12, color: "#FBBF24", marginTop: 2, fontWeight: 700 }}>Average Rating: 4.9 ★</div>
           </div>
         </div>
       </div>

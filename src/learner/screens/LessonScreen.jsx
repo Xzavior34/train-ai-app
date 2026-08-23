@@ -100,6 +100,8 @@ export function LessonScreen({
   back, push, showToast, markLessonComplete, enrollmentsQuery, lessonProgressQuery,
   completedLessonIds, setCompletedLessonIds, addLessonNote
 }) {
+  const videoPlayerRef = useRef(null);
+
   // Video Player States
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeSec, setCurrentTimeSec] = useState(145);

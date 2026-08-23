@@ -94,13 +94,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             EXECUTIVE HERO TELEMETRY BANNER
             ========================================================================= */}
         <div
-          className="ta-card anim-fluid-entrance"
+          className="ta-card ta-hero-banner anim-fluid-entrance"
           style={{
             borderRadius: 14,
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
             padding: "clamp(18px, 2.5vw, 24px)",
-            boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
             position: "relative",
             overflow: "hidden"
           }}
@@ -113,7 +110,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               width: 200,
               height: 200,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
               pointerEvents: "none"
             }}
           />
@@ -122,27 +119,27 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             <div className="ta-hero-text">
               <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
                 <span style={{
-                  background: "var(--primary-tint)", color: "var(--primary)",
-                  border: "1px solid var(--border)",
+                  background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC",
+                  border: "1px solid rgba(165, 180, 252, 0.4)",
                   fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
                   display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
                 }}>
-                  <Server size={13} color="var(--primary)" /> ENTERPRISE MULTI-TENANT CLUSTER
+                  <Server size={13} color="#A5B4FC" /> ENTERPRISE MULTI-TENANT CLUSTER
                 </span>
                 <span style={{
-                  background: "rgba(16, 185, 129, 0.12)", color: "#10B981",
-                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  background: "rgba(16, 185, 129, 0.2)", color: "#34D399",
+                  border: "1px solid rgba(16, 185, 129, 0.4)",
                   fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
                   display: "inline-flex", alignItems: "center", gap: 5
                 }}>
-                  <Radio size={11} color="#10B981" /> 99.98% UPTIME • GLOBAL EDGE
+                  <Radio size={11} color="#34D399" /> 99.98% UPTIME • GLOBAL EDGE
                 </span>
               </div>
 
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+              <h1 className="ta-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
                 Train AI Platform Overview
               </h1>
-              <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 680, lineHeight: 1.5 }}>
+              <p className="ta-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 680, lineHeight: 1.5 }}>
                 Active orchestration across {effectiveTotalOrgs} tenant institutions, powering {effectiveTotalUsers.toLocaleString()} enrolled learners with real-time AI tutor inference.
               </p>
             </div>

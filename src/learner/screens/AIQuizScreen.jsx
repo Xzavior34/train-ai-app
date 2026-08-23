@@ -179,13 +179,10 @@ export function AIQuizScreen({
           HERO COACH BANNER: Adaptive Liquid Glass AI Learning Co-Pilot
           ========================================================================= */}
       <div
-        className="tai-card anim-fluid-entrance"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
           borderRadius: 14,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           padding: "clamp(18px, 2.5vw, 24px)",
-          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "hidden",
           width: "100%",
@@ -200,7 +197,7 @@ export function AIQuizScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -210,29 +207,28 @@ export function AIQuizScreen({
             <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
-                background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
+                background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC", border: "1px solid rgba(165, 180, 252, 0.4)",
                 fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
               }}>
-                <Bot size={13} color="var(--primary)" /> AI LEARNING COACH
+                <Bot size={13} color="#A5B4FC" /> AI LEARNING COACH
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               AI Learning Coach &amp; Quiz Arena
             </h1>
-            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
               Ask questions, debug code, and take interactive practice quizzes generated in real-time.
             </p>
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", flexShrink: 0 }}>
             {typeof credits === "number" && (
-              <div style={{
-                background: "var(--surface-2)",
-                border: "1px solid var(--border)", padding: "6px 12px", borderRadius: 8,
-                display: "inline-flex", alignItems: "center", gap: 6, boxShadow: "var(--glass-shadow)"
+              <div className="tai-hero-subcard" style={{
+                padding: "6px 12px", borderRadius: 8,
+                display: "inline-flex", alignItems: "center", gap: 6
               }}>
-                <Zap size={13} color="var(--primary)" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{credits} credits</span>
+                <Zap size={13} color="#818CF8" />
+                <span style={{ fontSize: 12, fontWeight: 700 }}>{credits} credits</span>
               </div>
             )}
 
@@ -240,12 +236,11 @@ export function AIQuizScreen({
               className="tai-btn tai-btn-primary tai-btn-sm"
               onClick={onBuyCredits}
               style={{
-                padding: "8px 14px", borderRadius: 8, cursor: "pointer",
-                display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
-                fontSize: 12, fontWeight: 700
+                borderRadius: 8, fontWeight: 700, fontSize: 12,
+                display: "inline-flex", alignItems: "center", gap: 5
               }}
             >
-              <span>+ Get Credits</span>
+              <Zap size={13} /> Buy Credits
             </button>
           </div>
         </div>

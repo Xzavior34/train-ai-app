@@ -164,13 +164,10 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           HERO BANNER: Progression & Level Showcase (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
-        className="tai-card anim-fluid-entrance"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
           borderRadius: 14,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           padding: "clamp(18px, 2.5vw, 24px)",
-          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "hidden"
         }}
@@ -183,7 +180,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -193,57 +190,55 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
-                background: "rgba(245, 158, 11, 0.12)", color: "#D97706", border: "1px solid rgba(245, 158, 11, 0.3)",
+                background: "rgba(245, 158, 11, 0.2)", color: "#FBBF24", border: "1px solid rgba(245, 158, 11, 0.4)",
                 fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
               }}>
-                <Trophy size={12} color="#D97706" /> REPUTATION & BADGES
+                <Trophy size={12} color="#FBBF24" /> REPUTATION &amp; BADGES
               </span>
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 99,
-                background: "rgba(16, 185, 129, 0.12)", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.3)",
+                background: "rgba(16, 185, 129, 0.2)", color: "#34D399", border: "1px solid rgba(16, 185, 129, 0.4)",
                 fontSize: 11, fontWeight: 800
               }}>
                 <CheckCircle2 size={11} /> Level {user.level || 2} Qualified
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               Level {user.level || 2} • Senior Specialist
             </h1>
-            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               {(user.totalPoints || 4520).toLocaleString()} XP earned • {ceiling - (user.totalPoints || 450)} XP to Level {(user.level || 2) + 1}
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "var(--surface-2)", padding: "10px 16px", borderRadius: 10, border: "1px solid var(--border)", boxShadow: "var(--glass-shadow)" }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "#D97706" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
-            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Total Earned XP</div>
+          <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#F59E0B" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
+            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>Total Earned XP</div>
           </div>
         </div>
 
         {/* Level Progress Meter */}
-        <div style={{
+        <div className="tai-hero-subcard" style={{
           marginTop: 16,
           position: "relative",
           zIndex: 1,
-          background: "var(--surface-2)",
           padding: "12px 16px",
-          borderRadius: 10,
-          border: "1px solid var(--border)"
+          borderRadius: 10
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
+          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "#FFFFFF" }}>
             <span>Level {user.level || 2} Progress ({percent}%)</span>
-            <span style={{ color: "#D97706", fontWeight: 700 }}>{Math.max(0, ceiling - (user.totalPoints || 450)).toLocaleString()} XP to Level {(user.level || 2) + 1}</span>
+            <span style={{ color: "#FBBF24", fontWeight: 700 }}>{Math.max(0, ceiling - (user.totalPoints || 450)).toLocaleString()} XP to Level {(user.level || 2) + 1}</span>
           </div>
           <div style={{
             height: 8,
             borderRadius: 99,
-            background: "var(--surface-3)",
+            background: "rgba(255, 255, 255, 0.12)",
             overflow: "hidden"
           }}>
             <div style={{
               width: `${percent}%`,
               height: "100%",
-              background: "linear-gradient(90deg, #F59E0B 0%, #D97706 100%)",
+              background: "#F59E0B",
               borderRadius: 99,
               transition: "width 0.4s ease"
             }} />

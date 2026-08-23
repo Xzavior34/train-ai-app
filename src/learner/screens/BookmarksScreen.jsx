@@ -206,13 +206,10 @@ results = vector_store.similarity_search(query, k=4)`
           HERO BANNER: Dedicated Bookmarks & Study Library (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
-        className="tai-card anim-fluid-entrance"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
           borderRadius: 14,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           padding: "clamp(18px, 2.5vw, 24px)",
-          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "hidden"
         }}
@@ -225,17 +222,17 @@ results = vector_store.similarity_search(query, k=4)`
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
 
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               Saved Library &amp; Bookmarks
             </h1>
-            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               Quick access to your bookmarked masterclasses, core video lessons, reusable code snippets, and personalized study notes.
             </p>
           </div>

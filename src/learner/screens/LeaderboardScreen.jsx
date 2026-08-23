@@ -151,13 +151,10 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           TOP 3 PODIUM HERO SECTION (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
-        className="tai-card anim-fluid-entrance"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
           borderRadius: 14,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           padding: "clamp(20px, 3vw, 28px)",
-          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "hidden"
         }}
@@ -171,7 +168,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
             width: 260,
             height: 160,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -180,16 +177,16 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             <div style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              background: "rgba(245, 158, 11, 0.12)", color: "#D97706",
+              background: "rgba(245, 158, 11, 0.2)", color: "#FBBF24",
               padding: "4px 12px", borderRadius: 99, fontSize: 11.5, fontWeight: 800,
-              border: "1px solid rgba(245, 158, 11, 0.3)", marginBottom: 8
+              border: "1px solid rgba(245, 158, 11, 0.4)", marginBottom: 8
             }}>
-              <Trophy size={13} color="#D97706" /> SPRINT CHAMPIONS
+              <Trophy size={13} color="#FBBF24" /> SPRINT CHAMPIONS
             </div>
-            <h2 style={{ fontSize: "clamp(20px, 2.8vw, 26px)", fontWeight: 900, margin: "0 0 4px", color: "var(--text)", letterSpacing: "-0.02em" }}>
+            <h2 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.8vw, 26px)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.02em" }}>
               Hall of Fame &amp; Top Performers
             </h2>
-            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0 }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0 }}>
               Top 3 learners earn bonus mystery boxes and exclusive certification badges.
             </p>
           </div>
@@ -201,10 +198,10 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           }}>
             {/* 2nd Place (Silver) */}
             {learners[1] && (
-              <div style={{
+              <div className="tai-hero-subcard" style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 flex: "1 1 110px", maxWidth: 140, textAlign: "center", order: 1,
-                background: "var(--surface-2)", padding: "14px 10px", borderRadius: 12, border: "1px solid var(--border)"
+                padding: "14px 10px", borderRadius: 12
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
                   <img
@@ -224,12 +221,12 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     2
                   </span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginTop: 4 }}>{learners[1].name}</div>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{learners[1].role}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "#FFFFFF", marginTop: 4 }}>{learners[1].name}</div>
+                <div style={{ fontSize: 10.5, color: "#94A3B8" }}>{learners[1].role}</div>
                 <div style={{
-                  background: "rgba(148, 163, 184, 0.15)", color: "var(--text)",
+                  background: "rgba(148, 163, 184, 0.2)", color: "#FFFFFF",
                   fontWeight: 800, fontSize: 11.5, padding: "2px 8px", borderRadius: 99,
-                  marginTop: 6, border: "1px solid rgba(148, 163, 184, 0.3)"
+                  marginTop: 6, border: "1px solid rgba(148, 163, 184, 0.4)"
                 }}>
                   {learners[1].xp.toLocaleString()} XP
                 </div>
@@ -238,13 +235,13 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
 
             {/* 1st Place (Gold - Elevated) */}
             {learners[0] && (
-              <div style={{
+              <div className="tai-hero-subcard" style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 flex: "1 1 130px", maxWidth: 160, textAlign: "center", order: 2,
                 transform: "translateY(-8px)",
-                background: "var(--surface-2)", padding: "16px 12px", borderRadius: 14,
-                border: "2px solid rgba(245, 158, 11, 0.4)",
-                boxShadow: "0 8px 24px -4px rgba(245, 158, 11, 0.25)"
+                padding: "16px 12px", borderRadius: 14,
+                border: "2px solid rgba(245, 158, 11, 0.5)",
+                boxShadow: "0 8px 24px -4px rgba(245, 158, 11, 0.35)"
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
                   <Crown size={22} color="#F59E0B" style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
@@ -265,12 +262,12 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     1
                   </span>
                 </div>
-                <div style={{ fontWeight: 900, fontSize: 14.5, color: "var(--text)", marginTop: 4 }}>{learners[0].name}</div>
-                <div style={{ fontSize: 11, color: "var(--text-2)" }}>{learners[0].role}</div>
+                <div style={{ fontWeight: 900, fontSize: 14.5, color: "#FFFFFF", marginTop: 4 }}>{learners[0].name}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8" }}>{learners[0].role}</div>
                 <div style={{
-                  background: "rgba(245, 158, 11, 0.15)", color: "#D97706",
+                  background: "rgba(245, 158, 11, 0.25)", color: "#FBBF24",
                   fontWeight: 900, fontSize: 12, padding: "3px 10px", borderRadius: 99,
-                  marginTop: 6, border: "1px solid rgba(245, 158, 11, 0.4)"
+                  marginTop: 6, border: "1px solid rgba(245, 158, 11, 0.5)"
                 }}>
                   {learners[0].xp.toLocaleString()} XP
                 </div>
@@ -279,10 +276,10 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
 
             {/* 3rd Place (Bronze) */}
             {learners[2] && (
-              <div style={{
+              <div className="tai-hero-subcard" style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
                 flex: "1 1 110px", maxWidth: 140, textAlign: "center", order: 3,
-                background: "var(--surface-2)", padding: "14px 10px", borderRadius: 12, border: "1px solid var(--border)"
+                padding: "14px 10px", borderRadius: 12
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
                   <img
@@ -302,12 +299,12 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     3
                   </span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginTop: 4 }}>{learners[2].name}</div>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{learners[2].role}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "#FFFFFF", marginTop: 4 }}>{learners[2].name}</div>
+                <div style={{ fontSize: 10.5, color: "#94A3B8" }}>{learners[2].role}</div>
                 <div style={{
-                  background: "rgba(217, 119, 6, 0.15)", color: "#D97706",
+                  background: "rgba(217, 119, 6, 0.2)", color: "#FBBF24",
                   fontWeight: 800, fontSize: 11.5, padding: "2px 8px", borderRadius: 99,
-                  marginTop: 6, border: "1px solid rgba(217, 119, 6, 0.3)"
+                  marginTop: 6, border: "1px solid rgba(217, 119, 6, 0.4)"
                 }}>
                   {learners[2].xp.toLocaleString()} XP
                 </div>

@@ -211,13 +211,10 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             ORGANIZATIONS HERO BANNER
             ========================================================================= */}
         <div
-          className="ta-card anim-fluid-entrance"
+          className="ta-card ta-hero-banner anim-fluid-entrance"
           style={{
             borderRadius: 14,
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
             padding: "clamp(18px, 2.5vw, 24px)",
-            boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
             position: "relative",
             overflow: "hidden"
           }}
@@ -230,7 +227,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
               width: 200,
               height: 200,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
               pointerEvents: "none"
             }}
           />
@@ -239,39 +236,39 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             <div className="ta-hero-text">
               <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
                 <span style={{
-                  background: "var(--primary-tint)", color: "var(--primary)",
-                  border: "1px solid var(--border)",
+                  background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC",
+                  border: "1px solid rgba(165, 180, 252, 0.4)",
                   fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
                   display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
                 }}>
-                  <Building2 size={13} color="var(--primary)" /> TENANT ISOLATION ARCHITECTURE
+                  <Building2 size={13} color="#A5B4FC" /> TENANT ISOLATION ARCHITECTURE
                 </span>
                 <span style={{
-                  background: "rgba(16, 185, 129, 0.12)", color: "#10B981",
-                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  background: "rgba(16, 185, 129, 0.2)", color: "#34D399",
+                  border: "1px solid rgba(16, 185, 129, 0.4)",
                   fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
                   display: "inline-flex", alignItems: "center", gap: 5
                 }}>
-                  <ShieldCheck size={11} color="#10B981" /> RLS STRICT MULTI-TENANCY
+                  <ShieldCheck size={11} color="#34D399" /> RLS STRICT MULTI-TENANCY
                 </span>
               </div>
 
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+              <h1 className="ta-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
                 Multi-Tenant Organizations Directory
               </h1>
-              <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 680, lineHeight: 1.5 }}>
+              <p className="ta-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 680, lineHeight: 1.5 }}>
                 Manage institutional subscriptions, seat quotas, custom feature flag overrides, and cross-tenant SSO settings.
               </p>
             </div>
 
             <div className="ta-hero-actions">
-              <div style={{ background: "var(--surface-2)", padding: "8px 14px", borderRadius: 10, border: "1px solid var(--border)", textAlign: "center", boxShadow: "var(--glass-shadow)" }}>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Total Registered</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: "var(--text)" }}>{orgs.length} Tenants</div>
+              <div className="ta-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, color: "#94A3B8", fontWeight: 700 }}>Total Registered</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{orgs.length} Tenants</div>
               </div>
-              <div style={{ background: "var(--surface-2)", padding: "8px 14px", borderRadius: 10, border: "1px solid var(--border)", textAlign: "center", boxShadow: "var(--glass-shadow)" }}>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Active Users</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: "#10B981" }}>{orgs.reduce((sum, o) => sum + (o.user_count || 0), 0)} Active</div>
+              <div className="ta-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, color: "#94A3B8", fontWeight: 700 }}>Active Users</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>{orgs.reduce((sum, o) => sum + (o.user_count || 0), 0)} Active</div>
               </div>
             </div>
           </div>
