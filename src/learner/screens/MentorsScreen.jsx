@@ -83,7 +83,7 @@ export function MentorsScreen({
           HERO BANNER: Expert Mentors & 1-on-1 Office Hours (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
-        className="tai-card tai-hero-card anim-fluid-entrance"
+        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
         style={{
           borderRadius: 14,
           padding: "clamp(18px, 2.5vw, 24px)",

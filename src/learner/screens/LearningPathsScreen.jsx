@@ -269,7 +269,7 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
       {/* =========================================================================
           LEARNING PATHS HERO BANNER (Adaptive Liquid Glass)
           ========================================================================= */}      <div
-        className="tai-card tai-hero-card anim-fluid-entrance"
+        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
         style={{
           position: "relative",
           borderRadius: 14,

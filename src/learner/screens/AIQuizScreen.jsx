@@ -179,7 +179,7 @@ export function AIQuizScreen({
           HERO COACH BANNER: Adaptive Liquid Glass AI Learning Co-Pilot
           ========================================================================= */}
       <div
-        className="tai-card tai-hero-card anim-fluid-entrance"
+        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
         style={{
           borderRadius: 14,
           padding: "clamp(18px, 2.5vw, 24px)",
