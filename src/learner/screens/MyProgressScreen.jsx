@@ -119,48 +119,80 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
       {/* =========================================================================
           HERO BANNER: My Learning Journey & Weekly Milestone
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      {/* =========================================================================
+          HERO BANNER: My Learning Journey & Weekly Milestone (Adaptive Liquid Glass)
+          ========================================================================= */}
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
+            <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
+                background: "rgba(16, 185, 129, 0.12)", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.3)",
+                fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
+              }}>
+                <TrendingUp size={12} color="#10B981" /> SPRINT VELOCITY
+              </span>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 99,
+                background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
+                fontSize: 11, fontWeight: 800
+              }}>
+                <CheckCircle2 size={11} /> 85% Met
+              </span>
+            </div>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
               My Learning Progress
             </h1>
-            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               16.6 study hours logged across {inProgressCount} active courses this week.
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.06)", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF" }}>17 / 20 Lessons Done</div>
-            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>85% Sprint Met</div>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "var(--surface-2)", padding: "10px 16px", borderRadius: 10, border: "1px solid var(--border)", boxShadow: "var(--glass-shadow)" }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#10B981" }}>17 / 20 Lessons Done</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>85% Sprint Met</div>
           </div>
         </div>
 
         {/* Weekly Goal Progress Bar */}
         <div style={{
-          position: "relative", zIndex: 1, marginTop: 14,
-          background: "#1E293B",
-          padding: "10px 14px", borderRadius: 8, border: "1px solid #334155"
+          position: "relative", zIndex: 1, marginTop: 16,
+          background: "var(--surface-2)",
+          padding: "12px 16px", borderRadius: 10, border: "1px solid var(--border)"
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#FFFFFF" }}>
-            <span>
-              Weekly Sprint Progress (85% Target Met)
-            </span>
-            <span style={{ color: "#34D399", fontSize: 11.5, fontWeight: 700 }}>
+          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
+            <span>Weekly Sprint Progress (85% Target Met)</span>
+            <span style={{ color: "#10B981", fontSize: 12, fontWeight: 700 }}>
               3 of 20 lessons remaining
             </span>
           </div>
-          <div style={{ height: 6, borderRadius: 3, background: "#334155", overflow: "hidden" }}>
-            <div style={{ width: "85%", height: "100%", background: "#10B981", borderRadius: 3, transition: "width 0.4s ease" }} />
+          <div style={{ height: 8, borderRadius: 99, background: "var(--surface-3)", overflow: "hidden" }}>
+            <div style={{ width: "85%", height: "100%", background: "linear-gradient(90deg, #10B981 0%, #059669 100%)", borderRadius: 99, transition: "width 0.4s ease" }} />
           </div>
         </div>
       </div>

@@ -209,9 +209,9 @@ export function ProfileScreen({
           }}
         />
 
-        {/* Profile Identity Details (Stacked on Mobile, Flex Row on Desktop) */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20, position: "relative", zIndex: 2 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "clamp(14px, 3vw, 22px)", flexWrap: "wrap" }}>
+        {/* Profile Identity Details (Stacked cleanly on Mobile, Flex Row on Desktop) */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, position: "relative", zIndex: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "clamp(12px, 3vw, 20px)", flex: "1 1 260px", minWidth: 0, flexWrap: "wrap" }}>
             {/* Avatar with Camera Overlay */}
             <div
               style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default", flexShrink: 0 }}
@@ -222,22 +222,22 @@ export function ProfileScreen({
                 src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=220&auto=format&fit=crop&q=80"}
                 alt={user.name}
                 style={{
-                  width: "clamp(74px, 12vw, 92px)",
-                  height: "clamp(74px, 12vw, 92px)",
+                  width: "clamp(68px, 14vw, 88px)",
+                  height: "clamp(68px, 14vw, 88px)",
                   borderRadius: "50%",
                   objectFit: "cover",
                   border: "3px solid var(--surface-2)",
-                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.25)"
+                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.22)"
                 }}
               />
               {session?.user?.id && (
                 <div
                   style={{
                     position: "absolute",
-                    bottom: 2,
-                    right: 2,
-                    width: 28,
-                    height: 28,
+                    bottom: 0,
+                    right: 0,
+                    width: 26,
+                    height: 26,
                     borderRadius: "50%",
                     background: "#4F46E5",
                     display: "flex",
@@ -248,15 +248,15 @@ export function ProfileScreen({
                     boxShadow: "0 2px 8px rgba(79, 70, 229, 0.45)"
                   }}
                 >
-                  <Camera size={13} />
+                  <Camera size={12} />
                 </div>
               )}
             </div>
 
             {/* Name, Verified Badge & Metadata */}
-            <div style={{ minWidth: 0 }}>
+            <div style={{ minWidth: 0, flex: "1 1 200px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <h1 style={{ fontWeight: 900, fontSize: "clamp(20px, 3.2vw, 25px)", color: "var(--text)", letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
+                <h1 style={{ fontWeight: 900, fontSize: "clamp(19px, 3.5vw, 25px)", color: "var(--text)", letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2, wordBreak: "break-word" }}>
                   {user.name || "Evelyn Hayes"}
                 </h1>
                 <span
@@ -277,9 +277,9 @@ export function ProfileScreen({
                 </span>
               </div>
 
-              <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, display: "flex", alignItems: "center", gap: "clamp(6px, 1.5vw, 12px)", flexWrap: "wrap", lineHeight: 1.4 }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                  <Mail size={13} color="var(--text-3)" />
+              <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 5, display: "flex", alignItems: "center", gap: "clamp(6px, 1.5vw, 10px)", flexWrap: "wrap", lineHeight: 1.4 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, wordBreak: "break-all" }}>
+                  <Mail size={12} color="var(--text-3)" />
                   {user.email || "evelyn.hayes@trainai.co"}
                 </span>
                 <span style={{ opacity: 0.4 }}>•</span>
@@ -288,17 +288,17 @@ export function ProfileScreen({
                 <span>{user.organization || "Train AI Academy"}</span>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                <span className="tai-tag" style={{ fontWeight: 700, padding: "4px 10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                <span className="tai-tag" style={{ fontWeight: 700, padding: "3px 8px", fontSize: 11 }}>
                   <Zap size={11} style={{ marginRight: 4 }} />
                   {user.track || "Full-Stack AI & Design"}
                 </span>
                 {user.role && (
-                  <span className="tai-tag" style={{ background: "var(--surface-3)", color: "var(--text-2)", padding: "4px 10px" }}>
+                  <span className="tai-tag" style={{ background: "var(--surface-3)", color: "var(--text-2)", padding: "3px 8px", fontSize: 11 }}>
                     {user.role.toUpperCase()}
                   </span>
                 )}
-                <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>
+                <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
                   Cohort 04 • Sprint 5
                 </span>
               </div>
@@ -306,12 +306,12 @@ export function ProfileScreen({
           </div>
 
           {/* Quick Actions */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", flexShrink: 0 }}>
             {onBuyCredits && (
               <button
                 className="tai-btn tai-btn-outline tai-btn-sm"
                 onClick={onBuyCredits}
-                style={{ padding: "8px 14px", fontWeight: 700, fontSize: 12.5 }}
+                style={{ padding: "7px 12px", fontWeight: 700, fontSize: 12 }}
               >
                 <Zap size={13} color="var(--primary)" />
                 <span>{typeof credits === "number" ? credits : 10} Credits</span>
@@ -321,7 +321,7 @@ export function ProfileScreen({
               <button
                 className="tai-btn tai-btn-outline tai-btn-sm"
                 onClick={() => setShowAvatarUpload(v => !v)}
-                style={{ padding: "8px 14px", fontWeight: 700, fontSize: 12.5 }}
+                style={{ padding: "7px 12px", fontWeight: 700, fontSize: 12 }}
               >
                 <Camera size={13} />
                 <span>Change Photo</span>
@@ -348,24 +348,24 @@ export function ProfileScreen({
         )}
 
         {/* 4 Stat Cards with Responsive Grid & Liquid Glass Styling */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))", gap: 10, marginTop: 22, paddingTop: 18, borderTop: "1px solid var(--border-subtle)" }}>
-          <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
-            <div style={{ fontWeight: 900, fontSize: "clamp(18px, 2.2vw, 22px)", color: "var(--primary)", letterSpacing: "-0.02em" }}>{user.mastery ?? 88}%</div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, fontWeight: 600 }}>Curriculum Mastery</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8, marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
+          <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--primary)", letterSpacing: "-0.02em" }}>{user.mastery ?? 88}%</div>
+            <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Curriculum Mastery</div>
           </div>
-          <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
-            <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: "clamp(18px, 2.2vw, 22px)", color: "#F59E0B" }}>
-              <span>{user.streak ?? 8}</span> <Flame size={18} color="#F59E0B" fill="#F59E0B" />
+          <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "#F59E0B" }}>
+              <span>{user.streak ?? 8}</span> <Flame size={16} color="#F59E0B" fill="#F59E0B" />
             </div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, fontWeight: 600 }}>Active Day Streak</div>
+            <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Active Day Streak</div>
           </div>
-          <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
-            <div style={{ fontWeight: 900, fontSize: "clamp(18px, 2.2vw, 22px)", color: "var(--text)", letterSpacing: "-0.02em" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, fontWeight: 600 }}>Credential XP</div>
+          <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--text)", letterSpacing: "-0.02em" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
+            <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Credential XP</div>
           </div>
-          <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
-            <div style={{ fontWeight: 900, fontSize: "clamp(18px, 2.2vw, 22px)", color: "var(--success)", letterSpacing: "-0.02em" }}>3 Issued</div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, fontWeight: 600 }}>Certificates</div>
+          <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--success)", letterSpacing: "-0.02em" }}>3 Issued</div>
+            <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Certificates</div>
           </div>
         </div>
       </div>

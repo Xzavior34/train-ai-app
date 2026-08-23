@@ -175,37 +175,64 @@ export function AIQuizScreen({
       {/* =========================================================================
           HERO COACH BANNER: Clean & Optimized AI Learning Co-Pilot
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden",
-        width: "100%",
-        boxSizing: "border-box"
-      }}>
+      {/* =========================================================================
+          HERO COACH BANNER: Adaptive Liquid Glass AI Learning Co-Pilot
+          ========================================================================= */}
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden",
+          width: "100%",
+          boxSizing: "border-box"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div style={{ minWidth: 0, flex: "1 1 220px" }}>
-            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
-              AI Learning Coach
+            <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
+                background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
+                fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
+              }}>
+                <Sparkles size={12} color="var(--primary)" /> GEMINI 2.5 FLASH PROMPT ENGINE
+              </span>
+            </div>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+              AI Learning Coach &amp; Quiz Arena
             </h1>
-            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
-              Ask questions, debug code, and take interactive practice quizzes.
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
+              Ask questions, debug code, and take interactive practice quizzes generated in real-time.
             </p>
           </div>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", flexShrink: 0 }}>
             {typeof credits === "number" && (
               <div style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)", padding: "6px 10px", borderRadius: 8,
-                display: "inline-flex", alignItems: "center", gap: 6
+                background: "var(--surface-2)",
+                border: "1px solid var(--border)", padding: "6px 12px", borderRadius: 8,
+                display: "inline-flex", alignItems: "center", gap: 6, boxShadow: "var(--glass-shadow)"
               }}>
-                <Zap size={13} color="#818CF8" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{credits} credits</span>
+                <Zap size={13} color="var(--primary)" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{credits} credits</span>
               </div>
             )}
 
@@ -213,7 +240,7 @@ export function AIQuizScreen({
               className="tai-btn tai-btn-primary tai-btn-sm"
               onClick={onBuyCredits}
               style={{
-                padding: "7px 12px", borderRadius: 8, cursor: "pointer",
+                padding: "8px 14px", borderRadius: 8, cursor: "pointer",
                 display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
                 fontSize: 12, fontWeight: 700
               }}

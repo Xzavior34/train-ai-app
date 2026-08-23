@@ -161,59 +161,90 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       
       {/* =========================================================================
-          HERO BANNER: Progression & Level Showcase
+          HERO BANNER: Progression & Level Showcase (Adaptive Liquid Glass)
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
+            <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
+                background: "rgba(245, 158, 11, 0.12)", color: "#D97706", border: "1px solid rgba(245, 158, 11, 0.3)",
+                fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
+              }}>
+                <Trophy size={12} color="#D97706" /> REPUTATION & BADGES
+              </span>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 99,
+                background: "rgba(16, 185, 129, 0.12)", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.3)",
+                fontSize: 11, fontWeight: 800
+              }}>
+                <CheckCircle2 size={11} /> Level {user.level || 2} Qualified
+              </span>
+            </div>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
               Level {user.level || 2} • Senior Specialist
             </h1>
-            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               {(user.totalPoints || 4520).toLocaleString()} XP earned • {ceiling - (user.totalPoints || 450)} XP to Level {(user.level || 2) + 1}
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.06)", padding: "8px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#FBBF24" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
-            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>Total Points</div>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "var(--surface-2)", padding: "10px 16px", borderRadius: 10, border: "1px solid var(--border)", boxShadow: "var(--glass-shadow)" }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#D97706" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Total Earned XP</div>
           </div>
         </div>
 
         {/* Level Progress Meter */}
         <div style={{
-          marginTop: 14,
+          marginTop: 16,
           position: "relative",
           zIndex: 1,
-          background: "#1E293B",
-          padding: "10px 14px",
-          borderRadius: 8,
-          border: "1px solid #334155"
+          background: "var(--surface-2)",
+          padding: "12px 16px",
+          borderRadius: 10,
+          border: "1px solid var(--border)"
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#FFFFFF" }}>
+          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
             <span>Level {user.level || 2} Progress ({percent}%)</span>
-            <span style={{ color: "#FBBF24", fontWeight: 700 }}>{Math.max(0, ceiling - (user.totalPoints || 450)).toLocaleString()} XP to Level {(user.level || 2) + 1}</span>
+            <span style={{ color: "#D97706", fontWeight: 700 }}>{Math.max(0, ceiling - (user.totalPoints || 450)).toLocaleString()} XP to Level {(user.level || 2) + 1}</span>
           </div>
           <div style={{
-            height: 6,
-            borderRadius: 3,
-            background: "#334155",
+            height: 8,
+            borderRadius: 99,
+            background: "var(--surface-3)",
             overflow: "hidden"
           }}>
             <div style={{
               width: `${percent}%`,
               height: "100%",
-              background: "#F59E0B",
-              borderRadius: 3,
+              background: "linear-gradient(90deg, #F59E0B 0%, #D97706 100%)",
+              borderRadius: 99,
               transition: "width 0.4s ease"
             }} />
           </div>

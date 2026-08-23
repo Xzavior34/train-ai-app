@@ -202,22 +202,40 @@ results = vector_store.similarity_search(query, k=4)`
       {/* =========================================================================
           HERO BANNER: Dedicated Bookmarks & Study Library
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      {/* =========================================================================
+          HERO BANNER: Dedicated Bookmarks & Study Library (Adaptive Liquid Glass)
+          ========================================================================= */}
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
               Saved Library &amp; Bookmarks
             </h1>
-            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               Quick access to your bookmarked masterclasses, core video lessons, reusable code snippets, and personalized study notes.
             </p>
           </div>
@@ -226,7 +244,7 @@ results = vector_store.similarity_search(query, k=4)`
             className="tai-btn tai-btn-primary"
             onClick={() => setActiveTab("snippets")}
             style={{
-              padding: "8px 14px", borderRadius: 8, fontWeight: 700,
+              padding: "9px 16px", borderRadius: 8, fontWeight: 700,
               display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
             }}
           >

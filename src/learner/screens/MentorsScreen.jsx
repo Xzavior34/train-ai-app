@@ -79,52 +79,71 @@ export function MentorsScreen({
       {/* =========================================================================
           HERO BANNER: Expert Mentors & 1-on-1 Office Hours
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      {/* =========================================================================
+          HERO BANNER: Expert Mentors & 1-on-1 Office Hours (Adaptive Liquid Glass)
+          ========================================================================= */}
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
               <span style={{
-                background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                border: "1px solid rgba(165, 180, 252, 0.5)",
+                background: "var(--primary-tint)", color: "var(--primary)",
+                border: "1px solid var(--border)",
                 fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
                 display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
               }}>
-                <Video size={13} color="#A5B4FC" /> 1-ON-1 INSTRUCTOR SESSIONS
+                <Video size={13} color="var(--primary)" /> 1-ON-1 INSTRUCTOR SESSIONS
               </span>
               <span style={{
-                background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                border: "1px solid rgba(16, 185, 129, 0.5)",
+                background: "rgba(16, 185, 129, 0.12)", color: "#10B981",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
                 fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
               }}>
                 {mentorsList.length} ACTIVE INSTRUCTOR{mentorsList.length === 1 ? "" : "S"}
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "var(--text)", lineHeight: 1.2 }}>
               Expert Instructors &amp; 1-on-1 Mentorship
             </h1>
-            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
               Book dedicated 1-on-1 sessions for portfolio reviews, code architecture deep-dives, design token audits, and career guidance.
             </p>
           </div>
 
           <div style={{
-            background: "rgba(255, 255, 255, 0.05)",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
-            borderRadius: 8,
+            background: "var(--surface-2)",
+            border: "1px solid var(--border)",
+            borderRadius: 10,
             padding: "10px 16px",
-            flexShrink: 0
+            flexShrink: 0,
+            boxShadow: "var(--glass-shadow)"
           }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
-            <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 2, fontWeight: 600 }}>Average Rating: 4.9 ★</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)" }}>{mentorsList.length} Active Instructors</div>
+            <div style={{ fontSize: 12, color: "#D97706", marginTop: 2, fontWeight: 700 }}>Average Rating: 4.9 ★</div>
           </div>
         </div>
       </div>

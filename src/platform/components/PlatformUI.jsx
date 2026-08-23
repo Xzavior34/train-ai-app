@@ -269,11 +269,11 @@ export const TOKENS = `
     border-bottom: 1px solid var(--glass-border); background: var(--glass-elevated);
     backdrop-filter: var(--glass-blur-lg); -webkit-backdrop-filter: var(--glass-blur-lg);
     box-shadow: var(--glass-shadow);
-    display: flex; align-items: center; justify-content: space-between; padding: 6px clamp(12px, 1.8vw, 20px); position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between; padding: 8px clamp(12px, 1.8vw, 20px); position: sticky; top: 0; z-index: 50;
     box-sizing: border-box; width: 100%; gap: 12px;
   }
-  .ta-topbar-left { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; }
-  .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; justify-content: flex-end; }
+  .ta-topbar-left { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; min-width: min-content; max-width: 45%; }
+  .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; justify-content: flex-end; min-width: 0; flex-wrap: wrap; }
   .ta-search {
     display:flex; align-items:center; gap:6px;
     background: var(--glass-surface); backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm);
@@ -283,8 +283,8 @@ export const TOKENS = `
   }
   .ta-search:focus-within { border-color: var(--primary); background: var(--glass-elevated); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), inset 0 1px 0 var(--glass-specular); }
   .ta-content { padding: 20px clamp(14px, 2vw, 28px) 64px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-  .ta-h1 { font-size: clamp(14px, 1.2vw, 16px); font-weight: 800; letter-spacing: -0.015em; margin: 0; color: var(--text); line-height: 1.25; word-break: normal; overflow-wrap: break-word; }
-  .ta-sub { font-size: 11.5px; color: var(--text-3); margin: 2px 0 0; font-weight: 500; line-height: 1.25; word-break: normal; overflow-wrap: break-word; }
+  .ta-h1 { font-size: clamp(14px, 1.2vw, 16px); font-weight: 800; letter-spacing: -0.015em; margin: 0; color: var(--text); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ta-sub { font-size: 11.5px; color: var(--text-3); margin: 2px 0 0; font-weight: 500; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }

@@ -148,32 +148,48 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
       />
 
       {/* =========================================================================
-          TOP 3 PODIUM HERO SECTION
+          TOP 3 PODIUM HERO SECTION (Adaptive Liquid Glass)
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 24px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(20px, 3vw, 28px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 260,
+            height: 160,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div style={{ position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             <div style={{
               display: "inline-flex", alignItems: "center", gap: 6,
-              background: "rgba(245, 158, 11, 0.2)", color: "#FBBF24",
-              padding: "4px 12px", borderRadius: 99, fontSize: 12, fontWeight: 800,
-              border: "1px solid rgba(245, 158, 11, 0.4)", marginBottom: 8
+              background: "rgba(245, 158, 11, 0.12)", color: "#D97706",
+              padding: "4px 12px", borderRadius: 99, fontSize: 11.5, fontWeight: 800,
+              border: "1px solid rgba(245, 158, 11, 0.3)", marginBottom: 8
             }}>
-              <Trophy size={14} color="#FBBF24" /> SPRINT CHAMPIONS
+              <Trophy size={13} color="#D97706" /> SPRINT CHAMPIONS
             </div>
-            <h2 style={{ fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 900, margin: "0 0 4px", color: "#FFFFFF" }}>
+            <h2 style={{ fontSize: "clamp(20px, 2.8vw, 26px)", fontWeight: 900, margin: "0 0 4px", color: "var(--text)", letterSpacing: "-0.02em" }}>
               Hall of Fame &amp; Top Performers
             </h2>
-            <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.8)", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0 }}>
               Top 3 learners earn bonus mystery boxes and exclusive certification badges.
             </p>
           </div>
@@ -181,13 +197,14 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           {/* 3-Column Podium Display */}
           <div style={{
             display: "flex", justifyContent: "center", alignItems: "flex-end",
-            gap: "clamp(8px, 2vw, 20px)", paddingBottom: 10, flexWrap: "wrap"
+            gap: "clamp(10px, 2.5vw, 24px)", paddingBottom: 10, flexWrap: "wrap"
           }}>
             {/* 2nd Place (Silver) */}
             {learners[1] && (
               <div style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
-                flex: "1 1 100px", maxWidth: 140, textAlign: "center", order: 1
+                flex: "1 1 110px", maxWidth: 140, textAlign: "center", order: 1,
+                background: "var(--surface-2)", padding: "14px 10px", borderRadius: 12, border: "1px solid var(--border)"
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
                   <img
@@ -196,23 +213,23 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     style={{
                       width: 52, height: 52, borderRadius: "50%",
                       border: "3px solid #94A3B8", objectFit: "cover",
-                      boxShadow: "0 0 16px rgba(148, 163, 184, 0.5)"
+                      boxShadow: "0 4px 12px rgba(148, 163, 184, 0.4)"
                     }}
                   />
                   <span style={{
                     position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)",
-                    background: "#94A3B8", color: "#0F172A", fontWeight: 900, fontSize: 11,
+                    background: "#94A3B8", color: "#FFFFFF", fontWeight: 900, fontSize: 11,
                     width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
                     2
                   </span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "#FFFFFF", marginTop: 4 }}>{learners[1].name}</div>
-                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)" }}>{learners[1].role}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginTop: 4 }}>{learners[1].name}</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{learners[1].role}</div>
                 <div style={{
-                  background: "rgba(148, 163, 184, 0.2)", color: "#CBD5E1",
+                  background: "rgba(148, 163, 184, 0.15)", color: "var(--text)",
                   fontWeight: 800, fontSize: 11.5, padding: "2px 8px", borderRadius: 99,
-                  marginTop: 6, border: "1px solid rgba(148, 163, 184, 0.4)"
+                  marginTop: 6, border: "1px solid rgba(148, 163, 184, 0.3)"
                 }}>
                   {learners[1].xp.toLocaleString()} XP
                 </div>
@@ -223,35 +240,37 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
             {learners[0] && (
               <div style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
-                flex: "1 1 120px", maxWidth: 160, textAlign: "center", order: 2,
-                transform: "translateY(-8px)"
+                flex: "1 1 130px", maxWidth: 160, textAlign: "center", order: 2,
+                transform: "translateY(-8px)",
+                background: "var(--surface-2)", padding: "16px 12px", borderRadius: 14,
+                border: "2px solid rgba(245, 158, 11, 0.4)",
+                boxShadow: "0 8px 24px -4px rgba(245, 158, 11, 0.25)"
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
-                  <Crown size={22} color="#F59E0B" style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", filter: "drop-shadow(0 0 8px #F59E0B)" }} />
+                  <Crown size={22} color="#F59E0B" style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
                   <img
                     src={learners[0].avatar}
                     alt={learners[0].name}
                     style={{
                       width: 66, height: 66, borderRadius: "50%",
                       border: "3.5px solid #F59E0B", objectFit: "cover",
-                      boxShadow: "0 0 24px rgba(245, 158, 11, 0.7)"
+                      boxShadow: "0 0 20px rgba(245, 158, 11, 0.4)"
                     }}
                   />
                   <span style={{
                     position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)",
-                    background: "#F59E0B", color: "#0F172A", fontWeight: 900, fontSize: 12,
+                    background: "#F59E0B", color: "#FFFFFF", fontWeight: 900, fontSize: 12,
                     width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
                     1
                   </span>
                 </div>
-                <div style={{ fontWeight: 900, fontSize: 14.5, color: "#FFFFFF", marginTop: 4 }}>{learners[0].name}</div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)" }}>{learners[0].role}</div>
+                <div style={{ fontWeight: 900, fontSize: 14.5, color: "var(--text)", marginTop: 4 }}>{learners[0].name}</div>
+                <div style={{ fontSize: 11, color: "var(--text-2)" }}>{learners[0].role}</div>
                 <div style={{
-                  background: "rgba(245, 158, 11, 0.25)", color: "#FDE68A",
+                  background: "rgba(245, 158, 11, 0.15)", color: "#D97706",
                   fontWeight: 900, fontSize: 12, padding: "3px 10px", borderRadius: 99,
-                  marginTop: 6, border: "1px solid rgba(245, 158, 11, 0.5)",
-                  boxShadow: "0 0 12px rgba(245, 158, 11, 0.3)"
+                  marginTop: 6, border: "1px solid rgba(245, 158, 11, 0.4)"
                 }}>
                   {learners[0].xp.toLocaleString()} XP
                 </div>
@@ -262,7 +281,8 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
             {learners[2] && (
               <div style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
-                flex: "1 1 100px", maxWidth: 140, textAlign: "center", order: 3
+                flex: "1 1 110px", maxWidth: 140, textAlign: "center", order: 3,
+                background: "var(--surface-2)", padding: "14px 10px", borderRadius: 12, border: "1px solid var(--border)"
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
                   <img
@@ -271,7 +291,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     style={{
                       width: 52, height: 52, borderRadius: "50%",
                       border: "3px solid #D97706", objectFit: "cover",
-                      boxShadow: "0 0 16px rgba(217, 119, 6, 0.5)"
+                      boxShadow: "0 4px 12px rgba(217, 119, 6, 0.3)"
                     }}
                   />
                   <span style={{
@@ -282,12 +302,12 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     3
                   </span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "#FFFFFF", marginTop: 4 }}>{learners[2].name}</div>
-                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)" }}>{learners[2].role}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginTop: 4 }}>{learners[2].name}</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{learners[2].role}</div>
                 <div style={{
-                  background: "rgba(217, 119, 6, 0.2)", color: "#FDE68A",
+                  background: "rgba(217, 119, 6, 0.15)", color: "#D97706",
                   fontWeight: 800, fontSize: 11.5, padding: "2px 8px", borderRadius: 99,
-                  marginTop: 6, border: "1px solid rgba(217, 119, 6, 0.4)"
+                  marginTop: 6, border: "1px solid rgba(217, 119, 6, 0.3)"
                 }}>
                   {learners[2].xp.toLocaleString()} XP
                 </div>

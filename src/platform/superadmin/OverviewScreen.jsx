@@ -93,48 +93,72 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         {/* =========================================================================
             EXECUTIVE HERO TELEMETRY BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
-        <div className="ta-hero-inner">
-          <div className="ta-hero-text">
-            <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
-              <span style={{
-                background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                border: "1px solid rgba(165, 180, 252, 0.5)",
-                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-              }}>
-                <Server size={13} color="#A5B4FC" /> ENTERPRISE MULTI-TENANT CLUSTER
-              </span>
-              <span style={{
-                background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                border: "1px solid rgba(16, 185, 129, 0.5)",
-                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                display: "inline-flex", alignItems: "center", gap: 5
-              }}>
-                <Radio size={11} color="#34D399" /> 99.98% UPTIME • GLOBAL EDGE
-              </span>
+        <div
+          className="ta-card anim-fluid-entrance"
+          style={{
+            borderRadius: 14,
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            padding: "clamp(18px, 2.5vw, 24px)",
+            boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+            position: "relative",
+            overflow: "hidden"
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              top: -40,
+              right: -40,
+              width: 200,
+              height: 200,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%)",
+              pointerEvents: "none"
+            }}
+          />
+
+          <div className="ta-hero-inner" style={{ position: "relative", zIndex: 1 }}>
+            <div className="ta-hero-text">
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
+                <span style={{
+                  background: "var(--primary-tint)", color: "var(--primary)",
+                  border: "1px solid var(--border)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <Server size={13} color="var(--primary)" /> ENTERPRISE MULTI-TENANT CLUSTER
+                </span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.12)", color: "#10B981",
+                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 5
+                }}>
+                  <Radio size={11} color="#10B981" /> 99.98% UPTIME • GLOBAL EDGE
+                </span>
+              </div>
+
+              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+                Train AI Platform Overview
+              </h1>
+              <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 680, lineHeight: 1.5 }}>
+                Active orchestration across {effectiveTotalOrgs} tenant institutions, powering {effectiveTotalUsers.toLocaleString()} enrolled learners with real-time AI tutor inference.
+              </p>
             </div>
 
-            <h1 className="ta-hero-title">
-              Train AI Platform Overview
-            </h1>
-            <p className="ta-hero-desc">
-              Active orchestration across {effectiveTotalOrgs} tenant institutions, powering {effectiveTotalUsers.toLocaleString()} enrolled learners with real-time AI tutor inference.
-            </p>
-          </div>
-
-          <div className="ta-hero-actions">
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-              <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>AI Speed</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: "#34D399" }}>18ms avg</div>
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-              <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>WebSockets</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24" }}>428 Live</div>
+            <div className="ta-hero-actions">
+              <div style={{ background: "var(--surface-2)", padding: "8px 14px", borderRadius: 10, border: "1px solid var(--border)", textAlign: "center", boxShadow: "var(--glass-shadow)" }}>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>AI Speed</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#10B981" }}>18ms avg</div>
+              </div>
+              <div style={{ background: "var(--surface-2)", padding: "8px 14px", borderRadius: 10, border: "1px solid var(--border)", textAlign: "center", boxShadow: "var(--glass-shadow)" }}>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>WebSockets</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#D97706" }}>428 Live</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
       {/* =========================================================================
           TOP 4 EXECUTIVE METRIC CARDS WITH SPARKLINE GROWTH
