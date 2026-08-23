@@ -6,7 +6,7 @@ import {
   Clock, Video, BookOpen, Zap, Download, Share2, HelpCircle, FileText,
   Code2, Award, Star, MessageSquare, Send, Search, Check, X, ShieldCheck,
   Bookmark, Heart, Layers, RefreshCw, PanelRightClose, PanelRightOpen,
-  Sliders, ExternalLink, Bot, Terminal, Copy, Paperclip
+  Sliders, ExternalLink, Bot, Terminal, Copy, Paperclip, Sparkles, Tv
 } from "lucide-react";
 import { submitLessonFeedback } from "../../lib/api/learner.js";
 import { getYouTubeEmbedId, isMockDataEnabled } from "../../lib/mockDataManager.js";
