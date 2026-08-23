@@ -333,6 +333,104 @@ export function LessonScreen({
             }}
           />
 
+          {/* Quick Interactive Video Control Suite & Key Moments (Liquid Glass) */}
+          <div
+            className="tai-card"
+            style={{
+              padding: "10px 14px",
+              borderRadius: 12,
+              background: "rgba(15, 23, 42, 0.88)",
+              backdropFilter: "blur(16px)",
+              WebkitBackdropFilter: "blur(16px)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8
+            }}
+          >
+            <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#A5B4FC", textTransform: "uppercase", letterSpacing: ".04em", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <Sparkles size={12} color="#A5B4FC" /> Video Control Suite
+                </span>
+              </div>
+              <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                <button
+                  className="tai-video-control-pill"
+                  style={{ padding: "4px 8px", fontSize: 11, fontWeight: 700 }}
+                  onClick={() => {
+                    videoPlayerRef.current?.seekTo(0);
+                    showToast?.("Restarted video from 00:00", "info");
+                  }}
+                  title="Restart video from beginning"
+                >
+                  <RotateCcw size={11} /> 0:00 Start
+                </button>
+                <button
+                  className="tai-video-control-pill"
+                  style={{ padding: "4px 8px", fontSize: 11, fontWeight: 700 }}
+                  onClick={() => {
+                    videoPlayerRef.current?.setSpeed(1.25);
+                    showToast?.("Set speed to 1.25x", "info");
+                  }}
+                  title="Set 1.25x speed"
+                >
+                  ⚡ 1.25x
+                </button>
+                <button
+                  className="tai-video-control-pill"
+                  style={{ padding: "4px 8px", fontSize: 11, fontWeight: 700 }}
+                  onClick={() => {
+                    videoPlayerRef.current?.setSpeed(1.5);
+                    showToast?.("Set speed to 1.5x", "info");
+                  }}
+                  title="Set 1.5x speed"
+                >
+                  ⚡ 1.5x
+                </button>
+                <button
+                  className="tai-video-control-pill"
+                  style={{ padding: "4px 8px", fontSize: 11, fontWeight: 700 }}
+                  onClick={() => {
+                    videoPlayerRef.current?.setSpeed(2.0);
+                    showToast?.("Set speed to 2.0x", "info");
+                  }}
+                  title="Set 2.0x speed"
+                >
+                  ⚡ 2.0x
+                </button>
+                <button
+                  className={`tai-video-control-pill ${isTheatreMode ? "active" : ""}`}
+                  style={{ padding: "4px 8px", fontSize: 11, fontWeight: 700 }}
+                  onClick={() => setIsTheatreMode(v => !v)}
+                  title="Toggle Theatre mode"
+                >
+                  <Tv size={11} /> Cinema
+                </button>
+              </div>
+            </div>
+
+            {/* Jump to Chapter Key Moments */}
+            <div className="tai-scrollx tai-gap6" style={{ alignItems: "center", paddingBottom: 2, scrollbarWidth: "none" }}>
+              <span style={{ fontSize: 10.5, color: "#94A3B8", fontWeight: 700, flexShrink: 0 }}>Jump to:</span>
+              {DEFAULT_CHAPTERS.slice(0, 4).map((ch, idx) => (
+                <button
+                  key={idx}
+                  className="tai-video-control-pill"
+                  style={{ padding: "3px 8px", fontSize: 10.5, fontWeight: 600, flexShrink: 0 }}
+                  onClick={() => {
+                    videoPlayerRef.current?.seekTo(ch.seconds);
+                    showToast?.(`Seeked to ${ch.time} - ${ch.title}`, "info");
+                  }}
+                  title={`Jump to ${ch.title}`}
+                >
+                  <span style={{ color: "#A5B4FC", fontWeight: 800 }}>{ch.time}</span> {ch.title.split(" ")[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Quick Action Lesson Controls Bar (Prev Lesson • Mark Complete • Next Lesson) */}
           <div className="tai-lesson-nav-container">
             <button
