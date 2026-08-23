@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } f
 import {
   Play, Pause, RotateCcw, RotateCw, Volume2, Volume1, VolumeX,
   Maximize2, Minimize2, Video, Settings, Sliders, Check, Subtitles,
-  Tv, Sparkles
+  Tv
 } from "lucide-react";
 import { parseVideoSource } from "../../lib/mockDataManager.js";
 
