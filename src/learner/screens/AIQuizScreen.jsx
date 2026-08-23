@@ -4,7 +4,7 @@ import {
   Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight,
   GraduationCap, Send, Bot, MessageSquare, BookOpen, Lightbulb,
   Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck,
-  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp
+  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp, Sparkles
 } from "lucide-react";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 
