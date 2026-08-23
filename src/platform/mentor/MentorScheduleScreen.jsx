@@ -120,24 +120,6 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <Calendar size={13} color="#A5B4FC" /> LIVE TEACHING STUDIO
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-                }}>
-                  {filteredSessions.filter(s => s.status === "confirmed").length} CONFIRMED SESSIONS
-                </span>
-              </div>
-
               <h1 className="ta-hero-title">
                 Availability &amp; Live Sessions
               </h1>

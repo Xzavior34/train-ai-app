@@ -104,24 +104,6 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.35)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <ShieldCheck size={13} color="#34D399" /> DIRECT DEPOSIT VERIFIED
-                </span>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.28)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-                }}>
-                  NEXT AUTOMATED CYCLE: 1ST OF MONTH
-                </span>
-              </div>
-
               <h1 className="ta-hero-title">
                 Instructor Earnings &amp; Financial Studio
               </h1>

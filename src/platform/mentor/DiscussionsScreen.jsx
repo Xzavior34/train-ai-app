@@ -142,24 +142,6 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
 
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <HelpCircle size={13} color="#A5B4FC" /> COURSE Q&amp;A CENTER
-                </span>
-                <span style={{
-                  background: "rgba(245, 158, 11, 0.28)", color: "#FDE68A",
-                  border: "1px solid rgba(245, 158, 11, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-                }}>
-                  {openCount} UNRESOLVED QUESTION{openCount === 1 ? "" : "S"}
-                </span>
-              </div>
-
               <h1 className="ta-hero-title">
                 Instructor Q&amp;A &amp; Knowledge Base
               </h1>

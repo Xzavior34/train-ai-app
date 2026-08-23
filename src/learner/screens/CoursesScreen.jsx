@@ -401,16 +401,20 @@ export function CoursesScreen({
             
             {/* Left Column: Spotlight details */}
             <div>
-              <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
+              <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8" }}>
+                  Featured Masterclass {(activeSlide % dynamicSpotlightSlides.length) + 1} of {dynamicSpotlightSlides.length}
+                </div>
+
                 {/* Prev / Next Controls */}
-                <div className="tai-row tai-gap6">
+                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
                   <button
                     aria-label="Previous Slide"
                     onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
                     style={{
                       width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
                       background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer"
+                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
                     }}
                   >
                     <ChevronLeft size={14} />
@@ -421,7 +425,7 @@ export function CoursesScreen({
                     style={{
                       width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
                       background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer"
+                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
                     }}
                   >
                     <ChevronRight size={14} />
@@ -429,13 +433,13 @@ export function CoursesScreen({
                 </div>
               </div>
 
-            <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.25 }}>
-              {currentSpotlight.title}
-            </h1>
+              <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.25 }}>
+                {currentSpotlight.title}
+              </h1>
 
-            <p key={currentSpotlight.id + "-desc"} className="tai-fade-in tai-hero-desc" style={{ fontSize: 13, margin: "0 0 12px", lineHeight: 1.45, maxWidth: 540 }}>
-              {currentSpotlight.description}
-            </p>
+              <p key={currentSpotlight.id + "-desc"} className="tai-fade-in tai-hero-desc" style={{ fontSize: 13, margin: "0 0 12px", lineHeight: 1.45, maxWidth: 540 }}>
+                {currentSpotlight.description}
+              </p>
 
             {/* In-Progress Sprint Pace Meter */}
             {currentSpotlight.progress > 0 && (

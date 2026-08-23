@@ -131,24 +131,6 @@ export function NotificationsScreen({
 
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
-              <span style={{
-                background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC",
-                border: "1px solid rgba(165, 180, 252, 0.4)",
-                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-              }}>
-                <Bell size={13} color="#A5B4FC" /> REAL-TIME ALERTS
-              </span>
-              <span style={{
-                background: unreadCount > 0 ? "rgba(239, 68, 68, 0.2)" : "rgba(16, 185, 129, 0.2)",
-                color: unreadCount > 0 ? "#FCA5A5" : "#34D399",
-                border: unreadCount > 0 ? "1px solid rgba(239, 68, 68, 0.4)" : "1px solid rgba(16, 185, 129, 0.4)",
-                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-              }}>
-                {unreadCount > 0 ? `${unreadCount} UNREAD ALERT${unreadCount === 1 ? "" : "S"}` : "ALL CAUGHT UP"}
-              </span>
-            </div>
             <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.2 }}>
               Notifications &amp; Activity Center
             </h1>
