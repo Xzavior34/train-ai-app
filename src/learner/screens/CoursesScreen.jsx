@@ -373,7 +373,7 @@ export function CoursesScreen({
           ========================================================================= */}
       {currentSpotlight && (
         <div
-          className="tai-card tai-hero-card anim-fluid-entrance"
+          className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
           onMouseEnter={() => setIsCarouselPaused(true)}
           onMouseLeave={() => setIsCarouselPaused(false)}
           style={{

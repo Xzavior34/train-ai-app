@@ -260,50 +260,50 @@ export function LessonScreen({
           TOP INDUSTRY-STANDARD COURSE HEADER / APP BAR
           ========================================================================= */}
       <div className="tai-card" style={{
-        padding: "10px 14px", borderRadius: 10,
+        padding: "10px 12px", borderRadius: 10,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        flexWrap: "wrap", gap: 10, background: "var(--surface)", border: "1px solid var(--border)",
+        gap: 8, background: "var(--surface)", border: "1px solid var(--border)",
         width: "100%", boxSizing: "border-box"
       }}>
-        <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: "1 1 220px", alignItems: "center" }}>
+        <div className="tai-row tai-gap8" style={{ minWidth: 0, flex: "1 1 auto", alignItems: "center" }}>
           <button
             className="tai-btn tai-btn-outline tai-btn-sm"
             onClick={back}
-            style={{ borderRadius: 8, flexShrink: 0, padding: "6px 10px", fontSize: 12 }}
+            style={{ borderRadius: 8, flexShrink: 0, padding: "6px 9px", fontSize: 12 }}
             title="Course Overview"
           >
-            <ChevronLeft size={16} /> <span className="tai-header-full-text">Overview</span>
+            <ChevronLeft size={15} /> <span className="tai-header-full-text">Overview</span>
           </button>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em" }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em" }}>
               {course?.category || "Masterclass Track"} • Lesson {currentLessonIndex + 1} of {rawLessons.length}
             </div>
-            <div style={{ fontWeight: 800, fontSize: "clamp(13px, 2.5vw, 15px)", color: "var(--text)", lineHeight: 1.3, wordBreak: "break-word" }}>
+            <div style={{ fontWeight: 800, fontSize: "clamp(12.5px, 2.5vw, 15px)", color: "var(--text)", lineHeight: 1.3, wordBreak: "break-word" }}>
               {course?.title || "AI Product Architecture Masterclass"}
             </div>
           </div>
         </div>
 
         {/* Course Progress & Action Badges */}
-        <div className="tai-row tai-gap10" style={{ alignItems: "center", flexShrink: 0 }}>
-          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+        <div className="tai-row tai-gap6" style={{ alignItems: "center", flexShrink: 0 }}>
+          <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 9.5, color: "var(--text-3)", fontWeight: 700 }}>PROGRESS</div>
-              <div style={{ fontSize: 12, fontWeight: 800, color: "var(--primary)" }}>{courseProgressPercent}%</div>
+              <div style={{ fontSize: 8.5, color: "var(--text-3)", fontWeight: 700 }}>PROGRESS</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--primary)" }}>{courseProgressPercent}%</div>
             </div>
-            <div style={{ width: 44, height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
+            <div style={{ width: 32, height: 5, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
               <div style={{ width: `${courseProgressPercent}%`, height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 99 }} />
             </div>
           </div>
 
           <button
             className="tai-iconbtn"
-            style={{ borderRadius: 8, width: 34, height: 34 }}
+            style={{ borderRadius: 8, width: 30, height: 30 }}
             onClick={() => setSidebarOpen(v => !v)}
             title={sidebarOpen ? "Hide Course Curriculum" : "Show Course Curriculum"}
             aria-label="Toggle Curriculum"
           >
-            {sidebarOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+            {sidebarOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
           </button>
         </div>
       </div>
@@ -314,7 +314,7 @@ export function LessonScreen({
       <div className={`tai-lesson-cinema-layout ${!sidebarOpen || isTheatreMode ? "tai-cinema-full" : ""}`}>
         
         {/* Left Column: Widescreen Video Player & Interactive Tabs */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, width: "100%", boxSizing: "border-box" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0, width: "100%", boxSizing: "border-box" }}>
 
           {/* Universal High-Performance Course Video Player */}
           <CourseVideoPlayer
@@ -342,16 +342,16 @@ export function LessonScreen({
                 <button
                   className="tai-video-control-pill"
                   style={{
-                    padding: "6px 14px",
-                    fontSize: 12,
+                    padding: "5px 12px",
+                    fontSize: 11.5,
                     fontWeight: 700,
                     borderRadius: 8,
-                    gap: 6
+                    gap: 5
                   }}
                   onClick={() => setShowControlSuite(true)}
                   title="Show Video Controls, Speed, Resolution & Settings"
                 >
-                  <Sliders size={13} color="var(--primary)" />
+                  <Sliders size={12} color="var(--primary)" />
                   <span>Video Controls &amp; Settings</span>
                 </button>
               </div>
@@ -359,7 +359,7 @@ export function LessonScreen({
               <div
                 className="tai-card anim-slide-down"
                 style={{
-                  padding: "14px 16px",
+                  padding: "12px 14px",
                   borderRadius: 12,
                   background: "rgba(15, 23, 42, 0.92)",
                   backdropFilter: "blur(16px)",
@@ -368,7 +368,7 @@ export function LessonScreen({
                   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35)",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 12
+                  gap: 10
                 }}
               >
                 {/* Header Row */}
@@ -384,51 +384,51 @@ export function LessonScreen({
                       alignItems: "center",
                       gap: 5
                     }}>
-                      <Sliders size={13} color="#A5B4FC" /> Video Controls &amp; Quick Actions
+                      <Sliders size={12} color="#A5B4FC" /> Video Controls &amp; Quick Actions
                     </span>
                   </div>
                   <button
                     className="tai-video-control-pill"
-                    style={{ padding: "3px 9px", fontSize: 11, fontWeight: 700, gap: 4 }}
+                    style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700, gap: 4 }}
                     onClick={() => setShowControlSuite(false)}
                     title="Hide Video Controls"
                   >
-                    <EyeOff size={12} /> Hide
+                    <EyeOff size={11} /> Hide
                   </button>
                 </div>
 
                 {/* Main Controls Rows */}
-                <div className="tai-col tai-gap10">
+                <div className="tai-col tai-gap8">
                   
                   {/* Row 1: Playback Speed Controls */}
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 70 }}>Speed:</span>
+                  <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Speed:</span>
                     {[0.75, 1.0, 1.25, 1.5, 2.0].map((spd) => (
                       <button
                         key={spd}
                         className={`tai-video-control-pill ${playbackSpeed === spd ? "active" : ""}`}
-                        style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                        style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
                         onClick={() => {
                           setPlaybackSpeed(spd);
                           videoPlayerRef.current?.setSpeed(spd);
                           showToast?.(`Playback speed set to ${spd}x`, "info");
                         }}
                       >
-                        {spd === 1.0 ? "1.0x (Normal)" : `${spd}x`}
+                        {spd === 1.0 ? "1.0x" : `${spd}x`}
                       </button>
                     ))}
                   </div>
 
                   {/* Row 2: Resolution / Quality Controls */}
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 70 }}>Quality:</span>
+                  <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Quality:</span>
                     {["Auto", "1080p HD", "720p", "480p"].map((qual) => {
                       const isQualActive = qual === "Auto" ? videoQuality.includes("Auto") : videoQuality.includes(qual);
                       return (
                         <button
                           key={qual}
                           className={`tai-video-control-pill ${isQualActive ? "active" : ""}`}
-                          style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                          style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
                           onClick={() => {
                             const newQual = qual === "Auto" ? "Auto (1080p)" : qual;
                             setVideoQuality(newQual);
@@ -443,57 +443,57 @@ export function LessonScreen({
                   </div>
 
                   {/* Row 3: Options (Captions CC, Cinema View, Restart) */}
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 70 }}>Options:</span>
+                  <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Options:</span>
                     <button
                       className={`tai-video-control-pill ${captionsEnabled ? "active" : ""}`}
-                      style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                      style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
                       onClick={() => {
                         setCaptionsEnabled(v => !v);
                         showToast?.(!captionsEnabled ? "Subtitles CC enabled" : "Subtitles disabled", "info");
                       }}
                     >
-                      <Subtitles size={13} /> {captionsEnabled ? "Captions (On)" : "Captions (Off)"}
+                      <Subtitles size={12} /> {captionsEnabled ? "CC (On)" : "CC (Off)"}
                     </button>
                     
                     <button
                       className={`tai-video-control-pill ${isTheatreMode ? "active" : ""}`}
-                      style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                      style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
                       onClick={() => setIsTheatreMode(v => !v)}
                       title="Toggle Cinema Theatre mode"
                     >
-                      <Tv size={13} /> {isTheatreMode ? "Standard View" : "Cinema View"}
+                      <Tv size={12} /> {isTheatreMode ? "Standard View" : "Cinema View"}
                     </button>
 
                     <button
                       className="tai-video-control-pill"
-                      style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                      style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
                       onClick={() => {
                         videoPlayerRef.current?.seekTo(0);
                         showToast?.("Restarted video from 00:00", "info");
                       }}
                       title="Restart video from 00:00"
                     >
-                      <RotateCcw size={12} /> Restart (0:00)
+                      <RotateCcw size={11} /> Restart (0:00)
                     </button>
                   </div>
 
                   {/* Row 4: Key Moments & Chapters */}
-                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 70 }}>Moments:</span>
+                  <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Moments:</span>
                     <div className="tai-scrollx tai-gap6" style={{ flex: 1, alignItems: "center", paddingBottom: 2, scrollbarWidth: "none" }}>
                       {DEFAULT_CHAPTERS.slice(0, 4).map((ch, idx) => (
                         <button
                           key={idx}
                           className="tai-video-control-pill"
-                          style={{ padding: "3px 9px", fontSize: 11, fontWeight: 600, flexShrink: 0 }}
+                          style={{ padding: "3px 8px", fontSize: 11, fontWeight: 600, flexShrink: 0 }}
                           onClick={() => {
                             videoPlayerRef.current?.seekTo(ch.seconds);
                             showToast?.(`Jumped to ${ch.time} • ${ch.title}`, "info");
                           }}
                           title={`Jump to ${ch.title}`}
                         >
-                          <span style={{ color: "#A5B4FC", fontWeight: 800, marginRight: 4 }}>{ch.time}</span> {ch.title.split(" ")[0]}
+                          <span style={{ color: "#A5B4FC", fontWeight: 800, marginRight: 3 }}>{ch.time}</span> {ch.title.split(" ")[0]}
                         </button>
                       ))}
                     </div>

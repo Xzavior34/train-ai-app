@@ -675,6 +675,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
 
               <input
                 type="range"
+                className="tai-desktop-only"
                 min="0"
                 max="1"
                 step="0.05"
@@ -691,11 +692,11 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
             </div>
 
             {/* Time Stamp Badge */}
-            <div style={{
+            <div className="tai-video-timestamp" style={{
               fontSize: 12, fontWeight: 800, color: "#FFFFFF",
               fontVariantNumeric: "tabular-nums", marginLeft: 4,
               background: "rgba(255,255,255,0.06)", padding: "4px 8px", borderRadius: 6,
-              border: "1px solid rgba(255,255,255,0.1)"
+              border: "1px solid rgba(255,255,255,0.1)", whiteSpace: "nowrap"
             }}>
               {formatTime(currentTime)} <span style={{ color: "#94A3B8" }}>/ {formatTime(duration)}</span>
             </div>
