@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Bookmark, BookOpen, Video, Code2, FileText, Trash2, ExternalLink, Play,
-  FolderPlus, Search, Check, Heart, Clock, Star, ArrowRight, Share2, Copy
+  FolderPlus, Search, Check, Heart, Clock, Star, ArrowRight, Share2, Copy, Plus
 } from "lucide-react";
 
 export function BookmarksScreen({ push, back, showToast, session }) {

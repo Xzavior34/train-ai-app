@@ -6,7 +6,7 @@ import {
   Search, Bookmark, ExternalLink, Calendar, CheckCircle2, Megaphone, Radio,
   Filter, Pin, ThumbsUp, Code2, Award, ChevronRight, Layers, Play, Clock,
   ArrowUpRight, MoreHorizontal, Check, X, HelpCircle, Image as ImageIcon,
-  Palette, Zap, Target, MessageSquare, GraduationCap, Video, BookOpen
+  Palette, Zap, Target, MessageSquare, GraduationCap, Video, BookOpen, FileText
 } from "lucide-react";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
