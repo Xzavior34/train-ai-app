@@ -105,10 +105,9 @@ export function HomeScreen({
 
             {continueCourse && (
               <button
-                className="tai-btn tai-hero-btn"
+                className="tai-btn tai-btn-primary tai-hero-btn"
                 style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 700,
-                  padding: "8px 16px", borderRadius: 8, border: "none", fontSize: 13,
+                  padding: "8px 16px", borderRadius: 8, fontSize: 13,
                   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
                   cursor: "pointer"
                 }}

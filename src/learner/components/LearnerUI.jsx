@@ -162,49 +162,75 @@ export const TOKENS = `
     .tai-sidebar-nav {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       flex: 1;
     }
-    .tai-sidebar-section-title {
-      font-size: 10.5px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--text-3);
-      padding: 10px 10px 4px;
-      margin-top: 4px;
-      user-select: none;
+    .tai-category-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 4px;
     }
-    .tai-nav-item {
+    .tai-group-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 11px;
+      justify-content: space-between;
+      padding: 8px 10px;
       border-radius: 8px;
       cursor: pointer;
       font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      transition: all .16s ease;
+      user-select: none;
+    }
+    .tai-group-header:hover {
+      background: var(--glass-surface);
+      color: var(--primary);
+    }
+    .tai-group-header.active {
+      color: var(--primary);
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.14) 100%);
+    }
+    .tai.dark .tai-group-header.active {
+      color: #818CF8;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.22) 0%, rgba(99, 102, 241, 0.30) 100%);
+    }
+    .tai-sub-items {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 2px 0 4px 10px;
+      margin-left: 8px;
+      border-left: 1.5px solid var(--glass-border);
+    }
+    .tai-sub-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12.5px;
       font-weight: 600;
       color: var(--text-2);
       transition: all .16s ease;
-      line-height: 1.4;
-      min-height: 36px;
-      box-sizing: border-box;
-      position: relative;
+      line-height: 1.35;
     }
-    .tai-nav-item:hover {
+    .tai-sub-item:hover {
       background: var(--glass-surface);
       color: var(--text);
       transform: translateX(2px);
       box-shadow: inset 0 1px 0 var(--glass-specular);
     }
-    .tai-nav-item.active {
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(99, 102, 241, 0.18) 100%) !important;
+    .tai-sub-item.active {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.14) 0%, rgba(99, 102, 241, 0.20) 100%) !important;
       color: #4F46E5 !important;
       font-weight: 700;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(79, 70, 229, 0.12);
     }
-    .tai.dark .tai-nav-item.active {
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.25) 0%, rgba(99, 102, 241, 0.35) 100%) !important;
+    .tai.dark .tai-sub-item.active {
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.28) 0%, rgba(99, 102, 241, 0.38) 100%) !important;
       color: #818CF8 !important;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.3);
     }
@@ -212,7 +238,7 @@ export const TOKENS = `
       margin-left: auto;
       background: #4F46E5;
       color: #fff;
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 700;
       padding: 1px 6px;
       border-radius: 99px;
@@ -824,6 +850,8 @@ export function DesktopSidebar({
   unreadNotifs = 0,
 }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("tai_sidebar_minimized") === "true");
+  // Default all categories to open so learner can explore and collapse at will
+  const [collapsedCategories, setCollapsedCategories] = useState({});
 
   const toggleMinimized = () => {
     setIsMinimized(prev => {
@@ -833,9 +861,78 @@ export function DesktopSidebar({
     });
   };
 
+  const toggleCategory = (catKey) => {
+    setCollapsedCategories(prev => ({
+      ...prev,
+      [catKey]: !prev[catKey]
+    }));
+  };
+
+  const CATEGORIES = [
+    {
+      key: "home",
+      label: "Home",
+      icon: Home,
+      defaultScreen: "home",
+      screens: ["home", "myProgress"],
+      subItems: [
+        { key: "home", label: "Overview", icon: Home },
+        { key: "myProgress", label: "My Progress", icon: BarChart3 }
+      ]
+    },
+    {
+      key: "courses",
+      label: "Courses",
+      icon: BookOpen,
+      defaultScreen: "courses",
+      screens: ["courses", "courseDetail", "lesson", "learningPaths", "bookmarks"],
+      subItems: [
+        { key: "courses", label: "All Courses", icon: BookOpen },
+        { key: "learningPaths", label: "Learning Paths", icon: Layers },
+        { key: "bookmarks", label: "Bookmarks", icon: Bookmark }
+      ]
+    },
+    {
+      key: "ai",
+      label: "AI Coach",
+      icon: Zap,
+      defaultScreen: "ai",
+      screens: ["ai", "aiQuiz"],
+      subItems: [
+        { key: "ai", label: "AI Coach", icon: Zap },
+        { key: "aiQuiz", label: "Quizzes", icon: GraduationCap }
+      ]
+    },
+    {
+      key: "community",
+      label: "Community",
+      icon: Users,
+      defaultScreen: "communityFeed",
+      screens: ["community", "communityFeed", "cohort", "mentors", "messages", "notifications"],
+      subItems: [
+        { key: "communityFeed", label: "Discussions", icon: MessageSquare },
+        { key: "cohort", label: "Cohorts", icon: Users },
+        { key: "mentors", label: "Mentors", icon: Calendar },
+        { key: "messages", label: "Messages", icon: Mail },
+        { key: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifs }
+      ]
+    },
+    {
+      key: "account",
+      label: "Account",
+      icon: Settings,
+      defaultScreen: "settings",
+      screens: ["achievements", "leaderboard", "settings", "profile"],
+      subItems: [
+        { key: "achievements", label: "Achievements", icon: Award },
+        { key: "settings", label: "Settings", icon: Settings }
+      ]
+    }
+  ];
+
   return (
     <aside className={`tai-desktop-sidebar ${isMinimized ? "tai-sidebar-minimized" : ""}`}>
-      {/* Sidebar Collapse / Expand Toggle */}
+      {/* Sidebar Minimize / Expand Toggle */}
       <button
         className="tai-toggle-sidebar-btn"
         onClick={toggleMinimized}
@@ -846,146 +943,98 @@ export function DesktopSidebar({
       </button>
 
       <div className="tai-sidebar-nav">
-        {/* OVERVIEW */}
-        <div className="tai-sidebar-section-title">Overview</div>
-        <div
-          className={`tai-nav-item ${activeScreen === "home" ? "active" : ""}`}
-          onClick={() => go("home")}
-          title="Home Dashboard"
-        >
-          <Home size={18} />
-          <span>Home</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "ai" ? "active" : ""}`}
-          onClick={() => go("ai")}
-          title="AI Neural Coach & Quizzes"
-        >
-          <Zap size={18} />
-          <span>AI Coach</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "myProgress" ? "active" : ""}`}
-          onClick={() => go("myProgress")}
-          title="My Learning Progress"
-        >
-          <BarChart3 size={18} />
-          <span>My Progress</span>
-        </div>
+        {CATEGORIES.map(category => {
+          const isCategoryActive = category.screens.includes(activeScreen);
+          const isCollapsed = !!collapsedCategories[category.key];
+          const Icon = category.icon;
 
-        {/* LEARNING */}
-        <div className="tai-sidebar-section-title">Learning</div>
-        <div
-          className={`tai-nav-item ${activeScreen === "courses" || activeScreen === "courseDetail" || activeScreen === "lesson" ? "active" : ""}`}
-          onClick={() => go("courses")}
-          title="Explore Courses"
-        >
-          <BookOpen size={18} />
-          <span>Courses</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "learningPaths" ? "active" : ""}`}
-          onClick={() => go("learningPaths")}
-          title="Learning Paths & Career Tracks"
-        >
-          <Layers size={18} />
-          <span>Learning Paths</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "bookmarks" ? "active" : ""}`}
-          onClick={() => go("bookmarks")}
-          title="Saved Library & Bookmarks"
-        >
-          <Bookmark size={18} />
-          <span>Bookmarks</span>
-        </div>
+          return (
+            <div key={category.key} className="tai-category-group">
+              {/* Category Header */}
+              <div
+                className={`tai-group-header ${isCategoryActive ? "active" : ""}`}
+                onClick={() => {
+                  if (isMinimized) {
+                    go(category.defaultScreen);
+                  } else {
+                    toggleCategory(category.key);
+                  }
+                }}
+                title={category.label}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <Icon size={17} style={{ flexShrink: 0 }} />
+                  {!isMinimized && <span>{category.label}</span>}
+                </div>
 
-        {/* COMMUNITY & MENTORS */}
-        <div className="tai-sidebar-section-title">Community & Live</div>
-        <div
-          className={`tai-nav-item ${activeScreen === "community" ? "active" : ""}`}
-          onClick={() => go("communityFeed")}
-          title="Community Discussions & Feed"
-        >
-          <MessageSquare size={18} />
-          <span>Community</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "cohort" ? "active" : ""}`}
-          onClick={() => go("cohort")}
-          title="Active Study Cohorts"
-        >
-          <Users size={18} />
-          <span>Cohorts</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "mentors" ? "active" : ""}`}
-          onClick={() => go("mentors")}
-          title="Mentors & 1-on-1 Sessions"
-        >
-          <Calendar size={18} />
-          <span>Mentors</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "messages" ? "active" : ""}`}
-          onClick={() => go("messages")}
-          title="Direct Messages"
-        >
-          <Mail size={18} />
-          <span>Messages</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "notifications" ? "active" : ""}`}
-          onClick={() => go("notifications")}
-          title="Notifications"
-        >
-          <Bell size={18} />
-          <span>Notifications</span>
-          {unreadNotifs > 0 && <span className="tai-badge tai-badge-danger">{unreadNotifs}</span>}
-        </div>
+                {!isMinimized && (
+                  <ChevronDown
+                    size={15}
+                    color="var(--text-3)"
+                    className={`rotator-chevron ${!isCollapsed ? "rotator-chevron-open" : ""}`}
+                    style={{ flexShrink: 0 }}
+                  />
+                )}
+              </div>
 
-        {/* ACCOUNT */}
-        <div className="tai-sidebar-section-title">Account</div>
-        <div
-          className={`tai-nav-item ${activeScreen === "achievements" || activeScreen === "leaderboard" ? "active" : ""}`}
-          onClick={() => go("achievements")}
-          title="Achievements & Leaderboard"
-        >
-          <Award size={18} />
-          <span>Achievements</span>
-        </div>
-        <div
-          className={`tai-nav-item ${activeScreen === "settings" || activeScreen === "profile" ? "active" : ""}`}
-          onClick={() => onProfile ? onProfile() : go("settings")}
-          title="Account Settings"
-        >
-          <Settings size={18} />
-          <span>Settings</span>
-        </div>
+              {/* Sub-items (collapsible) */}
+              {!isMinimized && !isCollapsed && (
+                <div className="tai-sub-items anim-fluid-entrance">
+                  {category.subItems.map(item => {
+                    const SubIcon = item.icon;
+                    const isSubActive = activeScreen === item.key ||
+                      (item.key === "courses" && (activeScreen === "courseDetail" || activeScreen === "lesson")) ||
+                      (item.key === "settings" && activeScreen === "profile") ||
+                      (item.key === "communityFeed" && activeScreen === "community");
+
+                    return (
+                      <div
+                        key={item.key}
+                        className={`tai-sub-item ${isSubActive ? "active" : ""}`}
+                        onClick={() => {
+                          if (item.key === "settings" && onProfile) {
+                            onProfile();
+                          } else {
+                            go(item.key);
+                          }
+                        }}
+                        title={item.label}
+                      >
+                        <SubIcon size={14} style={{ flexShrink: 0 }} />
+                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</span>
+                        {item.badge > 0 && <span className="tai-badge tai-badge-danger">{item.badge}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Footer Switcher / Sign Out */}
       <div className="tai-sidebar-footer">
         {onOpenDashboardSwitcher && (
           <div
-            className="tai-nav-item"
+            className="tai-sub-item"
             onClick={onOpenDashboardSwitcher}
             title="Switch Workspace"
             style={{ color: "var(--primary)", fontWeight: 700 }}
           >
-            <ShieldCheck size={18} />
-            <span>Admin Portal</span>
+            <ShieldCheck size={16} />
+            {!isMinimized && <span>Admin Portal</span>}
           </div>
         )}
         {onSignOut && (
           <div
-            className="tai-nav-item"
+            className="tai-sub-item"
             onClick={onSignOut}
             title="Sign Out"
             style={{ color: "var(--danger)" }}
           >
-            <LogOut size={18} />
-            <span>Sign Out</span>
+            <LogOut size={16} />
+            {!isMinimized && <span>Sign Out</span>}
           </div>
         )}
       </div>
