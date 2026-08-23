@@ -160,51 +160,6 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
       <TopBar
         title="Organizations" sub="All registered multi-tenant organizations on Train AI"
         orgSelector={orgSelector}
-        right={
-          <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-            <div className="ta-row" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: 3 }}>
-              <button
-                className={`ta-btn ta-btn-sm ${viewMode === "grid" ? "ta-btn-ghost" : ""}`}
-                style={{ padding: "5px 10px", background: viewMode === "grid" ? "var(--primary-tint)" : "transparent", color: viewMode === "grid" ? "var(--primary)" : "var(--text-3)", border: "none" }}
-                onClick={() => setViewMode("grid")}
-                title="Grid Card View"
-              >
-                <LayoutGrid size={14} />
-              </button>
-              <button
-                className={`ta-btn ta-btn-sm ${viewMode === "table" ? "ta-btn-ghost" : ""}`}
-                style={{ padding: "5px 10px", background: viewMode === "table" ? "var(--primary-tint)" : "transparent", color: viewMode === "table" ? "var(--primary)" : "var(--text-3)", border: "none" }}
-                onClick={() => setViewMode("table")}
-                title="Table View"
-              >
-                <List size={14} />
-              </button>
-            </div>
-            <button
-              className="ta-btn ta-btn-outline"
-              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-              onClick={() => setShowBilling((v) => !v)}
-            >
-              <CreditCard size={13} /> {showBilling ? "Hide billing" : "Billing"}
-            </button>
-            {onLaunchOnboarding && (
-              <button
-                className="ta-btn ta-btn-outline"
-                style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-                onClick={onLaunchOnboarding}
-              >
-                <Rocket size={13} /> Set up new organization
-              </button>
-            )}
-            <button
-              className="ta-btn ta-btn-primary"
-              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-              onClick={() => setNewOrgOpen(true)}
-            >
-              <Plus size={14} /> Create organization
-            </button>
-          </div>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
@@ -231,15 +186,21 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
               </p>
             </div>
 
-            <div className="ta-hero-actions">
-              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Total Registered</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{orgs.length} Tenants</div>
-              </div>
-              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Active Users</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>{orgs.reduce((sum, o) => sum + (o.user_count || 0), 0)} Active</div>
-              </div>
+            <div className="ta-hero-actions" style={{ flexWrap: "wrap", gap: 8 }}>
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ height: 36, padding: "0 12px", borderRadius: 8, fontSize: 12.5, color: "#FFFFFF", borderColor: "rgba(255,255,255,0.2)", display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={() => setShowBilling((v) => !v)}
+              >
+                <CreditCard size={13} /> {showBilling ? "Hide Billing" : "Billing"}
+              </button>
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setNewOrgOpen(true)}
+              >
+                <Plus size={14} /> Create Organization
+              </button>
             </div>
           </div>
         </div>

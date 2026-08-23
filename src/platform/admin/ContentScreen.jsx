@@ -281,38 +281,6 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
         sub={activeCourse ? "Admin workspace to edit settings, curriculum, and publishing" : "Build, manage, and publish organization courses"}
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={
-          activeCourse ? (
-            <div className="ta-row ta-gap8">
-              <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={handleCloseActiveCourse}>
-                <ArrowLeft size={14} /> Back to Courses
-              </button>
-              <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleSaveCourseSettings} disabled={isSaving}>
-                <Save size={14} /> {isSaving ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          ) : (
-            <button
-              className="ta-btn ta-btn-primary"
-              style={{
-                height: 34,
-                padding: "0 12px",
-                borderRadius: 8,
-                background: "#4F46E5",
-                color: "#FFFFFF",
-                fontWeight: 700,
-                fontSize: 12.5,
-                border: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5
-              }}
-              onClick={() => setNewCourseOpen(true)}
-            >
-              <Plus size={14} /> Create course
-            </button>
-          )
-        }
       />
 
       <div className="ta-content">
@@ -1111,6 +1079,28 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   <p className="ta-hero-desc">
                     Author interactive courses, manage lesson syllabi, configure assessment criteria, and publish learning modules.
                   </p>
+                </div>
+
+                <div className="ta-hero-actions">
+                  <button
+                    className="ta-btn ta-btn-primary"
+                    style={{
+                      height: 36,
+                      padding: "0 14px",
+                      borderRadius: 8,
+                      background: "#4F46E5",
+                      color: "#FFFFFF",
+                      fontWeight: 700,
+                      fontSize: 12.5,
+                      border: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6
+                    }}
+                    onClick={() => setNewCourseOpen(true)}
+                  >
+                    <Plus size={14} /> Create Course
+                  </button>
                 </div>
               </div>
             </div>

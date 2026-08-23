@@ -18,15 +18,6 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
         title="Cohort Management" sub="Active learning batches & timeline progress"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={
-          <button
-            className="ta-btn ta-btn-primary"
-            style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-            onClick={() => setNewCohortOpen(true)}
-          >
-            <Plus size={14} /> Create cohort
-          </button>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
@@ -42,6 +33,16 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
               <p className="ta-hero-desc">
                 Manage batch schedules, enrollment windows, synchronous sessions, and student milestone pacing.
               </p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setNewCohortOpen(true)}
+              >
+                <Plus size={14} /> Create Cohort
+              </button>
             </div>
           </div>
         </div>

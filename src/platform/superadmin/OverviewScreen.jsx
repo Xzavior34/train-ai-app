@@ -74,19 +74,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           TOP EXECUTIVE CONTROL BAR
           ========================================================================= */}
       <TopBar
-        title="Platform Governance & Control Hub"
-        sub="Executive multi-tenant control, AI cluster consumption & system metrics"
+        title="Superadmin Dashboard"
+        sub="System telemetry, multi-tenant directory, and global platform controls"
         orgSelector={orgSelector}
-        right={
-          <div className="ta-row ta-gap10">
-            <button className="ta-btn ta-btn-outline" onClick={handleExportPlatformReport} disabled={!orgs.length}>
-              <Download size={14} /> Export CSV Audit
-            </button>
-            <button className="ta-btn ta-btn-primary" onClick={() => onNavigate?.("organizations")}>
-              <Plus size={14} /> Add Tenant Org
-            </button>
-          </div>
-        }
+        onNavigate={onNavigate}
       />
 
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>

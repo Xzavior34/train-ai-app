@@ -165,11 +165,16 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
         sub={cohort ? `${cohort.starts_at ? new Date(cohort.starts_at).toLocaleDateString() : "TBD"} to ${cohort.ends_at ? new Date(cohort.ends_at).toLocaleDateString() : "TBD"}` : "Loading..."}
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={cohort && <button className="ta-btn ta-btn-outline" onClick={openSettings}><SettingsIcon size={15} /> Settings</button>}
       />
       <div className="ta-content">
         {detailQuery.loading && <div className="ta-empty">Loading cohort...</div>}
         {!detailQuery.loading && !cohort && <div className="ta-empty">Cohort not found.</div>}
+        {cohort && !editingSettings && (
+          <div className="ta-row ta-between" style={{ marginBottom: 12, alignItems: "center" }}>
+            <div style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>Batch Management &amp; Pacing</div>
+            <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={openSettings}><SettingsIcon size={14} /> Cohort Settings</button>
+          </div>
+        )}
 
         {editingSettings && (
           <div className="ta-card ta-mt16" style={{ borderColor: "var(--border)", borderRadius: 10 }}>

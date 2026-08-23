@@ -1453,9 +1453,11 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
         </div>
 
         {/* Primary Header Quick Action */}
-        <div className="ta-header-full-only">
-          {right}
-        </div>
+        {right && (
+          <div className="ta-header-full-only">
+            {right}
+          </div>
+        )}
 
         {/* User Profile Pill */}
         <div

@@ -301,12 +301,12 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
           {/* Quick Metrics */}
           <div className="tai-row tai-gap16 tai-mt20" style={{ flexWrap: "wrap" }}>
             <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 10 }}>
-              <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>ACTIVE ENROLLED TRACKS</div>
+              <div style={{ fontSize: 10.5, color: "#94A3B8", fontWeight: 700 }}>ACTIVE ENROLLED TRACKS</div>
               <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>2 In Progress</div>
             </div>
             <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 10 }}>
-              <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>TOTAL CURRICULUM</div>
-              <div style={{ fontSize: 16, fontWeight: 900, color: "var(--text)" }}>180+ Hours • 14 Courses</div>
+              <div style={{ fontSize: 10.5, color: "#94A3B8", fontWeight: 700 }}>TOTAL CURRICULUM</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>180+ Hours • 14 Courses</div>
             </div>
           </div>
         </div>

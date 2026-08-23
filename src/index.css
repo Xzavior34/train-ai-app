@@ -609,7 +609,13 @@ html.tai-high-contrast .ta-card {
 .ta-hero-dark .tai-hero-subcard *,
 .tai-hero-dark .ta-hero-subcard *,
 .ta-hero-dark .ta-hero-subcard * {
-  color: inherit;
+  color: #FFFFFF;
+}
+.tai-hero-dark .tai-hero-subcard div:first-child,
+.ta-hero-dark .tai-hero-subcard div:first-child,
+.tai-hero-dark .ta-hero-subcard div:first-child,
+.ta-hero-dark .ta-hero-subcard div:first-child {
+  color: #94A3B8 !important;
 }
 
 /* Ambient Glowing Corner Halos */

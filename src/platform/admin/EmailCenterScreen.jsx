@@ -179,23 +179,6 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
         sub="Send announcements and nudges to your organization's members"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={
-          <button
-            className="ta-btn ta-btn-outline"
-            style={{
-              height: 34,
-              padding: "0 12px",
-              borderRadius: 8,
-              fontSize: 12.5,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5
-            }}
-            onClick={() => campaignsQuery.refetch()}
-          >
-            <RefreshCw size={13} /> Refresh history
-          </button>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
@@ -211,6 +194,24 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
               <p className="ta-hero-desc">
                 Send targeted announcements, automated milestone reminders, and batch nudges to your organization learners.
               </p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{
+                  height: 36,
+                  padding: "0 14px",
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+                onClick={() => campaignsQuery.refetch()}
+              >
+                <RefreshCw size={13} /> Refresh History
+              </button>
             </div>
           </div>
         </div>

@@ -62,20 +62,9 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
   return (
     <div className="ta-fade">
       <TopBar
-        title="Analytics Hub" sub="Enrollment growth, top courses & community activity. Computed from live org data"
+        title="Analytics & Telemetry" sub="Live aggregate engagement metrics"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={
-          <button
-            className="ta-btn ta-btn-outline"
-            style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-            onClick={handleExport}
-            disabled={!trend.length || !canExport}
-            title={!canExport ? `Requires ${minTierLabelFor("analytics_export")} plan` : undefined}
-          >
-            {!canExport && <Lock size={12} />} <Download size={13} /> Export CSV
-          </button>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
@@ -87,6 +76,18 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Institutional Analytics &amp; AI Usage</h1>
               <p className="ta-hero-desc">Track completion pacing, study time distribution, retention curves, and AI usage metrics.</p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={handleExport}
+                disabled={!trend.length || !canExport}
+                title={!canExport ? `Requires ${minTierLabelFor("analytics_export")} plan` : undefined}
+              >
+                {!canExport && <Lock size={12} />} <Download size={13} /> Export CSV
+              </button>
             </div>
           </div>
         </div>

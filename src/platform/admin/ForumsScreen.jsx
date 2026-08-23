@@ -91,15 +91,6 @@ export function ForumsScreen({ orgSelector, setScreen }) {
         sub={selectedForum ? "Moderate threads in this category" : "Manage discussion categories and moderate threads"}
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={!selectedForum && (
-          <button
-            className="ta-btn ta-btn-primary"
-            style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-            onClick={openCreate}
-          >
-            <Plus size={14} /> New category
-          </button>
-        )}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
@@ -116,6 +107,18 @@ export function ForumsScreen({ orgSelector, setScreen }) {
                 {selectedForum ? "Review, moderate and manage active community threads for this category." : "Manage discussion categories, review community questions, and moderate forum topics."}
               </p>
             </div>
+
+            {!selectedForum && (
+              <div className="ta-hero-actions">
+                <button
+                  className="ta-btn ta-btn-primary"
+                  style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                  onClick={openCreate}
+                >
+                  <Plus size={14} /> New Category
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

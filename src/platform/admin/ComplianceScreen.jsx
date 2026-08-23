@@ -152,36 +152,6 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
         sub="Track progress across all learners, by course, and who's behind - plus compliance tracking"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={
-          <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-            <button
-              className="ta-btn ta-btn-outline"
-              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-              onClick={handleExportCompliance}
-            >
-              <Download size={13} /> Export Report
-            </button>
-            <button
-              className="ta-btn ta-btn-outline"
-              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-              onClick={async () => {
-                if (!orgId) return;
-                await refreshComplianceStatus(orgId);
-                complianceQuery.refetch();
-                showToast("Compliance audit refreshed!");
-              }}
-            >
-              <RefreshCw size={13} /> Refresh Audit
-            </button>
-            <button
-              className="ta-btn ta-btn-primary"
-              style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-              onClick={() => setShowAssignModal(true)}
-            >
-              <Plus size={14} /> Assign Course
-            </button>
-          </div>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div className="ta-hero-banner anim-fluid-entrance">
@@ -194,6 +164,35 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
               <p className="ta-hero-desc">
                 Track student progress, mandatory certifications, regulatory audit readiness, and automated status reports.
               </p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={handleExportCompliance}
+              >
+                <Download size={13} /> Export Report
+              </button>
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={async () => {
+                  if (!orgId) return;
+                  await refreshComplianceStatus(orgId);
+                  complianceQuery.refetch();
+                  showToast("Compliance audit refreshed!");
+                }}
+              >
+                <RefreshCw size={13} /> Refresh Audit
+              </button>
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={() => setShowAssignModal(true)}
+              >
+                <Plus size={14} /> Assign Course
+              </button>
             </div>
           </div>
         </div>

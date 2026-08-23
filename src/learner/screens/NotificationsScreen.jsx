@@ -94,16 +94,6 @@ export function NotificationsScreen({
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
-      <TopBar
-        title="Notifications & Updates"
-        sub={`${unreadCount} unread alert${unreadCount === 1 ? "" : "s"} across all courses and cohorts`}
-        onBack={back}
-        hideBell
-      />
-
-      {/* =========================================================================
-          HERO BANNER: Unified Command Center
-          ========================================================================= */}
       {/* =========================================================================
           HERO BANNER: Unified Activity Center (Adaptive Liquid Glass)
           ========================================================================= */}
@@ -131,9 +121,20 @@ export function NotificationsScreen({
 
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.2 }}>
-              Notifications &amp; Activity Center
-            </h1>
+            <div className="tai-row tai-gap10" style={{ alignItems: "center", marginBottom: 6 }}>
+              {back && (
+                <button
+                  onClick={back}
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  style={{ padding: "4px 8px", borderRadius: 6, color: "#FFFFFF", background: "rgba(255,255,255,0.12)" }}
+                >
+                  <ChevronLeft size={16} /> Back
+                </button>
+              )}
+              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
+                Notifications &amp; Activity Center
+              </h1>
+            </div>
             <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
               Stay on top of live instructor sessions, cohort assignments, milestone achievements, and platform announcements.
             </p>

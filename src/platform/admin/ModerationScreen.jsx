@@ -73,7 +73,6 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
         title="Content Moderation" sub="AI-flagged community content awaiting a human decision"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={<Tag tone={queue.length ? "warning" : "success"}><Flag size={12} /> {queue.length} awaiting review</Tag>}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div className="ta-hero-banner anim-fluid-entrance">
@@ -82,6 +81,10 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Content &amp; Safety Moderation</h1>
               <p className="ta-hero-desc">Review flagged posts, policy violations, AI confidence scores, and community safety reports.</p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <Tag tone={queue.length ? "warning" : "success"}><Flag size={12} /> {queue.length} awaiting review</Tag>
             </div>
           </div>
         </div>

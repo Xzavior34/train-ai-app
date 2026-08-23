@@ -85,15 +85,6 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
         sub="Connect webhooks for platform events"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={
-          <button
-            className="ta-btn ta-btn-primary"
-            style={{ height: 34, padding: "0 12px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-            onClick={() => setFormOpen((v) => !v)}
-          >
-            <Plus size={14} /> New webhook
-          </button>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div className="ta-hero-banner anim-fluid-entrance">
@@ -102,6 +93,16 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">API &amp; Event Integrations</h1>
               <p className="ta-hero-desc">Configure secure webhooks, third-party LMS bridges, and event notification streams.</p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setFormOpen((v) => !v)}
+              >
+                <Plus size={14} /> New Webhook
+              </button>
             </div>
           </div>
         </div>

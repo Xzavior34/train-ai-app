@@ -72,24 +72,6 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
       <TopBar
         title={`My Team${profileQuery?.data?.display_name ? `: ${profileQuery.data.display_name}` : ""}`}
         sub="Progress and compliance for your direct reports"
-        right={
-          <button
-            className="ta-btn ta-btn-outline"
-            style={{
-              height: 34,
-              padding: "0 12px",
-              borderRadius: 8,
-              fontSize: 12.5,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5
-            }}
-            onClick={handleDownloadReport}
-            disabled={reports.length === 0}
-          >
-            <Download size={13} /> Download Report
-          </button>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div className="ta-hero-banner anim-fluid-entrance">
@@ -102,6 +84,25 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
               <p className="ta-hero-desc">
                 Track direct reports' progress, identify skill gaps, monitor compliance requirements, and export audit reports.
               </p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{
+                  height: 36,
+                  padding: "0 14px",
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+                onClick={handleDownloadReport}
+                disabled={reports.length === 0}
+              >
+                <Download size={13} /> Download Report
+              </button>
             </div>
           </div>
         </div>

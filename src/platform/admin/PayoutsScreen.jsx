@@ -87,23 +87,6 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
         sub="Instructor withdrawal requests and per-instructor payout access"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={
-          <button
-            className="ta-btn ta-btn-outline"
-            style={{
-              height: 34,
-              padding: "0 12px",
-              borderRadius: 8,
-              fontSize: 12.5,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5
-            }}
-            onClick={() => { requestsQuery.refetch(); mentorsQuery.refetch(); }}
-          >
-            <RefreshCw size={13} /> Refresh
-          </button>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
@@ -119,6 +102,24 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
               <p className="ta-hero-desc">
                 Review and approve withdrawal requests, manage per-instructor payout access, and track verified ledger settlements.
               </p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{
+                  height: 36,
+                  padding: "0 14px",
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+                onClick={() => { requestsQuery.refetch(); mentorsQuery.refetch(); }}
+              >
+                <RefreshCw size={13} /> Refresh
+              </button>
             </div>
           </div>
         </div>

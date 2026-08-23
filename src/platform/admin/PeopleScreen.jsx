@@ -574,27 +574,6 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         title="People & Access" sub="Directory, member records, roles & invitations"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={
-          <button
-            className="ta-btn ta-btn-primary"
-            style={{
-              height: 34,
-              padding: "0 12px",
-              borderRadius: 8,
-              background: "#4F46E5",
-              color: "#FFFFFF",
-              fontWeight: 700,
-              fontSize: 12.5,
-              border: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5
-            }}
-            onClick={() => setInviteOpen(true)}
-          >
-            <UserPlus size={14} /> Invite user
-          </button>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
@@ -610,6 +589,28 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               <p className="ta-hero-desc">
                 Invite instructors, manage role permissions, and track organization student seat allocations.
               </p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{
+                  height: 36,
+                  padding: "0 14px",
+                  borderRadius: 8,
+                  background: "#4F46E5",
+                  color: "#FFFFFF",
+                  fontWeight: 700,
+                  fontSize: 12.5,
+                  border: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+                onClick={() => setInviteOpen(true)}
+              >
+                <UserPlus size={14} /> Invite User
+              </button>
             </div>
           </div>
         </div>
