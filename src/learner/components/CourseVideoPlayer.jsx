@@ -268,19 +268,90 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
 
   const handleFullscreenToggle = () => {
     if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen?.().catch(() => {});
-      setIsFullscreen(true);
+
+    const isCurrentlyFs = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement ||
+      isFullscreen
+    );
+
+    if (!isCurrentlyFs) {
+      // iOS Safari native video fullscreen support
+      if (source.type === "html5" && videoRef.current && typeof videoRef.current.webkitEnterFullscreen === "function") {
+        try {
+          videoRef.current.webkitEnterFullscreen();
+          setIsFullscreen(true);
+          return;
+        } catch (e) {}
+      }
+
+      // Container fullscreen for modern browsers
+      const reqFs =
+        containerRef.current.requestFullscreen ||
+        containerRef.current.webkitRequestFullscreen ||
+        containerRef.current.mozRequestFullScreen ||
+        containerRef.current.msRequestFullscreen;
+
+      if (reqFs) {
+        reqFs.call(containerRef.current).then(() => {
+          setIsFullscreen(true);
+        }).catch(() => {
+          // CSS fallback for mobile browsers
+          setIsFullscreen(true);
+        });
+      } else {
+        setIsFullscreen(true);
+      }
     } else {
-      document.exitFullscreen?.().catch(() => {});
+      const exitFs =
+        document.exitFullscreen ||
+        document.webkitExitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.msExitFullscreen;
+
+      if (exitFs && (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement)) {
+        exitFs.call(document).catch(() => {});
+      }
       setIsFullscreen(false);
     }
   };
 
   useEffect(() => {
-    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const onFsChange = () => {
+      const isFs = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement
+      );
+      setIsFullscreen(isFs);
+    };
+
+    const handleVideoEndFs = () => {
+      setIsFullscreen(false);
+    };
+
     document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange", onFsChange);
+    document.addEventListener("mozfullscreenchange", onFsChange);
+    document.addEventListener("MSFullscreenChange", onFsChange);
+
+    const vid = videoRef.current;
+    if (vid) {
+      vid.addEventListener("webkitendfullscreen", handleVideoEndFs);
+    }
+
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("webkitfullscreenchange", onFsChange);
+      document.removeEventListener("mozfullscreenchange", onFsChange);
+      document.removeEventListener("MSFullscreenChange", onFsChange);
+      if (vid) {
+        vid.removeEventListener("webkitendfullscreen", handleVideoEndFs);
+      }
+    };
   }, []);
 
   const progressPercent = Math.max(0, Math.min(100, ((currentTime || 0) / (duration || 1)) * 100));
@@ -288,21 +359,66 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
   return (
     <div
       ref={containerRef}
-      className="tai-card"
+      className={`tai-card ${isFullscreen ? "tai-video-fullscreen" : ""}`}
       style={{
         padding: 0,
         overflow: "hidden",
-        position: "relative",
-        borderRadius: 14,
+        position: isFullscreen ? "fixed" : "relative",
+        borderRadius: isFullscreen ? 0 : 14,
         background: "#080C16",
-        border: "1px solid rgba(255, 255, 255, 0.12)",
-        boxShadow: "0 20px 50px -12px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.16)",
+        border: isFullscreen ? "none" : "1px solid rgba(255, 255, 255, 0.12)",
+        boxShadow: isFullscreen ? "none" : "0 20px 50px -12px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.16)",
         width: "100%",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
+        zIndex: isFullscreen ? 99999 : "auto"
       }}
     >
-      {/* 16:9 Responsive Video Viewport */}
-      <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%", height: 0, background: "#000", overflow: "hidden" }}>
+      {/* Responsive Video Viewport */}
+      <div
+        className="tai-video-viewport"
+        style={{
+          position: "relative",
+          width: "100%",
+          paddingBottom: isFullscreen ? 0 : "56.25%",
+          height: isFullscreen ? "100%" : 0,
+          flex: isFullscreen ? "1 1 auto" : "none",
+          background: "#000",
+          overflow: "hidden",
+          display: isFullscreen ? "flex" : "block",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
+        
+        {/* Floating Mobile Exit Fullscreen Button */}
+        {isFullscreen && (
+          <button
+            onClick={handleFullscreenToggle}
+            className="tai-btn"
+            style={{
+              position: "absolute",
+              top: 14,
+              right: 14,
+              zIndex: 150,
+              background: "rgba(15, 23, 42, 0.9)",
+              color: "#FFFFFF",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              padding: "6px 12px",
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              boxShadow: "0 4px 16px rgba(0,0,0,0.6)"
+            }}
+          >
+            <Minimize2 size={15} />
+            <span>Exit Fullscreen</span>
+          </button>
+        )}
         
         {/* Case 1: Direct HTML5 Video Stream */}
         {source.type === "html5" && (
@@ -585,123 +701,30 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
             </div>
           </div>
 
-          {/* Right Actions: Speed • Quality • Captions • Theatre • Fullscreen */}
-          <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
-            
-            {/* Speed Selector Pill & Menu */}
-            <div style={{ position: "relative" }}>
-              <button
-                className={`tai-video-control-pill ${showSpeedMenu ? "active" : ""}`}
-                style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 800 }}
-                onClick={() => {
-                  setShowSpeedMenu(v => !v);
-                  setShowQualityMenu(false);
-                }}
-                title="Playback Speed"
-              >
-                {playbackSpeed}x Speed
-              </button>
-
-              {showSpeedMenu && (
-                <div className="tai-video-glass-dropdown anim-slide-down" style={{
-                  position: "absolute", bottom: 36, right: 0, width: 110, padding: 6, zIndex: 120
-                }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: "#94A3B8", textTransform: "uppercase", padding: "4px 8px 6px" }}>Speed</div>
-                  {[0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map((spd) => (
-                    <div
-                      key={spd}
-                      style={{
-                        padding: "6px 8px", borderRadius: 6, fontSize: 11.5,
-                        color: playbackSpeed === spd ? "#A5B4FC" : "#FFFFFF",
-                        background: playbackSpeed === spd ? "rgba(99, 102, 241, 0.25)" : "transparent",
-                        fontWeight: playbackSpeed === spd ? 800 : 500, cursor: "pointer",
-                        display: "flex", justifyContent: "space-between", alignItems: "center"
-                      }}
-                      onClick={() => handleSpeedChange(spd)}
-                    >
-                      <span>{spd === 1.0 ? "1.0x (Normal)" : `${spd}x`}</span>
-                      {playbackSpeed === spd && <Check size={13} color="#A5B4FC" />}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Quality Selector Pill & Menu */}
-            <div style={{ position: "relative" }}>
-              <button
-                className={`tai-video-control-pill ${showQualityMenu ? "active" : ""}`}
-                style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 800 }}
-                onClick={() => {
-                  setShowQualityMenu(v => !v);
-                  setShowSpeedMenu(false);
-                }}
-                title="Video Resolution & Quality"
-              >
-                <Sliders size={12} /> {videoQuality}
-              </button>
-
-              {showQualityMenu && (
-                <div className="tai-video-glass-dropdown anim-slide-down" style={{
-                  position: "absolute", bottom: 36, right: 0, width: 140, padding: 6, zIndex: 120
-                }}>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: "#94A3B8", textTransform: "uppercase", padding: "4px 8px 6px" }}>Quality</div>
-                  {["Auto (1080p)", "1080p HD", "720p 60fps", "480p", "360p Data Saver"].map((qual) => (
-                    <div
-                      key={qual}
-                      style={{
-                        padding: "6px 8px", borderRadius: 6, fontSize: 11.5,
-                        color: videoQuality === qual ? "#A5B4FC" : "#FFFFFF",
-                        background: videoQuality === qual ? "rgba(99, 102, 241, 0.25)" : "transparent",
-                        fontWeight: videoQuality === qual ? 800 : 500, cursor: "pointer",
-                        display: "flex", justifyContent: "space-between", alignItems: "center"
-                      }}
-                      onClick={() => {
-                        setVideoQuality(qual);
-                        setShowQualityMenu(false);
-                      }}
-                    >
-                      <span>{qual}</span>
-                      {videoQuality === qual && <Check size={13} color="#A5B4FC" />}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Closed Captions CC Toggle */}
-            <button
-              className={`tai-video-control-pill ${captionsEnabled ? "active" : ""}`}
-              style={{ width: 32, height: 32, padding: 0, justifyContent: "center" }}
-              onClick={() => setCaptionsEnabled(v => !v)}
-              title={captionsEnabled ? "Subtitles / CC On" : "Subtitles / CC Off"}
-              aria-label="Subtitles CC"
-            >
-              <Subtitles size={14} />
-            </button>
-
+          {/* Right Actions: Fullscreen Toggle */}
+          <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
             {/* Theatre Mode Toggle */}
             {onToggleTheatreMode && (
               <button
                 className={`tai-video-control-pill ${isTheatreMode ? "active" : ""}`}
-                style={{ width: 32, height: 32, padding: 0, justifyContent: "center" }}
+                style={{ width: 34, height: 34, padding: 0, justifyContent: "center" }}
                 onClick={onToggleTheatreMode}
                 title={isTheatreMode ? "Exit Cinema Theatre Mode" : "Cinema Theatre Mode"}
                 aria-label="Theatre Mode"
               >
-                <Tv size={14} />
+                <Tv size={15} />
               </button>
             )}
 
             {/* Fullscreen Toggle */}
             <button
               className="tai-video-control-pill"
-              style={{ width: 32, height: 32, padding: 0, justifyContent: "center" }}
+              style={{ width: 34, height: 34, padding: 0, justifyContent: "center" }}
               onClick={handleFullscreenToggle}
               title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
               aria-label="Fullscreen"
             >
-              {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+              {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>
           </div>
         </div>

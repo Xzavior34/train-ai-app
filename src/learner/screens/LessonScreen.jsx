@@ -6,7 +6,7 @@ import {
   Clock, Video, BookOpen, Zap, Download, Share2, HelpCircle, FileText,
   Code2, Award, Star, MessageSquare, Send, Search, Check, X, ShieldCheck,
   Bookmark, Heart, Layers, RefreshCw, PanelRightClose, PanelRightOpen,
-  Sliders, ExternalLink, Bot, Terminal, Copy, Paperclip, Tv, Eye, EyeOff
+  Sliders, ExternalLink, Bot, Terminal, Copy, Paperclip, Tv, Eye, EyeOff, Subtitles
 } from "lucide-react";
 import { submitLessonFeedback } from "../../lib/api/learner.js";
 import { getYouTubeEmbedId, isMockDataEnabled } from "../../lib/mockDataManager.js";
@@ -114,6 +114,7 @@ export function LessonScreen({
   const [activeChapterIndex, setActiveChapterIndex] = useState(1);
   const [videoQuality, setVideoQuality] = useState("1080p HD");
   const [showQualityMenu, setShowQualityMenu] = useState(false);
+  const [captionsEnabled, setCaptionsEnabled] = useState(false);
   const [showControlSuite, setShowControlSuite] = useState(false);
 
   // Layout & Navigation States
@@ -334,40 +335,40 @@ export function LessonScreen({
             }}
           />
 
-          {/* Quick Video Controls & Key Moments Strip (Collapsible Liquid Glass) */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {/* Quick Video Controls & Settings Strip (Collapsible Liquid Glass) */}
+          <div style={{ width: "100%" }}>
             {!showControlSuite ? (
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button
                   className="tai-video-control-pill"
                   style={{
-                    padding: "5px 12px",
-                    fontSize: 11.5,
+                    padding: "6px 14px",
+                    fontSize: 12,
                     fontWeight: 700,
                     borderRadius: 8,
                     gap: 6
                   }}
                   onClick={() => setShowControlSuite(true)}
-                  title="Show Video Quick Controls & Moments"
+                  title="Show Video Controls, Speed, Resolution & Settings"
                 >
-                  <Sliders size={12} color="var(--primary)" />
-                  <span>Video Controls &amp; Moments</span>
+                  <Sliders size={13} color="var(--primary)" />
+                  <span>Video Controls &amp; Settings</span>
                 </button>
               </div>
             ) : (
               <div
                 className="tai-card anim-slide-down"
                 style={{
-                  padding: "12px 16px",
+                  padding: "14px 16px",
                   borderRadius: 12,
-                  background: "rgba(15, 23, 42, 0.90)",
+                  background: "rgba(15, 23, 42, 0.92)",
                   backdropFilter: "blur(16px)",
                   WebkitBackdropFilter: "blur(16px)",
                   border: "1px solid rgba(255, 255, 255, 0.12)",
                   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35)",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 10
+                  gap: 12
                 }}
               >
                 {/* Header Row */}
@@ -383,92 +384,121 @@ export function LessonScreen({
                       alignItems: "center",
                       gap: 5
                     }}>
-                      <Sliders size={12} color="#A5B4FC" /> Video Controls &amp; Quick Actions
+                      <Sliders size={13} color="#A5B4FC" /> Video Controls &amp; Quick Actions
                     </span>
                   </div>
                   <button
                     className="tai-video-control-pill"
-                    style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700, gap: 4 }}
+                    style={{ padding: "3px 9px", fontSize: 11, fontWeight: 700, gap: 4 }}
                     onClick={() => setShowControlSuite(false)}
                     title="Hide Video Controls"
                   >
-                    <EyeOff size={11} /> Hide
+                    <EyeOff size={12} /> Hide
                   </button>
                 </div>
 
-                {/* Controls Action Row */}
-                <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                  <button
-                    className="tai-video-control-pill"
-                    style={{ padding: "5px 10px", fontSize: 11.5, fontWeight: 700 }}
-                    onClick={() => {
-                      videoPlayerRef.current?.seekTo(0);
-                      showToast?.("Restarted video from 00:00", "info");
-                    }}
-                    title="Restart video from 00:00"
-                  >
-                    <RotateCcw size={12} /> Restart (0:00)
-                  </button>
-                  <button
-                    className="tai-video-control-pill"
-                    style={{ padding: "5px 10px", fontSize: 11.5, fontWeight: 700 }}
-                    onClick={() => {
-                      videoPlayerRef.current?.setSpeed(1.25);
-                      showToast?.("Playback speed set to 1.25x", "info");
-                    }}
-                    title="1.25x speed"
-                  >
-                    1.25x
-                  </button>
-                  <button
-                    className="tai-video-control-pill"
-                    style={{ padding: "5px 10px", fontSize: 11.5, fontWeight: 700 }}
-                    onClick={() => {
-                      videoPlayerRef.current?.setSpeed(1.5);
-                      showToast?.("Playback speed set to 1.5x", "info");
-                    }}
-                    title="1.5x speed"
-                  >
-                    1.5x
-                  </button>
-                  <button
-                    className="tai-video-control-pill"
-                    style={{ padding: "5px 10px", fontSize: 11.5, fontWeight: 700 }}
-                    onClick={() => {
-                      videoPlayerRef.current?.setSpeed(2.0);
-                      showToast?.("Playback speed set to 2.0x", "info");
-                    }}
-                    title="2.0x speed"
-                  >
-                    2.0x
-                  </button>
-                  <button
-                    className={`tai-video-control-pill ${isTheatreMode ? "active" : ""}`}
-                    style={{ padding: "5px 10px", fontSize: 11.5, fontWeight: 700 }}
-                    onClick={() => setIsTheatreMode(v => !v)}
-                    title="Toggle Theatre mode"
-                  >
-                    <Tv size={12} /> Cinema View
-                  </button>
-                </div>
+                {/* Main Controls Rows */}
+                <div className="tai-col tai-gap10">
+                  
+                  {/* Row 1: Playback Speed Controls */}
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 70 }}>Speed:</span>
+                    {[0.75, 1.0, 1.25, 1.5, 2.0].map((spd) => (
+                      <button
+                        key={spd}
+                        className={`tai-video-control-pill ${playbackSpeed === spd ? "active" : ""}`}
+                        style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                        onClick={() => {
+                          setPlaybackSpeed(spd);
+                          videoPlayerRef.current?.setSpeed(spd);
+                          showToast?.(`Playback speed set to ${spd}x`, "info");
+                        }}
+                      >
+                        {spd === 1.0 ? "1.0x (Normal)" : `${spd}x`}
+                      </button>
+                    ))}
+                  </div>
 
-                {/* Key Moments Chapter Row */}
-                <div className="tai-scrollx tai-gap6" style={{ alignItems: "center", paddingBottom: 2, scrollbarWidth: "none" }}>
-                  <span style={{ fontSize: 10.5, color: "#94A3B8", fontWeight: 700, flexShrink: 0 }}>Jump to:</span>
-                  {DEFAULT_CHAPTERS.slice(0, 4).map((ch, idx) => (
+                  {/* Row 2: Resolution / Quality Controls */}
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 70 }}>Quality:</span>
+                    {["Auto", "1080p HD", "720p", "480p"].map((qual) => {
+                      const isQualActive = qual === "Auto" ? videoQuality.includes("Auto") : videoQuality.includes(qual);
+                      return (
+                        <button
+                          key={qual}
+                          className={`tai-video-control-pill ${isQualActive ? "active" : ""}`}
+                          style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                          onClick={() => {
+                            const newQual = qual === "Auto" ? "Auto (1080p)" : qual;
+                            setVideoQuality(newQual);
+                            videoPlayerRef.current?.setQuality(newQual);
+                            showToast?.(`Resolution set to ${qual}`, "info");
+                          }}
+                        >
+                          {qual}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Row 3: Options (Captions CC, Cinema View, Restart) */}
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 70 }}>Options:</span>
                     <button
-                      key={idx}
-                      className="tai-video-control-pill"
-                      style={{ padding: "3px 9px", fontSize: 11, fontWeight: 600, flexShrink: 0 }}
+                      className={`tai-video-control-pill ${captionsEnabled ? "active" : ""}`}
+                      style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
                       onClick={() => {
-                        videoPlayerRef.current?.seekTo(ch.seconds);
-                        showToast?.(`Jumped to ${ch.time} • ${ch.title}`, "info");
+                        setCaptionsEnabled(v => !v);
+                        showToast?.(!captionsEnabled ? "Subtitles CC enabled" : "Subtitles disabled", "info");
                       }}
-                      title={`Jump to ${ch.title}`}
                     >
-                      <span style={{ color: "#A5B4FC", fontWeight: 800, marginRight: 3 }}>{ch.time}</span> {ch.title.split(" ")[0]}
+                      <Subtitles size={13} /> {captionsEnabled ? "Captions (On)" : "Captions (Off)"}
                     </button>
-                  ))}
+                    
+                    <button
+                      className={`tai-video-control-pill ${isTheatreMode ? "active" : ""}`}
+                      style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                      onClick={() => setIsTheatreMode(v => !v)}
+                      title="Toggle Cinema Theatre mode"
+                    >
+                      <Tv size={13} /> {isTheatreMode ? "Standard View" : "Cinema View"}
+                    </button>
+
+                    <button
+                      className="tai-video-control-pill"
+                      style={{ padding: "4px 10px", fontSize: 11.5, fontWeight: 700 }}
+                      onClick={() => {
+                        videoPlayerRef.current?.seekTo(0);
+                        showToast?.("Restarted video from 00:00", "info");
+                      }}
+                      title="Restart video from 00:00"
+                    >
+                      <RotateCcw size={12} /> Restart (0:00)
+                    </button>
+                  </div>
+
+                  {/* Row 4: Key Moments & Chapters */}
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 70 }}>Moments:</span>
+                    <div className="tai-scrollx tai-gap6" style={{ flex: 1, alignItems: "center", paddingBottom: 2, scrollbarWidth: "none" }}>
+                      {DEFAULT_CHAPTERS.slice(0, 4).map((ch, idx) => (
+                        <button
+                          key={idx}
+                          className="tai-video-control-pill"
+                          style={{ padding: "3px 9px", fontSize: 11, fontWeight: 600, flexShrink: 0 }}
+                          onClick={() => {
+                            videoPlayerRef.current?.seekTo(ch.seconds);
+                            showToast?.(`Jumped to ${ch.time} • ${ch.title}`, "info");
+                          }}
+                          title={`Jump to ${ch.title}`}
+                        >
+                          <span style={{ color: "#A5B4FC", fontWeight: 800, marginRight: 4 }}>{ch.time}</span> {ch.title.split(" ")[0]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
               </div>
             )}
