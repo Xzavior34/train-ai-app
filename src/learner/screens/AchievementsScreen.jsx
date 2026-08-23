@@ -197,7 +197,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
 
           <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: "#F59E0B" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
-            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>Total Earned XP</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Total Earned XP</div>
           </div>
         </div>
 
@@ -209,14 +209,14 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           padding: "12px 16px",
           borderRadius: 10
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "#FFFFFF" }}>
+          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
             <span>Level {user.level || 2} Progress ({percent}%)</span>
             <span style={{ color: "#FBBF24", fontWeight: 700 }}>{Math.max(0, ceiling - (user.totalPoints || 450)).toLocaleString()} XP to Level {(user.level || 2) + 1}</span>
           </div>
           <div style={{
             height: 8,
             borderRadius: 99,
-            background: "rgba(255, 255, 255, 0.12)",
+            background: "var(--surface-3)",
             overflow: "hidden"
           }}>
             <div style={{

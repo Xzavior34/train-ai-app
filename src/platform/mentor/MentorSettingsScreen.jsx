@@ -303,9 +303,9 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             </div>
 
             <div className="ta-hero-actions">
-              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Platform</div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: "#fff", textTransform: "capitalize" }}>{videoPlatform.replace(/_/g, " ")}</div>
+              <div style={{ background: "var(--surface-2)", padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid var(--border)", textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Active Platform</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)", textTransform: "capitalize" }}>{videoPlatform.replace(/_/g, " ")}</div>
               </div>
             </div>
           </div>

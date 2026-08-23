@@ -244,11 +244,11 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
 
             <div className="ta-hero-actions">
               <div className="ta-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, color: "#94A3B8", fontWeight: 700 }}>Total Registered</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{orgs.length} Tenants</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Total Registered</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "var(--text)" }}>{orgs.length} Tenants</div>
               </div>
               <div className="ta-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, color: "#94A3B8", fontWeight: 700 }}>Active Users</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Active Users</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>{orgs.reduce((sum, o) => sum + (o.user_count || 0), 0)} Active</div>
               </div>
             </div>

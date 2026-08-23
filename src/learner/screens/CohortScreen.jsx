@@ -90,8 +90,8 @@ export function CohortScreen({
           </div>
 
           <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "#FFFFFF" }}>{(cohortMembersQuery?.data || []).length} Peers Enrolled</div>
-            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>Active Cohort Track</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{(cohortMembersQuery?.data || []).length} Peers Enrolled</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Active Cohort Track</div>
           </div>
         </div>
 
@@ -103,7 +103,7 @@ export function CohortScreen({
           padding: "12px 16px",
           borderRadius: 10
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "#FFFFFF" }}>
+          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
             <div className="tai-row tai-gap6">
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34D399" }} />
               <span>Cohort Pace: Sprint 5 of 12</span>
@@ -120,7 +120,7 @@ export function CohortScreen({
           <div style={{
             height: 8,
             borderRadius: 99,
-            background: "rgba(255, 255, 255, 0.12)",
+            background: "var(--surface-3)",
             overflow: "hidden"
           }}>
             <div style={{

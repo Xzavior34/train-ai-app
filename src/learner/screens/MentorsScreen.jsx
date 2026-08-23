@@ -119,7 +119,7 @@ export function MentorsScreen({
             padding: "10px 16px",
             flexShrink: 0
           }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)" }}>{mentorsList.length} Active Instructors</div>
             <div style={{ fontSize: 12, color: "#FBBF24", marginTop: 2, fontWeight: 700 }}>Average Rating: 4.9 ★</div>
           </div>
         </div>

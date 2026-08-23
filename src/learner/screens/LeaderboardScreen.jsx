@@ -213,8 +213,8 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     2
                   </span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "#FFFFFF", marginTop: 4 }}>{learners[1].name}</div>
-                <div style={{ fontSize: 10.5, color: "#94A3B8" }}>{learners[1].role}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginTop: 4 }}>{learners[1].name}</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{learners[1].role}</div>
                 <div style={{
                   background: "rgba(148, 163, 184, 0.2)", color: "#FFFFFF",
                   fontWeight: 800, fontSize: 11.5, padding: "2px 8px", borderRadius: 99,
@@ -254,8 +254,8 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     1
                   </span>
                 </div>
-                <div style={{ fontWeight: 900, fontSize: 14.5, color: "#FFFFFF", marginTop: 4 }}>{learners[0].name}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8" }}>{learners[0].role}</div>
+                <div style={{ fontWeight: 900, fontSize: 14.5, color: "var(--text)", marginTop: 4 }}>{learners[0].name}</div>
+                <div style={{ fontSize: 11, color: "var(--text-3)" }}>{learners[0].role}</div>
                 <div style={{
                   background: "rgba(245, 158, 11, 0.25)", color: "#FBBF24",
                   fontWeight: 900, fontSize: 12, padding: "3px 10px", borderRadius: 99,
@@ -291,8 +291,8 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     3
                   </span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "#FFFFFF", marginTop: 4 }}>{learners[2].name}</div>
-                <div style={{ fontSize: 10.5, color: "#94A3B8" }}>{learners[2].role}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginTop: 4 }}>{learners[2].name}</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{learners[2].role}</div>
                 <div style={{
                   background: "rgba(217, 119, 6, 0.2)", color: "#FBBF24",
                   fontWeight: 800, fontSize: 11.5, padding: "2px 8px", borderRadius: 99,

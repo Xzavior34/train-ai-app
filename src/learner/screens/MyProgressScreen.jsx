@@ -156,7 +156,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
 
           <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>17 / 20 Lessons Done</div>
-            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>85% Sprint Met</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>85% Sprint Met</div>
           </div>
         </div>
 
@@ -165,13 +165,13 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           position: "relative", zIndex: 1, marginTop: 16,
           padding: "12px 16px", borderRadius: 10
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "#FFFFFF" }}>
+          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
             <span>Weekly Sprint Progress (85% Target Met)</span>
             <span style={{ color: "#34D399", fontSize: 12, fontWeight: 700 }}>
               3 of 20 lessons remaining
             </span>
           </div>
-          <div style={{ height: 8, borderRadius: 99, background: "rgba(255, 255, 255, 0.12)", overflow: "hidden" }}>
+          <div style={{ height: 8, borderRadius: 99, background: "var(--surface-3)", overflow: "hidden" }}>
             <div style={{ width: "85%", height: "100%", background: "#10B981", borderRadius: 99, transition: "width 0.4s ease" }} />
           </div>
         </div>

@@ -83,7 +83,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
             </div>
 
             <div className="ta-hero-actions">
-              <div className="ta-row ta-gap8" style={{ background: "rgba(255,255,255,0.08)", padding: "4px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)" }}>
+              <div className="ta-row ta-gap8" style={{ background: "var(--surface-2)", padding: "4px", borderRadius: 10, border: "1px solid var(--border)" }}>
                 {["7d", "30d", "90d", "all"].map((t) => (
                   <button
                     key={t}
@@ -96,7 +96,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
                       fontWeight: 700,
                       cursor: "pointer",
                       background: timeframe === t ? "var(--primary)" : "transparent",
-                      color: "#FFFFFF",
+                      color: timeframe === t ? "#FFFFFF" : "var(--text-2)",
                       transition: "all 0.15s ease"
                     }}
                   >

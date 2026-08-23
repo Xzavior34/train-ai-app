@@ -152,7 +152,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
 
             <div className="ta-hero-actions">
               <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Avg Response Time</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Avg Response Time</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>1.4 Hours</div>
               </div>
             </div>

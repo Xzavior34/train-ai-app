@@ -116,7 +116,6 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
               <button
                 className="ta-btn ta-btn-outline"
                 onClick={handleExportCsv}
-                style={{ background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}
               >
                 <Download size={14} /> Export CSV Statement
               </button>
