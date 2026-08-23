@@ -303,11 +303,11 @@ export const TOKENS = `
   }
   .ta-hero-banner {
     border-radius: 14px;
-    background: #0F172A;
-    color: #FFFFFF;
+    background: var(--surface);
+    color: var(--text);
     padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 8px 24px rgba(15, 23, 42, 0.35);
-    border: 1px solid #1E293B;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border);
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -338,7 +338,7 @@ export const TOKENS = `
     font-weight: 900;
     letter-spacing: -0.025em;
     margin: 0 0 4px;
-    color: #FFFFFF;
+    color: var(--text);
     line-height: 1.25;
   }
   .ta.dark .ta-hero-title, html.dark .ta-hero-title {
@@ -346,7 +346,7 @@ export const TOKENS = `
   }
   .ta-hero-desc {
     font-size: clamp(12.5px, 1vw, 13.5px);
-    color: #94A3B8;
+    color: var(--text-2);
     margin: 0;
     max-width: 680px;
     line-height: 1.5;

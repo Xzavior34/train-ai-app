@@ -151,7 +151,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
-                Welcome back, {profileQuery.data?.display_name || "Admin"}
+                Welcome back, {profileQuery.data?.display_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "Admin"}
               </h1>
               <p className="ta-hero-desc">
                 Monitor active learner cohorts, completion rates, and curriculum deployments.
