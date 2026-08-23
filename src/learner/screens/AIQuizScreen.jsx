@@ -213,7 +213,7 @@ export function AIQuizScreen({
                 background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
                 fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
               }}>
-                <Sparkles size={12} color="var(--primary)" /> GEMINI 2.5 FLASH PROMPT ENGINE
+                <Bot size={13} color="var(--primary)" /> AI LEARNING COACH
               </span>
             </div>
             <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>

@@ -373,7 +373,7 @@ export function ProfileScreen({
       {/* =========================================================================
           TAB NAVIGATION (Responsive Scroll with Fluid Liquid Glass Pills)
           ========================================================================= */}
-      <div className="tai-scrollx" style={{ gap: 8, paddingBottom: 2 }}>
+      <div className="tai-scrollx" style={{ gap: 8, paddingBottom: 6, width: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         {TABS.map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.key;
@@ -383,8 +383,8 @@ export function ProfileScreen({
               type="button"
               className={`tai-btn tai-btn-sm ${isActive ? "tai-btn-primary" : "tai-btn-outline"}`}
               style={{
-                borderRadius: 8, padding: "8px 16px", fontSize: 12.5, fontWeight: 700,
-                display: "inline-flex", alignItems: "center", gap: 7, whiteSpace: "nowrap"
+                borderRadius: 8, padding: "8px 14px", fontSize: 12.5, fontWeight: 700,
+                display: "inline-flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", flexShrink: 0
               }}
               onClick={() => setActiveTab(t.key)}
             >

@@ -49,19 +49,26 @@ export const TOKENS = `
     color: var(--text);
     transition: background .25s ease, color .25s ease;
   }
-  .tai.dark {
+  .tai.dark, html.dark .tai {
     --bg: #090D1A;
     --surface: #121829;
     --surface-2: #1B243B;
     --surface-3: #161D31;
+    --primary: #818CF8;
+    --primary-dark: #6366F1;
+    --primary-light: #A5B4FC;
+    --primary-tint: rgba(99, 102, 241, 0.18);
     --text: #F8FAFC;
     --text-2: #94A3B8;
     --text-3: #64748B;
-    --border: #1E293B;
-    --border-subtle: #161F33;
-    --success-bg: #064E3B;
-    --warning-bg: #451A03;
-    --danger-bg: #450A0A;
+    --border: rgba(255, 255, 255, 0.09);
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --success-bg: rgba(16, 185, 129, 0.18);
+    --success-border: rgba(16, 185, 129, 0.35);
+    --warning-bg: rgba(245, 158, 11, 0.18);
+    --warning-border: rgba(245, 158, 11, 0.35);
+    --danger-bg: rgba(239, 68, 68, 0.18);
+    --danger-border: rgba(239, 68, 68, 0.35);
   }
   .tai-app-outer { min-height: 100vh; min-height: 100dvh; background: var(--bg); display:flex; flex-direction:column; width: 100%; box-sizing: border-box; }
   

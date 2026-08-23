@@ -81,6 +81,11 @@ export const TOKENS = `
     --surface: #121829;
     --surface-2: #1B243B;
     --surface-3: #161D31;
+    --primary: #818CF8;
+    --primary-dark: #6366F1;
+    --primary-light: #A5B4FC;
+    --primary-hover: #93C5FD;
+    --primary-tint: rgba(99, 102, 241, 0.18);
     --text: #F8FAFC;
     --text-2: #94A3B8;
     --text-3: #64748B;
@@ -92,7 +97,6 @@ export const TOKENS = `
     --warning-border: rgba(245, 158, 11, 0.35);
     --danger-bg: rgba(239, 68, 68, 0.18);
     --danger-border: rgba(239, 68, 68, 0.35);
-    --primary-tint: rgba(99, 102, 241, 0.2);
   }
   .ta.dark .ta-sidebar, html.dark .ta-sidebar {
     background: #0D1222;
@@ -229,10 +233,11 @@ export const TOKENS = `
     color: #4F46E5 !important; font-weight: 700;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 8px rgba(79, 70, 229, 0.12);
   }
-  .ta.dark .ta-nav-item.active {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.25) 0%, rgba(99, 102, 241, 0.35) 100%) !important;
-    color: #818CF8 !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(0, 0, 0, 0.3);
+  .ta.dark .ta-nav-item.active, html.dark .ta-nav-item.active {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.28) 0%, rgba(99, 102, 241, 0.38) 100%) !important;
+    color: #A5B4FC !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(165, 180, 252, 0.25) !important;
   }
   .ta-nav-divider { height: 1px; background: var(--glass-border); margin: 8px 4px; }
   .ta-workspace-card {
@@ -253,6 +258,13 @@ export const TOKENS = `
     font-weight: 700;
     border: 1px solid var(--glass-border);
     box-shadow: var(--glass-shadow);
+  }
+  .ta.dark .ta-ws-item.active, html.dark .ta-ws-item.active {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.28) 0%, rgba(99, 102, 241, 0.38) 100%) !important;
+    color: #A5B4FC !important;
+    font-weight: 700;
+    border: 1px solid rgba(165, 180, 252, 0.30) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
   }
   .ta-nav-footer { display:flex; flex-direction:column; gap:3px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--glass-border); }
   .ta-toggle-btn {
@@ -836,7 +848,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           {onOpenDashboardSwitcher && (
             <div
               className="ta-nav-item"
-              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid #E0E7FF", fontWeight: 700 }}
+              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--glass-border)", fontWeight: 700 }}
               onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
               title="Switch Dashboard"
             >
@@ -950,7 +962,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           {onOpenDashboardSwitcher && (
             <div
               className="ta-nav-item"
-              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid #E0E7FF", fontWeight: 700 }}
+              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--glass-border)", fontWeight: 700 }}
               onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
               title="Switch Dashboard"
             >
