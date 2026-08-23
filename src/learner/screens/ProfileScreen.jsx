@@ -177,119 +177,195 @@ export function ProfileScreen({
   ];
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: 1040, margin: "0 auto" }}>
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: 1040, margin: "0 auto", padding: "0 0 32px" }}>
       <TopBar title="Profile & Settings" sub="Manage your personal identity, learning pace, security, and app preferences" onBack={back} />
 
       {/* =========================================================================
-          HERO PROFILE COVER & IDENTITY CARD (Fully Optimized for Desktop & Mobile)
+          REVAMPED LIQUID GLASS PROFILE IDENTITY HERO
           ========================================================================= */}
-      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 12 }}>
-        {/* Cover Photo */}
-        <div style={{
-          height: "clamp(90px, 14vw, 130px)",
-          background: "#0F172A",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-          position: "relative"
-        }}>
-          <img
-            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
-            alt="Cover"
-            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.35 }}
-          />
-        </div>
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          borderRadius: 14,
+          padding: "clamp(20px, 3.5vw, 32px)",
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.12)"
+        }}
+      >
+        {/* Subtle decorative glow in top corner */}
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 200,
+            height: 200,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(79, 70, 229, 0.18) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
 
-        {/* Profile Content */}
-        <div style={{ padding: "0 clamp(14px, 3vw, 24px) 20px", marginTop: "clamp(-32px, -5vw, -40px)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 14 }}>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 14, flexWrap: "wrap" }}>
-              <div
-                style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default", flexShrink: 0 }}
-                onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}
-                title="Change profile photo"
-              >
-                <img
-                  src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=180&auto=format&fit=crop&q=80"}
-                  alt={user.name}
+        {/* Profile Identity Details (Stacked on Mobile, Flex Row on Desktop) */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 20, position: "relative", zIndex: 2 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "clamp(14px, 3vw, 22px)", flexWrap: "wrap" }}>
+            {/* Avatar with Camera Overlay */}
+            <div
+              style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default", flexShrink: 0 }}
+              onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}
+              title="Change profile photo"
+            >
+              <img
+                src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=220&auto=format&fit=crop&q=80"}
+                alt={user.name}
+                style={{
+                  width: "clamp(74px, 12vw, 92px)",
+                  height: "clamp(74px, 12vw, 92px)",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "3px solid var(--surface-2)",
+                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.25)"
+                }}
+              />
+              {session?.user?.id && (
+                <div
                   style={{
-                    width: "clamp(68px, 10vw, 84px)",
-                    height: "clamp(68px, 10vw, 84px)",
-                    borderRadius: "50%", objectFit: "cover",
-                    border: "3.5px solid var(--surface)",
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.18)"
+                    position: "absolute",
+                    bottom: 2,
+                    right: 2,
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    background: "#4F46E5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid var(--surface)",
+                    color: "#FFFFFF",
+                    boxShadow: "0 2px 8px rgba(79, 70, 229, 0.45)"
                   }}
-                />
-                {session?.user?.id && (
-                  <div style={{
-                    position: "absolute", bottom: 2, right: 2, width: 24, height: 24, borderRadius: "50%",
-                    background: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "2px solid var(--surface)", color: "#fff"
-                  }}>
-                    <Camera size={12} />
-                  </div>
-                )}
-              </div>
-
-              <div style={{ minWidth: 0, paddingBottom: 2 }}>
-                <h1 style={{ fontWeight: 800, fontSize: "clamp(18px, 2.4vw, 22px)", color: "var(--text)", letterSpacing: "-0.02em", margin: 0, lineHeight: 1.25 }}>
-                  {user.name || "Evelyn Hayes"}
-                </h1>
-                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", lineHeight: 1.3 }}>
-                  <span>{user.email || "evelyn.hayes@trainai.co"}</span>
-                  <span style={{ opacity: 0.5 }}>•</span>
-                  <span>{user.location || "San Francisco, CA"}</span>
+                >
+                  <Camera size={13} />
                 </div>
-              </div>
+              )}
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 4, flexWrap: "wrap" }}>
-              <span className="tai-tag" style={{ fontWeight: 700 }}>
-                {user.track || "Full-Stack AI & Design"}
-              </span>
-              {user.role && (
-                <span className="tai-tag" style={{ background: "var(--surface-3)", color: "var(--text-2)" }}>
-                  {user.role.toUpperCase()}
+            {/* Name, Verified Badge & Metadata */}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <h1 style={{ fontWeight: 900, fontSize: "clamp(20px, 3.2vw, 25px)", color: "var(--text)", letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
+                  {user.name || "Evelyn Hayes"}
+                </h1>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    padding: "3px 8px",
+                    borderRadius: 99,
+                    background: "rgba(16, 185, 129, 0.12)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    color: "#10B981",
+                    fontSize: 11,
+                    fontWeight: 700
+                  }}
+                >
+                  <CheckCircle2 size={11} /> Verified Learner
                 </span>
-              )}
+              </div>
+
+              <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, display: "flex", alignItems: "center", gap: "clamp(6px, 1.5vw, 12px)", flexWrap: "wrap", lineHeight: 1.4 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                  <Mail size={13} color="var(--text-3)" />
+                  {user.email || "evelyn.hayes@trainai.co"}
+                </span>
+                <span style={{ opacity: 0.4 }}>•</span>
+                <span>{user.location || "San Francisco, CA"}</span>
+                <span style={{ opacity: 0.4 }}>•</span>
+                <span>{user.organization || "Train AI Academy"}</span>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                <span className="tai-tag" style={{ fontWeight: 700, padding: "4px 10px" }}>
+                  <Zap size={11} style={{ marginRight: 4 }} />
+                  {user.track || "Full-Stack AI & Design"}
+                </span>
+                {user.role && (
+                  <span className="tai-tag" style={{ background: "var(--surface-3)", color: "var(--text-2)", padding: "4px 10px" }}>
+                    {user.role.toUpperCase()}
+                  </span>
+                )}
+                <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>
+                  Cohort 04 • Sprint 5
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Upload Zone Drawer */}
-          {showAvatarUpload && session?.user?.id && (
-            <div className="tai-mt16" style={{ background: "var(--surface-2)", padding: 16, borderRadius: 10, border: "1px solid var(--border)" }}>
-              <FileUploadZone
-                bucket="uploads"
-                pathPrefix={`avatars/${session.user.id}`}
-                accept="image/*"
-                maxSizeMB={5}
-                label="Drag and drop a new profile photo, or click to browse"
-                onUploaded={(url) => {
-                  onAvatarUploaded?.(url);
-                  setShowAvatarUpload(false);
-                }}
-              />
-            </div>
-          )}
+          {/* Quick Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            {onBuyCredits && (
+              <button
+                className="tai-btn tai-btn-outline tai-btn-sm"
+                onClick={onBuyCredits}
+                style={{ padding: "8px 14px", fontWeight: 700, fontSize: 12.5 }}
+              >
+                <Zap size={13} color="var(--primary)" />
+                <span>{typeof credits === "number" ? credits : 10} Credits</span>
+              </button>
+            )}
+            {session?.user?.id && (
+              <button
+                className="tai-btn tai-btn-outline tai-btn-sm"
+                onClick={() => setShowAvatarUpload(v => !v)}
+                style={{ padding: "8px 14px", fontWeight: 700, fontSize: 12.5 }}
+              >
+                <Camera size={13} />
+                <span>Change Photo</span>
+              </button>
+            )}
+          </div>
+        </div>
 
-          {/* 4 Stat Cards with Responsive Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))", gap: 10, marginTop: 18 }}>
-            <div className="tai-card" style={{ textAlign: "center", padding: "12px 10px", borderRadius: 8 }}>
-              <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2vw, 20px)", color: "var(--primary)", letterSpacing: "-0.02em" }}>{user.mastery ?? 88}%</div>
-              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Curriculum Mastery</div>
+        {/* Upload Zone Drawer */}
+        {showAvatarUpload && session?.user?.id && (
+          <div className="tai-mt20 anim-fluid-entrance" style={{ background: "var(--surface-2)", padding: 18, borderRadius: 10, border: "1px solid var(--border)" }}>
+            <FileUploadZone
+              bucket="uploads"
+              pathPrefix={`avatars/${session.user.id}`}
+              accept="image/*"
+              maxSizeMB={5}
+              label="Drag and drop a new profile photo, or click to browse"
+              onUploaded={(url) => {
+                onAvatarUploaded?.(url);
+                setShowAvatarUpload(false);
+              }}
+            />
+          </div>
+        )}
+
+        {/* 4 Stat Cards with Responsive Grid & Liquid Glass Styling */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))", gap: 10, marginTop: 22, paddingTop: 18, borderTop: "1px solid var(--border-subtle)" }}>
+          <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 900, fontSize: "clamp(18px, 2.2vw, 22px)", color: "var(--primary)", letterSpacing: "-0.02em" }}>{user.mastery ?? 88}%</div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, fontWeight: 600 }}>Curriculum Mastery</div>
+          </div>
+          <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: "clamp(18px, 2.2vw, 22px)", color: "#F59E0B" }}>
+              <span>{user.streak ?? 8}</span> <Flame size={18} color="#F59E0B" fill="#F59E0B" />
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "12px 10px", borderRadius: 8 }}>
-              <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: "clamp(17px, 2vw, 20px)", color: "#F59E0B" }}>
-                <span>{user.streak ?? 8}</span> <Flame size={17} color="#F59E0B" fill="#F59E0B" />
-              </div>
-              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Active Day Streak</div>
-            </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "12px 10px", borderRadius: 8 }}>
-              <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2vw, 20px)", color: "var(--text)", letterSpacing: "-0.02em" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
-              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Credential Points</div>
-            </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "12px 10px", borderRadius: 8 }}>
-              <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2vw, 20px)", color: "var(--success)", letterSpacing: "-0.02em" }}>3 Issued</div>
-              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Certificates</div>
-            </div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, fontWeight: 600 }}>Active Day Streak</div>
+          </div>
+          <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 900, fontSize: "clamp(18px, 2.2vw, 22px)", color: "var(--text)", letterSpacing: "-0.02em" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, fontWeight: 600 }}>Credential XP</div>
+          </div>
+          <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", borderRadius: 10, background: "var(--surface-2)" }}>
+            <div style={{ fontWeight: 900, fontSize: "clamp(18px, 2.2vw, 22px)", color: "var(--success)", letterSpacing: "-0.02em" }}>3 Issued</div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, fontWeight: 600 }}>Certificates</div>
           </div>
         </div>
       </div>
@@ -297,7 +373,7 @@ export function ProfileScreen({
       {/* =========================================================================
           TAB NAVIGATION (Responsive Scroll with Fluid Liquid Glass Pills)
           ========================================================================= */}
-      <div className="tai-scrollx" style={{ gap: 6, paddingBottom: 2 }}>
+      <div className="tai-scrollx" style={{ gap: 8, paddingBottom: 2 }}>
         {TABS.map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.key;
@@ -307,7 +383,7 @@ export function ProfileScreen({
               type="button"
               className={`tai-btn tai-btn-sm ${isActive ? "tai-btn-primary" : "tai-btn-outline"}`}
               style={{
-                borderRadius: 8, padding: "8px 15px", fontSize: 12.5, fontWeight: 700,
+                borderRadius: 8, padding: "8px 16px", fontSize: 12.5, fontWeight: 700,
                 display: "inline-flex", alignItems: "center", gap: 7, whiteSpace: "nowrap"
               }}
               onClick={() => setActiveTab(t.key)}
@@ -324,22 +400,22 @@ export function ProfileScreen({
           ========================================================================= */}
       {activeTab === "profile" && (
         <div className="tai-col tai-gap16 anim-stagger">
-          <div className="tai-card">
-            <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Learner Information</h2>
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
+            <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Learner Information & Identity</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
-              <div>
+              <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Full Name</label>
                 <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.name || "Evelyn Hayes"}</div>
               </div>
-              <div>
+              <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Email Address</label>
                 <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.email || "evelyn.hayes@trainai.co"}</div>
               </div>
-              <div>
+              <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Current Organization</label>
                 <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.organization || "Train AI Academy"}</div>
               </div>
-              <div>
+              <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Enrolled Batch</label>
                 <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>Cohort 04 • Sprint 5</div>
               </div>
@@ -349,7 +425,7 @@ export function ProfileScreen({
           {push && gamificationEnabled !== false && (
             <div
               className="tai-card tai-card-hover"
-              style={{ cursor: "pointer", background: "var(--surface)" }}
+              style={{ cursor: "pointer", background: "var(--surface)", borderRadius: 12, padding: "clamp(16px, 3vw, 20px)" }}
               onClick={() => push("achievements")}
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
@@ -370,7 +446,7 @@ export function ProfileScreen({
           {onOpenDashboardSwitcher && (
             <div
               className="tai-card tai-card-hover"
-              style={{ cursor: "pointer", background: "var(--surface)" }}
+              style={{ cursor: "pointer", background: "var(--surface)", borderRadius: 12, padding: "clamp(16px, 3vw, 20px)" }}
               onClick={onOpenDashboardSwitcher}
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
@@ -395,9 +471,9 @@ export function ProfileScreen({
           ========================================================================= */}
       {activeTab === "preferences" && (
         <div className="tai-col tai-gap16 anim-stagger">
-          <div className="tai-card">
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Display & Theme</h2>
-            <div className="tai-row tai-between">
+            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
               <div className="tai-row tai-gap12">
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Moon size={18} color="var(--primary)" />
@@ -411,7 +487,7 @@ export function ProfileScreen({
             </div>
           </div>
 
-          <div className="tai-card">
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Weekly Lesson Target</h2>
             <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 14px" }}>
               Choose your target number of lessons to complete each week. Tracked automatically on your home dashboard.
@@ -422,7 +498,7 @@ export function ProfileScreen({
                   key={v}
                   type="button"
                   className={`tai-btn tai-btn-sm ${weeklyGoal === v ? "tai-btn-primary" : "tai-btn-outline"}`}
-                  style={{ minWidth: 64, fontWeight: 800 }}
+                  style={{ minWidth: 70, fontWeight: 800 }}
                   disabled={savingGoal}
                   onClick={() => handleSetWeeklyGoal(v)}
                 >
@@ -433,7 +509,7 @@ export function ProfileScreen({
           </div>
 
           {onBuyCredits && (
-            <div className="tai-card">
+            <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap12">
                   <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -459,7 +535,7 @@ export function ProfileScreen({
       {activeTab === "notifications" && (
         <div className="tai-col tai-gap16 anim-stagger">
           {session?.user?.id && (
-            <div className="tai-card">
+            <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
               <h2 className="tai-title-sm" style={{ margin: "0 0 14px" }}>Push Notifications</h2>
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap12">
@@ -502,7 +578,7 @@ export function ProfileScreen({
           )}
 
           {notifPrefs && (
-            <div className="tai-card">
+            <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
               <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Notification Channels</h2>
               <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
                 Select where you would like to receive course assignments, critique notices, and peer messages.
@@ -553,7 +629,7 @@ export function ProfileScreen({
         <div className="tai-col tai-gap16 anim-stagger">
           <div
             className="tai-card tai-card-hover"
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}
             onClick={() => setShowAccessibility(true)}
           >
             <div className="tai-row tai-between">
@@ -573,7 +649,7 @@ export function ProfileScreen({
           {session?.user?.id && (
             <div
               className="tai-card tai-card-hover"
-              style={{ cursor: "pointer" }}
+              style={{ cursor: "pointer", borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}
               onClick={() => setShowMfaSetup(true)}
             >
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
@@ -591,7 +667,7 @@ export function ProfileScreen({
             </div>
           )}
 
-          <div className="tai-card">
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <h2 className="tai-title-sm" style={{ margin: "0 0 12px" }}>Active Session Information</h2>
             <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
               Signed in as <strong>{session?.user?.email || user.email || "Learner"}</strong>. Your session is securely encrypted via Supabase Auth with JWT token refresh.
@@ -605,7 +681,7 @@ export function ProfileScreen({
           ========================================================================= */}
       {activeTab === "privacy" && (
         <div className="tai-col tai-gap16 anim-stagger">
-          <div className="tai-card">
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <h2 className="tai-title-sm" style={{ margin: "0 0 6px" }}>GDPR Data Portability &amp; Export</h2>
             <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
               Download a complete machine-readable JSON copy of all personal records, course enrollments, quiz results, and community discussions.
@@ -622,7 +698,7 @@ export function ProfileScreen({
             </button>
           </div>
 
-          <div className="tai-card" style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}>
+          <div className="tai-card" style={{ borderColor: "rgba(239, 68, 68, 0.3)", borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <h2 className="tai-title-sm" style={{ margin: "0 0 6px", color: "var(--danger)" }}>Account Deletion &amp; Erasure</h2>
             <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
               Permanently delete your profile, earned certificates, study records, and personal identifier tokens under GDPR Right to be Forgotten.
@@ -654,7 +730,7 @@ export function ProfileScreen({
           ========================================================================= */}
       {activeTab === "referrals" && (
         <div className="tai-col tai-gap16 anim-stagger">
-          <div className="tai-card">
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Invite Friends &amp; Earn</h2>
             <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
               Share your personal link. When someone signs up through it, it's tracked here.
@@ -712,7 +788,7 @@ export function ProfileScreen({
 
       {activeTab === "feedback" && (
         <div className="tai-col tai-gap16 anim-stagger">
-          <div className="tai-card">
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Send Product Feedback &amp; Suggestions</h2>
             <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
               Have an idea for a new course track, or found a UI bug? Your feedback goes directly to our curriculum and engineering teams.
@@ -800,7 +876,7 @@ export function ProfileScreen({
             className="tai-btn"
             style={{
               width: "100%", background: "var(--surface)", border: "1px solid var(--border)",
-              color: "var(--danger)", fontWeight: 700, padding: "12px 20px"
+              color: "var(--danger)", fontWeight: 700, padding: "12px 20px", borderRadius: 10
             }}
             onClick={signOut}
           >
@@ -828,7 +904,7 @@ export function ProfileScreen({
           <div
             onClick={(e) => e.stopPropagation()}
             className="tai-card anim-pop"
-            style={{ width: "100%", maxWidth: 440, background: "var(--surface)" }}
+            style={{ width: "100%", maxWidth: 440, background: "var(--surface)", borderRadius: 12 }}
           >
             <div className="tai-row tai-gap10">
               <AlertTriangle size={22} color="var(--danger)" />

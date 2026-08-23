@@ -442,12 +442,38 @@ export const TOKENS = `
     .ta-btn { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
     .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; }
   }
-  .ta-btn { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 9px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: background-color .15s ease, border-color .15s ease; font-family: var(--font); }
-  .ta-btn:active { transform: scale(.98); }
-  .ta-btn-primary { background: #4F46E5; color: #fff; }
-  .ta-btn-primary:hover { background: #4338CA; }
-  .ta-btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
-  .ta-btn-outline:hover { background: var(--surface-2); border-color: #CBD5E1; }
+  .ta-btn { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 9px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); user-select: none; }
+  .ta-btn-primary {
+    background: #4F46E5 !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.20) !important;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.32), 0 4px 14px -2px rgba(79, 70, 229, 0.40) !important;
+  }
+  .ta-btn-primary:hover {
+    background: #4338CA !important;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 6px 20px -2px rgba(79, 70, 229, 0.50) !important;
+    transform: translateY(-1.5px);
+  }
+  .ta-btn-primary:active {
+    background: #3730A3 !important;
+    transform: translateY(1px) scale(0.975);
+    box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.15), 0 2px 6px rgba(79, 70, 229, 0.30) !important;
+  }
+  .ta-btn-outline {
+    background: var(--glass-surface) !important;
+    backdrop-filter: var(--glass-blur-sm) !important;
+    -webkit-backdrop-filter: var(--glass-blur-sm) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text) !important;
+    box-shadow: inset 0 1px 0 var(--glass-specular), var(--shadow-card) !important;
+  }
+  .ta-btn-outline:hover {
+    background: var(--glass-elevated) !important;
+    border-color: rgba(99, 102, 241, 0.35) !important;
+    transform: translateY(-1.5px);
+    color: var(--primary) !important;
+  }
+  .ta-btn-outline:active { transform: translateY(1px) scale(0.975); }
   .ta-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
   .ta-btn-ghost:hover { background: #E0E7FF; }
   .ta-btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }

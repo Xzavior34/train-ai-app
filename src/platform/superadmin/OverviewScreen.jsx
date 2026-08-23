@@ -235,11 +235,9 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 <button
                   key={m}
                   onClick={() => setActiveChartMetric(m)}
+                  className={`ta-btn ta-btn-sm ${activeChartMetric === m ? "ta-btn-primary" : "ta-btn-outline"}`}
                   style={{
-                    padding: "4px 10px", borderRadius: 8, fontSize: 11.5, fontWeight: 700, cursor: "pointer",
-                    background: activeChartMetric === m ? "var(--primary)" : "var(--surface-3)",
-                    color: activeChartMetric === m ? "#FFFFFF" : "var(--text-2)",
-                    border: "none", transition: "all .15s ease"
+                    padding: "4px 10px", borderRadius: 6, fontSize: 11.5, fontWeight: 700, cursor: "pointer"
                   }}
                 >
                   {m === "enrollments" ? "Enrollments" : "ARR / MRR ($)"}
