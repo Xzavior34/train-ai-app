@@ -56,13 +56,10 @@ export function MessagesScreen({
           HERO BANNER: Direct Messages & Mentorship (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
-        className="tai-card anim-fluid-entrance"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
           borderRadius: 14,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           padding: "clamp(18px, 2.5vw, 24px)",
-          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "hidden"
         }}
@@ -75,7 +72,7 @@ export function MessagesScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -84,25 +81,25 @@ export function MessagesScreen({
           <div style={{ minWidth: 0, flex: 1 }}>
             <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
               <span style={{
-                background: "var(--primary-tint)", color: "var(--primary)",
-                border: "1px solid var(--border)",
+                background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC",
+                border: "1px solid rgba(165, 180, 252, 0.4)",
                 fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
                 display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
               }}>
-                <Send size={13} color="var(--primary)" /> 1-ON-1 INSTRUCTOR CHAT
+                <Send size={13} color="#A5B4FC" /> 1-ON-1 INSTRUCTOR CHAT
               </span>
               <span style={{
-                background: "rgba(16, 185, 129, 0.12)", color: "#10B981",
-                border: "1px solid rgba(16, 185, 129, 0.3)",
+                background: "rgba(16, 185, 129, 0.2)", color: "#34D399",
+                border: "1px solid rgba(16, 185, 129, 0.4)",
                 fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
               }}>
                 {messageThreads.length} CONVERSATION{messageThreads.length === 1 ? "" : "S"}
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "var(--text)", lineHeight: 1.2 }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.2 }}>
               Direct Messages &amp; Mentorship
             </h1>
-            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
               Ask project questions, receive code review guidance, and communicate directly with your academy instructors.
             </p>
           </div>

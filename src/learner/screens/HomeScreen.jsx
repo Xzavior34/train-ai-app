@@ -86,13 +86,10 @@ export function HomeScreen({
           HERO BANNER: Adaptive Liquid Glass Learner Command Center
           ========================================================================= */}
       <div
-        className="tai-card anim-fluid-entrance"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
           borderRadius: 14,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           padding: "clamp(18px, 2.5vw, 24px)",
-          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "hidden",
           width: "100%",
@@ -107,7 +104,7 @@ export function HomeScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -118,24 +115,24 @@ export function HomeScreen({
               <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
-                  background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
+                  background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC", border: "1px solid rgba(165, 180, 252, 0.4)",
                   fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
                 }}>
-                  <GraduationCap size={12} color="var(--primary)" /> LEARNER COMMAND CENTER
+                  <GraduationCap size={12} color="#A5B4FC" /> LEARNER COMMAND CENTER
                 </span>
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 99,
-                  background: "rgba(16, 185, 129, 0.12)", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.3)",
+                  background: "rgba(16, 185, 129, 0.2)", color: "#34D399", border: "1px solid rgba(16, 185, 129, 0.4)",
                   fontSize: 11, fontWeight: 800
                 }}>
                   <Flame size={11} /> Active Sprint
                 </span>
               </div>
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
                 Welcome back, {userFirstName || "Learner"}
               </h1>
-              <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
-                {done} of {goal} weekly lessons done. Continue in <strong style={{ color: "var(--primary)" }}>{continueCourse?.title || "AI Fundamentals"}</strong>.
+              <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+                {done} of {goal} weekly lessons done. Continue in <strong style={{ color: "#A5B4FC" }}>{continueCourse?.title || "AI Fundamentals"}</strong>.
               </p>
             </div>
 
@@ -155,24 +152,22 @@ export function HomeScreen({
           </div>
 
           {/* Milestone Progress Bar */}
-          <div style={{
-            background: "var(--surface-2)",
+          <div className="tai-hero-subcard" style={{
             padding: "12px 16px",
-            borderRadius: 10,
-            border: "1px solid var(--border)"
+            borderRadius: 10
           }}>
-            <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
-              <span className="tai-row tai-gap6">
-                <Target size={14} color="var(--primary)" />
+            <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
+              <span className="tai-row tai-gap6" style={{ color: "#E0E7FF" }}>
+                <Target size={14} color="#818CF8" />
                 <span>Weekly Sprint Goal ({done}/{goal})</span>
               </span>
-              <span style={{ color: "#10B981", fontWeight: 700 }}>{goalPercent}% Completed</span>
+              <span style={{ color: "#34D399", fontWeight: 700 }}>{goalPercent}% Completed</span>
             </div>
 
             <div style={{
               height: 8,
               borderRadius: 99,
-              background: "var(--surface-3)",
+              background: "rgba(255, 255, 255, 0.12)",
               overflow: "hidden"
             }}>
               <div style={{

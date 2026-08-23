@@ -538,3 +538,70 @@ html.tai-high-contrast .tai-card,
 html.tai-high-contrast .ta-card {
   border-width: 2px;
 }
+
+/* =========================================================================
+   HERO BANNER: Dark Blue Liquid Glass in Light Mode, Frosted Surface in Dark Mode
+   ========================================================================= */
+.tai-hero-card,
+.ta-hero-banner {
+  background: #0F172A !important;
+  color: #FFFFFF !important;
+  border: 1px solid #1E293B !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 8px 24px rgba(15, 23, 42, 0.35) !important;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.tai-hero-card h1, .ta-hero-banner h1,
+.tai-hero-card .tai-hero-title, .ta-hero-banner .ta-hero-title {
+  color: #FFFFFF !important;
+}
+.tai-hero-card p, .ta-hero-banner p,
+.tai-hero-card .tai-hero-desc, .ta-hero-banner .ta-hero-desc {
+  color: #94A3B8 !important;
+}
+.tai-hero-card .tai-hero-subcard,
+.ta-hero-banner .ta-hero-subcard {
+  background: #1E293B !important;
+  border: 1px solid #334155 !important;
+  color: #FFFFFF !important;
+}
+
+/* In Dark Mode: adapt seamlessly to the Profile & Settings frosted Liquid Glass card */
+.dark .tai-hero-card,
+.dark .ta-hero-banner,
+html.dark .tai-hero-card,
+html.dark .ta-hero-banner {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0, 0, 0, 0.55) !important;
+}
+.dark .tai-hero-card h1,
+.dark .ta-hero-banner h1,
+html.dark .tai-hero-card h1,
+html.dark .ta-hero-banner h1,
+.dark .tai-hero-card .tai-hero-title,
+.dark .ta-hero-banner .ta-hero-title,
+html.dark .tai-hero-card .tai-hero-title,
+html.dark .ta-hero-banner .ta-hero-title {
+  color: var(--text) !important;
+}
+.dark .tai-hero-card p,
+.dark .ta-hero-banner p,
+html.dark .tai-hero-card p,
+html.dark .ta-hero-banner p,
+.dark .tai-hero-card .tai-hero-desc,
+.dark .ta-hero-banner .ta-hero-desc,
+html.dark .tai-hero-card .tai-hero-desc,
+html.dark .ta-hero-banner .ta-hero-desc {
+  color: var(--text-2) !important;
+}
+.dark .tai-hero-card .tai-hero-subcard,
+.dark .ta-hero-banner .ta-hero-subcard,
+html.dark .tai-hero-card .tai-hero-subcard,
+html.dark .ta-hero-banner .ta-hero-subcard {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}

@@ -108,13 +108,10 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
           HERO BANNER: Unified Checkout Header (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
-        className="tai-card anim-fluid-entrance"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
           borderRadius: 14,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
           padding: "clamp(18px, 2.5vw, 24px)",
-          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "hidden"
         }}
@@ -127,7 +124,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -137,23 +134,23 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
             <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
               <span style={{
                 display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
-                background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
+                background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC", border: "1px solid rgba(165, 180, 252, 0.4)",
                 fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
               }}>
-                <CreditCard size={12} color="var(--primary)" /> SECURE CHECKOUT
+                <CreditCard size={12} color="#A5B4FC" /> SECURE CHECKOUT
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               {isCourseMode ? "Course Checkout" : "Buy AI Credits"}
             </h1>
-            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, lineHeight: 1.45 }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, lineHeight: 1.45 }}>
               {isCourseMode ? (params?.courseTitle || "Enrollment Fee") : "Select a credit tier for unlimited AI simulations, code reviews, and mock interviews."}
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "var(--surface-2)", padding: "10px 16px", borderRadius: 10, border: "1px solid var(--border)", boxShadow: "var(--glass-shadow)" }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{formatAmount(amount, currency)}</div>
-            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Total Due</div>
+          <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#FFFFFF" }}>{formatAmount(amount, currency)}</div>
+            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>Total Due</div>
           </div>
         </div>
       </div>

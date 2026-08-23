@@ -8,18 +8,20 @@ function CourseCoverImage({ course, children }) {
   const imageUrl = course.coverImageUrl || course.image || `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&auto=format&fit=crop&q=80`;
 
   return (
-    <div style={{
-      position: "relative", width: "100%", padding: "22px 20px", borderRadius: 14, overflow: "hidden",
-      background: "var(--surface)", border: "1px solid var(--border)",
-      minHeight: 140, display: "flex", flexDirection: "column", justifyContent: "space-between",
-      boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)", boxSizing: "border-box"
-    }}>
+    <div
+      className="tai-hero-card"
+      style={{
+        position: "relative", width: "100%", padding: "22px 20px", borderRadius: 14, overflow: "hidden",
+        minHeight: 140, display: "flex", flexDirection: "column", justifyContent: "space-between",
+        boxSizing: "border-box"
+      }}
+    >
       {!errored && (
         <img
           src={imageUrl}
           alt=""
           onError={() => setErrored(true)}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.15, display: "block" }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.22, display: "block" }}
         />
       )}
       <div style={{ position: "relative", zIndex: 1 }}>{children}</div>

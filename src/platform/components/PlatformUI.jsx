@@ -303,20 +303,21 @@ export const TOKENS = `
   }
   .ta-hero-banner {
     border-radius: 14px;
-    background: var(--surface);
-    color: var(--text);
+    background: #0F172A;
+    color: #FFFFFF;
     padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px);
-    box-shadow: inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0, 0, 0, 0.10);
-    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 8px 24px rgba(15, 23, 42, 0.35);
+    border: 1px solid #1E293B;
     position: relative;
     overflow: hidden;
     width: 100%;
     box-sizing: border-box;
   }
   .ta.dark .ta-hero-banner, html.dark .ta-hero-banner {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    box-shadow: inset 0 1px 0 var(--glass-specular), 0 12px 36px -4px rgba(0, 0, 0, 0.65);
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: inset 0 1px 0 var(--glass-specular), 0 12px 36px -4px rgba(0, 0, 0, 0.65) !important;
   }
   .ta-hero-inner {
     position: relative;
@@ -337,15 +338,21 @@ export const TOKENS = `
     font-weight: 900;
     letter-spacing: -0.025em;
     margin: 0 0 4px;
-    color: var(--text);
+    color: #FFFFFF;
     line-height: 1.25;
+  }
+  .ta.dark .ta-hero-title, html.dark .ta-hero-title {
+    color: var(--text) !important;
   }
   .ta-hero-desc {
     font-size: clamp(12.5px, 1vw, 13.5px);
-    color: var(--text-2);
+    color: #94A3B8;
     margin: 0;
     max-width: 680px;
     line-height: 1.5;
+  }
+  .ta.dark .ta-hero-desc, html.dark .ta-hero-desc {
+    color: var(--text-2) !important;
   }
   .ta-hero-actions {
     display: flex;
