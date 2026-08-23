@@ -403,18 +403,19 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
           display: "flex",
           alignItems: "center",
           gap: 8,
-          background: "rgba(15, 23, 42, 0.82)",
+          background: "rgba(15, 23, 42, 0.85)",
           backdropFilter: "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           padding: "5px 12px",
           borderRadius: 8,
           border: "1px solid rgba(255, 255, 255, 0.15)",
           boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 4px 14px rgba(0, 0, 0, 0.4)",
-          maxWidth: "85%",
-          pointerEvents: "none"
+          maxWidth: "calc(100% - 24px)",
+          pointerEvents: "none",
+          boxSizing: "border-box"
         }}>
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: isPlaying ? "#10B981" : "#F59E0B", boxShadow: isPlaying ? "0 0 8px #10B981" : "0 0 8px #F59E0B", flexShrink: 0 }} />
-          <span style={{ fontSize: 11.5, fontWeight: 800, color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: 11.5, fontWeight: 800, color: "#FFFFFF", wordBreak: "break-word", lineHeight: 1.25 }}>
             {lessonTitle}
           </span>
           <span style={{ fontSize: 10.5, color: "#A5B4FC", fontWeight: 700, flexShrink: 0, background: "rgba(99, 102, 241, 0.25)", padding: "1px 6px", borderRadius: 4, border: "1px solid rgba(165, 180, 252, 0.3)" }}>

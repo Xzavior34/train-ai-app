@@ -261,23 +261,23 @@ export function LessonScreen({
       <div className="tai-card" style={{
         padding: "10px 14px", borderRadius: 10,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        gap: 10, background: "var(--surface)", border: "1px solid var(--border)",
+        flexWrap: "wrap", gap: 10, background: "var(--surface)", border: "1px solid var(--border)",
         width: "100%", boxSizing: "border-box"
       }}>
-        <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1, alignItems: "center" }}>
+        <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: "1 1 220px", alignItems: "center" }}>
           <button
             className="tai-btn tai-btn-outline tai-btn-sm"
             onClick={back}
             style={{ borderRadius: 8, flexShrink: 0, padding: "6px 10px", fontSize: 12 }}
             title="Course Overview"
           >
-            <ChevronLeft size={16} /> <span className="tai-header-full-text">Course Overview</span>
+            <ChevronLeft size={16} /> <span className="tai-header-full-text">Overview</span>
           </button>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em" }}>
               {course?.category || "Masterclass Track"} • Lesson {currentLessonIndex + 1} of {rawLessons.length}
             </div>
-            <div style={{ fontWeight: 800, fontSize: "clamp(13px, 2.5vw, 15px)", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontWeight: 800, fontSize: "clamp(13px, 2.5vw, 15px)", color: "var(--text)", lineHeight: 1.3, wordBreak: "break-word" }}>
               {course?.title || "AI Product Architecture Masterclass"}
             </div>
           </div>

@@ -146,22 +146,6 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
 
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
-              <span style={{
-                display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
-                background: "rgba(16, 185, 129, 0.2)", color: "#34D399", border: "1px solid rgba(16, 185, 129, 0.4)",
-                fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
-              }}>
-                <TrendingUp size={12} color="#34D399" /> SPRINT VELOCITY
-              </span>
-              <span style={{
-                display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 99,
-                background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC", border: "1px solid rgba(165, 180, 252, 0.4)",
-                fontSize: 11, fontWeight: 800
-              }}>
-                <CheckCircle2 size={11} /> 85% Met
-              </span>
-            </div>
             <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               My Learning Progress
             </h1>

@@ -401,11 +401,7 @@ export function CoursesScreen({
             
             {/* Left Column: Spotlight details */}
             <div>
-              <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-                <span style={{ fontSize: 11, color: "#E0E7FF", fontWeight: 800, background: "rgba(99, 102, 241, 0.25)", padding: "3px 10px", borderRadius: 99, border: "1px solid rgba(165, 180, 252, 0.4)" }}>
-                  {currentSpotlight.cohortTag} • {currentSpotlight.badge}
-                </span>
-
+              <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8, justifyContent: "flex-end" }}>
                 {/* Prev / Next Controls */}
                 <div className="tai-row tai-gap6">
                   <button

@@ -117,25 +117,6 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
 
           <div className="ta-hero-inner" style={{ position: "relative", zIndex: 1 }}>
             <div className="ta-hero-text">
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC",
-                  border: "1px solid rgba(165, 180, 252, 0.4)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <Server size={13} color="#A5B4FC" /> ENTERPRISE MULTI-TENANT CLUSTER
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.2)", color: "#34D399",
-                  border: "1px solid rgba(16, 185, 129, 0.4)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 5
-                }}>
-                  <Radio size={11} color="#34D399" /> 99.98% UPTIME • GLOBAL EDGE
-                </span>
-              </div>
-
               <h1 className="ta-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
                 Train AI Platform Overview
               </h1>

@@ -187,22 +187,6 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
 
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
-              <span style={{
-                display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
-                background: "rgba(245, 158, 11, 0.2)", color: "#FBBF24", border: "1px solid rgba(245, 158, 11, 0.4)",
-                fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
-              }}>
-                <Trophy size={12} color="#FBBF24" /> REPUTATION &amp; BADGES
-              </span>
-              <span style={{
-                display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 99,
-                background: "rgba(16, 185, 129, 0.2)", color: "#34D399", border: "1px solid rgba(16, 185, 129, 0.4)",
-                fontSize: 11, fontWeight: 800
-              }}>
-                <CheckCircle2 size={11} /> Level {user.level || 2} Qualified
-              </span>
-            </div>
             <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               Level {user.level || 2} • Senior Specialist
             </h1>

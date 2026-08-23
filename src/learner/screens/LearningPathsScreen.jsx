@@ -291,24 +291,6 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
         />
 
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-            <span style={{
-              background: "rgba(99, 102, 241, 0.25)", color: "#A5B4FC",
-              border: "1px solid rgba(165, 180, 252, 0.4)",
-              fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-              display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-            }}>
-              <Compass size={13} color="#A5B4FC" /> CAREER ROADMAPS &amp; SPECIALIZATIONS
-            </span>
-            <span style={{
-              background: "rgba(16, 185, 129, 0.2)", color: "#34D399",
-              border: "1px solid rgba(16, 185, 129, 0.4)",
-              fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-            }}>
-              ACCREDITED CERTIFICATE INCLUDED
-            </span>
-          </div>
-
           <h1 className="tai-hero-title" style={{ fontSize: "clamp(22px, 3vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", lineHeight: 1.2 }}>
             Learning Paths &amp; Career Tracks
           </h1>

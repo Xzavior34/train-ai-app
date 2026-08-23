@@ -175,14 +175,6 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
 
         <div style={{ position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              background: "rgba(245, 158, 11, 0.2)", color: "#FBBF24",
-              padding: "4px 12px", borderRadius: 99, fontSize: 11.5, fontWeight: 800,
-              border: "1px solid rgba(245, 158, 11, 0.4)", marginBottom: 8
-            }}>
-              <Trophy size={13} color="#FBBF24" /> SPRINT CHAMPIONS
-            </div>
             <h2 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.8vw, 26px)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.02em" }}>
               Hall of Fame &amp; Top Performers
             </h2>
