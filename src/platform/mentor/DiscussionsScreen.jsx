@@ -138,7 +138,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
         {/* =========================================================================
             INSTRUCTOR Q&A HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner anim-fluid-entrance">
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
           <div className="tai-glow-violet" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -151,8 +151,8 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
             </div>
 
             <div className="ta-hero-actions">
-              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Avg Response Time</div>
+              <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Avg Response Time</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>1.4 Hours</div>
               </div>
             </div>

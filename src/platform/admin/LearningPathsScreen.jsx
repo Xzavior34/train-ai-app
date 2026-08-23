@@ -573,7 +573,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
         {/* =========================================================================
             LEARNING PATHS HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner anim-fluid-entrance">
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
           <div className="tai-glow-purple" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">

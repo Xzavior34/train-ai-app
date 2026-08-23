@@ -68,7 +68,8 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
         {/* =========================================================================
             RBAC & PERMISSIONS HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
+          <div className="tai-glow-purple" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Role &amp; Permission Access Controls</h1>

@@ -319,6 +319,14 @@ export const TOKENS = `
     border: 1px solid var(--border) !important;
     box-shadow: inset 0 1px 0 var(--glass-specular), 0 12px 36px -4px rgba(0, 0, 0, 0.65) !important;
   }
+  .ta-hero-banner.ta-hero-dark {
+    background: #0F172A !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 12px 32px -4px rgba(15, 23, 42, 0.45) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
   .ta-hero-inner {
     position: relative;
     z-index: 1;
@@ -341,6 +349,10 @@ export const TOKENS = `
     color: var(--text);
     line-height: 1.25;
   }
+  .ta-hero-banner.ta-hero-dark .ta-hero-title,
+  .ta-hero-banner.ta-hero-dark h1 {
+    color: #FFFFFF !important;
+  }
   .ta.dark .ta-hero-title, html.dark .ta-hero-title {
     color: var(--text) !important;
   }
@@ -350,6 +362,15 @@ export const TOKENS = `
     margin: 0;
     max-width: 680px;
     line-height: 1.5;
+  }
+  .ta-hero-banner.ta-hero-dark .ta-hero-desc,
+  .ta-hero-banner.ta-hero-dark p {
+    color: #94A3B8 !important;
+  }
+  .ta-hero-banner.ta-hero-dark .ta-hero-subcard {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    color: #FFFFFF !important;
   }
   .ta.dark .ta-hero-desc, html.dark .ta-hero-desc {
     color: var(--text-2) !important;
@@ -439,15 +460,23 @@ export const TOKENS = `
       font-size: clamp(18px, 4.5vw, 22px) !important;
       line-height: 1.25 !important;
       margin-bottom: 6px !important;
-      color: var(--text) !important;
+      color: var(--text);
       word-break: normal !important;
       overflow-wrap: break-word !important;
+    }
+    .ta-hero-banner.ta-hero-dark .ta-hero-title,
+    .ta-hero-banner.ta-hero-dark h1 {
+      color: #FFFFFF !important;
     }
     .ta-hero-desc {
       font-size: 13px !important;
       line-height: 1.45 !important;
-      color: var(--text-2) !important;
+      color: var(--text-2);
       max-width: 100% !important;
+    }
+    .ta-hero-banner.ta-hero-dark .ta-hero-desc,
+    .ta-hero-banner.ta-hero-dark p {
+      color: #94A3B8 !important;
     }
     .ta-hero-actions {
       width: 100% !important;

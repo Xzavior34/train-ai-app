@@ -586,18 +586,30 @@ html.tai-high-contrast .ta-card {
   -webkit-backdrop-filter: blur(16px);
 }
 .tai-hero-dark h1, .ta-hero-dark h1,
-.tai-hero-dark .tai-hero-title, .ta-hero-dark .ta-hero-title {
+.tai-hero-dark h2, .ta-hero-dark h2,
+.tai-hero-dark h3, .ta-hero-dark h3,
+.tai-hero-dark .tai-hero-title, .ta-hero-dark .ta-hero-title,
+.tai-hero-dark .ta-title, .ta-hero-dark .ta-title {
   color: #FFFFFF !important;
 }
 .tai-hero-dark p, .ta-hero-dark p,
-.tai-hero-dark .tai-hero-desc, .ta-hero-dark .ta-hero-desc {
+.tai-hero-dark .tai-hero-desc, .ta-hero-dark .ta-hero-desc,
+.tai-hero-dark .ta-subtitle, .ta-hero-dark .ta-subtitle {
   color: #94A3B8 !important;
 }
 .tai-hero-dark .tai-hero-subcard,
-.ta-hero-dark .tai-hero-subcard {
+.ta-hero-dark .tai-hero-subcard,
+.tai-hero-dark .ta-hero-subcard,
+.ta-hero-dark .ta-hero-subcard {
   background: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   color: #FFFFFF !important;
+}
+.tai-hero-dark .tai-hero-subcard *,
+.ta-hero-dark .tai-hero-subcard *,
+.tai-hero-dark .ta-hero-subcard *,
+.ta-hero-dark .ta-hero-subcard * {
+  color: inherit;
 }
 
 /* Ambient Glowing Corner Halos */

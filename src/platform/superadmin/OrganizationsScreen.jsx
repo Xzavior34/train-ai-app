@@ -211,7 +211,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             ORGANIZATIONS HERO BANNER
             ========================================================================= */}
         <div
-          className="ta-card ta-hero-banner anim-fluid-entrance"
+          className="ta-card ta-hero-banner ta-hero-dark anim-fluid-entrance"
           style={{
             borderRadius: 14,
             padding: "clamp(18px, 2.5vw, 24px)",
@@ -219,18 +219,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             overflow: "hidden"
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              top: -40,
-              right: -40,
-              width: 200,
-              height: 200,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
-              pointerEvents: "none"
-            }}
-          />
+          <div className="tai-glow-purple" />
 
           <div className="ta-hero-inner" style={{ position: "relative", zIndex: 1 }}>
             <div className="ta-hero-text">
@@ -243,12 +232,12 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             </div>
 
             <div className="ta-hero-actions">
-              <div className="ta-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Total Registered</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: "var(--text)" }}>{orgs.length} Tenants</div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Total Registered</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{orgs.length} Tenants</div>
               </div>
-              <div className="ta-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Active Users</div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Active Users</div>
                 <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>{orgs.reduce((sum, o) => sum + (o.user_count || 0), 0)} Active</div>
               </div>
             </div>

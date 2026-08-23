@@ -1101,7 +1101,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
           /* ================================================================= */
           <>
             {/* Masterclasses & Content Hero Banner */}
-            <div className="ta-hero-banner anim-fluid-entrance" style={{ marginBottom: 20 }}>
+            <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance" style={{ marginBottom: 20 }}>
               <div className="tai-glow-violet" />
               <div className="ta-hero-inner">
                 <div className="ta-hero-text">

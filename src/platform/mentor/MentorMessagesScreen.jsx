@@ -107,7 +107,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
 
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
-        <div className="ta-hero-banner anim-fluid-entrance">
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
           <div className="tai-glow-purple" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">

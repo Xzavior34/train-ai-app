@@ -287,7 +287,7 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
       <TopBar title="Instructor Settings" sub="Profile setup, communications, session preferences, and teaching resources" />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
-        <div className="ta-hero-banner anim-fluid-entrance">
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
           <div className="tai-glow-purple" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
@@ -300,9 +300,9 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
             </div>
 
             <div className="ta-hero-actions">
-              <div style={{ background: "var(--surface-2)", padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", border: "1px solid var(--border)", textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>Active Platform</div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)", textTransform: "capitalize" }}>{videoPlatform.replace(/_/g, " ")}</div>
+              <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Active Platform</div>
+                <div style={{ fontSize: 15, fontWeight: 900, textTransform: "capitalize" }}>{videoPlatform.replace(/_/g, " ")}</div>
               </div>
             </div>
           </div>

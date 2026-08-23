@@ -94,7 +94,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             EXECUTIVE HERO TELEMETRY BANNER
             ========================================================================= */}
         <div
-          className="ta-card ta-hero-banner anim-fluid-entrance"
+          className="ta-card ta-hero-banner ta-hero-dark anim-fluid-entrance"
           style={{
             borderRadius: 14,
             padding: "clamp(18px, 2.5vw, 24px)",
@@ -102,18 +102,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             overflow: "hidden"
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              top: -40,
-              right: -40,
-              width: 200,
-              height: 200,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
-              pointerEvents: "none"
-            }}
-          />
+          <div className="tai-glow-cobalt" />
 
           <div className="ta-hero-inner" style={{ position: "relative", zIndex: 1 }}>
             <div className="ta-hero-text">
@@ -126,13 +115,13 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             </div>
 
             <div className="ta-hero-actions">
-              <div style={{ background: "var(--surface-2)", padding: "8px 14px", borderRadius: 10, border: "1px solid var(--border)", textAlign: "center", boxShadow: "var(--glass-shadow)" }}>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>AI Speed</div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>AI Speed</div>
                 <div style={{ fontSize: 15, fontWeight: 900, color: "#10B981" }}>18ms avg</div>
               </div>
-              <div style={{ background: "var(--surface-2)", padding: "8px 14px", borderRadius: 10, border: "1px solid var(--border)", textAlign: "center", boxShadow: "var(--glass-shadow)" }}>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700 }}>WebSockets</div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: "#D97706" }}>428 Live</div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>WebSockets</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#F59E0B" }}>428 Live</div>
               </div>
             </div>
           </div>
