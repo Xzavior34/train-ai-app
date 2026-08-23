@@ -104,29 +104,56 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
       {/* =========================================================================
           HERO BANNER: Unified Checkout Header
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      {/* =========================================================================
+          HERO BANNER: Unified Checkout Header (Adaptive Liquid Glass)
+          ========================================================================= */}
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
+            <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
+                background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
+                fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
+              }}>
+                <CreditCard size={12} color="var(--primary)" /> SECURE CHECKOUT
+              </span>
+            </div>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
               {isCourseMode ? "Course Checkout" : "Buy AI Credits"}
             </h1>
-            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, lineHeight: 1.45 }}>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, lineHeight: 1.45 }}>
               {isCourseMode ? (params?.courseTitle || "Enrollment Fee") : "Select a credit tier for unlimited AI simulations, code reviews, and mock interviews."}
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.06)", padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "#FFFFFF" }}>{formatAmount(amount, currency)}</div>
-            <div style={{ fontSize: 11, color: "#94A3B8", fontWeight: 600 }}>Total Due</div>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "var(--surface-2)", padding: "10px 16px", borderRadius: 10, border: "1px solid var(--border)", boxShadow: "var(--glass-shadow)" }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{formatAmount(amount, currency)}</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Total Due</div>
           </div>
         </div>
       </div>

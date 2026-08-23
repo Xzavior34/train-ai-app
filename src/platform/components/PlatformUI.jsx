@@ -302,16 +302,21 @@ export const TOKENS = `
     .ta-header-mobile-only { display: none !important; }
   }
   .ta-hero-banner {
-    border-radius: var(--radius);
-    background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-    color: #FFFFFF;
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
     padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 24px rgba(15, 23, 42, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0, 0, 0, 0.10);
+    border: 1px solid var(--border);
     position: relative;
     overflow: hidden;
     width: 100%;
     box-sizing: border-box;
+  }
+  .ta.dark .ta-hero-banner, html.dark .ta-hero-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: inset 0 1px 0 var(--glass-specular), 0 12px 36px -4px rgba(0, 0, 0, 0.65);
   }
   .ta-hero-inner {
     position: relative;
@@ -328,16 +333,16 @@ export const TOKENS = `
     flex: 1;
   }
   .ta-hero-title {
-    font-size: clamp(20px, 1.8vw, 24px);
-    font-weight: 800;
+    font-size: clamp(20px, 1.8vw, 25px);
+    font-weight: 900;
     letter-spacing: -0.025em;
     margin: 0 0 4px;
-    color: #FFFFFF;
+    color: var(--text);
     line-height: 1.25;
   }
   .ta-hero-desc {
     font-size: clamp(12.5px, 1vw, 13.5px);
-    color: #94A3B8;
+    color: var(--text-2);
     margin: 0;
     max-width: 680px;
     line-height: 1.5;
@@ -424,15 +429,17 @@ export const TOKENS = `
       flex: none !important;
     }
     .ta-hero-title {
-      font-size: 17px !important;
-      line-height: 1.3 !important;
-      margin-bottom: 4px !important;
+      font-size: clamp(18px, 4.5vw, 22px) !important;
+      line-height: 1.25 !important;
+      margin-bottom: 6px !important;
+      color: var(--text) !important;
       word-break: normal !important;
       overflow-wrap: break-word !important;
     }
     .ta-hero-desc {
-      font-size: 12px !important;
-      line-height: 1.4 !important;
+      font-size: 13px !important;
+      line-height: 1.45 !important;
+      color: var(--text-2) !important;
       max-width: 100% !important;
     }
     .ta-hero-actions {

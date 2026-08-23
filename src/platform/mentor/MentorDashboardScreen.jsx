@@ -455,28 +455,28 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 </button>
               </div>
 
-              {/* Dark Live Hero Stream Card */}
+              {/* Adaptive Liquid Glass Live Stream Card */}
               {activeLiveSession && (
                 <div style={{ 
                   marginTop: 16,
                   padding: 16, 
-                  borderRadius: 10, 
-                  background: "#0F172A",
-                  color: "#FFFFFF",
-                  border: "1px solid #1E293B",
-                  boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)"
+                  borderRadius: 12, 
+                  background: "var(--surface)",
+                  color: "var(--text)",
+                  border: "1px solid var(--border)",
+                  boxShadow: "inset 0 1px 0 var(--glass-specular), 0 8px 24px -6px rgba(0,0,0,0.12)"
                 }}>
                   <div className="ta-row ta-between">
-                    <div className="ta-row ta-gap6" style={{ background: "rgba(239, 68, 68, 0.2)", padding: "3px 8px", borderRadius: 4, color: "#FCA5A5", fontSize: 10.5, fontWeight: 700 }}>
+                    <div className="ta-row ta-gap6" style={{ background: "rgba(239, 68, 68, 0.12)", padding: "3px 8px", borderRadius: 4, color: "#EF4444", fontSize: 10.5, fontWeight: 700, border: "1px solid rgba(239, 68, 68, 0.3)" }}>
                       <Radio size={11} className="anim-pulse" /> LIVE NOW
                     </div>
-                    <span style={{ fontSize: 11, color: "#94A3B8" }}>Studio Session</span>
+                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>Studio Session</span>
                   </div>
 
-                  <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 10, lineHeight: 1.35 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 10, lineHeight: 1.35, color: "var(--text)" }}>
                     {activeLiveSession.title || "Live Mentorship Studio"}
                   </div>
-                  <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 3 }}>
                     {activeLiveSession.description || "Cohort Batch interactive review session"}
                   </div>
 

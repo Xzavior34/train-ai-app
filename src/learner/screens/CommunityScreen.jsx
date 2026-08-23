@@ -400,25 +400,52 @@ export const chartColors = {
       {/* =========================================================================
           HERO BANNER: DISCO LMS COMMUNITY & COLLABORATIVE KNOWLEDGE HUB
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden",
-        width: "100%",
-        boxSizing: "border-box"
-      }}>
+      {/* =========================================================================
+          HERO BANNER: Adaptive Liquid Glass Community & Knowledge Hub
+          ========================================================================= */}
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden",
+          width: "100%",
+          boxSizing: "border-box"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <div style={{ minWidth: 0, flex: "1 1 240px" }}>
-            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
+            <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
+                background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
+                fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
+              }}>
+                <Users size={12} color="var(--primary)" /> COLLABORATIVE DISCOURSE
+              </span>
+            </div>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
               Train AI Community Hub
             </h1>
-            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
-              Share projects, ask questions, and collaborate with peers and mentors.
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
+              Share projects, ask questions, and collaborate with peers and instructors.
             </p>
           </div>
 
@@ -426,7 +453,7 @@ export const chartColors = {
             className="tai-btn tai-btn-primary"
             onClick={() => setPostComposerOpen(true)}
             style={{
-              padding: "8px 14px", borderRadius: 8, fontWeight: 700, fontSize: 13,
+              padding: "8px 16px", borderRadius: 8, fontWeight: 700, fontSize: 13,
               display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
             }}
           >

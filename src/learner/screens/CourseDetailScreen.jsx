@@ -9,17 +9,17 @@ function CourseCoverImage({ course, children }) {
 
   return (
     <div style={{
-      position: "relative", width: "100%", padding: "22px 20px", borderRadius: "var(--radius)", overflow: "hidden",
-      background: "#0F172A", border: "1px solid #1E293B",
+      position: "relative", width: "100%", padding: "22px 20px", borderRadius: 14, overflow: "hidden",
+      background: "var(--surface)", border: "1px solid var(--border)",
       minHeight: 140, display: "flex", flexDirection: "column", justifyContent: "space-between",
-      boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)", boxSizing: "border-box"
+      boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)", boxSizing: "border-box"
     }}>
       {!errored && (
         <img
           src={imageUrl}
           alt=""
           onError={() => setErrored(true)}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.2, display: "block" }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.15, display: "block" }}
         />
       )}
       <div style={{ position: "relative", zIndex: 1 }}>{children}</div>

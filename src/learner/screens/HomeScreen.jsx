@@ -82,34 +82,70 @@ export function HomeScreen({
       {/* =========================================================================
           HERO BANNER: Visually Consistent Learner Command Center
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      {/* =========================================================================
+          HERO BANNER: Adaptive Liquid Glass Learner Command Center
+          ========================================================================= */}
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden",
+          width: "100%",
+          boxSizing: "border-box"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div className="tai-hero-row">
+          <div className="tai-hero-row" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF" }}>
+              <div className="tai-row tai-gap8" style={{ marginBottom: 6, flexWrap: "wrap" }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 99,
+                  background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--border)",
+                  fontSize: 11, fontWeight: 800, letterSpacing: "0.03em"
+                }}>
+                  <GraduationCap size={12} color="var(--primary)" /> LEARNER COMMAND CENTER
+                </span>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 4, padding: "3px 10px", borderRadius: 99,
+                  background: "rgba(16, 185, 129, 0.12)", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.3)",
+                  fontSize: 11, fontWeight: 800
+                }}>
+                  <Flame size={11} /> Active Sprint
+                </span>
+              </div>
+              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "var(--text)", lineHeight: 1.2 }}>
                 Welcome back, {userFirstName || "Learner"}
               </h1>
-              <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
-                {done} of {goal} weekly lessons done. Continue in <strong style={{ color: "#A5B4FC" }}>{continueCourse?.title || "AI Fundamentals"}</strong>.
+              <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+                {done} of {goal} weekly lessons done. Continue in <strong style={{ color: "var(--primary)" }}>{continueCourse?.title || "AI Fundamentals"}</strong>.
               </p>
             </div>
 
             {continueCourse && (
               <button
-                className="tai-btn tai-btn-primary tai-hero-btn"
+                className="tai-btn tai-btn-primary"
                 style={{
-                  padding: "8px 16px", borderRadius: 8, fontSize: 13,
+                  padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 700,
                   display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  cursor: "pointer"
+                  cursor: "pointer", flexShrink: 0
                 }}
                 onClick={() => push("courseDetail", { id: continueCourse.id })}
               >
@@ -120,30 +156,30 @@ export function HomeScreen({
 
           {/* Milestone Progress Bar */}
           <div style={{
-            background: "#1E293B",
-            padding: "10px 14px",
-            borderRadius: 8,
-            border: "1px solid #334155"
+            background: "var(--surface-2)",
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid var(--border)"
           }}>
-            <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#FFFFFF" }}>
+            <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
               <span className="tai-row tai-gap6">
-                <Target size={13} color="#818CF8" />
+                <Target size={14} color="var(--primary)" />
                 <span>Weekly Sprint Goal ({done}/{goal})</span>
               </span>
-              <span style={{ color: "#34D399", fontWeight: 700 }}>{goalPercent}% Completed</span>
+              <span style={{ color: "#10B981", fontWeight: 700 }}>{goalPercent}% Completed</span>
             </div>
 
             <div style={{
-              height: 6,
-              borderRadius: 3,
-              background: "#334155",
+              height: 8,
+              borderRadius: 99,
+              background: "var(--surface-3)",
               overflow: "hidden"
             }}>
               <div style={{
                 width: `${goalPercent}%`,
                 height: "100%",
-                background: "#10B981",
-                borderRadius: 3,
+                background: "linear-gradient(90deg, #10B981 0%, #059669 100%)",
+                borderRadius: 99,
                 transition: "width 0.4s ease"
               }} />
             </div>

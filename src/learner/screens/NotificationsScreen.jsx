@@ -104,40 +104,58 @@ export function NotificationsScreen({
       {/* =========================================================================
           HERO BANNER: Unified Command Center
           ========================================================================= */}
-      <div style={{
-        borderRadius: 10,
-        background: "#0F172A",
-        color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 22px)",
-        boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-        border: "1px solid #1E293B",
-        position: "relative",
-        overflow: "hidden"
-      }}>
+      {/* =========================================================================
+          HERO BANNER: Unified Activity Center (Adaptive Liquid Glass)
+          ========================================================================= */}
+      <div
+        className="tai-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          padding: "clamp(18px, 2.5vw, 24px)",
+          boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginBottom: 8 }}>
               <span style={{
-                background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                border: "1px solid rgba(165, 180, 252, 0.5)",
+                background: "var(--primary-tint)", color: "var(--primary)",
+                border: "1px solid var(--border)",
                 fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
                 display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
               }}>
-                <Bell size={13} color="#A5B4FC" /> REAL-TIME ALERTS
+                <Bell size={13} color="var(--primary)" /> REAL-TIME ALERTS
               </span>
               <span style={{
-                background: unreadCount > 0 ? "rgba(239, 68, 68, 0.25)" : "rgba(16, 185, 129, 0.28)",
-                color: unreadCount > 0 ? "#FECACA" : "#A7F3D0",
-                border: unreadCount > 0 ? "1px solid rgba(239, 68, 68, 0.5)" : "1px solid rgba(16, 185, 129, 0.5)",
+                background: unreadCount > 0 ? "rgba(239, 68, 68, 0.12)" : "rgba(16, 185, 129, 0.12)",
+                color: unreadCount > 0 ? "#EF4444" : "#10B981",
+                border: unreadCount > 0 ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid rgba(16, 185, 129, 0.3)",
                 fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
               }}>
                 {unreadCount > 0 ? `${unreadCount} UNREAD ALERT${unreadCount === 1 ? "" : "S"}` : "ALL CAUGHT UP"}
               </span>
             </div>
-            <h1 style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+            <h1 style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "var(--text)", lineHeight: 1.2 }}>
               Notifications &amp; Activity Center
             </h1>
-            <p style={{ fontSize: 13, color: "#94A3B8", margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
+            <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
               Stay on top of live instructor sessions, cohort assignments, milestone achievements, and platform announcements.
             </p>
           </div>
@@ -146,13 +164,12 @@ export function NotificationsScreen({
             {unreadCount > 0 && (
               <button
                 type="button"
-                className="tai-btn tai-btn-sm"
+                className="tai-btn tai-btn-primary tai-btn-sm"
                 onClick={handleMarkAll}
                 style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 700,
+                  fontWeight: 700,
                   display: "inline-flex", alignItems: "center", gap: 6,
-                  borderRadius: 8, height: 34, padding: "0 14px", border: "none",
-                  cursor: "pointer"
+                  borderRadius: 8, height: 34, padding: "0 14px"
                 }}
               >
                 <CheckCheck size={14} /> Mark All Read
@@ -161,12 +178,11 @@ export function NotificationsScreen({
             {baseNotifs.length > 0 && (
               <button
                 type="button"
-                className="tai-btn tai-btn-sm"
+                className="tai-btn tai-btn-outline tai-btn-sm"
                 onClick={handleClearAll}
                 style={{
-                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.18)",
-                  color: "#FECACA", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6,
-                  borderRadius: 8, height: 34, padding: "0 12px", cursor: "pointer"
+                  color: "var(--danger)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6,
+                  borderRadius: 8, height: 34, padding: "0 12px"
                 }}
                 title="Clear all notifications"
               >

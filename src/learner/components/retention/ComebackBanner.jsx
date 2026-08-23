@@ -38,22 +38,34 @@ export function ComebackBanner({ userId, daysAway, course, onContinue, onBrowse 
   return (
     <div
       className="tai-card tai-mt12"
-      style={{ background: "#0F172A", color: "#fff", border: "1px solid #1E293B", borderRadius: 10, position: "relative", overflow: "hidden" }}
+      style={{
+        background: "var(--surface)",
+        color: "var(--text)",
+        border: "1px solid var(--border)",
+        borderRadius: 14,
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "inset 0 1px 0 var(--glass-specular), 0 8px 24px -6px rgba(0,0,0,0.12)"
+      }}
     >
       <button
         onClick={dismiss}
         aria-label="Dismiss"
-        style={{ position: "absolute", top: 10, right: 10, border: "none", background: "rgba(255,255,255,.12)", borderRadius: 8, cursor: "pointer", color: "#fff", width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center" }}
+        style={{
+          position: "absolute", top: 12, right: 12, border: "1px solid var(--border)",
+          background: "var(--surface-2)", borderRadius: 8, cursor: "pointer", color: "var(--text-3)",
+          width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center"
+        }}
       >
         <X size={13} />
       </button>
       <div className="tai-row tai-gap12">
-        <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(255,255,255,.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Zap size={18} />
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--primary-tint)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <Zap size={18} color="var(--primary)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 800, fontSize: 15, color: "#fff" }}>Welcome back!</div>
-          <div style={{ fontSize: 12.5, color: "#94A3B8", marginTop: 2 }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Welcome back!</div>
+          <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2, lineHeight: 1.4 }}>
             {course
               ? <>It's been {daysAway} days. You're {Math.round(course.progress || 0)}% through "{course.title}". Pick up right where you left off.</>
               : <>It's been {daysAway} days since your last lesson. Ready to jump back in?</>}

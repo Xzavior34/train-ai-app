@@ -373,26 +373,40 @@ export function CoursesScreen({
           ========================================================================= */}
       {currentSpotlight && (
         <div
+          className="tai-card anim-fluid-entrance"
           onMouseEnter={() => setIsCarouselPaused(true)}
           onMouseLeave={() => setIsCarouselPaused(false)}
           style={{
             position: "relative",
-            borderRadius: 10,
+            borderRadius: 14,
             overflow: "hidden",
-            background: "#0F172A",
-            color: "#FFFFFF",
-            padding: "clamp(16px, 2.5vw, 24px)",
-            boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)",
-            border: "1px solid #1E293B",
+            background: "var(--surface)",
+            color: "var(--text)",
+            padding: "clamp(18px, 2.5vw, 24px)",
+            boxShadow: "inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0,0,0,0.10)",
+            border: "1px solid var(--border)",
             transition: "all 0.3s ease"
           }}
         >
+          <div
+            style={{
+              position: "absolute",
+              top: -40,
+              right: -40,
+              width: 180,
+              height: 180,
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+              pointerEvents: "none"
+            }}
+          />
+
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, alignItems: "center", position: "relative", zIndex: 1 }}>
             
             {/* Left Column: Spotlight details */}
             <div>
               <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
-                <span style={{ fontSize: 11, color: "#E0E7FF", fontWeight: 700, background: "rgba(99, 102, 241, 0.2)", padding: "3px 8px", borderRadius: 6, border: "1px solid rgba(165, 180, 252, 0.3)" }}>
+                <span style={{ fontSize: 11, color: "var(--primary)", fontWeight: 800, background: "var(--primary-tint)", padding: "3px 10px", borderRadius: 99, border: "1px solid var(--border)" }}>
                   {currentSpotlight.cohortTag} • {currentSpotlight.badge}
                 </span>
 
@@ -402,9 +416,9 @@ export function CoursesScreen({
                     aria-label="Previous Slide"
                     onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
                     style={{
-                      width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)",
-                      background: "rgba(255,255,255,0.08)", color: "#fff", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer"
+                      width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border)",
+                      background: "var(--surface-2)", color: "var(--text)", display: "flex", alignItems: "center",
+                      justifyContent: "center", cursor: "pointer", boxShadow: "var(--glass-shadow)"
                     }}
                   >
                     <ChevronLeft size={14} />
@@ -413,9 +427,9 @@ export function CoursesScreen({
                     aria-label="Next Slide"
                     onClick={() => setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length)}
                     style={{
-                      width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.15)",
-                      background: "rgba(255,255,255,0.08)", color: "#fff", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer"
+                      width: 28, height: 28, borderRadius: 6, border: "1px solid var(--border)",
+                      background: "var(--surface-2)", color: "var(--text)", display: "flex", alignItems: "center",
+                      justifyContent: "center", cursor: "pointer", boxShadow: "var(--glass-shadow)"
                     }}
                   >
                     <ChevronRight size={14} />
@@ -423,23 +437,23 @@ export function CoursesScreen({
                 </div>
               </div>
 
-            <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in" style={{ fontSize: "clamp(18px, 2.2vw, 24px)", fontWeight: 800, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.25, color: "#FFFFFF" }}>
+            <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.25, color: "var(--text)" }}>
               {currentSpotlight.title}
             </h1>
 
-            <p key={currentSpotlight.id + "-desc"} className="tai-fade-in" style={{ fontSize: 13, color: "#94A3B8", margin: "0 0 12px", lineHeight: 1.45, maxWidth: 540 }}>
+            <p key={currentSpotlight.id + "-desc"} className="tai-fade-in" style={{ fontSize: 13, color: "var(--text-2)", margin: "0 0 12px", lineHeight: 1.45, maxWidth: 540 }}>
               {currentSpotlight.description}
             </p>
 
             {/* In-Progress Sprint Pace Meter */}
             {currentSpotlight.progress > 0 && (
-              <div style={{ background: "#1E293B", padding: "8px 12px", borderRadius: 8, border: "1px solid #334155", marginBottom: 12 }}>
-                <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 4, color: "#E0E7FF" }}>
+              <div style={{ background: "var(--surface-2)", padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
+                <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "var(--text)" }}>
                   <span>Active Sprint Pace</span>
-                  <span style={{ color: "#34D399", fontWeight: 700 }}>{currentSpotlight.progress}% ({currentSpotlight.lessonsRemaining})</span>
+                  <span style={{ color: "#10B981", fontWeight: 700 }}>{currentSpotlight.progress}% ({currentSpotlight.lessonsRemaining})</span>
                 </div>
-                <div style={{ height: 5, borderRadius: 3, background: "#334155", overflow: "hidden" }}>
-                  <div style={{ width: `${currentSpotlight.progress}%`, height: "100%", background: "#10B981", borderRadius: 3 }} />
+                <div style={{ height: 6, borderRadius: 99, background: "var(--surface-3)", overflow: "hidden" }}>
+                  <div style={{ width: `${currentSpotlight.progress}%`, height: "100%", background: "#10B981", borderRadius: 99 }} />
                 </div>
               </div>
             )}
