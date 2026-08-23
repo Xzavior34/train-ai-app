@@ -276,7 +276,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {/* =========================================================================
           TAB NAVIGATION STRIP
           ========================================================================= */}
-      <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box" }}>
+      <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box", gap: 8 }}>
         {[
           { k: "overview", label: "Progress Analytics", icon: BarChart3 },
           { k: "certificates", label: `Certificates (${CERTIFICATES.length})`, icon: GraduationCap },
@@ -289,26 +289,20 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             <button
               key={t.k}
               onClick={() => setActiveProgressTab(t.k)}
+              className={`tai-btn tai-btn-sm ${isActive ? "tai-btn-primary" : "tai-btn-outline"}`}
               style={{
-                padding: "8px 16px",
                 borderRadius: 8,
-                border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                background: isActive ? "var(--primary-tint)" : "var(--surface)",
-                color: isActive ? "var(--primary)" : "var(--text-2)",
-                fontWeight: isActive ? 800 : 600,
+                padding: "8px 16px",
                 fontSize: 12.5,
-                cursor: "pointer",
+                fontWeight: 700,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
                 flexShrink: 0,
-                whiteSpace: "nowrap",
-                transition: "all 0.15s ease"
+                whiteSpace: "nowrap"
               }}
-              onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--text)"; } }}
-              onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)"; } }}
             >
-              <Icon size={15} />
+              <Icon size={14} />
               <span>{t.label}</span>
             </button>
           );

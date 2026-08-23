@@ -350,17 +350,17 @@ export const TOKENS = `
   .tai-btn { border:none; cursor:pointer; border-radius: 8px; font-weight:600; font-size:13.5px; padding: 10px 16px;
     display:flex; align-items:center; justify-content:center; gap:6px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); user-select: none; }
   .tai-btn-primary {
-    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 50%, #7C3AED 100%) !important;
+    background: #4F46E5 !important;
     color: #FFFFFF !important;
-    border: 1px solid rgba(255, 255, 255, 0.22) !important;
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.38), 0 4px 16px -2px rgba(79, 70, 229, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.20) !important;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.32), 0 4px 14px -2px rgba(79, 70, 229, 0.40) !important;
   }
   .tai-btn-primary:hover {
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.55), 0 8px 24px -2px rgba(79, 70, 229, 0.55) !important;
-    transform: translateY(-2px);
-    filter: brightness(1.04);
+    background: #4338CA !important;
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 6px 20px -2px rgba(79, 70, 229, 0.50) !important;
+    transform: translateY(-1.5px);
   }
-  .tai-btn-primary:active { transform: translateY(1px) scale(.975); }
+  .tai-btn-primary:active { background: #3730A3 !important; transform: translateY(1px) scale(.975); }
   .tai-btn-ghost {
     background: var(--glass-surface); color: var(--primary); font-weight: 700;
     backdrop-filter: var(--glass-blur-sm); border: 1px solid var(--glass-border);

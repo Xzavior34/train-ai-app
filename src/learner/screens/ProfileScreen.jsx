@@ -177,33 +177,33 @@ export function ProfileScreen({
   ];
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24, width: "100%", maxWidth: 1040, margin: "0 auto" }}>
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20, width: "100%", maxWidth: 1040, margin: "0 auto" }}>
       <TopBar title="Profile & Settings" sub="Manage your personal identity, learning pace, security, and app preferences" onBack={back} />
 
       {/* =========================================================================
-          HERO PROFILE COVER & IDENTITY CARD
+          HERO PROFILE COVER & IDENTITY CARD (Fully Optimized for Desktop & Mobile)
           ========================================================================= */}
-      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 10, border: "1px solid var(--border)" }}>
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 12 }}>
         {/* Cover Photo */}
         <div style={{
-          height: 110,
+          height: "clamp(90px, 14vw, 130px)",
           background: "#0F172A",
-          borderBottom: "1px solid #1E293B",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
           position: "relative"
         }}>
           <img
             src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
             alt="Cover"
-            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.35 }}
           />
         </div>
 
         {/* Profile Content */}
-        <div style={{ padding: "0 clamp(16px, 3.5vw, 24px) 20px", marginTop: -36 }}>
-          <div className="tai-row tai-between" style={{ alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
-            <div className="tai-row tai-gap16" style={{ alignItems: "flex-end", flexWrap: "wrap" }}>
+        <div style={{ padding: "0 clamp(14px, 3vw, 24px) 20px", marginTop: "clamp(-32px, -5vw, -40px)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 14, flexWrap: "wrap" }}>
               <div
-                style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default" }}
+                style={{ position: "relative", cursor: session?.user?.id ? "pointer" : "default", flexShrink: 0 }}
                 onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}
                 title="Change profile photo"
               >
@@ -211,8 +211,11 @@ export function ProfileScreen({
                   src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=180&auto=format&fit=crop&q=80"}
                   alt={user.name}
                   style={{
-                    width: 80, height: 80, borderRadius: "50%", objectFit: "cover",
-                    border: "4px solid var(--surface)", boxShadow: "0 6px 16px rgba(0,0,0,0.18)"
+                    width: "clamp(68px, 10vw, 84px)",
+                    height: "clamp(68px, 10vw, 84px)",
+                    borderRadius: "50%", objectFit: "cover",
+                    border: "3.5px solid var(--surface)",
+                    boxShadow: "0 6px 18px rgba(0,0,0,0.18)"
                   }}
                 />
                 {session?.user?.id && (
@@ -226,20 +229,20 @@ export function ProfileScreen({
                 )}
               </div>
 
-              <div style={{ minWidth: 0, paddingBottom: 4 }}>
-                <div style={{ fontWeight: 900, fontSize: 22, color: "var(--text)", letterSpacing: "-0.02em" }}>
+              <div style={{ minWidth: 0, paddingBottom: 2 }}>
+                <h1 style={{ fontWeight: 800, fontSize: "clamp(18px, 2.4vw, 22px)", color: "var(--text)", letterSpacing: "-0.02em", margin: 0, lineHeight: 1.25 }}>
                   {user.name || "Evelyn Hayes"}
-                </div>
-                <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                </h1>
+                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", lineHeight: 1.3 }}>
                   <span>{user.email || "evelyn.hayes@trainai.co"}</span>
-                  <span>•</span>
+                  <span style={{ opacity: 0.5 }}>•</span>
                   <span>{user.location || "San Francisco, CA"}</span>
                 </div>
               </div>
             </div>
 
-            <div className="tai-row tai-gap10" style={{ paddingBottom: 4, flexWrap: "wrap" }}>
-              <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)", fontWeight: 700 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 4, flexWrap: "wrap" }}>
+              <span className="tai-tag" style={{ fontWeight: 700 }}>
                 {user.track || "Full-Stack AI & Design"}
               </span>
               {user.role && (
@@ -267,34 +270,34 @@ export function ProfileScreen({
             </div>
           )}
 
-          {/* 4 Stat Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginTop: 20 }}>
-            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
-              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--primary)" }}>{user.mastery ?? 88}%</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Curriculum Mastery</div>
+          {/* 4 Stat Cards with Responsive Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))", gap: 10, marginTop: 18 }}>
+            <div className="tai-card" style={{ textAlign: "center", padding: "12px 10px", borderRadius: 8 }}>
+              <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2vw, 20px)", color: "var(--primary)", letterSpacing: "-0.02em" }}>{user.mastery ?? 88}%</div>
+              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Curriculum Mastery</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
-              <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: 20, color: "#F59E0B" }}>
-                <span>{user.streak ?? 8}</span> <Flame size={18} color="#F59E0B" fill="#F59E0B" />
+            <div className="tai-card" style={{ textAlign: "center", padding: "12px 10px", borderRadius: 8 }}>
+              <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: "clamp(17px, 2vw, 20px)", color: "#F59E0B" }}>
+                <span>{user.streak ?? 8}</span> <Flame size={17} color="#F59E0B" fill="#F59E0B" />
               </div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Active Day Streak</div>
+              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Active Day Streak</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
-              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--text)" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Credential Points</div>
+            <div className="tai-card" style={{ textAlign: "center", padding: "12px 10px", borderRadius: 8 }}>
+              <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2vw, 20px)", color: "var(--text)", letterSpacing: "-0.02em" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Credential Points</div>
             </div>
-            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
-              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--success)" }}>3 Issued</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Course Certificates</div>
+            <div className="tai-card" style={{ textAlign: "center", padding: "12px 10px", borderRadius: 8 }}>
+              <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2vw, 20px)", color: "var(--success)", letterSpacing: "-0.02em" }}>3 Issued</div>
+              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Certificates</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* =========================================================================
-          TAB NAVIGATION (Responsive Horizontal Scroll on Mobile, Sticky Strip on Desktop)
+          TAB NAVIGATION (Responsive Scroll with Fluid Liquid Glass Pills)
           ========================================================================= */}
-      <div className="tai-scrollx" style={{ gap: 8, paddingBottom: 4 }}>
+      <div className="tai-scrollx" style={{ gap: 6, paddingBottom: 2 }}>
         {TABS.map(t => {
           const Icon = t.icon;
           const isActive = activeTab === t.key;
@@ -304,12 +307,12 @@ export function ProfileScreen({
               type="button"
               className={`tai-btn tai-btn-sm ${isActive ? "tai-btn-primary" : "tai-btn-outline"}`}
               style={{
-                borderRadius: 999, padding: "8px 18px", fontSize: 13, fontWeight: 700,
-                display: "inline-flex", alignItems: "center", gap: 8, whiteSpace: "nowrap"
+                borderRadius: 8, padding: "8px 15px", fontSize: 12.5, fontWeight: 700,
+                display: "inline-flex", alignItems: "center", gap: 7, whiteSpace: "nowrap"
               }}
               onClick={() => setActiveTab(t.key)}
             >
-              <Icon size={15} />
+              <Icon size={14} />
               <span>{t.label}</span>
             </button>
           );

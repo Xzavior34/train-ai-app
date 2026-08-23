@@ -210,13 +210,12 @@ export function AIQuizScreen({
             )}
 
             <button
-              className="tai-btn"
+              className="tai-btn tai-btn-primary tai-btn-sm"
               onClick={onBuyCredits}
               style={{
-                background: "#4F46E5",
-                color: "#FFFFFF", border: "none", fontWeight: 700, fontSize: 12,
                 padding: "7px 12px", borderRadius: 8, cursor: "pointer",
-                display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
+                display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0,
+                fontSize: 12, fontWeight: 700
               }}
             >
               <span>+ Get Credits</span>
@@ -228,7 +227,7 @@ export function AIQuizScreen({
       {/* =========================================================================
           TAB NAVIGATION STRIP
           ========================================================================= */}
-      <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box" }}>
+      <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box", gap: 8 }}>
         {[
           { k: "coach", label: "AI Coach & Tutor", icon: MessageSquare },
           { k: "quiz", label: "Adaptive Quizzes", icon: Zap },
@@ -241,26 +240,20 @@ export function AIQuizScreen({
             <button
               key={t.k}
               onClick={() => setAiTab(t.k)}
+              className={`tai-btn tai-btn-sm ${isActive ? "tai-btn-primary" : "tai-btn-outline"}`}
               style={{
-                padding: "8px 16px",
                 borderRadius: 8,
-                border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                background: isActive ? "var(--primary-tint)" : "var(--surface)",
-                color: isActive ? "var(--primary)" : "var(--text-2)",
-                fontWeight: isActive ? 800 : 600,
+                padding: "8px 16px",
                 fontSize: 12.5,
-                cursor: "pointer",
+                fontWeight: 700,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
                 flexShrink: 0,
-                whiteSpace: "nowrap",
-                transition: "all 0.15s ease"
+                whiteSpace: "nowrap"
               }}
-              onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--text)"; } }}
-              onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)"; } }}
             >
-              <Icon size={15} />
+              <Icon size={14} />
               <span>{t.label}</span>
             </button>
           );
