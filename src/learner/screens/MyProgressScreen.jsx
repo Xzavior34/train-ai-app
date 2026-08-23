@@ -5,6 +5,7 @@ import {
   Calendar, ArrowRight, Play, Star, Target, Award, ShieldCheck,
   TrendingUp, Check, ExternalLink
 } from "lucide-react";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function MyProgressScreen({ user = {}, courses = [], push, back, session, showToast }) {
   const [filterStatus, setFilterStatus] = useState("all"); // "all" | "in_progress" | "completed"
@@ -77,14 +78,40 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
     { name: "Spatial Interface Design", mastery: 68, status: "In Progress" },
   ];
 
-  const filteredCourses = ENROLLED_COURSES_DETAILED.filter(c => {
+  const enrolledFromDb = (courses || [])
+    .filter(c => c.enrolled || c.progress > 0)
+    .map((c, idx) => {
+      const isDone = (c.progress || 0) >= 100;
+      return {
+        id: c.id,
+        title: c.title,
+        category: c.category || "Professional Track",
+        instructor: c.instructor || "Instructor",
+        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        totalLessons: c.lessons || 12,
+        completedLessons: Math.round(((c.progress || 0) / 100) * (c.lessons || 12)),
+        totalHours: c.hours || 10,
+        hoursSpent: Math.round(((c.progress || 0) / 100) * (c.hours || 10) * 10) / 10,
+        progress: c.progress || 0,
+        status: isDone ? "completed" : "in_progress",
+        lastActive: "Recent",
+        nextLesson: isDone ? "All modules completed" : "Continue current module",
+        coverImageUrl: c.coverImageUrl || c.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
+      };
+    });
+
+  const allProgressCourses = enrolledFromDb.length > 0
+    ? enrolledFromDb
+    : (isMockDataEnabled() ? ENROLLED_COURSES_DETAILED : []);
+
+  const filteredCourses = allProgressCourses.filter(c => {
     if (filterStatus === "in_progress") return c.status === "in_progress";
     if (filterStatus === "completed") return c.status === "completed";
     return true;
   });
 
-  const inProgressCount = ENROLLED_COURSES_DETAILED.filter(c => c.status === "in_progress").length;
-  const completedCount = ENROLLED_COURSES_DETAILED.filter(c => c.status === "completed").length;
+  const inProgressCount = allProgressCourses.filter(c => c.status === "in_progress").length;
+  const completedCount = allProgressCourses.filter(c => c.status === "completed").length;
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -282,7 +309,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           {/* Status Filter Tabs */}
           <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
             {[
-              { k: "all", label: `All (${ENROLLED_COURSES_DETAILED.length})` },
+              { k: "all", label: `All (${allProgressCourses.length})` },
               { k: "in_progress", label: `In Progress (${inProgressCount})` },
               { k: "completed", label: `Completed (${completedCount})` },
             ].map(t => (
@@ -298,6 +325,26 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
         </div>
 
         <div className="tai-col tai-gap20 anim-stagger">
+          {filteredCourses.length === 0 && (
+            <div className="tai-card" style={{ textAlign: "center", padding: "48px 24px", borderRadius: 10 }}>
+              <BookOpen size={36} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
+              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
+                {filterStatus === "completed" ? "No completed courses yet" : filterStatus === "in_progress" ? "No courses in progress" : "No enrolled courses yet"}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 440, margin: "4px auto 16px" }}>
+                {filterStatus === "all" ? "Explore the course catalog to enroll in masterclasses and track your skill growth." : "Browse available courses to continue learning."}
+              </div>
+              <button
+                className="tai-btn tai-btn-primary"
+                onClick={() => push("courses")}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, margin: "0 auto" }}
+              >
+                <span>Browse Courses</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          )}
+
           {filteredCourses.map(course => {
             const isCompleted = course.progress === 100;
             return (

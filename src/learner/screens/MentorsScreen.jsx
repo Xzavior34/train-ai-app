@@ -230,10 +230,16 @@ export function MentorsScreen({
         />
       </div>
 
-      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 20 }}>
+      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
         {filteredMentors.length === 0 && (
-          <div className="tai-card tai-empty" style={{ gridColumn: "1 / -1", borderRadius: 10 }}>
-            No instructors found matching "{searchQuery}".
+          <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px 20px", borderRadius: 10 }}>
+            <Users size={32} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
+            <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
+              {searchQuery ? "No instructors match your search" : "No active instructors found"}
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 420, margin: "4px auto 0" }}>
+              {searchQuery ? "Try searching for a different name, specialization, or keyword." : "Check back soon as new instructors and industry mentors join the platform."}
+            </div>
           </div>
         )}
 

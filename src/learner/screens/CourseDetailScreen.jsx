@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import { Clock, Layers, Rocket, CheckCircle2, Lock, ChevronRight, Video, Edit3, Send, GraduationCap, Award, X, ArrowRight, Star, Users, ShieldCheck, FileText, MessageSquare } from "lucide-react";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 function CourseCoverImage({ course, children }) {
   const [errored, setErrored] = useState(false);
@@ -519,7 +520,7 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
     }
   ];
 
-  const effectiveQuestions = (questions && questions.length > 0) ? questions : DEFAULT_QUESTIONS;
+  const effectiveQuestions = (questions && questions.length > 0) ? questions : (isMockDataEnabled() ? DEFAULT_QUESTIONS : []);
 
   if (myAttempt || localScore !== null) {
     const score = myAttempt ? myAttempt.score : localScore;

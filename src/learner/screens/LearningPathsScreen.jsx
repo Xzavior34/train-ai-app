@@ -7,6 +7,7 @@ import {
   Compass, Zap
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 const TRACK_CATEGORIES = [
   { id: "all", label: "All Career Tracks" },
@@ -58,145 +59,145 @@ export const LEARNING_TRACKS = [
         instructor: "Sarah Connor",
         instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
         lessonsCount: 18,
-        description: "Depth hierarchies, spatial audio, glassmorphism tokens, and eye-tracking UX."
-      },
-      {
-        id: "course-prompt-pro",
-        step: 3,
-        title: "Generative AI UI Prototyping & Dynamic Interfaces",
-        duration: "10 Hours",
-        status: "upcoming",
-        instructor: "Elena Rostova",
-        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 16,
-        description: "Zero-shot UI prompt schemas, component generation, and real-time state hydration."
+        description: "Eye-tracking ergonomics, depth layers, glassmorphism materials, and gesture canvas."
       },
       {
         id: "course-fullstack-ai",
-        step: 4,
-        title: "Capstone: Production Enterprise Spatial Design System",
-        duration: "10 Hours",
+        step: 3,
+        title: "Autonomous Agents & Generative UI Pipelines",
+        duration: "12 Hours",
         status: "upcoming",
         instructor: "Alex Rivera",
         instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
+        lessonsCount: 16,
+        description: "Function-calling schemas, dynamic generative component streaming, and model evaluations."
+      },
+      {
+        id: "course-prompt-pro",
+        step: 4,
+        title: "Capstone: Production Spatial AI Interface",
+        duration: "8 Hours",
+        status: "upcoming",
+        instructor: "Astrid Larsson",
+        instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
         lessonsCount: 12,
-        description: "Deliver an end-to-end multi-platform design token system evaluated by staff architects."
+        description: "End-to-end portfolio case study reviewed and certified by senior industry mentors."
       }
     ]
   },
   {
-    id: "track-fullstack-ai-eng",
-    title: "Full-Stack Generative AI Application Architect",
-    category: "ai",
-    categoryLabel: "AI & Machine Learning",
-    provider: "Train AI Engineering Labs • Anthropic & OpenAI",
-    badge: "CAREER TRACK",
+    id: "track-fullstack-agent-eng",
+    title: "Full-Stack AI Agent & Systems Engineering",
+    category: "engineering",
+    categoryLabel: "Full-Stack & Web Dev",
+    provider: "Train AI Engineering Consortium",
+    badge: "ENGINEERING DIPLOMA",
     badgeColor: "#059669",
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80",
-    description: "Build, evaluate, and scale production-grade multi-agent applications with Python FastAPI backends, LangChain orchestration, vector embeddings, and React 19.",
-    progress: 25,
-    isEnrolled: true,
-    totalHours: "56 Hours",
+    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80",
+    description: "Architect production agent systems, LangChain / LlamaIndex graphs, real-time vector embeddings, and zero-latency microservices with automated evaluation suites.",
+    progress: 0,
+    isEnrolled: false,
+    totalHours: "64 Hours",
     coursesCount: 4,
-    rating: 4.9,
-    reviews: "2,890",
-    enrolledCount: "18.6k",
-    targetRole: "Principal AI Engineer / LLM Systems Architect",
-    skills: ["LangChain", "Vector Databases", "FastAPI", "React 19", "Autonomous Agents", "RAG"],
+    rating: 4.95,
+    reviews: "2,840",
+    enrolledCount: "11.6k",
+    targetRole: "Lead AI Engineer / Agent Platform Architect",
+    skills: ["LangChain", "FastAPI", "Pinecone / Qdrant", "Python 3.12", "Evals & Guardrails"],
     courses: [
       {
-        id: "course-prompt-pro",
-        step: 1,
-        title: "Prompt Engineering & Multi-Modal Foundation Models",
-        duration: "12 Hours",
-        status: "completed",
-        instructor: "Elena Rostova",
-        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 16,
-        description: "Zero-shot, chain-of-thought, function calling JSON schemas, and automated evals."
-      },
-      {
         id: "course-fullstack-ai",
-        step: 2,
-        title: "Full-Stack AI Application Engineering with React 19",
-        duration: "20 Hours",
-        status: "in_progress",
+        step: 1,
+        title: "Full-Stack AI Application Engineering",
+        duration: "26 Hours",
+        status: "upcoming",
         instructor: "Alex Rivera",
         instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
         lessonsCount: 32,
-        description: "FastAPI REST/WebSocket gateways, Supabase pgvector, and responsive client state."
+        description: "FastAPI endpoints, streaming SSE, Postgres pgvector, and React client architecture."
+      },
+      {
+        id: "course-prompt-pro",
+        step: 2,
+        title: "Advanced Prompt Engineering & Chain-of-Thought",
+        duration: "12 Hours",
+        status: "upcoming",
+        instructor: "Elena Rostova",
+        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
+        lessonsCount: 16,
+        description: "Few-shot prompting, self-consistency sampling, and automated red-teaming benchmarks."
       },
       {
         id: "course-cloud-devops",
         step: 3,
-        title: "Enterprise RAG, Vector Search & Knowledge Graphs",
-        duration: "12 Hours",
+        title: "Deploying Multi-Agent Graphs to Kubernetes",
+        duration: "14 Hours",
         status: "upcoming",
-        instructor: "David Vance",
-        instructorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
+        instructor: "Elena Rostova",
+        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
         lessonsCount: 18,
-        description: "Hierarchical chunking, re-ranking models, hybrid lexical/dense search."
+        description: "Containerization, auto-scaling HPA, distributed Redis queues, and canary rollouts."
       },
       {
-        id: "course-product-metrics",
+        id: "course-spatial-ui",
         step: 4,
-        title: "Capstone: Autonomous Multi-Agent Copilot Deployment",
+        title: "Capstone: Autonomous Customer Support Agent Platform",
         duration: "12 Hours",
         status: "upcoming",
-        instructor: "Marcus Wright",
+        instructor: "Alex Rivera",
         instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
         lessonsCount: 14,
-        description: "Deploy a production-grade multi-agent workflow with observability & tracing."
+        description: "Production capstone deployment featuring live telemetry, SLA tracking, and synthetic evals."
       }
     ]
   },
   {
-    id: "track-cloud-devops-mlops",
-    title: "Cloud Infrastructure, Kubernetes & AI MLOps",
+    id: "track-cloud-ai-ops",
+    title: "Cloud Infrastructure, Kubernetes & AI DevOps",
     category: "cloud",
     categoryLabel: "Cloud & DevOps",
-    provider: "Train AI Cloud Labs • Google Cloud Certified",
-    badge: "INDUSTRY ACCREDITED",
+    provider: "Train AI Cloud Systems",
+    badge: "CLOUD ARCHITECT CERTIFICATE",
     badgeColor: "#D97706",
     image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
-    description: "Architect resilient cloud-native infrastructure, Kubernetes clusters, GPU inference pipelines, automated CI/CD releases, and telemetry observability.",
+    description: "Master enterprise cloud engineering, Terraform infrastructure-as-code, high-throughput GPU model serving, and zero-trust IAM security architectures.",
     progress: 0,
     isEnrolled: false,
-    totalHours: "42 Hours",
+    totalHours: "52 Hours",
     coursesCount: 3,
-    rating: 4.8,
-    reviews: "1,420",
-    enrolledCount: "9.3k",
-    targetRole: "Lead MLOps Engineer / Cloud DevOps Architect",
-    skills: ["Kubernetes", "Docker", "GPU Autoscaling", "Prometheus / Grafana", "CI/CD Pipelines"],
+    rating: 4.88,
+    reviews: "1,980",
+    enrolledCount: "9.1k",
+    targetRole: "Senior Cloud Architect / MLOps Platform Lead",
+    skills: ["Kubernetes", "Terraform", "Docker", "vLLM Serving", "CI/CD Pipelines"],
     courses: [
       {
         id: "course-cloud-devops",
         step: 1,
-        title: "Cloud Native Microservices & Docker Containerization",
-        duration: "16 Hours",
+        title: "Cloud Native Microservices & Kubernetes",
+        duration: "20 Hours",
         status: "upcoming",
-        instructor: "David Vance",
-        instructorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
+        instructor: "Elena Rostova",
+        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
         lessonsCount: 22,
-        description: "Multi-stage Docker builds, image hardening, and container orchestration."
+        description: "GKE clusters, Helm chart deployments, ingress controllers, and service meshes."
       },
       {
         id: "course-fullstack-ai",
         step: 2,
-        title: "Kubernetes Clustering & GPU Inference Workloads",
-        duration: "14 Hours",
+        title: "High-Throughput Model Serving & GPU Orchestration",
+        duration: "16 Hours",
         status: "upcoming",
         instructor: "Alex Rivera",
         instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
         lessonsCount: 18,
-        description: "Horizontal Pod Autoscalers, Helm charts, and low-latency Triton GPU serving."
+        description: "vLLM, TensorRT-LLM, batching optimization, and Ray distributed compute."
       },
       {
-        id: "course-product-metrics",
+        id: "course-prompt-pro",
         step: 3,
-        title: "Telemetry, Distributed Tracing & Continuous Deployment",
-        duration: "12 Hours",
+        title: "Observability, Telemetry & SRE for AI Workloads",
+        duration: "16 Hours",
         status: "upcoming",
         instructor: "Marcus Wright",
         instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
@@ -204,70 +205,53 @@ export const LEARNING_TRACKS = [
         description: "OpenTelemetry, Grafana dashboards, zero-downtime rolling updates."
       }
     ]
-  },
-  {
-    id: "track-product-ai-strategy",
-    title: "AI Product Management, Growth & Data Strategy",
-    category: "product",
-    categoryLabel: "Product & Strategy",
-    provider: "Train AI Executive Education",
-    badge: "EXECUTIVE CERTIFICATE",
-    badgeColor: "#7C3AED",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
-    description: "Lead AI product transformations, leverage experimentation flywheels, calculate model ROI, and design retention mechanics for AI-powered platforms.",
-    progress: 0,
-    isEnrolled: false,
-    totalHours: "38 Hours",
-    coursesCount: 3,
-    rating: 4.9,
-    reviews: "1,120",
-    enrolledCount: "7.8k",
-    targetRole: "VP of Product / AI Growth Director",
-    skills: ["AI Roadmapping", "Cohort Retention", "A/B Experimentation", "Product-Led Growth", "Model ROI"],
-    courses: [
-      {
-        id: "course-product-metrics",
-        step: 1,
-        title: "Data-Driven Product Management & Growth Flywheels",
-        duration: "14 Hours",
-        status: "upcoming",
-        instructor: "Marcus Wright",
-        instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 20,
-        description: "Cohort retention analysis, pirate metrics (AARRR), and growth experiments."
-      },
-      {
-        id: "course-prompt-pro",
-        step: 2,
-        title: "Evaluating AI Features, Cost Economics & Latency Budgets",
-        duration: "12 Hours",
-        status: "upcoming",
-        instructor: "Elena Rostova",
-        instructorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 16,
-        description: "Token economics, model distillation tradeoffs, and guardrail architectures."
-      },
-      {
-        id: "course-figma-ai",
-        step: 3,
-        title: "Capstone: Enterprise AI Product Strategy Pitch",
-        duration: "12 Hours",
-        status: "upcoming",
-        instructor: "Astrid Larsson",
-        instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-        lessonsCount: 14,
-        description: "Comprehensive product requirements document (PRD) and business case."
-      }
-    ]
   }
 ];
 
-export function LearningPathsScreen({ push, back }) {
+export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQuery, session, showToast }) {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTrack, setSelectedTrack] = useState(null);
 
-  const filteredTracks = LEARNING_TRACKS.filter(track => {
+  const rawPaths = pathsQuery?.data || [];
+  const realTracks = rawPaths.map((p, idx) => {
+    const isEnrolled = (pathEnrollmentsQuery?.data || []).some(e => e.learning_path_id === p.id);
+    return {
+      id: p.id,
+      title: p.title || "Career Track",
+      category: p.category || "ai",
+      categoryLabel: p.category || "Specialization Track",
+      provider: p.provider || "Train AI Academy",
+      badge: p.badge_title || "PROFESSIONAL CERTIFICATE",
+      badgeColor: idx % 2 === 0 ? "#4F46E5" : "#7C3AED",
+      image: p.cover_image_url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80",
+      description: p.description || "Master core competencies, practical workflows, and real-world project deliverables.",
+      progress: isEnrolled ? 25 : 0,
+      isEnrolled: isEnrolled,
+      totalHours: `${p.estimated_hours || 32} Hours`,
+      coursesCount: p.courses_count || p.courses?.length || 3,
+      rating: p.rating || 4.9,
+      reviews: "420",
+      enrolledCount: `${p.enrolled_count || 1.2}k`,
+      targetRole: p.target_role || "Specialist",
+      skills: p.skills || ["Core Fundamentals", "Architecture", "Hands-on Projects"],
+      courses: (p.courses || []).map((c, cIdx) => ({
+        id: c.course_id || c.id || `c-${cIdx}`,
+        step: cIdx + 1,
+        title: c.title || "Core Course",
+        duration: `${c.hours || 10} Hours`,
+        status: cIdx === 0 && isEnrolled ? "in_progress" : "upcoming",
+        instructor: c.instructor || "Instructor",
+        instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        lessonsCount: c.lessons_count || 12,
+        description: c.description || "In-depth curriculum modules and assessments."
+      }))
+    };
+  });
+
+  const allTracks = realTracks.length > 0 ? realTracks : (isMockDataEnabled() ? LEARNING_TRACKS : []);
+
+  const filteredTracks = allTracks.filter(track => {
     const matchesCategory = selectedCategory === "all" || track.category === selectedCategory;
     const matchesSearch = searchQuery === "" ||
       track.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -386,6 +370,18 @@ export function LearningPathsScreen({ push, back }) {
 
       {/* Career Tracks Cards Grid */}
       <div className="tai-col tai-gap20 anim-stagger">
+        {filteredTracks.length === 0 && (
+          <div className="tai-card" style={{ textAlign: "center", padding: "48px 24px", borderRadius: 10 }}>
+            <Map size={36} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
+            <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
+              {searchQuery || selectedCategory !== "all" ? "No learning paths match your filter" : "No learning paths available"}
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 440, margin: "4px auto 0" }}>
+              {searchQuery || selectedCategory !== "all" ? "Try selecting a different category or clearing your search term." : "Career roadmaps and specialization tracks created by administrators will appear here."}
+            </div>
+          </div>
+        )}
+
         {filteredTracks.map((track) => (
           <div
             key={track.id}

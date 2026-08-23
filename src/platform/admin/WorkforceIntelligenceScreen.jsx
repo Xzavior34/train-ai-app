@@ -6,8 +6,9 @@ import {
   Award, ShieldCheck, ChevronRight, Zap, Target, BookOpen
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchWorkforceIntelligence } from "../../lib/api/platform.js";
+import { fetchWorkforceIntelligence, fetchOrgMembers } from "../../lib/api/platform.js";
 import { DEMO_LEARNERS } from "../../lib/api/demoData.js";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const showToast = useContext(ToastContext);
@@ -16,7 +17,26 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const wiQuery = useSupabaseQuery(async () => (orgId ? fetchWorkforceIntelligence(orgId) : null), [orgId]);
   const wi = wiQuery.data;
 
-  const currentLearner = DEMO_LEARNERS.find(l => l.id === selectedLearnerId) || DEMO_LEARNERS[0];
+  const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
+  const realLearners = (membersQuery.data || [])
+    .filter(m => m.role === "learner" || m.role === "student" || !m.role)
+    .map(m => ({
+      id: m.user_id || m.id,
+      name: m.display_name || m.name || m.email || "Learner",
+      email: m.email || "learner@domain.com",
+      status: "On Track",
+      readiness: "84%",
+      avatar: m.avatar_url
+    }));
+
+  const allLearners = realLearners.length > 0 ? realLearners : (isMockDataEnabled() ? DEMO_LEARNERS : []);
+  const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0] || {
+    id: "none",
+    name: "No Learners Found",
+    email: "Invite learners to your organization",
+    status: "Active",
+    readiness: "0%"
+  };
 
   const careerSteps = [
     { title: "Junior UI Designer", status: "completed", progress: 100, tag: "Completed" },
@@ -135,7 +155,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                 value={selectedLearnerId}
                 onChange={(e) => setSelectedLearnerId(e.target.value)}
               >
-                {DEMO_LEARNERS.map(l => (
+                {allLearners.map(l => (
                   <option key={l.id} value={l.id}>{l.name} ({l.status})</option>
                 ))}
               </select>

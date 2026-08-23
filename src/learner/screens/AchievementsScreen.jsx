@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { fetchMyMysteryBoxes, claimMysteryBox } from "../../lib/api/schemaHelper.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 function iconForCategory(category) {
   if (category === "streak") return Flame;
@@ -147,7 +148,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
     { skill: "Cloud Services & Deployment", score: 70, level: "Intermediate" },
   ];
 
-  const effectiveAchievements = (achievements && achievements.length > 0) ? achievements : DEFAULT_EARNED;
+  const effectiveAchievements = (achievements && achievements.length > 0) ? achievements : (isMockDataEnabled() ? DEFAULT_EARNED : []);
   const { ceiling, percent } = levelProgress(user.level || 2, user.totalPoints || 450);
   // Real earned rows carry the catalog slug as achievement_slug (via the
   // my_achievements_with_slug view - achievement_id itself is a uuid FK
