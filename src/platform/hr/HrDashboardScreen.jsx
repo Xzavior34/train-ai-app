@@ -40,7 +40,24 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
   return (
     <div className="ta-fade">
       <TopBar title="HR Overview" sub="Org-wide people & compliance snapshot" />
-      <div className="ta-content">
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            HR & PEOPLE DIRECTORY HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-emerald" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                HR People &amp; Compliance Snapshot
+              </h1>
+              <p className="ta-hero-desc">
+                Org-wide talent directory, onboarding completion rates, active cohort enrollments, and compliance health.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {!orgId && !profileQuery?.loading && (
           <div className="ta-empty">No organization on your profile yet. Join an organization to see live stats.</div>
         )}

@@ -101,7 +101,24 @@ export function ForumsScreen({ orgSelector, setScreen }) {
           </button>
         )}
       />
-      <div className="ta-content">
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            COMMUNITY FORUMS & KNOWLEDGE BASE HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-violet" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                {selectedForum ? selectedForum.title : "Community Forums & Q&A"}
+              </h1>
+              <p className="ta-hero-desc">
+                {selectedForum ? "Review, moderate and manage active community threads for this category." : "Manage discussion categories, review community questions, and moderate forum topics."}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {!selectedForum && (
           <>
             <PortalModal

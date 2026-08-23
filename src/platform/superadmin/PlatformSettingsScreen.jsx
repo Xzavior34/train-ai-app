@@ -122,7 +122,24 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
   return (
     <div className="ta-fade">
       <TopBar title="Platform Settings" sub="Global system configuration" />
-      <div className="ta-content" style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="ta-content" style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            PLATFORM SETTINGS HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-purple" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                Platform Architecture &amp; Settings
+              </h1>
+              <p className="ta-hero-desc">
+                Configure global database connectivity, platform feature flags, demo mock toggles, and environment key-value pairs.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {settingsQuery.loading && <div className="ta-empty">Loading platform settings...</div>}
         {settingsQuery.error && <div className="ta-empty">Couldn't load platform settings: {settingsQuery.error}</div>}
 

@@ -231,14 +231,12 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
     <div className="ta-fade">
       <TopBar title="Settings Hub" sub="Organization name & configuration" orgSelector={orgSelector} onNavigate={setScreen} profileQuery={profileQuery} />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            SETTINGS HUB HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-purple" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Settings Hub &amp; Preferences</h1>
-              <p className="ta-hero-desc">Manage organization profile, seat licenses, AI policies, and gamification.</p>
+              <p className="ta-hero-desc">Manage organization profile, seat licenses, AI policies, security rules, and gamification toggles.</p>
             </div>
           </div>
         </div>

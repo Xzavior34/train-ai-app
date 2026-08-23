@@ -92,11 +92,8 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
         }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            MANAGER WORKSPACE HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner">
-
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-amber" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">

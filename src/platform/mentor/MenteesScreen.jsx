@@ -101,10 +101,8 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
     <div className="ta-fade">
       <TopBar title="My Learners & Progress" sub="Search all platform learners, monitor progress & launch direct messaging" orgSelector={orgSelector} />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            MENTEES HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-purple" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">

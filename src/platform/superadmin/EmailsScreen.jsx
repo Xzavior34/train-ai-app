@@ -92,7 +92,24 @@ export function EmailsScreen() {
   return (
     <div className="ta-fade">
       <TopBar title="Platform Emails" sub="System notifications & email broadcasts" />
-      <div className="ta-content" style={{ maxWidth: 760, margin: "0 auto" }}>
+      <div className="ta-content" style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            PLATFORM BROADCASTS HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cyan" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                Platform Broadcasts &amp; Dispatch
+              </h1>
+              <p className="ta-hero-desc">
+                Dispatch platform-wide announcements, emergency maintenance notices, and multi-channel system notifications.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="ta-card" style={{ borderRadius: 10 }}>
           <div className="ta-title">Send Broadcast Email</div>
           <input className="ta-input ta-mt12" placeholder="Email subject line..." value={subject} onChange={(e) => setSubject(e.target.value)} />

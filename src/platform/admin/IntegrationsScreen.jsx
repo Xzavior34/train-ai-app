@@ -96,14 +96,12 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
         }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            INTEGRATIONS HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cobalt" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">API &amp; Event Integrations</h1>
-              <p className="ta-hero-desc">Configure secure webhooks and event notification streams.</p>
+              <p className="ta-hero-desc">Configure secure webhooks, third-party LMS bridges, and event notification streams.</p>
             </div>
           </div>
         </div>

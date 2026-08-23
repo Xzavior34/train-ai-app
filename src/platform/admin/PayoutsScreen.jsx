@@ -105,7 +105,24 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
           </button>
         }
       />
-      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            PAYOUTS & FINANCIALS HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-emerald" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                Instructor Payouts &amp; Settlements
+              </h1>
+              <p className="ta-hero-desc">
+                Review and approve withdrawal requests, manage per-instructor payout access, and track verified ledger settlements.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="ta-grid ta-grid-4 anim-stagger">
           {[
             { label: "Awaiting decision", value: requests.filter((r) => (r.status || "pending") === "pending").length, hint: "Requests to review" },

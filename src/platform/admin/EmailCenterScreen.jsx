@@ -197,7 +197,24 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
           </button>
         }
       />
-      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            EMAIL CENTER & BROADCASTS HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cyan" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                Email Center &amp; Broadcasts
+              </h1>
+              <p className="ta-hero-desc">
+                Send targeted announcements, automated milestone reminders, and batch nudges to your organization learners.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="ta-tabs">
           {[
             { k: "compose", label: "Compose" },

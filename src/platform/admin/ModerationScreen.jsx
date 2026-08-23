@@ -76,14 +76,12 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
         right={<Tag tone={queue.length ? "warning" : "success"}><Flag size={12} /> {queue.length} awaiting review</Tag>}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            CONTENT MODERATION HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner">
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-violet" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Content &amp; Safety Moderation</h1>
-              <p className="ta-hero-desc">Review flagged posts, policy violations, and community safety reports.</p>
+              <p className="ta-hero-desc">Review flagged posts, policy violations, AI confidence scores, and community safety reports.</p>
             </div>
           </div>
         </div>

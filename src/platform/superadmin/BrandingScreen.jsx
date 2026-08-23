@@ -60,7 +60,25 @@ export function BrandingScreen() {
     <div className="ta-fade">
       <TopBar title="Branding & White-Label" sub="Customize logos, brand palettes, and theme tokens per tenant" />
       
-      <div className="ta-content" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "start" }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            BRANDING & WHITE-LABEL HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-magenta" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                White-Label &amp; Brand Studio
+              </h1>
+              <p className="ta-hero-desc">
+                Customize institution logos, custom accent palettes, domain hostnames, and CSS design tokens per tenant.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "start" }}>
         
         {/* Controls Card */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
@@ -213,8 +231,8 @@ export function BrandingScreen() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
-  );
+  </div>
+);
 }
