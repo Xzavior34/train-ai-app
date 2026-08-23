@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { TopBar } from "../components/LearnerUI.jsx";
 import {
   Bell, BookOpen, Video, Trophy, CheckCheck, Trash2,
-  Search, ArrowRight, MessageSquare, ShieldAlert, Check, X, Filter
+  Search, ArrowRight, MessageSquare, ShieldAlert, Check, X, Filter, ChevronLeft
 } from "lucide-react";
 
 export function NotificationsScreen({
