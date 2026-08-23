@@ -11,6 +11,7 @@ import {
   fetchRefundRequestsForMentor, respondToRefundRequest,
 } from "../../lib/api/schemaHelper.js";
 import { useAuth } from "../../lib/useAuth.js";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 const PAYOUT_METHODS = [
   { key: "bank_transfer", label: "Direct Bank Transfer (ACH / SEPA)", icon: Building2, desc: "Direct deposit to your local or international bank account (1-3 business days)" },
@@ -37,7 +38,7 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
     { id: "e-4", earning_type: "1:1 Architecture Mentorship", amount: 120.00, status: "pending", created_at: new Date(Date.now() - 86400000 * 1).toISOString(), learner_name: "Marcus Webb" },
   ];
 
-  const earnings = rawEarnings.length > 0 ? rawEarnings : defaultEarnings;
+  const earnings = rawEarnings.length > 0 ? rawEarnings : (isMockDataEnabled() ? defaultEarnings : []);
   const totalEarnings = earnings.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const pendingEarnings = earnings.filter(e => e.status === "pending").reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const availableEarnings = earnings.filter(e => e.status === "available" || e.status === "paid" || e.status == null).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);

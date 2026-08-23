@@ -10,6 +10,7 @@ import {
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../../lib/api/platform.js";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId, onNavigate }) {
   const showToast = useContext(ToastContext);
@@ -54,13 +55,17 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
     }, 1200);
   };
 
-  const studentRisks = [
+  const defaultStudentRisks = [
     { name: "Fatima Diallo", role: "UI Design Fellow", risk: "High Risk", riskTone: "danger", lastActive: "12 days ago", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" },
     { name: "Liam Torres", role: "AI Engineering Track", risk: "Needs Attention", riskTone: "warning", lastActive: "8 days ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
     { name: "Priya Nair", role: "Product Design", risk: "Needs Attention", riskTone: "warning", lastActive: "4 days ago", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80" },
     { name: "Amara Chen", role: "Generative AI Scholar", risk: "On Track", riskTone: "success", lastActive: "Just now", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
     { name: "Marcus Webb", role: "Spatial Systems", risk: "On Track", riskTone: "success", lastActive: "1 hour ago", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" }
   ];
+  const studentRisks = isMockDataEnabled() ? defaultStudentRisks : [];
+
+  const activeLiveSession = mentorSessions.find(s => s.status === "in_progress" || s.status === "live") || null;
+  const upcomingMentorSessions = mentorSessions.filter(s => s.status === "scheduled" || s.status === "pending");
 
   const mentorName = profileQuery?.data?.display_name || "Hazel";
 
@@ -399,10 +404,15 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                   <div className="ta-title" style={{ fontSize: 16 }}>Student Risk Monitor</div>
                   <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Learners needing academic or attendance support</div>
                 </div>
-                <Tag tone="danger">2 High Risk</Tag>
+                {studentRisks.length > 0 && <Tag tone="danger">{studentRisks.filter(s => s.riskTone === "danger").length} High Risk</Tag>}
               </div>
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
+                {studentRisks.length === 0 && (
+                  <div className="ta-empty" style={{ padding: "16px 8px" }}>
+                    All learners in your assigned cohorts are currently in good academic standing.
+                  </div>
+                )}
                 {studentRisks.map(s => (
                   <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 10 }}>
                     <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 160px" }}>
@@ -446,62 +456,67 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               </div>
 
               {/* Dark Live Hero Stream Card */}
-              <div style={{ 
-                marginTop: 16,
-                padding: 16, 
-                borderRadius: 10, 
-                background: "#0F172A",
-                color: "#FFFFFF",
-                border: "1px solid #1E293B",
-                boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)"
-              }}>
-                <div className="ta-row ta-between">
-                  <div className="ta-row ta-gap6" style={{ background: "rgba(239, 68, 68, 0.2)", padding: "3px 8px", borderRadius: 4, color: "#FCA5A5", fontSize: 10.5, fontWeight: 700 }}>
-                    <Radio size={11} className="anim-pulse" /> LIVE NOW
+              {activeLiveSession && (
+                <div style={{ 
+                  marginTop: 16,
+                  padding: 16, 
+                  borderRadius: 10, 
+                  background: "#0F172A",
+                  color: "#FFFFFF",
+                  border: "1px solid #1E293B",
+                  boxShadow: "0 4px 16px rgba(15, 23, 42, 0.2)"
+                }}>
+                  <div className="ta-row ta-between">
+                    <div className="ta-row ta-gap6" style={{ background: "rgba(239, 68, 68, 0.2)", padding: "3px 8px", borderRadius: 4, color: "#FCA5A5", fontSize: 10.5, fontWeight: 700 }}>
+                      <Radio size={11} className="anim-pulse" /> LIVE NOW
+                    </div>
+                    <span style={{ fontSize: 11, color: "#94A3B8" }}>Studio Session</span>
                   </div>
-                  <span style={{ fontSize: 11, color: "#94A3B8" }}>60 mins • 28 joined</span>
-                </div>
 
-                <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 10, lineHeight: 1.35 }}>
-                  Spatial UI &amp; Design Systems Critique
-                </div>
-                <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>
-                  Cohort Batch 4 interactive portfolio review session
-                </div>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 10, lineHeight: 1.35 }}>
+                    {activeLiveSession.title || "Live Mentorship Studio"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>
+                    {activeLiveSession.description || "Cohort Batch interactive review session"}
+                  </div>
 
-                <div className="ta-row ta-between ta-mt14">
-                  <button 
-                    className="ta-btn ta-btn-primary ta-btn-sm" 
-                    style={{ background: "#4F46E5", border: "none", color: "#FFFFFF", fontWeight: 700, borderRadius: 6 }}
-                    onClick={() => window.open("https://meet.google.com/demo-room-ai", "_blank")}
-                  >
-                    <Video size={13} /> Join Studio
-                  </button>
-                  <span style={{ fontSize: 11, color: "#64748B" }}>Room #082</span>
+                  <div className="ta-row ta-between ta-mt14">
+                    <button 
+                      className="ta-btn ta-btn-primary ta-btn-sm" 
+                      style={{ background: "#4F46E5", border: "none", color: "#FFFFFF", fontWeight: 700, borderRadius: 6 }}
+                      onClick={() => window.open(activeLiveSession.meeting_url || "https://meet.google.com/new", "_blank")}
+                    >
+                      <Video size={13} /> Join Studio
+                    </button>
+                    <span style={{ fontSize: 11, color: "#64748B" }}>Room #{activeLiveSession.id ? activeLiveSession.id.slice(0, 6) : "082"}</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Upcoming sessions timeline */}
               <div className="ta-col ta-gap10 ta-mt16">
-                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "break-word" }}>Cloud Architecture Masterclass</div>
-                    <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
-                      <Clock size={11} /> Tomorrow • 3:00 PM (45m)
-                    </div>
+                {upcomingMentorSessions.length === 0 && !activeLiveSession && (
+                  <div className="ta-empty" style={{ padding: "16px 8px" }}>
+                    No sessions scheduled today.
                   </div>
-                  <Tag tone="primary">Upcoming</Tag>
-                </div>
-
-                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "break-word" }}>Generative AI Prompts Workshop</div>
-                    <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
-                      <Clock size={11} /> Friday • 5:00 PM (90m)
+                )}
+                {upcomingMentorSessions.slice(0, 3).map((sess) => (
+                  <div key={sess.id} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "break-word" }}>{sess.title || "1-on-1 Mentorship"}</div>
+                      <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                        <Clock size={11} /> {sess.scheduled_at ? new Date(sess.scheduled_at).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "Scheduled"}
+                      </div>
                     </div>
+                    <button
+                      className="ta-btn ta-btn-primary ta-btn-sm"
+                      style={{ padding: "3px 8px", fontSize: 11 }}
+                      onClick={() => window.open(sess.meeting_url || "https://meet.google.com/new", "_blank")}
+                    >
+                      <Video size={12} /> Launch
+                    </button>
                   </div>
-                  <Tag tone="default">Scheduled</Tag>
-                </div>
+                ))}
               </div>
             </div>
 
