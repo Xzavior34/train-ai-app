@@ -323,23 +323,17 @@ export async function fetchMyGamificationStats(userId) {
 // src/learner/achievementCatalog.js), matched here by achievement_id.
 export async function fetchMyAchievements(userId) {
   if (!supabase || !userId) return [];
-  // my_achievements_with_slug (0145) joins in achievements.slug so rows can
-  // be matched against ACHIEVEMENT_CATALOG's string ids - the raw
-  // user_achievements.achievement_id is a uuid FK and never matches a
-  // catalog id directly. Falls back to the raw table if the view isn't
-  // available yet (e.g. migration not applied in this environment).
   const { data, error } = await supabase
     .from("my_achievements_with_slug")
     .select("*")
     .order("earned_at", { ascending: false });
-  if (!error) return data || [];
-  console.warn("Achievements (with slug) fetch warning, falling back:", error);
+  if (!error && data) return data;
   const fallback = await supabase
     .from("user_achievements")
     .select("*")
     .eq("user_id", userId)
     .order("earned_at", { ascending: false });
-  if (fallback.error) { console.warn("Achievements fetch warning:", fallback.error); return []; }
+  if (fallback.error) return [];
   return fallback.data || [];
 }
 

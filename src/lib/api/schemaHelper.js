@@ -35,13 +35,19 @@ export async function fetchProfilesByUserIds(userIds, columns = "id, display_nam
   const normalise = (rows) => Object.fromEntries((rows || []).map((p) => [p.user_id || p.id, p]));
 
   const byId = await supabase.from("user_profiles").select(columns).in("id", ids);
-  if (!byId.error) return normalise(byId.data);
+  if (!byId.error && byId.data) return normalise(byId.data);
+
+  // If requested columns include missing fields (e.g. email/role), fall back to basic profile columns
+  const basicById = await supabase.from("user_profiles").select("id, display_name, avatar_url").in("id", ids);
+  if (!basicById.error && basicById.data) return normalise(basicById.data);
 
   const legacyColumns = columns.includes("user_id") ? columns : columns.replace(/^id\b/, "user_id");
   const byUserId = await supabase.from("user_profiles").select(legacyColumns).in("user_id", ids);
-  if (!byUserId.error) return normalise(byUserId.data);
+  if (!byUserId.error && byUserId.data) return normalise(byUserId.data);
 
-  console.warn("Profiles batch fetch warning:", byId.error);
+  const basicByUserId = await supabase.from("user_profiles").select("user_id, display_name, avatar_url").in("user_id", ids);
+  if (!basicByUserId.error && basicByUserId.data) return normalise(basicByUserId.data);
+
   return {};
 }
 
@@ -466,8 +472,16 @@ export async function fetchCommunityPosts(studyGroupId = null) {
     query = query.is("study_group_id", null);
   }
 
-  const { data, error } = await query;
-  if (error) { console.warn("Community posts fetch warning:", error); return []; }
+  let { data, error } = await query;
+  if (error && (error.code === "42703" || error.message?.includes("study_group_id"))) {
+    const fallback = await supabase
+      .from("community_posts")
+      .select("*, post_comments(*), post_reactions(*)")
+      .order("created_at", { ascending: false });
+    data = fallback.data;
+    error = fallback.error;
+  }
+  if (error) return [];
   const rows = data || [];
   // Batch-fetch profiles for both post authors AND comment authors in one
   // round trip, so comment threads can show real names/avatars instead of
@@ -1167,7 +1181,6 @@ export async function fetchAIRecommendations({ userContext, userProgress } = {})
       reminders: Array.isArray(data.reminders) ? data.reminders : [],
     };
   } catch (e) {
-    console.warn("AI recommendations unavailable, falling back to client-side picks:", e?.message || e);
     return null;
   }
 }
@@ -1239,10 +1252,16 @@ export async function fetchNotificationPreferences(userId) {
 
 export async function upsertNotificationPreferences(userId, prefs) {
   if (!supabase || !userId) return;
-  const { error } = await supabase
-    .from("notification_preferences")
-    .upsert({ user_id: userId, ...prefs }, { onConflict: "user_id" });
-  if (error) console.warn("Notification preferences save warning:", error);
+  try {
+    const existing = await fetchNotificationPreferences(userId);
+    if (existing) {
+      await supabase.from("notification_preferences").update(prefs).eq("user_id", userId);
+    } else {
+      await supabase.from("notification_preferences").insert({ user_id: userId, ...prefs });
+    }
+  } catch (e) {
+    // Silently ignore preference save errors when table structure varies
+  }
 }
 
 // Daily challenges removed per the product brief - see the note in

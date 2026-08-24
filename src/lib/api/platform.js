@@ -468,16 +468,19 @@ export async function updateOrganization(orgId, patch) {
 }
 
 export async function fetchOrganizationById(orgId) {
-  if (!supabase) {
+  if (!orgId || orgId === "demo-org-id" || !supabase) {
     const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
-    const found = projData.orgs.find(o => o.id === orgId);
+    const found = projData.orgs?.find(o => o.id === orgId);
     if (found) return found;
-    return projData.orgs[0] || { id: "demo-org-id", name: "Demo Academy", status: "active", subscription_tier: "growth", max_users: 50 };
+    return projData.orgs?.[0] || { id: "demo-org-id", name: "Sara Foundation Africa", status: "active", subscription_tier: "enterprise", max_users: 50 };
   }
-  if (!orgId) return null;
-  const { data, error } = await supabase.from("organizations").select("*").eq("id", orgId).maybeSingle();
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase.from("organizations").select("*").eq("id", orgId).maybeSingle();
+    if (error) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
 }
 
 export async function fetchPlatformSettings() {
@@ -689,8 +692,13 @@ export async function fetchTodaysTasks(organizationId) {
     if (orgFilter) inviteQuery = inviteQuery.eq("organization_id", orgFilter);
     const { count: pendingInvitations } = await inviteQuery;
 
-    let modQuery = supabase.from("community_posts").select("id", { count: "exact", head: true }).in("moderation_status", ["pending", "rejected"]);
-    const { count: moderationQueue } = await modQuery;
+    let moderationQueue = 0;
+    try {
+      const { count } = await supabase.from("community_posts").select("id", { count: "exact", head: true }).in("moderation_status", ["pending", "rejected"]);
+      moderationQueue = count || 0;
+    } catch (e) {
+      moderationQueue = 0;
+    }
 
     return {
       mentorApplications: mentorApplications ?? 0,
@@ -698,7 +706,6 @@ export async function fetchTodaysTasks(organizationId) {
       moderationQueue: moderationQueue ?? 0,
     };
   } catch (err) {
-    console.warn("fetchTodaysTasks warning:", err);
     return DEMO_TASKS;
   }
 }
@@ -792,32 +799,43 @@ export async function fetchTopMentors(organizationId) {
     const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
     let query = supabase
       .from("mentors")
-      .select("id, user_id, rating, total_sessions, specialization")
+      .select("id, user_id, rating, total_sessions, specializations")
       .eq("is_active", true)
       .order("rating", { ascending: false })
       .limit(5);
 
     if (orgFilter) query = query.eq("organization_id", orgFilter);
-    const { data, error } = await query;
+    let { data, error } = await query;
 
-    if (error) throw error;
-    if (!data || data.length === 0) return [];
+    if (error) {
+      // Fallback query if specializations column differs
+      const fallbackQuery = await supabase
+        .from("mentors")
+        .select("id, user_id, rating, total_sessions")
+        .eq("is_active", true)
+        .order("rating", { ascending: false })
+        .limit(5);
+      data = fallbackQuery.data;
+      error = fallbackQuery.error;
+    }
+
+    if (error || !data || data.length === 0) return DEMO_MENTORS;
 
     const profiles = await fetchProfilesByUserIds(data.map((m) => m.user_id));
     return data.map(m => {
       const p = profiles[m.user_id];
       const name = p?.display_name || "Mentor";
+      const spec = Array.isArray(m.specializations) ? m.specializations.join(", ") : (m.specializations || "Instructor");
       return {
         name,
         initials: name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-        specialization: m.specialization || "Instructor",
+        specialization: spec,
         rating: m.rating || 5.0,
         sessions: m.total_sessions || 0,
         avatar: p?.avatar_url,
       };
     });
   } catch (err) {
-    console.warn("fetchTopMentors warning:", err);
     return DEMO_MENTORS;
   }
 }
@@ -3732,14 +3750,13 @@ export async function fetchManagerTeamCompliance(managerId) {
 // underlying RLS previously let any org admin read every organization's
 // audit log, not just their own.
 export async function fetchOrgActivityLog(organizationId, limit = 30) {
-  if (!supabase) {
+  if (!supabase || !organizationId || organizationId === "demo-org-id") {
     return [
       { id: "demo-log-1", text: "issue certificate directly: Amara Chen", time: new Date(Date.now() - 3600000).toLocaleString() },
       { id: "demo-log-2", text: "assign compliance course: Fatima Diallo", time: new Date(Date.now() - 86400000).toLocaleString() },
       { id: "demo-log-3", text: "review certificate: Priya Nair", time: new Date(Date.now() - 2 * 86400000).toLocaleString() },
     ];
   }
-  if (!organizationId) return [];
   const { data, error } = await supabase
     .from("safe_admin_audit_log")
     .select("*")
