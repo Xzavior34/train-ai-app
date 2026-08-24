@@ -62,32 +62,51 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
   return (
     <div className="ta-fade">
       <TopBar
-        title="Analytics & Telemetry" sub="Live aggregate engagement metrics"
+        title="Analytics Hub" sub="Enrollment growth, top courses & community activity. Computed from live org data"
         orgSelector={orgSelector}
         onNavigate={setScreen}
+        right={
+          <button className="ta-btn ta-btn-outline" onClick={handleExport} disabled={!trend.length || !canExport} title={!canExport ? `Requires ${minTierLabelFor("analytics_export")} plan` : undefined}>
+            {!canExport && <Lock size={13} />} <Download size={15} /> Export CSV
+          </button>
+        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
             ANALYTICS HUB HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner anim-fluid-entrance">
-          <div className="tai-glow-amber" />
-          <div className="ta-hero-inner">
-            <div className="ta-hero-text">
-              <h1 className="ta-hero-title">Institutional Analytics &amp; AI Usage</h1>
-              <p className="ta-hero-desc">Track completion pacing, study time distribution, retention curves, and AI usage metrics.</p>
-            </div>
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(18px, 3vw, 26px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
 
-            <div className="ta-hero-actions">
-              <button
-                className="ta-btn ta-btn-outline"
-                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
-                onClick={handleExport}
-                disabled={!trend.length || !canExport}
-                title={!canExport ? `Requires ${minTierLabelFor("analytics_export")} plan` : undefined}
-              >
-                {!canExport && <Lock size={12} />} <Download size={13} /> Export CSV
-              </button>
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Institutional Analytics &amp; AI Usage
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+                Track completion pacing, study time distribution, and AI usage metrics.
+              </p>
             </div>
           </div>
         </div>
@@ -121,8 +140,12 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
             {!canSeeDepartmentBreakdown && (
               <div className="ta-row ta-gap8" style={{ background: "var(--surface-2)", borderRadius: 10, padding: "8px 12px", marginTop: 8, marginBottom: 4 }}>
                 <Lock size={13} color="var(--text-2)" />
+                {/* The plan name was the literal string "Starter", so a Growth
+                    or Enterprise org that lacks this feature was told it was on
+                    Starter. orgTier is the real subscription_tier from
+                    fetchOrganizationById, already in scope above. */}
                 <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>
-                  Department-by-department breakdown is a {minTierLabelFor("multi_department_breakdown")}-plan feature. This organization is on Starter. Showing the org-wide trend only.
+                  Department-by-department breakdown is a {minTierLabelFor("multi_department_breakdown")}-plan feature. This organization is on {orgTier[0].toUpperCase() + orgTier.slice(1)}. Showing the org-wide trend only.
                 </span>
               </div>
             )}
@@ -186,15 +209,15 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
         <div className="ta-card">
           <div className="ta-label">General Overview</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12, marginTop: 14 }}>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
+            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 12 }}>
               <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>{generalOverviewQuery.data?.studyGroupCount ?? 0}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Study groups</div>
             </div>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
+            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 12 }}>
               <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>{generalOverviewQuery.data?.certificatesIssued ?? 0}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Certificates issued</div>
             </div>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
+            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 12 }}>
               <div style={{ fontSize: 22, fontWeight: 900, color: "var(--primary)" }}>{generalOverviewQuery.data?.avgAssessmentScore ?? "N/A"}{generalOverviewQuery.data?.avgAssessmentScore != null ? "%" : ""}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Avg. score</div>
             </div>
@@ -207,15 +230,15 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
             <Tag tone="primary"><Bot size={12} /> AI Coach calls</Tag>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 12 }}>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
+            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 12 }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "N/A" : (aiUsage?.total ?? 0).toLocaleString()}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>All time</div>
             </div>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
+            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 12 }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "N/A" : (aiUsage?.last30d ?? 0).toLocaleString()}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Last 30 days</div>
             </div>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
+            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 12 }}>
               <div style={{ fontSize: 20, fontWeight: 900, color: "var(--primary)" }}>{aiUsageQuery.loading ? "N/A" : (aiUsage?.last7d ?? 0).toLocaleString()}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Last 7 days</div>
             </div>

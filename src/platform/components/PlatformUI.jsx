@@ -2,7 +2,8 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail,
-  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Zap, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy,
+  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy,
+  Armchair,
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
@@ -47,8 +48,8 @@ export const TOKENS = `
     --primary-dark: #4338CA;
     --primary-light: #6366F1;
     --primary-tint: #EEF2FF;
-    --grad: #4F46E5;
-    --grad-subtle: #EEF2FF;
+    --grad: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+    --grad-subtle: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
     --text: #0F172A;
     --text-2: #475569;
     --text-3: #94A3B8;
@@ -64,11 +65,11 @@ export const TOKENS = `
     --danger-bg: #FEF2F2;
     --danger-border: #FECACA;
     --sidebar-w: 260px;
-    --radius: 10px;
-    --radius-sm: 6px;
-    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.02);
-    --shadow-hover: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-    --shadow-btn: none;
+    --radius: 18px;
+    --radius-sm: 12px;
+    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
+    --shadow-hover: 0 8px 24px -4px rgba(79, 70, 229, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --shadow-btn: 0 4px 14px -2px rgba(79, 70, 229, 0.32);
     --font: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-family: var(--font);
     color: var(--text);
@@ -81,22 +82,18 @@ export const TOKENS = `
     --surface: #121829;
     --surface-2: #1B243B;
     --surface-3: #161D31;
-    --primary: #818CF8;
-    --primary-dark: #6366F1;
-    --primary-light: #A5B4FC;
-    --primary-hover: #93C5FD;
-    --primary-tint: rgba(99, 102, 241, 0.18);
     --text: #F8FAFC;
     --text-2: #94A3B8;
     --text-3: #64748B;
-    --border: rgba(255, 255, 255, 0.08);
-    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border: rgba(255, 255, 255, 0.1);
+    --border-subtle: rgba(255, 255, 255, 0.06);
     --success-bg: rgba(16, 185, 129, 0.18);
     --success-border: rgba(16, 185, 129, 0.35);
     --warning-bg: rgba(245, 158, 11, 0.18);
     --warning-border: rgba(245, 158, 11, 0.35);
     --danger-bg: rgba(239, 68, 68, 0.18);
     --danger-border: rgba(239, 68, 68, 0.35);
+    --primary-tint: rgba(99, 102, 241, 0.2);
   }
   .ta.dark .ta-sidebar, html.dark .ta-sidebar {
     background: #0D1222;
@@ -119,85 +116,59 @@ export const TOKENS = `
     background: #121829;
   }
   .ta-shell { display: flex; min-height: 100vh; min-height: 100dvh; }
+  /* position: fixed rather than sticky - sticky depends on none of its
+     ancestors setting transform/filter/contain/overflow in a way that
+     creates a new containing block, which is easy to accidentally trip
+     with this many shared style layers in play, and empirically has (see
+     the DashboardSwitcher note below) actually resolved to position: static
+     when this app, the learner app, and the owner app are all mounted at
+     once (App.jsx keeps all three mounted, toggling display none/block).
+     Fixed is anchored to the viewport unconditionally, so it can't be
+     broken the same way - this is what keeps the sidebar "long" (always
+     the full viewport height) and never scrolling with the page. .ta-main
+     below carries the matching margin-left. */
   .ta-sidebar {
     width: var(--sidebar-w); flex-shrink: 0;
     background: #FFFFFF;
     border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 18px 12px;
+    display: flex; flex-direction: column; padding: 20px 14px;
     position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh;
-    color: var(--text); box-shadow: 1px 0 6px rgba(15,23,42,0.02);
+    color: var(--text); box-shadow: 2px 0 16px -8px rgba(15,23,42,0.04);
     transition: width .2s ease, padding .2s ease;
     z-index: 30;
   }
   .ta-sidebar.ta-sidebar-minimized {
-    width: 68px; padding: 18px 6px;
+    width: 76px; padding: 20px 8px;
   }
   .ta-sidebar.ta-sidebar-minimized .ta-brand-name,
   .ta-sidebar.ta-sidebar-minimized .ta-brand-tag,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-section-title,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-item span,
   .ta-sidebar.ta-sidebar-minimized .ta-ws-item span,
-  .ta-sidebar.ta-sidebar-minimized .ta-ws-item div,
-  .ta-sidebar.ta-sidebar-minimized .ta-ws-item > div,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-item svg:last-child {
-    display: none !important;
+    display: none;
   }
-  .ta-sidebar.ta-sidebar-minimized .ta-workspace-card {
-    padding: 2px;
-    margin-bottom: 8px;
-    background: var(--surface-2);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .ta-sidebar.ta-sidebar-minimized .ta-ws-item,
-  .ta-sidebar.ta-sidebar-minimized .ta-nav-item {
-    width: 100%;
-    min-height: 38px;
-    height: 38px;
-    padding: 0 !important;
-    margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0 !important;
-    box-sizing: border-box;
-  }
-  .ta-sidebar.ta-sidebar-minimized .ta-ws-item svg,
-  .ta-sidebar.ta-sidebar-minimized .ta-nav-item svg {
-    margin: 0 auto !important;
-    flex-shrink: 0 !important;
+  .ta-sidebar.ta-sidebar-minimized .ta-nav-item,
+  .ta-sidebar.ta-sidebar-minimized .ta-ws-item {
+    justify-content: center; padding: 10px 0; gap: 0;
   }
   .ta-sidebar.ta-sidebar-minimized .ta-brand {
-    justify-content: center; padding: 0 0 14px;
+    justify-content: center; padding: 0 0 16px;
   }
-  .ta-brand { display: flex; align-items: center; gap: 10px; padding: 4px 6px 14px; }
+  .ta-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 16px; }
   .ta-brand-mark {
-    width: 32px; height: 32px; border-radius: 8px; background: #4F46E5;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; color: #fff;
+    width: 36px; height: 36px; border-radius: 10px; background: var(--grad);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    box-shadow: 0 4px 12px rgba(79,70,229,0.3);
   }
-  .ta-brand-name { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: var(--text); }
-  .ta-brand-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; background: var(--primary-tint); color: var(--primary); padding: 2px 6px; border-radius: 4px; }
-  .ta-sidebar-scroll {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 2px;
-  }
-  .ta-sidebar-scroll::-webkit-scrollbar { width: 4px; }
-  .ta-sidebar-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
-  .ta-nav { display: flex; flex-direction: column; gap: 2px; }
+  .ta-brand-name { font-weight: 800; font-size: 17px; letter-spacing: -0.02em; color: var(--text); }
+  .ta-brand-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; background: var(--primary-tint); color: var(--primary); padding: 3px 8px; border-radius: 6px; }
+  .ta-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y:auto; padding-right: 2px; }
+  .ta-nav::-webkit-scrollbar { width: 4px; }
+  .ta-nav::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
   .ta-nav-section-title {
     font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3);
-    padding: 10px 8px 3px; margin-top: 4px;
+    padding: 14px 10px 6px; margin-top: 4px;
   }
   /* .ta-iconbtn was already used by admin screens (Learning Paths' reorder and
      delete controls) but was never defined anywhere in TOKENS, so those
@@ -207,125 +178,69 @@ export const TOKENS = `
   .ta-iconbtn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 30px; height: 30px; flex-shrink: 0;
-    border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-surface);
-    backdrop-filter: var(--glass-blur-xs); -webkit-backdrop-filter: var(--glass-blur-xs);
-    box-shadow: inset 0 1px 0 var(--glass-specular);
+    border-radius: 9px; border: 1px solid var(--border); background: var(--surface);
     color: var(--text-2); cursor: pointer; font-size: 13px; line-height: 1;
-    transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); padding: 0;
+    transition: all .15s ease; padding: 0;
   }
-  .ta-iconbtn:hover:not(:disabled) {
-    background: var(--glass-elevated); color: var(--text); border-color: rgba(99, 102, 241, 0.35); box-shadow: var(--shadow-hover);
-  }
-  .ta-iconbtn:active:not(:disabled) { transform: scale(.95); }
+  .ta-iconbtn:hover:not(:disabled) { background: var(--surface-2); color: var(--text); border-color: var(--text-3); }
+  .ta-iconbtn:active:not(:disabled) { transform: scale(.94); }
   .ta-iconbtn:disabled { opacity: .4; cursor: not-allowed; }
   .ta-nav-item {
-    display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 8px; cursor: pointer;
-    font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .16s ease; line-height: 1.4;
-    min-height: 34px; box-sizing: border-box;
+    display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; cursor: pointer;
+    font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .16s ease;
   }
-  .ta-nav-item:hover {
-    background: var(--glass-surface); color: var(--text);
-    transform: translateX(2px);
-    box-shadow: inset 0 1px 0 var(--glass-specular);
-  }
+  .ta-nav-item:hover { background: var(--surface-2); color: var(--text); transform: translateX(2px); }
   .ta-nav-item.active {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(99, 102, 241, 0.18) 100%) !important;
-    color: #4F46E5 !important; font-weight: 700;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 2px 8px rgba(79, 70, 229, 0.12);
+    background: var(--surface-2);
+    color: var(--primary); font-weight: 700; border-left: 3px solid var(--primary); padding-left: 9px;
   }
-  .ta.dark .ta-nav-item.active, html.dark .ta-nav-item.active {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.28) 0%, rgba(99, 102, 241, 0.38) 100%) !important;
-    color: #A5B4FC !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-    border: 1px solid rgba(165, 180, 252, 0.25) !important;
-  }
-  .ta-nav-divider { height: 1px; background: var(--glass-border); margin: 8px 4px; }
+  .ta-nav-divider { height: 1px; background: var(--border); margin: 10px 4px; }
   .ta-workspace-card {
-    background: var(--glass-surface); backdrop-filter: blur(8px);
-    border: 1px solid var(--glass-border); border-radius: 8px; padding: 3px;
-    margin-bottom: 6px; display: flex; flex-direction: column; gap: 2px;
-    box-shadow: inset 0 1px 0 var(--glass-specular);
+    background: var(--surface-3); border: 1px solid var(--border); border-radius: 14px; padding: 6px;
+    margin-bottom: 12px; display: flex; flex-direction: column; gap: 3px;
   }
   .ta-ws-item {
-    display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; cursor: pointer;
-    font-size: 12.5px; font-weight: 600; color: var(--text-2); transition: all .14s ease; line-height: 1.35;
-    background: transparent;
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
   }
-  .ta-ws-item:hover { background: var(--glass-elevated); color: var(--text); }
-  .ta-ws-item.active {
-    background: var(--glass-surface-solid) !important;
-    color: var(--primary) !important;
-    font-weight: 700;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--glass-shadow);
-  }
-  .ta.dark .ta-ws-item.active, html.dark .ta-ws-item.active {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.28) 0%, rgba(99, 102, 241, 0.38) 100%) !important;
-    color: #A5B4FC !important;
-    font-weight: 700;
-    border: 1px solid rgba(165, 180, 252, 0.30) !important;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.4) !important;
-  }
-  .ta-nav-footer { display:flex; flex-direction:column; gap:3px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--glass-border); }
+  .ta-ws-item:hover { background: var(--surface-2); color: var(--text); }
+  .ta-ws-item.active { background: var(--grad); color: #FFFFFF; font-weight: 700; box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
+  .ta-nav-footer { display:flex; flex-direction:column; gap:4px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); }
   .ta-toggle-btn {
-    display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; border-radius: 6px;
-    border: 1px solid var(--glass-border); background: var(--glass-surface); color: var(--text-2); cursor: pointer;
-    backdrop-filter: blur(8px);
-    transition: all .15s ease; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 36px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer;
+    transition: all .15s ease; margin-bottom: 10px;
   }
-  .ta-toggle-btn:hover { background: var(--glass-elevated); color: var(--primary); border-color: rgba(99, 102, 241, 0.35); }
+  .ta-toggle-btn:hover { background: var(--surface-3); color: var(--primary); border-color: var(--primary-light); }
   .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
-  .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 68px; }
+  .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 76px; }
   .ta-topbar {
-    min-height: 54px; height: auto;
-    border-bottom: 1px solid var(--glass-border); background: var(--glass-elevated);
-    backdrop-filter: var(--glass-blur-lg); -webkit-backdrop-filter: var(--glass-blur-lg);
-    box-shadow: var(--glass-shadow);
-    display: flex; align-items: center; justify-content: space-between; padding: 8px clamp(12px, 1.8vw, 20px); position: sticky; top: 0; z-index: 50;
-    box-sizing: border-box; width: 100%; gap: 12px;
+    height: 58px; min-height: 58px; max-height: 58px; border-bottom: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 28px); position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03); box-sizing: border-box; width: 100%;
   }
-  .ta-topbar-left { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; min-width: min-content; max-width: 45%; }
-  .ta-topbar-right { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; justify-content: flex-end; min-width: 0; flex-wrap: wrap; }
-  .ta-search {
-    display:flex; align-items:center; gap:6px;
-    background: var(--glass-surface); backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px 10px; width: clamp(120px, 14vw, 190px);
-    color: var(--text-2); font-size: 12px; transition: border-color .15s ease; flex-shrink: 1; min-width: 90px;
-    box-shadow: inset 0 1px 0 var(--glass-specular);
-  }
-  .ta-search:focus-within { border-color: var(--primary); background: var(--glass-elevated); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), inset 0 1px 0 var(--glass-specular); }
-  .ta-content { padding: 20px clamp(14px, 2vw, 28px) 64px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-  .ta-h1 { font-size: clamp(14px, 1.2vw, 16px); font-weight: 800; letter-spacing: -0.015em; margin: 0; color: var(--text); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ta-sub { font-size: 11.5px; color: var(--text-3); margin: 2px 0 0; font-weight: 500; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ta-topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; padding-right: 10px; }
+  .ta-topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 10px; padding: 6px 12px; width: clamp(140px, 15vw, 210px); color: var(--text-3); font-size: 12.5px; transition: all .15s ease; flex-shrink: 0; }
+  .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); background: #fff; }
+  .ta-content { padding: 22px clamp(14px, 2vw, 32px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+  .ta-h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); line-height: 1.2; }
+  .ta-sub { font-size: 11.5px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }
   }
   .ta-hero-banner {
-    border-radius: 14px;
-    background: var(--surface);
-    color: var(--text);
-    padding: clamp(18px, 2vw, 24px) clamp(20px, 2.2vw, 28px);
-    box-shadow: var(--shadow-card);
-    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%);
+    color: #FFFFFF;
+    padding: clamp(22px, 2.2vw, 30px) clamp(24px, 2.5vw, 34px);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+    border: 1px solid rgba(99, 102, 241, 0.4);
     position: relative;
     overflow: hidden;
     width: 100%;
     box-sizing: border-box;
-  }
-  .ta.dark .ta-hero-banner, html.dark .ta-hero-banner {
-    background: var(--surface) !important;
-    color: var(--text) !important;
-    border: 1px solid var(--border) !important;
-    box-shadow: inset 0 1px 0 var(--glass-specular), 0 12px 36px -4px rgba(0, 0, 0, 0.65) !important;
-  }
-  .ta-hero-banner.ta-hero-dark {
-    background: #0F172A !important;
-    color: #FFFFFF !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 12px 32px -4px rgba(15, 23, 42, 0.45) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
   }
   .ta-hero-inner {
     position: relative;
@@ -342,97 +257,69 @@ export const TOKENS = `
     flex: 1;
   }
   .ta-hero-title {
-    font-size: clamp(20px, 1.8vw, 25px);
+    font-size: clamp(22px, 2vw, 28px);
     font-weight: 900;
     letter-spacing: -0.025em;
-    margin: 0 0 4px;
-    color: var(--text);
+    margin: 0 0 6px;
+    color: #FFFFFF;
     line-height: 1.25;
   }
-  .ta-hero-banner.ta-hero-dark .ta-hero-title,
-  .ta-hero-banner.ta-hero-dark h1 {
-    color: #FFFFFF !important;
-  }
-  .ta.dark .ta-hero-title, html.dark .ta-hero-title {
-    color: var(--text) !important;
-  }
   .ta-hero-desc {
-    font-size: clamp(12.5px, 1vw, 13.5px);
-    color: var(--text-2);
+    font-size: clamp(13px, 1vw, 14.5px);
+    color: rgba(255, 255, 255, 0.85);
     margin: 0;
     max-width: 680px;
     line-height: 1.5;
   }
-  .ta-hero-banner.ta-hero-dark .ta-hero-desc,
-  .ta-hero-banner.ta-hero-dark p {
-    color: #94A3B8 !important;
-  }
-  .ta-hero-banner.ta-hero-dark .ta-hero-subcard {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.14) !important;
-    color: #FFFFFF !important;
-  }
-  .ta.dark .ta-hero-desc, html.dark .ta-hero-desc {
-    color: var(--text-2) !important;
-  }
   .ta-hero-actions {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-shrink: 0;
     align-items: center;
   }
 
   @media (max-width: 899px) {
-    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
+    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
     .ta-search { display: none; }
+    /* The sidebar is an off-canvas drawer here (translateX(-100%) unless
+       .mobile-open), so content must never be pushed over for it. */
     .ta-main, .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 0; }
+    /* The theme toggle, notifications bell, per-screen quick-action, and
+       Sign Out button all get hidden here rather than shrunk - crammed
+       together as icons they still read as "crowded" no matter how small.
+       Each one (except the purely-decorative bell) is replicated inside the
+       single "more" menu (.ta-header-mobile-only) instead, so nothing is
+       actually lost - it's consolidated into one tap target. */
     .ta-header-full-only { display: none !important; }
     .ta-header-mobile-only { display: block; }
     .ta-topbar {
-      padding: 6px 12px; min-height: 52px; height: auto; max-height: none;
+      padding: 0 12px; height: 52px; min-height: 52px; max-height: 52px;
       display: flex; align-items: center; justify-content: space-between;
       box-sizing: border-box; width: 100%; position: sticky; top: 0; z-index: 50; background: var(--surface);
-      gap: 8px;
     }
-    .ta-topbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; }
-    .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; flex: 0 0 auto; }
-    .ta-topbar-right .ta-btn {
-      height: 32px !important;
-      padding: 0 10px !important;
-      font-size: 11.5px !important;
-      border-radius: 6px !important;
-      gap: 4px !important;
-    }
+    .ta-topbar-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; padding-right: 6px; }
+    .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .ta-profile-pill { padding: 3px !important; }
-    .ta-content { padding: 14px 14px calc(80px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
+    .ta-content { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
       position: fixed; top: 0; left: 0; z-index: 100;
-      transform: translateX(-100%); transition: transform .2s ease;
-      box-shadow: 4px 0 18px rgba(15,23,42,.15);
+      transform: translateX(-100%); transition: transform .22s ease;
+      box-shadow: 6px 0 24px rgba(15,23,42,.18);
     }
     .ta-sidebar.mobile-open { transform: translateX(0); }
     .ta-sidebar-close {
       display: flex !important; align-items: center; justify-content: center;
-      width: 32px; height: 32px; border-radius: 6px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
+      width: 34px; height: 34px; border-radius: 8px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
     }
-    .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; }
+    .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
-    .ta-h1 {
-      font-size: clamp(13.5px, 4vw, 15px) !important;
-      font-weight: 800 !important;
-      line-height: 1.25 !important;
-      color: var(--text) !important;
-      white-space: normal !important;
-      overflow: visible !important;
-      text-overflow: clip !important;
-      word-break: normal !important;
-      overflow-wrap: break-word !important;
-    }
-    .ta-sub { display: none !important; }
+    .ta-h1 { font-size: 14.5px !important; font-weight: 800 !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    .ta-sub { display: block !important; font-size: 11px !important; color: var(--text-3) !important; margin-top: 1px !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
     .ta-table-wrap .ta-table { min-width: 460px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
+    /* Clean mobile scrolling for tabs and filter pills */
     .ta-tabs, .ta-pills-row {
       overflow-x: auto !important;
       -webkit-overflow-scrolling: touch;
@@ -443,132 +330,106 @@ export const TOKENS = `
     .ta-tabs::-webkit-scrollbar, .ta-pills-row::-webkit-scrollbar { display: none; }
     .ta-tab, .ta-pill { flex-shrink: 0 !important; white-space: nowrap !important; }
 
+    /* Responsive hero layout for all dashboards */
     .ta-hero-banner {
-      padding: 14px 12px !important;
-      border-radius: 12px !important;
+      padding: 16px 14px !important;
+      border-radius: 16px !important;
     }
     .ta-hero-inner {
       flex-direction: column !important;
       align-items: flex-start !important;
-      gap: 10px !important;
+      gap: 12px !important;
     }
     .ta-hero-text {
       width: 100% !important;
       flex: none !important;
     }
     .ta-hero-title {
-      font-size: clamp(18px, 4.5vw, 22px) !important;
-      line-height: 1.25 !important;
-      margin-bottom: 6px !important;
-      color: var(--text);
-      word-break: normal !important;
-      overflow-wrap: break-word !important;
-    }
-    .ta-hero-banner.ta-hero-dark .ta-hero-title,
-    .ta-hero-banner.ta-hero-dark h1 {
-      color: #FFFFFF !important;
+      font-size: 18px !important;
+      line-height: 1.3 !important;
+      margin-bottom: 5px !important;
     }
     .ta-hero-desc {
-      font-size: 13px !important;
+      font-size: 12.5px !important;
       line-height: 1.45 !important;
-      color: var(--text-2);
       max-width: 100% !important;
-    }
-    .ta-hero-banner.ta-hero-dark .ta-hero-desc,
-    .ta-hero-banner.ta-hero-dark p {
-      color: #94A3B8 !important;
     }
     .ta-hero-actions {
       width: 100% !important;
       flex-wrap: wrap !important;
-      gap: 6px !important;
+      gap: 8px !important;
     }
     .ta-hero-actions .ta-btn, .ta-hero-actions button {
-      padding: 7px 14px !important;
-      font-size: 12px !important;
-      border-radius: 8px !important;
+      padding: 8px 16px !important;
+      font-size: 12.5px !important;
+      border-radius: 10px !important;
     }
   }
   @media (max-width: 640px) {
-    .ta-topbar { padding: 6px 10px; min-height: 50px; height: auto; }
-    .ta-content { padding: 12px 12px calc(80px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
-    .ta-card { padding: 16px 14px; border-radius: 10px; width: 100%; box-sizing: border-box; }
-    .ta-h1 { font-size: 13.5px !important; font-weight: 800 !important; line-height: 1.25 !important; white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
-    .ta-btn { padding: 7px 12px; font-size: 12px; border-radius: 8px; }
-    .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; }
+    .ta-topbar { padding: 0 14px; height: 56px; min-height: 56px; }
+    .ta-content { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
+    .ta-card { padding: 18px 16px; border-radius: 16px; width: 100%; box-sizing: border-box; }
+    .ta-h1 { font-size: 14.5px; }
+    .ta-btn { padding: 8px 14px; font-size: 12.5px; border-radius: 10px; }
+    .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; }
   }
-  .ta-btn { border: none; cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 9px 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); user-select: none; }
-  .ta-btn-primary {
-    background: #4F46E5 !important;
-    color: #FFFFFF !important;
-    border: 1px solid rgba(255, 255, 255, 0.20) !important;
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.32), 0 4px 14px -2px rgba(79, 70, 229, 0.40) !important;
-  }
-  .ta-btn-primary:hover {
-    background: #4338CA !important;
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 6px 20px -2px rgba(79, 70, 229, 0.50) !important;
-    transform: translateY(-1.5px);
-  }
-  .ta-btn-primary:active {
-    background: #3730A3 !important;
-    transform: translateY(1px) scale(0.975);
-    box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.15), 0 2px 6px rgba(79, 70, 229, 0.30) !important;
-  }
-  .ta-btn-outline {
-    background: var(--glass-surface) !important;
-    backdrop-filter: var(--glass-blur-sm) !important;
-    -webkit-backdrop-filter: var(--glass-blur-sm) !important;
-    border: 1px solid var(--glass-border) !important;
-    color: var(--text) !important;
-    box-shadow: inset 0 1px 0 var(--glass-specular), var(--shadow-card) !important;
-  }
-  .ta-btn-outline:hover {
-    background: var(--glass-elevated) !important;
-    border-color: rgba(99, 102, 241, 0.35) !important;
-    transform: translateY(-1.5px);
-    color: var(--primary) !important;
-  }
-  .ta-btn-outline:active { transform: translateY(1px) scale(0.975); }
+  .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
+  .ta-btn:active { transform: scale(.96); }
+  .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32); }
+  .ta-btn-primary:hover { box-shadow: 0 8px 22px -2px rgba(79,70,229,0.48); transform: translateY(-2px); }
+  .ta-btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); }
+  .ta-btn-outline:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-1px); }
   .ta-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
-  .ta-btn-ghost:hover { background: #E0E7FF; }
-  .ta-btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+  .ta-btn-ghost:hover { background: #E0E7FF; transform: translateY(-1px); }
+  .ta-btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 10px; }
   .ta-btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
   
+  /* Card surface for Platform - no backdrop-filter: this app is dense with
+     stacked/nested cards and tables, and a blur costs real scroll/render
+     performance for near-zero visible benefit on flat backgrounds. */
+  /* Card surface for Platform */
   .ta-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: clamp(16px, 2.5vw, 20px);
-    box-shadow: var(--shadow-card);
-    transition: border-color .15s ease, box-shadow .15s ease;
+    padding: 22px;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow .24s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color .24s ease,
+                background .2s ease;
   }
   .ta.dark .ta-card, html.dark .ta-card, html.dark .ta .ta-card {
     background: var(--surface) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.45) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06) !important;
   }
   .ta-card-hover {
     cursor: pointer;
   }
   .ta-card-hover:hover {
-    box-shadow: var(--shadow-hover);
-    border-color: #CBD5E1;
+    box-shadow: 0 16px 36px -6px rgba(79, 70, 229, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(99, 102, 241, 0.35);
+    transform: translateY(-3px) scale(1.006);
   }
   .ta.dark .ta-card-hover:hover, html.dark .ta .ta-card-hover:hover {
-    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6) !important;
+    box-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.12) !important;
     border-color: rgba(129, 140, 248, 0.35) !important;
+    transform: translateY(-3px) scale(1.006);
   }
-  .ta-grid { display: grid; gap: 16px; }
+  .ta-grid { display: grid; gap: 20px; }
   .ta-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .ta-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .ta-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ta-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (min-width: 641px) and (max-width: 1080px) {
-    .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 14px !important; }
+    .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 16px !important; }
   }
-  .ta-sidebar-layout { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; }
+  /* Main content + sidebar layout: keeps the main column dominant instead of
+     splitting 50/50 once both tracks clear an auto-fit minmax threshold */
+  .ta-sidebar-layout { display: grid; grid-template-columns: 1fr; gap: 20px; align-items: start; }
   @media (min-width: 900px) {
-    .ta-sidebar-layout { grid-template-columns: minmax(0, 2fr) minmax(300px, 360px); gap: 20px; }
+    .ta-sidebar-layout { grid-template-columns: minmax(0, 2fr) minmax(320px, 380px); gap: 24px; }
   }
   .ta-row { display: flex; align-items: center; }
   .ta-between { justify-content: space-between; }
@@ -576,13 +437,13 @@ export const TOKENS = `
   .ta-gap4 { gap: 4px; } .ta-gap6 { gap: 6px; } .ta-gap8 { gap: 8px; } .ta-gap10 { gap: 10px; } .ta-gap12 { gap: 12px; } .ta-gap14 { gap: 14px; } .ta-gap16 { gap: 16px; } .ta-gap20 { gap: 20px; } .ta-gap24 { gap: 24px; }
   .ta-mt4 { margin-top: 4px; } .ta-mt6 { margin-top: 6px; } .ta-mt8 { margin-top: 8px; } .ta-mt10 { margin-top: 10px; } .ta-mt12 { margin-top: 12px; } .ta-mt14 { margin-top: 14px; } .ta-mt16 { margin-top: 16px; } .ta-mt18 { margin-top: 18px; } .ta-mt20 { margin-top: 20px; } .ta-mt24 { margin-top: 24px; } .ta-mt28 { margin-top: 28px; }
   .ta-label { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
-  .ta-title { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
-  .ta-body { font-size: 13px; color: var(--text-2); line-height: 1.5; }
-  .ta-avatar { border-radius: 50%; background: #4F46E5; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
-  .ta-tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: var(--surface-2); color: var(--primary); display:inline-flex; align-items:center; gap:4px; }
-  .ta-divider { height: 1px; background: var(--border); border: none; margin: 14px 0; }
+  .ta-title { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; color: var(--text); }
+  .ta-body { font-size: 13.5px; color: var(--text-2); line-height: 1.5; }
+  .ta-avatar { border-radius: 50%; background: var(--grad); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; box-shadow: 0 2px 6px rgba(79,70,229,0.25); }
+  .ta-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700; background: var(--surface-2); color: var(--primary); display:inline-flex; align-items:center; gap:4px; }
+  .ta-divider { height: 1px; background: var(--border); border: none; margin: 16px 0; }
   .ta-table { width: 100%; border-collapse: collapse; }
-  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); }
+  .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
   .ta-table-wrap .ta-table { min-width: 560px; }
   .ta-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 700; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-3); }
   .ta-table td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text); }
@@ -731,7 +592,7 @@ const ADMIN_NAV = [
     section: "Learning",
     items: [
       { key: "content", label: "Courses", icon: BookOpen },
-      { key: "coursebuilder", label: "Course Builder", icon: Zap },
+      { key: "coursebuilder", label: "Course Builder", icon: Sparkles },
       { key: "paths", label: "Learning Paths", icon: Map },
       { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
       { key: "compliance", label: "Learner Progress", icon: ShieldCheck },
@@ -749,6 +610,7 @@ const ADMIN_NAV = [
     section: "Operations",
     items: [
       { key: "emails", label: "Email Center", icon: Mail },
+      { key: "seats", label: "Seats & Licensing", icon: Armchair },
       { key: "payouts", label: "Payouts", icon: Briefcase },
       { key: "integrations", label: "Integrations", icon: Plug },
       { key: "moderation", label: "Content Moderation", icon: Flag },
@@ -850,7 +712,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
             <BrandLogo height={22} isMinimized={isMinimized} />
             {!isMinimized && (
-              <span className="ta-brand-tag" style={{ marginLeft: "auto", background: "#F59E0B", color: "#FFFFFF" }}>OWNER</span>
+              <span className="ta-brand-tag" style={{ marginLeft: "auto", background: "linear-gradient(135deg, #F59E0B, #EF4444)", color: "#FFFFFF" }}>OWNER</span>
             )}
           </div>
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
@@ -866,32 +728,30 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </button>
 
-        <div className="ta-sidebar-scroll">
-          {!isMinimized && <div className="ta-nav-section-title" style={{ marginTop: 0 }}>Platform Owner</div>}
-          <div className="ta-nav">
-            {SUPERADMIN_NAV.map(s => {
-              const Icon = s.icon;
-              const isActive = screen === s.key;
-              return (
-                <div
-                  key={s.key}
-                  className={`ta-nav-item ${isActive ? "active" : ""}`}
-                  onClick={() => { setScreen(s.key); onClose(); }}
-                  title={s.label}
-                >
-                  <Icon size={17} />
-                  <span style={{ flex: 1 }}>{s.label}</span>
-                </div>
-              );
-            })}
-          </div>
+        {!isMinimized && <div className="ta-nav-section-title">Platform Owner</div>}
+        <div className="ta-nav">
+          {SUPERADMIN_NAV.map(s => {
+            const Icon = s.icon;
+            const isActive = screen === s.key;
+            return (
+              <div
+                key={s.key}
+                className={`ta-nav-item ${isActive ? "active" : ""}`}
+                onClick={() => { setScreen(s.key); onClose(); }}
+                title={s.label}
+              >
+                <Icon size={17} />
+                <span style={{ flex: 1 }}>{s.label}</span>
+              </div>
+            );
+          })}
         </div>
 
         <div className="ta-nav-footer">
           {onOpenDashboardSwitcher && (
             <div
               className="ta-nav-item"
-              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--glass-border)", fontWeight: 700 }}
+              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid #E0E7FF", fontWeight: 700 }}
               onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
               title="Switch Dashboard"
             >
@@ -935,7 +795,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
         />
       )}
       <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
-        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 14px" }}>
+        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
             <BrandLogo height={22} isMinimized={isMinimized} />
             {!isMinimized && <span className="ta-brand-tag" style={{ marginLeft: "auto" }}>PRO</span>}
@@ -953,59 +813,55 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
         </button>
 
-        <div className="ta-sidebar-scroll">
-          {!isMinimized && <div className="ta-nav-section-title" style={{ marginTop: 0 }}>Workspaces</div>}
-          <div className="ta-workspace-card">
-            {allowedWorkspaces.map(w => {
-              const Icon = w.icon;
-              const isActive = workspace === w.key;
-              return (
-                <div
-                  key={w.key}
-                  className={`ta-ws-item ${isActive ? "active" : ""}`}
-                  onClick={() => { setWorkspace(w.key); onClose(); }}
-                  title={w.label}
-                >
-                  <Icon size={17} style={{ flexShrink: 0 }} />
-                  {!isMinimized && (
-                    <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, flex: 1, minWidth: 0 }}>
-                      <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.label}</span>
-                    </div>
-                  )}
+        {!isMinimized && <div className="ta-nav-section-title">Workspaces</div>}
+        <div className="ta-workspace-card">
+          {allowedWorkspaces.map(w => {
+            const Icon = w.icon;
+            const isActive = workspace === w.key;
+            return (
+              <div
+                key={w.key}
+                className={`ta-ws-item ${isActive ? "active" : ""}`}
+                onClick={() => { setWorkspace(w.key); onClose(); }}
+                title={w.label}
+              >
+                <Icon size={16} />
+                <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, flex: 1, minWidth: 0 }}>
+                  <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.label}</span>
                 </div>
-              );
-            })}
-          </div>
-
-          {navSections.map(group => (
-            <div key={group.section} className="ta-nav-group">
-              {!isMinimized && <div className="ta-nav-section-title">{group.section}</div>}
-              <div className="ta-nav">
-                {group.items.map(item => {
-                  const Icon = item.icon;
-                  const isActive = screen === item.key;
-                  return (
-                    <div
-                      key={item.key}
-                      className={`ta-nav-item ${isActive ? "active" : ""}`}
-                      onClick={() => { setScreen(item.key); onClose(); }}
-                      title={item.label}
-                    >
-                      <Icon size={17} />
-                      <span style={{ flex: 1 }}>{item.label}</span>
-                    </div>
-                  );
-                })}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
+        {navSections.map(group => (
+          <React.Fragment key={group.section}>
+            {!isMinimized && <div className="ta-nav-section-title">{group.section}</div>}
+            <div className="ta-nav">
+              {group.items.map(item => {
+                const Icon = item.icon;
+                const isActive = screen === item.key;
+                return (
+                  <div
+                    key={item.key}
+                    className={`ta-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => { setScreen(item.key); onClose(); }}
+                    title={item.label}
+                  >
+                    <Icon size={17} />
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </React.Fragment>
+        ))}
 
         <div className="ta-nav-footer">
           {onOpenDashboardSwitcher && (
             <div
               className="ta-nav-item"
-              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid var(--glass-border)", fontWeight: 700 }}
+              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid #E0E7FF", fontWeight: 700 }}
               onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
               title="Switch Dashboard"
             >
@@ -1065,7 +921,7 @@ export function DashboardSwitcher({ currentDashboard, availableDashboards, roleL
             <div
               key={key}
               className={`ta-ws-item ${isActive ? "active" : ""}`}
-              style={{ padding: "14px 16px", borderRadius: 10, cursor: isActive ? "default" : "pointer" }}
+              style={{ padding: "14px 16px", borderRadius: 14, cursor: isActive ? "default" : "pointer" }}
               onClick={() => { if (!isActive) onSwitch(key); }}
             >
               <Icon size={20} />
@@ -1256,35 +1112,28 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
       <div className="ta-topbar-right">
         {/* Tenant Organization Context Selector */}
         {orgSelector && (
-          <div className="ta-row ta-gap6 ta-org-selector" style={{
+          <div className="ta-row ta-gap8 ta-org-selector" style={{
             background: "var(--surface)",
-            height: 34,
-            padding: "2px 8px",
-            borderRadius: 8,
+            padding: "4px 10px",
+            borderRadius: 10,
             border: "1px solid var(--border)",
-            maxWidth: 190,
-            flexShrink: 1,
-            alignItems: "center"
+            boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
           }}>
-            <Building2 size={14} color="var(--primary)" style={{ flexShrink: 0 }} />
-            <div className="ta-col" style={{ lineHeight: 1.1, minWidth: 0, flex: 1 }}>
-              <span style={{ fontSize: 9, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em" }}>Tenant</span>
+            <Building2 size={15} color="var(--primary)" />
+            <div className="ta-col" style={{ lineHeight: 1 }}>
+              <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em" }}>Tenant</span>
               <select
                 value={orgSelector.selectedOrgId || ""}
                 onChange={(e) => orgSelector.onSelectOrg(e.target.value)}
                 style={{
-                  padding: 0,
+                  padding: "1px 0 0",
                   fontSize: 11.5,
                   fontWeight: 700,
                   border: "none",
                   background: "transparent",
                   color: "var(--text)",
                   cursor: "pointer",
-                  outline: "none",
-                  maxWidth: 135,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap"
+                  outline: "none"
                 }}
               >
                 <option value="">All Organizations (Global)</option>
@@ -1293,7 +1142,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
                 ))}
               </select>
             </div>
-            <ChevronRight size={12} color="var(--text-3)" style={{ transform: "rotate(90deg)", flexShrink: 0 }} />
+            <ChevronRight size={13} color="var(--text-3)" style={{ transform: "rotate(90deg)" }} />
           </div>
         )}
 
@@ -1432,10 +1281,9 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
         {/* Theme Toggle (Dark / Light) - full button on desktop, folded into
             the mobile "more" menu below instead of shown here, so it isn't
             a 6th thing competing for room in an already-tight mobile header. */}
-        {/* Theme Toggle (Dark / Light) */}
         <button
           className="ta-btn ta-btn-outline ta-header-full-only"
-          style={{ width: 34, height: 34, padding: 0, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+          style={{ width: 42, height: 42, padding: 0, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
           onClick={() => {
             const next = !isDarkTheme;
             setIsDarkTheme(next);
@@ -1444,43 +1292,46 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
           aria-label={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
         >
-          {isDarkTheme ? <Sun size={15} color="#FBBF24" /> : <Moon size={15} color="var(--text-2)" />}
+          {isDarkTheme ? <Sun size={17} color="#FBBF24" /> : <Moon size={17} color="var(--text-2)" />}
         </button>
 
-        {/* Notifications icon */}
-        <div className="ta-header-full-only" style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 8, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Bell size={15} color="var(--text-2)" />
+        {/* Notifications icon - desktop only; purely decorative (no real
+            feed to back it yet), so it isn't worth a slot in the mobile
+            menu either. */}
+        <div className="ta-header-full-only" style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
+          <Bell size={17} color="var(--text-2)" />
         </div>
 
-        {/* Primary Header Quick Action */}
-        {right && (
-          <div className="ta-header-full-only">
-            {right}
-          </div>
-        )}
+        {/* Primary Header Quick Action - full-size on desktop, replicated
+            (not dropped) inside the mobile "more" menu below. */}
+        <div className="ta-header-full-only">
+          {right}
+        </div>
 
-        {/* User Profile Pill */}
+        {/* User Profile Pill - opens the real Settings Hub. Always visible -
+            this is the one action worth a permanent, dedicated slot. */}
         <div
           className="ta-row ta-gap8 ta-profile-pill"
-          style={{ background: "var(--surface)", height: 34, padding: "2px 8px 2px 4px", borderRadius: 8, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0, alignItems: "center" }}
+          style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0 }}
           onClick={() => canOpenOwnSettings && onNavigate("settings")}
         >
-          <Avatar initials={userInitials} size={26} />
-          <div className="ta-col ta-profile-pill-text" style={{ lineHeight: 1.15, paddingRight: 2 }}>
-            <span className="ta-profile-pill-name" style={{ fontSize: 11.5, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
-            <span className="ta-profile-pill-name" style={{ fontSize: 9.5, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
+          <Avatar initials={userInitials} size={32} />
+          <div className="ta-col ta-profile-pill-text" style={{ lineHeight: 1.2, paddingRight: 4 }}>
+            <span className="ta-profile-pill-name" style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
+            <span className="ta-profile-pill-name" style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
           </div>
         </div>
 
-        {/* Sign Out Action */}
+        {/* Sign Out Action - full button on desktop, replicated inside the
+            mobile "more" menu below. */}
         <button
           className="ta-btn ta-btn-ghost ta-btn-sm ta-header-full-only"
           onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
           title="Sign Out"
           aria-label="Sign out"
-          style={{ height: 34, padding: "0 8px", borderRadius: 8, color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12 }}
+          style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
         >
-          <LogOut size={14} />
+          <LogOut size={15} />
           <span>Sign Out</span>
         </button>
 

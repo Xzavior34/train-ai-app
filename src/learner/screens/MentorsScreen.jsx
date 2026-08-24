@@ -24,10 +24,19 @@ export function MentorsScreen({
   sessionTopicInput, setSessionTopicInput, sessionRequestSent, setSessionRequestSent, session,
   showToast, bookMentorshipSession, upcomingSessionsQuery,
   mentorAvailabilityQuery, bookingDay, setBookingDay, bookingTime, setBookingTime,
-  initialSelectedMentorId = null,
+  initialSelectedMentorId = null, mentorsLoading = false,
 }) {
   const [expandedMentorId, setExpandedMentorId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // The header stat was a literal "Average Rating: 4.9 ★". It is now the
+  // mean of the real `mentors.rating` values already loaded into
+  // mentorsList, across the mentors that actually carry a rating - an
+  // unrated roster says "No ratings yet" instead of averaging to 0.0.
+  const ratedMentors = mentorsList.filter((m) => Number(m.rating) > 0);
+  const averageRating = ratedMentors.length
+    ? (ratedMentors.reduce((sum, m) => sum + Number(m.rating), 0) / ratedMentors.length).toFixed(1)
+    : null;
 
   useEffect(() => {
     if (!initialSelectedMentorId) return;
@@ -79,48 +88,46 @@ export function MentorsScreen({
       {/* =========================================================================
           HERO BANNER: Expert Mentors & 1-on-1 Office Hours
           ========================================================================= */}
-      {/* =========================================================================
-          HERO BANNER: Expert Mentors & 1-on-1 Office Hours (Adaptive Liquid Glass)
-          ========================================================================= */}
-      <div
-        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
-        style={{
-          borderRadius: 14,
-          padding: "clamp(18px, 2.5vw, 24px)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
-        <div
+      <div style={{
+        borderRadius: 20,
+        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
+        color: "#FFFFFF",
+        padding: "clamp(24px, 4vw, 32px)",
+        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+        border: "1px solid rgba(99, 102, 241, 0.4)",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        {/* Background Stock Photo with Overlay */}
+        <img
+          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1400&auto=format&fit=crop&q=85"
+          alt=""
           style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 180,
-            height: 180,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
-            pointerEvents: "none"
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover", opacity: 0.38, zIndex: 0
           }}
         />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
+          zIndex: 0
+        }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.2 }}>
+            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
               Expert Instructors &amp; 1-on-1 Mentorship
             </h1>
-            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
+            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
               Book dedicated 1-on-1 sessions for portfolio reviews, code architecture deep-dives, design token audits, and career guidance.
             </p>
           </div>
 
-          <div className="tai-hero-subcard" style={{
-            borderRadius: 10,
-            padding: "10px 16px",
-            flexShrink: 0
-          }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
-            <div style={{ fontSize: 12, color: "#FBBF24", marginTop: 2, fontWeight: 700 }}>Average Rating: 4.9 ★</div>
+          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>
+              {averageRating ? `Average Rating: ${averageRating} ★` : "No ratings yet"}
+            </div>
           </div>
         </div>
       </div>
@@ -143,7 +150,7 @@ export function MentorsScreen({
         </div>
 
         {sessionMentorChoice && (
-          <div className="tai-row tai-gap14 tai-mt14" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
+          <div className="tai-row tai-gap14 tai-mt14" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 14, border: "1px solid var(--border)" }}>
             <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={48} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sessionMentorChoice.name}</div>
@@ -220,34 +227,25 @@ export function MentorsScreen({
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: "100%", height: 44, paddingLeft: 42, paddingRight: 14,
-            borderRadius: 8, border: "1.5px solid var(--border)", background: "var(--surface)",
+            borderRadius: 12, border: "1.5px solid var(--border)", background: "var(--surface)",
             fontSize: 13.5, color: "var(--text)", outline: "none"
           }}
         />
       </div>
 
-      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
+      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 20 }}>
         {filteredMentors.length === 0 && (
-          <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px 20px", borderRadius: 10 }}>
-            <Users size={32} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
-            <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
-              {searchQuery ? "No instructors match your search" : "No active instructors found"}
-            </div>
-            <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 420, margin: "4px auto 0" }}>
-              {searchQuery ? "Try searching for a different name, specialization, or keyword." : "Check back soon as new instructors and industry mentors join the platform."}
-            </div>
+          <div className="tai-card tai-empty" style={{ gridColumn: "1 / -1", borderRadius: 16 }}>
+            {mentorsLoading
+              ? "Loading instructors…"
+              : (searchQuery
+                  ? `No instructors found matching "${searchQuery}".`
+                  : "No instructors have been published yet.")}
           </div>
         )}
 
-        {filteredMentors.map((m, idx) => {
+        {filteredMentors.map((m) => {
           const isExpanded = expandedMentorId === m.id;
-          const stockAvatar = `https://images.unsplash.com/photo-${[
-            "1534528741775-53994a69daeb",
-            "1507003211169-0a1dd7228f2d",
-            "1494790108377-be9c29b29330",
-            "1500648767791-00dcc994a43e",
-            "1573496359142-b8d87734a5a2"
-          ][idx % 5]}?w=150&auto=format&fit=crop&q=80`;
 
           return (
             <div
@@ -255,7 +253,7 @@ export function MentorsScreen({
               id={`mentor-card-${m.id}`}
               className="tai-card tai-card-hover"
               style={{
-                borderRadius: 10,
+                borderRadius: 18,
                 borderColor: isExpanded ? "var(--primary)" : "var(--border)",
                 cursor: "pointer",
                 padding: 22
@@ -264,7 +262,12 @@ export function MentorsScreen({
             >
               <div className="tai-row tai-between">
                 <div className="tai-row tai-gap14" style={{ minWidth: 0 }}>
-                  <Avatar initials={m.name.split(" ").map(n => n[0]).join("")} size={48} src={stockAvatar} />
+                  {/* Every mentor used to be handed one of five stock
+                      Unsplash headshots picked by list index, passed as
+                      `src` so it overrode any real photo. This is the
+                      mentor's own user_profiles.avatar_url, with the
+                      initials avatar as the only fallback. */}
+                  <Avatar initials={m.name.split(" ").map(n => n[0]).join("")} size={48} src={m.avatarUrl} />
                   <div style={{ minWidth: 0 }}>
                     <div className="tai-row tai-gap6">
                       <span style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
@@ -285,7 +288,13 @@ export function MentorsScreen({
 
               <div className="tai-row tai-between tai-mt16" style={{ flexWrap: "wrap", gap: 10 }}>
                 <div className="tai-row tai-gap12" style={{ fontSize: 12.5, color: "var(--text-2)", fontWeight: 600, flexWrap: "wrap" }}>
-                  <span className="tai-row tai-gap4"><Star size={13} color="var(--warning)" fill="var(--warning)" /> {m.rating}</span>
+                  {/* Real mentors.rating - an unrated instructor says so
+                      rather than showing a bare "0". */}
+                  {Number(m.rating) > 0 ? (
+                    <span className="tai-row tai-gap4"><Star size={13} color="var(--warning)" fill="var(--warning)" /> {m.rating}</span>
+                  ) : (
+                    <span className="tai-row tai-gap4"><Star size={13} color="var(--text-3)" /> Not rated yet</span>
+                  )}
                   <span>•</span>
                   <span>{m.sessions} sessions completed</span>
                 </div>

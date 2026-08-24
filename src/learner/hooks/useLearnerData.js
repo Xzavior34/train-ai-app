@@ -23,8 +23,12 @@ import {
   fetchForumCategories, fetchMyCohortMembership, fetchCohortPostsFeed,
   fetchCohortResources, fetchCohortSessions, fetchCohortAssignedCourses, fetchCohortMembers
 } from "../../lib/api/schemaHelper.js";
+import {
+  fetchLeaderboardExtras, fetchCohortSessionsWithFacilitator
+} from "../../lib/api/live/learnerMiscLive.js";
 import { initialsOf, gradForIndex, timeAgo } from "../components/LearnerUI.jsx";
-import { isMockDataEnabled, subscribeToMockDataChanges, getYouTubeEmbedId } from "../../lib/mockDataManager.js";
+import { getYouTubeEmbedId } from "../../lib/mockDataManager.js";
+import { DEMO_MODE } from "../../lib/demoMode.js";
 
 export function useLearnerData(session, screen, params) {
   const userProfileQuery = useSupabaseQuery(async () => {
@@ -91,45 +95,34 @@ export function useLearnerData(session, screen, params) {
     return fetchMyStreakActivity(session.user.id, 14);
   }, [session?.user?.id, screen === "achievements"]);
 
-  const user = {
-    name: userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner",
-    initials: initialsOf(userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email),
-    avatarUrl: userProfileQuery.data?.avatar_url || null,
-    location: userProfileQuery.data?.school || userProfileQuery.data?.department || "Member",
-    role: "Learner",
-    level: gamificationStatsQuery.data?.current_level || Math.floor((gamificationStatsQuery.data?.total_points || 0) / 500) + 1 || 1,
-    totalPoints: gamificationStatsQuery.data?.total_points || 0,
-    streak: gamificationStatsQuery.data?.streak_days || 1,
-    streakFreezes: gamificationStatsQuery.data?.streak_freezes_available || 1,
-    lessonsCompleted: gamificationStatsQuery.data?.lessons_completed || 0,
-    coursesCompleted: gamificationStatsQuery.data?.courses_completed || 0,
-    sessionsCompleted: gamificationStatsQuery.data?.sessions_completed || 0,
-    weeklyGoal: userProfileQuery.data?.weekly_lesson_goal || 5,
-    weeklyDone: (gamificationStatsQuery.data?.lessons_completed || 0) % (userProfileQuery.data?.weekly_lesson_goal || 5),
-    // Real `updated_at` column on `user_gamification_stats` - touched every
-    // time points/streak/lessons are written (lesson complete, quiz, daily
-    // reward claim, etc.), so it doubles as a "last learning activity"
-    // signal for the retention nudges without needing a second query.
-    lastActiveAt: gamificationStatsQuery.data?.updated_at || null,
-    track: personalizationQuery.data?.learning_tracks?.[0] || "Data & AI",
-    skillLevel: personalizationQuery.data?.skill_level || "beginner",
-    mastery: Math.min(100, Math.round(((gamificationStatsQuery.data?.lessons_completed || 0) * 10) / 2)),
-    accuracy: 85,
-  };
-
   const leaderboardQuery = useSupabaseQuery(async () => {
     if (!session) return [];
     const rows = await fetchLeaderboard(50);
     return rows.map((r, i) => ({
       rank: i + 1,
+      // userId/avatarUrl were dropped by this mapper, so every consumer
+      // downstream (LeaderboardScreen) had no way to match "this is you" or
+      // to render a real photo and substituted constants instead.
+      userId: r.user_id,
       name: r.display_name || "Learner",
       initials: (r.display_name || "L").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-      points: r.total_points,
-      streak: r.streak_days,
-      level: r.current_level,
+      avatarUrl: r.avatar_url || null,
+      points: r.total_points ?? 0,
+      streak: r.streak_days ?? 0,
+      level: r.current_level ?? 1,
       you: r.user_id === session.user.id,
     }));
   }, [session?.user?.id]);
+
+  // Columns the leaderboard table renders that the leaderboard RPC itself
+  // does not return: role/department, completed courses, earned badge count
+  // and cohort name. Batched across every ranked learner, dependent on the
+  // resolved ids the same way memberStatsQuery is below.
+  const leaderboardUserIdsKey = (leaderboardQuery.data || []).map((l) => l.userId).filter(Boolean).join(",");
+  const leaderboardExtrasQuery = useSupabaseQuery(async () => {
+    if (!leaderboardUserIdsKey) return {};
+    return fetchLeaderboardExtras(leaderboardUserIdsKey.split(","));
+  }, [leaderboardUserIdsKey]);
 
   const coursesQuery = useSupabaseQuery(async () => fetchPublishedCourses(), []);
   const enrollmentsQuery = useSupabaseQuery(async () => {
@@ -146,10 +139,17 @@ export function useLearnerData(session, screen, params) {
     return fetchMyBookmarks(session.user.id);
   }, [session?.user?.id]);
 
-  const [mockEnabled, setMockEnabled] = useState(() => isMockDataEnabled());
+  const [mockToggleOn, setMockToggleOn] = useState(() => isMockDataEnabled());
   useEffect(() => {
-    return subscribeToMockDataChanges((enabled) => setMockEnabled(enabled));
+    return subscribeToMockDataChanges((enabled) => setMockToggleOn(enabled));
   }, []);
+
+  // The sample-content toggle alone used to gate the fallbacks below, which
+  // meant a correctly configured but still-empty database showed fabricated
+  // enrolled courses (with progress and an invented instructor) as though they
+  // were real records. Sample content now additionally requires that there be
+  // no database at all: with Supabase connected, an empty result stays empty.
+  const mockEnabled = DEMO_MODE && mockToggleOn;
 
   const MOCK_COURSE_LESSONS = {
     "course-figma-ai": [
@@ -384,6 +384,10 @@ export function useLearnerData(session, screen, params) {
 
     if (mockEnabled && params?.id && MOCK_COURSE_LESSONS[params.id]) {
       return MOCK_COURSE_LESSONS[params.id];
+    }
+
+    if (mockEnabled) {
+      return MOCK_COURSE_LESSONS["course-figma-ai"];
     }
 
     return [];

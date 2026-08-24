@@ -1072,7 +1072,13 @@ export async function fetchLearningPathsAdmin() {
   const { data, error } = await supabase
     .from("learning_paths")
     .select("*, learning_path_courses(*, courses(id, title))")
-    .order("created_at", { ascending: false });
+    // learning_paths has no created_at column in this schema (id, title,
+    // description, level_label, category, organization_id, created_by,
+    // is_published). Ordering on it made PostgREST reject the entire query,
+    // so every learning-path list came back empty - which is exactly why the
+    // admin Learning Paths screen showed nothing at all. Ordered by title
+    // instead, which is a real column and gives a stable, readable order.
+    .order("title", { ascending: true });
   if (error) throw error;
   return (data || []).map(p => ({
     id: p.id,
@@ -2192,12 +2198,14 @@ export async function setOrgPermission(organizationId, role, resource, action, a
 
 export async function fetchOrgBranding(organizationId) {
   if (!supabase || !organizationId) return null;
+  // branding_settings is keyed by organization_id and has neither an `id` nor
+  // an `updated_at` column, so ordering on updated_at made PostgREST reject
+  // the query outright - branding always read back as null, which is why the
+  // Branding screen never showed a saved logo or colour.
   const { data, error } = await supabase
     .from("branding_settings")
     .select("*")
     .eq("organization_id", organizationId)
-    .order("updated_at", { ascending: false })
-    .limit(1)
     .maybeSingle();
   if (error) { console.warn("Org branding fetch warning:", error); return null; }
   return data;
@@ -2206,15 +2214,18 @@ export async function fetchOrgBranding(organizationId) {
 export async function upsertOrgBranding(organizationId, { logoUrl, primaryColor } = {}) {
   if (!supabase || !organizationId) return null;
   const existing = await fetchOrgBranding(organizationId);
-  const patch = { updated_at: new Date().toISOString() };
+  // No updated_at column on this table either - writing one made every save
+  // fail. organization_id is the key, so the update targets that.
+  const patch = {};
   if (logoUrl !== undefined) patch.logo_url = logoUrl || null;
   if (primaryColor !== undefined) patch.primary_color = primaryColor || null;
+  if (!Object.keys(patch).length) return existing;
 
   if (existing) {
     const { data, error } = await supabase
       .from("branding_settings")
       .update(patch)
-      .eq("id", existing.id)
+      .eq("organization_id", organizationId)
       .select()
       .single();
     if (error) throw error;
@@ -2824,13 +2835,20 @@ export async function fetchCertificateRequestsForCourse(courseId) {
     ];
   }
   if (!courseId) return [];
+  // `certificates` has TWO foreign keys to user_profiles (user_id and
+  // reviewed_by), which makes a bare `user_profiles(...)` embed ambiguous -
+  // PostgREST rejects the whole query rather than guessing, so this list came
+  // back empty and no learner name ever appeared. Resolved with the same
+  // batched manual lookup this file already uses everywhere else.
   const { data, error } = await supabase
     .from("certificates")
-    .select("*, user_profiles(display_name)")
+    .select("*")
     .eq("course_id", courseId)
     .order("requested_at", { ascending: false });
   if (error) { console.warn("Certificate requests fetch warning:", error); return []; }
-  return data || [];
+  const rows = data || [];
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
+  return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
 }
 
 export async function reviewCertificate(certificateId, approve, rejectionReason = "") {
@@ -3289,13 +3307,18 @@ export async function fetchAllIssuedCertificates(organizationId) {
     }));
   }
   if (!organizationId) return [];
+  // Same ambiguous-embed problem as fetchCertificateRequestsForCourse above:
+  // two user_profiles FKs on `certificates`. courses(title) embeds fine (a
+  // single FK), so only the profile join is done manually.
   const { data, error } = await supabase
     .from("certificates")
-    .select("*, user_profiles(display_name), courses(title)")
+    .select("*, courses(title)")
     .eq("organization_id", organizationId)
     .order("issued_at", { ascending: false, nullsFirst: false });
   if (error) { console.warn("Issued certificates fetch warning:", error); return []; }
-  return data || [];
+  const rows = data || [];
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
+  return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
 }
 
 // ============================================================================

@@ -85,24 +85,44 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
         sub="Connect webhooks for platform events"
         orgSelector={orgSelector}
         onNavigate={setScreen}
+        right={<button className="ta-btn ta-btn-primary" onClick={() => setFormOpen((v) => !v)}><Plus size={15} /> New webhook</button>}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div className="ta-hero-banner anim-fluid-entrance">
-          <div className="tai-glow-cobalt" />
-          <div className="ta-hero-inner">
-            <div className="ta-hero-text">
-              <h1 className="ta-hero-title">API &amp; Event Integrations</h1>
-              <p className="ta-hero-desc">Configure secure webhooks, third-party LMS bridges, and event notification streams.</p>
-            </div>
+        {/* =========================================================================
+            INTEGRATIONS HERO BANNER
+            ========================================================================= */}
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(18px, 3vw, 26px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
 
-            <div className="ta-hero-actions">
-              <button
-                className="ta-btn ta-btn-primary"
-                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
-                onClick={() => setFormOpen((v) => !v)}
-              >
-                <Plus size={14} /> New Webhook
-              </button>
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                API &amp; Event Integrations
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+                Configure secure webhooks and event notification streams.
+              </p>
             </div>
           </div>
         </div>
@@ -152,67 +172,69 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
           </div>
         )}
 
-        {/* Pre-built Enterprise Connectors Catalog */}
-        <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 16 }}>
-          {[
-            { name: "Slack Notifications", category: "Communication", desc: "Push real-time cohort milestones & completion alerts into team channels.", icon: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80", status: "Connected", enabled: true },
-            { name: "Zapier Automations", category: "Workflow", desc: "Sync enrolled learners and assessment outcomes with 5,000+ business apps.", icon: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&auto=format&fit=crop&q=80", status: "Active", enabled: true },
-            { name: "Discord Community Bot", category: "Community", desc: "Manage role gated channels and sync cohort study pod discussions.", icon: "https://images.unsplash.com/photo-1614680376593-902f749f7ffc?w=100&auto=format&fit=crop&q=80", status: "Configured", enabled: false },
-            { name: "Custom Event Webhooks", category: "Developer API", desc: "Stream raw JSON payloads for all student and instructor platform lifecycle events.", icon: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100&auto=format&fit=crop&q=80", status: "Custom", enabled: true },
-          ].map((conn, idx) => (
-            <div key={idx} className="ta-card ta-card-hover" style={{ borderRadius: 10, padding: 18, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div className="ta-row ta-between">
-                  <div className="ta-row ta-gap10">
-                    <img src={conn.icon} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: 14 }}>{conn.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-3)" }}>{conn.category}</div>
-                    </div>
-                  </div>
-                  <Tag tone={conn.enabled ? "success" : "default"}>{conn.status}</Tag>
-                </div>
-                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 12, lineHeight: 1.45 }}>
-                  {conn.desc}
-                </div>
-              </div>
-
-              <div className="ta-row ta-between" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Realtime Sync</span>
-                <Switch on={conn.enabled} onChange={() => showToast(`${conn.name} settings toggled.`)} />
-              </div>
-            </div>
-          ))}
-        </div>
-
+        {/* Connectors. This grid used to be a literal array of four connectors -
+            Slack "Connected", Zapier "Active", Discord "Configured" - with stock
+            Unsplash photos standing in for vendor logos and Switches whose
+            onChange only fired a toast. It sat directly above the real
+            org_integrations list, so every organization appeared to already have
+            Slack and Zapier wired up. It now renders the real rows from
+            fetchOrgIntegrations, with each Switch writing through
+            toggleOrgIntegration. The separate, smaller "Custom Webhooks" card
+            that used to follow is gone: it listed exactly these same rows. */}
         {integrationsQuery.loading && <div className="ta-empty">Loading integrations...</div>}
         {integrationsQuery.error && <div className="ta-empty">Couldn't load integrations: {integrationsQuery.error}</div>}
+        {!integrationsQuery.loading && !integrationsQuery.error && integrations.length === 0 && (
+          <div className="ta-card ta-empty">
+            No integrations connected yet. Use "New webhook" above to send platform events to Slack, Zapier, Discord or any other endpoint that accepts a webhook.
+          </div>
+        )}
 
         {integrations.length > 0 && (
-          <div className="ta-card">
-            <div className="ta-title">Custom Webhooks ({integrations.length})</div>
-            <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 14, marginTop: 14 }}>
-              {integrations.map(i => (
-                <div key={i.id} style={{ padding: 14, background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
+          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 16 }}>
+            {integrations.map((conn) => (
+              <div key={conn.id} className="ta-card ta-card-hover" style={{ borderRadius: 16, padding: 18, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div>
                   <div className="ta-row ta-between">
-                    <div className="ta-row ta-gap8">
-                      <Plug size={15} color="var(--primary)" />
-                      <span style={{ fontWeight: 700, fontSize: 13.5 }}>{i.name}</span>
+                    <div className="ta-row ta-gap10">
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface-3)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Plug size={16} color="var(--primary)" />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: 14, overflowWrap: "anywhere" }}>{conn.name || "Untitled integration"}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{conn.kind || "webhook"}</div>
+                      </div>
                     </div>
-                    <Switch on={!!i.enabled} onChange={async () => {
-                      await toggleOrgIntegration(i.id, !i.enabled);
-                      integrationsQuery.refetch();
-                      showToast(`${i.name} ${!i.enabled ? "enabled" : "disabled"}`);
-                    }} />
+                    <Tag tone={conn.enabled ? "success" : "default"}>{conn.enabled ? "Enabled" : "Disabled"}</Tag>
                   </div>
-                  {i.events?.length > 0 && (
+                  <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 12, lineHeight: 1.45, overflowWrap: "anywhere" }}>
+                    {conn.webhook_url || "No endpoint URL stored for this integration."}
+                  </div>
+                  {conn.events?.length > 0 && (
                     <div className="ta-row ta-gap6 ta-mt10" style={{ flexWrap: "wrap" }}>
-                      {i.events.map((ev) => <Tag key={ev}>{ev}</Tag>)}
+                      {conn.events.map((ev) => <Tag key={ev}>{ev}</Tag>)}
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
+
+                <div className="ta-row ta-between" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
+                    {conn.events?.length ? `${conn.events.length} event${conn.events.length === 1 ? "" : "s"} subscribed` : "No events subscribed"}
+                  </span>
+                  <Switch
+                    on={!!conn.enabled}
+                    onChange={async () => {
+                      try {
+                        await toggleOrgIntegration(conn.id, !conn.enabled);
+                        integrationsQuery.refetch();
+                        showToast(`${conn.name || "Integration"} ${!conn.enabled ? "enabled" : "disabled"}`);
+                      } catch (err) {
+                        showToast(err.message || "Could not change this integration.");
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

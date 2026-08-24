@@ -1,11 +1,15 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useMemo } from "react";
+import { DEMO_MODE, liveOr } from "../../lib/demoMode.js";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import {
+  fetchLearnerScheduleSessions, fetchCohortSessionsWithFacilitator
+} from "../../lib/api/live/learnerMiscLive.js";
 import {
   Home, BookOpen, Zap, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
-  Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Flame, MessageSquare, Calendar,
+  Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Sparkles, Flame, MessageSquare, Calendar,
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
   PanelLeftClose, PanelLeftOpen, Video
 } from "lucide-react";
-import { LearningPathsScreen } from "../screens/LearningPathsScreen.jsx";
 
 // Lets any screen's shared TopBar show a real unread-notifications bell
 // without threading unreadNotifs/push down through every screen's props.
@@ -23,8 +27,8 @@ export const TOKENS = `
     --primary-dark: #4338CA;
     --primary-light: #6366F1;
     --primary-tint: #EEF2FF;
-    --grad: #4F46E5;
-    --grad-subtle: #EEF2FF;
+    --grad: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+    --grad-subtle: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
     --text: #0F172A;
     --text-2: #475569;
     --text-3: #94A3B8;
@@ -39,291 +43,159 @@ export const TOKENS = `
     --danger: #EF4444;
     --danger-bg: #FEF2F2;
     --danger-border: #FECACA;
-    --radius: 10px;
-    --radius-sm: 6px;
-    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 2px 8px -1px rgba(15, 23, 42, 0.02);
-    --shadow-hover: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-    --shadow-btn: none;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03);
+    --shadow-hover: 0 8px 24px -4px rgba(79, 70, 229, 0.12), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+    --shadow-btn: 0 4px 14px -2px rgba(79, 70, 229, 0.32);
     --font: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-family: var(--font);
     color: var(--text);
     transition: background .25s ease, color .25s ease;
   }
-  .tai.dark, html.dark .tai {
+  .tai.dark {
     --bg: #090D1A;
     --surface: #121829;
     --surface-2: #1B243B;
     --surface-3: #161D31;
-    --primary: #818CF8;
-    --primary-dark: #6366F1;
-    --primary-light: #A5B4FC;
-    --primary-tint: rgba(99, 102, 241, 0.18);
     --text: #F8FAFC;
     --text-2: #94A3B8;
     --text-3: #64748B;
-    --border: rgba(255, 255, 255, 0.09);
-    --border-subtle: rgba(255, 255, 255, 0.05);
-    --success-bg: rgba(16, 185, 129, 0.18);
-    --success-border: rgba(16, 185, 129, 0.35);
-    --warning-bg: rgba(245, 158, 11, 0.18);
-    --warning-border: rgba(245, 158, 11, 0.35);
-    --danger-bg: rgba(239, 68, 68, 0.18);
-    --danger-border: rgba(239, 68, 68, 0.35);
+    --border: #1E293B;
+    --border-subtle: #161F33;
+    --success-bg: #064E3B;
+    --warning-bg: #451A03;
+    --danger-bg: #450A0A;
   }
   .tai-app-outer { min-height: 100vh; min-height: 100dvh; background: var(--bg); display:flex; flex-direction:column; width: 100%; box-sizing: border-box; }
   
   /* Top Full-Width Learner Global Header */
   .tai-global-header {
-    height: 54px; min-height: 54px; width: 100%; max-width: 100%;
-    background: var(--glass-elevated); backdrop-filter: var(--glass-blur-lg); -webkit-backdrop-filter: var(--glass-blur-lg);
-    border-bottom: 1px solid var(--glass-border);
+    height: 58px; min-height: 58px; width: 100%; max-width: 100%; background: var(--surface); border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 24px);
-    position: sticky; top: 0; z-index: 60; box-shadow: var(--glass-shadow); box-sizing: border-box;
+    position: sticky; top: 0; z-index: 60; box-shadow: 0 1px 3px rgba(15,23,42,0.03); box-sizing: border-box;
   }
   .tai-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .tai-header-brand { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; flex-shrink: 0; }
-  .tai-header-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(79,70,229,0.35); display: flex; align-items: center; justify-content: center; color: #fff; }
-  .tai-header-brand-name { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
-  .tai-header-search {
-    display: flex; align-items: center; gap: 6px;
-    background: var(--glass-surface); backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border); border-radius: 8px; padding: 6px 11px; width: clamp(140px, 15vw, 210px);
-    font-size: 12px; color: var(--text-2); box-shadow: inset 0 1px 0 var(--glass-specular);
-  }
+  .tai-header-brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
+  .tai-header-brand-name { font-size: 15.5px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+  .tai-header-search { display: flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 11px; width: clamp(140px, 15vw, 210px); font-size: 12px; color: var(--text-2); }
   .tai-header-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 12px; font-family: inherit; color: var(--text); }
   
   .tai-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(255, 247, 237, 0.9); border: 1px solid rgba(255, 237, 213, 0.9); color: #EA580C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(238, 242, 255, 0.9); border: 1px solid rgba(224, 231, 255, 0.9); color: #4F46E5; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-workspace-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: var(--glass-surface); border: 1px solid var(--glass-border); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .16s ease; flex-shrink: 0; box-shadow: inset 0 1px 0 var(--glass-specular); }
-  .tai-workspace-pill:hover { background: var(--glass-elevated); border-color: rgba(99, 102, 241, 0.35); }
+  .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-workspace-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .14s ease; flex-shrink: 0; }
+  .tai-workspace-pill:hover { background: var(--surface-2); border-color: #CBD5E1; }
   
-  .tai-desktop-shell {
-    display: flex;
-    width: 100%;
-    align-items: stretch;
-    min-height: calc(100vh - 54px);
-    box-sizing: border-box;
-  }
+  .tai-desktop-shell { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; align-items: stretch; min-height: calc(100vh - 58px); box-sizing: border-box; }
   .tai-app {
-    flex: 1;
-    min-width: 0;
-    min-height: calc(100vh - 54px);
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
+    width: 100%; max-width: 100%; flex: 1; min-height: calc(100vh - 58px);
+    background: var(--bg); position: relative; display: flex; flex-direction: column; min-width: 0; box-sizing: border-box;
   }
   .tai-body {
-    flex: 1;
-    padding: 24px clamp(16px, 2.5vw, 36px) calc(80px + env(safe-area-inset-bottom));
-    width: 100%;
-    max-width: 1360px;
-    margin: 0 auto;
-    box-sizing: border-box;
+    flex: 1; padding: 20px 24px calc(88px + env(safe-area-inset-bottom));
+    width: 100%; max-width: 1240px; margin: 0 auto; box-sizing: border-box;
   }
 
-  /* Refined Learner Desktop Sidebar with Liquid Glass */
+  /* Collapsible Accordion Sidebar */
   .tai-desktop-sidebar { display: none; }
   @media (min-width: 900px) {
     .tai-desktop-sidebar {
-      display: flex;
-      flex-direction: column;
-      width: 236px;
-      flex-shrink: 0;
-      position: sticky;
-      top: 54px;
-      height: calc(100vh - 54px);
-      background: var(--glass-surface);
-      backdrop-filter: var(--glass-blur-md);
-      -webkit-backdrop-filter: var(--glass-blur-md);
-      border-right: 1px solid var(--glass-border);
-      padding: 16px 10px;
-      box-sizing: border-box;
-      z-index: 40;
-      overflow-y: auto;
-      overflow-x: hidden;
-      transition: width .18s cubic-bezier(0.16, 1, 0.3, 1), padding .18s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column; width: 250px; flex-shrink: 0;
+      position: fixed; top: 58px; left: max(0px, calc((100vw - 1440px) / 2));
+      height: calc(100vh - 58px); height: calc(100dvh - 58px); background: var(--surface); border-right: 1px solid var(--border);
+      padding: 16px 12px; box-shadow: 2px 0 12px -6px rgba(15, 23, 42, 0.03); z-index: 40; overflow-y: auto;
+      transition: width .2s ease, padding .2s ease;
     }
-    .tai-desktop-sidebar::-webkit-scrollbar { width: 4px; }
-    .tai-desktop-sidebar::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 4px; }
-
+    .tai-app { margin-left: 250px; transition: margin-left .2s ease; }
+    .tai-desktop-sidebar.tai-sidebar-minimized + .tai-app { margin-left: 72px; }
     .tai-desktop-sidebar.tai-sidebar-minimized {
-      width: 64px;
-      padding: 16px 8px;
+      width: 72px; padding: 16px 8px;
     }
-    .tai-desktop-sidebar.tai-sidebar-minimized .tai-sidebar-section-title,
-    .tai-desktop-sidebar.tai-sidebar-minimized .tai-nav-item span,
-    .tai-desktop-sidebar.tai-sidebar-minimized .tai-nav-item .tai-badge {
-      display: none !important;
+    .tai-desktop-sidebar.tai-sidebar-minimized .tai-group-header span,
+    .tai-desktop-sidebar.tai-sidebar-minimized .tai-single-nav span,
+    .tai-desktop-sidebar.tai-sidebar-minimized .tai-sub-item span,
+    .tai-desktop-sidebar.tai-sidebar-minimized .tai-group-header > svg:last-child {
+      display: none;
     }
-    .tai-desktop-sidebar.tai-sidebar-minimized .tai-nav-item {
-      justify-content: center;
-      padding: 9px 0;
-      gap: 0;
+    .tai-desktop-sidebar.tai-sidebar-minimized .tai-group-header,
+    .tai-desktop-sidebar.tai-sidebar-minimized .tai-single-nav,
+    .tai-desktop-sidebar.tai-sidebar-minimized .tai-sub-item {
+      justify-content: center; padding: 10px 0; gap: 0;
     }
-    .tai-desktop-sidebar.tai-sidebar-minimized .tai-nav-item svg {
-      margin: 0 auto;
+    .tai-desktop-sidebar.tai-sidebar-minimized .tai-sub-items {
+      padding: 2px 0 4px 0;
     }
-
-    .tai-sidebar-nav {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-    }
-    .tai-category-group {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin-bottom: 4px;
-    }
+    .tai-sidebar-nav { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+    .tai-nav-group { margin-bottom: 4px; }
     .tai-group-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text);
-      transition: all .16s ease;
-      user-select: none;
+      display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 10px;
+      cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
     }
-    .tai-group-header:hover {
-      background: var(--glass-surface);
-      color: var(--primary);
-    }
-    .tai-group-header.active {
-      color: var(--primary);
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.14) 100%);
-    }
-    .tai.dark .tai-group-header.active {
-      color: #818CF8;
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.22) 0%, rgba(99, 102, 241, 0.30) 100%);
-    }
-    .tai-sub-items {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding: 2px 0 4px 10px;
-      margin-left: 8px;
-      border-left: 1.5px solid var(--glass-border);
-    }
+    .tai-group-header:hover { background: var(--surface-2); color: var(--text); }
+    .tai-group-header.active { color: var(--primary); font-weight: 700; }
+    .tai-sub-items { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 6px 12px; }
     .tai-sub-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-2);
-      transition: all .16s ease;
-      line-height: 1.35;
+      display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 500; color: var(--text-2); transition: all .14s ease;
     }
-    .tai-sub-item:hover {
-      background: var(--glass-surface);
-      color: var(--text);
-      transform: translateX(2px);
-      box-shadow: inset 0 1px 0 var(--glass-specular);
+    .tai-sub-item:hover { background: var(--surface-2); color: var(--text); }
+    .tai-sub-item.active { background: #EEF2FF; color: #4F46E5; font-weight: 700; border-left: 3px solid #4F46E5; padding-left: 9px; }
+    .tai-single-nav {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer;
+      font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
     }
-    .tai-sub-item.active {
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.14) 0%, rgba(99, 102, 241, 0.20) 100%) !important;
-      color: #4F46E5 !important;
-      font-weight: 700;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(79, 70, 229, 0.12);
-    }
-    .tai.dark .tai-sub-item.active {
-      background: linear-gradient(135deg, rgba(79, 70, 229, 0.28) 0%, rgba(99, 102, 241, 0.38) 100%) !important;
-      color: #818CF8 !important;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-    .tai-badge {
-      margin-left: auto;
-      background: #4F46E5;
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 1px 6px;
-      border-radius: 99px;
-      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
-    }
-    .tai-badge-danger {
-      background: var(--danger);
-    }
-    .tai-sidebar-footer {
-      margin-top: auto;
-      padding-top: 12px;
-      border-top: 1px solid var(--glass-border);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
+    .tai-single-nav:hover { background: var(--surface-2); color: var(--text); }
+    .tai-single-nav.active { background: #EEF2FF; color: #4F46E5; font-weight: 700; border-left: 3px solid #4F46E5; padding-left: 9px; }
+    .tai-sidebar-footer { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px; }
     .tai-toggle-sidebar-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      height: 32px;
-      border-radius: 6px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-surface);
-      color: var(--text-2);
-      cursor: pointer;
-      backdrop-filter: blur(8px);
-      transition: all .15s ease;
-      margin-bottom: 6px;
+      display: flex; align-items: center; justify-content: center; width: 100%; height: 36px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer;
+      transition: all .15s ease; margin-bottom: 10px;
     }
-    .tai-toggle-sidebar-btn:hover {
-      background: var(--glass-elevated);
-      color: var(--primary);
-      border-color: rgba(99, 102, 241, 0.35);
-      transform: translateY(-1px);
-    }
+    .tai-toggle-sidebar-btn:hover { background: var(--surface-3); color: var(--primary); border-color: var(--primary-light); }
   }
 
   .tai-demo-banner {
     position: fixed; top: 0; left: 0; right: 0; width: 100%;
-    background: rgba(254, 243, 199, 0.92); backdrop-filter: blur(8px);
-    border-bottom: 1px solid rgba(253, 230, 138, 0.9); color: #B45309; font-size: 11.5px; font-weight: 700; text-align: center;
+    background: var(--warning-bg); border-bottom: 1px solid var(--warning-border); color: #B45309; font-size: 11.5px; font-weight: 700; text-align: center;
     padding: 6px 12px; z-index: 100;
   }
   .tai, .tai * { -webkit-tap-highlight-color: transparent; }
   .tai-toast {
-    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 200;
-    background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    color: #FFFFFF; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
-    box-shadow: 0 8px 32px rgba(15, 23, 42, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
-    display: flex; align-items: center; gap: 8px; max-width: 90%;
-    animation: slideUp .18s cubic-bezier(.16,1,.3,1) both; border: 1px solid rgba(255,255,255,0.15);
+    position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%); z-index: 200;
+    background: #0F172A; color: #FFFFFF; padding: 12px 20px; border-radius: 14px; font-size: 13.5px; font-weight: 600;
+    box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.35); display: flex; align-items: center; gap: 10px; max-width: 90%;
+    animation: slideUp .22s cubic-bezier(.16,1,.3,1) both; border: 1px solid rgba(255,255,255,0.1);
   }
   .tai-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap: nowrap; gap: 10px; padding: 6px 0 14px; width: 100%; box-sizing: border-box; }
   .tai-topbar > .tai-row.tai-gap12 { min-width: 0; flex: 1; }
   .tai-topbar-actions { flex-wrap: nowrap; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
   .tai-h1 { font-size: clamp(17px, 2.5vw, 20px); font-weight: 800; letter-spacing: -0.02em; margin:0; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
   .tai-sub { font-size: 12px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-  .tai-iconbtn {
-    width:32px; height:32px; border-radius:8px;
-    background: var(--glass-surface); backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-specular), 0 2px 6px rgba(15, 23, 42, 0.04);
+  .tai-iconbtn { width:34px; height:34px; border-radius:10px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border:1px solid var(--border);
+    box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
     display:flex; align-items:center; justify-content:center; color: var(--text); flex-shrink:0; cursor:pointer;
-    transition: all .16s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .tai-iconbtn:hover { background: var(--glass-elevated); border-color: rgba(99, 102, 241, 0.35); box-shadow: var(--shadow-hover); }
-  .tai-iconbtn:active { transform: scale(0.96); }
+    transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); }
+  .tai-iconbtn:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-2px) scale(1.04); box-shadow: 0 6px 16px -2px rgba(79, 70, 229, 0.18); }
+  .tai-iconbtn:active { transform: scale(0.94); }
   
+  /* Card surface with a subtle specular highlight - no backdrop-filter on
+     cards: this screen stacks many of them per page, and blurring flat
+     background colors costs real scroll/render performance for no visible
+     benefit. (.tai-iconbtn and .tai-navbar keep their blur - those are single,
+     small, fixed elements, not repeated per-card.) */
   .tai-card {
-    background: var(--glass-surface);
-    backdrop-filter: var(--glass-blur-md); -webkit-backdrop-filter: var(--glass-blur-md);
-    border-radius: var(--radius);
-    padding: 20px;
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-card);
-    transition: border-color .18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .18s cubic-bezier(0.16, 1, 0.3, 1), transform .18s cubic-bezier(0.16, 1, 0.3, 1);
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 18px;
+    padding: 22px;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow .24s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color .24s ease,
+                background .24s ease;
     position: relative;
     overflow: hidden;
     width: 100%;
@@ -331,18 +203,35 @@ export const TOKENS = `
     box-sizing: border-box;
   }
   .tai.dark .tai-card {
-    background: var(--glass-surface);
-    backdrop-filter: var(--glass-blur-md); -webkit-backdrop-filter: var(--glass-blur-md);
-    border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-card);
+    background: rgba(18, 24, 43, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   }
   .tai-card-hover {
     cursor: pointer;
   }
   .tai-card-hover:hover {
-    border-color: rgba(99, 102, 241, 0.4);
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
+    box-shadow: 0 16px 36px -6px rgba(79, 70, 229, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    border-color: rgba(99, 102, 241, 0.35);
+    transform: translateY(-3px) scale(1.006);
+  }
+  .tai.dark .tai-card-hover:hover {
+    box-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+    border-color: rgba(129, 140, 248, 0.35);
+    transform: translateY(-3px) scale(1.006);
+  }
+  .tai-card-hover:active {
+    transform: translateY(-1px) scale(0.995);
+  }
+  
+  /* Card image dynamic zoom */
+  .tai-card-hover img.tai-zoomable,
+  .tai-card:hover img.tai-zoomable {
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .tai-card-hover:hover img.tai-zoomable,
+  .tai-card:hover img.tai-zoomable {
+    transform: scale(1.04);
   }
 
   .tai-row { display:flex; align-items:center; }
@@ -350,92 +239,58 @@ export const TOKENS = `
   .tai-gap4 { gap:4px; } .tai-gap6 { gap:6px; } .tai-gap8 { gap:8px; } .tai-gap10 { gap:10px; } .tai-gap12 { gap:12px; } .tai-gap14 { gap:14px; } .tai-gap16 { gap:16px; } .tai-gap18 { gap:18px; } .tai-gap20 { gap:20px; }
   .tai-col { display:flex; flex-direction:column; }
   .tai-mt4 { margin-top:4px; } .tai-mt6 { margin-top:6px; } .tai-mt8 { margin-top:8px; } .tai-mt10 { margin-top:10px; } .tai-mt12 { margin-top:12px; } .tai-mt14 { margin-top:14px; } .tai-mt16 { margin-top:16px; } .tai-mt20 { margin-top:20px; } .tai-mt24 { margin-top:24px; }
-  .tai-label { font-size:11px; font-weight:700; color: var(--text-3); text-transform:uppercase; letter-spacing:.06em; }
-  .tai-title-sm { font-size:15px; font-weight:800; letter-spacing: -0.01em; color: var(--text); }
-  .tai-body-text { font-size: 13px; color: var(--text-2); line-height:1.5; }
+  .tai-label { font-size:11.5px; font-weight:700; color: var(--text-3); text-transform:uppercase; letter-spacing:.06em; }
+  .tai-title-sm { font-size:16px; font-weight:800; letter-spacing: -0.01em; color: var(--text); }
+  .tai-body-text { font-size: 13.5px; color: var(--text-2); line-height:1.5; }
   
-  .tai-btn { border:none; cursor:pointer; border-radius: 8px; font-weight:600; font-size:13.5px; padding: 10px 16px;
-    display:flex; align-items:center; justify-content:center; gap:6px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); user-select: none; }
-  .tai-btn-primary {
-    background: #4F46E5 !important;
-    color: #FFFFFF !important;
-    border: 1px solid rgba(255, 255, 255, 0.20) !important;
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.32), 0 4px 14px -2px rgba(79, 70, 229, 0.40) !important;
-  }
-  .tai-btn-primary:hover {
-    background: #4338CA !important;
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 6px 20px -2px rgba(79, 70, 229, 0.50) !important;
-    transform: translateY(-1.5px);
-  }
-  .tai-btn-primary:active { background: #3730A3 !important; transform: translateY(1px) scale(.975); }
-  .tai-btn-ghost {
-    background: var(--glass-surface); color: var(--primary); font-weight: 700;
-    backdrop-filter: var(--glass-blur-sm); border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-specular);
-  }
-  .tai-btn-ghost:hover { background: var(--glass-elevated); color: var(--primary-dark); border-color: rgba(99, 102, 241, 0.3); }
-  .tai-btn-ghost:active { transform: scale(.985); }
-  .tai-btn-outline {
-    background: var(--glass-surface); backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border); color: var(--text); font-weight: 600;
-    box-shadow: inset 0 1px 0 var(--glass-specular), var(--shadow-card);
-  }
-  .tai-btn-outline:hover { background: var(--glass-elevated); border-color: rgba(99, 102, 241, 0.3); box-shadow: var(--shadow-hover); transform: translateY(-1.5px); }
-  .tai-btn-outline:active { transform: translateY(1px) scale(.975); }
-  .tai-btn-sm { padding: 6px 12px; font-size:12px; border-radius:6px; }
+  /* Buttons with micro spring animations */
+  .tai-btn { border:none; cursor:pointer; border-radius: 12px; font-weight:700; font-size:14px; padding: 12px 20px;
+    display:flex; align-items:center; justify-content:center; gap:8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
+  .tai-btn-primary { background: var(--grad); color:#fff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32); }
+  .tai-btn-primary:hover { opacity: 0.96; transform: translateY(-2px); box-shadow: 0 8px 22px -2px rgba(79, 70, 229, 0.48); }
+  .tai-btn-primary:active { transform: scale(.96); }
+  .tai-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
+  .tai-btn-ghost:hover { background: #E0E7FF; color: var(--primary-dark); transform: translateY(-1px); }
+  .tai-btn-ghost:active { transform: scale(.96); }
+  .tai-btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); font-weight: 600; }
+  .tai-btn-outline:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-1px); }
+  .tai-btn-outline:active { transform: scale(.96); }
+  .tai-btn-sm { padding: 8px 14px; font-size:12.5px; border-radius:10px; }
   
-  .tai-pill { padding:6px 12px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); }
-  .tai-pill-active {
-    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
-    color:#fff;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 8px rgba(79, 70, 229, 0.35);
-  }
-  .tai-pill-inactive {
-    background: var(--glass-surface); backdrop-filter: var(--glass-blur-xs);
-    color: var(--text-2); border-color: var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-specular);
-  }
-  .tai-pill-inactive:hover { background: var(--glass-elevated); color: var(--text); border-color: rgba(99, 102, 241, 0.3); }
+  /* Interactive Pills with spring motion */
+  .tai-pill { padding:7px 16px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); }
+  .tai-pill:hover { transform: translateY(-1px); }
+  .tai-pill:active { transform: scale(0.96); }
+  .tai-pill-active { background: var(--primary); color:#fff; box-shadow: 0 4px 14px -2px rgba(79, 70, 229, 0.4); }
+  .tai-pill-inactive { background: var(--surface); color: var(--text-2); border-color: var(--border); }
+  .tai-pill-inactive:hover { background: var(--surface-2); color: var(--text); border-color: #CBD5E1; }
   
-  .tai-tag {
-    padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight:700;
-    background: var(--glass-surface); backdrop-filter: blur(4px);
-    border: 1px solid var(--glass-border);
-    color: var(--primary); letter-spacing: 0.02em;
-    box-shadow: inset 0 1px 0 var(--glass-specular);
-  }
+  /* Dynamic tags */
+  .tai-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight:700; background: var(--surface-2); color: var(--primary); letter-spacing: 0.02em; transition: all .16s ease; }
+  .tai-tag:hover { transform: scale(1.03); }
   
   .tai-scrollx { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; -ms-overflow-style:none; scrollbar-width:none; }
   .tai-scrollx::-webkit-scrollbar { display:none; }
-  .tai-progress-track { width:100%; height:6px; border-radius:4px; background: var(--glass-border-subtle); overflow:hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
-  .tai-progress-fill {
-    height:100%; border-radius:4px;
-    background: linear-gradient(90deg, #4F46E5 0%, #6366F1 100%);
-    box-shadow: 0 0 8px rgba(79, 70, 229, 0.4);
-    transition: width .25s ease;
-  }
-  .tai-avatar {
-    border-radius:50%; background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(79, 70, 229, 0.3);
-    color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;
-  }
-  .tai-divider { height:1px; background: var(--glass-border); border:none; margin: 12px 0; }
+  .tai-progress-track { width:100%; height:8px; border-radius:99px; background: var(--surface-2); overflow:hidden; }
+  .tai-progress-fill { height:100%; border-radius:99px; background: var(--grad); transition: width .35s cubic-bezier(0.16, 1, 0.3, 1); }
+  .tai-avatar { border-radius:50%; background: var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; box-shadow: 0 2px 8px rgba(79,70,229,0.25); }
+  .tai-divider { height:1px; background: var(--border); border:none; margin: 14px 0; }
   
-  /* Full-width attached bottom navigation on mobile with dynamic expanding pill motion (Liquid Glass) */
+  /* Full-width attached bottom navigation on mobile with dynamic glowing pill motion */
   .tai-navbar {
     position: fixed; left: 0; right: 0; bottom: 0; width: 100vw; max-width: 100%;
-    background: var(--glass-elevated);
-    backdrop-filter: var(--glass-blur-lg); -webkit-backdrop-filter: var(--glass-blur-lg);
-    border-top: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(226, 232, 240, 0.85);
     display: flex; justify-content: space-around; align-items: center;
-    padding: 8px 14px max(10px, env(safe-area-inset-bottom)); z-index: 100;
-    box-shadow: 0 -6px 28px rgba(15, 23, 42, 0.08), inset 0 1px 0 0 var(--glass-specular);
+    padding: 8px 14px max(12px, env(safe-area-inset-bottom)); z-index: 100;
+    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.06), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
     transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
   .tai.dark .tai-navbar {
-    background: var(--glass-elevated);
-    border-top: 1px solid var(--glass-border);
-    box-shadow: 0 -8px 36px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 var(--glass-specular);
+    background: rgba(13, 18, 34, 0.94);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   }
   .tai-navitem {
     display: flex; flex-direction: row; align-items: center; justify-content: center;
@@ -448,56 +303,48 @@ export const TOKENS = `
   }
   .tai-navitem-icon-wrap {
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), filter 0.25s ease;
   }
   .tai-navitem-label {
     max-width: 0; opacity: 0; transform: scale(0.7);
     overflow: hidden; white-space: nowrap; margin-left: 0;
-    font-size: 12px; font-weight: 800; letter-spacing: 0.02em;
+    font-size: 12.5px; font-weight: 800; letter-spacing: 0.02em;
     transition: max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
                 opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
                 transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
                 margin-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  /* Active dynamic pill state */
+  /* Active dynamic glowing pill state */
   .tai-navitem.active {
-    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
-    color: #FFFFFF;
+    background: var(--grad); color: #FFFFFF;
     padding: 8px 18px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 16px rgba(79, 70, 229, 0.45);
+    box-shadow: 0 4px 18px rgba(79, 70, 229, 0.45);
     transform: translateY(-2px);
   }
   .tai-navitem.active .tai-navitem-icon-wrap {
-    transform: scale(1.05);
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
   }
   .tai-navitem.active .tai-navitem-label {
     max-width: 90px; opacity: 1; transform: scale(1);
     margin-left: 7px; color: #FFFFFF;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
-  .tai-input {
-    width:100%; border-radius:8px;
-    border:1px solid var(--glass-border);
-    background: var(--glass-surface);
-    backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm);
-    box-shadow: inset 0 1px 0 var(--glass-specular);
-    padding: 10px 14px;
-    font-size:13px; color: var(--text); font-family: var(--font); transition: all .16s ease;
-  }
-  .tai-input:focus {
-    outline:none; border-color: var(--primary);
-    box-shadow: 0 0 0 2.5px rgba(79, 70, 229, 0.2), inset 0 1px 0 var(--glass-specular);
-  }
-  .tai-fade-in { animation: fadeIn .15s ease-out both; }
-  .tai-switch { width:40px; height:22px; border-radius:99px; background: var(--surface-2); position:relative; cursor:pointer; flex-shrink:0; transition: background .15s ease; border: 1px solid var(--border); }
+  .tai-input { width:100%; border-radius:12px; border:1px solid var(--border); background: var(--surface); padding: 12px 16px;
+    font-size:13.5px; color: var(--text); font-family: var(--font); transition: all .18s ease; }
+  .tai-input:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); transform: translateY(-1px); }
+  .tai-fade-in { animation: fadeIn .18s ease-out both; }
+  .tai-switch { width:44px; height:26px; border-radius:99px; background: var(--surface-2); position:relative; cursor:pointer; flex-shrink:0; transition: background .18s ease; border: 1px solid var(--border); }
   .tai-switch.on { background: var(--primary); border-color: var(--primary); }
-  .tai-switch-knob { width:16px; height:16px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition: left .15s ease; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+  .tai-switch-knob { width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition: left .18s cubic-bezier(.16,1,.3,1); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
   .tai-switch.on .tai-switch-knob { left:20px; }
-  .tai-empty { text-align:center; padding: 36px 16px; color: var(--text-2); }
-  .tai-grid2 { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:16px; width:100%; box-sizing:border-box; }
-  .tai-grid3 { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:16px; width:100%; box-sizing:border-box; }
-  .tai-grid4 { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:16px; width:100%; box-sizing:border-box; }
-  .tai-link { color: var(--primary); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:3px; }
-  .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 20px; align-items: start; width: 100%; max-width: 100%; box-sizing: border-box; }
+  .tai-empty { text-align:center; padding: 42px 18px; color: var(--text-2); }
+  .tai-grid2 { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
+  .tai-grid3 { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
+  .tai-grid4 { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
+  .tai-link { color: var(--primary); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:3px; transition: all .16s ease; }
+  .tai-link:hover { transform: translateX(2px); }
+  .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 24px; align-items: start; width: 100%; max-width: 100%; box-sizing: border-box; }
 
   /* Learner Hero & Career Roadmap responsive classes */
   .tai-hero-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
@@ -528,7 +375,7 @@ export const TOKENS = `
     .tai-streak-pill, .tai-credits-pill { padding: 6px 10px; font-size: 12px; gap: 5px; }
     .tai-header-right { gap: 8px; }
     .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-card { padding: 16px 14px !important; border-radius: 10px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-card { padding: 16px 14px !important; border-radius: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .tai-hero-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
     .tai-hero-btn { width: 100% !important; justify-content: center !important; padding: 10px 16px !important; font-size: 13px !important; }
@@ -541,7 +388,7 @@ export const TOKENS = `
     .tai-global-header { padding: 0 14px; height: 54px; width: 100%; max-width: 100%; box-sizing: border-box; }
     .tai-header-brand img, .tai-header-logo { height: 19px !important; }
     .tai-body { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-card { padding: 14px 14px !important; border-radius: 10px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-card { padding: 14px 14px !important; border-radius: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .tai-iconbtn { width: 34px; height: 34px; border-radius: 10px; }
     .tai-topbar { padding: 4px 0 12px; }
     .tai-h1 { font-size: 19px; }
@@ -758,30 +605,28 @@ export function LearnerHeader({
 
   return (
     <header className="tai-global-header">
-      <div className="tai-header-left" style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-        <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}>
+      <div className="tai-header-left">
+        <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
           <img
             src={brandLogoUrl || defaultLogo}
             alt="Train AI"
             className="tai-header-logo"
-            style={{ height: 24, width: "auto", minWidth: 70, objectFit: "contain", display: "block", flexShrink: 0 }}
+            style={{ height: 22, width: "auto", maxWidth: 100, objectFit: "contain", display: "block" }}
           />
         </div>
-        <div className="tai-desktop-only">
-          {searchComponent}
-        </div>
+        {searchComponent}
       </div>
 
-      <div className="tai-header-right" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+      <div className="tai-header-right">
         {/* Streak Pill */}
         <div className="tai-streak-pill" onClick={() => go?.("achievements")} title="Active Streak">
           <Flame size={14} color="#EA580C" />
-          <span>{user?.streak || 8} <span className="tai-pill-unit tai-desktop-only">days</span></span>
+          <span>{user?.streak || 8} <span className="tai-pill-unit">days</span></span>
         </div>
 
-        {/* AI Credits Pill (Desktop only to prevent mobile crowding) */}
-        <div className="tai-credits-pill tai-desktop-only" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
-          <Zap size={13} color="#4F46E5" />
+        {/* AI Credits Pill */}
+        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
+          <Sparkles size={13} color="#4F46E5" />
           <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
         </div>
 
@@ -801,13 +646,13 @@ export function LearnerHeader({
             aria-label="Notifications"
             style={{ position: "relative" }}
           >
-            <Bell size={16} />
+            <Bell size={17} />
             {unreadNotifs > 0 && (
               <span style={{
-                position: "absolute", top: 4, right: 4, minWidth: 14, height: 14,
+                position: "absolute", top: 5, right: 5, minWidth: 15, height: 15,
                 borderRadius: 99, background: "var(--danger)", color: "#fff",
-                fontSize: 9, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center",
-                padding: "0 2px", border: "1.5px solid #fff"
+                fontSize: 9.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "0 3px", border: "2px solid #fff"
               }}>
                 {unreadNotifs}
               </span>
@@ -823,7 +668,7 @@ export function LearnerHeader({
         >
           <Avatar
             initials={initialsOf(user?.name || user?.email || "Learner")}
-            size={32}
+            size={34}
             src={user?.avatarUrl}
           />
         </div>
@@ -835,7 +680,6 @@ export function LearnerHeader({
             onClick={onSignOut}
             title="Sign out"
             style={{ color: "var(--danger)" }}
-            aria-label="Sign out"
           >
             <LogOut size={16} />
           </button>
@@ -857,8 +701,10 @@ export function DesktopSidebar({
   unreadNotifs = 0,
 }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("tai_sidebar_minimized") === "true");
-  // Default all categories to open so learner can explore and collapse at will
-  const [collapsedCategories, setCollapsedCategories] = useState({});
+  const [learningOpen, setLearningOpen] = useState(true);
+  const [communityOpen, setCommunityOpen] = useState(true);
+  const [inboxOpen, setInboxOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const toggleMinimized = () => {
     setIsMinimized(prev => {
@@ -868,194 +714,242 @@ export function DesktopSidebar({
     });
   };
 
-  const toggleCategory = (catKey) => {
-    setCollapsedCategories(prev => ({
-      ...prev,
-      [catKey]: !prev[catKey]
-    }));
-  };
-
-  const CATEGORIES = [
-    {
-      key: "home",
-      label: "Home",
-      icon: Home,
-      defaultScreen: "home",
-      screens: ["home", "myProgress"],
-      subItems: [
-        { key: "home", label: "Overview", icon: Home },
-        { key: "myProgress", label: "My Progress", icon: BarChart3 }
-      ]
-    },
-    {
-      key: "courses",
-      label: "Courses",
-      icon: BookOpen,
-      defaultScreen: "courses",
-      screens: ["courses", "courseDetail", "lesson", "learningPaths", "bookmarks"],
-      subItems: [
-        { key: "courses", label: "All Courses", icon: BookOpen },
-        { key: "learningPaths", label: "Learning Paths", icon: Layers },
-        { key: "bookmarks", label: "Bookmarks", icon: Bookmark }
-      ]
-    },
-    {
-      key: "ai",
-      label: "AI Coach",
-      icon: Zap,
-      defaultScreen: "ai",
-      screens: ["ai", "aiQuiz"],
-      subItems: [
-        { key: "ai", label: "AI Coach", icon: Zap },
-        { key: "aiQuiz", label: "Quizzes", icon: GraduationCap }
-      ]
-    },
-    {
-      key: "community",
-      label: "Community",
-      icon: Users,
-      defaultScreen: "communityFeed",
-      screens: ["community", "communityFeed", "cohort", "mentors", "messages", "notifications"],
-      subItems: [
-        { key: "communityFeed", label: "Discussions", icon: MessageSquare },
-        { key: "cohort", label: "Cohorts", icon: Users },
-        { key: "mentors", label: "Mentors", icon: Calendar },
-        { key: "messages", label: "Messages", icon: Mail },
-        { key: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifs }
-      ]
-    },
-    {
-      key: "account",
-      label: "Account",
-      icon: Settings,
-      defaultScreen: "settings",
-      screens: ["achievements", "leaderboard", "settings", "profile"],
-      subItems: [
-        { key: "achievements", label: "Achievements", icon: Award },
-        { key: "settings", label: "Settings", icon: Settings }
-      ]
-    }
-  ];
-
   return (
     <aside className={`tai-desktop-sidebar ${isMinimized ? "tai-sidebar-minimized" : ""}`}>
-      {/* Sidebar Minimize / Expand Toggle */}
+      {/* Sidebar Collapse / Expand Toggle */}
       <button
         className="tai-toggle-sidebar-btn"
         onClick={toggleMinimized}
-        title={isMinimized ? "Expand sidebar" : "Minimize sidebar"}
-        aria-label={isMinimized ? "Expand sidebar" : "Minimize sidebar"}
+        title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+        aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
       >
         {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
       </button>
 
       <div className="tai-sidebar-nav">
-        {CATEGORIES.map(category => {
-          const isCategoryActive = category.screens.includes(activeScreen);
-          const isCollapsed = !!collapsedCategories[category.key];
-          const Icon = category.icon;
+        {/* HOME (Single link) */}
+        <div
+          className={`tai-single-nav ${activeScreen === "home" ? "active" : ""}`}
+          onClick={() => go("home")}
+          title="Home"
+        >
+          <Home size={18} />
+          <span>Home</span>
+        </div>
 
-          return (
-            <div key={category.key} className="tai-category-group">
-              {/* Category Header */}
+        {/* LEARNING (Collapsible Accordion) */}
+        <div className="tai-nav-group">
+          <div
+            className={`tai-group-header ${["courses", "courseDetail", "lesson", "learningPaths", "bookmarks", "myProgress"].includes(activeScreen) ? "active" : ""}`}
+            onClick={() => isMinimized ? go("courses") : setLearningOpen(!learningOpen)}
+            title="Learning & Courses"
+          >
+            <div className="tai-row tai-gap10">
+              <BookOpen size={18} />
+              <span>Learning</span>
+            </div>
+            {!isMinimized && (learningOpen ? <ChevronDown size={15} color="var(--text-3)" /> : <ChevronRight size={15} color="var(--text-3)" />)}
+          </div>
+          {(!isMinimized ? learningOpen : true) && (
+            <div className="tai-sub-items">
               <div
-                className={`tai-group-header ${isCategoryActive ? "active" : ""}`}
-                onClick={() => {
-                  if (isMinimized) {
-                    go(category.defaultScreen);
-                  } else {
-                    toggleCategory(category.key);
-                  }
-                }}
-                title={category.label}
+                className={`tai-sub-item ${activeScreen === "courses" && currentTab !== "myCourses" && currentTab !== "bookmarks" ? "active" : ""}`}
+                onClick={() => go("courses")}
+                title="Explore Courses"
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                  <Icon size={17} style={{ flexShrink: 0 }} />
-                  {!isMinimized && <span>{category.label}</span>}
-                </div>
-
-                {!isMinimized && (
-                  <ChevronDown
-                    size={15}
-                    color="var(--text-3)"
-                    className={`rotator-chevron ${!isCollapsed ? "rotator-chevron-open" : ""}`}
-                    style={{ flexShrink: 0 }}
-                  />
-                )}
+                <BookOpen size={15} />
+                <span>Courses</span>
               </div>
+              <div
+                className={`tai-sub-item ${currentTab === "learningPaths" ? "active" : ""}`}
+                onClick={() => go("learningPaths")}
+                title="Learning Paths & Tracks"
+              >
+                <Layers size={15} />
+                <span>Learning Paths</span>
+              </div>
+              <div
+                className={`tai-sub-item ${activeScreen === "bookmarks" ? "active" : ""}`}
+                onClick={() => go("bookmarks")}
+                title="Saved Library & Bookmarks"
+              >
+                <Bookmark size={15} />
+                <span>Bookmarks</span>
+              </div>
+              <div
+                className={`tai-sub-item ${activeScreen === "myProgress" ? "active" : ""}`}
+                onClick={() => go("myProgress")}
+                title="My Progress & Syllabus"
+              >
+                <BarChart3 size={15} />
+                <span>My Progress</span>
+              </div>
+            </div>
+          )}
+        </div>
 
-              {/* Sub-items (collapsible) */}
-              {!isMinimized && !isCollapsed && (
-                <div className="tai-sub-items anim-fluid-entrance">
-                  {category.subItems.map(item => {
-                    const SubIcon = item.icon;
-                    const isSubActive = activeScreen === item.key ||
-                      (item.key === "courses" && (activeScreen === "courseDetail" || activeScreen === "lesson")) ||
-                      (item.key === "settings" && activeScreen === "profile") ||
-                      (item.key === "communityFeed" && activeScreen === "community");
+        {/* AI COACH (Single link) */}
+        <div
+          className={`tai-single-nav ${activeScreen === "ai" ? "active" : ""}`}
+          onClick={() => go("ai")}
+          title="AI Neural Coach"
+        >
+          <Zap size={18} />
+          <span>AI Coach</span>
+        </div>
 
-                    return (
-                      <div
-                        key={item.key}
-                        className={`tai-sub-item ${isSubActive ? "active" : ""}`}
-                        onClick={() => {
-                          if (item.key === "settings" && onProfile) {
-                            onProfile();
-                          } else {
-                            go(item.key);
-                          }
-                        }}
-                        title={item.label}
-                      >
-                        <SubIcon size={14} style={{ flexShrink: 0 }} />
-                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.label}</span>
-                        {item.badge > 0 && <span className="tai-badge tai-badge-danger">{item.badge}</span>}
-                      </div>
-                    );
-                  })}
+        {/* COMMUNITY (Collapsible Accordion) */}
+        <div className="tai-nav-group">
+          <div
+            className={`tai-group-header ${["community", "cohort"].includes(activeScreen) ? "active" : ""}`}
+            onClick={() => isMinimized ? go("communityFeed") : setCommunityOpen(!communityOpen)}
+            title="Community Hub"
+          >
+            <div className="tai-row tai-gap10">
+              <Users size={18} />
+              <span>Community</span>
+            </div>
+            {!isMinimized && (communityOpen ? <ChevronDown size={15} color="var(--text-3)" /> : <ChevronRight size={15} color="var(--text-3)" />)}
+          </div>
+          {(!isMinimized ? communityOpen : true) && (
+            <div className="tai-sub-items">
+              <div
+                className={`tai-sub-item ${activeScreen === "community" && currentTab === "posts" ? "active" : ""}`}
+                onClick={() => go("communityFeed")}
+                title="Community Feed"
+              >
+                <MessageSquare size={15} />
+                <span>Feed</span>
+              </div>
+              <div
+                className={`tai-sub-item ${activeScreen === "cohort" || (activeScreen === "community" && currentTab === "groups") ? "active" : ""}`}
+                onClick={() => go("cohort")}
+                title="Active Cohorts"
+              >
+                <Users size={15} />
+                <span>Cohorts</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* INBOX & SESSIONS (Collapsible Accordion) */}
+        <div className="tai-nav-group">
+          <div
+            className={`tai-group-header ${["messages", "mentors", "notifications"].includes(activeScreen) ? "active" : ""}`}
+            onClick={() => isMinimized ? go("messages") : setInboxOpen(!inboxOpen)}
+            title="Inbox & Sessions"
+          >
+            <div className="tai-row tai-gap10">
+              <Mail size={18} />
+              <span>Inbox &amp; Sessions</span>
+            </div>
+            {!isMinimized && (inboxOpen ? <ChevronDown size={15} color="var(--text-3)" /> : <ChevronRight size={15} color="var(--text-3)" />)}
+          </div>
+          {(!isMinimized ? inboxOpen : true) && (
+            <div className="tai-sub-items">
+              <div
+                className={`tai-sub-item ${activeScreen === "messages" ? "active" : ""}`}
+                onClick={() => go("messages")}
+                title="Direct Messages"
+              >
+                <MessageSquare size={15} />
+                <span>Messages</span>
+              </div>
+              <div
+                className={`tai-sub-item ${activeScreen === "mentors" ? "active" : ""}`}
+                onClick={() => go("mentors")}
+                title="Instructors & 1-on-1 Sessions"
+              >
+                <Calendar size={15} />
+                <span>Schedule</span>
+              </div>
+              <div
+                className={`tai-sub-item ${activeScreen === "notifications" ? "active" : ""}`}
+                onClick={() => go("notifications")}
+                title="Notifications"
+              >
+                <Bell size={15} />
+                <span>Notifications</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ACCOUNT (Collapsible Accordion) */}
+        <div className="tai-nav-group">
+          <div
+            className={`tai-group-header ${activeScreen === "settings" ? "active" : ""}`}
+            onClick={() => isMinimized ? onProfile?.() : setAccountOpen(!accountOpen)}
+            title="Account & Settings"
+          >
+            <div className="tai-row tai-gap10">
+              <Settings size={18} />
+              <span>Account</span>
+            </div>
+            {!isMinimized && (accountOpen ? <ChevronDown size={15} color="var(--text-3)" /> : <ChevronRight size={15} color="var(--text-3)" />)}
+          </div>
+          {(!isMinimized ? accountOpen : false) && (
+            <div className="tai-sub-items">
+              <div
+                className={`tai-sub-item ${activeScreen === "achievements" ? "active" : ""}`}
+                onClick={() => go("achievements")}
+                title="Achievements & Badges"
+              >
+                <Award size={15} />
+                <span>Achievements</span>
+              </div>
+              <div
+                className={`tai-sub-item ${activeScreen === "settings" ? "active" : ""}`}
+                onClick={() => onProfile ? onProfile() : go("settings")}
+                title="Settings"
+              >
+                <Settings size={15} />
+                <span>Settings</span>
+              </div>
+              {onSignOut && (
+                <div
+                  className="tai-sub-item"
+                  style={{ color: "var(--danger)" }}
+                  onClick={onSignOut}
+                  title="Sign Out"
+                >
+                  <LogOut size={15} />
+                  <span>Sign Out</span>
                 </div>
               )}
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
 
-      {/* Footer Switcher / Sign Out */}
       <div className="tai-sidebar-footer">
         {onOpenDashboardSwitcher && (
-          <div
-            className="tai-sub-item"
-            onClick={onOpenDashboardSwitcher}
-            title="Switch Workspace"
-            style={{ color: "var(--primary)", fontWeight: 700 }}
-          >
-            <ShieldCheck size={16} />
-            {!isMinimized && <span>Admin Portal</span>}
+          <div className="tai-single-nav" onClick={onOpenDashboardSwitcher} title="Switch Dashboard Workspace">
+            <Repeat size={16} />
+            <span>Switch Dashboard</span>
           </div>
         )}
-        {onSignOut && (
-          <div
-            className="tai-sub-item"
-            onClick={onSignOut}
-            title="Sign Out"
-            style={{ color: "var(--danger)" }}
-          >
-            <LogOut size={16} />
-            {!isMinimized && <span>Sign Out</span>}
-          </div>
-        )}
+        <div
+          className={`tai-single-nav ${activeScreen === "settings" ? "active" : ""}`}
+          onClick={onProfile}
+          title="My Profile"
+        >
+          <Settings size={16} />
+          <span>Profile</span>
+        </div>
       </div>
     </aside>
   );
 }
 
-export function CourseThumb({ course, size = 56, rounded = 8 }) {
+export function CourseThumb({ course, size = 56, rounded = 14 }) {
   const [errored, setErrored] = useState(false);
   if (errored) {
     return (
       <div style={{
         width: size, height: size, borderRadius: rounded, flexShrink: 0,
-        background: course.grad?.[0] || "#4F46E5",
+        background: `linear-gradient(135deg, ${course.grad?.[0] || "#4F46E5"}, ${course.grad?.[1] || "#818CF8"})`,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <GraduationCap size={size * 0.42} color="#fff" strokeWidth={1.6} />
@@ -1066,7 +960,7 @@ export function CourseThumb({ course, size = 56, rounded = 8 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: rounded, flexShrink: 0, overflow: "hidden", position: "relative",
-      background: "#0F172A",
+      background: `linear-gradient(135deg, ${course.grad?.[0] || "#4F46E5"}, ${course.grad?.[1] || "#818CF8"})`,
       boxShadow: "0 2px 6px rgba(15,23,42,0.06)"
     }}>
       <img
@@ -1182,55 +1076,156 @@ export function QuickWinCard({ title, duration, points, onClick }) {
 // against the learner's own course completions, and lets a learner add and
 // drop their own tracks (user_personalization.learning_tracks).
 
-export function ScheduleView({ push, back }) {
-  const SESSIONS = [
-    {
-      id: "live-now",
-      title: "UI Critique & System Architecture Review",
-      track: "Design & UX",
-      time: "Live Now (10:00 AM - 11:30 AM)",
-      instructor: "Astrid Larsson",
-      isLive: true,
-      attendees: 18,
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-    },
-    {
-      id: "live-2",
-      title: "Full-Stack GenAI: Vector Embeddings & Supabase",
-      track: "AI & Engineering",
-      time: "Tomorrow at 02:00 PM UTC",
-      instructor: "Alex Rivera",
-      isLive: false,
-      attendees: 24,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
-    },
-    {
-      id: "live-3",
-      title: "Axon AI Prompting & Autonomous Workflows",
-      track: "AI Tools",
-      time: "Thursday at 04:30 PM UTC",
-      instructor: "Marcus Vance",
-      isLive: false,
-      attendees: 31,
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80"
-    }
-  ];
+// Illustrative agenda, for the no-database walkthrough only. The whole
+// "Schedule & Live Sessions" screen used to be this array: a permanently
+// "Live Now (10:00 AM - 11:30 AM)" session, three invented instructors with
+// stock headshots, attendee counts, and a Join button that opened
+// meet.google.com for everyone regardless of the session.
+const DEMO_SCHEDULE_SESSIONS = [
+  {
+    id: "live-now",
+    title: "UI Critique & System Architecture Review",
+    track: "Design & UX",
+    time: "Live Now (10:00 AM - 11:30 AM)",
+    instructor: "Astrid Larsson",
+    isLive: true,
+    attendees: 18,
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+    joinUrl: "https://meet.google.com"
+  },
+  {
+    id: "live-2",
+    title: "Full-Stack GenAI: Vector Embeddings & Supabase",
+    track: "AI & Engineering",
+    time: "Tomorrow at 02:00 PM UTC",
+    instructor: "Alex Rivera",
+    isLive: false,
+    attendees: 24,
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
+    joinUrl: "https://meet.google.com"
+  },
+  {
+    id: "live-3",
+    title: "Axon AI Prompting & Autonomous Workflows",
+    track: "AI Tools",
+    time: "Thursday at 04:30 PM UTC",
+    instructor: "Marcus Vance",
+    isLive: false,
+    attendees: 31,
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
+    joinUrl: "https://meet.google.com"
+  }
+];
+
+function formatSessionTime(startsAt, durationMinutes, isLive) {
+  if (!startsAt) return "Time to be confirmed";
+  const start = new Date(startsAt);
+  if (Number.isNaN(start.getTime())) return "Time to be confirmed";
+  const timeOpts = { hour: "2-digit", minute: "2-digit" };
+  const startLabel = start.toLocaleTimeString(undefined, timeOpts);
+  if (isLive) {
+    if (!durationMinutes) return `Live Now (started ${startLabel})`;
+    const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+    return `Live Now (${startLabel} - ${end.toLocaleTimeString(undefined, timeOpts)})`;
+  }
+  const isToday = start.toDateString() === new Date().toDateString();
+  const dayLabel = isToday
+    ? "Today"
+    : start.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+  return `${dayLabel} at ${startLabel}`;
+}
+
+export function ScheduleView({ push, back, session, cohortId = null }) {
+  const userId = session?.user?.id || null;
+
+  // The learner's own booked 1-on-1s (mentorship_sessions, with the real
+  // mentor profile resolved) plus the live sessions scheduled for their
+  // cohort (cohort_sessions, with the real facilitator behind created_by).
+  const mySessionsQuery = useSupabaseQuery(
+    async () => (userId ? fetchLearnerScheduleSessions(userId) : []),
+    [userId]
+  );
+  const cohortSessionsQuery = useSupabaseQuery(
+    async () => (cohortId ? fetchCohortSessionsWithFacilitator(cohortId) : []),
+    [cohortId]
+  );
+
+  const liveSessions = useMemo(() => {
+    const now = Date.now();
+    // "LIVE NOW" is derived from real timestamps instead of a hardcoded
+    // flag. mentorship_sessions carries duration_minutes; cohort_sessions
+    // has no duration column, so a 60-minute window off starts_at is used
+    // for the badge only - nothing about it is displayed as fact.
+    const COHORT_LIVE_WINDOW_MINUTES = 60;
+
+    const mine = (mySessionsQuery.data || []).map((s) => {
+      const start = s.scheduled_at ? new Date(s.scheduled_at).getTime() : null;
+      const duration = s.duration_minutes || null;
+      const isLive = Boolean(
+        start && now >= start && now <= start + (duration || COHORT_LIVE_WINDOW_MINUTES) * 60 * 1000
+      );
+      return {
+        id: s.id,
+        title: s.title || "Mentorship session",
+        // The mentor's real title, not an invented track name.
+        track: s.facilitatorTitle || "1-on-1 mentorship",
+        startsAt: s.scheduled_at || null,
+        durationMinutes: duration,
+        isLive,
+        instructor: s.facilitatorName || null,
+        avatar: s.facilitatorAvatarUrl || null,
+        joinUrl: s.meeting_url || null,
+      };
+    });
+
+    const cohort = (cohortSessionsQuery.data || []).map((s) => {
+      const start = s.starts_at ? new Date(s.starts_at).getTime() : null;
+      const isLive = Boolean(
+        start && now >= start && now <= start + COHORT_LIVE_WINDOW_MINUTES * 60 * 1000
+      );
+      return {
+        id: s.id,
+        title: s.title || "Cohort session",
+        track: "Cohort session",
+        startsAt: s.starts_at || null,
+        durationMinutes: null,
+        isLive,
+        instructor: s.facilitatorName || null,
+        avatar: s.facilitatorAvatarUrl || null,
+        joinUrl: s.join_url || s.recording_url || null,
+      };
+    });
+
+    return [...mine, ...cohort].sort((a, b) => {
+      const at = a.startsAt ? new Date(a.startsAt).getTime() : Infinity;
+      const bt = b.startsAt ? new Date(b.startsAt).getTime() : Infinity;
+      return at - bt;
+    });
+  }, [mySessionsQuery.data, cohortSessionsQuery.data]);
+
+  const SESSIONS = liveOr(liveSessions, DEMO_SCHEDULE_SESSIONS);
+  const loading = !DEMO_MODE && (mySessionsQuery.loading || cohortSessionsQuery.loading);
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <TopBar title="Schedule & Live Sessions" sub="Join live mentor workshops, critiques, and cohort sessions" onBack={back} />
 
       <div className="tai-col tai-gap14">
+        {loading && <div className="tai-empty">Loading your schedule...</div>}
+        {!loading && SESSIONS.length === 0 && (
+          <div className="tai-empty">
+            Nothing scheduled yet. Book a 1-on-1 with an instructor, or wait for your cohort's next live session.
+          </div>
+        )}
         {SESSIONS.map((sess) => (
           <div
             key={sess.id}
             className="tai-card tai-card-hover"
             style={{
               padding: 22,
-              borderRadius: 10,
-              background: sess.isLive ? "#0F172A" : "var(--surface)",
+              background: sess.isLive ? "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)" : "var(--surface)",
               color: sess.isLive ? "#fff" : "var(--text)",
-              border: sess.isLive ? "1px solid #1E293B" : "1px solid var(--border)",
+              border: sess.isLive ? "none" : "1px solid var(--border)",
               boxShadow: sess.isLive ? "0 10px 30px rgba(15,23,42,0.25)" : "var(--shadow-card)"
             }}
           >
@@ -1251,7 +1246,9 @@ export function ScheduleView({ push, back }) {
               </div>
 
               <span style={{ fontSize: 12.5, fontWeight: 700, color: sess.isLive ? "#F87171" : "var(--primary)" }}>
-                {sess.time}
+                {/* Real scheduled_at / starts_at, formatted in the viewer's
+                    locale - the old label was a fixed string. */}
+                {sess.time || formatSessionTime(sess.startsAt, sess.durationMinutes, sess.isLive)}
               </span>
             </div>
 
@@ -1261,22 +1258,37 @@ export function ScheduleView({ push, back }) {
 
             <div className="tai-row tai-between tai-mt16" style={{ flexWrap: "wrap", gap: 12 }}>
               <div className="tai-row tai-gap10">
-                <Avatar initials={sess.instructor.slice(0, 2)} size={38} src={sess.avatar} />
+                {/* Real facilitator: the mentor behind mentorship_sessions,
+                    or the cohort_sessions.created_by profile. Their own
+                    avatar_url, initials otherwise - never a stock photo. */}
+                <Avatar initials={initialsOf(sess.instructor || "?")} size={38} src={sess.avatar} />
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>{sess.instructor}</div>
-                  <div style={{ fontSize: 11.5, opacity: 0.75 }}>Instructor • {sess.attendees} learners registered</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>{sess.instructor || "Facilitator to be confirmed"}</div>
+                  <div style={{ fontSize: 11.5, opacity: 0.75 }}>
+                    {/* Case C: no table records session registrations or
+                        attendance, so the attendee count can only ever be
+                        illustrative. */}
+                    Instructor{DEMO_MODE && sess.attendees != null ? ` • ${sess.attendees} learners registered` : ""}
+                  </div>
                 </div>
               </div>
 
-              <button
-                className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ padding: "10px 20px" }}
-                onClick={() => {
-                  window.open("https://meet.google.com", "_blank");
-                }}
-              >
-                <Video size={14} /> {sess.isLive ? "Join Live Stream Room" : "Add to Calendar"}
-              </button>
+              {/* Every card used to open meet.google.com. The button now
+                  uses the session's real meeting_url / join_url, and says
+                  so when the organiser hasn't published a link yet. */}
+              {sess.joinUrl ? (
+                <button
+                  className="tai-btn tai-btn-primary tai-btn-sm"
+                  style={{ padding: "10px 20px" }}
+                  onClick={() => { window.open(sess.joinUrl, "_blank", "noopener"); }}
+                >
+                  <Video size={14} /> {sess.isLive ? "Join Live Stream Room" : "Open Session Link"}
+                </button>
+              ) : (
+                <span style={{ fontSize: 11.5, opacity: 0.75, fontWeight: 600 }}>
+                  Joining link not published yet
+                </span>
+              )}
             </div>
           </div>
         ))}

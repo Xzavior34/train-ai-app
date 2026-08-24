@@ -1,15 +1,27 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { TopBar, Tag, Avatar, ProgressBar } from "../components/LearnerUI.jsx";
+import { DEMO_MODE, liveOr } from "../../lib/demoMode.js";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { fetchLeaderboardExtras } from "../../lib/api/live/learnerMiscLive.js";
 import {
   Trophy, Medal, Crown, Flame, Award, ArrowUp, ArrowDown, Minus,
-  Search, Filter, Users, TrendingUp, ChevronRight, CheckCircle2
+  Search, Filter, Users, Sparkles, TrendingUp, ChevronRight, CheckCircle2
 } from "lucide-react";
-import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, push }) {
-  const [timeframe, setTimeframe] = useState("week"); // "all" | "month" | "week" | "cohort"
+  // fetchLeaderboard() ranks on all-time user_gamification_stats points -
+  // it takes no timeframe argument and nothing in the schema aggregates
+  // points per week/month or per cohort - so the week/month/cohort tabs
+  // could only ever re-show the same all-time rows under a different
+  // label. Case C: the controls stay for the no-database walkthrough and
+  // only the one that is actually true is offered against a real database.
+  const [timeframe, setTimeframe] = useState(DEMO_MODE ? "week" : "all"); // "all" | "month" | "week" | "cohort"
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Illustrative board, for the no-database walkthrough only. This array
+  // used to render whenever the real leaderboard query came back empty, so
+  // an org with nobody ranked yet still showed eight invented learners at
+  // 6,840/6,120/5,790 XP in a "Spring Cohort 2026" that does not exist.
   const DEFAULT_LEADERBOARD = [
     {
       id: "l-1",
@@ -118,25 +130,62 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
     }
   ];
 
-  const learners = (leaderboardQuery?.data && leaderboardQuery.data.length > 0)
-    ? leaderboardQuery.data.map((l, i) => ({
-        id: l.user_id || `l-${i}`,
-        rank: i + 1,
-        name: l.display_name || l.name || "Learner",
-        role: l.role || "Specialist",
-        cohort: l.cohort_name || "Active Batch",
-        avatar: l.avatar_url,
-        xp: l.total_points || l.xp || 1000,
-        streak: l.streak || 5,
-        completedCourses: l.completed_courses || 2,
-        badgesCount: l.badges_count || 4,
-        isCurrentUser: l.user_id === session?.user?.id
-      }))
-    : (isMockDataEnabled() ? DEFAULT_LEADERBOARD : []);
+  // useLearnerData normalises every leaderboard row to
+  // {rank, userId, name, initials, avatarUrl, points, streak, level, you}.
+  // This screen was reading l.total_points / l.streak / l.completed_courses
+  // / l.badges_count / l.user_id - none of which exist on that shape - so
+  // every field fell through to its literal and all real learners rendered
+  // 1000 XP, 5-day streaks, 2 courses and 4 badges, with the "this is you"
+  // highlight never firing.
+  const liveRows = leaderboardQuery?.data || [];
+
+  // Columns the leaderboard RPC itself does not return: profile role /
+  // department, courses completed (user_gamification_stats.courses_completed),
+  // earned badge count (user_achievements rows) and cohort name
+  // (cohort_members -> cohorts.name). Batched across every ranked learner.
+  const extrasUserIdsKey = liveRows.map((l) => l.userId).filter(Boolean).join(",");
+  const extrasQuery = useSupabaseQuery(
+    async () => (extrasUserIdsKey ? fetchLeaderboardExtras(extrasUserIdsKey.split(",")) : {}),
+    [extrasUserIdsKey]
+  );
+  const extras = extrasQuery.data || {};
+
+  const liveLearners = liveRows.map((l, i) => {
+    const extra = extras[l.userId] || {};
+    return {
+      id: l.userId || `l-${i}`,
+      rank: l.rank ?? i + 1,
+      name: l.name || "Learner",
+      initials: l.initials || null,
+      // Nothing invents a job title here any more: with no role/department
+      // on the profile the line is simply not rendered.
+      role: extra.role || extra.department || null,
+      cohort: extra.cohortName || null,
+      // Real user_profiles.avatar_url only. Avatar falls back to initials.
+      avatar: l.avatarUrl || null,
+      xp: l.points ?? 0,
+      streak: l.streak ?? 0,
+      level: l.level ?? 1,
+      completedCourses: extra.coursesCompleted ?? 0,
+      badgesCount: extra.badgesCount ?? 0,
+      isCurrentUser: Boolean(l.you),
+    };
+  });
+
+  const learners = liveOr(liveLearners, DEFAULT_LEADERBOARD);
+  const rankingsLoading = !DEMO_MODE && Boolean(leaderboardQuery?.loading || extrasQuery.loading);
+
+  // This learner's own rank comes from the real board (the `you` flag), not
+  // a hardcoded #4, and the percentile is derived from the board's own
+  // length instead of a fixed "Top 5%".
+  const myRow = learners.find((l) => l.isCurrentUser) || null;
+  const myPercentile = myRow && learners.length
+    ? Math.max(1, Math.round((myRow.rank / learners.length) * 100))
+    : null;
 
   const filteredLearners = learners.filter(l =>
-    l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.role.toLowerCase().includes(searchQuery.toLowerCase())
+    (l.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (l.role || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -148,37 +197,46 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
       />
 
       {/* =========================================================================
-          TOP 3 PODIUM HERO SECTION (Adaptive Liquid Glass)
+          TOP 3 PODIUM HERO SECTION
           ========================================================================= */}
-      <div
-        className="tai-card tai-hero-card anim-fluid-entrance"
-        style={{
-          borderRadius: 14,
-          padding: "clamp(20px, 3vw, 28px)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
-        <div
+      <div style={{
+        borderRadius: 20,
+        background: "linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.92) 100%)",
+        color: "#FFFFFF",
+        padding: "clamp(18px, 3vw, 28px)",
+        boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.45)",
+        border: "1px solid rgba(99, 102, 241, 0.4)",
+        position: "relative",
+        overflow: "hidden"
+      }}>
+        <img
+          src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1400&auto=format&fit=crop&q=85"
+          alt=""
           style={{
-            position: "absolute",
-            top: -40,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 260,
-            height: 160,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, transparent 70%)",
-            pointerEvents: "none"
+            position: "absolute", inset: 0, width: "100%", height: "100%",
+            objectFit: "cover", opacity: 0.25, zIndex: 0
           }}
         />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 55%, rgba(15,23,42,0.7) 100%)",
+          zIndex: 0
+        }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <h2 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.8vw, 26px)", fontWeight: 900, margin: "0 0 4px", letterSpacing: "-0.02em" }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              background: "rgba(245, 158, 11, 0.2)", color: "#FBBF24",
+              padding: "4px 12px", borderRadius: 99, fontSize: 12, fontWeight: 800,
+              border: "1px solid rgba(245, 158, 11, 0.4)", marginBottom: 8
+            }}>
+              <Trophy size={14} color="#FBBF24" /> SPRINT CHAMPIONS
+            </div>
+            <h2 style={{ fontSize: "clamp(18px, 2.5vw, 24px)", fontWeight: 900, margin: "0 0 4px", color: "#FFFFFF" }}>
               Hall of Fame &amp; Top Performers
             </h2>
-            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0 }}>
+            <p style={{ fontSize: 12.5, color: "rgba(255,255,255,0.8)", margin: 0 }}>
               Top 3 learners earn bonus mystery boxes and exclusive certification badges.
             </p>
           </div>
@@ -186,37 +244,37 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           {/* 3-Column Podium Display */}
           <div style={{
             display: "flex", justifyContent: "center", alignItems: "flex-end",
-            gap: "clamp(10px, 2.5vw, 24px)", paddingBottom: 10, flexWrap: "wrap"
+            gap: "clamp(8px, 2vw, 20px)", paddingBottom: 10, flexWrap: "wrap"
           }}>
             {/* 2nd Place (Silver) */}
             {learners[1] && (
-              <div className="tai-hero-subcard" style={{
+              <div style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
-                flex: "1 1 110px", maxWidth: 140, textAlign: "center", order: 1,
-                padding: "14px 10px", borderRadius: 12
+                flex: "1 1 100px", maxWidth: 140, textAlign: "center", order: 1
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
-                  <img
+                  {/* Real avatar_url when the profile has one, initials
+                      otherwise - never a stand-in stock photo. */}
+                  <Avatar
+                    size={52}
                     src={learners[1].avatar}
-                    alt={learners[1].name}
-                    style={{
-                      width: 52, height: 52, borderRadius: "50%",
-                      border: "3px solid #94A3B8", objectFit: "cover",
-                      boxShadow: "0 4px 12px rgba(148, 163, 184, 0.4)"
-                    }}
+                    initials={learners[1].initials || (learners[1].name || "L").slice(0, 1)}
+                    style={{ border: "3px solid #94A3B8", boxShadow: "0 0 16px rgba(148, 163, 184, 0.5)" }}
                   />
                   <span style={{
                     position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)",
-                    background: "#94A3B8", color: "#FFFFFF", fontWeight: 900, fontSize: 11,
+                    background: "#94A3B8", color: "#0F172A", fontWeight: 900, fontSize: 11,
                     width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
                     2
                   </span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginTop: 4 }}>{learners[1].name}</div>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{learners[1].role}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "#FFFFFF", marginTop: 4 }}>{learners[1].name}</div>
+                {learners[1].role && (
+                  <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)" }}>{learners[1].role}</div>
+                )}
                 <div style={{
-                  background: "rgba(148, 163, 184, 0.2)", color: "#FFFFFF",
+                  background: "rgba(148, 163, 184, 0.2)", color: "#CBD5E1",
                   fontWeight: 800, fontSize: 11.5, padding: "2px 8px", borderRadius: 99,
                   marginTop: 6, border: "1px solid rgba(148, 163, 184, 0.4)"
                 }}>
@@ -227,39 +285,36 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
 
             {/* 1st Place (Gold - Elevated) */}
             {learners[0] && (
-              <div className="tai-hero-subcard" style={{
+              <div style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
-                flex: "1 1 130px", maxWidth: 160, textAlign: "center", order: 2,
-                transform: "translateY(-8px)",
-                padding: "16px 12px", borderRadius: 14,
-                border: "2px solid rgba(245, 158, 11, 0.5)",
-                boxShadow: "0 8px 24px -4px rgba(245, 158, 11, 0.35)"
+                flex: "1 1 120px", maxWidth: 160, textAlign: "center", order: 2,
+                transform: "translateY(-8px)"
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
-                  <Crown size={22} color="#F59E0B" style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
-                  <img
+                  <Crown size={22} color="#F59E0B" style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", filter: "drop-shadow(0 0 8px #F59E0B)" }} />
+                  <Avatar
+                    size={66}
                     src={learners[0].avatar}
-                    alt={learners[0].name}
-                    style={{
-                      width: 66, height: 66, borderRadius: "50%",
-                      border: "3.5px solid #F59E0B", objectFit: "cover",
-                      boxShadow: "0 0 20px rgba(245, 158, 11, 0.4)"
-                    }}
+                    initials={learners[0].initials || (learners[0].name || "L").slice(0, 1)}
+                    style={{ border: "3.5px solid #F59E0B", boxShadow: "0 0 24px rgba(245, 158, 11, 0.7)" }}
                   />
                   <span style={{
                     position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)",
-                    background: "#F59E0B", color: "#FFFFFF", fontWeight: 900, fontSize: 12,
+                    background: "#F59E0B", color: "#0F172A", fontWeight: 900, fontSize: 12,
                     width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center"
                   }}>
                     1
                   </span>
                 </div>
-                <div style={{ fontWeight: 900, fontSize: 14.5, color: "var(--text)", marginTop: 4 }}>{learners[0].name}</div>
-                <div style={{ fontSize: 11, color: "var(--text-3)" }}>{learners[0].role}</div>
+                <div style={{ fontWeight: 900, fontSize: 14.5, color: "#FFFFFF", marginTop: 4 }}>{learners[0].name}</div>
+                {learners[0].role && (
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.85)" }}>{learners[0].role}</div>
+                )}
                 <div style={{
-                  background: "rgba(245, 158, 11, 0.25)", color: "#FBBF24",
+                  background: "rgba(245, 158, 11, 0.25)", color: "#FDE68A",
                   fontWeight: 900, fontSize: 12, padding: "3px 10px", borderRadius: 99,
-                  marginTop: 6, border: "1px solid rgba(245, 158, 11, 0.5)"
+                  marginTop: 6, border: "1px solid rgba(245, 158, 11, 0.5)",
+                  boxShadow: "0 0 12px rgba(245, 158, 11, 0.3)"
                 }}>
                   {learners[0].xp.toLocaleString()} XP
                 </div>
@@ -268,20 +323,16 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
 
             {/* 3rd Place (Bronze) */}
             {learners[2] && (
-              <div className="tai-hero-subcard" style={{
+              <div style={{
                 display: "flex", flexDirection: "column", alignItems: "center",
-                flex: "1 1 110px", maxWidth: 140, textAlign: "center", order: 3,
-                padding: "14px 10px", borderRadius: 12
+                flex: "1 1 100px", maxWidth: 140, textAlign: "center", order: 3
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
-                  <img
+                  <Avatar
+                    size={52}
                     src={learners[2].avatar}
-                    alt={learners[2].name}
-                    style={{
-                      width: 52, height: 52, borderRadius: "50%",
-                      border: "3px solid #D97706", objectFit: "cover",
-                      boxShadow: "0 4px 12px rgba(217, 119, 6, 0.3)"
-                    }}
+                    initials={learners[2].initials || (learners[2].name || "L").slice(0, 1)}
+                    style={{ border: "3px solid #D97706", boxShadow: "0 0 16px rgba(217, 119, 6, 0.5)" }}
                   />
                   <span style={{
                     position: "absolute", bottom: -5, left: "50%", transform: "translateX(-50%)",
@@ -291,15 +342,25 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     3
                   </span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginTop: 4 }}>{learners[2].name}</div>
-                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{learners[2].role}</div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "#FFFFFF", marginTop: 4 }}>{learners[2].name}</div>
+                {learners[2].role && (
+                  <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)" }}>{learners[2].role}</div>
+                )}
                 <div style={{
-                  background: "rgba(217, 119, 6, 0.2)", color: "#FBBF24",
+                  background: "rgba(217, 119, 6, 0.2)", color: "#FDE68A",
                   fontWeight: 800, fontSize: 11.5, padding: "2px 8px", borderRadius: 99,
                   marginTop: 6, border: "1px solid rgba(217, 119, 6, 0.4)"
                 }}>
                   {learners[2].xp.toLocaleString()} XP
                 </div>
+              </div>
+            )}
+
+            {/* An empty real board says so instead of falling back to the
+                illustrative podium above. */}
+            {learners.length === 0 && (
+              <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.8)", padding: "18px 0", textAlign: "center", width: "100%" }}>
+                {rankingsLoading ? "Loading rankings…" : "No learners are ranked yet."}
               </div>
             )}
           </div>
@@ -312,11 +373,11 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <div className="tai-row tai-gap8" style={{ overflowX: "auto", paddingBottom: 2 }}>
           {[
-            { k: "week", label: "This Week" },
-            { k: "month", label: "This Month" },
-            { k: "cohort", label: "My Cohort" },
+            { k: "week", label: "This Week", demoOnly: true },
+            { k: "month", label: "This Month", demoOnly: true },
+            { k: "cohort", label: "My Cohort", demoOnly: true },
             { k: "all", label: "All Time" },
-          ].map(tf => (
+          ].filter(tf => DEMO_MODE || !tf.demoOnly).map(tf => (
             <button
               key={tf.k}
               className="tai-btn"
@@ -351,9 +412,9 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           STICKY CURRENT USER RANK BAR
           ========================================================================= */}
       <div className="tai-card" style={{
-        background: "rgba(79, 70, 229, 0.05)",
-        border: "1px solid rgba(79, 70, 229, 0.2)",
-        padding: "10px 14px", borderRadius: 8
+        background: "linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%)",
+        border: "1.5px solid rgba(79, 70, 229, 0.35)",
+        padding: "12px 16px", borderRadius: 14
       }}>
         <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
           <div className="tai-row tai-gap10">
@@ -361,21 +422,30 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
               width: 30, height: 30, borderRadius: 8, background: "#4F46E5", color: "#FFFFFF",
               display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12
             }}>
-              #4
+              {/* Real rank off the board's own `you` row - this was a
+                  literal "#4" for every learner. Unranked shows a dash. */}
+              {DEMO_MODE ? "#4" : (myRow ? `#${myRow.rank}` : "–")}
             </span>
-            <Avatar size={32} src={user?.avatarUrl} initials={user?.name?.[0] || "E"} />
+            <Avatar size={32} src={user?.avatarUrl} initials={user?.name?.[0] || "L"} />
             <div>
-              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{user?.name || "Evelyn Hayes"} (You)</div>
-              <div style={{ fontSize: 11, color: "var(--text-3)" }}>Top 5% of all active learners</div>
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{user?.name || (DEMO_MODE ? "Evelyn Hayes" : "You")} (You)</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)" }}>
+                {DEMO_MODE
+                  ? "Top 5% of all active learners"
+                  : (myPercentile != null
+                      ? `Top ${myPercentile}% of ${learners.length} ranked learners`
+                      : (rankingsLoading ? "Loading your rank…" : "Not ranked yet"))}
+              </div>
             </div>
           </div>
 
           <div className="tai-row tai-gap12">
             <span className="tai-row tai-gap4" style={{ fontSize: 12, fontWeight: 700, color: "#EA580C" }}>
-              <Flame size={14} /> {user?.streak || 8}d
+              {/* `??`, not `||`: a real zero-day streak is the truth. */}
+              <Flame size={14} /> {user?.streak ?? (DEMO_MODE ? 8 : 0)}d
             </span>
             <span style={{ fontSize: 13.5, fontWeight: 900, color: "var(--primary)" }}>
-              {(user?.totalPoints || 4520).toLocaleString()} XP
+              {(user?.totalPoints ?? (DEMO_MODE ? 4520 : 0)).toLocaleString()} XP
             </span>
           </div>
         </div>
@@ -384,7 +454,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
       {/* =========================================================================
           FULL RANKINGS TABLE
           ========================================================================= */}
-      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 10 }}>
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", borderRadius: 16 }}>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: 13 }}>
             <thead>
@@ -398,6 +468,20 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
               </tr>
             </thead>
             <tbody>
+              {rankingsLoading && filteredLearners.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ padding: "18px 14px", color: "var(--text-3)", fontSize: 12.5, textAlign: "center" }}>
+                    Loading rankings…
+                  </td>
+                </tr>
+              )}
+              {!rankingsLoading && filteredLearners.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ padding: "18px 14px", color: "var(--text-3)", fontSize: 12.5, textAlign: "center" }}>
+                    {searchQuery ? `No learners match "${searchQuery}".` : "No learners are ranked yet."}
+                  </td>
+                </tr>
+              )}
               {filteredLearners.map((l) => {
                 const isTop3 = l.rank <= 3;
                 const rankColor = l.rank === 1 ? "#F59E0B" : l.rank === 2 ? "#94A3B8" : l.rank === 3 ? "#D97706" : "var(--text-2)";
@@ -415,21 +499,21 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       <div className="tai-row tai-gap8">
-                        <img
-                          src={l.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80"}
-                          alt={l.name}
-                          style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }}
-                        />
+                        {/* A missing photo used to fall back to a stock
+                            headshot; it now falls back to initials. */}
+                        <Avatar size={30} src={l.avatar} initials={l.initials || (l.name || "L").slice(0, 1)} />
                         <div>
                           <div style={{ fontWeight: 700, color: "var(--text)", fontSize: 13 }}>
                             {l.name} {l.isCurrentUser && <span style={{ color: "var(--primary)", fontSize: 11 }}>(You)</span>}
                           </div>
-                          <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{l.role}</div>
+                          {l.role && <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{l.role}</div>}
                         </div>
                       </div>
                     </td>
                     <td style={{ padding: "10px 14px", color: "var(--text-2)", fontSize: 11.5 }}>
-                      {l.cohort}
+                      {/* Real cohorts.name via cohort_members; a learner in
+                          no cohort shows a dash, not "Active Batch". */}
+                      {l.cohort || "–"}
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       <span className="tai-row tai-gap4" style={{ fontWeight: 700, color: "#EA580C", fontSize: 11.5 }}>

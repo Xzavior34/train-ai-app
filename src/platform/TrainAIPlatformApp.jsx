@@ -10,6 +10,7 @@ import { ContentScreen } from "./admin/ContentScreen.jsx";
 import { LearningPathsScreen } from "./admin/LearningPathsScreen.jsx";
 import { EmailCenterScreen } from "./admin/EmailCenterScreen.jsx";
 import { PayoutsScreen } from "./admin/PayoutsScreen.jsx";
+import { SeatsScreen } from "./admin/SeatsScreen.jsx";
 import { WorkforceIntelligenceScreen } from "./admin/WorkforceIntelligenceScreen.jsx";
 import { ModerationScreen } from "./admin/ModerationScreen.jsx";
 import { AdminStudyGroupsScreen } from "./admin/AdminStudyGroupsScreen.jsx";
@@ -193,6 +194,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "coursebuilder" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} openBuilderOnMount />}
                   {screen === "emails" && <EmailCenterScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "payouts" && <PayoutsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
+                  {screen === "seats" && <SeatsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} />}
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "moderation" && <ModerationScreen orgSelector={orgSelector} setScreen={setScreen} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
                   {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
@@ -279,7 +281,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
             // maxWidth/left, so anchoring purely via `right` let a long
             // message's left edge run off a narrow phone screen, getting
             // clipped by the global overflow-x:hidden safety net.
-            <div className="anim-pop" style={{ position: "fixed", left: "50%", bottom: 24, transform: "translateX(-50%)", maxWidth: "calc(100vw - 32px)", zIndex: 999, background: "var(--text)", color: "#fff", padding: "10px 16px", borderRadius: 8, display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, boxShadow: "0 12px 32px -4px rgba(15,23,42,0.35)", boxSizing: "border-box" }}>
+            <div className="anim-pop" style={{ position: "fixed", left: "50%", bottom: 24, transform: "translateX(-50%)", maxWidth: "calc(100vw - 32px)", zIndex: 999, background: "var(--text)", color: "#fff", padding: "10px 16px", borderRadius: 12, display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, boxShadow: "0 12px 32px -4px rgba(15,23,42,0.35)", boxSizing: "border-box" }}>
               <CheckCircle2 size={16} style={{ flexShrink: 0 }} /> <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{toast}</span>
             </div>
           )}

@@ -1,8 +1,8 @@
 import React, { useState, useContext } from "react";
-import { TopBar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
+import { TopBar, Tag, ProgressBar, ToastContext, Avatar } from "../components/PlatformUI.jsx";
 import { Plus, Layers, Users, Calendar, ArrowRight, X } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCohortsWithStats, createCohort } from "../../lib/api/platform.js";
+import { fetchCohortsWithStats, createCohort, fetchUpcomingOrgSessions, fetchOrgInstructorsMonitor } from "../../lib/api/platform.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, currentUserId }) {
@@ -11,6 +11,14 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   const [name, setName] = useState("");
   const cohortsQuery = useSupabaseQuery(async () => orgId ? fetchCohortsWithStats(orgId) : [], [orgId]);
   const cohorts = cohortsQuery.data || [];
+  // Both right-hand panels used to be literal arrays - three invented
+  // "milestones" with relative dates that never advanced, and three invented
+  // instructors whose "View" button jumped to People where those names don't
+  // exist. Both now read the same real tables the rest of the admin area does.
+  const sessionsQuery = useSupabaseQuery(async () => orgId ? fetchUpcomingOrgSessions(orgId) : [], [orgId]);
+  const sessions = sessionsQuery.data || [];
+  const instructorsQuery = useSupabaseQuery(async () => orgId ? fetchOrgInstructorsMonitor(orgId) : [], [orgId]);
+  const instructors = (instructorsQuery.data || []).filter((i) => i.is_active);
 
   return (
     <div className="ta-fade">
@@ -18,31 +26,36 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
         title="Cohort Management" sub="Active learning batches & timeline progress"
         orgSelector={orgSelector}
         onNavigate={setScreen}
+        right={<button className="ta-btn ta-btn-primary" onClick={() => setNewCohortOpen(true)}><Plus size={15} /> Create cohort</button>}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
             COHORT DASHBOARD HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner anim-fluid-entrance">
-          <div className="tai-glow-cyan" />
+        <div className="ta-hero-banner">
+          {/* Background Stock Photo with Overlay */}
+          <img
+            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
+
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
                 Cohort Governance &amp; Pacing
               </h1>
               <p className="ta-hero-desc">
-                Manage batch schedules, enrollment windows, synchronous sessions, and student milestone pacing.
+                Manage batch schedules, enrollment windows, and student milestones.
               </p>
-            </div>
-
-            <div className="ta-hero-actions">
-              <button
-                className="ta-btn ta-btn-primary"
-                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
-                onClick={() => setNewCohortOpen(true)}
-              >
-                <Plus size={14} /> Create Cohort
-              </button>
             </div>
           </div>
         </div>
@@ -68,7 +81,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                   <div
                     key={c.id || c.name}
                     className="ta-card ta-card-hover"
-                    style={{ cursor: onOpenCohort ? "pointer" : "default", borderRadius: 10, padding: 0, overflow: "hidden", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column" }}
+                    style={{ cursor: onOpenCohort ? "pointer" : "default", borderRadius: 16, padding: 0, overflow: "hidden", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column" }}
                     onClick={() => onOpenCohort?.(c.id)}
                   >
                     <div style={{ position: "relative", width: "100%", height: 120, overflow: "hidden" }}>
@@ -78,7 +91,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                         <Tag tone="primary">{c.courses || 0} course{c.courses === 1 ? "" : "s"}</Tag>
                         <Tag tone={isCompleted ? "warning" : "success"}>{isCompleted ? "Completed" : "Active Batch"}</Tag>
                       </div>
-                      <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 14.5, textShadow: "0 2px 4px rgba(0,0,0,0.6)", lineHeight: 1.25, wordBreak: "break-word" }}>
+                      <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 15, textShadow: "0 2px 4px rgba(0,0,0,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {c.name}
                       </div>
                     </div>
@@ -90,7 +103,11 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       </div>
                       <div className="ta-mt8"><ProgressBar value={c.progress || 0} /></div>
                       <div className="ta-row ta-between ta-mt12" style={{ paddingTop: 10, borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)" }}>
-                        <span>Schedule: Active</span>
+                        {/* Was the fixed string "Schedule: Active" on every card,
+                            including cohorts this same component had already
+                            computed as finished. c.start/c.end are the real
+                            starts_at/ends_at from fetchCohortsWithStats. */}
+                        <span>{isCompleted ? `Ended ${c.end}` : `Schedule: ${c.start} → ${c.end}`}</span>
                         <span style={{ fontWeight: 700, color: "var(--primary)", display: "flex", alignItems: "center", gap: 3 }}>Manage Batch <ArrowRight size={12} /></span>
                       </div>
                     </div>
@@ -146,7 +163,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
           {/* Right Side Panel */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {/* Cohort Milestones */}
-            <div className="ta-card" style={{ padding: 20 }}>
+            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 15 }}>Cohort Milestones</div>
@@ -155,45 +172,67 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                 <Layers size={16} color="var(--primary)" />
               </div>
 
+              {/* Real scheduled sessions for this org's instructors
+                  (fetchUpcomingOrgSessions -> mentorship_sessions). The three
+                  literals here were identical for every organization, with
+                  "Tomorrow"/"Friday"/"Next Week" dates that never moved. */}
               <div className="ta-col ta-gap12 ta-mt14">
-                {[
-                  { title: "Module 4 Design Critique", date: "Tomorrow • 6:00 PM", status: "Live Review", tone: "primary" },
-                  { title: "Mid-Term Capstone Submissions", date: "Friday • 11:59 PM", status: "Deadline", tone: "danger" },
-                  { title: "Industry Pitch & Demo Day", date: "Next Week • 4:00 PM", status: "Demo Day", tone: "success" }
-                ].map((m, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{m.title}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{m.date}</div>
+                {sessionsQuery.loading && <div className="ta-empty">Loading milestones...</div>}
+                {!sessionsQuery.loading && sessions.length === 0 && (
+                  <div className="ta-empty">No sessions scheduled for this organization yet.</div>
+                )}
+                {sessions.map((m, idx) => {
+                  const when = m.time || (m.scheduled_at ? new Date(m.scheduled_at).toLocaleString() : "Time not set");
+                  const who = m.mentor || m.mentor_name || null;
+                  const isLive = m.status === "live" || m.status === "live_now";
+                  return (
+                    <div key={m.id || idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700 }}>{m.title}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{who ? `${who} • ${when}` : when}</div>
+                      </div>
+                      <Tag tone={isLive ? "danger" : "primary"}>{isLive ? "Live now" : "Scheduled"}</Tag>
                     </div>
-                    <Tag tone={m.tone}>{m.status}</Tag>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
             {/* Assigned Facilitators */}
-            <div className="ta-card" style={{ padding: 20 }}>
+            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 15 }}>Lead Instructors</div>
                   <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Active cohort mentors</div>
                 </div>
-                <Tag tone="success">3 Active</Tag>
+                {/* Was a hardcoded "3 Active" regardless of how many instructors
+                    the org actually had. */}
+                <Tag tone="success">{instructorsQuery.loading ? "..." : `${instructors.length} Active`}</Tag>
               </div>
 
+              {/* Real active mentors rows for this organization
+                  (fetchOrgInstructorsMonitor - the same source the People >
+                  Instructor Monitor tab uses), so "View" now leads to people who
+                  actually appear in the directory. The three literal instructors
+                  with stock headshots are gone; where a mentor has no avatar the
+                  shared initials Avatar is used instead of a stock photo. */}
               <div className="ta-col ta-gap10 ta-mt14">
-                {[
-                  { name: "Astrid Larsson", track: "UI/UX & Design Systems", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" },
-                  { name: "Alex Rivera", track: "Generative AI Workflows", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80" },
-                  { name: "Sarah Jenkins", track: "DevOps & Cloud Architecture", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80" }
-                ].map((ins, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10 }}>
+                {instructorsQuery.loading && <div className="ta-empty">Loading instructors...</div>}
+                {!instructorsQuery.loading && instructors.length === 0 && (
+                  <div className="ta-empty">No active instructors in this organization yet.</div>
+                )}
+                {instructors.map((ins, idx) => (
+                  <div key={ins.id || idx} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10 }}>
                     <div className="ta-row ta-gap10">
-                      <img src={ins.avatar} alt={ins.name} style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover" }} />
+                      <Avatar
+                        initials={(ins.display_name || "I").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                        size={32}
+                        src={ins.avatar_url || undefined}
+                        style={{ borderRadius: 10 }}
+                      />
                       <div>
-                        <div style={{ fontSize: 12.5, fontWeight: 700 }}>{ins.name}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{ins.track}</div>
+                        <div style={{ fontSize: 12.5, fontWeight: 700 }}>{ins.display_name || "Instructor"}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{ins.specialization || ins.expertise || "Specialization not set"}</div>
                       </div>
                     </div>
                     <button className="ta-btn ta-btn-outline ta-btn-sm" style={{ padding: "4px 8px", fontSize: 11 }} onClick={() => setScreen?.("people")}>

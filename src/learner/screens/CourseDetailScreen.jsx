@@ -1,21 +1,19 @@
 import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import { Clock, Layers, Rocket, CheckCircle2, Lock, ChevronRight, Video, Edit3, Send, GraduationCap, Award, X, ArrowRight, Star, Users, ShieldCheck, FileText, MessageSquare } from "lucide-react";
-import { isMockDataEnabled } from "../../lib/mockDataManager.js";
+import { DEMO_MODE } from "../../lib/demoMode.js";
 
 function CourseCoverImage({ course, children }) {
   const [errored, setErrored] = useState(false);
   const imageUrl = course.coverImageUrl || course.image || `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&auto=format&fit=crop&q=80`;
 
   return (
-    <div
-      className="tai-hero-card"
-      style={{
-        position: "relative", width: "100%", padding: "22px 20px", borderRadius: 14, overflow: "hidden",
-        minHeight: 140, display: "flex", flexDirection: "column", justifyContent: "space-between",
-        boxSizing: "border-box"
-      }}
-    >
+    <div style={{
+      position: "relative", width: "100%", padding: "26px 22px", borderRadius: "var(--radius)", overflow: "hidden",
+      background: `linear-gradient(135deg, ${course.grad?.[0] || "#4338CA"}, ${course.grad?.[1] || "#6366F1"})`,
+      minHeight: 160, display: "flex", flexDirection: "column", justifyContent: "space-between",
+      boxShadow: "0 6px 20px rgba(67, 56, 202, 0.25)"
+    }}>
       {!errored && (
         <img
           src={imageUrl}
@@ -138,7 +136,7 @@ export function CourseDetailScreen({
           {lessons.length > 0 && (
             <div className="tai-col tai-gap14">
               {/* Module Progress Card matching media_1787304915509.jpg */}
-              <div className="tai-card" style={{ padding: "18px 20px", borderRadius: 10, background: "var(--surface)" }}>
+              <div className="tai-card" style={{ padding: "18px 20px", borderRadius: 16, background: "var(--surface)" }}>
                 <div style={{ fontSize: 13, color: "var(--text-3)", fontWeight: 600 }}>Module Progress</div>
                 <div className="tai-row tai-between" style={{ alignItems: "baseline", marginTop: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -180,7 +178,7 @@ export function CourseDetailScreen({
                         cursor: locked ? "default" : "pointer",
                         opacity: locked ? 0.6 : 1,
                         padding: "16px 18px",
-                        borderRadius: 10,
+                        borderRadius: 16,
                         background: "var(--surface)",
                         border: "1px solid var(--border)"
                       }}
@@ -189,7 +187,7 @@ export function CourseDetailScreen({
                       <div className="tai-row tai-between" style={{ alignItems: "center" }}>
                         <div className="tai-row tai-gap14" style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
-                            width: 38, height: 38, borderRadius: 8,
+                            width: 38, height: 38, borderRadius: 12,
                             background: isDone ? "var(--success-bg)" : "var(--surface-3)",
                             color: isDone ? "var(--success)" : "var(--primary)",
                             display: "flex", alignItems: "center", justifyContent: "center",
@@ -486,7 +484,12 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
     return <div className="tai-mt16 tai-empty">Loading assessment...</div>;
   }
 
-  const DEFAULT_QUESTIONS = [
+  // Sample questions, kept for the no-database walkthrough only. They used
+  // to stand in whenever fetchSafeAssessmentQuestions returned nothing, so a
+  // course with no assessment at all presented a generic gradeable quiz -
+  // three questions about design tokens and pgvector, submittable, scored -
+  // that belonged to no course in the database.
+  const DEMO_QUESTIONS = [
     {
       id: "q-1",
       question: "What is the primary advantage of design token architectures in production design systems?",
@@ -522,7 +525,9 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
     }
   ];
 
-  const effectiveQuestions = (questions && questions.length > 0) ? questions : (isMockDataEnabled() ? DEFAULT_QUESTIONS : []);
+  const effectiveQuestions = (questions && questions.length > 0)
+    ? questions
+    : (DEMO_MODE ? DEMO_QUESTIONS : []);
 
   if (myAttempt || localScore !== null) {
     const score = myAttempt ? myAttempt.score : localScore;
@@ -538,6 +543,26 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
         <div className="tai-mt14" style={{ fontSize: 28, fontWeight: 800, color: "var(--primary)" }}>{score}%</div>
         <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>
           🎉 Congratulations! You have successfully passed this course assessment. You are now eligible to request your course certificate.
+        </div>
+      </div>
+    );
+  }
+
+  // With a database connected, no assessment - or an assessment whose
+  // questions have not been published yet - is the honest answer, not a quiz
+  // to sit. Checked after the completed-attempt branch so an existing score
+  // still shows.
+  if (effectiveQuestions.length === 0) {
+    return (
+      <div className="tai-mt16 tai-card" style={{ padding: 22 }}>
+        <div className="tai-row tai-gap10">
+          <FileText size={22} color="var(--text-3)" />
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>No assessment for this course yet</div>
+            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+              Your instructor has not published a graded assessment here. You will see it on this tab as soon as they do.
+            </div>
+          </div>
         </div>
       </div>
     );

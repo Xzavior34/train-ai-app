@@ -1,10 +1,10 @@
 import React, { useState, useContext, useMemo } from "react";
-import { TopBar, Avatar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
+import { TopBar, Avatar, Tag, ToastContext, Switch, NavigationContext } from "../components/PlatformUI.jsx";
 import {
   UserPlus, Search, X, Download, Trash2, FileText, ArrowUpRight, ArrowDownRight,
   Minus, Award, Eye, Pencil, ShieldCheck, Layers, UserMinus, RefreshCw, Link2,
   BookOpen, GraduationCap, MoreHorizontal, Save, CheckCircle2,
-  Mail, TrendingUp, AlertTriangle,
+  Mail, TrendingUp, AlertTriangle, CreditCard,
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
@@ -27,6 +27,8 @@ import {
 } from "../../lib/api/platform.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
+import { fetchOrgSeatsSummary } from "../../lib/api/organizations.js";
+import { fetchOrganizationById } from "../../lib/api/platform.js";
 import { fetchAllDSARRequests, updateDSARRequestStatus, exportUserData, deleteUserCascade } from "../../lib/api/gdprService.js";
 
 const PACE_META = {
@@ -228,7 +230,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
             ].map((k) => {
               const Icon = k.Icon;
               return (
-                <div key={k.label} className="ta-card" style={{ padding: "12px 14px", borderRadius: 10 }}>
+                <div key={k.label} className="ta-card" style={{ padding: "12px 14px", borderRadius: 12 }}>
                   <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>
                     <Icon size={12} /> {k.label}
                   </div>
@@ -456,6 +458,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
    Screen
    ========================================================================= */
 export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
+  const navigate = useContext(NavigationContext);
   const showToast = useContext(ToastContext);
   const [tab, setTab] = useState("all");
   const [certModalUser, setCertModalUser] = useState(null);
@@ -493,6 +496,13 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   // Instructor applications: mentors rows in this org that aren't active yet.
   const applicationsQuery = useSupabaseQuery(async () => orgId ? fetchMentorApplications(orgId) : [], [orgId]);
   const rolePermsQuery = useSupabaseQuery(async () => orgId ? fetchOrgRolePermissions(orgId) : [], [orgId]);
+  // Seat availability is a real, server-enforced constraint on inviting:
+  // create_user_invitation() raises "No seats available" once an organization
+  // is 'active' (0129_seat_based_payments.sql). Without reading it here, the
+  // invite dialog offered a Send button that could only fail with a raw
+  // Postgres error and no way to resolve it.
+  const seatsQuery = useSupabaseQuery(async () => orgId ? fetchOrgSeatsSummary(orgId) : null, [orgId]);
+  const orgQuery = useSupabaseQuery(async () => orgId ? fetchOrganizationById(orgId) : null, [orgId]);
   // DSAR requests have no org_id column in the schema - this queue is
   // platform-wide by design, not scoped to the current org.
   const dsarQuery = useSupabaseQuery(async () => fetchAllDSARRequests(), []);
@@ -508,6 +518,18 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   // set. An absent row means "not yet decided", which the matrix shows as off
   // rather than pretending a default was chosen.
   const permLookup = Object.fromEntries(rolePerms.map((r) => [`${r.role}:${r.permission_key}`, !!r.allowed]));
+  const seats = seatsQuery.data || { purchased: 0, used: 0, available: 0 };
+  // Trial organizations are deliberately exempt from seat checks server-side,
+  // so the dialog must not block them either.
+  const seatsEnforced = orgQuery.data?.status === "active";
+  const seatsBlocked = seatsEnforced && seats.available <= 0;
+  const bulkEmailCount = bulkEmails.split("\n").filter((e) => e.trim().includes("@")).length;
+  const bulkOverSeats = seatsEnforced && bulkEmailCount > seats.available;
+
+  function goBuySeats() {
+    setInviteOpen(false);
+    if (navigate) navigate("seats"); else setScreen?.("seats");
+  }
   const pendingDsarCount = dsarRequests.filter(r => r.status === "pending").length;
   const progressRows = progressQuery.data || [];
   const behindCount = progressRows.filter(r => r.pace === "behind").length;
@@ -574,43 +596,35 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         title="People & Access" sub="Directory, member records, roles & invitations"
         orgSelector={orgSelector}
         onNavigate={setScreen}
+        right={<button className="ta-btn ta-btn-primary" onClick={() => setInviteOpen(true)}><UserPlus size={15} /> Invite user</button>}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
             PEOPLE & ACCESS HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner anim-fluid-entrance">
-          <div className="tai-glow-emerald" />
+        <div className="ta-hero-banner">
+          <img
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
+
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
                 Member &amp; Role Management
               </h1>
               <p className="ta-hero-desc">
-                Invite instructors, manage role permissions, and track organization student seat allocations.
+                Invite instructors, manage permissions, and track student seat allocations.
               </p>
-            </div>
-
-            <div className="ta-hero-actions">
-              <button
-                className="ta-btn ta-btn-primary"
-                style={{
-                  height: 36,
-                  padding: "0 14px",
-                  borderRadius: 8,
-                  background: "#4F46E5",
-                  color: "#FFFFFF",
-                  fontWeight: 700,
-                  fontSize: 12.5,
-                  border: "none",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6
-                }}
-                onClick={() => setInviteOpen(true)}
-              >
-                <UserPlus size={14} /> Invite User
-              </button>
             </div>
           </div>
         </div>
@@ -631,29 +645,34 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
 
         {tab === "all" && (
           <div className="ta-col ta-gap16">
-            {/* KPI row */}
+            {/* KPI row. "Avg. Attendance 92%" and "Top Achievers 24" used to be
+                literal hardcoded strings - identical for every organization and
+                never moving. Three of these four are now real reads
+                (fetchOrgPeopleKpis); attendance has no source table anywhere in
+                this schema, so it reports that honestly instead of inventing a
+                number that looks authoritative. */}
             <div className="ta-grid ta-grid-4 anim-stagger">
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
-                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Total Members</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
+                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Members</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>{kpis?.totalMembers ?? members.length}</div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
                   {kpis ? `${kpis.activeMembers} active • ${kpis.suspendedMembers} suspended` : `${invitations.length} invite${invitations.length === 1 ? "" : "s"} pending`}
                 </div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
-                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>At Risk Learners</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
+                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>At Risk Learners</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: behindCount > 0 ? "#EF4444" : "var(--text)", marginTop: 4 }}>{behindCount}</div>
                 <div style={{ fontSize: 11, color: behindCount > 0 ? "#EF4444" : "var(--text-3)", marginTop: 2 }}>{behindCount > 0 ? "Needs intervention" : "All learners on pace"}</div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
-                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Avg. Course Progress</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
+                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Avg. Course Progress</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#10B981", marginTop: 4 }}>
                   {kpisQuery.loading ? "..." : `${kpis?.avgCompletion ?? 0}%`}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Across every enrollment</div>
               </div>
-              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
-                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Point Earners</div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
+                <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Point Earners</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#4F46E5", marginTop: 4 }}>
                   {kpisQuery.loading ? "..." : (kpis?.topAchievers ?? 0)}
                 </div>
@@ -661,7 +680,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               </div>
             </div>
 
-            <div className="ta-card" style={{ padding: 20 }}>
+            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
                 <div className="ta-row ta-gap12" style={{ flex: "1 1 260px", minWidth: 0, flexWrap: "wrap" }}>
                   <div className="ta-search" style={{ flex: "1 1 180px", minWidth: 0, width: "auto" }}>
@@ -707,7 +726,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
 
               {/* Bulk bar - suspend was the only bulk action that existed. */}
               {selectedMemberIds.size > 0 && (
-                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", padding: "10px 12px", background: "var(--primary-tint)", borderRadius: 8, marginBottom: 14 }}>
+                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", padding: "10px 12px", background: "var(--primary-tint)", borderRadius: 12, marginBottom: 14 }}>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)" }}>{selectedMemberIds.size} selected</span>
                   <button className="ta-btn ta-btn-outline ta-btn-sm" disabled={bulkBusy}
                     onClick={() => runBulk("Reactivated", (m) => updateOrgMemberStatus(m.id, orgId, "active"))}>
@@ -1230,6 +1249,37 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setInviteOpen(false)}><X size={16} /></button>
             </div>
           </div>
+          {/* Seat status. Shown before the form because on an active plan it
+              decides whether sending is even possible. */}
+          {seatsEnforced && (
+            <div
+              className="ta-row ta-between ta-mt12"
+              style={{
+                gap: 10, flexWrap: "wrap", padding: "10px 12px", borderRadius: 12,
+                background: seatsBlocked ? "var(--danger-bg)" : "var(--surface-2)",
+                border: `1px solid ${seatsBlocked ? "var(--danger)" : "var(--border)"}`,
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: seatsBlocked ? "var(--danger)" : "var(--text)" }}>
+                  {seatsQuery.loading
+                    ? "Checking available seats..."
+                    : seatsBlocked
+                      ? "No seats available"
+                      : `${seats.available} seat${seats.available === 1 ? "" : "s"} available`}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2 }}>
+                  {seatsBlocked
+                    ? "Every purchased seat is taken. Buy more before inviting anyone else."
+                    : `${seats.used} of ${seats.purchased} purchased seat${seats.purchased === 1 ? "" : "s"} in use.`}
+                </div>
+              </div>
+              <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={goBuySeats}>
+                <CreditCard size={13} /> Buy seats
+              </button>
+            </div>
+          )}
+
           {!bulkMode ? (
             <>
               <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 14 }}>
@@ -1249,12 +1299,14 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               </div>
               <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
                 <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
-                <button className="ta-btn ta-btn-primary" onClick={async () => {
+                <button className="ta-btn ta-btn-primary" disabled={seatsBlocked} title={seatsBlocked ? "Buy a seat before inviting another member" : undefined} onClick={async () => {
                   if (!inviteEmail.trim() || !orgId) return;
+                  if (seatsBlocked) { showToast("No seats available - buy a seat first."); return; }
                   try {
                     await createInvitation({ organizationId: orgId, email: inviteEmail.trim(), role: inviteRole });
                     setInviteOpen(false); setInviteEmail("");
                     invitationsQuery.refetch();
+                    seatsQuery.refetch();
                     showToast("Invitation sent successfully!");
                   } catch (e) {
                     showToast(e?.message || "Could not send that invitation.");
@@ -1274,11 +1326,22 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   {PLATFORM_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
               </div>
+              {bulkOverSeats && (
+                <div className="ta-row ta-between ta-mt10" style={{ gap: 10, flexWrap: "wrap", padding: "9px 12px", borderRadius: 10, background: "var(--warning-bg)", color: "var(--warning)" }}>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>
+                    {bulkEmailCount} email{bulkEmailCount === 1 ? "" : "s"} entered but only {seats.available} seat
+                    {seats.available === 1 ? "" : "s"} free — the rest will be refused.
+                  </span>
+                  <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={goBuySeats}>
+                    <CreditCard size={13} /> Buy {bulkEmailCount - seats.available} more
+                  </button>
+                </div>
+              )}
               <div className="ta-row ta-gap10 ta-mt16" style={{ justifyContent: "flex-end" }}>
                 <button className="ta-btn ta-btn-outline" onClick={() => setInviteOpen(false)}>Cancel</button>
                 <button
                   className="ta-btn ta-btn-primary"
-                  disabled={bulkSubmitting}
+                  disabled={bulkSubmitting || seatsBlocked}
                   onClick={async () => {
                     const emails = bulkEmails.split("\n").map((e) => e.trim()).filter((e) => e && e.includes("@"));
                     if (!emails.length || !orgId) return;

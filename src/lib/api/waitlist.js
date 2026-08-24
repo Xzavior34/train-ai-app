@@ -145,7 +145,13 @@ export async function fetchMyWaitlistStatus({ email, userId } = {}) {
       }
     }
 
-    let tierQuery = supabase.from("waitlist_tiers").select("*").order("created_at", { ascending: false }).limit(1);
+    // waitlist_tiers has no created_at column, so ordering on it made
+    // PostgREST reject the query and this check always reported "not on the
+    // waitlist" even for someone who had just joined. `id` is a uuid so it
+    // gives no chronological ordering - the limit(1) below simply takes the
+    // single row for this email/user, which is what the unique key gives us
+    // anyway.
+    let tierQuery = supabase.from("waitlist_tiers").select("*").limit(1);
     tierQuery = userId ? tierQuery.eq("user_id", userId) : tierQuery.eq("email", normalizedEmail);
     const { data: tierRow } = await tierQuery.maybeSingle();
     if (tierRow) {

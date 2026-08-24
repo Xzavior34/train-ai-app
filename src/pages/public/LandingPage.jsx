@@ -1,149 +1,248 @@
 import React, { useState, useEffect } from "react";
 import {
-  ArrowRight, BookOpen, GraduationCap, ShieldCheck, CheckCircle2, X,
-  Brain, Layers, ChevronDown, ClipboardList, UserPlus,
-  Building2, Users, Target, TrendingUp, Lock, BarChart3,
-  Zap, Flame, Menu, Check,
-  Activity, Gauge, Database, Home, Mail, Download, Wifi,
-  Accessibility, Bell, Facebook, Twitter, Instagram, Linkedin, Search,
-  BarChart2
+  ArrowRight, BookOpen, GraduationCap, Cpu, ShieldCheck, CheckCircle2, Globe, X,
+  Brain, Layers, ChevronDown, HelpCircle, ClipboardList, UserPlus, Rocket,
+  Building2, Users, Target, TrendingUp, AlertTriangle, Eye, Lock, Compass, BarChart3,
+  GitCompare, Table, School, Handshake, Briefcase, Zap, Sparkles, Flame
 } from "lucide-react";
-import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
-import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
+import { submitDemoRequest, submitOrganizationInquiry, captureAttributionFromURL } from "../../lib/api/waitlist.js";
+import { trackReferralClickIfPresent, TIER_PRICING } from "../../lib/api/organizations.js";
+
+// ============================================================================
+// Copy source: "TRAIN AI - Website Copy & Structure - Master Draft" (New
+// Version), which explicitly supersedes the prior draft ("merges two prior
+// versions into one definitive structure"). Every heading, body line, stat,
+// and FAQ answer below is copied from that document as written - this is a
+// positioning/marketing document, not a feature-by-feature engineering
+// spec, so it's followed strictly rather than filtered through "is this
+// literally shipped" the way the rest of this app's copy has been.
+//
+// Structural note: the master draft lays out a full multi-page site (Home,
+// Platform, Solutions, Why Train AI, Built for Organizations, For
+// Individuals, Enterprise Readiness, Pricing, FAQ). This app has no router
+// it's a single scrolling page with anchor-linked sections, the same
+// pattern the existing nav already used for "Platform"/"Pricing" before
+// this rewrite. Rather than build real client-side routing (a much larger,
+// separate change), each "page" in the draft is implemented as its own
+// full section on this one page, in the same order as the sitemap, with
+// the nav linking to each by anchor. Flagging this rather than quietly
+// picking one interpretation.
+// ============================================================================
 
 const TEAM_SIZE_OPTIONS = ["1–50", "51–200", "201–1,000", "1,000+"];
 
 const LEGAL_CONTENT = {
   about: {
     title: "About Us",
-    body: "Train AI is an enterprise AI-powered workforce learning and intelligence platform. We bridge the gap between static training and measurable business capability by uniting adaptive AI tutoring, live cohort mentorship, and real-time skill telemetry in one unified system."
+    body: "Train AI is an AI-powered learning operating system that gives organizations a live map of their workforce's skills, connecting learners, facilitators, and content into personalised, outcome-driven pathways. We help companies close skill gaps before they become delivery problems."
   },
   privacy: {
     title: "Privacy Policy",
-    body: "Our Privacy Policy ensures your workforce data remains strictly confidential and protected. We process minimal telemetry required to deliver adaptive pathways, track skills, and issue certified credentials. We never sell personal data or use proprietary enterprise data to train public foundation models."
+    body: "Our full Privacy Policy is being finalized. In short: we only collect the data needed to run your account (profile, course progress, and communications you send us), we never sell personal data, and you can request an export or deletion of your data at any time by emailing hello@trainailtd.com."
   },
   terms: {
     title: "Terms of Service",
-    body: "Train AI terms govern organizational workspaces, role-based licensing, and institutional agreements. All accounts, certifications, and compliance logs are auditable under enterprise SLAs. Questions: hello@trainailtd.com."
+    body: "Our full Terms of Service are being finalized. In short: Train AI is provided as-is; accounts are personal and non-transferable (or managed by your organisation's admin, if you were invited by one); and we may update these terms as the platform evolves. Questions: hello@trainailtd.com."
   },
   cookie: {
     title: "Cookie Policy",
-    body: "We use strictly necessary session cookies to maintain secure authentication and role isolation. Optional analytics cookies remain disabled until explicit user consent is provided. Questions: hello@trainailtd.com."
+    body: "We use strictly necessary cookies to keep you signed in. Any analytics or marketing cookies are off by default and only load after you explicitly opt in. Questions: hello@trainailtd.com."
   }
 };
 
-const HOW_WE_BUILD_IT = [
+const PROBLEM_POINTS = [
   {
-    icon: Target,
-    title: "Readiness over completion",
-    desc: "A finished course is not the same as capability. We measure real comprehension, assessment scores, and practical execution."
+    icon: Eye,
+    title: "You've lost visibility",
+    desc: "You know your teams are \u201Cin training.\u201D You don't know who's actually building the skills you're paying for, or when they'll be ready to use them."
   },
   {
-    icon: Gauge,
-    title: "Intelligence over reporting",
-    desc: "Dashboards power proactive talent decisions, forecasting team capability gaps before they impact business delivery."
+    icon: GitCompare,
+    title: "Your teams are out of sync",
+    desc: "Learning lives in one tool, performance in another, and skills data in neither. By the time a gap shows up in a project, it's already too late to close it."
   },
   {
-    icon: Building2,
-    title: "Organisation-first",
-    desc: "Engineered specifically for multi-tenant organizations, with seamless individual learner access."
-  },
-  {
-    icon: Activity,
-    title: "Every signal matters",
-    desc: "Live assessments, instructor feedback, AI queries, and milestone completions all enrich your live skill graph."
+    icon: AlertTriangle,
+    title: "You're finding out too late",
+    desc: "78% of organizations abandon digital projects not for lack of budget, but for lack of the right skills, spotted after the deadline was already at risk."
   }
 ];
 
-const SIGNALS = [
-  "Assessments",
-  "Course completion",
-  "Compliance completion",
-  "Learner activity",
-  "Progress data",
-  "Instructor feedback",
-  "Manager review",
-  "AI usage signals"
+const INTELLIGENCE_LAYERS = [
+  { icon: BookOpen, letter: "Learn", desc: "Adaptive learning paths that build the exact skill, for the exact role, at the exact time it's needed." },
+  { icon: TrendingUp, letter: "Perform", desc: "Live visibility into who's on track, who's stuck, and who's ready for what's next." },
+  { icon: Users, letter: "Develop", desc: "Structured growth through mentors or instructors, cohorts, and career paths that turn training into a real talent pipeline." },
+  { icon: BarChart3, letter: "Measure", desc: "Real-time dashboards and analytics that turn learning activity into decisions leadership can act on." },
+  { icon: Cpu, letter: "Automate", desc: "AI that personalises paths, flags risk, and writes the report, so your team spends less time managing training and more time using what it reveals." }
 ];
 
-const TRUST_FEATURES = [
+const HOW_IT_WORKS = [
+  { icon: UserPlus, title: "Onboard your team", desc: "Bring your people in, link their roles and goals, and Train AI pairs each of them with an AI coach tailored to what they need to learn most." },
+  { icon: Target, title: "Assign learning paths", desc: "Every employee gets an AI-personalised path, matched to their role, pace, and the gaps that matter most to your business." },
+  { icon: TrendingUp, title: "Track skill growth", desc: "Watch skills develop in real time, not in a report that lands a month after the fact." },
+  { icon: Rocket, title: "Act on insights", desc: "Spot the gaps, flag the risks, and know exactly who's ready for what's next, before it becomes a delivery problem." }
+];
+
+const SOLUTIONS = [
+  { icon: GraduationCap, title: "Graduate and Early-Career Programmes", desc: "Onboard talent at scale, track progress, and reduce time to competence." },
+  { icon: Briefcase, title: "Leadership Academies", desc: "Build leadership capability with structured cohorts, mentors, and readiness tracking." },
+  { icon: ShieldCheck, title: "Compliance and Regulated Training", desc: "Keep mandatory learning visible, auditable, and easy to manage." },
+  { icon: Cpu, title: "Digital Transformation and AI Upskilling", desc: "Close digital skill gaps before they become delivery problems." },
+  { icon: School, title: "Universities and Foundations", desc: "Support cohorts, mentorship, and structured learning communities." },
+  { icon: Handshake, title: "NGOs and Development Programmes", desc: "Track learning impact across distributed learner groups and partners." }
+];
+
+const WHY_QUESTIONS = [
+  "Who is actually ready?",
+  "What skills are improving?",
+  "Where are our most important gaps?",
+  "Which teams need support now?",
+  "Who should be promoted or developed next?",
+  "What value did learning create for the business?"
+];
+
+const WHY_FEATURES = [
+  { icon: Compass, title: "AI Skill Graph", desc: "A live map of every skill in your organization: who has it, who's building it, and where the real gaps are.", answers: "\u201CDo we actually have the skills to ship this project?\u201D" },
+  { icon: BarChart3, title: "Workforce Intelligence Dashboard with Readiness Score", desc: "Skill gaps and a readiness score, department by department, in one view built for decision-makers, not just admins.", answers: "\u201CWho should we be promoting, and who's at risk?\u201D" },
+  { icon: Brain, title: "AI Support for Employees", desc: "AI coach, quiz generator, and tailored AI insights, with access to courses.", answers: "\u201CWill my team get curated support for their development?\u201D" },
+  { icon: ShieldCheck, title: "Certificates & Compliance", desc: "Verifiable certificates and audit-ready compliance tracking, tied directly to the same dashboards, so your training record and your readiness data are never two different stories.", answers: null }
+];
+
+const COMPARISON_ROWS = [
+  { dimension: "Focus", lms: "Course completion", trainai: "Workforce readiness" },
+  { dimension: "Data", lms: "Enrolment and completion logs", trainai: "Live skill graph and readiness scores" },
+  { dimension: "Output", lms: "Certificates", trainai: "Certificates plus decision-ready intelligence" },
+  { dimension: "Audience", lms: "L&D admins", trainai: "Executives, managers, and L&D" }
+];
+
+const ORG_FEATURES = [
+  { icon: Layers, title: "Cohort Management", desc: "Group learners into cohorts, assign instructors, and run structured programs (onboarding, leadership tracks, compliance training) without juggling five tools." },
+  { icon: BarChart3, title: "Organization Dashboards", desc: "One dashboard for executives, one for managers, one for admins, each showing exactly what that person needs to make a decision." },
+  { icon: BookOpen, title: "Course Management", desc: "Upload your content and manage completion rates and progress analytics across cohorts and teams." },
+  { icon: ShieldCheck, title: "GDPR & Enterprise Compliance", desc: "Append-only audit logging, DSAR data exports, consent mode, and renewal reminders handled automatically, so compliance stops being a spreadsheet fire drill." },
+  { icon: Users, title: "Manager & Instructor Views", desc: "Every manager becomes a talent developer, with a live view of their team's progress, without adding headcount to your L&D function." }
+];
+
+const INDIVIDUAL_FEATURES = [
+  { icon: Brain, title: "AI Learning Coach", desc: "A 24/7 conversational tutor that explains, quizzes, and answers anything you're stuck on." },
+  { icon: BookOpen, title: "Real courses, curated", desc: "No content overload. Just the resources that move you toward your goal." },
+  { icon: Users, title: "A community, not a login", desc: "Cohorts, peer accountability, and mentors, so you're never learning alone." }
+];
+
+// Pricing. These tier names match what checkout actually charges against
+// (TIER_PRICING in lib/api/organizations.js, used by
+// startOrganizationSubscriptionPayment), but this table previously showed no
+// figure at all - just "Per user" - so a visitor learned the real amount only
+// after starting a payment. The amounts are now read from that same exported
+// constant rather than retyped here, so the page and the charge cannot drift
+// apart. Enterprise stays "Custom" because it genuinely is:
+// startOrganizationSubscriptionPayment refuses the enterprise tier and routes
+// to Book a Demo instead.
+//
+// Per-tier entitlements are resolved server-side by tier_default_feature()
+// (0115_organization_feature_flags.sql) and can be overridden per
+// organization by the Platform Owner, so these bullet lists cannot be a
+// guarantee of what a tier contains. They are kept as indicative highlights
+// and labelled as such.
+const PRICING_TIERS = [
   {
-    icon: Lock,
-    title: "Secure tenant separation",
-    desc: "Row-level policies keep every organisation's learners, courses and results isolated."
+    name: "Starter",
+    tierKey: "starter",
+    tagline: "For teams just getting started with structured learning. Core platform, per-user pricing, no long-term commitment.",
+    priceNote: "Per user, per month. No long-term commitment.",
+    features: [
+      "Full learner experience: AI Coach, AI Insights, Quiz Generator",
+      "Cohorts, courses, assessments, certificates",
+      "Organisation dashboard for a single team",
+    ],
+    highlighted: false,
   },
   {
-    icon: ClipboardList,
-    title: "Audit logging",
-    desc: "Administrative actions are recorded in an append-only trail for enterprise review."
+    name: "Growth",
+    tierKey: "growth",
+    tagline: "For organizations scaling cohorts across departments, with volume pricing as you onboard more of your team.",
+    priceNote: "Per user, per month. Volume pricing as headcount grows.",
+    features: [
+      "Everything in Starter",
+      "Multi-department Workforce Intelligence Dashboard",
+      "Manager views at scale, compliance tracking",
+      "Org-level course management, analytics export",
+    ],
+    highlighted: true,
   },
   {
-    icon: Download,
-    title: "Consent & export controls",
-    desc: "Data ownership is explicit, with export and consent controls for compliance teams."
+    name: "Enterprise",
+    tierKey: "enterprise",
+    tagline: "For organizations that need full customization, dedicated support, and infrastructure built around them. Custom enterprise pricing.",
+    priceNote: "Annual contract. Talk to us for a quote.",
+    features: [
+      "Everything in Growth",
+      "SSO and API integrations",
+      "Custom branding, data residency options",
+      "Dedicated support, custom SLAs",
+    ],
+    highlighted: false,
   },
-  {
-    icon: Bell,
-    title: "Reliable notifications",
-    desc: "Session reminders, assignment alerts and nudges by email and in-app."
-  },
-  {
-    icon: Wifi,
-    title: "Low-bandwidth ready",
-    desc: "Fast on modest connections and mobile-first across every surface."
-  },
-  {
-    icon: Accessibility,
-    title: "Accessible UI",
-    desc: "Readable contrast, keyboard-friendly navigation and semantic structure."
-  }
+];
+
+// The real charged amount for a tier, or "Custom" where none exists
+// (enterprise, which is deliberately absent from TIER_PRICING).
+function tierPriceLabel(tierKey) {
+  const pricing = TIER_PRICING[tierKey];
+  if (!pricing) return "Custom";
+  return `₦${pricing.amountNGN.toLocaleString()}`;
+}
+
+function tierPriceAltLabel(tierKey) {
+  const pricing = TIER_PRICING[tierKey];
+  return pricing ? `≈ $${pricing.amountUSD}` : null;
+}
+
+const INQUIRY_TYPE_OPTIONS = [
+  { value: "procurement", label: "Procurement / security review" },
+  { value: "partnership", label: "Partnership" },
+  { value: "custom_requirements", label: "Custom requirements" },
+  { value: "other", label: "Something else" },
 ];
 
 const FAQ_ITEMS = [
   {
-    q: "What is Train AI?",
-    a: "Train AI is an enterprise AI-powered workforce learning and intelligence platform. We combine adaptive AI tutoring, structured learning pathways, live cohort mentorship, and real-time skill telemetry so organizations can track measurable capability."
+    q: "How is this different from TalentLMS and other learning management systems?",
+    a: "Those platforms give you a library of courses. Train AI gives you a living map of your workforce's skills: who has them, who's building them, and where the gaps are. We're built around outcomes and visibility, not just content delivery."
   },
   {
-    q: "How is this different from a normal LMS?",
-    a: "Traditional LMS tools only measure passive video clicks and completion percentages. Train AI is an active Workforce Intelligence Operating System that maps dynamic team capability in real time, provides 24/7 AI tutoring, automated practice quizzes, and live cohort mentorship."
+    q: "Can our team use this without a full enterprise rollout?",
+    a: "Yes. Most organizations start with a single team or cohort as a pilot, then expand once they've seen the readiness data for themselves."
   },
   {
-    q: "What is the Workforce Readiness Score?",
-    a: "The Workforce Readiness Score is a composite, real-time capability metric calculated per employee, team, and department based on verified assessment scores, practical task performance, and learning velocity."
+    q: "How does pricing scale with team size?",
+    a: "Pricing is per user, with better rates as your team grows. Larger organizations move to a custom enterprise plan built around their specific needs, so there are no surprise jumps."
   },
   {
-    q: "What does the AI Skill Graph show?",
-    a: "The AI Skill Graph is a dynamic topological map of your organization's talent, visualizing verified skills, skills currently in development, and critical capability gaps across teams."
+    q: "What does onboarding look like?",
+    a: "You bring your team in, we help you map roles to skills, and Train AI builds a readiness baseline within days, not months. A dedicated team supports you through setup."
   },
   {
-    q: "What AI tools do learners get?",
-    a: "Learners have access to a 24/7 AI Neural Tutor for conversational Q&A and code debugging, an Adaptive Quiz Generator that builds personalized practice assessments, and AI Progress Summaries."
-  },
-  {
-    q: "Which roles does the platform support?",
-    a: "Train AI supports 4 dedicated roles: Learners (personal courses, AI tutor, cohort chat), Instructors (cohort management, grading, scheduling), Managers (team analytics, readiness scores), and Admins (multi-tenant governance, SSO, billing, audit logs)."
-  },
-  {
-    q: "Are certificates branded for our organisation?",
-    a: "Yes. Administrators can customize certificates with their organization's official logo, signature, verification hashes, and custom accreditation details."
-  },
-  {
-    q: "Is our data separated and auditable?",
-    a: "Yes. Every organization operates within an isolated tenant protected by PostgreSQL Row-Level Security (RLS). All administrative actions and compliance completions are logged to an append-only audit trail."
+    q: "Who owns our data?",
+    a: "You do, full stop. Your organization's learning and skills data stays yours. We don't sell it or share it outside your account."
   }
 ];
 
 export default function LandingPage({ onNavigate }) {
+  // Campaign attribution (PRD Platform Owner Analytics) - captured once on
+  // mount, before any UTM query params could be lost to navigation within
+  // this single-page app.
   useEffect(() => { captureAttributionFromURL(); }, []);
+
+  // Referral link clicks (the "Invite & Earn" panel in ProfileScreen) -
+  // same "capture once on mount before it's lost" reasoning as the UTM
+  // capture above, kept as a separate call since it's a distinct feature
+  // with its own storage key.
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get("ref");
     if (ref) trackReferralClickIfPresent(ref);
   }, []);
 
-  const [mobileLearnerTab, setMobileLearnerTab] = useState("home"); // "home" | "courses" | "ai" | "community"
-  const [pollVoted, setPollVoted] = useState(false);
-  const [selectedPollOption, setSelectedPollOption] = useState(0);
   const [demoName, setDemoName] = useState("");
   const [demoEmail, setDemoEmail] = useState("");
   const [demoCompany, setDemoCompany] = useState("");
@@ -153,23 +252,21 @@ export default function LandingPage({ onNavigate }) {
   const [demoError, setDemoError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
-  const [openFaq, setOpenFaq] = useState(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [demoModalOpen, setDemoModalOpen] = useState(false);
-  const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
 
   useEffect(() => {
-    if (!activeModal && !demoModalOpen) return;
+    if (!activeModal) return;
     function handleKeyDown(e) {
-      if (e.key === "Escape") {
-        setActiveModal(null);
-        setDemoModalOpen(false);
-      }
+      if (e.key === "Escape") setActiveModal(null);
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [activeModal, demoModalOpen]);
+  }, [activeModal]);
+
+  const [contactMode, setContactMode] = useState("demo");
+  const [inquiryType, setInquiryType] = useState(INQUIRY_TYPE_OPTIONS[0].value);
+  const [inquirySubmitted, setInquirySubmitted] = useState(false);
+  const [inquiryError, setInquiryError] = useState("");
 
   async function handleDemoSubmit(e) {
     e.preventDefault();
@@ -198,30 +295,44 @@ export default function LandingPage({ onNavigate }) {
     }
   }
 
-  function handleNewsletterSubmit(e) {
+  async function handleInquirySubmit(e) {
     e.preventDefault();
-    if (!newsletterEmail.trim()) return;
-    setNewsletterSubscribed(true);
-    setNewsletterEmail("");
+    if (submitting) return;
+    setSubmitting(true);
+    setInquiryError("");
+    try {
+      const result = await submitOrganizationInquiry({
+        fullName: demoName,
+        workEmail: demoEmail,
+        companyName: demoCompany,
+        inquiryType,
+        message: demoMessage,
+        source: "landing_page",
+      });
+      if (!result.success) {
+        setInquiryError(result.error || "Could not submit your inquiry. Please try again.");
+        return;
+      }
+      setInquirySubmitted(true);
+    } catch (err) {
+      console.warn("Organization inquiry failed:", err);
+      setInquiryError("Something went wrong. Please try again, or email info@trainailtd.com.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function scrollToId(id) {
-    setMobileMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function handleNav(target) {
-    setMobileMenuOpen(false);
     if (["about", "privacy", "terms", "cookie"].includes(target)) {
       setActiveModal(target);
       return;
     }
-    if (["intelligence", "learners", "organisation", "faq", "how-it-works", "trust"].includes(target)) {
+    if (["platform", "solutions", "why-train-ai", "pricing", "individuals", "book-demo", "organizations"].includes(target)) {
       scrollToId(target);
-      return;
-    }
-    if (target === "demo") {
-      setDemoModalOpen(true);
       return;
     }
     onNavigate(target);
@@ -230,1506 +341,911 @@ export default function LandingPage({ onNavigate }) {
   return (
     <div style={styles.outer}>
       <style>{`
-        @keyframes fillBar1 { from { width: 0%; } to { width: 82%; } }
-        @keyframes fillBar2 { from { width: 0%; } to { width: 74%; } }
-        @keyframes fillBar3 { from { width: 0%; } to { width: 61%; } }
-        @keyframes fillBar4 { from { width: 0%; } to { width: 55%; } }
+        @keyframes heroPop { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+        .hero-anim { animation: heroPop .4s ease both; }
+        .action-btn { transition: transform .15s ease, box-shadow .15s ease; }
+        .action-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -4px rgba(79, 70, 229, 0.45); }
+        .action-btn:active { transform: scale(.97); }
 
-        .lp-card-hover {
-          transition: border-color .15s ease, box-shadow .15s ease;
-        }
-        .lp-card-hover:hover {
-          border-color: #CBD5E1 !important;
-          box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
-        }
+        .lp-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+        .lp-card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px -10px rgba(15,23,42,.12); border-color: #C7D2FE; }
 
-        .lp-step-card {
-          transition: border-color .15s ease, box-shadow .15s ease;
-        }
-        .lp-step-card:hover {
-          border-color: #CBD5E1 !important;
-          box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
-        }
+        .lp-nav-link { transition: color .15s ease; }
+        .lp-nav-link:hover { color: #4F46E5 !important; }
+        .lp-footer-link { transition: color .15s ease; }
+        .lp-footer-link:hover { color: #4F46E5 !important; }
+        .lp-contact-toggle-btn { transition: all .15s ease; }
+        .lp-outline-btn { transition: background .15s ease, transform .15s ease; }
+        .lp-outline-btn:hover { background: #F8FAFC; }
+        .lp-outline-btn:active { transform: scale(.97); }
+        .lp-faq-chevron { transition: transform .2s ease; }
+        .lp-faq-answer { animation: heroPop .22s ease both; }
+        .lp-question-pill { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+        .lp-question-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 16px -6px rgba(15,23,42,.1); border-color: #C7D2FE; }
+        .lp-demo-form input, .lp-demo-form select, .lp-demo-form textarea { transition: border-color .15s ease, box-shadow .15s ease; }
+        .lp-demo-form input:focus, .lp-demo-form select:focus, .lp-demo-form textarea:focus { border-color: #4F46E5 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
 
-        .lp-nav-link {
-          transition: color .14s ease;
-          cursor: pointer;
-          color: #475569;
-          font-weight: 600;
-          font-size: 13.5px;
-        }
-        .lp-nav-link:hover {
-          color: #4F46E5 !important;
-        }
+        .lp-stagger > * { opacity: 0; animation: heroPop .4s ease both; }
+        .lp-stagger > *:nth-child(1) { animation-delay: .03s; }
+        .lp-stagger > *:nth-child(2) { animation-delay: .08s; }
+        .lp-stagger > *:nth-child(3) { animation-delay: .13s; }
+        .lp-stagger > *:nth-child(4) { animation-delay: .18s; }
+        .lp-stagger > *:nth-child(5) { animation-delay: .23s; }
+        .lp-stagger > *:nth-child(n+6) { animation-delay: .28s; }
 
-        .lp-pill-hover {
-          transition: background-color .14s ease, border-color .14s ease;
-          cursor: pointer;
+        @media (max-width: 760px) {
+          .lp-nav-links { display: none; }
+          .lp-header-inner { padding: 10px 14px; }
+          .lp-header-actions { gap: 6px; }
+          .lp-header-actions button { padding: 8px 11px; font-size: 12px; }
+          .lp-brand-sub { display: none; }
+          .lp-comparison-table { font-size: 11.5px !important; }
+          .lp-legal-links { flex-wrap: wrap; row-gap: 6px; }
+          .lp-contact-toggle { flex-wrap: wrap; justify-content: center; }
         }
-        .lp-pill-hover:hover {
-          border-color: #CBD5E1 !important;
-          background: #F1F5F9 !important;
+        @media (max-width: 560px) {
+          .lp-hero-section { padding: 36px 16px 48px !important; }
+          .lp-hero-h1 { font-size: 28px !important; }
+          .lp-hero-sub { font-size: 14.5px !important; }
+          .lp-section { padding: 44px 16px !important; }
+          .lp-section-h2 { font-size: 22px !important; }
+          .lp-demo-form-row { flex-direction: column; }
+          .lp-footer-inner { flex-direction: column; gap: 20px; align-items: flex-start !important; text-align: left; }
+          .lp-pricing-card { max-width: 100% !important; }
         }
-
-        .action-btn-primary {
-          background: #4F46E5;
-          color: #FFFFFF;
-          transition: background-color .14s ease;
+        @media (max-width: 480px) {
+          .lp-hero-cta-row { flex-direction: column; }
         }
-        .action-btn-primary:hover {
-          background: #4338CA;
-        }
-        .action-btn-primary:active {
-          transform: scale(.99);
-        }
-
-        .action-btn-outline {
-          background: #FFFFFF;
-          color: #0F172A;
-          border: 1px solid #CBD5E1;
-          transition: background-color .14s ease, border-color .14s ease;
-        }
-        .action-btn-outline:hover {
-          background: #F8FAFC;
-          border-color: #94A3B8;
-        }
-
-        .lp-bar-1 { animation: fillBar1 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .lp-bar-2 { animation: fillBar2 1.0s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .lp-bar-3 { animation: fillBar3 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .lp-bar-4 { animation: fillBar4 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        .lp-footer-link {
-          color: #94A3B8;
-          text-decoration: none;
-          font-size: 13px;
-          transition: color .14s ease;
-          cursor: pointer;
-        }
-        .lp-footer-link:hover {
-          color: #FFFFFF !important;
-        }
-
-        .lp-social-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 6px;
-          background: #1E293B;
-          border: 1px solid #334155;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #94A3B8;
-          transition: background-color .14s ease, color .14s ease;
-          cursor: pointer;
-        }
-        .lp-social-btn:hover {
-          background: #4F46E5;
-          color: #FFFFFF;
-          border-color: #4F46E5;
-        }
-
-        /* Interactive Phone Nav Pill Tabs */
-        .phone-nav-item {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          padding: 4px 8px;
-          border-radius: 6px;
-          font-size: 9.5px;
-          font-weight: 700;
-          color: #64748B;
-          cursor: pointer;
-          transition: background-color .14s ease, color .14s ease;
-        }
-        .phone-nav-item.active {
-          background: #4F46E5;
-          color: #FFFFFF !important;
-        }
-
-        /* Section Background Utilities */
-        .lp-bg-hero {
-          background-color: #FFFFFF;
-        }
-        .lp-bg-surface-1 {
-          background-color: #F8FAFC;
-          border-top: 1px solid #E2E8F0;
-          border-bottom: 1px solid #E2E8F0;
-        }
-        .lp-bg-surface-2 {
-          background-color: #FFFFFF;
-        }
-        .lp-bg-surface-tint {
-          background-color: #F1F5F9;
-          border-top: 1px solid #E2E8F0;
-          border-bottom: 1px solid #E2E8F0;
-        }
-
-        /* Mobile specific layout enhancements */
-        @media (max-width: 960px) {
-          .lp-desktop-nav { display: none !important; }
-          .lp-mobile-menu-btn { display: flex !important; }
-          .lp-hero-grid { grid-template-columns: 1fr !important; gap: 32px !important; text-align: center !important; }
-          .lp-hero-left { margin: 0 auto !important; max-width: 600px !important; }
-          .lp-hero-ctas { justify-content: center !important; }
-          .lp-hero-pills { justify-content: center !important; }
-          .lp-hero-right { justify-content: center !important; margin-top: 10px !important; }
-          .lp-learner-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-        }
-        @media (min-width: 961px) {
-          .lp-mobile-drawer { display: none !important; }
-          .lp-mobile-menu-btn { display: none !important; }
-        }
-        @media (max-width: 640px) {
-          .lp-hero-h1 { font-size: 30px !important; line-height: 1.15 !important; }
-          .lp-section-h2 { font-size: 22px !important; line-height: 1.2 !important; }
-          .lp-section-inner { padding: 32px 14px !important; }
-          .lp-hero-pill-wrap { flex-direction: column !important; width: 100% !important; }
-          .lp-hero-pill-wrap > div { width: 100% !important; justify-content: flex-start !important; }
-          .lp-header-actions { gap: 6px !important; }
-          .lp-hero-ctas { flex-direction: column !important; width: 100% !important; }
-          .lp-hero-ctas > button { width: 100% !important; justify-content: center !important; }
+        @media (max-width: 400px) {
+          .lp-header-brand img { height: 36px !important; }
+          .lp-header-actions { gap: 4px; }
+          .lp-header-actions button { padding: 7px 9px; font-size: 11px; }
+          .lp-contact-toggle-btn { padding: 7px 12px !important; font-size: 11.5px !important; }
+          .lp-mockup-url { display: none; }
+          .lp-mockup-grid { padding: 14px !important; gap: 14px !important; }
         }
       `}</style>
 
-      {/* =========================================================================
-          STICKY HEADER
-          ========================================================================= */}
       <header style={styles.header}>
-        <div style={styles.headerInner}>
-          
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", flexShrink: 0 }} onClick={() => handleNav("home")}>
-            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 24, width: "auto", objectFit: "contain", display: "block" }} />
+        <div className="lp-header-inner" style={styles.headerInner}>
+          <div className="lp-header-brand" style={{ ...styles.brandRow, cursor: "pointer" }} onClick={() => handleNav("home")}>
+            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 48, width: "auto", objectFit: "contain", display: "block" }} />
           </div>
 
-          {/* Center Navigation Links */}
-          <nav className="lp-desktop-nav" style={{ display: "flex", gap: 24, alignItems: "center" }}>
-            <span className="lp-nav-link" onClick={() => handleNav("home")}>Home</span>
-            <span className="lp-nav-link" onClick={() => handleNav("intelligence")}>Intelligence</span>
-            <span className="lp-nav-link" onClick={() => handleNav("learners")}>Learners</span>
-            <span className="lp-nav-link" onClick={() => handleNav("organisation")}>Organisation</span>
-            <span className="lp-nav-link" onClick={() => handleNav("faq")}>FAQ</span>
+          <nav className="lp-nav-links" style={styles.navLinks}>
+            <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("platform")}>Platform</span>
+            <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("solutions")}>Solutions</span>
+            <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
+            <span className="lp-nav-link" style={styles.navLink} onClick={() => handleNav("pricing")}>Pricing</span>
+            <span className="lp-nav-link" style={styles.navLinkQuiet} onClick={() => handleNav("individuals")}>For Individuals</span>
           </nav>
 
-          {/* Action CTAs */}
-          <div className="lp-header-actions" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button
-              style={styles.signInBtn}
-              onClick={() => handleNav("signin")}
-            >
-              Sign In
-            </button>
-            <button
-              className="action-btn-outline lp-desktop-nav"
-              style={styles.requestDemoBtn}
-              onClick={() => handleNav("demo")}
-            >
-              Request demo
-            </button>
-            <button
-              className="action-btn-primary"
-              style={styles.getStartedBtn}
-              onClick={() => handleNav("signin")}
-            >
-              Get Started
-            </button>
-
-            {/* Mobile Hamburger Button */}
-            <button
-              className="lp-mobile-menu-btn"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{
-                width: 34, height: 34, borderRadius: 6, border: "1px solid #E2E8F0",
-                background: "#F8FAFC", display: "none", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: "#0F172A"
-              }}
-              aria-label="Toggle Mobile Navigation"
-            >
-              {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
-            </button>
+          <div className="lp-header-actions" style={{ display: "flex", gap: 10, flexShrink: 0 }}>
+            <button className="lp-outline-btn" style={styles.signInBtn} onClick={() => handleNav("signin")}>Sign In</button>
+            <button className="action-btn" style={styles.getStartedBtn} onClick={() => handleNav("book-demo")}>Book a Demo</button>
           </div>
-
         </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div
-            className="lp-mobile-drawer anim-fluid-entrance"
-            style={{
-              background: "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(24px)",
-              WebkitBackdropFilter: "blur(24px)",
-              borderTop: "1px solid rgba(226, 232, 240, 0.9)",
-              padding: "16px 20px 24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              boxShadow: "0 16px 40px -10px rgba(15, 23, 42, 0.15)"
-            }}
-          >
-            <span className="lp-nav-link anim-stagger-1" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("home")}>Home</span>
-            <span className="lp-nav-link anim-stagger-2" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("intelligence")}>Intelligence</span>
-            <span className="lp-nav-link anim-stagger-3" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("learners")}>Learners</span>
-            <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("organisation")}>Organisation</span>
-            <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("faq")}>FAQ</span>
-            <button
-              className="action-btn-outline"
-              style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, marginTop: 6, fontSize: 13 }}
-              onClick={() => handleNav("demo")}
-            >
-              Request a demo
-            </button>
-          </div>
-        )}
       </header>
 
-      {/* =========================================================================
-          SECTION 1: HERO SECTION
-          ========================================================================= */}
-      <section className="lp-bg-hero ambient-mesh-glow" style={{ width: "100%", position: "relative", borderBottom: "1px solid #E2E8F0" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 64px" }}>
-          <div className="lp-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 36, alignItems: "center" }}>
-            
-            {/* Left Column */}
-            <div className="lp-hero-left" style={{ textAlign: "left" }}>
-              
-              {/* Badge */}
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 6,
-                background: "#EEF2FF", border: "1px solid #C7D2FE",
-                color: "#4F46E5", fontSize: 11, fontWeight: 700, marginBottom: 16, letterSpacing: ".02em"
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} />
-                <span>AI WORKFORCE INTELLIGENCE PLATFORM</span>
+      <main className="hero-anim lp-hero-section" style={styles.heroSection}>
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 99,
+          background: "linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%)", border: "1px solid #E0E7FF",
+          color: "#4F46E5", fontSize: 12.5, fontWeight: 800, marginBottom: 20
+        }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} /> AI WORKFORCE INTELLIGENCE PLATFORM
+        </div>
+
+        <h1 className="lp-hero-h1" style={{ ...styles.heroH1, fontSize: 46, maxWidth: 840, margin: "0 auto 18px" }}>
+          Measure readiness,<br /><span style={{ background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>not completion.</span>
+        </h1>
+        <p className="lp-hero-sub" style={{ ...styles.heroSub, fontSize: 17, maxWidth: 760, margin: "0 auto 30px" }}>
+          Train AI turns learning activity into decision-ready intelligence about workforce readiness, skill coverage and team capability — so you know who is ready, who is stuck, and where the gaps are.
+        </p>
+
+        <div className="lp-hero-cta-row" style={styles.heroCtaRow}>
+          <button className="action-btn" style={styles.getStartedBtn} onClick={() => handleNav("book-demo")}>
+            Start with your organisation<ArrowRight size={16} />
+          </button>
+          <button className="lp-outline-btn" style={styles.heroSecondaryBtn} onClick={() => handleNav("book-demo")}>Request a demo</button>
+        </div>
+
+        {/* 3 Pill Metric Cards under CTAs matching Screenshot 3 */}
+        <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 14, marginTop: 24 }}>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "10px 18px", borderRadius: 14, textAlign: "left", boxShadow: "0 2px 8px rgba(15,23,42,0.03)" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 6 }}>
+              <Layers size={14} color="#4F46E5" /> Skill Graph
+            </div>
+            <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>Held • developing • missing</div>
+          </div>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "10px 18px", borderRadius: 14, textAlign: "left", boxShadow: "0 2px 8px rgba(15,23,42,0.03)" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 6 }}>
+              <TrendingUp size={14} color="#4F46E5" /> Readiness Score
+            </div>
+            <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>Team • function • org</div>
+          </div>
+          <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "10px 18px", borderRadius: 14, textAlign: "left", boxShadow: "0 2px 8px rgba(15,23,42,0.03)" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 6 }}>
+              <Zap size={14} color="#4F46E5" /> Live Signals
+            </div>
+            <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 2 }}>Assessments • progress</div>
+          </div>
+        </div>
+
+        {/* Hero Interactive UI Preview Mockup matching Screenshot 3 */}
+        <div style={{
+          marginTop: 48, position: "relative", borderRadius: 24, overflow: "hidden",
+          border: "1px solid #E2E8F0", background: "#FFFFFF",
+          boxShadow: "0 24px 60px -12px rgba(79, 70, 229, 0.18), 0 8px 24px -4px rgba(15, 23, 42, 0.06)",
+          textAlign: "left"
+        }}>
+          {/* Mockup Top Header */}
+          <div className="lp-mockup-header" style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, rowGap: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444", flexShrink: 0 }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B", flexShrink: 0 }} />
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981", flexShrink: 0 }} />
+              <span className="lp-mockup-url" style={{ fontSize: 12, fontWeight: 700, color: "#64748B", marginLeft: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>app.trainailtd.com/workforce-intelligence</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+              {/* Was "⚡ Live Intelligence Signal". This is a static product
+                  screenshot on an unauthenticated marketing page - no query
+                  could legitimately fill it - so the "Live" framing is gone
+                  and the mockup is labelled as an example. */}
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "3px 10px", borderRadius: 8, whiteSpace: "nowrap" }}>Example dashboard</span>
+            </div>
+          </div>
+
+          {/* Mockup Dashboard Content Grid */}
+          <div className="lp-mockup-grid" style={{ padding: 24, background: "#F8FAFC", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(300px, 100%), 1fr))", gap: 20 }}>
+            {/* Workforce Intelligence Readiness by Team Card matching Screenshot 3 */}
+            <div style={{
+              background: "#FFFFFF", borderRadius: 18, border: "1px solid #E2E8F0", padding: 22,
+              boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", textTransform: "uppercase" }}>WORKFORCE INTELLIGENCE</div>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: "#0F172A", marginTop: 2 }}>Readiness by team</div>
+                </div>
+                {/* "Live" over illustrative readiness figures (71, +4 this
+                    month, per-team scores) - the numbers are sample content,
+                    so the badge now says so. */}
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", background: "#EEF2FF", padding: "2px 8px", borderRadius: 6 }}>Sample</span>
               </div>
 
-              {/* Headline */}
-              <h1 className="lp-hero-h1" style={{ fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0F172A", margin: "0 0 14px", lineHeight: 1.1 }}>
-                Measure<br />
-                readiness,<br />
-                <span style={{ color: "#4F46E5" }}>
-                  not completion.
-                </span>
-              </h1>
-
-              {/* Subtitle */}
-              <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.55, margin: "0 0 22px", maxWidth: 500 }}>
-                Train AI turns learning activity into decision-ready intelligence about workforce readiness, skill coverage and team capability — so leaders know who is ready, who is stuck, and where the gaps are.
-              </p>
-
-              {/* Dual CTAs */}
-              <div className="lp-hero-ctas" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
-                <button className="action-btn-primary" style={styles.startOrgBtn} onClick={() => handleNav("signin")}>
-                  Start with your organisation <ArrowRight size={14} />
-                </button>
-                <button className="action-btn-outline" style={styles.requestDemoOutlineBtn} onClick={() => handleNav("demo")}>
-                  Request a demo
-                </button>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 16 }}>
+                <span style={{ fontSize: 36, fontWeight: 900, color: "#0F172A" }}>71</span>
+                <span style={{ fontSize: 13, color: "#64748B" }}>Organisation readiness</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#10B981" }}>+4 this month</span>
               </div>
 
-              {/* 3 Metric Badges */}
-              <div className="lp-hero-pills lp-hero-pill-wrap" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
-                  <Layers size={15} color="#4F46E5" />
-                  <div>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Skill Graph</div>
-                    <div style={{ fontSize: 10.5, color: "#64748B" }}>Held • developing • missing</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    <span style={{ color: "#334155" }}>Engineering</span>
+                    <span style={{ color: "#4F46E5" }}>82 (+6)</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                    <div style={{ width: "82%", height: "100%", background: "#4F46E5", borderRadius: 99 }} />
                   </div>
                 </div>
-
-                <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
-                  <Gauge size={15} color="#4F46E5" />
-                  <div>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Readiness Score</div>
-                    <div style={{ fontSize: 10.5, color: "#64748B" }}>Team • function • org</div>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    <span style={{ color: "#334155" }}>Operations</span>
+                    <span style={{ color: "#4F46E5" }}>74 (+3)</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                    <div style={{ width: "74%", height: "100%", background: "#6366F1", borderRadius: 99 }} />
                   </div>
                 </div>
-
-                <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("learners")}>
-                  <Activity size={15} color="#4F46E5" />
-                  <div>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Live Signals</div>
-                    <div style={{ fontSize: 10.5, color: "#64748B" }}>Assessments • progress</div>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    <span style={{ color: "#334155" }}>Compliance</span>
+                    <span style={{ color: "#4F46E5" }}>61 (-2)</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                    <div style={{ width: "61%", height: "100%", background: "#818CF8", borderRadius: 99 }} />
+                  </div>
+                </div>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 4 }}>
+                    <span style={{ color: "#334155" }}>Sales</span>
+                    <span style={{ color: "#4F46E5" }}>55 (+9)</span>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 99, background: "#EEF2FF", overflow: "hidden" }}>
+                    <div style={{ width: "55%", height: "100%", background: "#A5B4FC", borderRadius: 99 }} />
                   </div>
                 </div>
               </div>
 
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginTop: 18, paddingTop: 14, borderTop: "1px solid #E2E8F0" }}>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#0F172A" }}>12</div>
+                  <div style={{ fontSize: 11, color: "#64748B" }}>Skill gaps</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#0F172A" }}>38</div>
+                  <div style={{ fontSize: 11, color: "#64748B" }}>Compliance due</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#0F172A" }}>6</div>
+                  <div style={{ fontSize: 11, color: "#64748B" }}>Cohorts active</div>
+                </div>
+              </div>
             </div>
 
-            {/* Right Column: Professional Editorial Team Photo + Telemetry Card */}
-            <div className="lp-hero-right" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-              
-              {/* Authentic Photo */}
-              <div style={{ width: "100%", maxWidth: 360, marginBottom: -32, position: "relative", zIndex: 1 }}>
-                <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80"
-                  alt="Train AI Professional Team"
-                  style={{ width: "100%", height: 260, objectFit: "cover", borderRadius: 8, border: "1px solid #E2E8F0" }}
-                />
+            {/* Right Side Team Stock Image Card */}
+            <div style={{
+              borderRadius: 18, overflow: "hidden", position: "relative",
+              border: "1px solid #E2E8F0", minHeight: 280,
+              backgroundImage: "url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80')",
+              backgroundSize: "cover", backgroundPosition: "center",
+              display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 20
+            }}>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.2) 60%, transparent 100%)" }} />
+              <div style={{ position: "relative", color: "#FFFFFF", zIndex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#818CF8", textTransform: "uppercase", letterSpacing: ".05em" }}>ENTERPRISE LEARNING</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 4 }}>Empower your workforce with AI-driven skill maps</div>
+                {/* "across 18+ industries" was a factual customer-base claim
+                    with nothing behind it - dropped rather than softened. */}
+                <div style={{ fontSize: 12.5, opacity: 0.85, marginTop: 4 }}>Team readiness tracking built for any industry</div>
               </div>
-
-              {/* Grounded Workforce Telemetry Card */}
-              <div style={{
-                position: "relative", zIndex: 2, width: "100%", maxWidth: 420,
-                background: "#FFFFFF", borderRadius: 8, padding: "18px 20px",
-                border: "1px solid #CBD5E1", boxShadow: "0 4px 16px rgba(15,23,42,0.06)",
-                textAlign: "left", boxSizing: "border-box"
-              }}>
-                
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".04em" }}>WORKFORCE INTELLIGENCE</div>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", marginTop: 1 }}>Readiness by team</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "2px 6px", borderRadius: 4 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} />
-                    <span>Live Telemetry</span>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-                  <span style={{ fontSize: 30, fontWeight: 900, color: "#0F172A", letterSpacing: "-0.03em" }}>71</span>
-                  <span style={{ fontSize: 12, color: "#64748B", fontWeight: 600 }}>Organisation readiness</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#16A34A" }}>+4 this month</span>
-                </div>
-
-                {/* Progress Bars */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 14 }}>
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                      <span style={{ color: "#334155" }}>Engineering</span>
-                      <span style={{ color: "#4F46E5", fontWeight: 700 }}>82 (+6)</span>
-                    </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "#EEF2FF", overflow: "hidden" }}>
-                      <div className="lp-bar-1" style={{ height: "100%", background: "#4F46E5", borderRadius: 2 }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                      <span style={{ color: "#334155" }}>Operations</span>
-                      <span style={{ color: "#4F46E5", fontWeight: 700 }}>74 (+3)</span>
-                    </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "#EEF2FF", overflow: "hidden" }}>
-                      <div className="lp-bar-2" style={{ height: "100%", background: "#4F46E5", borderRadius: 2 }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                      <span style={{ color: "#334155" }}>Compliance</span>
-                      <span style={{ color: "#4F46E5", fontWeight: 700 }}>61 (-2)</span>
-                    </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "#EEF2FF", overflow: "hidden" }}>
-                      <div className="lp-bar-3" style={{ height: "100%", background: "#4F46E5", borderRadius: 2 }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
-                      <span style={{ color: "#334155" }}>Sales</span>
-                      <span style={{ color: "#4F46E5", fontWeight: 700 }}>55 (+9)</span>
-                    </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "#EEF2FF", overflow: "hidden" }}>
-                      <div className="lp-bar-4" style={{ height: "100%", background: "#4F46E5", borderRadius: 2 }} />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom 3 Numbers */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, paddingTop: 10, borderTop: "1px solid #F1F5F9" }}>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: "#0F172A" }}>12</div>
-                    <div style={{ fontSize: 10, color: "#64748B" }}>Skill gaps</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: "#0F172A" }}>38</div>
-                    <div style={{ fontSize: 10, color: "#64748B" }}>Compliance due</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 800, color: "#0F172A" }}>6</div>
-                    <div style={{ fontSize: 10, color: "#64748B" }}>Cohorts active</div>
-                  </div>
-                </div>
-
-              </div>
-
             </div>
+          </div>
+        </div>
 
+        <div style={styles.heroNote}>
+          Learning on your own? <span style={{ color: "#4F46E5", fontWeight: 700, cursor: "pointer" }} onClick={() => handleNav("individuals")}>Get your own AI coach and dashboard here →</span>
+        </div>
+
+        <div style={styles.grid}>
+          <div className="lp-card" style={styles.card}>
+            <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><BarChart3 size={20} color="#4F46E5" /></div>
+            <h3 style={styles.cardTitle}>Executive Dashboard</h3>
+            <p style={styles.cardDesc}>Org-wide readiness scores and skill gaps, department by department, built for decision-makers.</p>
+          </div>
+          <div className="lp-card" style={styles.card}>
+            <div style={{ ...styles.cardIcon, background: "rgba(99,102,241,.1)" }}><Brain size={20} color="#6366F1" /></div>
+            <h3 style={styles.cardTitle}>AI Coach in Action</h3>
+            <p style={styles.cardDesc}>Every learner gets a 24/7 AI coach, personalised to their role and the gaps that matter.</p>
+          </div>
+          <div className="lp-card" style={styles.card}>
+            <div style={{ ...styles.cardIcon, background: "rgba(23,166,115,.1)" }}><Compass size={20} color="#17A673" /></div>
+            <h3 style={styles.cardTitle}>Live Skill Graph</h3>
+            <p style={styles.cardDesc}>A live map of every skill in your organization: who has it, who's building it, where the gaps are.</p>
+          </div>
+          <div className="lp-card" style={styles.card}>
+            <div style={{ ...styles.cardIcon, background: "rgba(245,165,36,.1)" }}><ShieldCheck size={20} color="#F5A524" /></div>
+            <h3 style={styles.cardTitle}>Enterprise Compliance</h3>
+            <p style={styles.cardDesc}>Append-only audit logging, DSAR data export, and multi-tenant organisation isolation.</p>
+          </div>
+        </div>
+      </main>
+
+      <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
+        <div style={{ ...styles.sectionInner, maxWidth: 780 }}>
+          <div style={styles.sectionTag}><Globe size={13} color="#4F46E5" /> Who we are</div>
+          <p style={styles.bodyLarge}>
+            Train AI is the AI learning infrastructure for organizations that never stop learning. We combine
+            AI-personalised learning paths, live skills data, and real human mentorship into one platform, so
+            leadership always knows who's ready, who's stuck, and where the next skill gap is, before it turns
+            into a missed delivery.
+          </p>
+          <p style={styles.bodyLarge}>
+            We're not another course library. We're the layer that sits underneath your L&amp;D, turning
+            training from something people complete into something the business can actually see, measure,
+            and act on.
+          </p>
+        </div>
+      </section>
+
+      <section className="lp-section" style={styles.section}>
+        <div style={styles.sectionInner}>
+          <div style={styles.sectionTag}><AlertTriangle size={13} color="#4F46E5" /> The problem</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>Your teams are training. You still can't see what's working.</h2>
+          <p style={styles.sectionSub}>
+            Learning is happening somewhere in your organization. It just isn't happening anywhere leadership
+            can see it. Courses get assigned, seats get filled, certificates get issued, and none of it
+            tells you who's actually ready to deliver.
+          </p>
+
+          <div style={styles.statBanner}>
+            Most online training loses <strong>80–85%</strong> of learners before they finish, a
+            completion problem that starts on day one and shows up months later as a delivery problem.
+          </div>
+
+          <div className="lp-stagger" style={styles.featuresGrid}>
+            {PROBLEM_POINTS.map((p) => {
+              const Icon = p.icon;
+              return (
+                <div key={p.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(239,68,68,.1)" }}><Icon size={20} color="#EF4444" /></div>
+                  <h3 style={styles.cardTitle}>{p.title}</h3>
+                  <p style={styles.cardDesc}>{p.desc}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* =========================================================================
-          SECTION 2: HOW WE BUILD IT (Slate Surface #F8FAFC with Borders)
-          ========================================================================= */}
-      <section className="lp-bg-surface-1" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "36px 20px 44px" }}>
-          
-          <div style={{ textAlign: "left", marginBottom: 14 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>HOW WE BUILD IT</span>
+      <section id="platform" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
+        <div style={styles.sectionInner}>
+          <div style={styles.sectionTag}><Layers size={13} color="#4F46E5" /> The platform</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>One Platform. Five Intelligence Layers.</h2>
+          <p style={styles.sectionSub}>
+            Train AI replaces scattered courses, spreadsheets, and status meetings with a single system that
+            learns how your workforce grows.
+          </p>
+
+          <div className="lp-stagger" style={styles.featuresGrid}>
+            {INTELLIGENCE_LAYERS.map((l) => {
+              const Icon = l.icon;
+              return (
+                <div key={l.letter} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
+                  <h3 style={styles.cardTitle}>{l.letter}</h3>
+                  <p style={styles.cardDesc}>{l.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works" className="lp-section" style={styles.section}>
+        <div style={styles.sectionInner}>
+          <div style={styles.sectionTag}><ClipboardList size={13} color="#4F46E5" /> How it works</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>From onboarding to outcome, in four steps.</h2>
+
+          <div className="lp-stagger" style={styles.stepsRow}>
+            {HOW_IT_WORKS.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.title} className="lp-card" style={styles.stepCard}>
+                  <div style={styles.stepNumber}>{i + 1}</div>
+                  <div style={styles.stepIcon}><Icon size={20} color="#4F46E5" /></div>
+                  <h3 style={styles.cardTitle}>{step.title}</h3>
+                  <p style={styles.cardDesc}>{step.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section id="solutions" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
+        <div style={styles.sectionInner}>
+          <div style={styles.sectionTag}><Target size={13} color="#4F46E5" /> Solutions</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>Built around your organization's specific need.</h2>
+
+          <div className="lp-stagger" style={styles.featuresGrid}>
+            {SOLUTIONS.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
+                  <h3 style={styles.cardTitle}>{s.title}</h3>
+                  <p style={styles.cardDesc}>{s.desc}</p>
+                  <div style={styles.inlineLink} onClick={() => handleNav("book-demo")}>Book a demo <ArrowRight size={13} /></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section id="why-train-ai" className="lp-section" style={styles.section}>
+        <div style={styles.sectionInner}>
+          <div style={styles.sectionTag}><HelpCircle size={13} color="#4F46E5" /> Why Train AI</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>Not Another LMS. Built to Answer the Questions Yours Can't.</h2>
+          <p style={styles.sectionSub}>Train AI is built to answer questions a standard learning platform cannot:</p>
+
+          <div className="lp-stagger" style={styles.questionGrid}>
+            {WHY_QUESTIONS.map((q) => (
+              <div key={q} className="lp-question-pill" style={styles.questionPill}>{q}</div>
+            ))}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, textAlign: "left" }}>
-            {HOW_WE_BUILD_IT.map((item) => {
-              const Icon = item.icon;
+          <h3 style={{ ...styles.sectionH2, fontSize: 20, marginTop: 48, marginBottom: 24 }}>The features that answer them</h3>
+          <div className="lp-stagger" style={styles.featuresGrid}>
+            {WHY_FEATURES.map((f) => {
+              const Icon = f.icon;
               return (
-                <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "18px 18px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                    <Icon size={16} color="#4F46E5" />
-                  </div>
-                  <h3 style={{ fontSize: 14.5, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>{item.title}</h3>
-                  <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.45 }}>{item.desc}</p>
+                <div key={f.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
+                  <h3 style={styles.cardTitle}>{f.title}</h3>
+                  <p style={styles.cardDesc}>{f.desc}</p>
+                  {f.answers && <p style={styles.answersLine}>Answers: {f.answers}</p>}
                 </div>
               );
             })}
           </div>
 
+          <h3 style={{ ...styles.sectionH2, fontSize: 20, marginTop: 48, marginBottom: 24 }}>Traditional LMS vs. Train AI</h3>
+          <div className="lp-comparison-table" style={styles.comparisonWrap}>
+            <table style={styles.comparisonTable}>
+              <thead>
+                <tr>
+                  <th style={styles.comparisonHeaderCell}>Dimension</th>
+                  <th style={styles.comparisonHeaderCell}>Traditional LMS</th>
+                  <th style={{ ...styles.comparisonHeaderCell, color: "#4F46E5" }}>Train AI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON_ROWS.map((row) => (
+                  <tr key={row.dimension}>
+                    <td style={styles.comparisonCellLabel}>{row.dimension}</td>
+                    <td style={styles.comparisonCell}>{row.lms}</td>
+                    <td style={{ ...styles.comparisonCell, fontWeight: 700, color: "#0F172A" }}>{row.trainai}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
-      {/* =========================================================================
-          SECTION 3: THE WORKFORCE INTELLIGENCE LAYER (Clean White Surface)
-          ========================================================================= */}
-      <section id="intelligence" className="lp-bg-surface-2" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 58px", textAlign: "left" }}>
-          
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>THE WORKFORCE INTELLIGENCE LAYER</span>
-          </div>
-
-          <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
-            Understand what your people<br />can actually do
-          </h2>
-
-          <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 620, margin: "0 0 28px", lineHeight: 1.5 }}>
-            Available to admins and managers as an overview, the intelligence layer combines every available signal into outputs you can act on — never completion alone.
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-            
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <Brain size={18} color="#4F46E5" />
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>AI Skill Graph</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                A live view of capability across a learner, team or organisation — what skills exist, what is developing, where the gaps are, and how capability grows over time.
-              </p>
-            </div>
-
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <Gauge size={18} color="#4F46E5" />
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Workforce Readiness Score</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                One readiness indicator per team, function and organisation, so leadership can answer: are we ready, which team is strongest, which team needs support now?
-              </p>
-            </div>
-
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <BarChart3 size={18} color="#4F46E5" />
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Intelligence Dashboard</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                A summary view built for decisions: skill gaps by department, readiness by team, progress and activity trends, plus high-level organisational insights.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 4: THE LEARNER APP
-          ========================================================================= */}
-      <section id="learners" className="lp-bg-surface-tint" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "38px 20px 50px" }}>
-          
-          {/* Signals Pill Bar */}
-          <div style={{ background: "#FFFFFF", padding: "12px 16px", borderRadius: 10, border: "1px solid #E2E8F0", marginBottom: 24 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6, textAlign: "left" }}>
-              SIGNALS FEEDING THE MODEL
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {SIGNALS.map((sig) => (
-                <span key={sig} style={{ background: "#EEF2FF", color: "#4F46E5", fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 4, border: "1px solid #C7D2FE" }}>
-                  {sig}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* The Learner App Grid */}
-          <div style={{ textAlign: "left", marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>THE LEARNER APP</span>
-          </div>
-
-          <h2 className="lp-section-h2" style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 6px", textAlign: "left" }}>
-            Four places. Zero confusion.
-          </h2>
-
-          <p style={{ fontSize: 14, color: "#64748B", maxWidth: 620, margin: "0 0 20px", lineHeight: 1.5, textAlign: "left" }}>
-            Learners get a focused workspace with primary navigation at the bottom of the screen: Home, Courses, AI Coach, and Community. Tap the tabs on the left or the phone buttons to preview live.
-          </p>
-
-          <div className="lp-learner-grid" style={{ display: "grid", gridTemplateColumns: "1.25fr 0.75fr", gap: 20, alignItems: "stretch" }}>
-            
-            {/* Left Side: Rich Vertical Interactive Tab Stack */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "space-between" }}>
-              
-              {/* Tab 1: Home */}
-              <div
-                className="lp-card-hover"
-                onClick={() => setMobileLearnerTab("home")}
-                style={{
-                  background: mobileLearnerTab === "home" ? "#EEF2FF" : "#FFFFFF",
-                  padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "home" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
-                  cursor: "pointer", transition: "background-color .15s ease, border-color .15s ease"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "home" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "home" ? "#fff" : "#4F46E5" }}>
-                      <Home size={13} />
-                    </div>
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Home Workspace</h3>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "home" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "home" ? "rgba(79,70,229,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "home" ? "Active Preview" : "Personalized"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>
-                  Current sprint progress, career roadmap, active cohorts and daily streak tracker.
-                </p>
-              </div>
-
-              {/* Tab 2: Courses */}
-              <div
-                className="lp-card-hover"
-                onClick={() => setMobileLearnerTab("courses")}
-                style={{
-                  background: mobileLearnerTab === "courses" ? "#EEF2FF" : "#FFFFFF",
-                  padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "courses" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
-                  cursor: "pointer", transition: "background-color .15s ease, border-color .15s ease"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "courses" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "courses" ? "#fff" : "#4F46E5" }}>
-                      <BookOpen size={13} />
-                    </div>
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Courses &amp; Masterclasses</h3>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "courses" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "courses" ? "rgba(79,70,229,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "courses" ? "Active Preview" : "49 Courses"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>
-                  Executive masterclasses, spotlight carousels, assigned tracks, and video trailers.
-                </p>
-              </div>
-
-              {/* Tab 3: AI Coach */}
-              <div
-                className="lp-card-hover"
-                onClick={() => setMobileLearnerTab("ai")}
-                style={{
-                  background: mobileLearnerTab === "ai" ? "#EEF2FF" : "#FFFFFF",
-                  padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "ai" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
-                  cursor: "pointer", transition: "background-color .15s ease, border-color .15s ease"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "ai" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "ai" ? "#fff" : "#4F46E5" }}>
-                      <Zap size={13} />
-                    </div>
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>AI Neural Coach</h3>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "ai" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "ai" ? "rgba(79,70,229,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "ai" ? "Active Preview" : "24/7 Neural Tutor"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>
-                  AI Learning Coach, custom adaptive assessment generator, and debugging assistant.
-                </p>
-              </div>
-
-              {/* Tab 4: Community */}
-              <div
-                className="lp-card-hover"
-                onClick={() => setMobileLearnerTab("community")}
-                style={{
-                  background: mobileLearnerTab === "community" ? "#EEF2FF" : "#FFFFFF",
-                  padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "community" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
-                  cursor: "pointer", transition: "background-color .15s ease, border-color .15s ease"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "community" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "community" ? "#fff" : "#4F46E5" }}>
-                      <Users size={13} />
-                    </div>
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Community Hub</h3>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "community" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "community" ? "rgba(79,70,229,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "community" ? "Active Preview" : "Peer Network"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>
-                  Community hub, pinned faculty announcements, live polls, and student discussions.
-                </p>
-              </div>
-
-              {/* Bottom Feature Badges Bar */}
-              <div style={{ background: "#FFFFFF", borderRadius: 8, padding: "8px 12px", border: "1px solid #E2E8F0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#334155" }}>
-                  <Flame size={12} color="#EA580C" /> Daily Streaks
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#334155" }}>
-                  <Target size={12} color="#4F46E5" /> Adaptive Quizzes
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#334155" }}>
-                  <CheckCircle2 size={12} color="#16A34A" /> Micro-Certs
-                </span>
-              </div>
-
-            </div>
-
-            {/* Right Side: PROPORTIONAL LIVE MOBILE PHONE PREVIEW */}
-            <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-              
-              {/* Phone Chassis */}
-              <div style={{
-                width: 270, height: 475, background: "#0F172A", borderRadius: 10,
-                padding: 6, border: "2px solid #334155", position: "relative",
-                display: "flex", flexDirection: "column", boxSizing: "border-box"
-              }}>
-                
-                {/* Screen */}
-                <div style={{
-                  flex: 1, background: "#F8FAFC", borderRadius: 10, overflow: "hidden",
-                  display: "flex", flexDirection: "column", position: "relative"
-                }}>
-                  
-                  {/* Top Bar */}
-                  <div style={{ padding: "8px 10px 6px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#FFFFFF", borderBottom: "1px solid #F1F5F9" }}>
-                    <img src="/train-ai-logo.png" alt="TRAIN.AI" style={{ height: 14, width: "auto" }} />
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 2, background: "#FFF7ED", padding: "1px 5px", borderRadius: 4, fontSize: 8.5, fontWeight: 700, color: "#EA580C" }}>
-                        <Flame size={9} color="#EA580C" /> 1
-                      </div>
-                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#4F46E5", color: "#fff", fontSize: 8.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        J
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Body */}
-                  <div style={{ flex: 1, overflowY: "auto", padding: "8px", textAlign: "left" }}>
-                    
-                    {/* TAB 1: HOME */}
-                    {mobileLearnerTab === "home" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        
-                        {/* Welcome Card */}
-                        <div style={{
-                          background: "#0F172A",
-                          borderRadius: 8, padding: "9px 10px", color: "#FFFFFF"
-                        }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                            <div>
-                              <div style={{ fontSize: 10.5, color: "#94A3B8" }}>Welcome back,</div>
-                              <div style={{ fontSize: 12, fontWeight: 800, color: "#FFFFFF" }}>John</div>
-                            </div>
-                            <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#4F46E5", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>J</div>
-                          </div>
-
-                          <div style={{ fontSize: 8.5, color: "#94A3B8", marginTop: 2 }}>
-                            0 of 5 lessons done. Continue in <span style={{ color: "#818CF8", fontWeight: 600 }}>AI Fundamentals</span>.
-                          </div>
-
-                          {/* Sprint Goal */}
-                          <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 6, padding: "4px 6px", marginTop: 6, border: "1px solid rgba(255,255,255,0.1)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 8, fontWeight: 700, marginBottom: 2 }}>
-                              <span style={{ color: "#E2E8F0" }}>Sprint Goal (0/5)</span>
-                              <span style={{ color: "#34D399" }}>0% Done</span>
-                            </div>
-                            <div style={{ height: 3, borderRadius: 2, background: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
-                              <div style={{ width: "8%", height: "100%", background: "#34D399", borderRadius: 2 }} />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Course Catalog CTA */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "7px", textAlign: "center" }}>
-                          <div style={{ fontSize: 9, color: "#475569" }}>No active course yet. Browse catalog to start.</div>
-                          <button
-                            onClick={() => setMobileLearnerTab("courses")}
-                            style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 6, padding: "5px 8px", fontSize: 9.5, fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer" }}
-                          >
-                            <BookOpen size={10} /> Browse courses
-                          </button>
-                        </div>
-
-                        {/* Cohort Status */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "6px 8px", display: "flex", alignItems: "center", gap: 6 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: 4, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Users size={10} color="#4F46E5" />
-                          </div>
-                          <div>
-                            <div style={{ fontSize: 7.5, fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>YOUR COHORT</div>
-                            <div style={{ fontSize: 9, color: "#334155", fontWeight: 600 }}>Not part of a cohort yet</div>
-                          </div>
-                        </div>
-
-                        {/* Roadmap */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "7px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 3, color: "#4F46E5", fontSize: 9, fontWeight: 700 }}>
-                            <TrendingUp size={10} /> Career Roadmap • UX &amp; AI
-                          </div>
-                          <div style={{ fontSize: 8, color: "#64748B", marginTop: 1 }}>
-                            Current: <span style={{ fontWeight: 600, color: "#0F172A" }}>Junior Designer</span>
-                          </div>
-
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 2, marginTop: 4 }}>
-                            <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 4, padding: "2px", textAlign: "center" }}>
-                              <CheckCircle2 size={7} color="#10B981" style={{ margin: "0 auto" }} />
-                              <div style={{ fontSize: 7, fontWeight: 700, color: "#0F172A" }}>Junior</div>
-                            </div>
-                            <div style={{ background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: 4, padding: "2px", textAlign: "center" }}>
-                              <Zap size={7} color="#4F46E5" style={{ margin: "0 auto" }} />
-                              <div style={{ fontSize: 7, fontWeight: 700, color: "#4F46E5" }}>Tokens</div>
-                            </div>
-                            <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 4, padding: "2px", textAlign: "center" }}>
-                              <Lock size={7} color="#94A3B8" style={{ margin: "0 auto" }} />
-                              <div style={{ fontSize: 7, fontWeight: 600, color: "#64748B" }}>Spatial</div>
-                            </div>
-                            <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 4, padding: "2px", textAlign: "center" }}>
-                              <Lock size={7} color="#94A3B8" style={{ margin: "0 auto" }} />
-                              <div style={{ fontSize: 7, fontWeight: 600, color: "#64748B" }}>Lead</div>
-                            </div>
-                          </div>
-                        </div>
-
-                      </div>
-                    )}
-
-                    {/* TAB 2: COURSES */}
-                    {mobileLearnerTab === "courses" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        
-                        <div style={{
-                          background: "#0F172A",
-                          borderRadius: 8, padding: "8px 9px", color: "#FFFFFF"
-                        }}>
-                          <div style={{ fontSize: 7.5, fontWeight: 700, color: "#C7D2FE", background: "rgba(255,255,255,0.1)", padding: "1px 4px", borderRadius: 3, display: "inline-block" }}>
-                            SPOTLIGHT
-                          </div>
-
-                          <div style={{ fontSize: 10.5, fontWeight: 800, marginTop: 3, lineHeight: 1.2 }}>
-                            Spatial Computing Foundations
-                          </div>
-
-                          <div style={{ fontSize: 8, color: "#CBD5E1", marginTop: 1 }}>
-                            3D spatial user experiences and tokens.
-                          </div>
-
-                          <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 4, padding: "4px 6px", fontSize: 8.5, fontWeight: 700, marginTop: 5 }}>
-                            Explore Masterclass →
-                          </button>
-                        </div>
-
-                        <div style={{ display: "flex", gap: 3 }}>
-                          <span style={{ background: "#4F46E5", color: "#fff", padding: "1px 6px", borderRadius: 4, fontSize: 8.5, fontWeight: 700 }}>All Courses (49)</span>
-                          <span style={{ background: "#FFFFFF", color: "#64748B", border: "1px solid #E2E8F0", padding: "1px 6px", borderRadius: 4, fontSize: 8.5, fontWeight: 600 }}>Assigned (2)</span>
-                        </div>
-
-                        <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 6, padding: "3px 6px", display: "flex", alignItems: "center", gap: 4, fontSize: 8.5, color: "#94A3B8" }}>
-                          <Search size={9} /> Search masterclasses...
-                        </div>
-
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "5px 7px", display: "flex", gap: 5, alignItems: "center" }}>
-                          <div style={{ width: 24, height: 24, borderRadius: 4, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <Brain size={12} color="#4F46E5" />
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 8.5, fontWeight: 700, color: "#0F172A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Prompt Engineering &amp; LLMs</div>
-                            <div style={{ fontSize: 7.5, color: "#64748B" }}>12 modules • ⭐ 4.9</div>
-                          </div>
-                        </div>
-
-                      </div>
-                    )}
-
-                    {/* TAB 3: AI COACH */}
-                    {mobileLearnerTab === "ai" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        
-                        <div style={{
-                          background: "#0F172A",
-                          borderRadius: 8, padding: "8px 9px", color: "#FFFFFF"
-                        }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 800 }}>AI Learning Coach</div>
-                          <div style={{ fontSize: 8, color: "#CBD5E1", marginTop: 1 }}>
-                            Ask questions, debug code, and take practice quizzes.
-                          </div>
-
-                          <div style={{ display: "flex", gap: 3, marginTop: 4 }}>
-                            <span style={{ background: "rgba(255,255,255,0.12)", color: "#C7D2FE", padding: "1px 5px", borderRadius: 3, fontSize: 8, fontWeight: 700 }}>10 credits</span>
-                          </div>
-                        </div>
-
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "7px" }}>
-                          <div style={{ fontSize: 9.5, fontWeight: 700, color: "#0F172A" }}>AI Assessment Generator</div>
-                          <div style={{ fontSize: 8, color: "#64748B", marginBottom: 3 }}>Custom quiz tuned to skillset</div>
-
-                          <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 4, padding: "3px 5px", fontSize: 8, color: "#475569", marginBottom: 4 }}>
-                            e.g. LangChain RAG, Figma
-                          </div>
-
-                          <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 4, padding: "4px 6px", fontSize: 8.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
-                            ⚡ Generate &amp; Start Quiz
-                          </button>
-                        </div>
-
-                        <div style={{ background: "#FFFFFF", borderRadius: 6, border: "1px solid #E2E8F0", padding: "5px 7px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, fontWeight: 700 }}>
-                            <span style={{ color: "#0F172A" }}>Daily Goal</span>
-                            <span style={{ color: "#4F46E5" }}>1 of 3 Done</span>
-                          </div>
-                          <div style={{ height: 3, borderRadius: 2, background: "#EEF2FF", overflow: "hidden", marginTop: 2 }}>
-                            <div style={{ width: "33%", height: "100%", background: "#4F46E5", borderRadius: 2 }} />
-                          </div>
-                        </div>
-
-                      </div>
-                    )}
-
-                    {/* TAB 4: COMMUNITY */}
-                    {mobileLearnerTab === "community" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        
-                        <div style={{
-                          background: "#0F172A",
-                          borderRadius: 8, padding: "8px 9px", color: "#FFFFFF"
-                        }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 800 }}>Train AI Community</div>
-                          <div style={{ fontSize: 8, color: "#CBD5E1", marginTop: 1 }}>
-                            Share projects, ask questions, and collaborate.
-                          </div>
-                        </div>
-
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "7px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 7.5, fontWeight: 700, color: "#4F46E5", marginBottom: 2 }}>
-                            <BarChart2 size={9} /> POLL • 218 Votes
-                          </div>
-                          <div style={{ fontSize: 9, fontWeight: 700, color: "#0F172A", marginBottom: 3 }}>
-                            Which LLM orchestrator in production?
-                          </div>
-                          
-                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                            <div
-                              onClick={() => { setPollVoted(true); setSelectedPollOption(0); }}
-                              style={{
-                                background: selectedPollOption === 0 && pollVoted ? "#EEF2FF" : "#F8FAFC",
-                                border: selectedPollOption === 0 && pollVoted ? "1px solid #4F46E5" : "1px solid #E2E8F0",
-                                borderRadius: 3, padding: "2px 5px", fontSize: 8, fontWeight: 600,
-                                display: "flex", justifyContent: "space-between", cursor: "pointer"
-                              }}
-                            >
-                              <span>LangChain / LangGraph</span>
-                              <span style={{ color: "#4F46E5" }}>{pollVoted ? "64%" : "Vote"}</span>
-                            </div>
-
-                            <div
-                              onClick={() => { setPollVoted(true); setSelectedPollOption(1); }}
-                              style={{
-                                background: selectedPollOption === 1 && pollVoted ? "#EEF2FF" : "#F8FAFC",
-                                border: selectedPollOption === 1 && pollVoted ? "1px solid #4F46E5" : "1px solid #E2E8F0",
-                                borderRadius: 3, padding: "2px 5px", fontSize: 8, fontWeight: 600,
-                                display: "flex", justifyContent: "space-between", cursor: "pointer"
-                              }}
-                            >
-                              <span>Vercel AI SDK</span>
-                              <span style={{ color: "#4F46E5" }}>{pollVoted ? "28%" : "Vote"}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "5px 7px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 1 }}>
-                            <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#10B981", color: "#fff", fontSize: 7, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>MK</div>
-                            <div style={{ fontSize: 8.5, fontWeight: 700, color: "#0F172A" }}>Marcus K.</div>
-                          </div>
-                          <div style={{ fontSize: 8, color: "#334155", lineHeight: 1.25 }}>
-                            pgvector with HNSW index had 4ms latency in benchmark lab!
-                          </div>
-                        </div>
-
-                      </div>
-                    )}
-
-                  </div>
-
-                  {/* Navigation Bar */}
-                  <div style={{
-                    height: 36, background: "#FFFFFF", borderTop: "1px solid #E2E8F0",
-                    display: "flex", alignItems: "center", justifyContent: "space-around",
-                    padding: "0 2px"
-                  }}>
-                    <div
-                      className={`phone-nav-item ${mobileLearnerTab === "home" ? "active" : ""}`}
-                      onClick={() => setMobileLearnerTab("home")}
-                    >
-                      <Home size={11} />
-                      {mobileLearnerTab === "home" && <span>Home</span>}
-                    </div>
-
-                    <div
-                      className={`phone-nav-item ${mobileLearnerTab === "courses" ? "active" : ""}`}
-                      onClick={() => setMobileLearnerTab("courses")}
-                    >
-                      <BookOpen size={11} />
-                      {mobileLearnerTab === "courses" && <span>Courses</span>}
-                    </div>
-
-                    <div
-                      className={`phone-nav-item ${mobileLearnerTab === "ai" ? "active" : ""}`}
-                      onClick={() => setMobileLearnerTab("ai")}
-                    >
-                      <Zap size={11} />
-                      {mobileLearnerTab === "ai" && <span>AI</span>}
-                    </div>
-
-                    <div
-                      className={`phone-nav-item ${mobileLearnerTab === "community" ? "active" : ""}`}
-                      onClick={() => setMobileLearnerTab("community")}
-                    >
-                      <Users size={11} />
-                      {mobileLearnerTab === "community" && <span>Social</span>}
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 5: THE ORGANISATION APP
-          ========================================================================= */}
-      <section id="organisation" className="lp-bg-surface-2" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 58px", textAlign: "left" }}>
-          
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>THE ORGANISATION APP</span>
-          </div>
-
-          <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
-            One workspace, three views
-          </h2>
-
-          <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 660, margin: "0 0 28px", lineHeight: 1.5 }}>
-            Instructors, managers and admins work in the same organisation app. Each person sees only the view their role allows — no separate dashboards to maintain.
-          </p>
-
-          {/* 3 Column Role Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 16 }}>
-            
-            {/* Instructor View */}
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <GraduationCap size={16} color="#4F46E5" />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".05em" }}>INSTRUCTOR VIEW</span>
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>Run programmes, not spreadsheets</h3>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5, color: "#475569" }}>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Cohort creation, control and adjustment</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Session scheduling and resources</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Assessment creation and grading</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Progress monitoring by course and level</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Direct learner messaging and feedback notes</span></li>
-              </ul>
-            </div>
-
-            {/* Manager View */}
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <TrendingUp size={16} color="#4F46E5" />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".05em" }}>MANAGER VIEW</span>
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>See who is ready and who needs support</h3>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5, color: "#475569" }}>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Direct report progress</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Team summary</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Team readiness score</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Team skill snapshot</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Department feedback notes</span></li>
-              </ul>
-            </div>
-
-            {/* Admin View */}
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <ShieldCheck size={16} color="#4F46E5" />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".05em" }}>ADMIN VIEW</span>
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>Manage learning at scale</h3>
-              <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5, color: "#475569" }}>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Bulk onboarding and offboarding</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Learning track and course assignment</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Compliance tracking and organisation dashboard</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Certificate settings and AI moderation controls</span></li>
-                <li style={{ display: "flex", gap: 6 }}>• <span>Role management, SSO, API, audit and export controls</span></li>
-              </ul>
-            </div>
-
-          </div>
-
-          {/* Bottom 2 Connected Architecture Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
-            
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "16px 18px", borderRadius: 8, border: "1px solid #E2E8F0" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <Users size={15} color="#4F46E5" />
-                <h4 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Learner side, connected</h4>
-              </div>
-              <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.45 }}>
-                Assigned courses, cohort sessions and instructor messages appear straight in the learner app, with notifications and reminders attached.
-              </p>
-            </div>
-
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "16px 18px", borderRadius: 8, border: "1px solid #E2E8F0" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <Database size={15} color="#4F46E5" />
-                <h4 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Multi-tenant by design</h4>
-              </div>
-              <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.45 }}>
-                Every organisation's data is separated and permission-enforced, with audit logging and export controls built in.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 6: HOW IT WORKS
-          ========================================================================= */}
-      <section id="how-it-works" className="lp-bg-surface-1" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 58px", textAlign: "center" }}>
-          
-          <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 6px" }}>
-            How It Works
-          </h2>
-          <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 500, margin: "0 auto 30px" }}>
-            Move from onboarding to measurable workforce readiness
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, textAlign: "left" }}>
-            
-            {/* Step 1 */}
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
-                <UserPlus size={17} />
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>1. Onboard Your People</h3>
-              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Invite learners, instructors and managers, then organise them by team, cohort and learning need.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
-                <BookOpen size={17} />
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>2. Assign &amp; Develop</h3>
-              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Build or curate courses, assign required learning and support progress through instructors and AI tools.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
-                <TrendingUp size={17} />
-              </div>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>3. Measure Readiness</h3>
-              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Track skills, assessments, compliance, certificates and workforce readiness from live business dashboards.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 7: ENTERPRISE TRUST & DATA SECURITY
-          ========================================================================= */}
-      <section id="trust" className="lp-bg-surface-2" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "44px 20px 54px", textAlign: "left" }}>
-          
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>ENTERPRISE TRUST</span>
-          </div>
-
-          <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
-            Trust is part of the product
-          </h2>
-
-          <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 620, margin: "0 0 26px", lineHeight: 1.5 }}>
-            Permissions, privacy, auditability and data ownership are built in — not added later.
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
-            {TRUST_FEATURES.map((item) => {
-              const Icon = item.icon;
+      <section id="organizations" className="lp-section" style={{ ...styles.section, background: "#fff" }}>
+        <div style={styles.sectionInner}>
+          <div style={styles.sectionTag}><Building2 size={13} color="#4F46E5" /> Built for organizations</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>Everything Your L&amp;D and HR Team Needs, in One Platform.</h2>
+
+          <div className="lp-stagger" style={styles.featuresGrid}>
+            {ORG_FEATURES.map((f) => {
+              const Icon = f.icon;
               return (
-                <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "18px 18px", borderRadius: 8, border: "1px solid #E2E8F0" }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                    <Icon size={16} color="#4F46E5" />
-                  </div>
-                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>{item.title}</h3>
-                  <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.45 }}>{item.desc}</p>
+                <div key={f.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
+                  <h3 style={styles.cardTitle}>{f.title}</h3>
+                  <p style={styles.cardDesc}>{f.desc}</p>
                 </div>
               );
             })}
           </div>
 
+          <p style={{ ...styles.sectionSub, marginTop: 40, marginBottom: 8 }}>
+            Every organization account also gives learners their own AI coach, personalised courses, and
+            access to a learning community, included, not sold separately.
+          </p>
+          <p style={{ fontSize: 12.5, color: "#9AA1B9" }}>
+            Don't have an organization behind you? You can still get your own dashboard and AI coach.{" "}
+            <span style={{ color: "#4F46E5", fontWeight: 700, cursor: "pointer" }} onClick={() => handleNav("individuals")}>Visit For Individuals to get started.</span>
+          </p>
         </div>
       </section>
 
-      {/* =========================================================================
-          SECTION 8: FAQ ACCORDION
-          ========================================================================= */}
-      <section id="faq" className="lp-bg-surface-1" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 820, margin: "0 auto", padding: "48px 20px 60px", textAlign: "left" }}>
-          
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.035em", color: "#0F172A", margin: "0 0 6px" }}>
-              Frequently Asked Questions
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#64748B", margin: 0 }}>
-              Got questions? We've got answers. Find everything you need to know about Train AI.
-            </p>
+      <section id="individuals" className="lp-section" style={styles.section}>
+        <div style={{ ...styles.sectionInner, maxWidth: 720 }}>
+          <div style={styles.sectionTag}><Users size={13} color="#4F46E5" /> For individuals</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>Your Own AI-Powered Path to a Tech Career.</h2>
+          <p style={styles.sectionSub}>
+            No organization behind you? You don't need one. Get a personalised learning path, an AI coach,
+            and a community of peers, all in one place.
+          </p>
+
+          <div className="lp-stagger" style={styles.featuresGrid}>
+            {INDIVIDUAL_FEATURES.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div key={f.title} className="lp-card" style={styles.card}>
+                  <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Icon size={20} color="#4F46E5" /></div>
+                  <h3 style={styles.cardTitle}>{f.title}</h3>
+                  <p style={styles.cardDesc}>{f.desc}</p>
+                </div>
+              );
+            })}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <button className="action-btn" style={{ ...styles.getStartedBtn, marginTop: 32 }} onClick={() => handleNav("signup")}>
+            Create your free account<ArrowRight size={16} />
+          </button>
+        </div>
+      </section>
+
+      <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
+        <div style={styles.sectionInner}>
+          <div style={styles.sectionTag}><Lock size={13} color="#4F46E5" /> Enterprise readiness</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>Built for Procurement, Not Just for Pilots.</h2>
+
+          <div className="lp-stagger" style={styles.featuresGrid}>
+            <div className="lp-card" style={styles.card}>
+              <div style={{ ...styles.cardIcon, background: "rgba(79,70,229,.1)" }}><Lock size={20} color="#4F46E5" /></div>
+              <h3 style={styles.cardTitle}>Data ownership</h3>
+              <p style={styles.cardDesc}>Your data is yours. We don't sell it, and we don't use it to train models outside your organization's own account.</p>
+            </div>
+            <div className="lp-card" style={styles.card}>
+              <div style={{ ...styles.cardIcon, background: "rgba(23,166,115,.1)" }}><ShieldCheck size={20} color="#17A673" /></div>
+              <h3 style={styles.cardTitle}>Privacy</h3>
+              <p style={styles.cardDesc}>Built with EU and Africa data protection standards in mind, so your compliance team isn't left guessing.</p>
+            </div>
+            <div className="lp-card" style={styles.card}>
+              <div style={{ ...styles.cardIcon, background: "rgba(245,165,36,.1)" }}><Globe size={20} color="#F5A524" /></div>
+              <h3 style={styles.cardTitle}>SSO &amp; integrations</h3>
+              <p style={styles.cardDesc}>Enterprise SSO and API integrations to support your teams, on our roadmap. We'll tell you exactly where things stand when we talk, no surprises in a live demo.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="lp-section" style={styles.section}>
+        <div style={styles.sectionInner}>
+          <div style={styles.sectionTag}><ShieldCheck size={13} color="#4F46E5" /> Pricing</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>Simple Tiers That Grow With Your Team.</h2>
+          <p style={styles.sectionSub}>Pricing is framed around value and scale, not just seats.</p>
+
+          <div className="lp-stagger" style={styles.pricingGrid}>
+            {PRICING_TIERS.map((tier) => (
+              <div key={tier.name} className="lp-card lp-pricing-card" style={tier.highlighted ? { ...styles.pricingCard, ...styles.pricingCardHighlighted } : styles.pricingCard}>
+                {tier.highlighted && <div style={styles.pricingBadge}>Most popular</div>}
+                <h3 style={styles.pricingName}>{tier.name}</h3>
+                <p style={styles.pricingTagline}>{tier.tagline}</p>
+                <div style={styles.pricingPriceRow}>
+                  <span style={styles.pricingPrice}>{tierPriceLabel(tier.tierKey)}</span>
+                  {tierPriceAltLabel(tier.tierKey) && (
+                    <span style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>{tierPriceAltLabel(tier.tierKey)}</span>
+                  )}
+                </div>
+                <p style={styles.pricingNote}>{tier.priceNote}</p>
+                <div style={{ fontSize: 11, color: "#94A3B8", margin: "-12px 0 14px" }}>
+                  Indicative highlights — exact entitlements are confirmed on your plan.
+                </div>
+                <ul style={styles.pricingFeatureList}>
+                  {tier.features.map((f) => (
+                    <li key={f} style={styles.pricingFeatureItem}>
+                      <CheckCircle2 size={15} color="#17A673" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  className={tier.highlighted ? "action-btn" : "action-btn lp-outline-btn"}
+                  style={tier.highlighted ? styles.getStartedBtn : styles.pricingOutlineBtn}
+                  onClick={() => handleNav("book-demo")}
+                >
+                  Speak with us today<ArrowRight size={15} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="lp-section" style={{ ...styles.section, background: "#fff" }}>
+        <div style={{ ...styles.sectionInner, maxWidth: 720 }}>
+          <div style={styles.sectionTag}><HelpCircle size={13} color="#4F46E5" /> FAQ</div>
+          <h2 className="lp-section-h2" style={styles.sectionH2}>Frequently asked questions</h2>
+
+          <div style={styles.faqList}>
             {FAQ_ITEMS.map((item, i) => {
               const isOpen = openFaq === i;
               return (
-                <div
-                  key={item.q}
-                  className="tai-card tai-card-hover"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.88)",
-                    backdropFilter: "blur(14px)",
-                    WebkitBackdropFilter: "blur(14px)",
-                    border: "1px solid rgba(226, 232, 240, 0.85)",
-                    borderRadius: 10,
-                    padding: "2px 20px"
-                  }}
-                >
+                <div key={item.q} style={styles.faqItem}>
                   <button
                     type="button"
-                    style={{
-                      width: "100%", border: "none", background: "transparent", cursor: "pointer",
-                      padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "space-between",
-                      gap: 10, fontSize: 14.5, fontWeight: 700, color: "#0F172A", textAlign: "left"
-                    }}
+                    style={styles.faqQuestion}
                     onClick={() => setOpenFaq(isOpen ? null : i)}
                     aria-expanded={isOpen}
                   >
                     <span>{item.q}</span>
                     <ChevronDown
-                      size={16}
-                      color="#64748B"
-                      className={`rotator-chevron ${isOpen ? "rotator-chevron-open" : ""}`}
-                      style={{ flexShrink: 0 }}
+                      className="lp-faq-chevron"
+                      size={18}
+                      color="#656C86"
+                      style={{ flexShrink: 0, transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}
                     />
                   </button>
-                  {isOpen && <p className="anim-fluid-entrance" style={{ margin: "0 0 14px", fontSize: 13, color: "#64748B", lineHeight: 1.55 }}>{item.a}</p>}
+                  {isOpen && <p className="lp-faq-answer" style={styles.faqAnswer}>{item.a}</p>}
                 </div>
               );
             })}
           </div>
-
         </div>
       </section>
 
-      {/* =========================================================================
-          SECTION 9: PRE-FOOTER CTA
-          ========================================================================= */}
-      <section style={{ width: "100%", background: "#FFFFFF", padding: "36px 20px" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-          <div style={{
-            background: "#4F46E5",
-            borderRadius: 8, padding: "40px 24px", textAlign: "center"
-          }}>
-            <h2 style={{ fontSize: "clamp(22px, 3.2vw, 34px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 10px", color: "#FFFFFF", lineHeight: 1.15 }}>
-              Ready to Build a Workforce That Is Ready for<br />What's Next?
-            </h2>
-            
-            <p style={{ fontSize: 14.5, color: "#EEF2FF", maxWidth: 600, margin: "0 auto 20px", lineHeight: 1.5 }}>
-              Bring courses, cohorts, compliance and workforce intelligence together in one business LMS.
-            </p>
+      <section id="book-demo" className="lp-section" style={styles.ctaSection}>
+        <div style={styles.sectionInner}>
+          <h2 className="lp-section-h2" style={{ ...styles.sectionH2, color: "#fff" }}>
+            {contactMode === "demo" ? "Stop Measuring Learning. Start Measuring Workforce Readiness." : "Not ready for a demo yet?"}
+          </h2>
+          <p style={{ ...styles.sectionSub, color: "rgba(255,255,255,.75)" }}>
+            {contactMode === "demo"
+              ? "Book a demo and see your organization's skills, gaps, and readiness, mapped in real time."
+              : "Send us your procurement, partnership, or custom requirements question."}
+          </p>
 
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 18 }}>
-              <button
-                className="action-btn-primary"
-                style={{ background: "#FFFFFF", color: "#4F46E5", fontWeight: 700, padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13.5, display: "inline-flex", alignItems: "center", gap: 6 }}
-                onClick={() => handleNav("signin")}
-              >
-                Get Started <ArrowRight size={14} />
-              </button>
-              <button
-                style={{ background: "rgba(255,255,255,0.12)", color: "#FFFFFF", fontWeight: 600, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 13.5 }}
-                onClick={() => handleNav("signin")}
-              >
-                Sign In to Train AI
-              </button>
-              <button
-                style={{ background: "transparent", color: "#FFFFFF", fontWeight: 600, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 13.5 }}
-                onClick={() => handleNav("demo")}
-              >
-                Request a demo
-              </button>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap", fontSize: 11.5, color: "#EEF2FF", fontWeight: 600 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34D399" }} />
-                Role-based access
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34D399" }} />
-                Organisation-ready
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34D399" }} />
-                Secure learner data
-              </span>
-            </div>
+          <div className="lp-contact-toggle" style={styles.contactModeToggle}>
+            <button
+              type="button"
+              className="lp-contact-toggle-btn"
+              style={contactMode === "demo" ? styles.contactModeBtnActive : styles.contactModeBtn}
+              onClick={() => setContactMode("demo")}
+            >
+              Book a Demo
+            </button>
+            <button
+              type="button"
+              className="lp-contact-toggle-btn"
+              style={contactMode === "inquiry" ? styles.contactModeBtnActive : styles.contactModeBtn}
+              onClick={() => setContactMode("inquiry")}
+            >
+              Organisation Inquiry
+            </button>
           </div>
-        </div>
-      </section>
 
-      {/* =========================================================================
-          SECTION 10: DARK ENTERPRISE FOOTER
-          ========================================================================= */}
-      <footer style={{ background: "#0B1120", color: "#FFFFFF", paddingTop: 36, paddingBottom: 28, borderTop: "1px solid #1E293B" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px" }}>
-          
-          {/* Newsletter Box */}
-          <div style={{
-            background: "#111827", borderRadius: 10, padding: "24px 20px",
-            border: "1px solid #1E293B", textAlign: "center", marginBottom: 36
-          }}>
-            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#FFFFFF", margin: "0 0 4px" }}>
-              Stay Updated
-            </h3>
-            <p style={{ fontSize: 12.5, color: "#94A3B8", margin: "0 0 14px" }}>
-              Get the latest courses, features, and learning tips delivered to your inbox.
-            </p>
-
-            {newsletterSubscribed ? (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(16,185,129,0.15)", color: "#34D399", borderRadius: 6, fontWeight: 600, fontSize: 12.5 }}>
-                <CheckCircle2 size={15} />
-                <span>Thank you for subscribing! We will keep you updated.</span>
-              </div>
+          <div style={styles.waitlistCard}>
+            {contactMode === "demo" ? (
+              demoSubmitted ? (
+                <div style={styles.successBox}>
+                  <CheckCircle2 size={20} color="#17A673" />
+                  <span>Thanks! We'll reach out to schedule your demo shortly.</span>
+                </div>
+              ) : (
+                <form onSubmit={handleDemoSubmit} className="lp-demo-form" style={styles.demoForm}>
+                  <div className="lp-demo-form-row" style={styles.demoFormRow}>
+                    <div style={styles.demoInputWrap}>
+                      <Users size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <input
+                        required placeholder="Full name" value={demoName}
+                        onChange={(e) => setDemoName(e.target.value)}
+                        style={styles.demoInput}
+                      />
+                    </div>
+                    <div style={styles.demoInputWrap}>
+                      <Building2 size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <input
+                        required placeholder="Company name" value={demoCompany}
+                        onChange={(e) => setDemoCompany(e.target.value)}
+                        style={styles.demoInput}
+                      />
+                    </div>
+                  </div>
+                  <div className="lp-demo-form-row" style={styles.demoFormRow}>
+                    <div style={{ ...styles.demoInputWrap, flex: 2 }}>
+                      <Globe size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <input
+                        type="email" required placeholder="Work email" value={demoEmail}
+                        onChange={(e) => setDemoEmail(e.target.value)}
+                        style={styles.demoInput}
+                      />
+                    </div>
+                    <div style={{ ...styles.demoInputWrap, flex: 1 }}>
+                      <Users size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <select
+                        value={demoTeamSize} onChange={(e) => setDemoTeamSize(e.target.value)}
+                        style={{ ...styles.demoInput, paddingLeft: 34, appearance: "none" }}
+                      >
+                        {TEAM_SIZE_OPTIONS.map((t) => <option key={t} value={t}>{t} people</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <textarea
+                    placeholder="What else would you like to tell us? (optional)"
+                    value={demoMessage} onChange={(e) => setDemoMessage(e.target.value)}
+                    rows={2} style={styles.demoTextarea}
+                  />
+                  <button type="submit" disabled={submitting} className="action-btn" style={{ ...styles.waitlistBtn, width: "100%", justifyContent: "center", opacity: submitting ? 0.75 : 1 }}>
+                    {submitting ? "Submitting..." : "Book a Demo"} <ArrowRight size={16} />
+                  </button>
+                  {demoError && <div style={styles.waitlistErrorText}>{demoError}</div>}
+                </form>
+              )
             ) : (
-              <form onSubmit={handleNewsletterSubmit} style={{ display: "flex", maxWidth: 400, margin: "0 auto", gap: 6, flexWrap: "wrap" }}>
-                <input
-                  type="email"
-                  required
-                  placeholder="Enter your email"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  style={{
-                    flex: 1, minWidth: 170, padding: "8px 12px", borderRadius: 6,
-                    border: "1px solid #334155", background: "#0B1120", color: "#FFFFFF",
-                    fontSize: 12.5, outline: "none"
-                  }}
-                />
-                <button
-                  type="submit"
-                  className="action-btn-primary"
-                  style={{
-                    border: "none", padding: "8px 16px", borderRadius: 6, fontWeight: 700, fontSize: 12.5,
-                    cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5
-                  }}
-                >
-                  <Mail size={13} /> Subscribe
-                </button>
-              </form>
+              inquirySubmitted ? (
+                <div style={styles.successBox}>
+                  <CheckCircle2 size={20} color="#17A673" />
+                  <span>Thanks! Our sales team will follow up on your inquiry shortly.</span>
+                </div>
+              ) : (
+                <form onSubmit={handleInquirySubmit} className="lp-demo-form" style={styles.demoForm}>
+                  <div className="lp-demo-form-row" style={styles.demoFormRow}>
+                    <div style={styles.demoInputWrap}>
+                      <Users size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <input
+                        required placeholder="Full name" value={demoName}
+                        onChange={(e) => setDemoName(e.target.value)}
+                        style={styles.demoInput}
+                      />
+                    </div>
+                    <div style={styles.demoInputWrap}>
+                      <Building2 size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <input
+                        required placeholder="Company name" value={demoCompany}
+                        onChange={(e) => setDemoCompany(e.target.value)}
+                        style={styles.demoInput}
+                      />
+                    </div>
+                  </div>
+                  <div className="lp-demo-form-row" style={styles.demoFormRow}>
+                    <div style={{ ...styles.demoInputWrap, flex: 2 }}>
+                      <Globe size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <input
+                        type="email" required placeholder="Work email" value={demoEmail}
+                        onChange={(e) => setDemoEmail(e.target.value)}
+                        style={styles.demoInput}
+                      />
+                    </div>
+                    <div style={{ ...styles.demoInputWrap, flex: 1 }}>
+                      <ClipboardList size={14} color="#9AA1B9" style={styles.demoInputIcon} />
+                      <select
+                        value={inquiryType} onChange={(e) => setInquiryType(e.target.value)}
+                        style={{ ...styles.demoInput, paddingLeft: 34, appearance: "none" }}
+                      >
+                        {INQUIRY_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <textarea
+                    placeholder="What else would you like to tell us?"
+                    value={demoMessage} onChange={(e) => setDemoMessage(e.target.value)}
+                    rows={2} style={styles.demoTextarea}
+                  />
+                  <button type="submit" disabled={submitting} className="action-btn" style={{ ...styles.waitlistBtn, width: "100%", justifyContent: "center", opacity: submitting ? 0.75 : 1 }}>
+                    {submitting ? "Submitting..." : "Send Inquiry"} <ArrowRight size={16} />
+                  </button>
+                  {inquiryError && <div style={styles.waitlistErrorText}>{inquiryError}</div>}
+                </form>
+              )
             )}
           </div>
+        </div>
+      </section>
 
-          {/* Footer Navigation Columns */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 24, marginBottom: 32, textAlign: "left" }}>
-            
-            {/* Brand column with Dark Mode Logo */}
-            <div>
-              <img src="/logo-dark.png" alt="Train AI" style={{ height: 22, width: "auto", objectFit: "contain", display: "block", marginBottom: 10 }} />
-              <p style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.5, margin: "0 0 14px", maxWidth: 260 }}>
-                AI-powered workforce learning and intelligence for modern businesses.
-              </p>
-              <div style={{ display: "flex", gap: 6 }}>
-                <div className="lp-social-btn" aria-label="Facebook"><Facebook size={14} /></div>
-                <div className="lp-social-btn" aria-label="Twitter"><Twitter size={14} /></div>
-                <div className="lp-social-btn" aria-label="Instagram"><Instagram size={14} /></div>
-                <div className="lp-social-btn" aria-label="LinkedIn"><Linkedin size={14} /></div>
-              </div>
-            </div>
-
-            {/* Product column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", marginBottom: 1 }}>Product</div>
-              <span className="lp-footer-link" onClick={() => scrollToId("intelligence")}>Features</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("how-it-works")}>How It Works</span>
-              <span className="lp-footer-link" onClick={() => handleNav("signup")}>Sign Up</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Courses</span>
-            </div>
-
-            {/* For Users column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", marginBottom: 1 }}>For Users</div>
-              <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Learner Dashboard</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("organisation")}>Instructor Workspace</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Community</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("how-it-works")}>Certificates</span>
-            </div>
-
+      <footer style={styles.footer}>
+        <div className="lp-footer-inner" style={styles.footerInner}>
+          <div style={{ minWidth: 180 }}>
+            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 38, width: "auto", objectFit: "contain", display: "block", marginBottom: 8 }} />
+            <div style={{ fontSize: 12, color: "#656C86", marginTop: 4 }}>Train AI Limited · Lagos · London</div>
+            <div style={{ fontSize: 12, color: "#656C86", marginTop: 8 }}>info@trainailtd.com</div>
+            <div style={{ fontSize: 12, color: "#656C86" }}>+44 7435126104 · +234 9076664049</div>
           </div>
-
-          {/* Bottom Copyright & Legal Links */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, paddingTop: 16, borderTop: "1px solid #1E293B", fontSize: 11.5, color: "#64748B" }}>
-            <div>
-              © 2025 Train AI Ltd. All rights reserved. Headquartered in London, United Kingdom
-            </div>
-            <div style={{ display: "flex", gap: 14 }}>
-              <span className="lp-footer-link" onClick={() => handleNav("about")}>About Us</span>
-              <span className="lp-footer-link" onClick={() => handleNav("privacy")}>Privacy Policy</span>
-              <span className="lp-footer-link" onClick={() => handleNav("terms")}>Terms of Service</span>
-              <span className="lp-footer-link" onClick={() => handleNav("cookie")}>Cookie Policy</span>
-            </div>
+          <div style={styles.footerSitemap}>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("about")}>About</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("platform")}>Platform</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("solutions")}>Solutions</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("why-train-ai")}>Why Train AI</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("pricing")}>Pricing</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("organizations")}>For Organisations</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("individuals")}>For Individuals</span>
+            <span className="lp-footer-link" style={styles.footerLink} onClick={() => handleNav("book-demo")}>Contact</span>
           </div>
-
+          <div className="lp-legal-links" style={{ display: "flex", gap: 16, fontSize: 12.5, color: "#656C86" }}>
+            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("privacy")}>Privacy Policy</span>
+            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("terms")}>Terms of Service</span>
+            <span className="lp-footer-link" style={{ cursor: "pointer" }} onClick={() => handleNav("cookie")}>Cookie Policy</span>
+          </div>
         </div>
       </footer>
 
-      {/* Demo Modal */}
-      {demoModalOpen && (
-        <div style={styles.modalOverlay} onClick={() => setDemoModalOpen(false)} role="presentation">
-          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div>
-                <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 }}>Request a Live Demo</h3>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0" }}>Experience the workforce intelligence platform tailored to your team.</p>
-              </div>
-              <button style={styles.modalClose} onClick={() => setDemoModalOpen(false)} aria-label="Close">
-                <X size={16} />
-              </button>
-            </div>
-
-            {demoSubmitted ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 12, background: "#ECFDF5", color: "#059669", borderRadius: 8, fontWeight: 600, fontSize: 13 }}>
-                <CheckCircle2 size={16} />
-                <span>Thank you! We will reach out to schedule your demo shortly.</span>
-              </div>
-            ) : (
-              <form onSubmit={handleDemoSubmit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <input
-                    required placeholder="Full name" value={demoName} onChange={(e) => setDemoName(e.target.value)}
-                    style={styles.formInput}
-                  />
-                  <input
-                    required placeholder="Company name" value={demoCompany} onChange={(e) => setDemoCompany(e.target.value)}
-                    style={styles.formInput}
-                  />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <input
-                    type="email" required placeholder="Work email" value={demoEmail} onChange={(e) => setDemoEmail(e.target.value)}
-                    style={styles.formInput}
-                  />
-                  <select
-                    value={demoTeamSize} onChange={(e) => setDemoTeamSize(e.target.value)}
-                    style={styles.formInput}
-                  >
-                    {TEAM_SIZE_OPTIONS.map((t) => <option key={t} value={t}>{t} employees</option>)}
-                  </select>
-                </div>
-                <textarea
-                  placeholder="Tell us about your team's goals or current training challenges (optional)"
-                  value={demoMessage} onChange={(e) => setDemoMessage(e.target.value)}
-                  rows={2} style={styles.formTextarea}
-                />
-                <button type="submit" disabled={submitting} className="action-btn-primary" style={styles.modalSubmitBtn}>
-                  {submitting ? "Submitting..." : "Schedule Live Demo"} <ArrowRight size={13} />
-                </button>
-                {demoError && <div style={{ fontSize: 11.5, color: "#EF4444", fontWeight: 600 }}>{demoError}</div>}
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Legal Content Modal */}
       {activeModal && (
         <div style={styles.modalOverlay} onClick={() => setActiveModal(null)} role="presentation">
-          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: 0 }}>{LEGAL_CONTENT[activeModal].title}</h3>
+          <div
+            style={styles.modalCard}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lp-modal-title"
+          >
+            <div style={styles.modalHeader}>
+              <h3 id="lp-modal-title" style={styles.modalTitle}>{LEGAL_CONTENT[activeModal].title}</h3>
               <button style={styles.modalClose} onClick={() => setActiveModal(null)} aria-label="Close">
-                <X size={15} />
+                <X size={18} />
               </button>
             </div>
-            <p style={{ fontSize: 12.5, color: "#475569", lineHeight: 1.55, margin: 0 }}>{LEGAL_CONTENT[activeModal].body}</p>
+            <p style={styles.modalBody}>{LEGAL_CONTENT[activeModal].body}</p>
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
 const styles = {
-  outer: { minHeight: "100vh", background: "#FFFFFF", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflowX: "hidden" },
-  header: { background: "#FFFFFF", borderBottom: "1px solid #E2E8F0", position: "sticky", top: 0, zIndex: 60 },
-  headerInner: { maxWidth: 1180, margin: "0 auto", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" },
-  signInBtn: { border: "none", background: "transparent", padding: "6px 10px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: "#334155" },
-  requestDemoBtn: { padding: "6px 12px", borderRadius: 6, fontWeight: 600, fontSize: 12.5, cursor: "pointer" },
-  getStartedBtn: { border: "none", padding: "6px 14px", borderRadius: 6, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
-  startOrgBtn: { border: "none", padding: "10px 18px", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 },
-  requestDemoOutlineBtn: { padding: "10px 18px", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer" },
-  heroPill: { background: "#FFFFFF", border: "1px solid #E2E8F0", padding: "6px 10px", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 },
-  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 100 },
-  modalCard: { background: "#FFFFFF", borderRadius: 8, padding: 20, maxWidth: 460, width: "100%", maxHeight: "85vh", overflowY: "auto", border: "1px solid #E2E8F0", boxShadow: "0 8px 30px rgba(15,23,42,0.2)" },
-  modalClose: { border: "none", background: "#F1F5F9", borderRadius: 6, padding: 5, cursor: "pointer", display: "flex", color: "#64748B" },
-  formInput: { width: "100%", border: "1px solid #E2E8F0", padding: "8px 10px", fontSize: 12, borderRadius: 6, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#FFFFFF" },
-  formTextarea: { width: "100%", border: "1px solid #E2E8F0", padding: "8px 10px", fontSize: 12, borderRadius: 6, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit", background: "#FFFFFF" },
-  modalSubmitBtn: { border: "none", padding: "10px 16px", borderRadius: 6, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }
+  outer: { minHeight: "100vh", background: "#F4F6FC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+  header: { background: "#fff", borderBottom: "1px solid #E6E9F5", position: "sticky", top: 0, zIndex: 50 },
+  headerInner: { maxWidth: 1140, margin: "0 auto", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" },
+  brandRow: { display: "flex", alignItems: "center", gap: 10 },
+  brandName: { fontWeight: 800, fontSize: 16, color: "#10142A", lineHeight: 1.1 },
+  brandSub: { fontSize: 10.5, fontWeight: 700, color: "#4F46E5", textTransform: "uppercase", letterSpacing: ".06em" },
+  navLinks: { display: "flex", gap: 24, alignItems: "center" },
+  navLink: { fontSize: 13.5, fontWeight: 600, color: "#656C86", cursor: "pointer" },
+  navLinkQuiet: { fontSize: 12.5, fontWeight: 500, color: "#9AA1B9", cursor: "pointer" },
+  signInBtn: { border: "1.5px solid #E2E8F0", background: "transparent", padding: "8px 16px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" },
+  getStartedBtn: { border: "none", background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", color: "#fff", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", boxShadow: "0 4px 14px rgba(79,70,229,0.3)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 },
+  heroSection: { maxWidth: 1080, margin: "0 auto", padding: "60px 20px 80px", textAlign: "center" },
+  heroH1: { fontSize: 42, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 16px", lineHeight: 1.15 },
+  heroSub: { fontSize: 16.5, color: "#475569", maxWidth: 700, margin: "0 auto 10px", lineHeight: 1.5 },
+  heroSubBold: { fontSize: 15, color: "#0F172A", fontWeight: 700, maxWidth: 680, margin: "0 auto 30px", lineHeight: 1.5 },
+  heroCtaRow: { display: "flex", gap: 12, justifyContent: "center", marginBottom: 14 },
+  heroSecondaryBtn: { border: "1.5px solid #E2E8F0", background: "#fff", color: "#0F172A", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" },
+  heroNote: { fontSize: 12.5, color: "#64748B", fontWeight: 600, marginBottom: 36 },
+  waitlistCard: { maxWidth: 560, margin: "0 auto", background: "#fff", padding: 20, borderRadius: 16, border: "1px solid #E2E8F0", boxShadow: "0 20px 40px -16px rgba(15,23,42,.08)" },
+  demoForm: { display: "flex", flexDirection: "column", gap: 10 },
+  demoFormRow: { display: "flex", gap: 10 },
+  demoInputWrap: { position: "relative", flex: 1 },
+  demoInputIcon: { position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" },
+  demoInput: {
+    width: "100%", border: "1.5px solid #E2E8F0", padding: "11px 13px 11px 34px", fontSize: 13.5,
+    borderRadius: 11, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#fff",
+  },
+  demoTextarea: {
+    width: "100%", border: "1.5px solid #E2E8F0", padding: "11px 13px", fontSize: 13.5,
+    borderRadius: 11, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit",
+  },
+  waitlistBtn: { border: "none", background: "linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%)", color: "#fff", padding: "12px 20px", borderRadius: 11, fontWeight: 700, fontSize: 13.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap", boxShadow: "0 4px 14px rgba(79,70,229,0.3)" },
+  waitlistErrorText: { padding: "0 2px", fontSize: 12, color: "#EF4444", fontWeight: 600, textAlign: "left" },
+  successBox: { display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", fontSize: 13.5, fontWeight: 600, color: "#10B981" },
+  grid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
+  card: { flex: "1 1 220px", maxWidth: 340, background: "#fff", padding: 22, borderRadius: 18, border: "1px solid #E2E8F0" },
+  cardIcon: { width: 42, height: 42, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 },
+  cardTitle: { fontSize: 15, fontWeight: 800, margin: "0 0 6px", color: "#0F172A" },
+  cardDesc: { fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.45 },
+  inlineLink: { fontSize: 12, fontWeight: 700, color: "#4F46E5", marginTop: 12, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" },
+  bodyLarge: { fontSize: 15.5, color: "#334155", lineHeight: 1.65, marginBottom: 18 },
+  answersLine: { fontSize: 11.5, color: "#94A3B8", fontStyle: "italic", marginTop: 10 },
+
+  section: { padding: "72px 20px" },
+  sectionInner: { maxWidth: 1100, margin: "0 auto", textAlign: "center" },
+  sectionTag: { display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 99, background: "#EEF2FF", color: "#4F46E5", fontSize: 12, fontWeight: 700, marginBottom: 16 },
+  sectionH2: { fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", color: "#0F172A", margin: "0 0 10px", lineHeight: 1.2 },
+  sectionSub: { fontSize: 14.5, color: "#64748B", maxWidth: 640, margin: "0 auto 40px", lineHeight: 1.55 },
+
+  statBanner: { maxWidth: 680, margin: "0 auto 40px", padding: "18px 24px", background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 14, fontSize: 14, color: "#991B1B", lineHeight: 1.5 },
+
+  stepsRow: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
+  stepCard: { flex: "1 1 240px", maxWidth: 320, position: "relative", background: "#fff", padding: "26px 22px 22px", borderRadius: 18, border: "1px solid #E2E8F0" },
+  stepNumber: { position: "absolute", top: 16, right: 18, fontSize: 12, fontWeight: 800, color: "#C7D2FE" },
+  stepIcon: { width: 42, height: 42, borderRadius: 12, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 },
+
+  featuresGrid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left" },
+
+  questionGrid: { display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginTop: 20 },
+  questionPill: { background: "#fff", border: "1px solid #E2E8F0", borderRadius: 99, padding: "10px 18px", fontSize: 13, fontWeight: 700, color: "#0F172A" },
+
+  comparisonWrap: { overflowX: "auto", marginTop: 8 },
+  comparisonTable: { width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 14, overflow: "hidden", border: "1px solid #E2E8F0" },
+  comparisonHeaderCell: { textAlign: "left", padding: "12px 18px", fontSize: 12.5, fontWeight: 800, color: "#64748B", borderBottom: "1px solid #E2E8F0", background: "#F8FAFC" },
+  comparisonCellLabel: { textAlign: "left", padding: "12px 18px", fontSize: 13, fontWeight: 700, color: "#0F172A", borderBottom: "1px solid #E2E8F0" },
+  comparisonCell: { textAlign: "left", padding: "12px 18px", fontSize: 13, color: "#64748B", borderBottom: "1px solid #E2E8F0" },
+
+  pricingGrid: { display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 20, textAlign: "left", marginTop: 12 },
+  pricingCard: { flex: "1 1 280px", maxWidth: 360, position: "relative", background: "#fff", padding: 26, borderRadius: 18, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" },
+  pricingCardHighlighted: { border: "2px solid #4F46E5", boxShadow: "0 20px 40px -16px rgba(79,70,229,.25)" },
+  pricingBadge: { position: "absolute", top: -12, left: 24, background: "linear-gradient(135deg, #4338CA, #6366F1)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 99 },
+  pricingName: { fontSize: 18, fontWeight: 800, margin: "6px 0 4px", color: "#0F172A" },
+  pricingTagline: { fontSize: 12.5, color: "#64748B", margin: "0 0 16px", lineHeight: 1.4, minHeight: 54 },
+  pricingPriceRow: { display: "flex", alignItems: "baseline", gap: 6 },
+  pricingPrice: { fontSize: 26, fontWeight: 800, color: "#0F172A" },
+  pricingNote: { fontSize: 11.5, color: "#94A3B8", margin: "2px 0 18px" },
+  pricingFeatureList: { listStyle: "none", padding: 0, margin: "0 0 22px", display: "flex", flexDirection: "column", gap: 10, flex: 1 },
+  pricingFeatureItem: { display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "#334155", lineHeight: 1.4 },
+  pricingOutlineBtn: { border: "1.5px solid #4F46E5", background: "#fff", color: "#4F46E5", padding: "9px 18px", borderRadius: 11, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 },
+
+  contactModeToggle: { display: "inline-flex", background: "rgba(255,255,255,.12)", borderRadius: 12, padding: 4, gap: 4, marginBottom: 20 },
+  contactModeBtn: { border: "none", background: "transparent", color: "rgba(255,255,255,.75)", padding: "8px 16px", borderRadius: 9, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+  contactModeBtnActive: { border: "none", background: "#fff", color: "#0F172A", padding: "8px 16px", borderRadius: 9, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
+
+  faqList: { display: "flex", flexDirection: "column", gap: 10, textAlign: "left" },
+  faqItem: { background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 14, padding: "4px 18px" },
+  faqQuestion: {
+    width: "100%", border: "none", background: "transparent", cursor: "pointer", padding: "14px 0",
+    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+    fontSize: 14, fontWeight: 700, color: "#0F172A", textAlign: "left"
+  },
+  faqAnswer: { margin: "0 0 16px", fontSize: 13, color: "#64748B", lineHeight: 1.55 },
+
+  ctaSection: { padding: "72px 20px", background: "linear-gradient(135deg, #0F172A 0%, #312E81 50%, #4338CA 100%)" },
+
+  footer: { borderTop: "1px solid #E2E8F0", background: "#fff", padding: "32px 20px" },
+  footerInner: { maxWidth: 1140, margin: "0 auto", display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 24 },
+  footerSitemap: { display: "flex", flexDirection: "column", gap: 8, fontSize: 12.5 },
+  footerLink: { color: "#64748B", cursor: "pointer" },
+
+  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 100, overflowY: "auto", boxSizing: "border-box" },
+  modalCard: { background: "#fff", borderRadius: 18, padding: 24, maxWidth: 460, width: "100%", maxHeight: "85vh", overflowY: "auto", boxShadow: "0 30px 60px -24px rgba(15,23,42,.35)" },
+  modalHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  modalTitle: { fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 },
+  modalClose: { border: "none", background: "#F8FAFC", borderRadius: 8, padding: 6, cursor: "pointer", display: "flex" },
+  modalBody: { fontSize: 13.5, color: "#64748B", lineHeight: 1.55, margin: 0 }
 };

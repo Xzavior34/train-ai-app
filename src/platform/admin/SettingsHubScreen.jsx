@@ -5,7 +5,7 @@ import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockDat
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment, SEAT_PRICE_USD } from "../../lib/api/organizations.js";
 import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 
 // Previously seeded from `profileQuery.data?.organizations?.name`, which
@@ -27,7 +27,9 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const seatsSummary = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
   const [seatsToBuy, setSeatsToBuy] = useState("");
   const [purchasingSeats, setPurchasingSeats] = useState(false);
-  const SEAT_PRICE_DISPLAY = 10;
+  // SEAT_PRICE_USD removed - it was a second, independent copy of the seat
+// price that could drift from what startSeatPurchasePayment actually charges.
+// The real figure is now imported from lib/api/organizations.js.
   const ticketsQuery = useSupabaseQuery(async () => (orgId ? fetchMyOrgSupportTickets(orgId) : []), [orgId]);
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketDescription, setTicketDescription] = useState("");
@@ -231,12 +233,41 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
     <div className="ta-fade">
       <TopBar title="Settings Hub" sub="Organization name & configuration" orgSelector={orgSelector} onNavigate={setScreen} profileQuery={profileQuery} />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
-          <div className="tai-glow-purple" />
-          <div className="ta-hero-inner">
-            <div className="ta-hero-text">
-              <h1 className="ta-hero-title">Settings Hub &amp; Preferences</h1>
-              <p className="ta-hero-desc">Manage organization profile, seat licenses, AI policies, security rules, and gamification toggles.</p>
+        {/* =========================================================================
+            SETTINGS HUB HERO BANNER
+            ========================================================================= */}
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(18px, 3vw, 26px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
+
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Settings Hub &amp; Preferences
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
+                Manage organization profile, seat licenses, AI policies, and gamification.
+              </p>
             </div>
           </div>
         </div>
@@ -261,12 +292,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   <span>Status: <strong style={{ color: "var(--text-1)" }}>{org?.status || "trial"}</strong></span>
                   <span>Max users: <strong style={{ color: "var(--text-1)" }}>{org?.max_users ?? "N/A"}</strong></span>
                 </div>
-                <button
-                  className="ta-btn ta-btn-primary ta-mt16"
-                  style={{ height: 36, padding: "0 16px", borderRadius: 8, fontSize: 13 }}
-                  onClick={handleSave}
-                  disabled={saving || !orgName.trim()}
-                >
+                <button className="ta-btn ta-btn-primary ta-mt16" onClick={handleSave} disabled={saving || !orgName.trim()}>
                   {saving ? "Saving..." : "Save profile"}
                 </button>
               </div>
@@ -332,7 +358,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       }
                     }}
                   >
-                    {purchasingSeats ? "Redirecting to checkout..." : `Purchase seats ($${SEAT_PRICE_DISPLAY}/seat)`}
+                    {purchasingSeats ? "Redirecting to checkout..." : `Purchase seats ($${SEAT_PRICE_USD}/seat)`}
                   </button>
                 </div>
               </div>
@@ -517,9 +543,6 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                         if (window.confirm("Purge all mock data and switch to real database records only?")) {
                           purgeAllMockData();
                           showToast("All mock data purged! Live database mode active.");
-                          setTimeout(() => {
-                            window.location.reload();
-                          }, 500);
                         }
                       }}
                     >
@@ -531,9 +554,6 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       onClick={() => {
                         restoreMockData();
                         showToast("Demo & mock masterclasses restored.");
-                        setTimeout(() => {
-                          window.location.reload();
-                        }, 500);
                       }}
                     >
                       <RefreshCw size={13} /> Restore Demo Data

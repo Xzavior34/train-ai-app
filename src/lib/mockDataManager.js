@@ -1,13 +1,14 @@
-// Centralized Mock Data & Real Database Mode Manager
-// Allows toggling or purging demo / mock data globally across all learner and admin screens
+import { HAS_DATABASE } from "./demoMode.js";
 
 const STORAGE_KEY = "trainai_mock_data_enabled";
 const CHANGE_EVENT = "trainai_mock_data_changed";
 
 /**
- * Returns true if mock/demo data is enabled (defaults to true for prototyping until disabled by admin/owner)
+ * Returns true if mock/demo data is enabled (defaults to true for prototyping until disabled by admin/owner).
+ * Always returns false when Supabase database is connected.
  */
 export function isMockDataEnabled() {
+  if (HAS_DATABASE) return false;
   try {
     const val = localStorage.getItem(STORAGE_KEY);
     if (val === "false") return false;

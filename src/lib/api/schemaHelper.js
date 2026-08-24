@@ -14,13 +14,35 @@ import { supabase } from "../supabaseClient.js";
 // user_id, learner_id, etc.) stores that same raw auth uid directly, so the
 // lookup query and the returned map must both be keyed on `user_id`, not the
 // internal `id`.
-export async function fetchProfilesByUserIds(userIds, columns = "user_id, display_name, avatar_url") {
+export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url") {
   if (!supabase || !userIds || !userIds.length) return {};
   const ids = [...new Set(userIds.filter(Boolean))];
   if (!ids.length) return {};
-  const { data, error } = await supabase.from("user_profiles").select(columns).in("user_id", ids);
-  if (error) { console.warn("Profiles batch fetch warning:", error); return {}; }
-  return Object.fromEntries((data || []).map((p) => [p.user_id, p]));
+
+  // This helper is the single path by which almost every admin/mentor screen
+  // attaches a real name and avatar to rows from tables that only store a raw
+  // auth uid (compliance assignments, course applications, payouts, sessions,
+  // mentors, moderation...). It used to filter and key on `user_profiles.user_id`,
+  // but in the shared schema `user_profiles` has no such column - its `id` IS
+  // the auth uid (which platform.js's own comments state explicitly). Every
+  // call therefore failed and returned {}, which is why so many lists showed
+  // "Learner"/"Mentor" placeholders instead of real people.
+  //
+  // The two files disagreed about this column, so rather than trusting either
+  // one blindly this tries the schema-correct `id` shape first and falls back
+  // to the `user_id` shape if a deployment really does have it. Whichever
+  // works, the returned map is keyed on the auth uid the callers pass in.
+  const normalise = (rows) => Object.fromEntries((rows || []).map((p) => [p.user_id || p.id, p]));
+
+  const byId = await supabase.from("user_profiles").select(columns).in("id", ids);
+  if (!byId.error) return normalise(byId.data);
+
+  const legacyColumns = columns.includes("user_id") ? columns : columns.replace(/^id\b/, "user_id");
+  const byUserId = await supabase.from("user_profiles").select(legacyColumns).in("user_id", ids);
+  if (!byUserId.error) return normalise(byUserId.data);
+
+  console.warn("Profiles batch fetch warning:", byId.error);
+  return {};
 }
 
 // Same batching pattern as fetchProfilesByUserIds, but for gamification
@@ -168,7 +190,9 @@ export async function fetchMentorEarnings(mentorId) {
     .from("mentor_earnings")
     .select("*")
     .eq("mentor_id", mentorId)
-    .order("created_at", { ascending: false });
+    // mentor_earnings has no created_at column - ordering on it made PostgREST
+    // reject the query, so this list came back empty every time.
+    .order("payout_date", { ascending: false, nullsFirst: false });
   if (error) console.warn("Mentor earnings fetch warning:", error);
   return data || [];
 }
@@ -254,7 +278,9 @@ export async function fetchMentorCredentials(mentorId) {
     .from("mentor_credentials")
     .select("*")
     .eq("mentor_id", mentorId)
-    .order("created_at", { ascending: false });
+    // mentor_credentials has no created_at column - ordering on it made PostgREST
+    // reject the query, so this list came back empty every time.
+    .order("issue_date", { ascending: false, nullsFirst: false });
   if (error) { console.warn("Mentor credentials fetch warning:", error); return []; }
   return data || [];
 }
@@ -329,7 +355,9 @@ export async function fetchRefundRequestsForMentor(mentorId) {
     .from("refund_requests")
     .select("*")
     .eq("mentor_id", mentorId)
-    .order("created_at", { ascending: false });
+    // refund_requests has no created_at column - ordering on it made PostgREST
+    // reject the query, so this list came back empty every time.
+    .order("session_date", { ascending: false, nullsFirst: false });
   if (error) { console.warn("Refund requests fetch warning:", error); return []; }
   return data || [];
 }
@@ -364,7 +392,13 @@ export async function fetchLearningPaths() {
     .from("learning_paths")
     .select("*, learning_path_courses(*, courses(*))")
     .eq("is_published", true)
-    .order("created_at", { ascending: false });
+    // learning_paths has no created_at column in this schema (id, title,
+    // description, level_label, category, organization_id, created_by,
+    // is_published). Ordering on it made PostgREST reject the entire query,
+    // so every learning-path list came back empty - which is exactly why the
+    // admin Learning Paths screen showed nothing at all. Ordered by title
+    // instead, which is a real column and gives a stable, readable order.
+    .order("title", { ascending: true });
   if (error) console.warn("Learning paths fetch warning:", error);
   return data || [];
 }
@@ -1278,12 +1312,19 @@ export async function fetchCohortAssignedCourses(cohortId) {
 
 export async function fetchCohortMembers(cohortId) {
   if (!supabase || !cohortId) return [];
+  // `cohort_members` has two foreign keys to user_profiles (user_id and
+  // added_by), so a bare `user_profiles(...)` embed is ambiguous and PostgREST
+  // refuses the query outright - which is why cohort member lists rendered
+  // with no names at all. Resolved via the batched profile lookup instead, and
+  // the returned shape is unchanged so existing callers keep working.
   const { data, error } = await supabase
     .from("cohort_members")
-    .select("id, added_at, user_profiles(id, display_name, avatar_url, role)")
+    .select("id, added_at, user_id")
     .eq("cohort_id", cohortId);
   if (error) { console.warn("Cohort members fetch warning:", error); return []; }
-  return data || [];
+  const rows = data || [];
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id), "id, display_name, avatar_url, role");
+  return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
 }
 
 // Admin-wide Study Groups view - confirmed directly: "Admins should be

@@ -1,28 +1,40 @@
 import React, { useState, useEffect, useRef } from "react";
-import { TopBar, ProgressBar, Tag, Avatar } from "../components/LearnerUI.jsx";
+import { TopBar, ProgressBar, Tag, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import {
   Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize2, Minimize2,
   CheckCircle2, ChevronRight, ChevronLeft, PlusCircle, ThumbsUp, ThumbsDown,
-  Clock, Video, BookOpen, Zap, Download, Share2, HelpCircle, FileText,
+  Clock, Video, BookOpen, Sparkles, Download, Share2, HelpCircle, FileText,
   Code2, Award, Star, MessageSquare, Send, Search, Check, X, ShieldCheck,
   Bookmark, Heart, Layers, RefreshCw, PanelRightClose, PanelRightOpen,
-  Sliders, ExternalLink, Bot, Terminal, Copy, Paperclip, Tv, Eye, EyeOff, Subtitles
+  Sliders, ExternalLink, Bot, Terminal, Copy, Paperclip
 } from "lucide-react";
-import { submitLessonFeedback } from "../../lib/api/learner.js";
+import {
+  submitLessonFeedback, fetchLessonsForCourse,
+  fetchOrCreateCourseDiscussion, fetchCourseDiscussionMessages, postCourseDiscussionMessage
+} from "../../lib/api/learner.js";
+import { fetchCourseMaterials } from "../../lib/api/platform.js";
+import { fetchCourseInstructor } from "../../lib/api/live/learnerCourseLive.js";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { DEMO_MODE, liveOr } from "../../lib/demoMode.js";
 import { getYouTubeEmbedId, isMockDataEnabled } from "../../lib/mockDataManager.js";
-import { CourseVideoPlayer } from "../components/CourseVideoPlayer.jsx";
 
-// Industry-Standard Interactive Chapters
-const DEFAULT_CHAPTERS = [
-  { time: "00:00", seconds: 0, title: "Introduction & Architecture Overview" },
-  { time: "03:45", seconds: 225, title: "Design Tokens & Variable Configuration" },
-  { time: "08:15", seconds: 495, title: "Building Production Multi-Agent Workflows" },
-  { time: "13:30", seconds: 810, title: "Vector Embeddings & RAG Optimization" },
-  { time: "17:20", seconds: 1040, title: "Edge Deployment & Performance Benchmark" },
-  { time: "21:05", seconds: 1265, title: "Summary, Capstone & Next Action Items" }
+// Synchronized transcript lines. Case C: `lessons` has no transcript (or
+// caption/VTT) column anywhere in the schema, so these lines cannot be
+// anything but illustrative - and they were being presented as THE
+// transcript of every lesson in the catalog. Kept for the no-database
+// walkthrough; both the tab and the panel disappear once Supabase is
+// configured.
+// Illustrative objectives for the no-database walkthrough only. `lessons`
+// stores objectives in its own `content` column; when that is empty there is
+// genuinely nothing to list, so with a database connected the card is hidden
+// instead of borrowing these.
+const DEMO_LESSON_OBJECTIVES = [
+  "Architecting asynchronous function calling with schema validation.",
+  "Configuring Figma variables & vector tokens for design system automation.",
+  "Setting up Supabase pgvector with HNSW similarity index scoring.",
+  "Implementing exponential backoff and jittered retry hooks for multi-agent reliability.",
 ];
 
-// Interactive Synchronized Video Transcript Lines
 const DEFAULT_TRANSCRIPT = [
   { time: "00:00", seconds: 0, speaker: "Instructor", text: "Welcome back! In this masterclass module, we are diving deep into production-grade multi-agent AI architecture." },
   { time: "01:15", seconds: 75, speaker: "Instructor", text: "Before we write our first function call, let's examine why traditional single-prompt chains break down in enterprise applications." },
@@ -35,16 +47,25 @@ const DEFAULT_TRANSCRIPT = [
   { time: "21:05", seconds: 1265, speaker: "Instructor", text: "That wraps up this module! Complete the quick knowledge check and check out the starter kit in the resources tab." }
 ];
 
-// Downloadable Lesson Assets & Resources
-const LESSON_RESOURCES = [
+// Downloadable assets. Real source: the `course_materials` table via
+// fetchCourseMaterials(courseId) - see lib/api/platform.js. Titles, types and
+// links are all real columns there; file SIZE is not stored anywhere, so the
+// "ZIP • 4.2 MB" / "FIG • 18.5 MB" strings below are demo-only.
+const DEMO_LESSON_RESOURCES = [
   { id: "res-1", title: "Starter Code Repository (GitHub)", type: "GitHub Repo", size: "ZIP • 4.2 MB", icon: Code2, url: "https://github.com" },
   { id: "res-2", title: "Complete Figma Design Tokens & Variables Kit", type: "Figma File", size: "FIG • 18.5 MB", icon: Layers, url: "https://figma.com" },
   { id: "res-3", title: "Masterclass Slide Deck & Architecture Diagrams", type: "PDF Document", size: "PDF • 8.1 MB", icon: FileText, url: "#" },
-  { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: Zap, url: "#" }
+  { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: Sparkles, url: "#" }
 ];
 
-// Lesson Q&A Discussions
-const INITIAL_QA_THREADS = [
+// Q&A threads. Real source: the `course_discussions` table
+// (fetchOrCreateCourseDiscussion / fetchCourseDiscussionMessages /
+// postCourseDiscussionMessage in lib/api/learner.js), which is course-scoped
+// rather than lesson-scoped and stores flat messages - no upvote column, no
+// answer threading, no instructor flag. The upvote counts (24/18) and the
+// verified instructor answers below therefore exist only for the
+// no-database walkthrough.
+const DEMO_QA_THREADS = [
   {
     id: "qa-1",
     author: "Elena Rostova",
@@ -98,14 +119,18 @@ const INITIAL_QA_THREADS = [
 export function LessonScreen({
   course, lessons = [], lessonId, session, lessonNotesQuery, noteInputText, setNoteInputText,
   back, push, showToast, markLessonComplete, enrollmentsQuery, lessonProgressQuery,
-  completedLessonIds, setCompletedLessonIds, addLessonNote
+  completedLessonIds, setCompletedLessonIds, addLessonNote,
+  // Real AI path, owned by TrainAILearnerApp so the org's AI on/off and manual
+  // mode settings are honoured in one place instead of being bypassed here.
+  orgAISettings, askLessonTutor
 }) {
-  const videoPlayerRef = useRef(null);
-
   // Video Player States
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTimeSec, setCurrentTimeSec] = useState(145);
-  const [totalDurationSec] = useState(1320); // 22:00 mins
+  // Started at 145s ("2:25 already watched") against a fixed 22:00 runtime on
+  // every lesson. The real runtime is lessons.duration_minutes (see
+  // totalDurationSec below); playback position isn't persisted anywhere, so
+  // it starts at zero rather than implying progress.
+  const [currentTimeSec, setCurrentTimeSec] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
@@ -114,8 +139,6 @@ export function LessonScreen({
   const [activeChapterIndex, setActiveChapterIndex] = useState(1);
   const [videoQuality, setVideoQuality] = useState("1080p HD");
   const [showQualityMenu, setShowQualityMenu] = useState(false);
-  const [captionsEnabled, setCaptionsEnabled] = useState(false);
-  const [showControlSuite, setShowControlSuite] = useState(false);
 
   // Layout & Navigation States
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -134,8 +157,36 @@ export function LessonScreen({
   const [aiInput, setAiInput] = useState("");
   const [aiThinking, setAiThinking] = useState(false);
 
+  // This screen's own reads. The props it receives (`course`, `lessons`) are
+  // already normalized by useLearnerData, and that mapper drops the columns
+  // needed below - lessons.description/content and courses.instructor_id -
+  // so each is fetched here from the real table rather than substituted with
+  // a constant. Every one of these returns [] / null with no database.
+  const courseId = course?.id || null;
+  const userId = session?.user?.id || null;
+
+  const lessonRowsQuery = useSupabaseQuery(
+    async () => (courseId ? fetchLessonsForCourse(courseId) : []),
+    [courseId]
+  );
+  const materialsQuery = useSupabaseQuery(
+    async () => (courseId ? fetchCourseMaterials(courseId) : []),
+    [courseId]
+  );
+  const instructorQuery = useSupabaseQuery(
+    async () => (courseId ? fetchCourseInstructor(courseId) : null),
+    [courseId]
+  );
+  const discussionQuery = useSupabaseQuery(async () => {
+    if (!courseId) return [];
+    const discussion = await fetchOrCreateCourseDiscussion(courseId);
+    if (!discussion?.id) return [];
+    return fetchCourseDiscussionMessages(discussion.id);
+  }, [courseId]);
+
   // Q&A States
-  const [qaThreads, setQaThreads] = useState(INITIAL_QA_THREADS);
+  const [postingQuestion, setPostingQuestion] = useState(false);
+  const [qaThreads, setQaThreads] = useState(() => (DEMO_MODE ? DEMO_QA_THREADS : []));
   const [newQuestionTitle, setNewQuestionTitle] = useState("");
   const [newQuestionContent, setNewQuestionContent] = useState("");
   const [showQuestionComposer, setShowQuestionComposer] = useState(false);
@@ -147,21 +198,56 @@ export function LessonScreen({
   const [feedbackConfidence, setFeedbackConfidence] = useState(4);
   const [feedbackHelpful, setFeedbackHelpful] = useState(true);
 
-  // Normalize current lesson
-  const rawLessons = lessons && lessons.length > 0 ? lessons : [
+  // Normalize current lesson. The placeholder curriculum below is a literal
+  // fallback that used to hide an empty real result: a published course with
+  // no `lessons` rows yet rendered six invented modules. With a database
+  // connected the list stays empty and the curriculum drawer says so.
+  const rawLessons = lessons && lessons.length > 0 ? lessons : (DEMO_MODE ? [
     { id: "l-1", title: "1. Foundations of Spatial Systems & Multi-Agent AI", duration: 18, module: "Module 1: Foundations" },
     { id: "l-2", title: "2. Structuring Design Tokens with Figma Variables", duration: 22, module: "Module 1: Foundations" },
     { id: "l-3", title: "3. Vector Databases & pgvector Index Architectures", duration: 26, module: "Module 2: Core Engineering" },
     { id: "l-4", title: "4. Building Autonomous Function Calling Agents", duration: 32, module: "Module 2: Core Engineering" },
     { id: "l-5", title: "5. Production Deployment, Caching & Performance Benchmark", duration: 24, module: "Module 3: Production & Scaling" },
     { id: "l-6", title: "6. Final Capstone Project & Portfolio Submission", duration: 40, module: "Module 4: Capstone" }
-  ];
+  ] : []);
 
   const currentLessonIndex = rawLessons.findIndex(l => l.id === lessonId);
-  const lesson = rawLessons[currentLessonIndex >= 0 ? currentLessonIndex : 0] || rawLessons[0];
+  const lesson = rawLessons[currentLessonIndex >= 0 ? currentLessonIndex : 0] || rawLessons[0] || null;
+  // Real runtime for THIS lesson (lessons.duration_minutes), replacing the
+  // fixed 22:00 the scrub bar and time readout showed for every lesson.
+  const totalDurationSec = (lesson?.duration || 0) * 60;
   const nextLesson = rawLessons[currentLessonIndex + 1];
   const prevLesson = currentLessonIndex > 0 ? rawLessons[currentLessonIndex - 1] : null;
   const isCompleted = lesson && completedLessonIds.has(`${course?.id}-${lesson.id}`);
+
+  // The real `lessons` row behind the current lesson, for the two columns the
+  // normalized prop drops: `description` (the overview paragraph, previously
+  // one fixed masterclass blurb on every lesson in the catalog) and `content`
+  // (the objectives list, previously four fixed bullet points). Each renders
+  // only when the lesson actually has it - no placeholder copy.
+  const lessonRow = (lessonRowsQuery.data || []).find((l) => l.id === lesson?.id) || null;
+  const lessonDescription = lessonRow?.description || null;
+  const lessonObjectives = (lessonRow?.content || "")
+    .split(/\r?\n+/)
+    .map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim())
+    .filter(Boolean);
+
+  // Downloadable resources: real course_materials rows for this course.
+  const liveResources = (materialsQuery.data || []).map((m) => ({
+    id: m.id,
+    title: m.title,
+    type: m.material_type || "Material",
+    size: null,
+    icon: m.material_type === "link" ? ExternalLink : FileText,
+    url: m.file_url || m.external_url || null,
+  }));
+  const lessonResources = liveOr(liveResources, DEMO_LESSON_RESOURCES);
+
+  // Instructor: courses.instructor_id -> user_profiles (fetchCourseInstructor).
+  // Every lesson used to be attributed to "Astrid Larsson"; when the course
+  // has no instructor_id, or that profile is missing, the card renders
+  // nothing instead of a name.
+  const instructor = instructorQuery.data || null;
 
   // Format MM:SS helper
   const formatTime = (secs) => {
@@ -181,26 +267,46 @@ export function LessonScreen({
     setShowFeedbackPrompt(true);
   }
 
-  // Handle AI Tutor Query
-  function handleSendAiMessage(customPrompt) {
+  // Handle AI Tutor Query.
+  //
+  // This used to be a setTimeout that returned one of three hardcoded
+  // paragraphs (about pgvector latency and token-bucket throttling) regardless
+  // of the lesson, the course, or what was asked. It now goes through
+  // askLessonTutor, which runs the real ai_conversations/ai_messages path via
+  // the deployed ai-chat function and respects the organization's AI settings.
+  async function handleSendAiMessage(customPrompt) {
     const query = customPrompt || aiInput.trim();
-    if (!query) return;
+    if (!query || aiThinking) return;
 
     const userMsg = { id: `msg-${Date.now()}`, sender: "user", text: query };
     setAiChatMessages(prev => [...prev, userMsg]);
     if (!customPrompt) setAiInput("");
     setAiThinking(true);
 
-    setTimeout(() => {
-      let replyText = `Great question! In this section of the lesson (${formatTime(currentTimeSec)}), the key takeaway is ensuring your state variables are fully decoupled from asynchronous render loops. This prevents race conditions when multiple agent functions resolve out-of-order.`;
-      if (query.toLowerCase().includes("summar")) {
-        replyText = `**Key Takeaways for this Lesson:**\n\n1. **Decoupled Architecture**: Separate prompt reasoning from execution engines.\n2. **Vector Indexing**: Use HNSW with Supabase pgvector for sub-200ms semantic lookups.\n3. **Resilience**: Implement token-bucket throttling and exponential backoff retry hooks.`;
-      } else if (query.toLowerCase().includes("code") || query.toLowerCase().includes("example")) {
-        replyText = `Here is the production implementation pattern demonstrated in Chapter ${activeChapterIndex + 1}:\n\n\`\`\`javascript\nconst agentResponse = await executeAutonomousWorkflow({\n  model: "gemini-1.5-pro",\n  tools: [vectorSearchTool, databaseTool],\n  maxSteps: 5,\n  timeoutMs: 8000\n});\n\`\`\``;
+    try {
+      if (!askLessonTutor) {
+        setAiChatMessages(prev => [...prev, {
+          id: `msg-${Date.now() + 1}`, sender: "ai",
+          text: "The AI tutor isn't available on this screen.",
+        }]);
+        return;
       }
-      setAiChatMessages(prev => [...prev, { id: `msg-${Date.now() + 1}`, sender: "ai", text: replyText }]);
+      const result = await askLessonTutor({
+        question: query,
+        lessonTitle: lesson?.title,
+        courseTitle: course?.title,
+      });
+      setAiChatMessages(prev => [...prev, {
+        id: `msg-${Date.now() + 1}`,
+        sender: "ai",
+        text: result?.text || "No answer came back.",
+        // Flagged so the UI can distinguish a real answer from an org-level
+        // block or an instructor-will-reply message.
+        notice: result?.blocked || result?.manual || result?.error || false,
+      }]);
+    } finally {
       setAiThinking(false);
-    }, 900);
+    }
   }
 
   // Handle Q&A Upvote
@@ -217,9 +323,51 @@ export function LessonScreen({
     }));
   }
 
+  // Real Q&A: flat `course_discussions` rows for this course. Author name and
+  // avatar are the poster's real user_profiles row; upvotes/answers/video
+  // timestamp are left null because the table has no such columns, and the
+  // markup below hides those chips rather than inventing values for them.
+  const realQaThreads = (discussionQuery.data || []).map((m) => ({
+    id: m.id,
+    author: m.user_profiles?.display_name || "Learner",
+    role: m.sender_id === userId ? "You" : "Learner",
+    avatarUrl: m.user_profiles?.avatar_url || null,
+    time: m.created_at ? timeAgo(m.created_at) : "",
+    timestamp: null,
+    title: null,
+    content: m.content,
+    upvotes: null,
+    upvoted: false,
+    answers: [],
+  }));
+  const displayedQaThreads = liveOr(realQaThreads, qaThreads);
+
   // Handle New Q&A Question
-  function handlePostQuestion() {
+  async function handlePostQuestion() {
     if (!newQuestionTitle.trim()) return;
+
+    // With a database the question goes to the real course_discussions
+    // table; the local-state branch below is the no-database walkthrough.
+    if (!DEMO_MODE) {
+      if (!userId || !courseId) { showToast?.("You need to be signed in to ask a question."); return; }
+      setPostingQuestion(true);
+      try {
+        const body = [newQuestionTitle.trim(), newQuestionContent.trim()].filter(Boolean).join("\n\n");
+        const discussion = await fetchOrCreateCourseDiscussion(courseId);
+        await postCourseDiscussionMessage({ discussionId: discussion.id, senderId: userId, content: body });
+        setNewQuestionTitle("");
+        setNewQuestionContent("");
+        setShowQuestionComposer(false);
+        await discussionQuery.refetch?.();
+        showToast?.("Question posted to the course discussion!");
+      } catch (e) {
+        showToast?.(e?.message || "Could not post your question.");
+      } finally {
+        setPostingQuestion(false);
+      }
+      return;
+    }
+
     const newThread = {
       id: `qa-${Date.now()}`,
       author: session?.user?.user_metadata?.full_name || "Learner",
@@ -243,11 +391,17 @@ export function LessonScreen({
 
   // Calculate course completion progress
   const completedCount = rawLessons.filter(l => completedLessonIds?.has(`${course?.id}-${l.id}`)).length;
-  const courseProgressPercent = Math.round((completedCount / rawLessons.length) * 100);
+  const courseProgressPercent = rawLessons.length > 0
+    ? Math.round((completedCount / rawLessons.length) * 100)
+    : 0;
 
   // Group lessons by module for Coursera/Udemy style curriculum drawer
+  // `lessons` has no module/section column (only order_index), so real rows
+  // group under one unlabelled heading rather than an invented
+  // "Module 1: Foundations & Architecture". Only the demo lesson set carries
+  // a `module` field.
   const groupedModules = rawLessons.reduce((acc, l) => {
-    const mod = l.module || "Module 1: Foundations & Architecture";
+    const mod = l.module || "";
     if (!acc[mod]) acc[mod] = [];
     acc[mod].push(l);
     return acc;
@@ -260,50 +414,53 @@ export function LessonScreen({
           TOP INDUSTRY-STANDARD COURSE HEADER / APP BAR
           ========================================================================= */}
       <div className="tai-card" style={{
-        padding: "10px 12px", borderRadius: 10,
+        padding: "10px 14px", borderRadius: 16,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        gap: 8, background: "var(--surface)", border: "1px solid var(--border)",
+        gap: 10, background: "var(--surface)", border: "1px solid var(--border)",
         width: "100%", boxSizing: "border-box"
       }}>
-        <div className="tai-row tai-gap8" style={{ minWidth: 0, flex: "1 1 auto", alignItems: "center" }}>
+        <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1, alignItems: "center" }}>
           <button
             className="tai-btn tai-btn-outline tai-btn-sm"
             onClick={back}
-            style={{ borderRadius: 8, flexShrink: 0, padding: "6px 9px", fontSize: 12 }}
+            style={{ borderRadius: 10, flexShrink: 0, padding: "6px 10px", fontSize: 12 }}
             title="Course Overview"
           >
-            <ChevronLeft size={15} /> <span className="tai-header-full-text">Overview</span>
+            <ChevronLeft size={16} /> <span className="tai-header-full-text">Course Overview</span>
           </button>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em" }}>
-              {course?.category || "Masterclass Track"} • Lesson {currentLessonIndex + 1} of {rawLessons.length}
+            {/* Real courses.category / courses.title. The previous
+                "Masterclass Track" / "AI Product Architecture Masterclass"
+                fallbacks stood in for a course that failed to load. */}
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em" }}>
+              {[course?.category, rawLessons.length > 0 ? `Lesson ${currentLessonIndex + 1} of ${rawLessons.length}` : null].filter(Boolean).join(" • ")}
             </div>
-            <div style={{ fontWeight: 800, fontSize: "clamp(12.5px, 2.5vw, 15px)", color: "var(--text)", lineHeight: 1.3, wordBreak: "break-word" }}>
-              {course?.title || "AI Product Architecture Masterclass"}
+            <div style={{ fontWeight: 800, fontSize: "clamp(13px, 2.5vw, 15px)", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {course?.title || ""}
             </div>
           </div>
         </div>
 
         {/* Course Progress & Action Badges */}
-        <div className="tai-row tai-gap6" style={{ alignItems: "center", flexShrink: 0 }}>
-          <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+        <div className="tai-row tai-gap10" style={{ alignItems: "center", flexShrink: 0 }}>
+          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 8.5, color: "var(--text-3)", fontWeight: 700 }}>PROGRESS</div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--primary)" }}>{courseProgressPercent}%</div>
+              <div style={{ fontSize: 9.5, color: "var(--text-3)", fontWeight: 700 }}>PROGRESS</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "var(--primary)" }}>{courseProgressPercent}%</div>
             </div>
-            <div style={{ width: 32, height: 5, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ width: `${courseProgressPercent}%`, height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 99 }} />
+            <div style={{ width: 44, height: 6, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
+              <div style={{ width: `${courseProgressPercent}%`, height: "100%", background: "var(--primary-gradient, linear-gradient(135deg, #4F46E5, #6366F1))", borderRadius: 99 }} />
             </div>
           </div>
 
           <button
             className="tai-iconbtn"
-            style={{ borderRadius: 8, width: 30, height: 30 }}
+            style={{ borderRadius: 10, width: 34, height: 34 }}
             onClick={() => setSidebarOpen(v => !v)}
             title={sidebarOpen ? "Hide Course Curriculum" : "Show Course Curriculum"}
             aria-label="Toggle Curriculum"
           >
-            {sidebarOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />}
+            {sidebarOpen ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
           </button>
         </div>
       </div>
@@ -314,194 +471,200 @@ export function LessonScreen({
       <div className={`tai-lesson-cinema-layout ${!sidebarOpen || isTheatreMode ? "tai-cinema-full" : ""}`}>
         
         {/* Left Column: Widescreen Video Player & Interactive Tabs */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 0, width: "100%", boxSizing: "border-box" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0, width: "100%", boxSizing: "border-box" }}>
 
-          {/* Universal High-Performance Course Video Player */}
-          <CourseVideoPlayer
-            ref={videoPlayerRef}
-            videoUrl={lesson?.video_url}
-            youtubeVideoId={lesson?.youtubeVideoId}
-            courseId={course?.id}
-            lessonId={lesson?.id}
-            lessonTitle={lesson?.title}
-            durationMinutes={lesson?.duration || 20}
-            isTheatreMode={isTheatreMode}
-            onToggleTheatreMode={() => setIsTheatreMode(v => !v)}
-            onProgress={(cur, dur) => {
-              setCurrentTimeSec(Math.round(cur));
-            }}
-            onEnded={() => {
-              if (!isCompleted) handleMarkDone();
-            }}
-          />
+          {/* Video Player Cinema Box */}
+          <div className="tai-card" style={{
+            padding: 0,
+            overflow: "hidden",
+            position: "relative",
+            borderRadius: 20,
+            background: "#080C16",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: "0 20px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+            width: "100%",
+            boxSizing: "border-box"
+          }}>
+            {/* Real 16:9 Cinema Aspect Ratio Viewport */}
+            <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%", height: 0, background: "#000" }}>
+              {/* Working Interactive Video Stream */}
+              {(() => {
+                const videoEmbedId = lesson?.youtubeVideoId || lesson?.video_url?.match(/(?:embed\/|v=|youtu\.be\/)([\w-]+)/)?.[1] || getYouTubeEmbedId(course?.id, lesson?.id);
+                return (
+                  <iframe
+                    key={videoEmbedId}
+                    title={lesson?.title || "Lesson Video"}
+                    src={`https://www.youtube-nocookie.com/embed/${videoEmbedId}?autoplay=${isPlaying ? 1 : 0}&enablejsapi=1&rel=0&modestbranding=1`}
+                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                );
+              })()}
 
-          {/* Quick Video Controls & Settings Strip (Collapsible Liquid Glass) */}
-          <div style={{ width: "100%" }}>
-            {!showControlSuite ? (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button
-                  className="tai-video-control-pill"
-                  style={{
-                    padding: "5px 12px",
-                    fontSize: 11.5,
-                    fontWeight: 700,
-                    borderRadius: 8,
-                    gap: 5
-                  }}
-                  onClick={() => setShowControlSuite(true)}
-                  title="Show Video Controls, Speed, Resolution & Settings"
-                >
-                  <Sliders size={12} color="var(--primary)" />
-                  <span>Video Controls &amp; Settings</span>
-                </button>
+              {/* Speaker / Topic Ambient Badge Overlay */}
+              <div style={{
+                position: "absolute", top: 12, left: 12, zIndex: 10,
+                display: "flex", alignItems: "center", gap: 6,
+                background: "rgba(10, 14, 26, 0.75)", backdropFilter: "blur(8px)",
+                padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)",
+                maxWidth: "85%"
+              }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981", flexShrink: 0 }} />
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lesson?.title}</span>
+                <span style={{ fontSize: 10.5, color: "rgba(255,255,255,0.6)", flexShrink: 0 }}>• {videoQuality}</span>
               </div>
-            ) : (
+            </div>
+
+            {/* Cinema Video Control Bar Overlay */}
+            <div style={{
+              background: "#0D1322",
+              borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+              padding: "10px 14px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              boxSizing: "border-box",
+              width: "100%"
+            }}>
+              {/* Interactive Scrub Progress Bar */}
               <div
-                className="tai-card anim-slide-down"
                 style={{
-                  padding: "12px 14px",
-                  borderRadius: 12,
-                  background: "rgba(15, 23, 42, 0.92)",
-                  backdropFilter: "blur(16px)",
-                  WebkitBackdropFilter: "blur(16px)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10
+                  position: "relative",
+                  width: "100%",
+                  height: 5,
+                  background: "rgba(255, 255, 255, 0.15)",
+                  borderRadius: 99,
+                  cursor: "pointer"
+                }}
+                onClick={(e) => {
+                  if (!totalDurationSec) return;
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const clickPercent = (e.clientX - rect.left) / rect.width;
+                  setCurrentTimeSec(Math.round(clickPercent * totalDurationSec));
                 }}
               >
-                {/* Header Row */}
-                <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                  <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                    <span style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: "#A5B4FC",
-                      textTransform: "uppercase",
-                      letterSpacing: ".04em",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 5
-                    }}>
-                      <Sliders size={12} color="#A5B4FC" /> Video Controls &amp; Quick Actions
-                    </span>
-                  </div>
-                  <button
-                    className="tai-video-control-pill"
-                    style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700, gap: 4 }}
-                    onClick={() => setShowControlSuite(false)}
-                    title="Hide Video Controls"
-                  >
-                    <EyeOff size={11} /> Hide
-                  </button>
-                </div>
-
-                {/* Main Controls Rows */}
-                <div className="tai-col tai-gap8">
-                  
-                  {/* Row 1: Playback Speed Controls */}
-                  <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Speed:</span>
-                    {[0.75, 1.0, 1.25, 1.5, 2.0].map((spd) => (
-                      <button
-                        key={spd}
-                        className={`tai-video-control-pill ${playbackSpeed === spd ? "active" : ""}`}
-                        style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
-                        onClick={() => {
-                          setPlaybackSpeed(spd);
-                          videoPlayerRef.current?.setSpeed(spd);
-                          showToast?.(`Playback speed set to ${spd}x`, "info");
-                        }}
-                      >
-                        {spd === 1.0 ? "1.0x" : `${spd}x`}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Row 2: Resolution / Quality Controls */}
-                  <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Quality:</span>
-                    {["Auto", "1080p HD", "720p", "480p"].map((qual) => {
-                      const isQualActive = qual === "Auto" ? videoQuality.includes("Auto") : videoQuality.includes(qual);
-                      return (
-                        <button
-                          key={qual}
-                          className={`tai-video-control-pill ${isQualActive ? "active" : ""}`}
-                          style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
-                          onClick={() => {
-                            const newQual = qual === "Auto" ? "Auto (1080p)" : qual;
-                            setVideoQuality(newQual);
-                            videoPlayerRef.current?.setQuality(newQual);
-                            showToast?.(`Resolution set to ${qual}`, "info");
-                          }}
-                        >
-                          {qual}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Row 3: Options (Captions CC, Cinema View, Restart) */}
-                  <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Options:</span>
-                    <button
-                      className={`tai-video-control-pill ${captionsEnabled ? "active" : ""}`}
-                      style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
-                      onClick={() => {
-                        setCaptionsEnabled(v => !v);
-                        showToast?.(!captionsEnabled ? "Subtitles CC enabled" : "Subtitles disabled", "info");
-                      }}
-                    >
-                      <Subtitles size={12} /> {captionsEnabled ? "CC (On)" : "CC (Off)"}
-                    </button>
-                    
-                    <button
-                      className={`tai-video-control-pill ${isTheatreMode ? "active" : ""}`}
-                      style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
-                      onClick={() => setIsTheatreMode(v => !v)}
-                      title="Toggle Cinema Theatre mode"
-                    >
-                      <Tv size={12} /> {isTheatreMode ? "Standard View" : "Cinema View"}
-                    </button>
-
-                    <button
-                      className="tai-video-control-pill"
-                      style={{ padding: "3px 8px", fontSize: 11, fontWeight: 700 }}
-                      onClick={() => {
-                        videoPlayerRef.current?.seekTo(0);
-                        showToast?.("Restarted video from 00:00", "info");
-                      }}
-                      title="Restart video from 00:00"
-                    >
-                      <RotateCcw size={11} /> Restart (0:00)
-                    </button>
-                  </div>
-
-                  {/* Row 4: Key Moments & Chapters */}
-                  <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Moments:</span>
-                    <div className="tai-scrollx tai-gap6" style={{ flex: 1, alignItems: "center", paddingBottom: 2, scrollbarWidth: "none" }}>
-                      {DEFAULT_CHAPTERS.slice(0, 4).map((ch, idx) => (
-                        <button
-                          key={idx}
-                          className="tai-video-control-pill"
-                          style={{ padding: "3px 8px", fontSize: 11, fontWeight: 600, flexShrink: 0 }}
-                          onClick={() => {
-                            videoPlayerRef.current?.seekTo(ch.seconds);
-                            showToast?.(`Jumped to ${ch.time} • ${ch.title}`, "info");
-                          }}
-                          title={`Jump to ${ch.title}`}
-                        >
-                          <span style={{ color: "#A5B4FC", fontWeight: 800, marginRight: 3 }}>{ch.time}</span> {ch.title.split(" ")[0]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
+                <div style={{
+                  width: `${totalDurationSec > 0 ? Math.min(100, (currentTimeSec / totalDurationSec) * 100) : 0}%`,
+                  height: "100%",
+                  background: "var(--primary-gradient, linear-gradient(90deg, #4F46E5, #818CF8))",
+                  borderRadius: 99,
+                  position: "relative"
+                }}>
+                  <div style={{
+                    position: "absolute", right: -4, top: -3.5,
+                    width: 12, height: 12, borderRadius: "50%",
+                    background: "#FFFFFF", boxShadow: "0 0 8px rgba(79, 70, 229, 0.8)"
+                  }} />
                 </div>
               </div>
-            )}
+
+              {/* Bottom Cinema Controls */}
+              <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                  <button
+                    className="tai-iconbtn"
+                    style={{ background: "var(--primary)", color: "#fff", border: "none", width: 34, height: 34, borderRadius: "50%" }}
+                    onClick={() => setIsPlaying(v => !v)}
+                    aria-label={isPlaying ? "Pause" : "Play"}
+                  >
+                    {isPlaying ? <Pause size={16} /> : <Play size={16} fill="#fff" style={{ marginLeft: 2 }} />}
+                  </button>
+
+                  <button
+                    className="tai-iconbtn"
+                    style={{ color: "rgba(255,255,255,0.8)", width: 30, height: 30, borderRadius: 8 }}
+                    onClick={() => setCurrentTimeSec(Math.max(0, currentTimeSec - 10))}
+                    title="Rewind 10s"
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+
+                  <button
+                    className="tai-iconbtn"
+                    style={{ color: "rgba(255,255,255,0.8)", width: 30, height: 30, borderRadius: 8 }}
+                    onClick={() => setCurrentTimeSec(Math.min(totalDurationSec, currentTimeSec + 10))}
+                    title="Forward 10s"
+                  >
+                    <RotateCw size={14} />
+                  </button>
+
+                  <button
+                    className="tai-iconbtn"
+                    style={{ color: "rgba(255,255,255,0.8)", width: 30, height: 30, borderRadius: 8 }}
+                    onClick={() => setIsMuted(v => !v)}
+                    title={isMuted ? "Unmute" : "Mute"}
+                  >
+                    {isMuted ? <VolumeX size={15} color="#EF4444" /> : <Volume2 size={15} />}
+                  </button>
+
+                  {/* Runtime only shown when the lesson row actually records
+                      a duration. */}
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: "#FFFFFF", fontVariantNumeric: "tabular-nums", marginLeft: 2 }}>
+                    {formatTime(currentTimeSec)}
+                    {totalDurationSec > 0 && <span style={{ color: "rgba(255,255,255,0.5)" }}> / {formatTime(totalDurationSec)}</span>}
+                  </span>
+                </div>
+
+                {/* Right Video Controls */}
+                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                  {/* Speed Selector */}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      className="tai-btn tai-btn-sm"
+                      style={{
+                        background: "rgba(255,255,255,0.08)", color: "#FFFFFF",
+                        border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "3px 8px", fontSize: 11.5, fontWeight: 700
+                      }}
+                      onClick={() => setShowSpeedMenu(v => !v)}
+                    >
+                      {playbackSpeed}x
+                    </button>
+                    {showSpeedMenu && (
+                      <div className="tai-card anim-slide-down" style={{
+                        position: "absolute", bottom: 32, right: 0, width: 80, padding: 4, zIndex: 100,
+                        background: "#1E293B", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10
+                      }}>
+                        {[0.75, 1.0, 1.25, 1.5, 1.75, 2.0].map((spd) => (
+                          <div
+                            key={spd}
+                            style={{
+                              padding: "5px 6px", borderRadius: 6, fontSize: 11.5, color: playbackSpeed === spd ? "#818CF8" : "#FFFFFF",
+                              fontWeight: playbackSpeed === spd ? 800 : 500, cursor: "pointer", textAlign: "center"
+                            }}
+                            onClick={() => { setPlaybackSpeed(spd); setShowSpeedMenu(false); }}
+                          >
+                            {spd}x
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quality Selector */}
+                  <button
+                    className="tai-btn tai-btn-sm"
+                    style={{
+                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF",
+                      border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "3px 8px", fontSize: 11.5, fontWeight: 700
+                    }}
+                    onClick={() => setVideoQuality(v => v === "1080p HD" ? "720p" : "1080p HD")}
+                  >
+                    {videoQuality === "1080p HD" ? "1080p" : videoQuality}
+                  </button>
+
+                  {/* Theatre Mode Toggle */}
+                  <button
+                    className="tai-iconbtn"
+                    style={{ color: "rgba(255,255,255,0.8)", width: 30, height: 30, borderRadius: 8 }}
+                    onClick={() => setIsTheatreMode(v => !v)}
+                    title={isTheatreMode ? "Exit Theatre Mode" : "Theatre Mode"}
+                  >
+                    <Maximize2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Quick Action Lesson Controls Bar (Prev Lesson • Mark Complete • Next Lesson) */}
@@ -509,7 +672,7 @@ export function LessonScreen({
             <button
               className={`tai-btn ${isCompleted ? "tai-btn-outline" : "tai-btn-primary"} tai-lesson-nav-complete`}
               style={{
-                padding: "11px 18px", borderRadius: 8, fontSize: 13.5, fontWeight: 800,
+                padding: "11px 18px", borderRadius: 14, fontSize: 13.5, fontWeight: 800,
                 boxShadow: isCompleted ? "none" : "0 4px 16px rgba(79, 70, 229, 0.3)"
               }}
               onClick={handleMarkDone}
@@ -523,7 +686,7 @@ export function LessonScreen({
                 className="tai-btn tai-btn-outline"
                 disabled={!prevLesson}
                 onClick={() => prevLesson && push("lesson", { id: course?.id, lessonId: prevLesson.id })}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 8, opacity: prevLesson ? 1 : 0.4, fontSize: 12.5 }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 12, opacity: prevLesson ? 1 : 0.4, fontSize: 12.5 }}
               >
                 <ChevronLeft size={15} /> Prev Lesson
               </button>
@@ -532,7 +695,7 @@ export function LessonScreen({
                 className="tai-btn tai-btn-outline"
                 disabled={!nextLesson}
                 onClick={() => nextLesson && push("lesson", { id: course?.id, lessonId: nextLesson.id })}
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 8, opacity: nextLesson ? 1 : 0.4, fontSize: 12.5 }}
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 12, opacity: nextLesson ? 1 : 0.4, fontSize: 12.5 }}
               >
                 Next Lesson <ChevronRight size={15} />
               </button>
@@ -554,9 +717,12 @@ export function LessonScreen({
               { id: "overview", label: "Overview", icon: BookOpen },
               { id: "ai-tutor", label: "AI Tutor", icon: Bot, badge: "AI" },
               { id: "notes", label: `Notes (${lessonNotesQuery?.data?.length || 0})`, icon: FileText },
-              { id: "qa", label: `Q&A (${qaThreads.length})`, icon: MessageSquare },
-              { id: "transcript", label: "Transcript", icon: Terminal },
-              { id: "resources", label: `Resources (${LESSON_RESOURCES.length})`, icon: Paperclip },
+              // Both counts are real row counts now (course_discussions and
+              // course_materials) rather than the length of a seed array.
+              { id: "qa", label: `Q&A (${displayedQaThreads.length})`, icon: MessageSquare },
+              // The transcript tab itself is demo-only - see DEFAULT_TRANSCRIPT.
+              ...(DEMO_MODE ? [{ id: "transcript", label: "Transcript", icon: Terminal }] : []),
+              { id: "resources", label: `Resources (${lessonResources.length})`, icon: Paperclip },
               { id: "reviews", label: "Feedback", icon: Star }
             ].map(tabItem => {
               const Icon = tabItem.icon;
@@ -610,23 +776,35 @@ export function LessonScreen({
                 <h2 style={{ fontSize: "clamp(16px, 2.5vw, 19px)", fontWeight: 900, color: "var(--text)", margin: "0 0 8px" }}>
                   {lesson?.title}
                 </h2>
-                <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, margin: 0 }}>
-                  In this comprehensive masterclass module, you will learn the foundational architecture for building resilient multi-agent AI systems, configuring design tokens with vector variables, and optimizing sub-second query performance in production environments.
-                </p>
+                {/* Real lessons.description for THIS lesson. */}
+                {lessonRowsQuery.loading && !DEMO_MODE ? (
+                  <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.55, margin: 0 }}>
+                    Loading this lesson's overview…
+                  </p>
+                ) : (lessonDescription || DEMO_MODE) && (
+                  <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, margin: 0 }}>
+                    {lessonDescription || "In this comprehensive masterclass module, you will learn the foundational architecture for building resilient multi-agent AI systems, configuring design tokens with vector variables, and optimizing sub-second query performance in production environments."}
+                  </p>
+                )}
               </div>
 
-              {/* Learning Objectives Checklist */}
-              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8 }}>
+              {/* Learning Objectives Checklist - the real lessons.content
+                  column, one objective per line. Hidden entirely when the
+                  lesson has no content rather than showing sample bullets. */}
+              {(lessonObjectives.length > 0 || DEMO_MODE) && (
+              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 14 }}>
                 <div style={{ fontSize: 11.5, fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
                   What You'll Master in this Lesson
                 </div>
                 <div className="tai-col tai-gap8">
-                  {[
-                    "Architecting asynchronous function calling with schema validation.",
-                    "Configuring Figma variables & vector tokens for design system automation.",
-                    "Setting up Supabase pgvector with HNSW similarity index scoring.",
-                    "Implementing exponential backoff and jittered retry hooks for multi-agent reliability."
-                  ].map((obj, idx) => (
+                  {/* lessonObjectives comes from the real lessons.content column.
+                      This used to fall through to four invented objectives (about
+                      pgvector and retry hooks) for ANY lesson whose content was
+                      empty, so a real lesson could present someone else's
+                      curriculum as its own. The sample set is now demo-only, and
+                      the whole card is hidden when there is nothing real to show
+                      (see the guard on this block). */}
+                  {(lessonObjectives.length > 0 ? lessonObjectives : DEMO_LESSON_OBJECTIVES).map((obj, idx) => (
                     <div key={idx} className="tai-row tai-gap8" style={{ alignItems: "flex-start", fontSize: 12.5, color: "var(--text)", fontWeight: 600 }}>
                       <CheckCircle2 size={15} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
                       <span>{obj}</span>
@@ -634,18 +812,26 @@ export function LessonScreen({
                   ))}
                 </div>
               </div>
+              )}
 
-              {/* Instructor Bio Card */}
-              <div className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, flexWrap: "wrap", gap: 12 }}>
+              {/* Instructor Bio Card - the course's real instructor. The
+                  job-title second line has no column behind it (user_profiles
+                  stores no headline), so it is demo-only, and the whole card
+                  is skipped when the instructor can't be resolved. */}
+              {(instructor || DEMO_MODE) && (
+              <div className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 14, flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: "1 1 200px" }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                    alt="Instructor"
-                    style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                  <Avatar
+                    src={instructor?.avatarUrl || null}
+                    initials={initialsOf(instructor?.name || "Astrid Larsson")}
+                    size={40}
+                    style={{ borderRadius: "50%", flexShrink: 0 }}
                   />
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Astrid Larsson</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Lead AI Systems Architect • Former Staff Designer</div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{instructor?.name || "Astrid Larsson"}</div>
+                    {DEMO_MODE && (
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Lead AI Systems Architect • Former Staff Designer</div>
+                    )}
                   </div>
                 </div>
 
@@ -654,9 +840,10 @@ export function LessonScreen({
                   onClick={() => { setActiveTab("qa"); setShowQuestionComposer(true); }}
                   style={{ borderRadius: 10, padding: "7px 12px", fontSize: 12 }}
                 >
-                  <MessageSquare size={14} /> Ask Astrid a Question
+                  <MessageSquare size={14} /> Ask {(instructor?.name || "Astrid Larsson").split(" ")[0]} a Question
                 </button>
               </div>
+              )}
             </div>
           )}
 
@@ -713,7 +900,7 @@ export function LessonScreen({
                     <div style={{
                       maxWidth: "88%",
                       padding: "10px 14px",
-                      borderRadius: 8,
+                      borderRadius: 14,
                       background: msg.sender === "user" ? "var(--primary)" : "var(--surface-3)",
                       color: msg.sender === "user" ? "#FFFFFF" : "var(--text)",
                       fontSize: 12.5,
@@ -731,11 +918,27 @@ export function LessonScreen({
                 )}
               </div>
 
+              {/* An org can switch the AI assistant off, or put it in manual
+                  mode where an instructor answers instead. Both are real
+                  settings (fetchOrgAISettings), so the tab says so rather than
+                  offering an input that cannot produce an answer. */}
+              {orgAISettings && !orgAISettings.enabled && (
+                <div style={{ fontSize: 12, color: "var(--text-3)", padding: "10px 12px", background: "var(--surface-3)", borderRadius: 10, marginBottom: 8 }}>
+                  Your organization has turned the AI assistant off.
+                </div>
+              )}
+              {orgAISettings?.enabled && orgAISettings?.manual_mode && (
+                <div style={{ fontSize: 12, color: "var(--text-2)", padding: "10px 12px", background: "var(--surface-3)", borderRadius: 10, marginBottom: 8 }}>
+                  {orgAISettings.manual_message || "An instructor reviews these questions and will reply."}
+                </div>
+              )}
+
               {/* AI Chat Input Form */}
               <div className="tai-row tai-gap8">
                 <input
                   className="tai-input"
-                  placeholder="Ask a question about this timestamp..."
+                  disabled={orgAISettings ? !orgAISettings.enabled : false}
+                  placeholder={orgAISettings && !orgAISettings.enabled ? "AI assistant is off" : "Ask a question about this lesson..."}
                   value={aiInput}
                   onChange={(e) => setAiInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") handleSendAiMessage(); }}
@@ -743,7 +946,7 @@ export function LessonScreen({
                 />
                 <button
                   className="tai-btn tai-btn-primary"
-                  disabled={!aiInput.trim() || aiThinking}
+                  disabled={!aiInput.trim() || aiThinking || (orgAISettings ? !orgAISettings.enabled : false)}
                   onClick={() => handleSendAiMessage()}
                   style={{ padding: "9px 14px", fontSize: 12.5 }}
                 >
@@ -809,13 +1012,10 @@ export function LessonScreen({
               )}
 
               {(lessonNotesQuery?.data || []).map(n => (
-                <div key={n.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
+                <div key={n.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-3)", padding: 12, borderRadius: 12 }}>
                   <div className="tai-row tai-between" style={{ marginBottom: 4 }}>
                     <span
-                      onClick={() => {
-                        setCurrentTimeSec(n.timestamp_seconds);
-                        videoPlayerRef.current?.seekTo(n.timestamp_seconds);
-                      }}
+                      onClick={() => setCurrentTimeSec(n.timestamp_seconds)}
                       style={{ fontSize: 11.5, fontWeight: 800, color: "var(--primary)", cursor: "pointer", background: "var(--primary-tint)", padding: "2px 6px", borderRadius: 6 }}
                       title="Jump video to this timestamp"
                     >
@@ -837,7 +1037,11 @@ export function LessonScreen({
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Lesson Q&A Discussion</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>Ask questions and learn from instructors and peers</div>
+                  {/* course_discussions is course-scoped, so say so rather
+                      than implying a per-lesson thread. */}
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>
+                    {DEMO_MODE ? "Ask questions and learn from instructors and peers" : "Course discussion - questions here are visible to everyone on this course"}
+                  </div>
                 </div>
 
                 <button
@@ -851,8 +1055,12 @@ export function LessonScreen({
 
               {/* Question Composer */}
               {showQuestionComposer && (
-                <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8 }}>
-                  <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 8 }}>Ask a Question linked to {formatTime(currentTimeSec)}</div>
+                <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 14 }}>
+                  {/* course_discussions has no timestamp column, so a real
+                      question is not anchored to the video position. */}
+                  <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 8 }}>
+                    {DEMO_MODE ? `Ask a Question linked to ${formatTime(currentTimeSec)}` : "Ask a Question"}
+                  </div>
                   <input
                     className="tai-input"
                     placeholder="Question title (e.g. How does vector similarity work?)"
@@ -870,35 +1078,61 @@ export function LessonScreen({
                   />
                   <div className="tai-row tai-gap8" style={{ justifyContent: "flex-end" }}>
                     <button className="tai-btn tai-btn-outline tai-btn-sm" onClick={() => setShowQuestionComposer(false)}>Cancel</button>
-                    <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={!newQuestionTitle.trim()} onClick={handlePostQuestion}>Post Question</button>
+                    <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={!newQuestionTitle.trim() || postingQuestion} onClick={handlePostQuestion}>{postingQuestion ? "Posting…" : "Post Question"}</button>
                   </div>
                 </div>
               )}
 
               {/* Q&A List */}
               <div className="tai-col tai-gap10">
-                {qaThreads.map((thread) => (
-                  <div key={thread.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
+                {discussionQuery.loading && displayedQaThreads.length === 0 && (
+                  <div className="tai-empty" style={{ padding: "20px 0" }}>Loading the discussion…</div>
+                )}
+                {!discussionQuery.loading && displayedQaThreads.length === 0 && (
+                  <div className="tai-card" style={{ background: "var(--surface-2)", padding: "24px 16px", textAlign: "center" }}>
+                    <MessageSquare size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
+                    <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>No questions on this course yet</div>
+                    <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Be the first to ask one.</div>
+                  </div>
+                )}
+                {displayedQaThreads.map((thread) => (
+                  <div key={thread.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 14 }}>
                     <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
                       <div className="tai-row tai-gap8" style={{ minWidth: 0, flex: 1 }}>
-                        <img src={thread.avatar} alt="" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                        {/* Real avatar_url when the poster has one, their
+                            initials otherwise. */}
+                        <Avatar
+                          src={thread.avatarUrl || thread.avatar || null}
+                          initials={initialsOf(thread.author)}
+                          size={30}
+                          style={{ borderRadius: "50%", flexShrink: 0 }}
+                        />
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", wordBreak: "break-word" }}>{thread.title}</div>
-                          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>{thread.author} • {thread.time} • at {thread.timestamp}</div>
+                          {thread.title && (
+                            <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", wordBreak: "break-word" }}>{thread.title}</div>
+                          )}
+                          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>
+                            {[thread.author, thread.time, thread.timestamp ? `at ${thread.timestamp}` : null].filter(Boolean).join(" • ")}
+                          </div>
                         </div>
                       </div>
 
-                      <button
-                        className="tai-btn tai-btn-sm"
-                        style={{
-                          background: thread.upvoted ? "var(--primary)" : "var(--surface)",
-                          color: thread.upvoted ? "#FFFFFF" : "var(--text)",
-                          border: "1px solid var(--border)", borderRadius: 8, padding: "3px 8px", flexShrink: 0, fontSize: 11.5
-                        }}
-                        onClick={() => handleToggleUpvote(thread.id)}
-                      >
-                        <ThumbsUp size={12} /> {thread.upvotes}
-                      </button>
+                      {/* No vote column on course_discussions - the upvote
+                          control is demo-only rather than a counter that
+                          resets on every reload. */}
+                      {thread.upvotes != null && (
+                        <button
+                          className="tai-btn tai-btn-sm"
+                          style={{
+                            background: thread.upvoted ? "var(--primary)" : "var(--surface)",
+                            color: thread.upvoted ? "#FFFFFF" : "var(--text)",
+                            border: "1px solid var(--border)", borderRadius: 8, padding: "3px 8px", flexShrink: 0, fontSize: 11.5
+                          }}
+                          onClick={() => handleToggleUpvote(thread.id)}
+                        >
+                          <ThumbsUp size={12} /> {thread.upvotes}
+                        </button>
+                      )}
                     </div>
 
                     <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.45, margin: "0 0 8px" }}>
@@ -925,8 +1159,11 @@ export function LessonScreen({
             </div>
           )}
 
-          {/* TAB 5: SYNCHRONIZED TRANSCRIPT */}
-          {activeTab === "transcript" && (
+          {/* TAB 5: SYNCHRONIZED TRANSCRIPT - Case C, demo-only. Nothing in
+              the schema stores lesson transcripts, so with a database
+              connected both this panel and its tab are gone rather than
+              presenting one invented transcript for every lesson. */}
+          {DEMO_MODE && activeTab === "transcript" && (
             <div className="tai-card anim-slide-down" style={{ padding: "18px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 8 }}>
                 <div>
@@ -954,10 +1191,7 @@ export function LessonScreen({
                     return (
                       <div
                         key={line.time}
-                        onClick={() => {
-                          setCurrentTimeSec(line.seconds);
-                          videoPlayerRef.current?.seekTo(line.seconds);
-                        }}
+                        onClick={() => setCurrentTimeSec(line.seconds)}
                         style={{
                           padding: "8px 12px",
                           borderRadius: 8,
@@ -991,11 +1225,23 @@ export function LessonScreen({
                 <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>Download files, template repos, and cheatsheets</div>
               </div>
 
+              {/* Real course_materials rows for this course. */}
+              {materialsQuery.loading && lessonResources.length === 0 && (
+                <div className="tai-empty" style={{ padding: "20px 0" }}>Loading course resources…</div>
+              )}
+              {!materialsQuery.loading && lessonResources.length === 0 && (
+                <div className="tai-card" style={{ background: "var(--surface-2)", padding: "24px 16px", textAlign: "center" }}>
+                  <Paperclip size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
+                  <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>No resources attached to this course yet</div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Materials your instructor uploads will appear here.</div>
+                </div>
+              )}
+
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-                {LESSON_RESOURCES.map((res) => {
+                {lessonResources.map((res) => {
                   const Icon = res.icon;
                   return (
-                    <div key={res.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                    <div key={res.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 12, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                       <div>
                         <div className="tai-row tai-gap8" style={{ marginBottom: 6 }}>
                           <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1003,7 +1249,9 @@ export function LessonScreen({
                           </div>
                           <div>
                             <span style={{ fontSize: 9.5, fontWeight: 800, color: "var(--primary)", textTransform: "uppercase" }}>{res.type}</span>
-                            <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{res.size}</div>
+                            {/* course_materials stores no file size, so this
+                                line is demo-only rather than an estimate. */}
+                            {res.size && <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{res.size}</div>}
                           </div>
                         </div>
                         <div style={{ fontWeight: 700, fontSize: 12.5, color: "var(--text)", lineHeight: 1.35 }}>
@@ -1011,12 +1259,18 @@ export function LessonScreen({
                         </div>
                       </div>
 
+                      {/* Opens the material's real file_url/external_url
+                          instead of firing a fake "Downloading…" toast. */}
                       <button
                         className="tai-btn tai-btn-outline tai-btn-sm"
                         style={{ marginTop: 10, width: "100%", borderRadius: 8, padding: "6px 10px", fontSize: 11.5 }}
-                        onClick={() => showToast?.(`Downloading ${res.title}...`)}
+                        disabled={!res.url}
+                        onClick={() => {
+                          if (res.url) window.open(res.url, "_blank", "noopener");
+                          else showToast?.("This material has no file or link attached.");
+                        }}
                       >
-                        <Download size={13} /> Download Asset
+                        <Download size={13} /> {res.url ? "Open Asset" : "No file attached"}
                       </button>
                     </div>
                   );
@@ -1033,7 +1287,7 @@ export function LessonScreen({
                 <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>Help instructors improve learning outcomes and clarity</div>
               </div>
 
-              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 16, borderRadius: 8 }}>
+              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 16, borderRadius: 14 }}>
                 <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginBottom: 6 }}>Rate this lesson</div>
                 <div className="tai-row tai-gap6" style={{ marginBottom: 12 }}>
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -1091,7 +1345,7 @@ export function LessonScreen({
         {sidebarOpen && (
           <div className="tai-card anim-slide-down" style={{
             padding: "16px 14px",
-            borderRadius: 10,
+            borderRadius: 18,
             background: "var(--surface)",
             border: "1px solid var(--border)",
             display: "flex",
@@ -1139,15 +1393,22 @@ export function LessonScreen({
 
             {/* Modules and Lesson Items */}
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {rawLessons.length === 0 && (
+                <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+                  This course has no published lessons yet.
+                </div>
+              )}
               {Object.entries(groupedModules).map(([moduleName, moduleLessons], modIdx) => (
                 <div key={moduleName} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {/* Module Section Header */}
-                  <div style={{
-                    fontSize: 11.5, fontWeight: 800, color: "var(--primary)",
-                    textTransform: "uppercase", letterSpacing: ".04em", padding: "4px 2px"
-                  }}>
-                    {moduleName}
-                  </div>
+                  {moduleName && (
+                    <div style={{
+                      fontSize: 11.5, fontWeight: 800, color: "var(--primary)",
+                      textTransform: "uppercase", letterSpacing: ".04em", padding: "4px 2px"
+                    }}>
+                      {moduleName}
+                    </div>
+                  )}
 
                   {/* Lessons List in Module */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -1162,7 +1423,7 @@ export function LessonScreen({
                             onClick={() => push("lesson", { id: course?.id, lessonId: les.id })}
                             style={{
                               padding: "10px 12px",
-                              borderRadius: 8,
+                              borderRadius: 12,
                               background: isCurrent ? "var(--primary-tint)" : "var(--surface-2)",
                               border: `1.5px solid ${isCurrent ? "var(--primary-light, #818CF8)" : "transparent"}`,
                               cursor: "pointer",
@@ -1195,11 +1456,14 @@ export function LessonScreen({
                               }}>
                                 {les.title}
                               </div>
-                              <div className="tai-row tai-gap8" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>
-                                <span className="tai-row tai-gap4"><Clock size={11} /> {les.duration || 20}m</span>
-                                <span>•</span>
-                                <span>Video &amp; Code</span>
-                              </div>
+                              {/* Real duration_minutes only - "20m" was a
+                                  default standing in for lessons that record
+                                  no duration. */}
+                              {les.duration ? (
+                                <div className="tai-row tai-gap8" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>
+                                  <span className="tai-row tai-gap4"><Clock size={11} /> {les.duration}m</span>
+                                </div>
+                              ) : null}
                             </div>
 
                             {isCurrent && (
@@ -1215,11 +1479,11 @@ export function LessonScreen({
 
             {/* Quick Capstone Project Certificate Unlock Card */}
             <div className="tai-card" style={{
-              background: "rgba(79, 70, 229, 0.05)",
-              border: "1px solid rgba(79, 70, 229, 0.2)", padding: 12, borderRadius: 8
+              background: "linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%)",
+              border: "1px solid rgba(99, 102, 241, 0.3)", padding: 14, borderRadius: 14
             }}>
               <div className="tai-row tai-gap8" style={{ marginBottom: 4 }}>
-                <Award size={15} color="var(--primary)" />
+                <Award size={16} color="var(--primary)" />
                 <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>Official Credential</span>
               </div>
               <div style={{ fontSize: 11.5, color: "var(--text-2)", lineHeight: 1.4 }}>

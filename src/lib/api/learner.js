@@ -542,7 +542,13 @@ export async function fetchPublishedLearningPaths(organizationId) {
     .from("learning_paths")
     .select("*, learning_path_courses(*, courses(id, title, description, level, category, duration_hours, cover_image_url))")
     .eq("is_published", true)
-    .order("created_at", { ascending: false });
+    // learning_paths has no created_at column in this schema (id, title,
+    // description, level_label, category, organization_id, created_by,
+    // is_published). Ordering on it made PostgREST reject the entire query,
+    // so every learning-path list came back empty - which is exactly why the
+    // admin Learning Paths screen showed nothing at all. Ordered by title
+    // instead, which is a real column and gives a stable, readable order.
+    .order("title", { ascending: true });
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) { console.warn("Learning paths fetch warning:", error); return []; }
