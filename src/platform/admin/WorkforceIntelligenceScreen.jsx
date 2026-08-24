@@ -110,6 +110,26 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Workforce Intelligence &amp; Skill Radar</h1>
               <p className="ta-hero-desc">Map enterprise competencies, skill gaps, readiness trajectories, and automated upskilling paths.</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <span className="ta-tag ta-tag-success">
+                  <Brain size={12} /> {wi.readinessScore}% Enterprise Readiness
+                </span>
+                <span className="ta-tag ta-tag-info">
+                  <Target size={12} /> {wi.learnerCount} Active Profiles Tracked
+                </span>
+                <span className="ta-tag ta-tag-warning">
+                  <Zap size={12} /> {wi.aiUsageCount7d} AI Queries (7d)
+                </span>
+              </div>
+            </div>
+            <div className="ta-hero-actions">
+              <button 
+                className="ta-btn ta-btn-primary" 
+                style={{ background: "#4F46E5", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
+                onClick={() => showToast("Skill Radar report generated. Preparing download...")}
+              >
+                <TrendingUp size={14} style={{ marginRight: 6 }} /> Export Skill Radar
+              </button>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
-import React from "react";
-import { TopBar, Tag } from "../components/PlatformUI.jsx";
+import React, { useContext } from "react";
+import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { Users, BookOpen } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllStudyGroupsForOrg } from "../../lib/api/schemaHelper.js";
@@ -11,6 +11,7 @@ import { fetchAllStudyGroupsForOrg } from "../../lib/api/schemaHelper.js";
 // RLS was found and fixed while building this - see
 // 0127_suspend_instructor_payouts.sql).
 export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
+  const showToast = useContext(ToastContext);
   const groupsQuery = useSupabaseQuery(async () => (orgId ? fetchAllStudyGroupsForOrg(orgId) : []), [orgId]);
   const groups = groupsQuery.data || [];
 
@@ -27,6 +28,23 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Peer Circles &amp; Study Groups</h1>
               <p className="ta-hero-desc">Oversee student study circles, mentor pairings, and collaborative rooms.</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <span className="ta-tag ta-tag-info">
+                  <Users size={13} /> {groups.length} Active Pods
+                </span>
+                <span className="ta-tag ta-tag-success">
+                  <BookOpen size={13} /> Syllabi Linked
+                </span>
+              </div>
+            </div>
+            <div className="ta-hero-actions">
+              <button 
+                className="ta-btn ta-btn-primary" 
+                style={{ background: "#6366F1", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
+                onClick={() => showToast("Study group creation is managed from course curricula & learner circles.")}
+              >
+                + Auto-Pair Pods
+              </button>
             </div>
           </div>
         </div>

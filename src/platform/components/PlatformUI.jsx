@@ -299,6 +299,31 @@ export const TOKENS = `
     flex-shrink: 0;
     align-items: center;
   }
+  .ta-hero-banner .ta-tag {
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+  }
+  .ta-tag-success {
+    background: rgba(16, 185, 129, 0.25) !important;
+    color: #34D399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.5) !important;
+  }
+  .ta-tag-info {
+    background: rgba(99, 102, 241, 0.25) !important;
+    color: #A5B4FC !important;
+    border: 1px solid rgba(99, 102, 241, 0.5) !important;
+  }
+  .ta-tag-warning {
+    background: rgba(245, 158, 11, 0.25) !important;
+    color: #FBBF24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.5) !important;
+  }
 
   @media (max-width: 899px) {
     .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }

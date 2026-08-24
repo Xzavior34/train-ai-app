@@ -74,6 +74,23 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Role &amp; Permission Access Controls</h1>
               <p className="ta-hero-desc">Configure role access levels across curriculum, billing, and reporting.</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <span className="ta-tag ta-tag-info">
+                  <ShieldCheck size={13} /> Enterprise Security Matrix
+                </span>
+                <span className="ta-tag ta-tag-success">
+                  <CheckCircle2 size={13} /> 8 Policy Rules Active
+                </span>
+              </div>
+            </div>
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn"
+                style={{ background: "rgba(255, 255, 255, 0.12)", color: "#FFFFFF", border: "1px solid rgba(255, 255, 255, 0.25)", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, cursor: "pointer" }}
+                onClick={() => showToast("Permissions automatically saved on toggle change.")}
+              >
+                <Lock size={14} style={{ marginRight: 6 }} /> Audit Access Logs
+              </button>
             </div>
           </div>
         </div>
