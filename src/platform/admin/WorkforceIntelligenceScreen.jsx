@@ -34,10 +34,10 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
     ]
   };
 
-  const wiQuery = useSupabaseQuery(async () => (orgId ? fetchWorkforceIntelligence(orgId) : null), [orgId]);
-  const wi = wiQuery.data && wiQuery.data.learnerCount > 0 ? wiQuery.data : DEMO_WI;
+  const wiQuery = useSupabaseQuery(async () => fetchWorkforceIntelligence(orgId), [orgId]);
+  const wi = wiQuery.data || DEMO_WI;
 
-  const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
+  const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId), [orgId]);
   const realLearners = (membersQuery.data || [])
     .filter(m => m.role === "learner" || m.role === "student" || !m.role)
     .map(m => ({

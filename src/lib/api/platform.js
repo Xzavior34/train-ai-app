@@ -120,7 +120,7 @@ export async function fetchOrgMembers(organizationId) {
   // RLS grants unconditional read access to every org's user_profiles.
   // Without this, switching tenants in the super-admin Tenant selector
   // silently kept showing every organization's members mixed together.
-  if (organizationId) query = query.eq("organization_id", organizationId);
+  if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
   const profiles = data || [];
@@ -633,53 +633,76 @@ export async function fetchOrgDashboardStats(organizationId) {
     completionRate: 84,
     avgCompletedCourses: 2.8,
   };
-  if (!supabase || !organizationId || organizationId === "demo-org-id") return DEMO_STATS;
+  if (!supabase) return DEMO_STATS;
   try {
-    const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
-    const orgUserIds = (orgUserRows || []).map((r) => r.id);
-    const [{ count: activeStudents }, { count: cohortCount }, { count: courseCount }, { count: mentorCount }, { count: otherUserCount }, enrollments] = await Promise.all([
-      supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("role", "learner"),
-      supabase.from("cohorts").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
-      supabase.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true),
-      supabase.from("mentors").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("is_active", true),
-      supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).not("role", "in", "(learner,mentor)"),
-      safeInQuery("course_enrollments", "progress_percentage, completed_at", "user_id", orgUserIds),
-    ]);
-    if (!activeStudents && !cohortCount && !courseCount) return DEMO_STATS;
-    const completedCount = enrollments.filter(e => e.completed_at || (e.progress_percentage || 0) >= 100).length;
-    const learnerCount = activeStudents || orgUserIds.length || 1;
-    const completionRate = enrollments.length
-      ? Math.round((completedCount / enrollments.length) * 100)
-      : 84;
-    const avgCompletedCourses = learnerCount > 0
-      ? (completedCount / learnerCount).toFixed(1)
-      : "2.8";
+    const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+
+    let userQuery = supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("role", "learner");
+    if (orgFilter) userQuery = userQuery.eq("organization_id", orgFilter);
+    const { count: activeStudents } = await userQuery;
+
+    let cohortQuery = supabase.from("cohorts").select("id", { count: "exact", head: true });
+    if (orgFilter) cohortQuery = cohortQuery.eq("organization_id", orgFilter);
+    const { count: cohortCount } = await cohortQuery;
+
+    let courseQuery = supabase.from("courses").select("id", { count: "exact", head: true }).eq("is_published", true);
+    const { count: courseCount } = await courseQuery;
+
+    let mentorQuery = supabase.from("mentors").select("id", { count: "exact", head: true }).eq("is_active", true);
+    if (orgFilter) mentorQuery = mentorQuery.eq("organization_id", orgFilter);
+    const { count: mentorCount } = await mentorQuery;
+
+    let otherQuery = supabase.from("user_profiles").select("id", { count: "exact", head: true }).not("role", "in", "(learner,mentor)");
+    if (orgFilter) otherQuery = otherQuery.eq("organization_id", orgFilter);
+    const { count: otherUserCount } = await otherQuery;
+
+    const { data: enrollments } = await supabase.from("course_enrollments").select("progress_percentage, completed_at");
+    
+    const enrollList = enrollments || [];
+    const completedCount = enrollList.filter(e => e.completed_at || (e.progress_percentage || 0) >= 100).length;
+    const completionRate = enrollList.length ? Math.round((completedCount / enrollList.length) * 100) : 0;
+    const totalLearners = activeStudents || 0;
+    const avgCompletedCourses = totalLearners > 0 ? (completedCount / totalLearners).toFixed(1) : "0.0";
+
     return {
-      activeStudents: activeStudents || 142,
-      cohorts: cohortCount || 6,
-      courses: courseCount || 18,
-      mentors: mentorCount || 12,
-      otherUsers: otherUserCount || 8,
+      activeStudents: activeStudents ?? 0,
+      cohorts: cohortCount ?? 0,
+      courses: courseCount ?? 0,
+      mentors: mentorCount ?? 0,
+      otherUsers: otherUserCount ?? 0,
       completionRate,
       avgCompletedCourses,
     };
-  } catch {
+  } catch (err) {
+    console.warn("fetchOrgDashboardStats query warning:", err);
     return DEMO_STATS;
   }
 }
 
 export async function fetchTodaysTasks(organizationId) {
   const DEMO_TASKS = { mentorApplications: 3, pendingInvitations: 5, moderationQueue: 2 };
-  if (!supabase || !organizationId || organizationId === "demo-org-id") return DEMO_TASKS;
+  if (!supabase) return DEMO_TASKS;
   try {
-    const [{ count: mentorApplications }, { count: pendingInvitations }, { count: moderationQueue }] = await Promise.all([
-      supabase.from("mentors").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("is_active", false),
-      supabase.from("user_invitations").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).eq("status", "pending"),
-      supabase.from("community_posts").select("id", { count: "exact", head: true }).in("moderation_status", ["pending", "rejected"]),
-    ]);
-    if (!mentorApplications && !pendingInvitations && !moderationQueue) return DEMO_TASKS;
-    return { mentorApplications: mentorApplications || 0, pendingInvitations: pendingInvitations || 0, moderationQueue: moderationQueue || 0 };
-  } catch {
+    const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+
+    let mentorAppQuery = supabase.from("mentors").select("id", { count: "exact", head: true }).eq("is_active", false);
+    if (orgFilter) mentorAppQuery = mentorAppQuery.eq("organization_id", orgFilter);
+    const { count: mentorApplications } = await mentorAppQuery;
+
+    let inviteQuery = supabase.from("user_invitations").select("id", { count: "exact", head: true }).eq("status", "pending");
+    if (orgFilter) inviteQuery = inviteQuery.eq("organization_id", orgFilter);
+    const { count: pendingInvitations } = await inviteQuery;
+
+    let modQuery = supabase.from("community_posts").select("id", { count: "exact", head: true }).in("moderation_status", ["pending", "rejected"]);
+    const { count: moderationQueue } = await modQuery;
+
+    return {
+      mentorApplications: mentorApplications ?? 0,
+      pendingInvitations: pendingInvitations ?? 0,
+      moderationQueue: moderationQueue ?? 0,
+    };
+  } catch (err) {
+    console.warn("fetchTodaysTasks warning:", err);
     return DEMO_TASKS;
   }
 }
@@ -690,11 +713,17 @@ export async function fetchCohortProgressSummary(organizationId) {
     { name: "UI/UX Design Systems Sprint 2", members: 95, progress: 68 },
     { name: "Full-Stack Cloud Architecture Cohort 8", members: 80, progress: 76 }
   ];
-  if (!supabase || !organizationId || organizationId === "demo-org-id") return DEMO_COHORTS;
+  if (!supabase) return DEMO_COHORTS;
   try {
-    const { data: cohorts, error } = await supabase.from("cohorts").select("id, name").eq("organization_id", organizationId);
-    if (error || !cohorts || cohorts.length === 0) return DEMO_COHORTS;
-    const rows = await Promise.all((cohorts || []).map(async (c) => {
+    const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+    let query = supabase.from("cohorts").select("id, name");
+    if (orgFilter) query = query.eq("organization_id", orgFilter);
+    const { data: cohorts, error } = await query;
+    
+    if (error) throw error;
+    if (!cohorts || cohorts.length === 0) return [];
+
+    const rows = await Promise.all(cohorts.map(async (c) => {
       const { count: members } = await supabase.from("cohort_members").select("id", { count: "exact", head: true }).eq("cohort_id", c.id);
       const { data: memberRows } = await supabase.from("cohort_members").select("user_id").eq("cohort_id", c.id);
       const userIds = (memberRows || []).map(m => m.user_id);
@@ -705,10 +734,11 @@ export async function fetchCohortProgressSummary(organizationId) {
           progress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
         }
       }
-      return { name: c.name, members: members || 0, progress: progress || 75 };
+      return { name: c.name, members: members || 0, progress };
     }));
-    return rows.length ? rows : DEMO_COHORTS;
-  } catch {
+    return rows;
+  } catch (err) {
+    console.warn("fetchCohortProgressSummary warning:", err);
     return DEMO_COHORTS;
   }
 }
@@ -720,29 +750,36 @@ export async function fetchStudentRiskList(organizationId) {
     { name: "Priya Nair", initials: "PN", days: 4, risk: "medium", status: "Needs Attention", course: "Full-Stack Web & Cloud", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80" },
     { name: "Sofia Kim", initials: "SK", days: 5, risk: "medium", status: "Needs Attention", course: "Prompt Design Basics", avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80" }
   ];
-  if (!supabase || !organizationId || organizationId === "demo-org-id") return DEMO_RISKS;
+  if (!supabase) return DEMO_RISKS;
   try {
-    const cutoff = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString();
-    const { data, error } = await supabase
+    const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+    let query = supabase
       .from("user_profiles")
-      .select("id, display_name, last_active_at")
-      .eq("organization_id", organizationId)
+      .select("id, display_name, last_active_at, avatar_url")
       .eq("role", "learner")
-      .lt("last_active_at", cutoff)
-      .order("last_active_at", { ascending: true })
+      .order("last_active_at", { ascending: true, nullsFirst: true })
       .limit(6);
-    if (error || !data || data.length === 0) return DEMO_RISKS;
+
+    if (orgFilter) query = query.eq("organization_id", orgFilter);
+    const { data, error } = await query;
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
     const now = Date.now();
     return data.map(u => {
       const days = u.last_active_at ? Math.floor((now - new Date(u.last_active_at).getTime()) / (24 * 60 * 60 * 1000)) : null;
       return {
-        name: u.display_name || "Unnamed learner",
+        name: u.display_name || "Learner",
         initials: (u.display_name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
         days: days ?? "N/A",
-        risk: days !== null && days > 10 ? "high" : "medium",
+        risk: days !== null && days > 7 ? "high" : "medium",
+        status: days !== null && days > 7 ? "High Risk" : "Needs Attention",
+        avatar: u.avatar_url,
       };
     });
-  } catch {
+  } catch (err) {
+    console.warn("fetchStudentRiskList warning:", err);
     return DEMO_RISKS;
   }
 }
@@ -754,28 +791,37 @@ export async function fetchTopMentors(organizationId) {
     { name: "Marcus Vance", initials: "MV", specialization: "Cloud & Systems Architect", rating: 4.9, sessions: 52, avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" },
     { name: "Jordan Reyes", initials: "JR", specialization: "Data Science Lead", rating: 4.7, sessions: 29, avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
   ];
-  if (!supabase || !organizationId || organizationId === "demo-org-id") return DEMO_MENTORS;
+  if (!supabase) return DEMO_MENTORS;
   try {
-    const { data, error } = await supabase
+    const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+    let query = supabase
       .from("mentors")
-      .select("id, user_id, rating, total_sessions")
-      .eq("organization_id", organizationId)
+      .select("id, user_id, rating, total_sessions, specialization")
       .eq("is_active", true)
       .order("rating", { ascending: false })
       .limit(5);
-    if (error || !data || data.length === 0) return DEMO_MENTORS;
-    const rows = data || [];
-    const profiles = await fetchProfilesByUserIds(rows.map((m) => m.user_id));
-    return rows.map(m => {
-      const name = profiles[m.user_id]?.display_name || "Mentor";
+
+    if (orgFilter) query = query.eq("organization_id", orgFilter);
+    const { data, error } = await query;
+
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    const profiles = await fetchProfilesByUserIds(data.map((m) => m.user_id));
+    return data.map(m => {
+      const p = profiles[m.user_id];
+      const name = p?.display_name || "Mentor";
       return {
         name,
         initials: name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-        rating: m.rating || 4.8,
-        sessions: m.total_sessions || 24,
+        specialization: m.specialization || "Instructor",
+        rating: m.rating || 5.0,
+        sessions: m.total_sessions || 0,
+        avatar: p?.avatar_url,
       };
     });
-  } catch {
+  } catch (err) {
+    console.warn("fetchTopMentors warning:", err);
     return DEMO_MENTORS;
   }
 }
@@ -786,28 +832,37 @@ export async function fetchUpcomingOrgSessions(organizationId) {
     { id: "demo-sess-2", title: "Cloud Architecture Masterclass", mentor_name: "Marcus Vance", scheduled_at: new Date(Date.now() + 86400000).toISOString(), room_url: "https://meet.google.com/demo-cloud", duration: 45, status: "upcoming" },
     { id: "demo-sess-3", title: "Generative AI Prompts Workshop", mentor_name: "Alex Rivera", scheduled_at: new Date(Date.now() + 2 * 86400000).toISOString(), room_url: "https://meet.google.com/demo-genai", duration: 90, status: "upcoming" }
   ];
-  if (!supabase || !organizationId || organizationId === "demo-org-id") return DEMO_SESSIONS;
+  if (!supabase) return DEMO_SESSIONS;
   try {
-    const { data: mentorRows } = await supabase.from("mentors").select("id, user_id").eq("organization_id", organizationId);
-    const mentorIds = (mentorRows || []).map(m => m.id);
-    if (!mentorIds.length) return DEMO_SESSIONS;
-    const profiles = await fetchProfilesByUserIds((mentorRows || []).map((m) => m.user_id));
-    const nameByMentorId = Object.fromEntries((mentorRows || []).map((m) => [m.id, profiles[m.user_id]?.display_name || "Mentor"]));
-    const { data, error } = await supabase
+    let sessionQuery = supabase
       .from("mentorship_sessions")
       .select("id, title, scheduled_at, status, mentor_id")
-      .in("mentor_id", mentorIds)
-      .in("status", ["confirmed", "requested"])
       .order("scheduled_at", { ascending: true })
       .limit(5);
-    if (error || !data || data.length === 0) return DEMO_SESSIONS;
+
+    const { data, error } = await sessionQuery;
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+
+    const mentorIds = data.map(s => s.mentor_id).filter(Boolean);
+    let nameByMentorId = {};
+    if (mentorIds.length) {
+      const { data: mentorRows } = await supabase.from("mentors").select("id, user_id").in("id", mentorIds);
+      const userIds = (mentorRows || []).map(m => m.user_id);
+      const profiles = await fetchProfilesByUserIds(userIds);
+      const userToProfile = Object.fromEntries(userIds.map(uid => [uid, profiles[uid]?.display_name]));
+      nameByMentorId = Object.fromEntries((mentorRows || []).map(m => [m.id, userToProfile[m.user_id] || "Mentor"]));
+    }
+
     return data.map(s => ({
+      id: s.id,
       title: s.title || "Mentorship session",
       mentor: nameByMentorId[s.mentor_id] || "Mentor",
       time: new Date(s.scheduled_at).toLocaleString(),
       status: new Date(s.scheduled_at) <= new Date() ? "live" : "upcoming",
     }));
-  } catch {
+  } catch (err) {
+    console.warn("fetchUpcomingOrgSessions warning:", err);
     return DEMO_SESSIONS;
   }
 }
@@ -1115,7 +1170,8 @@ export async function fetchLearningPathsAdmin(orgId) {
     }
 
     const { data, error } = await query;
-    if (error || !data || data.length === 0) return DEMO_PATHS;
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
 
     return data.map(p => ({
       id: p.id,
@@ -1527,12 +1583,14 @@ export async function fetchCohortsWithStats(organizationId) {
       endsAt: DEMO_COHORT.endsAt, members: DEMO_COHORT.memberNames.length, courses: 1, progress: 71,
     }];
   }
-  if (!organizationId) return [];
-  const { data: cohorts, error } = await supabase
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase
     .from("cohorts")
     .select("id, name, starts_at, ends_at")
-    .eq("organization_id", organizationId)
     .order("starts_at", { ascending: false });
+
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data: cohorts, error } = await query;
   if (error) throw error;
   return Promise.all((cohorts || []).map(async (c) => {
     const [{ count: members }, { count: courses }, { data: memberRows }] = await Promise.all([

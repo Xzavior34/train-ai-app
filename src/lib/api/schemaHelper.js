@@ -113,25 +113,24 @@ export async function fetchMentorAvailability(mentorId) {
 }
 
 export async function fetchMentorSessions(mentorId) {
-  const now = Date.now();
-  const DEMO_SESSIONS = [
-    { id: "demo-sess-1", learner_id: "demo-learner-1", learner_name: "Amara Chen", status: "confirmed", scheduled_at: new Date(now + 2 * 86400000).toISOString(), duration_minutes: 45, rating: null },
-    { id: "demo-sess-2", learner_id: "demo-learner-4", learner_name: "Marcus Webb", status: "completed", scheduled_at: new Date(now - 3 * 86400000).toISOString(), duration_minutes: 45, rating: 5 },
-    { id: "demo-sess-3", learner_id: "demo-learner-7", learner_name: "Ngozi Adeyemi", status: "completed", scheduled_at: new Date(now - 6 * 86400000).toISOString(), duration_minutes: 60, rating: 5 },
-    { id: "demo-sess-4", learner_id: "demo-learner-9", learner_name: "Kofi Mensah", status: "completed", scheduled_at: new Date(now - 8 * 86400000).toISOString(), duration_minutes: 45, rating: 4 }
-  ];
-  if (!supabase || !mentorId) return DEMO_SESSIONS;
+  if (!supabase) return [];
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("mentorship_sessions")
       .select("*")
-      .eq("mentor_id", mentorId)
       .order("scheduled_at", { ascending: false });
-    if (error || !data || data.length === 0) return DEMO_SESSIONS;
+
+    if (mentorId && mentorId !== "all" && mentorId !== "demo-mentor-id") {
+      query = query.eq("mentor_id", mentorId);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
     const profiles = await fetchProfilesByUserIds(data.map((r) => r.learner_id));
     return data.map((r) => ({ ...r, learner_name: profiles[r.learner_id]?.display_name || "Learner" }));
-  } catch {
-    return DEMO_SESSIONS;
+  } catch (err) {
+    console.warn("fetchMentorSessions warning:", err);
+    return [];
   }
 }
 
@@ -168,23 +167,22 @@ export async function bookMentorshipSession({ learnerId, mentorId, title, schedu
 }
 
 export async function fetchMentorEarnings(mentorId) {
-  const now = new Date().toISOString();
-  const DEMO_EARNINGS = [
-    { id: "demo-earn-1", mentor_id: mentorId || "demo-mentor", amount: 450, created_at: now, source: "session", status: "completed" },
-    { id: "demo-earn-2", mentor_id: mentorId || "demo-mentor", amount: 380, created_at: now, source: "session", status: "completed" },
-    { id: "demo-earn-3", mentor_id: mentorId || "demo-mentor", amount: 420, created_at: now, source: "workshop", status: "completed" }
-  ];
-  if (!supabase || !mentorId) return DEMO_EARNINGS;
+  if (!supabase) return [];
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("mentor_earnings")
       .select("*")
-      .eq("mentor_id", mentorId)
       .order("payout_date", { ascending: false, nullsFirst: false });
-    if (error || !data || data.length === 0) return DEMO_EARNINGS;
-    return data;
-  } catch {
-    return DEMO_EARNINGS;
+
+    if (mentorId && mentorId !== "all" && mentorId !== "demo-mentor-id") {
+      query = query.eq("mentor_id", mentorId);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn("fetchMentorEarnings warning:", err);
+    return [];
   }
 }
 
