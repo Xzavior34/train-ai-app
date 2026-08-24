@@ -244,10 +244,10 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
               <button 
                 className="ta-btn ta-btn-primary" 
                 style={{ background: "#4F46E5", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
-                onClick={handleSaveOrgProfile}
-                disabled={savingOrg}
+                onClick={handleSave}
+                disabled={saving || !orgName.trim()}
               >
-                <Save size={14} style={{ marginRight: 6 }} /> {savingOrg ? "Saving..." : "Save Profile"}
+                <Save size={14} style={{ marginRight: 6 }} /> {saving ? "Saving..." : "Save Profile"}
               </button>
             </div>
           </div>

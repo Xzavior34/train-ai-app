@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { TopBar, Avatar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
-import { Check, X, Flag, Bot } from "lucide-react";
+import { Check, X, Flag, Bot, ShieldCheck } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchModerationQueue, resolveModerationItem } from "../../lib/api/platform.js";
 import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings } from "../../lib/api/organizations.js";
