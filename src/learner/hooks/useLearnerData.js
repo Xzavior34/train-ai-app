@@ -541,6 +541,25 @@ export function useLearnerData(session, screen, params) {
     };
   }, []);
 
+  const userProfile = userProfileQuery.data || null;
+  const gamificationStats = gamificationStatsQuery.data || {};
+  const personalization = personalizationQuery.data || {};
+
+  const user = {
+    id: session?.user?.id || "u-guest",
+    name: userProfile?.display_name || session?.user?.user_metadata?.full_name || "Learner",
+    email: session?.user?.email || "learner@organization.com",
+    role: userProfile?.role || "Learner",
+    avatarUrl: userProfile?.avatar_url || null,
+    initials: initialsOf(userProfile?.display_name || "Learner"),
+    level: gamificationStats.current_level ?? 1,
+    totalPoints: gamificationStats.total_points ?? 0,
+    streak: gamificationStats.streak_days ?? 0,
+    weeklyGoal: personalization.weekly_goal_hours ?? 5,
+    track: personalization.target_track || "AI Systems Architecture",
+    skillLevel: personalization.skill_level || "intermediate",
+  };
+
   return {
     userProfileQuery,
     gamificationStatsQuery,
