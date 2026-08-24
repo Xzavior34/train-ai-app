@@ -2,7 +2,7 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail,
-  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, Flag, Palette, Rocket, Brain, LifeBuoy,
+  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, Sparkles, ChevronRight, ChevronDown, Flag, Palette, Rocket, Brain, LifeBuoy,
   Armchair,
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
 } from "lucide-react";
@@ -129,33 +129,47 @@ export const TOKENS = `
      below carries the matching margin-left. */
   .ta-sidebar {
     width: var(--sidebar-w); flex-shrink: 0;
-    background: #FFFFFF;
+    background: var(--surface);
     border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 20px 14px;
+    display: flex; flex-direction: column; padding: 18px 14px;
     position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh;
     color: var(--text); box-shadow: 2px 0 16px -8px rgba(15,23,42,0.04);
     transition: width .2s ease, padding .2s ease;
-    z-index: 30;
+    z-index: 30; overflow: hidden;
   }
+  .ta-sidebar-nav {
+    display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y: auto;
+    padding-right: 4px; margin: 4px 0 8px; -webkit-overflow-scrolling: touch;
+  }
+  .ta-sidebar-nav::-webkit-scrollbar { width: 4px; }
+  .ta-sidebar-nav::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 4px; }
   .ta-sidebar.ta-sidebar-minimized {
-    width: 76px; padding: 20px 8px;
+    width: 76px; padding: 18px 8px;
   }
   .ta-sidebar.ta-sidebar-minimized .ta-brand-name,
   .ta-sidebar.ta-sidebar-minimized .ta-brand-tag,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-section-title,
+  .ta-sidebar.ta-sidebar-minimized .ta-group-header span,
+  .ta-sidebar.ta-sidebar-minimized .ta-group-header svg,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-item span,
   .ta-sidebar.ta-sidebar-minimized .ta-ws-item span,
   .ta-sidebar.ta-sidebar-minimized .ta-nav-item svg:last-child {
-    display: none;
+    display: none !important;
   }
   .ta-sidebar.ta-sidebar-minimized .ta-nav-item,
   .ta-sidebar.ta-sidebar-minimized .ta-ws-item {
-    justify-content: center; padding: 10px 0; gap: 0;
+    justify-content: center; padding: 10px 0; gap: 0; border-left: none !important;
+  }
+  .ta-sidebar.ta-sidebar-minimized .ta-nav-item.active {
+    background: var(--primary-tint); color: var(--primary);
   }
   .ta-sidebar.ta-sidebar-minimized .ta-brand {
-    justify-content: center; padding: 0 0 16px;
+    justify-content: center; padding: 0 0 12px;
   }
-  .ta-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 16px; }
+  .ta-sidebar.ta-sidebar-minimized .ta-group-header {
+    padding: 6px 0; justify-content: center;
+  }
+  .ta-brand { display: flex; align-items: center; gap: 12px; padding: 4px 6px 12px; }
   .ta-brand-mark {
     width: 36px; height: 36px; border-radius: 10px; background: var(--grad);
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
@@ -163,18 +177,20 @@ export const TOKENS = `
   }
   .ta-brand-name { font-weight: 800; font-size: 17px; letter-spacing: -0.02em; color: var(--text); }
   .ta-brand-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; background: var(--primary-tint); color: var(--primary); padding: 3px 8px; border-radius: 6px; }
-  .ta-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow-y:auto; padding-right: 2px; }
-  .ta-nav::-webkit-scrollbar { width: 4px; }
-  .ta-nav::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
   .ta-nav-section-title {
     font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3);
-    padding: 14px 10px 6px; margin-top: 4px;
+    padding: 10px 8px 4px; margin-top: 4px;
   }
-  /* .ta-iconbtn was already used by admin screens (Learning Paths' reorder and
-     delete controls) but was never defined anywhere in TOKENS, so those
-     buttons fell back to the browser's default button chrome. The new
-     People/Paths/Builder controls lean on it heavily, so it gets a real
-     definition here. */
+  .ta-nav-group { display: flex; flex-direction: column; }
+  .ta-group-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px; border-radius: 8px; cursor: pointer;
+    font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--text-3); user-select: none; transition: all .15s ease; margin-top: 6px;
+  }
+  .ta-group-header:hover { color: var(--text); background: var(--surface-2); }
+  .ta-group-header.has-active { color: var(--primary); }
+  .ta-group-items { display: flex; flex-direction: column; gap: 2px; }
   .ta-iconbtn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 30px; height: 30px; flex-shrink: 0;
@@ -186,32 +202,38 @@ export const TOKENS = `
   .ta-iconbtn:active:not(:disabled) { transform: scale(.94); }
   .ta-iconbtn:disabled { opacity: .4; cursor: not-allowed; }
   .ta-nav-item {
-    display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px; cursor: pointer;
-    font-size: 13.5px; font-weight: 600; color: var(--text-2); transition: all .16s ease;
+    display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .16s ease;
   }
   .ta-nav-item:hover { background: var(--surface-2); color: var(--text); transform: translateX(2px); }
   .ta-nav-item.active {
     background: var(--surface-2);
     color: var(--primary); font-weight: 700; border-left: 3px solid var(--primary); padding-left: 9px;
   }
-  .ta-nav-divider { height: 1px; background: var(--border); margin: 10px 4px; }
+  .ta-nav-divider { height: 1px; background: var(--border); margin: 8px 4px; }
   .ta-workspace-card {
-    background: var(--surface-3); border: 1px solid var(--border); border-radius: 14px; padding: 6px;
-    margin-bottom: 12px; display: flex; flex-direction: column; gap: 3px;
+    background: var(--surface-3); border: 1px solid var(--border); border-radius: 12px; padding: 4px;
+    margin-bottom: 8px; display: flex; flex-direction: column; gap: 2px;
   }
   .ta-ws-item {
-    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
-    font-size: 13px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer;
+    font-size: 12.5px; font-weight: 600; color: var(--text-2); transition: all .14s ease;
   }
   .ta-ws-item:hover { background: var(--surface-2); color: var(--text); }
   .ta-ws-item.active { background: var(--grad); color: #FFFFFF; font-weight: 700; box-shadow: 0 4px 12px rgba(79,70,229,0.25); }
-  .ta-nav-footer { display:flex; flex-direction:column; gap:4px; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); }
+  .ta-nav-footer { display:flex; flex-direction:column; gap:6px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
   .ta-toggle-btn {
-    display: flex; align-items: center; justify-content: center; width: 100%; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; width: 100%; height: 34px; border-radius: 9px;
     border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer;
-    transition: all .15s ease; margin-bottom: 10px;
+    transition: all .15s ease;
   }
   .ta-toggle-btn:hover { background: var(--surface-3); color: var(--primary); border-color: var(--primary-light); }
+  .ta-nav-switcher-btn {
+    background: var(--primary-tint); color: var(--primary); border: 1px solid rgba(99, 102, 241, 0.2); font-weight: 700;
+  }
+  .ta-nav-switcher-btn:hover {
+    background: rgba(99, 102, 241, 0.15); color: var(--primary-dark);
+  }
   .ta-main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); transition: margin-left .2s ease; }
   .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 76px; }
   .ta-topbar {
@@ -302,16 +324,20 @@ export const TOKENS = `
     .ta-profile-pill { padding: 3px !important; }
     .ta-content { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-sidebar {
-      position: fixed; top: 0; left: 0; z-index: 100;
+      position: fixed; top: 0; left: 0; z-index: 1000;
+      width: min(280px, 85vw) !important;
       transform: translateX(-100%); transition: transform .22s ease;
-      box-shadow: 6px 0 24px rgba(15,23,42,.18);
+      box-shadow: 6px 0 28px rgba(15,23,42,.22);
     }
     .ta-sidebar.mobile-open { transform: translateX(0); }
+    .ta-sidebar .ta-toggle-btn { display: none !important; }
     .ta-sidebar-close {
       display: flex !important; align-items: center; justify-content: center;
-      width: 34px; height: 34px; border-radius: 8px; border: none; background: var(--surface-2); cursor: pointer; color: var(--text-2);
+      width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; color: var(--text);
+      transition: all .15s ease;
     }
-    .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.45); z-index: 90; animation: fadeInScale .15s ease; }
+    .ta-sidebar-close:hover { background: var(--surface-3); color: var(--danger); }
+    .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 990; animation: fadeInScale .15s ease; backdrop-filter: blur(2px); }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
     .ta-h1 { font-size: 14.5px !important; font-weight: 800 !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
@@ -704,11 +730,10 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
         <div
           className="ta-scrim ta-scrim-sidebar"
           onClick={onClose}
-          style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(15,23,42,.45)" }}
         />
       )}
-      <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
-        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
+      <aside className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
+        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 12px" : "0 2px 14px", flexShrink: 0 }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
             <BrandLogo height={22} isMinimized={isMinimized} />
             {!isMinimized && (
@@ -718,18 +743,8 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
         </div>
 
-        {/* Minimize / Expand Toggle */}
-        <button
-          className="ta-toggle-btn"
-          onClick={toggleMinimized}
-          title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
-          aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
-        >
-          {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-        </button>
-
-        {!isMinimized && <div className="ta-nav-section-title">Platform Owner</div>}
-        <div className="ta-nav">
+        <div className="ta-sidebar-nav">
+          {!isMinimized && <div className="ta-nav-section-title">Platform Owner</div>}
           {SUPERADMIN_NAV.map(s => {
             const Icon = s.icon;
             const isActive = screen === s.key;
@@ -748,10 +763,18 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
         </div>
 
         <div className="ta-nav-footer">
+          <button
+            className="ta-toggle-btn"
+            onClick={toggleMinimized}
+            title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+            aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+          >
+            {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+
           {onOpenDashboardSwitcher && (
             <div
-              className="ta-nav-item"
-              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid #E0E7FF", fontWeight: 700 }}
+              className="ta-nav-item ta-nav-switcher-btn"
               onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
               title="Switch Dashboard"
             >
@@ -761,21 +784,27 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
             </div>
           )}
         </div>
-      </div>
+      </aside>
     </>
   );
 }
 
 export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, userRoles = ["admin", "mentor", "super_admin"] }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_sidebar_minimized") === "true");
+  const [collapsedSections, setCollapsedSections] = useState({});
+
   const allowedWorkspaces = WORKSPACES.filter(w => w.roles.some(r => userRoles.includes(r)));
-  // MENTOR_NAV / MANAGER_NAV / SUPERADMIN_NAV are still flat arrays - wrap
-  // them in a single "Navigation" section so one render path handles both
-  // shapes instead of duplicating the nav markup per workspace.
   const rawNav = NAV_BY_WORKSPACE[workspace] || MENTOR_NAV;
   const navSections = Array.isArray(rawNav) && rawNav.length && rawNav[0].items
     ? rawNav
     : [{ section: "Navigation", items: rawNav }];
+
+  const toggleSection = (sectionName) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [sectionName]: !prev[sectionName]
+    }));
+  };
 
   const toggleMinimized = () => {
     setIsMinimized(prev => {
@@ -791,11 +820,10 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
         <div
           className="ta-scrim ta-scrim-sidebar"
           onClick={onClose}
-          style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(15,23,42,.45)" }}
         />
       )}
-      <div className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
-        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 14px" : "0 4px 16px" }}>
+      <aside className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
+        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 12px" : "0 2px 14px", flexShrink: 0 }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
             <BrandLogo height={22} isMinimized={isMinimized} />
             {!isMinimized && <span className="ta-brand-tag" style={{ marginLeft: "auto" }}>PRO</span>}
@@ -803,65 +831,82 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
         </div>
 
-        {/* Minimize / Expand Toggle */}
-        <button
-          className="ta-toggle-btn"
-          onClick={toggleMinimized}
-          title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
-          aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
-        >
-          {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-        </button>
-
-        {!isMinimized && <div className="ta-nav-section-title">Workspaces</div>}
-        <div className="ta-workspace-card">
-          {allowedWorkspaces.map(w => {
-            const Icon = w.icon;
-            const isActive = workspace === w.key;
-            return (
-              <div
-                key={w.key}
-                className={`ta-ws-item ${isActive ? "active" : ""}`}
-                onClick={() => { setWorkspace(w.key); onClose(); }}
-                title={w.label}
-              >
-                <Icon size={16} />
-                <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, flex: 1, minWidth: 0 }}>
-                  <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.label}</span>
+        <div className="ta-sidebar-nav">
+          {!isMinimized && <div className="ta-nav-section-title">Workspaces</div>}
+          <div className="ta-workspace-card">
+            {allowedWorkspaces.map(w => {
+              const Icon = w.icon;
+              const isActive = workspace === w.key;
+              return (
+                <div
+                  key={w.key}
+                  className={`ta-ws-item ${isActive ? "active" : ""}`}
+                  onClick={() => { setWorkspace(w.key); onClose(); }}
+                  title={w.label}
+                >
+                  <Icon size={16} />
+                  <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25, flex: 1, minWidth: 0 }}>
+                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.label}</span>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+
+          {navSections.map(group => {
+            const isGroupCollapsed = !isMinimized && !!collapsedSections[group.section];
+            const hasActiveItem = group.items.some(i => i.key === screen);
+            return (
+              <div key={group.section} className="ta-nav-group">
+                {group.section !== "Navigation" && !isMinimized ? (
+                  <div
+                    className={`ta-group-header ${hasActiveItem ? "has-active" : ""}`}
+                    onClick={() => toggleSection(group.section)}
+                    title={`${isGroupCollapsed ? "Expand" : "Collapse"} ${group.section}`}
+                  >
+                    <span>{group.section}</span>
+                    {isGroupCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
+                  </div>
+                ) : (
+                  !isMinimized && <div className="ta-nav-section-title">{group.section}</div>
+                )}
+                {!isGroupCollapsed && (
+                  <div className="ta-group-items">
+                    {group.items.map(item => {
+                      const Icon = item.icon;
+                      const isActive = screen === item.key;
+                      return (
+                        <div
+                          key={item.key}
+                          className={`ta-nav-item ${isActive ? "active" : ""}`}
+                          onClick={() => { setScreen(item.key); onClose(); }}
+                          title={item.label}
+                        >
+                          <Icon size={17} />
+                          <span style={{ flex: 1 }}>{item.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
-        {navSections.map(group => (
-          <React.Fragment key={group.section}>
-            {!isMinimized && <div className="ta-nav-section-title">{group.section}</div>}
-            <div className="ta-nav">
-              {group.items.map(item => {
-                const Icon = item.icon;
-                const isActive = screen === item.key;
-                return (
-                  <div
-                    key={item.key}
-                    className={`ta-nav-item ${isActive ? "active" : ""}`}
-                    onClick={() => { setScreen(item.key); onClose(); }}
-                    title={item.label}
-                  >
-                    <Icon size={17} />
-                    <span style={{ flex: 1 }}>{item.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </React.Fragment>
-        ))}
-
         <div className="ta-nav-footer">
+          <button
+            className="ta-toggle-btn"
+            onClick={toggleMinimized}
+            title={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+            aria-label={isMinimized ? "Expand sidebar" : "Minimize to icons"}
+          >
+            {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          </button>
+
           {onOpenDashboardSwitcher && (
             <div
-              className="ta-nav-item"
-              style={{ background: "var(--primary-tint)", color: "var(--primary)", border: "1px solid #E0E7FF", fontWeight: 700 }}
+              className="ta-nav-item ta-nav-switcher-btn"
               onClick={() => { onOpenDashboardSwitcher(); onClose(); }}
               title="Switch Dashboard"
             >
@@ -871,7 +916,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
             </div>
           )}
         </div>
-      </div>
+      </aside>
     </>
   );
 }
