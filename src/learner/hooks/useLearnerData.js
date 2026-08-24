@@ -27,7 +27,7 @@ import {
   fetchLeaderboardExtras, fetchCohortSessionsWithFacilitator
 } from "../../lib/api/live/learnerMiscLive.js";
 import { initialsOf, gradForIndex, timeAgo } from "../components/LearnerUI.jsx";
-import { getYouTubeEmbedId } from "../../lib/mockDataManager.js";
+import { getYouTubeEmbedId, isMockDataEnabled, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
 import { DEMO_MODE } from "../../lib/demoMode.js";
 
 export function useLearnerData(session, screen, params) {
