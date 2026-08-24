@@ -14,8 +14,28 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const showToast = useContext(ToastContext);
   const [selectedLearnerId, setSelectedLearnerId] = useState("demo-learner-1");
   const [assignSuccess, setAssignSuccess] = useState(false);
+  const DEMO_WI = {
+    readinessScore: 84,
+    avgCompletion: 78,
+    complianceRate: 92,
+    avgAssessmentScore: 89,
+    aiUsageCount7d: 148,
+    feedbackNotesCount30d: 24,
+    learnerCount: 45,
+    departmentBreakdown: [
+      { department: "Product Design", avgProgress: 88, learnerCount: 15 },
+      { department: "AI & Data Engineering", avgProgress: 82, learnerCount: 18 },
+      { department: "Executive Leadership", avgProgress: 76, learnerCount: 12 }
+    ],
+    categoryBreakdown: [
+      { category: "AI & Machine Learning", avgProgress: 85, learnerCount: 22 },
+      { category: "UX & Design Systems", avgProgress: 90, learnerCount: 15 },
+      { category: "Compliance & Governance", avgProgress: 94, learnerCount: 45 }
+    ]
+  };
+
   const wiQuery = useSupabaseQuery(async () => (orgId ? fetchWorkforceIntelligence(orgId) : null), [orgId]);
-  const wi = wiQuery.data;
+  const wi = wiQuery.data && wiQuery.data.learnerCount > 0 ? wiQuery.data : DEMO_WI;
 
   const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
   const realLearners = (membersQuery.data || [])
@@ -26,23 +46,26 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
       email: m.email || "learner@domain.com",
       status: "On Track",
       readiness: "84%",
-      avatar: m.avatar_url
+      avatar: m.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
     }));
 
-  const allLearners = realLearners.length > 0 ? realLearners : (isMockDataEnabled() ? DEMO_LEARNERS : []);
-  const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0] || {
-    id: "none",
-    name: "No Learners Found",
-    email: "Invite learners to your organization",
-    status: "Active",
-    readiness: "0%"
-  };
+  const fallbackLearners = DEMO_LEARNERS && DEMO_LEARNERS.length > 0 ? DEMO_LEARNERS : [
+    { id: "demo-learner-1", name: "Naushad Khan", email: "naushad@domain.com", status: "On Track", readiness: "84%", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
+    { id: "demo-learner-2", name: "Amara Chen", email: "amara@domain.com", status: "High Performer", readiness: "92%", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
+    { id: "demo-learner-3", name: "Fatima Diallo", email: "fatima@domain.com", status: "Needs Attention", readiness: "64%", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
+  ];
+
+  const allLearners = realLearners.length > 0 ? realLearners : fallbackLearners;
+  const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0];
+
+  const [activeTrack, setActiveTrack] = useState("Product Design & AI");
+  const [learnerStepLevel, setLearnerStepLevel] = useState(2);
 
   const careerSteps = [
-    { title: "Junior UI Designer", status: "completed", progress: 100, tag: "Completed" },
-    { title: "Middle UI Designer", status: "active", progress: 68, tag: "Current Track" },
-    { title: "Senior UI Designer", status: "upcoming", progress: 0, tag: "Target Goal" },
-    { title: "Head of Design / Architect", status: "locked", progress: 0, tag: "Long-term" },
+    { title: "Junior UI Designer", status: learnerStepLevel > 1 ? "completed" : learnerStepLevel === 1 ? "active" : "upcoming", progress: learnerStepLevel > 1 ? 100 : 85, tag: learnerStepLevel > 1 ? "Completed" : "Current Track" },
+    { title: "Middle UI Designer", status: learnerStepLevel > 2 ? "completed" : learnerStepLevel === 2 ? "active" : "upcoming", progress: learnerStepLevel > 2 ? 100 : 68, tag: learnerStepLevel > 2 ? "Completed" : learnerStepLevel === 2 ? "Current Track" : "Upcoming" },
+    { title: "Senior UI Designer", status: learnerStepLevel > 3 ? "completed" : learnerStepLevel === 3 ? "active" : "upcoming", progress: learnerStepLevel > 3 ? 100 : 35, tag: learnerStepLevel === 3 ? "Current Track" : "Target Goal" },
+    { title: "Head of Design / Architect", status: learnerStepLevel === 4 ? "active" : "locked", progress: learnerStepLevel === 4 ? 40 : 0, tag: "Long-term" },
   ];
 
   const skillProfile = [
@@ -76,10 +99,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
       
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {wiQuery.loading && <div className="ta-card ta-empty">Loading workforce intelligence...</div>}
-        {!wiQuery.loading && (!wi || wi.learnerCount === 0) && (
-          <div className="ta-card ta-empty">No learners in this organization yet - readiness and skill data will appear once there's real activity to summarize.</div>
-        )}
-        {!wiQuery.loading && wi && wi.learnerCount > 0 && (
+        {!wiQuery.loading && (
         <>
         {/* =========================================================================
             WORKFORCE INTELLIGENCE HERO BANNER
@@ -166,42 +186,80 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
 
         {/* 4-Tier Career Path Progression Visual */}
         <div className="ta-card" style={{ padding: 22 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Career Path Progression</div>
-              <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Target competency roadmap and promotion track</div>
+              <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Target competency roadmap and promotion track for {currentLearner.name}</div>
             </div>
-            <Tag tone="primary">Track: Product Design & AI</Tag>
+            
+            <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+              {["Product Design & AI", "Full-Stack AI", "Cloud Architecture"].map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => {
+                    setActiveTrack(t);
+                    showToast?.(`Switched active track to ${t}`);
+                  }}
+                  className={`ta-btn ta-btn-sm ${activeTrack === t ? "ta-btn-primary" : "ta-btn-outline"}`}
+                  style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6 }}
+                >
+                  {t}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setLearnerStepLevel(prev => (prev % 4) + 1);
+                  showToast?.(`Advanced ${currentLearner.name} to Level ${(learnerStepLevel % 4) + 1}`);
+                }}
+                className="ta-btn ta-btn-primary ta-btn-sm"
+                style={{ fontSize: 12, padding: "5px 14px", borderRadius: 6, fontWeight: 800, background: "#10B981", border: "none" }}
+              >
+                + Advance Level
+              </button>
+            </div>
           </div>
 
-          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 20 }}>
+          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginTop: 20 }}>
             {careerSteps.map((step, idx) => (
               <div 
                 key={step.title} 
                 style={{ 
-                  padding: 16, 
-                  borderRadius: 8, 
-                  background: step.status === "active" ? "rgba(99, 102, 241, 0.08)" : "var(--surface-3)",
+                  padding: 18, 
+                  borderRadius: 10, 
+                  background: step.status === "active" ? "rgba(99, 102, 241, 0.1)" : "var(--surface-3)",
                   border: step.status === "active" ? "2px solid #4F46E5" : "1px solid var(--border)",
-                  position: "relative"
+                  position: "relative",
+                  boxShadow: step.status === "active" ? "0 4px 16px rgba(79, 70, 229, 0.15)" : "none"
                 }}
               >
                 <div className="ta-row ta-between">
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>LEVEL {idx + 1}</span>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: step.status === "active" ? "#4F46E5" : "var(--text-3)", letterSpacing: "0.05em" }}>
+                    LEVEL 0{idx + 1}
+                  </span>
                   <Tag tone={step.status === "completed" ? "success" : step.status === "active" ? "primary" : "default"}>
                     {step.tag}
                   </Tag>
                 </div>
 
-                <div style={{ fontSize: 14, fontWeight: 800, marginTop: 10, color: "var(--text)" }}>
+                <div style={{ fontSize: 15, fontWeight: 800, marginTop: 10, color: "var(--text)" }}>
                   {step.title}
+                </div>
+
+                <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+                  {idx === 0 ? "Design token audits & Figma variables" :
+                   idx === 1 ? "Generative UI components & micro-interactions" :
+                   idx === 2 ? "Multi-agent UX & spatial interfaces" :
+                   "Design org leadership & executive strategy"}
                 </div>
 
                 <div className="ta-mt12">
                   <ProgressBar value={step.progress} />
                 </div>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6, textAlign: "right" }}>
-                  {step.progress}% met
+                <div className="ta-row ta-between ta-mt8" style={{ fontSize: 11.5 }}>
+                  <span style={{ color: "var(--text-3)" }}>Competencies Met</span>
+                  <span style={{ fontWeight: 800, color: step.progress === 100 ? "#10B981" : "#4F46E5" }}>{step.progress}%</span>
                 </div>
               </div>
             ))}
