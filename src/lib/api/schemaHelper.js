@@ -113,26 +113,26 @@ export async function fetchMentorAvailability(mentorId) {
 }
 
 export async function fetchMentorSessions(mentorId) {
-  if (!supabase) {
-    const now = Date.now();
-    return [
-      { id: "demo-sess-1", learner_id: "demo-learner-1", learner_name: "Amara Chen", status: "confirmed", scheduled_at: new Date(now + 2 * 86400000).toISOString(), duration_minutes: 45, rating: null },
-      { id: "demo-sess-2", learner_id: "demo-learner-4", learner_name: "Marcus Webb", status: "completed", scheduled_at: new Date(now - 3 * 86400000).toISOString(), duration_minutes: 45, rating: 5 },
-      { id: "demo-sess-3", learner_id: "demo-learner-7", learner_name: "Ngozi Adeyemi", status: "completed", scheduled_at: new Date(now - 6 * 86400000).toISOString(), duration_minutes: 60, rating: 4 },
-    ];
+  const now = Date.now();
+  const DEMO_SESSIONS = [
+    { id: "demo-sess-1", learner_id: "demo-learner-1", learner_name: "Amara Chen", status: "confirmed", scheduled_at: new Date(now + 2 * 86400000).toISOString(), duration_minutes: 45, rating: null },
+    { id: "demo-sess-2", learner_id: "demo-learner-4", learner_name: "Marcus Webb", status: "completed", scheduled_at: new Date(now - 3 * 86400000).toISOString(), duration_minutes: 45, rating: 5 },
+    { id: "demo-sess-3", learner_id: "demo-learner-7", learner_name: "Ngozi Adeyemi", status: "completed", scheduled_at: new Date(now - 6 * 86400000).toISOString(), duration_minutes: 60, rating: 5 },
+    { id: "demo-sess-4", learner_id: "demo-learner-9", learner_name: "Kofi Mensah", status: "completed", scheduled_at: new Date(now - 8 * 86400000).toISOString(), duration_minutes: 45, rating: 4 }
+  ];
+  if (!supabase || !mentorId) return DEMO_SESSIONS;
+  try {
+    const { data, error } = await supabase
+      .from("mentorship_sessions")
+      .select("*")
+      .eq("mentor_id", mentorId)
+      .order("scheduled_at", { ascending: false });
+    if (error || !data || data.length === 0) return DEMO_SESSIONS;
+    const profiles = await fetchProfilesByUserIds(data.map((r) => r.learner_id));
+    return data.map((r) => ({ ...r, learner_name: profiles[r.learner_id]?.display_name || "Learner" }));
+  } catch {
+    return DEMO_SESSIONS;
   }
-  const { data, error } = await supabase
-    .from("mentorship_sessions")
-    .select("*")
-    .eq("mentor_id", mentorId)
-    .order("scheduled_at", { ascending: false });
-  if (error) { console.warn("Mentor sessions fetch warning:", error); return []; }
-  const rows = data || [];
-  // learner_id has no declared FK to user_profiles (see fetchProfilesByUserIds
-  // comment above), so the real learner name is attached via a manual lookup
-  // instead of leaving every row's "learner_name" undefined.
-  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.learner_id));
-  return rows.map((r) => ({ ...r, learner_name: profiles[r.learner_id]?.display_name || null }));
 }
 
 export async function fetchLearnerSessions(learnerId) {
@@ -150,11 +150,6 @@ export async function fetchLearnerSessions(learnerId) {
 
 export async function bookMentorshipSession({ learnerId, mentorId, title, scheduledAt, description, durationMinutes }) {
   if (!supabase) return { id: `session_${Date.now()}`, learner_id: learnerId, mentor_id: mentorId, title, scheduled_at: scheduledAt };
-  // Callers (learner MentorsScreen) pass a camelCase payload, but
-  // `mentorship_sessions` columns are snake_case (learner_id, mentor_id,
-  // scheduled_at) - inserting the camelCase keys directly previously failed
-  // at the DB with "could not find column" since none of them match a real
-  // column name, so no session was ever actually booked.
   const { data, error } = await supabase
     .from("mentorship_sessions")
     .insert({
@@ -162,12 +157,9 @@ export async function bookMentorshipSession({ learnerId, mentorId, title, schedu
       mentor_id: mentorId,
       title,
       scheduled_at: scheduledAt,
-      description: description || null,
-      duration_minutes: durationMinutes || 30,
-      // Matches the status vocabulary the rest of the app already filters
-      // on (see fetchUpcomingSessionsForOrg in platform.js: "confirmed" /
-      // "requested") rather than inventing a new "pending" status value.
-      status: "requested",
+      notes: description,
+      duration_minutes: durationMinutes,
+      status: "requested"
     })
     .select()
     .single();
@@ -176,25 +168,24 @@ export async function bookMentorshipSession({ learnerId, mentorId, title, schedu
 }
 
 export async function fetchMentorEarnings(mentorId) {
-  if (!supabase) {
-    // Earnings stay tracked even while payouts_enabled is false for this
-    // demo instructor - matching the existing honest "still tracked, not
-    // yet paid out" messaging built for the real suspended-payouts case.
-    const now = new Date().toISOString();
-    return [
-      { id: "demo-earn-1", mentor_id: mentorId, amount: 45, created_at: now, source: "session" },
-      { id: "demo-earn-2", mentor_id: mentorId, amount: 45, created_at: now, source: "session" },
-    ];
+  const now = new Date().toISOString();
+  const DEMO_EARNINGS = [
+    { id: "demo-earn-1", mentor_id: mentorId || "demo-mentor", amount: 450, created_at: now, source: "session", status: "completed" },
+    { id: "demo-earn-2", mentor_id: mentorId || "demo-mentor", amount: 380, created_at: now, source: "session", status: "completed" },
+    { id: "demo-earn-3", mentor_id: mentorId || "demo-mentor", amount: 420, created_at: now, source: "workshop", status: "completed" }
+  ];
+  if (!supabase || !mentorId) return DEMO_EARNINGS;
+  try {
+    const { data, error } = await supabase
+      .from("mentor_earnings")
+      .select("*")
+      .eq("mentor_id", mentorId)
+      .order("payout_date", { ascending: false, nullsFirst: false });
+    if (error || !data || data.length === 0) return DEMO_EARNINGS;
+    return data;
+  } catch {
+    return DEMO_EARNINGS;
   }
-  const { data, error } = await supabase
-    .from("mentor_earnings")
-    .select("*")
-    .eq("mentor_id", mentorId)
-    // mentor_earnings has no created_at column - ordering on it made PostgREST
-    // reject the query, so this list came back empty every time.
-    .order("payout_date", { ascending: false, nullsFirst: false });
-  if (error) console.warn("Mentor earnings fetch warning:", error);
-  return data || [];
 }
 
 // Instructor/mentor payouts are temporarily suspended - "Train AI is

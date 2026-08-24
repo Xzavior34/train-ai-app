@@ -30,7 +30,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   // a trial-status org (e.g. any of the seeded demo orgs) would hit the
   // exact same paywall a real, unpaid tenant sees - which would make it
   // impossible to review or manage a trial org before it converts.
-  if (!isPlatformOwner && orgId && !orgQuery.loading && orgQuery.data && orgQuery.data.status !== "active") {
+  if (!isPlatformOwner && orgId && orgId !== "demo-org-id" && !orgQuery.loading && orgQuery.data && orgQuery.data.status === "suspended") {
     return (
       <div className="ta-fade">
         <TopBar title="Dashboard" sub="Your organization dashboard" orgSelector={orgSelector} />
