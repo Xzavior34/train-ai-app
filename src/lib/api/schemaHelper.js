@@ -14,7 +14,7 @@ import { supabase } from "../supabaseClient.js";
 // user_id, learner_id, etc.) stores that same raw auth uid directly, so the
 // lookup query and the returned map must both be keyed on `user_id`, not the
 // internal `id`.
-export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url") {
+export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url, email, role") {
   if (!supabase || !userIds || !userIds.length) return {};
   const ids = [...new Set(userIds.filter(Boolean))];
   if (!ids.length) return {};

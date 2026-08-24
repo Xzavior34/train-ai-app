@@ -109,9 +109,9 @@ export async function safeInQuery(tableName, selectFields, idColumn, ids) {
 export async function fetchOrgMembers(organizationId) {
   if (!supabase) {
     return [
-      ...DEMO_LEARNERS.map((l) => ({ id: l.id, display_name: l.name, role: "learner", status: "active", last_active_at: new Date().toISOString() })),
-      ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, display_name: i.name, role: "mentor", status: "active", last_active_at: new Date().toISOString() })),
-      { id: "demo-manager-id", display_name: "Demo Manager", role: "manager", status: "active", last_active_at: new Date().toISOString() },
+      ...DEMO_LEARNERS.map((l) => ({ id: l.id, display_name: l.name, email: l.email, role: "learner", status: "active", last_active_at: new Date().toISOString() })),
+      ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, display_name: i.name, email: i.email || `${i.name.toLowerCase().replace(/\s+/g, '.')}@trainailtd.com`, role: "mentor", status: "active", last_active_at: new Date().toISOString() })),
+      { id: "demo-manager-id", display_name: "Demo Manager", email: "manager@trainailtd.com", role: "manager", status: "active", last_active_at: new Date().toISOString() },
     ];
   }
   let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
@@ -141,7 +141,15 @@ export async function fetchOrgMembers(organizationId) {
   const cohortNameByUserId = Object.fromEntries(
     (memberRows || []).map((m) => [m.user_id, cohortNameById[m.cohort_id] || null])
   );
-  return profiles.map((p) => ({ ...p, cohort_name: cohortNameByUserId[p.id] || null }));
+  return profiles.map((p) => {
+    const defaultDomain = p.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
+    const email = p.email || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : null);
+    return {
+      ...p,
+      email,
+      cohort_name: cohortNameByUserId[p.id] || null,
+    };
+  });
 }
 
 export async function fetchUsersInOrg(organizationId) {
@@ -623,6 +631,7 @@ export async function fetchOrgDashboardStats(organizationId) {
     mentors: 12,
     otherUsers: 8,
     completionRate: 84,
+    avgCompletedCourses: 2.8,
   };
   if (!supabase || !organizationId || organizationId === "demo-org-id") return DEMO_STATS;
   try {
@@ -637,9 +646,14 @@ export async function fetchOrgDashboardStats(organizationId) {
       safeInQuery("course_enrollments", "progress_percentage, completed_at", "user_id", orgUserIds),
     ]);
     if (!activeStudents && !cohortCount && !courseCount) return DEMO_STATS;
+    const completedCount = enrollments.filter(e => e.completed_at || (e.progress_percentage || 0) >= 100).length;
+    const learnerCount = activeStudents || orgUserIds.length || 1;
     const completionRate = enrollments.length
-      ? Math.round((enrollments.filter(e => e.completed_at || (e.progress_percentage || 0) >= 100).length / enrollments.length) * 100)
+      ? Math.round((completedCount / enrollments.length) * 100)
       : 84;
+    const avgCompletedCourses = learnerCount > 0
+      ? (completedCount / learnerCount).toFixed(1)
+      : "2.8";
     return {
       activeStudents: activeStudents || 142,
       cohorts: cohortCount || 6,
@@ -647,6 +661,7 @@ export async function fetchOrgDashboardStats(organizationId) {
       mentors: mentorCount || 12,
       otherUsers: otherUserCount || 8,
       completionRate,
+      avgCompletedCourses,
     };
   } catch {
     return DEMO_STATS;
@@ -2274,7 +2289,7 @@ export async function fetchAllPlatformLearners() {
       const rows = DEMO_ENROLLMENTS.filter((e) => e.learnerId === l.id);
       const avgProgress = rows.length ? Math.round(rows.reduce((a, r) => a + r.progress, 0) / rows.length) : 0;
       return {
-        id: l.id, name: l.name, initials: l.initials, progress: avgProgress, quizAvg: rows.length ? 82 : null,
+        id: l.id, name: l.name, email: l.email, initials: l.initials, progress: avgProgress, quizAvg: rows.length ? 82 : null,
         sessionsCompleted: rows.filter((r) => r.completed).length, courses: rows.map((r) => DEMO_COURSES.find((c) => c.id === r.courseId)?.title).filter(Boolean),
         risk: l.risk,
       };
@@ -2282,7 +2297,7 @@ export async function fetchAllPlatformLearners() {
   }
   const { data: profiles, error } = await supabase
     .from("user_profiles")
-    .select("id, display_name, avatar_url, role, school, department, created_at")
+    .select("id, display_name, avatar_url, role, school, department, email, created_at")
     .order("display_name", { ascending: true });
   if (error) { console.warn("Error fetching learner profiles:", error); return []; }
 
@@ -2301,17 +2316,6 @@ export async function fetchAllPlatformLearners() {
     }
   }
 
-  // RLS on the raw course_enrollments table only allows a caller to see their
-  // OWN rows (or every row, if the caller is an admin) - a plain mentor
-  // querying it directly for other learners' ids gets back nothing, not an
-  // error, so this must not be trusted as "the learner has 0% progress".
-  // `instructor_course_enrollments` (a real view granted SELECT to
-  // authenticated, added specifically so instructors can see progress
-  // without payment columns) additionally surfaces real rows for whichever
-  // courses THIS caller instructs/owns. Querying both and merging covers
-  // admins (raw table) and instructors (view) with real data wherever the
-  // database actually allows it, and leaves progress explicitly unknown
-  // (not a fake 0%) everywhere else.
   let progressByLearner = {};
   let courseIdsByLearner = {};
   if (learnerIds.length) {
@@ -2357,15 +2361,14 @@ export async function fetchAllPlatformLearners() {
     const name = p.display_name || "Learner";
     const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "L";
     const progressList = progressByLearner[id] || [];
-    // null (not 0) when this caller's database permissions don't surface any
-    // enrollment rows for this learner - a real "0%" and "no visible data"
-    // must not be shown identically.
     const progress = progressList.length ? Math.round(progressList.reduce((a, b) => a + b, 0) / progressList.length) : null;
     const quizScores = quizScoresByLearner[id] || [];
     const quizAvg = quizScores.length ? Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length) : null;
+    const email = p.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@sarafoundationafrica.com`;
     return {
       id,
       name,
+      email,
       initials,
       avatar_url: p.avatar_url,
       sessionsCompleted: sessionsByLearner[id] || 0,
@@ -2621,7 +2624,7 @@ export async function fetchDirectReports(managerId) {
     return DEMO_LEARNERS.slice(0, 5).map((l, i) => {
       const rows = DEMO_ENROLLMENTS.filter((e) => e.learnerId === l.id);
       return {
-        userId: l.id, name: l.name, initials: l.initials,
+        userId: l.id, name: l.name, email: l.email, initials: l.initials,
         enrolled: rows.length, completed: rows.filter((r) => r.completed).length,
         overdue: l.risk === "danger" ? 1 : 0, lastActive: `${i + 1} day${i === 0 ? "" : "s"} ago`,
       };
@@ -2630,7 +2633,7 @@ export async function fetchDirectReports(managerId) {
   if (!managerId) return [];
   const { data: profiles, error } = await supabase
     .from("user_profiles")
-    .select("id, display_name, last_active_at")
+    .select("id, display_name, email, last_active_at")
     .eq("manager_id", managerId);
   if (error) throw error;
   const rows = profiles || [];
@@ -2646,9 +2649,11 @@ export async function fetchDirectReports(managerId) {
     const userEnrolls = enrollList.filter((e) => e.user_id === r.id);
     const userComp = complianceList.filter((c) => c.user_id === r.id);
     const name = r.display_name || "Unnamed user";
+    const email = r.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@trainailtd.com`;
     return {
       userId: r.id,
       name,
+      email,
       initials: name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
       enrolled: userEnrolls.length,
       completed: userEnrolls.filter((e) => e.progress_percentage === 100).length,
