@@ -367,7 +367,7 @@ export const TOKENS = `
     .ta-org-selector { display: none !important; }
     .ta-h1 { font-size: 14.5px !important; font-weight: 800 !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
     .ta-sub { display: block !important; font-size: 11px !important; color: var(--text-3) !important; margin-top: 1px !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-    .ta-table-wrap .ta-table { min-width: 460px; }
+    .ta-table-wrap .ta-table { min-width: 680px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
     /* Clean mobile scrolling for tabs and filter pills */
@@ -495,7 +495,7 @@ export const TOKENS = `
   .ta-divider { height: 1px; background: var(--border); border: none; margin: 16px 0; }
   .ta-table { width: 100%; border-collapse: collapse; }
   .ta-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
-  .ta-table-wrap .ta-table { min-width: 560px; }
+  .ta-table-wrap .ta-table { min-width: 680px; }
   .ta-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 700; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--surface-3); }
   .ta-table td { padding: 14px 16px; font-size: 13.5px; border-bottom: 1px solid var(--border); color: var(--text); }
   .ta-table tr:last-child td { border-bottom: none; }

@@ -756,7 +756,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           onChange={(e) => setSelectedMemberIds(e.target.checked ? new Set(filteredMembers.map((m) => m.id)) : new Set())}
                         />
                       </th>
-                      <th>Member</th>
+                      <th style={{ minWidth: 180 }}>Member</th>
                       <th>Role</th>
                       <th>Cohort / Track</th>
                       <th>Attendance</th>
@@ -789,16 +789,12 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                               }}
                             />
                           </td>
-                          <td>
-                            {/* Avatars used to be built by adding idx*10000 to a
-                                hardcoded Unsplash photo id, producing a
-                                different broken stock-photo URL per row. Real
-                                avatar_url when set, initials otherwise. */}
-                            <div className="ta-row ta-gap10" style={{ cursor: "pointer" }} onClick={() => setDetailMember(m)}>
+                          <td style={{ minWidth: 180 }}>
+                            <div className="ta-row ta-gap10" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => setDetailMember(m)}>
                               <Avatar initials={initials} size={34} src={m.avatar_url || undefined} />
-                              <div style={{ minWidth: 0 }}>
-                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflowWrap: "anywhere" }}>{m.display_name || "Member"}</div>
-                                <div style={{ fontSize: 11, color: "var(--text-3)", overflowWrap: "anywhere" }}>{m.email || "No email on file"}</div>
+                              <div style={{ minWidth: 130, flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", whiteSpace: "normal", wordBreak: "break-word" }}>{m.display_name || "Member"}</div>
+                                <div style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "normal", wordBreak: "break-all" }}>{m.email || "No email on file"}</div>
                               </div>
                             </div>
                           </td>

@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { TopBar, ToastContext, Switch } from "../components/PlatformUI.jsx";
-import { ShieldCheck, Trophy } from "lucide-react";
+import { ShieldCheck, Trophy, CheckCircle2, Lock } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrgRolePermissions, setOrgRolePermission, ORG_RBAC_ROLES, ORG_RBAC_PERMISSIONS } from "../../lib/api/platform.js";
 import { fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings } from "../../lib/api/organizations.js";
