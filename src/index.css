@@ -573,11 +573,14 @@ html.tai-high-contrast .ta-card {
   color: var(--text);
 }
 
-/* Specific Dark Blue Liquid Glass Hero Cards in Light Mode (Purple/Indigo pages & Spotlight) */
+/* Specific Dark Blue Liquid Glass Hero Cards & Dark Backgrounds (Enforce Crisp Light Text Always) */
 .tai-hero-dark,
 .ta-hero-dark,
 .tai-hero-card.tai-hero-dark,
-.ta-hero-banner.ta-hero-dark {
+.ta-hero-banner.ta-hero-dark,
+.tai-card-dark,
+.ta-card-dark,
+.bg-dark {
   background: #0F172A !important;
   color: #FFFFFF !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
@@ -585,22 +588,27 @@ html.tai-high-contrast .ta-card {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
-.tai-hero-dark h1, .ta-hero-dark h1,
-.tai-hero-dark h2, .ta-hero-dark h2,
-.tai-hero-dark h3, .ta-hero-dark h3,
+.tai-hero-dark h1, .ta-hero-dark h1, .tai-card-dark h1, .ta-card-dark h1,
+.tai-hero-dark h2, .ta-hero-dark h2, .tai-card-dark h2, .ta-card-dark h2,
+.tai-hero-dark h3, .ta-hero-dark h3, .tai-card-dark h3, .ta-card-dark h3,
+.tai-hero-dark h4, .ta-hero-dark h4, .tai-card-dark h4, .ta-card-dark h4,
 .tai-hero-dark .tai-hero-title, .ta-hero-dark .ta-hero-title,
 .tai-hero-dark .ta-title, .ta-hero-dark .ta-title {
   color: #FFFFFF !important;
 }
-.tai-hero-dark p, .ta-hero-dark p,
+.tai-hero-dark p, .ta-hero-dark p, .tai-card-dark p, .ta-card-dark p,
+.tai-hero-dark span, .ta-hero-dark span, .tai-card-dark span, .ta-card-dark span,
+.tai-hero-dark div, .ta-hero-dark div, .tai-card-dark div, .ta-card-dark div,
 .tai-hero-dark .tai-hero-desc, .ta-hero-dark .ta-hero-desc,
 .tai-hero-dark .ta-subtitle, .ta-hero-dark .ta-subtitle {
-  color: #94A3B8 !important;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 .tai-hero-dark .tai-hero-subcard,
 .ta-hero-dark .tai-hero-subcard,
 .tai-hero-dark .ta-hero-subcard,
-.ta-hero-dark .ta-hero-subcard {
+.ta-hero-dark .ta-hero-subcard,
+.tai-card-dark .tai-subcard,
+.ta-card-dark .ta-subcard {
   background: rgba(255, 255, 255, 0.08) !important;
   border: 1px solid rgba(255, 255, 255, 0.14) !important;
   color: #FFFFFF !important;
@@ -608,14 +616,16 @@ html.tai-high-contrast .ta-card {
 .tai-hero-dark .tai-hero-subcard *,
 .ta-hero-dark .tai-hero-subcard *,
 .tai-hero-dark .ta-hero-subcard *,
-.ta-hero-dark .ta-hero-subcard * {
-  color: #FFFFFF;
+.ta-hero-dark .ta-hero-subcard *,
+.tai-card-dark .tai-subcard *,
+.ta-card-dark .ta-subcard * {
+  color: #FFFFFF !important;
 }
 .tai-hero-dark .tai-hero-subcard div:first-child,
 .ta-hero-dark .tai-hero-subcard div:first-child,
 .tai-hero-dark .ta-hero-subcard div:first-child,
 .ta-hero-dark .ta-hero-subcard div:first-child {
-  color: #94A3B8 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* Ambient Glowing Corner Halos */

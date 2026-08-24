@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import {
-  Home, BookOpen, Zap, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
+  Home, BookOpen, Zap, Plus, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
   Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Flame, MessageSquare, Calendar,
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
   PanelLeftClose, PanelLeftOpen, Video
@@ -708,7 +708,7 @@ export function Switch({ on, onChange }) {
 export const NAV_ITEMS = [
   { key: "home", label: "Home", icon: Home },
   { key: "courses", label: "Courses", icon: BookOpen },
-  { key: "ai", label: "AI Coach", icon: Zap },
+  { key: "ai", label: "AI Coach", icon: Plus },
   { key: "community", label: "Community", icon: Users },
 ];
 
@@ -902,11 +902,11 @@ export function DesktopSidebar({
     {
       key: "ai",
       label: "AI Coach",
-      icon: Zap,
+      icon: Plus,
       defaultScreen: "ai",
       screens: ["ai", "aiQuiz"],
       subItems: [
-        { key: "ai", label: "AI Coach", icon: Zap },
+        { key: "ai", label: "AI Coach", icon: Plus },
         { key: "aiQuiz", label: "Quizzes", icon: GraduationCap }
       ]
     },

@@ -618,7 +618,6 @@ const ADMIN_NAV = [
     section: "Learning",
     items: [
       { key: "content", label: "Courses", icon: BookOpen },
-      { key: "coursebuilder", label: "Course Builder", icon: Sparkles },
       { key: "paths", label: "Learning Paths", icon: Map },
       { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
       { key: "compliance", label: "Learner Progress", icon: ShieldCheck },

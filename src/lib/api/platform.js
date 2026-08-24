@@ -1069,44 +1069,72 @@ export async function replaceCourseLessons(courseId, lessons) {
   if (error) throw error;
 }
 
-export async function fetchLearningPathsAdmin() {
-  if (!supabase) {
-    return [{
-      id: "demo-path-1", title: "New Hire Foundations", description: "The core courses every new hire completes in their first month.",
-      level: "beginner", isPublished: true,
+export async function fetchLearningPathsAdmin(orgId) {
+  const DEMO_PATHS = [
+    {
+      id: "demo-path-1",
+      title: "New Hire Foundations",
+      description: "The core courses every new hire completes in their first month.",
+      level: "beginner",
+      category: "Onboarding",
+      isPublished: true,
       courseIds: ["demo-course-ai-fundamentals", "demo-course-compliance-101"],
       courseTitles: ["AI Fundamentals", "Workplace Compliance 101"],
-    }];
+    },
+    {
+      id: "demo-path-2",
+      title: "AI Engineer Track",
+      description: "Master LLM orchestration, RAG architectures, and fine-tuning models.",
+      level: "advanced",
+      category: "Engineering",
+      isPublished: true,
+      courseIds: ["demo-course-llm-arch", "demo-course-rag-mastery"],
+      courseTitles: ["LLM Architecture & Fine-Tuning", "Advanced RAG & Vector Databases"],
+    },
+    {
+      id: "demo-path-3",
+      title: "Product Manager Leadership",
+      description: "Essential framework for product strategy, data analytics, and team leadership.",
+      level: "intermediate",
+      category: "Product Management",
+      isPublished: true,
+      courseIds: ["demo-course-pm-intro"],
+      courseTitles: ["Product Analytics 101"],
+    }
+  ];
+
+  if (!supabase) return DEMO_PATHS;
+  try {
+    let query = supabase
+      .from("learning_paths")
+      .select("*, learning_path_courses(*, courses(id, title))")
+      .order("title", { ascending: true });
+
+    if (orgId && orgId !== "demo-org-id") {
+      query = query.or(`organization_id.eq.${orgId},organization_id.is.null`);
+    }
+
+    const { data, error } = await query;
+    if (error || !data || data.length === 0) return DEMO_PATHS;
+
+    return data.map(p => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      level: p.level_label || "beginner",
+      category: p.category || null,
+      isPublished: !!p.is_published,
+      courseIds: (p.learning_path_courses || [])
+        .sort((a, b) => a.order_index - b.order_index)
+        .map(pc => pc.course_id),
+      courseTitles: (p.learning_path_courses || [])
+        .sort((a, b) => a.order_index - b.order_index)
+        .map(pc => pc.courses?.title)
+        .filter(Boolean),
+    }));
+  } catch {
+    return DEMO_PATHS;
   }
-  const { data, error } = await supabase
-    .from("learning_paths")
-    .select("*, learning_path_courses(*, courses(id, title))")
-    // learning_paths has no created_at column in this schema (id, title,
-    // description, level_label, category, organization_id, created_by,
-    // is_published). Ordering on it made PostgREST reject the entire query,
-    // so every learning-path list came back empty - which is exactly why the
-    // admin Learning Paths screen showed nothing at all. Ordered by title
-    // instead, which is a real column and gives a stable, readable order.
-    .order("title", { ascending: true });
-  if (error) throw error;
-  return (data || []).map(p => ({
-    id: p.id,
-    title: p.title,
-    description: p.description,
-    level: p.level_label || "beginner",
-    // Real column, previously dropped on the floor by this mapper as well as
-    // by create/update - so the admin list had no category to show even for
-    // paths where one was set directly in the database.
-    category: p.category || null,
-    isPublished: !!p.is_published,
-    courseIds: (p.learning_path_courses || [])
-      .sort((a, b) => a.order_index - b.order_index)
-      .map(pc => pc.course_id),
-    courseTitles: (p.learning_path_courses || [])
-      .sort((a, b) => a.order_index - b.order_index)
-      .map(pc => pc.courses?.title)
-      .filter(Boolean),
-  }));
 }
 
 export async function createLearningPath({ title, description, level, category, courseIds, isPublished = true }, organizationId, createdBy) {

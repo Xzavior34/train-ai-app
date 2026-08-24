@@ -338,7 +338,7 @@ function PathBuilder({ path, orgId, onBack, onChanged }) {
    ========================================================================= */
 export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
   const showToast = useContext(ToastContext);
-  const pathsQuery = useSupabaseQuery(async () => fetchLearningPathsAdmin(), []);
+  const pathsQuery = useSupabaseQuery(async () => fetchLearningPathsAdmin(orgId), [orgId]);
   const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
   const enrollmentCountsQuery = useSupabaseQuery(async () => fetchLearningPathEnrollmentCounts(), []);
   const paths = pathsQuery.data || [];
