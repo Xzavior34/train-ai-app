@@ -813,7 +813,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                             <div style={{ width: "100%", maxWidth: 140 }}>
                               <div className="ta-row ta-between" style={{ fontSize: 11, marginBottom: 4 }}>
                                 <span>Overall</span>
-                                <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${Math.round(r.overallProgress ?? 80)}%`}</span>
+                                <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${Math.round(m.overallProgress ?? 80)}%`}</span>
                               </div>
                               <div style={{ width: "100%", height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
                                 <div style={{ width: `${progress || 80}%`, height: "100%", background: riskTone === "success" ? "#10B981" : riskTone === "warning" ? "#F59E0B" : "#EF4444", borderRadius: 4 }} />

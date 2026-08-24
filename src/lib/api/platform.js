@@ -93,13 +93,13 @@ export async function updateWeeklyGoal(userId, goal) {
 // Chunking helper to prevent HTTP query string length limits when querying large org user ID arrays
 export async function safeInQuery(tableName, selectFields, idColumn, ids) {
   if (!supabase || !ids || !ids.length) return [];
-  if (ids.length <= 100) {
+  if (ids.length <= 30) {
     const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, ids);
     return data || [];
   }
   const results = [];
-  for (let i = 0; i < ids.length; i += 100) {
-    const chunk = ids.slice(i, i + 100);
+  for (let i = 0; i < ids.length; i += 30) {
+    const chunk = ids.slice(i, i + 30);
     const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, chunk);
     if (data) results.push(...data);
   }
@@ -126,16 +126,12 @@ export async function fetchOrgMembers(organizationId) {
   const profiles = data || [];
   if (!profiles.length) return profiles;
 
-  // cohort_members has no FK to user_profiles or cohorts (same manual-lookup
-  // limitation as everywhere else this table is read - see
-  // fetchManagerTeamCohorts), so PeopleScreen's Directory "Cohort / Track"
-  // column previously had nothing real to show and used a fake idx%2
-  // placeholder. Attach the member's real cohort name here instead.
-  const { data: memberRows } = await supabase.from("cohort_members").select("user_id, cohort_id").in("user_id", profiles.map((p) => p.id));
+  // Use chunked safeInQuery to prevent URL length limits when fetching cohort_members for large user lists
+  const memberRows = await safeInQuery("cohort_members", "user_id, cohort_id", "user_id", profiles.map((p) => p.id));
   const cohortIds = [...new Set((memberRows || []).map((m) => m.cohort_id))];
   let cohortNameById = {};
   if (cohortIds.length) {
-    const { data: cohorts } = await supabase.from("cohorts").select("id, name").in("id", cohortIds);
+    const cohorts = await safeInQuery("cohorts", "id, name", "id", cohortIds);
     cohortNameById = Object.fromEntries((cohorts || []).map((c) => [c.id, c.name]));
   }
   const cohortNameByUserId = Object.fromEntries(
