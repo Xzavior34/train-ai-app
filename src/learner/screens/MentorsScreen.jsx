@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Tag } from "../components/LearnerUI.jsx";
 import {
   Star, Video, CheckCircle2, Globe, Award, ChevronDown, ChevronUp,
-  Users, Calendar, Clock, ShieldCheck, MessageSquare, Search
+  Users, Calendar, Clock, ShieldCheck, MessageSquare, Search, X
 } from "lucide-react";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -78,44 +79,48 @@ export function MentorsScreen({
       {/* =========================================================================
           HERO BANNER: Expert Mentors & 1-on-1 Office Hours
           ========================================================================= */}
-      <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
-        color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
-        position: "relative",
-        overflow: "hidden"
-      }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1400&auto=format&fit=crop&q=85"
-          alt=""
+      {/* =========================================================================
+          HERO BANNER: Expert Mentors & 1-on-1 Office Hours (Adaptive Liquid Glass)
+          ========================================================================= */}
+      <div
+        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          padding: "clamp(18px, 2.5vw, 24px)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
           style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            pointerEvents: "none"
           }}
         />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
-          zIndex: 0
-        }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.2 }}>
               Expert Instructors &amp; 1-on-1 Mentorship
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
               Book dedicated 1-on-1 sessions for portfolio reviews, code architecture deep-dives, design token audits, and career guidance.
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Average Rating: 4.9 ★</div>
+          <div className="tai-hero-subcard" style={{
+            borderRadius: 10,
+            padding: "10px 16px",
+            flexShrink: 0
+          }}>
+            <div style={{ fontSize: 15, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
+            <div style={{ fontSize: 12, color: "#FBBF24", marginTop: 2, fontWeight: 700 }}>Average Rating: 4.9 ★</div>
           </div>
         </div>
       </div>
@@ -123,72 +128,85 @@ export function MentorsScreen({
       {/* =========================================================================
           BOOKING MODAL / CARD
           ========================================================================= */}
-      {requestingSession && sessionMentorChoice && (
-        <div className="tai-card" style={{ borderColor: "var(--primary)", borderWidth: 2, padding: 24, borderRadius: 20, boxShadow: "0 10px 30px rgba(79, 70, 229, 0.15)" }}>
-          <div className="tai-row tai-between">
-            <div style={{ fontWeight: 800, fontSize: 17, color: "var(--text)" }}>Schedule 1-on-1 Mentorship Session</div>
-            <button className="tai-btn tai-btn-ghost tai-btn-sm" onClick={closeBooking}>Cancel</button>
-          </div>
-          
-          <div className="tai-row tai-gap14 tai-mt14">
+      {/* =========================================================================
+          BOOKING MODAL / CARD (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
+          ========================================================================= */}
+      <PortalModal
+        isOpen={Boolean(requestingSession && sessionMentorChoice)}
+        onClose={closeBooking}
+        maxWidth={540}
+        zIndex={9999}
+      >
+        <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
+          <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", minWidth: 0, flex: "1 1 200px" }}>Schedule 1-on-1 Mentorship Session</div>
+          <button className="tai-btn tai-btn-ghost tai-btn-sm" style={{ flexShrink: 0 }} onClick={closeBooking}><X size={16} /></button>
+        </div>
+
+        {sessionMentorChoice && (
+          <div className="tai-row tai-gap14 tai-mt14" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
             <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={48} />
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>{sessionMentorChoice.name}</div>
-              <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700 }}>${sessionMentorChoice.rate}/hr • {sessionMentorChoice.title}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sessionMentorChoice.name}</div>
+              <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>${sessionMentorChoice.rate}/hr • {sessionMentorChoice.title}</div>
             </div>
           </div>
+        )}
 
-          <div className="tai-label tai-mt16">Topic or Project Goals</div>
-          <input
-            className="tai-input tai-mt6"
-            placeholder="e.g. Figma variables architecture review, code audit for RNN pipeline..."
-            value={sessionTopicInput}
-            onChange={e => setSessionTopicInput(e.target.value)}
-          />
+        <div className="tai-label tai-mt16">Topic or Project Goals</div>
+        <input
+          className="tai-input tai-mt6"
+          style={{ width: "100%", boxSizing: "border-box" }}
+          placeholder="e.g. Figma variables architecture review, code audit for RNN pipeline..."
+          value={sessionTopicInput}
+          onChange={e => setSessionTopicInput(e.target.value)}
+          autoFocus
+        />
 
-          <div className="tai-label tai-mt16">Select Available Day</div>
-          {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>Loading instructor schedule...</div>}
-          {!mentorAvailabilityQuery?.loading && !hasAvailability && (
-            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>This instructor hasn't published recurring slots yet. Request will be submitted as tentative.</div>
-          )}
-          {hasAvailability && (
-            <div className="tai-scrollx tai-mt8">
-              {availableSlots.map(s => (
-                <div
-                  key={s.id}
-                  className={`tai-pill ${bookingDay === s.day_of_week ? "tai-pill-active" : "tai-pill-inactive"}`}
-                  onClick={() => chooseDay(s)}
-                >
-                  {DAY_NAMES[s.day_of_week]} ({(s.start_time || "09:00").slice(0, 5)})
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="tai-label tai-mt16">Select Available Day</div>
+        {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>Loading instructor schedule...</div>}
+        {!mentorAvailabilityQuery?.loading && !hasAvailability && (
+          <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>This instructor hasn't published recurring slots yet. Request will be submitted as tentative.</div>
+        )}
+        {hasAvailability && (
+          <div className="tai-scrollx tai-mt8">
+            {availableSlots.map(s => (
+              <div
+                key={s.id}
+                className={`tai-pill ${bookingDay === s.day_of_week ? "tai-pill-active" : "tai-pill-inactive"}`}
+                onClick={() => chooseDay(s)}
+              >
+                {DAY_NAMES[s.day_of_week]} ({(s.start_time || "09:00").slice(0, 5)})
+              </div>
+            ))}
+          </div>
+        )}
 
-          {hasAvailability && selectedSlot && (
-            <div className="tai-mt14">
-              <div className="tai-label">Preferred Time ({(selectedSlot.start_time || "").slice(0, 5)} - {(selectedSlot.end_time || "").slice(0, 5)})</div>
-              <input
-                className="tai-input tai-mt6"
-                type="time"
-                value={bookingTime}
-                min={(selectedSlot.start_time || "").slice(0, 5)}
-                max={(selectedSlot.end_time || "").slice(0, 5)}
-                onChange={e => setBookingTime(e.target.value)}
-              />
-            </div>
-          )}
+        {hasAvailability && selectedSlot && (
+          <div className="tai-mt14">
+            <div className="tai-label">Preferred Time ({(selectedSlot.start_time || "").slice(0, 5)} - {(selectedSlot.end_time || "").slice(0, 5)})</div>
+            <input
+              className="tai-input tai-mt6"
+              type="time"
+              style={{ width: "100%", boxSizing: "border-box" }}
+              value={bookingTime}
+              min={(selectedSlot.start_time || "").slice(0, 5)}
+              max={(selectedSlot.end_time || "").slice(0, 5)}
+              onChange={e => setBookingTime(e.target.value)}
+            />
+          </div>
+        )}
 
+        <div className="tai-row tai-gap10 tai-mt20" style={{ justifyContent: "flex-end" }}>
+          <button className="tai-btn tai-btn-outline" onClick={closeBooking}>Cancel</button>
           <button
-            className="tai-btn tai-btn-primary tai-mt16"
-            style={{ width: "100%", padding: "13px 20px" }}
+            className="tai-btn tai-btn-primary"
             disabled={!canConfirm}
             onClick={confirmBooking}
           >
             Confirm &amp; Request Session →
           </button>
         </div>
-      )}
+      </PortalModal>
 
       {/* =========================================================================
           SEARCH & MENTOR CARDS GRID
@@ -202,16 +220,22 @@ export function MentorsScreen({
           onChange={(e) => setSearchQuery(e.target.value)}
           style={{
             width: "100%", height: 44, paddingLeft: 42, paddingRight: 14,
-            borderRadius: 12, border: "1.5px solid var(--border)", background: "var(--surface)",
+            borderRadius: 8, border: "1.5px solid var(--border)", background: "var(--surface)",
             fontSize: 13.5, color: "var(--text)", outline: "none"
           }}
         />
       </div>
 
-      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
         {filteredMentors.length === 0 && (
-          <div className="tai-card tai-empty" style={{ gridColumn: "1 / -1", borderRadius: 16 }}>
-            No instructors found matching "{searchQuery}".
+          <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px 20px", borderRadius: 10 }}>
+            <Users size={32} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
+            <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
+              {searchQuery ? "No instructors match your search" : "No active instructors found"}
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 420, margin: "4px auto 0" }}>
+              {searchQuery ? "Try searching for a different name, specialization, or keyword." : "Check back soon as new instructors and industry mentors join the platform."}
+            </div>
           </div>
         )}
 
@@ -231,7 +255,7 @@ export function MentorsScreen({
               id={`mentor-card-${m.id}`}
               className="tai-card tai-card-hover"
               style={{
-                borderRadius: 18,
+                borderRadius: 10,
                 borderColor: isExpanded ? "var(--primary)" : "var(--border)",
                 cursor: "pointer",
                 padding: 22
@@ -259,8 +283,8 @@ export function MentorsScreen({
                 </div>
               </div>
 
-              <div className="tai-row tai-between tai-mt16">
-                <div className="tai-row tai-gap12" style={{ fontSize: 12.5, color: "var(--text-2)", fontWeight: 600 }}>
+              <div className="tai-row tai-between tai-mt16" style={{ flexWrap: "wrap", gap: 10 }}>
+                <div className="tai-row tai-gap12" style={{ fontSize: 12.5, color: "var(--text-2)", fontWeight: 600, flexWrap: "wrap" }}>
                   <span className="tai-row tai-gap4"><Star size={13} color="var(--warning)" fill="var(--warning)" /> {m.rating}</span>
                   <span>•</span>
                   <span>{m.sessions} sessions completed</span>
@@ -282,6 +306,7 @@ export function MentorsScreen({
               {isExpanded && (
                 <div className="tai-mt14 tai-fade-in" style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }} onClick={(e) => e.stopPropagation()}>
                   {m.bio && <p className="tai-body-text" style={{ fontSize: 12.5, margin: "0 0 10px" }}>{m.bio}</p>}
+                  {m.tagline && !m.bio && <p className="tai-body-text" style={{ fontSize: 12.5, margin: "0 0 10px" }}>{m.tagline}</p>}
                   <div className="tai-row tai-gap16" style={{ flexWrap: "wrap", fontSize: 12, color: "var(--text-2)" }}>
                     <span className="tai-row tai-gap4"><Award size={13} /> {m.years} yr{m.years === 1 ? "" : "s"} experience</span>
                     {m.languages && m.languages.length > 0 && (

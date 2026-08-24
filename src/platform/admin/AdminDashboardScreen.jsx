@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
-import { Plus, Users, Layers, BookOpen, GraduationCap, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Building2, Brain } from "lucide-react";
+import { Plus, Users, Layers, BookOpen, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Brain } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
@@ -73,31 +73,11 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   return (
     <div className="ta-fade">
       <TopBar
-        title={orgQuery.data?.name || "Dashboard"}
-        sub={`Admin workspace • ${profileQuery.data?.display_name || "Admin"}`}
+        title="Dashboard"
+        sub={orgQuery.data?.name || "Admin Workspace"}
         orgSelector={orgSelector}
         profileQuery={profileQuery}
         onNavigate={setScreen}
-        right={
-          <div style={{ position: "relative" }}>
-            <button className="ta-btn ta-btn-primary" onClick={() => setQuickActionOpen(v => !v)}>
-              <Plus size={15} /> Quick action
-            </button>
-            {quickActionOpen && (
-              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 48, right: 0, width: 210, padding: 8, zIndex: 50 }}>
-                <div className="ta-dropdown-item" onClick={() => { setScreen("content"); setQuickActionOpen(false); }}>
-                  <BookOpen size={14} /> Create course
-                </div>
-                <div className="ta-dropdown-item" onClick={() => { setScreen("cohorts"); setQuickActionOpen(false); }}>
-                  <Layers size={14} /> Create cohort
-                </div>
-                <div className="ta-dropdown-item" onClick={() => { setScreen("people"); setQuickActionOpen(false); }}>
-                  <Users size={14} /> Invite member
-                </div>
-              </div>
-            )}
-          </div>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {!orgId && !profileQuery.loading && (
@@ -107,69 +87,22 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
         {/* =========================================================================
             ADMIN DASHBOARD HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          {/* Background Stock Photo with Overlay */}
-          <img
-            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.35, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.82) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
-
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <Building2 size={13} color="#A5B4FC" /> {orgQuery.data?.name || "ACADEMY"} WORKSPACE
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 5
-                }}>
-                  <Radio size={11} color="#34D399" /> LIVE COHORTS ONLINE
-                </span>
-              </div>
-
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
-                Welcome back, {profileQuery.data?.display_name || "Admin"}
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cobalt" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                Welcome back, {profileQuery?.data?.display_name || profileQuery?.data?.email?.split("@")[0] || "Admin"}
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
-                Track cohort completion rates, moderate instructor submissions, monitor at-risk learners, and deploy curriculum tracks.
+              <p className="ta-hero-desc">
+                Monitor active learner cohorts, completion rates, and curriculum deployments across your enterprise workspace.
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
+            <div className="ta-hero-actions">
               <button
-                className="ta-btn"
+                className="ta-btn ta-btn-primary"
                 onClick={() => setScreen("content")}
-                style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13,
-                  padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
-                  boxShadow: "0 4px 16px rgba(79, 70, 229, 0.4)"
-                }}
               >
                 + Create Masterclass
               </button>
@@ -213,7 +146,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                       style={{
                         padding: "12px 14px",
                         background: "var(--surface-3)",
-                        borderRadius: 12,
+                        borderRadius: 8,
                         cursor: "pointer",
                         border: "1px solid var(--border)",
                         transition: "all 0.15s ease",
@@ -224,7 +157,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                         <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)", flexShrink: 0 }}>
                           <Icon size={16} color="var(--primary)" />
                         </div>
-                        <span style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.label}</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.35 }}>{t.label}</span>
                       </div>
                       <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
                         <Tag tone={t.tone === "danger" ? "danger" : t.tone === "warning" ? "warning" : undefined}>
@@ -253,10 +186,10 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No cohorts yet.</div>
                 )}
                 {(cohortProgressQuery.data || []).map(c => (
-                  <div key={c.name} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("cohorts")}>
-                    <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 8 }}>
-                      <span style={{ fontWeight: 700 }}>{c.name}</span>
-                      <span style={{ color: "var(--primary)", fontWeight: 700 }}>{c.progress}%</span>
+                  <div key={c.name} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("cohorts")}>
+                    <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 8, gap: 10 }}>
+                      <span style={{ fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
+                      <span style={{ color: "var(--primary)", fontWeight: 700, flexShrink: 0 }}>{c.progress}%</span>
                     </div>
                     <ProgressBar value={c.progress} />
                   </div>
@@ -286,7 +219,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                       <img src={act.avatar} alt={act.user} style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text)" }}>{act.user}</div>
-                        <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{act.action}</div>
+                        <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{act.action}</div>
                       </div>
                     </div>
                     <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600, flexShrink: 0 }}>{act.time}</span>
@@ -300,76 +233,58 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {/* Live Studio Hero Card */}
             <div className="ta-card" style={{
-              background: "linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.92) 100%)",
+              background: "#0F172A",
               color: "#FFFFFF",
-              padding: 20,
-              borderRadius: 16,
-              border: "1px solid rgba(99, 102, 241, 0.4)",
-              boxShadow: "0 10px 24px -4px rgba(15, 23, 42, 0.35)",
+              padding: 18,
+              borderRadius: "var(--radius)",
+              border: "1px solid #1E293B",
               position: "relative",
               overflow: "hidden"
             }}>
-              <img
-                src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80"
-                alt=""
-                style={{
-                  position: "absolute", inset: 0, width: "100%", height: "100%",
-                  objectFit: "cover", opacity: 0.22, zIndex: 0
-                }}
-              />
-              <div style={{
-                position: "absolute", inset: 0,
-                background: "linear-gradient(105deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 100%)",
-                zIndex: 0
-              }} />
-
-              <div style={{ position: "relative", zIndex: 1 }}>
+              <div>
                 <div className="ta-row ta-between">
-                  <span className="ta-tag" style={{ background: "rgba(239, 68, 68, 0.25)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.4)", fontSize: 11, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <Radio size={12} color="#F87171" /> LIVE NOW • 08:30 AM
+                  <span className="ta-tag" style={{ background: "rgba(239, 68, 68, 0.2)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.3)", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                    <Radio size={11} color="#F87171" /> LIVE NOW • 08:30 AM
                   </span>
-                  <span style={{ fontSize: 11.5, color: "rgba(255,255,255,0.7)" }}>Studio 1</span>
+                  <span style={{ fontSize: 11, color: "#94A3B8" }}>Studio 1</span>
                 </div>
 
-              <div style={{ fontWeight: 800, fontSize: 16, marginTop: 12 }}>Spatial UI &amp; Design Systems Critique</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>
-                Batch 04 live cohort review with Lead Instructors &amp; 24 learners online.
-              </div>
+                <div style={{ fontWeight: 800, fontSize: 15, marginTop: 10 }}>Spatial UI &amp; Design Systems Critique</div>
+                <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>
+                  Batch 04 live cohort review with Lead Instructors &amp; 24 learners online.
+                </div>
 
-              <div className="ta-row ta-between ta-mt16">
-                <div className="ta-row ta-gap8">
-                  <img 
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                    alt="Instructor"
-                    style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover", border: "1px solid rgba(255,255,255,0.4)" }}
-                  />
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700 }}>Astrid Larsson</div>
-                    <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.65)" }}>Lead Facilitator</div>
+                <div className="ta-row ta-between ta-mt14">
+                  <div className="ta-row ta-gap8">
+                    <img 
+                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+                      alt="Instructor"
+                      style={{ width: 30, height: 30, borderRadius: 6, objectFit: "cover" }}
+                    />
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700 }}>Astrid Larsson</div>
+                      <div style={{ fontSize: 10.5, color: "#94A3B8" }}>Lead Facilitator</div>
+                    </div>
                   </div>
+                  <button 
+                    className="ta-btn ta-btn-primary ta-btn-sm"
+                    style={{ background: "#4F46E5", border: "none", borderRadius: 6 }}
+                    onClick={() => window.open("https://meet.google.com/new", "_blank")}
+                  >
+                    Join Studio →
+                  </button>
                 </div>
-                <button 
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  style={{ background: "#4F46E5", border: "none" }}
-                  onClick={() => window.open("https://meet.google.com/new", "_blank")}
-                >
-                  Join Studio →
-                </button>
               </div>
             </div>
-          </div>
 
             {/* Cohort Diagnostic Insights Card */}
-            <div className="ta-card" style={{
-              padding: 20,
-              borderRadius: 16,
+            <div className="ta-card" style={{ padding: 20,
               background: "var(--surface-2)",
-              border: "1px solid var(--border)"
-            }}>
-              <div className="ta-row ta-between">
-                <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 13.5 }}>
-                  <Brain size={16} />
-                  <span>Cohort Diagnostic Insights</span>
+              border: "1px solid var(--border)" }}>
+              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+                <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>
+                  <Brain size={16} style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Cohort Diagnostic Insights</span>
                 </div>
                 <Tag tone="warning">Early Alert</Tag>
               </div>
@@ -410,16 +325,16 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No at-risk students right now.</div>
                 )}
                 {(riskQuery.data || []).map((s, idx) => (
-                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("people")}>
-                    <div className="ta-row ta-gap10">
-                      <img 
-                        src={s.avatar || `https://images.unsplash.com/photo-${1534528741775 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`} 
-                        alt={s.name} 
-                        style={{ width: 34, height: 34, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }}
+                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
+                    <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                      <img
+                        src={s.avatar || `https://images.unsplash.com/photo-${1534528741775 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`}
+                        alt={s.name}
+                        style={{ width: 34, height: 34, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
                         onError={(e) => { e.target.style.display = "none"; }}
                       />
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13 }}>{s.name}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{s.name}</div>
                         <div style={{ fontSize: 11, color: "var(--text-3)" }}>
                           {s.days === "N/A" ? "No recent activity" : `${s.days} days inactive`}
                         </div>
@@ -448,20 +363,46 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <div className="ta-empty">No active instructors yet.</div>
                 )}
                 {(mentorsQuery.data || []).map((m, idx) => (
-                  <div key={m.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("people")}>
-                    <div className="ta-row ta-gap10">
-                      <img 
-                        src={m.avatar || `https://images.unsplash.com/photo-${1573496359142 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`} 
-                        alt={m.name} 
-                        style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }}
+                  <div key={m.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
+                    <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                      <img
+                        src={m.avatar || `https://images.unsplash.com/photo-${1573496359142 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`}
+                        alt={m.name}
+                        style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
                         onError={(e) => { e.target.style.display = "none"; }}
                       />
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13 }}>{m.name}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{m.name}</div>
                         <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.sessions} session{m.sessions === 1 ? "" : "s"}</div>
                       </div>
                     </div>
                     <Tag tone="success"><Star size={11} /> {typeof m.rating === "number" ? m.rating.toFixed(1) : m.rating}</Tag>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Upcoming Sessions */}
+            <div className="ta-card">
+              <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
+                <div>
+                  <div className="ta-title">Upcoming sessions</div>
+                  <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Live &amp; confirmed instructor sessions</div>
+                </div>
+                <CalendarClock size={16} color="var(--text-3)" />
+              </div>
+              <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
+                {sessionsQuery.loading && <div className="ta-empty">Loading...</div>}
+                {!sessionsQuery.loading && (sessionsQuery.data || []).length === 0 && (
+                  <div className="ta-empty">No upcoming sessions scheduled.</div>
+                )}
+                {(sessionsQuery.data || []).map((s, i) => (
+                  <div key={i} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{s.title}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)" }}>{s.mentor} • {s.time}</div>
+                    </div>
+                    <Tag tone={s.status === "live" ? "danger" : undefined}>{s.status}</Tag>
                   </div>
                 ))}
               </div>
@@ -476,9 +417,9 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             {activityLogQuery.loading && <div className="ta-empty">Loading...</div>}
             {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && <div className="ta-empty">No recorded activity yet.</div>}
             {(activityLogQuery.data || []).map((a) => (
-              <div key={a.id} className="ta-row ta-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 12.5 }}>{a.text}</span>
-                <span style={{ fontSize: 11, color: "var(--text-3)" }}>{a.time}</span>
+              <div key={a.id} className="ta-row ta-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)", gap: 10 }}>
+                <span style={{ fontSize: 12.5, minWidth: 0, flex: 1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{a.text}</span>
+                <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{a.time}</span>
               </div>
             ))}
           </div>

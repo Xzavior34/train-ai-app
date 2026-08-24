@@ -54,15 +54,15 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
   }
 
   return (
-    <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
-      <div className="ta-row ta-between">
-        <div>
-          <div className="ta-title">{org.name}</div>
+    <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
+      <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="ta-title" style={{ wordBreak: "break-word" }}>{org.name}</div>
           <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>
             {org.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "-"} plan - status: {org.status}
           </div>
         </div>
-        <div className="ta-row ta-gap8">
+        <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
           <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={handleToggleStatus}>
             {org.status === "suspended" ? <><Unlock size={13} /> Reactivate</> : <><Lock size={13} /> Suspend</>}
           </button>
@@ -71,7 +71,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
       </div>
 
       <div className="ta-mt16">
-        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>Seats</div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>Seats</div>
         <div className="ta-row ta-gap16">
           <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.purchased}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Purchased</div></div>
           <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.used}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Used</div></div>
@@ -83,7 +83,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
       </div>
 
       <div className="ta-mt16">
-        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>Feature flags</div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>Feature flags</div>
         <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 10 }}>
           Tier defaults shown unless explicitly overridden below. Overriding a flag here applies to this organization only, independent of its tier.
         </div>
@@ -92,8 +92,8 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
             const hasOverride = key in overrideMap;
             const resolved = hasOverride ? overrideMap[key] : null; // resolved via tier default server-side when no override exists; we only show explicit overrides here plus a toggle to set one
             return (
-              <div key={key} className="ta-row ta-between" style={{ padding: "6px 4px" }}>
-                <div className="ta-row ta-gap8">
+              <div key={key} className="ta-row ta-between" style={{ padding: "6px 4px", gap: 8 }}>
+                <div className="ta-row ta-gap8" style={{ minWidth: 0, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12.5 }}>{label}</span>
                   {hasOverride && <Tag tone="warning">Override</Tag>}
                 </div>
@@ -114,12 +114,12 @@ function PlatformBillingPanel() {
   const paymentsQuery = useSupabaseQuery(async () => fetchPlatformOrganizationPayments(50), []);
   const payments = paymentsQuery.data || [];
   return (
-    <div className="ta-card ta-mt16">
+    <div className="ta-card ta-mt16 ta-fade">
       <div className="ta-row ta-gap8">
         <CreditCard size={16} color="var(--primary)" />
         <div className="ta-title" style={{ fontSize: 15 }}>Organization payments</div>
       </div>
-      <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4, marginBottom: 10 }}>
+      <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 6, marginBottom: 10 }}>
         Every organization subscription activation across the platform, from the audit log.
       </div>
       <div className="ta-table-wrap">
@@ -160,105 +160,47 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
       <TopBar
         title="Organizations" sub="All registered multi-tenant organizations on Train AI"
         orgSelector={orgSelector}
-        right={
-          <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-            <div className="ta-row" style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: 3 }}>
-              <button
-                className={`ta-btn ta-btn-sm ${viewMode === "grid" ? "ta-btn-ghost" : ""}`}
-                style={{ padding: "5px 10px", background: viewMode === "grid" ? "var(--primary-tint)" : "transparent", color: viewMode === "grid" ? "var(--primary)" : "var(--text-3)", border: "none" }}
-                onClick={() => setViewMode("grid")}
-                title="Grid Card View"
-              >
-                <LayoutGrid size={14} />
-              </button>
-              <button
-                className={`ta-btn ta-btn-sm ${viewMode === "table" ? "ta-btn-ghost" : ""}`}
-                style={{ padding: "5px 10px", background: viewMode === "table" ? "var(--primary-tint)" : "transparent", color: viewMode === "table" ? "var(--primary)" : "var(--text-3)", border: "none" }}
-                onClick={() => setViewMode("table")}
-                title="Table View"
-              >
-                <List size={14} />
-              </button>
-            </div>
-            <button className="ta-btn ta-btn-outline" onClick={() => setShowBilling((v) => !v)}>
-              <CreditCard size={15} /> {showBilling ? "Hide billing" : "Billing"}
-            </button>
-            {onLaunchOnboarding && (
-              <button className="ta-btn ta-btn-outline" onClick={onLaunchOnboarding}>
-                <Rocket size={15} /> Set up new organization
-              </button>
-            )}
-            <button className="ta-btn ta-btn-primary" onClick={() => setNewOrgOpen(true)}><Plus size={15} /> Create organization</button>
-          </div>
-        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
             ORGANIZATIONS HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          {/* Background Stock Photo with Overlay */}
-          <img
-            src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
+        <div
+          className="ta-card ta-hero-banner ta-hero-dark anim-fluid-entrance"
+          style={{
+            borderRadius: 14,
+            padding: "clamp(18px, 2.5vw, 24px)",
+            position: "relative",
+            overflow: "hidden"
+          }}
+        >
+          <div className="tai-glow-purple" />
 
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <Building2 size={13} color="#A5B4FC" /> TENANT ISOLATION ARCHITECTURE
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 5
-                }}>
-                  <ShieldCheck size={11} color="#34D399" /> RLS STRICT MULTI-TENANCY
-                </span>
-              </div>
-
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+          <div className="ta-hero-inner" style={{ position: "relative", zIndex: 1 }}>
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
                 Multi-Tenant Organizations Directory
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+              <p className="ta-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 680, lineHeight: 1.5 }}>
                 Manage institutional subscriptions, seat quotas, custom feature flag overrides, and cross-tenant SSO settings.
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
-              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Total Registered</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#fff" }}>{orgs.length} Tenants</div>
-              </div>
-              <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Seats</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>5,900 Active</div>
-              </div>
+            <div className="ta-hero-actions" style={{ flexWrap: "wrap", gap: 8 }}>
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ height: 36, padding: "0 12px", borderRadius: 8, fontSize: 12.5, color: "#FFFFFF", borderColor: "rgba(255,255,255,0.2)", display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={() => setShowBilling((v) => !v)}
+              >
+                <CreditCard size={13} /> {showBilling ? "Hide Billing" : "Billing"}
+              </button>
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setNewOrgOpen(true)}
+              >
+                <Plus size={14} /> Create Organization
+              </button>
             </div>
           </div>
         </div>
@@ -273,14 +215,14 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
             {!orgsQuery.loading && orgs.length === 0 && <div className="ta-empty">No organizations created yet.</div>}
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }} className="anim-stagger">
               {orgs.map(o => (
                 <div
                   key={o.id}
                   className="ta-card ta-card-hover"
                   style={{
                     padding: 20,
-                    borderRadius: 16,
+                    borderRadius: 10,
                     border: "1px solid var(--border)",
                     display: "flex",
                     flexDirection: "column",
@@ -291,18 +233,18 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                 >
                   <div>
                     {/* Top Row: Org Icon, Name, and Status */}
-                    <div className="ta-row ta-between" style={{ alignItems: "flex-start", marginBottom: 12 }}>
-                      <div className="ta-row ta-gap12">
+                    <div className="ta-row ta-between" style={{ alignItems: "flex-start", marginBottom: 12, gap: 10 }}>
+                      <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 auto" }}>
                         <div style={{
-                          width: 44, height: 44, borderRadius: 12,
+                          width: 44, height: 44, borderRadius: 8,
                           background: "var(--primary-tint)", color: "var(--primary)",
                           display: "flex", alignItems: "center", justifyContent: "center",
                           border: "1px solid rgba(99, 102, 241, 0.2)", flexShrink: 0
                         }}>
                           <Building2 size={22} />
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)" }}>{o.name}</div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", wordBreak: "break-word", lineHeight: 1.25 }}>{o.name}</div>
                           <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>ID: {o.id.slice(0, 12)}...</div>
                         </div>
                       </div>
@@ -314,7 +256,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                     {/* Stats Metric Strip */}
                     <div style={{
                       display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10,
-                      background: "var(--surface-2)", padding: "10px 14px", borderRadius: 12, marginBottom: 12
+                      background: "var(--surface-2)", padding: "10px 14px", borderRadius: 8, marginBottom: 12
                     }}>
                       <div>
                         <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700 }}>MEMBERS</div>
@@ -338,7 +280,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                   </div>
 
                   {/* Actions Footer */}
-                  <div className="ta-row ta-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                  <div className="ta-row ta-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
                       Created {new Date(o.created_at).toLocaleDateString()}
                     </span>
@@ -435,10 +377,10 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
         )}
 
         {newOrgOpen && (
-          <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
+          <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--border)", borderRadius: 10 }}>
             <div className="ta-title">Create New Organization</div>
             <input className="ta-input ta-mt12" placeholder="Organization name..." value={name} onChange={e => setName(e.target.value)} />
-            <div className="ta-row ta-gap8 ta-mt12">
+            <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
               <button className="ta-btn ta-btn-primary" onClick={async () => {
                 if (!name.trim()) return;
                 await createOrganization({ name: name.trim() });

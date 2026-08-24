@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, ProgressBar, StatTile } from "../components/LearnerUI.jsx";
 import {
   BarChart3, BookOpen, Clock, Trophy, Flame, GraduationCap, CheckCircle2,
-  Calendar, ArrowRight, Play, Star, Sparkles, Target, Award, ShieldCheck,
+  Calendar, ArrowRight, Play, Star, Target, Award, ShieldCheck,
   TrendingUp, Check, ExternalLink
 } from "lucide-react";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function MyProgressScreen({ user = {}, courses = [], push, back, session, showToast }) {
   const [filterStatus, setFilterStatus] = useState("all"); // "all" | "in_progress" | "completed"
@@ -77,14 +78,40 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
     { name: "Spatial Interface Design", mastery: 68, status: "In Progress" },
   ];
 
-  const filteredCourses = ENROLLED_COURSES_DETAILED.filter(c => {
+  const enrolledFromDb = (courses || [])
+    .filter(c => c.enrolled || c.progress > 0)
+    .map((c, idx) => {
+      const isDone = (c.progress || 0) >= 100;
+      return {
+        id: c.id,
+        title: c.title,
+        category: c.category || "Professional Track",
+        instructor: c.instructor || "Instructor",
+        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        totalLessons: c.lessons || 12,
+        completedLessons: Math.round(((c.progress || 0) / 100) * (c.lessons || 12)),
+        totalHours: c.hours || 10,
+        hoursSpent: Math.round(((c.progress || 0) / 100) * (c.hours || 10) * 10) / 10,
+        progress: c.progress || 0,
+        status: isDone ? "completed" : "in_progress",
+        lastActive: "Recent",
+        nextLesson: isDone ? "All modules completed" : "Continue current module",
+        coverImageUrl: c.coverImageUrl || c.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
+      };
+    });
+
+  const allProgressCourses = enrolledFromDb.length > 0
+    ? enrolledFromDb
+    : (isMockDataEnabled() ? ENROLLED_COURSES_DETAILED : []);
+
+  const filteredCourses = allProgressCourses.filter(c => {
     if (filterStatus === "in_progress") return c.status === "in_progress";
     if (filterStatus === "completed") return c.status === "completed";
     return true;
   });
 
-  const inProgressCount = ENROLLED_COURSES_DETAILED.filter(c => c.status === "in_progress").length;
-  const completedCount = ENROLLED_COURSES_DETAILED.filter(c => c.status === "completed").length;
+  const inProgressCount = allProgressCourses.filter(c => c.status === "in_progress").length;
+  const completedCount = allProgressCourses.filter(c => c.status === "completed").length;
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -92,63 +119,60 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
       {/* =========================================================================
           HERO BANNER: My Learning Journey & Weekly Milestone
           ========================================================================= */}
-      <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 27, 75, 0.85) 100%)",
-        color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
-        position: "relative",
-        overflow: "hidden"
-      }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1400&auto=format&fit=crop&q=85"
-          alt=""
+      {/* =========================================================================
+          HERO BANNER: My Learning Journey & Weekly Milestone (Adaptive Liquid Glass)
+          ========================================================================= */}
+      <div
+        className="tai-card tai-hero-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          padding: "clamp(18px, 2.5vw, 24px)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
           style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%)",
+            pointerEvents: "none"
           }}
         />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
-          zIndex: 0
-        }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
-              My Learning Progress &amp; Syllabus
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
+              My Learning Progress
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
-              16.6 total study hours logged this week across {inProgressCount} active courses. You're 3 lessons away from this week's sprint target.
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+              16.6 study hours logged across {inProgressCount} active courses this week.
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 20, fontWeight: 900, color: "#FFFFFF" }}>17 / 20 Lessons Done</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Weekly Target: 85% Met</div>
+          <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>17 / 20 Lessons Done</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>85% Sprint Met</div>
           </div>
         </div>
 
-        {/* Weekly Goal Progress Bar (High-Contrast Hero Feature) */}
-        <div style={{
-          position: "relative", zIndex: 1, marginTop: 22,
-          background: "rgba(255,255,255,0.12)", backdropFilter: "blur(10px)",
-          padding: "14px 18px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.22)"
+        {/* Weekly Goal Progress Bar */}
+        <div className="tai-hero-subcard" style={{
+          position: "relative", zIndex: 1, marginTop: 16,
+          padding: "12px 16px", borderRadius: 10
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 13, fontWeight: 800, marginBottom: 8, color: "#FFFFFF" }}>
-            <span>
-              Weekly Sprint Progress (85% Target Met)
-            </span>
-            <span style={{ color: "#FDE68A", fontSize: 12.5, fontWeight: 700 }}>
+          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
+            <span>Weekly Sprint Progress (85% Target Met)</span>
+            <span style={{ color: "#34D399", fontSize: 12, fontWeight: 700 }}>
               3 of 20 lessons remaining
             </span>
           </div>
-          <div style={{ height: 10, borderRadius: 99, background: "rgba(0,0,0,0.35)", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
-            <div style={{ width: "85%", height: "100%", background: "linear-gradient(90deg, #34D399 0%, #6366F1 100%)", borderRadius: 99, boxShadow: "0 0 12px rgba(52, 211, 153, 0.6)" }} />
+          <div style={{ height: 8, borderRadius: 99, background: "var(--surface-3)", overflow: "hidden" }}>
+            <div style={{ width: "85%", height: "100%", background: "#10B981", borderRadius: 99, transition: "width 0.4s ease" }} />
           </div>
         </div>
       </div>
@@ -157,9 +181,9 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           KEY STAT TILES STRIP
           ========================================================================= */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <BookOpen size={18} color="var(--primary)" />
             </div>
             <div>
@@ -169,9 +193,9 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <GraduationCap size={18} color="#10B981" />
             </div>
             <div>
@@ -181,9 +205,9 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Clock size={18} color="#F59E0B" />
             </div>
             <div>
@@ -193,9 +217,9 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Flame size={18} color="#8B5CF6" />
             </div>
             <div>
@@ -209,10 +233,10 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
       {/* =========================================================================
           ANALYTICS: 2-COLUMN STUDY TIME & SKILL RADAR
           ========================================================================= */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
-        
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 20 }}>
+
         {/* Weekly Learning Bar Chart */}
-        <div className="tai-card" style={{ padding: 22, borderRadius: 18 }}>
+        <div className="tai-card" style={{ padding: 22, borderRadius: 10 }}>
           <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
@@ -227,44 +251,55 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 150, padding: "16px 8px 8px", background: "var(--surface-3)", borderRadius: 14 }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 150, padding: "16px 8px 8px", background: "var(--surface-3)", borderRadius: 10 }}>
             {WEEKLY_BREAKDOWN.map((d, i) => (
               <div key={d.day} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>{d.hours}h</span>
                 <div
                   style={{
-                    width: 24, height: `${d.heightPct}%`,
-                    background: d.active ? "#4F46E5" : "rgba(99, 102, 241, 0.35)",
-                    borderRadius: "6px 6px 2px 2px"
+                    width: "45%",
+                    maxWidth: 32,
+                    height: `${d.heightPct}%`,
+                    background: d.active ? "#4F46E5" : "var(--primary-tint)",
+                    borderRadius: "6px 6px 0 0",
+                    transition: "height 0.3s ease"
                   }}
                 />
-                <span style={{ fontSize: 11.5, fontWeight: d.active ? 800 : 600, color: d.active ? "var(--primary)" : "var(--text-3)" }}>{d.day}</span>
+                <span style={{ fontSize: 11.5, fontWeight: d.active ? 800 : 600, color: d.active ? "var(--primary)" : "var(--text-3)" }}>
+                  {d.day}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Skill Mastery Breakdown */}
-        <div className="tai-card" style={{ padding: 22, borderRadius: 18 }}>
+        {/* Competency Mastery Overview */}
+        <div className="tai-card" style={{ padding: 22, borderRadius: 10 }}>
           <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
-                Skill Competency Tracker
+                Target Skills Mastery
               </h3>
               <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>
-                Mastery levels based on completed coursework &amp; quizzes
+                Evaluated from assessments &amp; projects
               </div>
             </div>
+            <span className="tai-tag" style={{ background: "rgba(79, 70, 229, 0.1)", color: "var(--primary)", fontWeight: 700 }}>
+              Level 2
+            </span>
           </div>
 
-          <div className="tai-col tai-gap12">
-            {SKILLS_OVERVIEW.map((s, idx) => (
-              <div key={idx}>
-                <div className="tai-row tai-between" style={{ fontSize: 12.5, marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, color: "var(--text)" }}>{s.name}</span>
-                  <span style={{ fontWeight: 800, color: "var(--primary)" }}>{s.mastery}% ({s.status})</span>
+          <div className="tai-col tai-gap14">
+            {SKILLS_OVERVIEW.map(skill => (
+              <div key={skill.name}>
+                <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 5 }}>
+                  <span style={{ color: "var(--text)" }}>{skill.name}</span>
+                  <div className="tai-row tai-gap6">
+                    <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>{skill.status}</span>
+                    <span style={{ color: "var(--primary)", fontWeight: 800 }}>{skill.mastery}%</span>
+                  </div>
                 </div>
-                <ProgressBar value={s.mastery} height={6} />
+                <ProgressBar value={skill.mastery} height={7} />
               </div>
             ))}
           </div>
@@ -273,21 +308,20 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
       </div>
 
       {/* =========================================================================
-          COURSES IN PROGRESS: DETAILED CARDS & NEXT UP ACTIONS
+          COURSE BREAKDOWN: STATUS TABS & EXPANDED SYLLABUS CARDS
           ========================================================================= */}
-      <div className="tai-col tai-gap16">
-        <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
-          <div className="tai-row tai-gap8">
-            <BookOpen size={20} color="var(--primary)" />
+      <div>
+        <div className="tai-row tai-between" style={{ marginBottom: 16, flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+          <div>
             <h2 style={{ fontSize: 18, fontWeight: 900, color: "var(--text)", margin: 0 }}>
-              Enrolled Courses &amp; Syllabi Breakdown
+              Enrolled Courses &amp; Modules
             </h2>
           </div>
 
           {/* Status Filter Tabs */}
           <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
             {[
-              { k: "all", label: `All (${ENROLLED_COURSES_DETAILED.length})` },
+              { k: "all", label: `All (${allProgressCourses.length})` },
               { k: "in_progress", label: `In Progress (${inProgressCount})` },
               { k: "completed", label: `Completed (${completedCount})` },
             ].map(t => (
@@ -303,20 +337,40 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
         </div>
 
         <div className="tai-col tai-gap20 anim-stagger">
+          {filteredCourses.length === 0 && (
+            <div className="tai-card" style={{ textAlign: "center", padding: "48px 24px", borderRadius: 10 }}>
+              <BookOpen size={36} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
+              <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
+                {filterStatus === "completed" ? "No completed courses yet" : filterStatus === "in_progress" ? "No courses in progress" : "No enrolled courses yet"}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 440, margin: "4px auto 16px" }}>
+                {filterStatus === "all" ? "Explore the course catalog to enroll in masterclasses and track your skill growth." : "Browse available courses to continue learning."}
+              </div>
+              <button
+                className="tai-btn tai-btn-primary"
+                onClick={() => push("courses")}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, margin: "0 auto" }}
+              >
+                <span>Browse Courses</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          )}
+
           {filteredCourses.map(course => {
             const isCompleted = course.progress === 100;
             return (
               <div
                 key={course.id}
                 className="tai-card tai-card-hover"
-                style={{ padding: "24px 26px", borderRadius: 20, background: "var(--surface)", border: "1px solid var(--border)" }}
+                style={{ padding: "clamp(16px, 4vw, 24px) clamp(16px, 4vw, 26px)", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}
                 onClick={() => push("courseDetail", { id: course.id })}
               >
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center", justifyContent: "space-between" }}>
                   
                   {/* Left: Course Image & Information with Generous Spacing */}
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "center", flex: "1 1 360px", minWidth: 0 }}>
-                    <div style={{ width: 130, height: 92, borderRadius: 14, overflow: "hidden", flexShrink: 0, boxShadow: "0 4px 12px rgba(15,23,42,0.08)", border: "1px solid var(--border)" }}>
+                    <div style={{ width: 130, height: 92, borderRadius: 8, overflow: "hidden", flexShrink: 0, boxShadow: "0 4px 12px rgba(15,23,42,0.08)", border: "1px solid var(--border)" }}>
                       <img
                         src={course.coverImageUrl}
                         alt={course.title}
@@ -350,7 +404,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
                   </div>
 
                   {/* Right: Dedicated Progress Bar & Resume Action Panel */}
-                  <div style={{ flex: "1 1 300px", background: "var(--surface-3)", padding: "16px 20px", borderRadius: 14, border: "1px solid var(--border)" }}>
+                  <div style={{ flex: "1 1 300px", background: "var(--surface-3)", padding: "16px 20px", borderRadius: 8, border: "1px solid var(--border)" }}>
                     <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 8 }}>
                       <span style={{ color: "var(--text-2)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginRight: 8 }}>
                         {isCompleted ? "Course Completed • 100%" : `Next: ${course.nextLesson || "Continue Lesson"}`}
@@ -369,7 +423,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
 
                       <button
                         className="tai-btn tai-btn-primary tai-btn-sm"
-                        style={{ padding: "8px 18px", borderRadius: 10, fontWeight: 700 }}
+                        style={{ padding: "8px 18px", borderRadius: 8, fontWeight: 700 }}
                         onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: course.id }); }}
                       >
                         {isCompleted ? "Review Syllabus →" : "Resume Lesson →"}

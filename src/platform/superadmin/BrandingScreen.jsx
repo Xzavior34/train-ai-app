@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { TopBar, ToastContext, Tag } from "../components/PlatformUI.jsx";
-import { Building2, Palette, Sparkles, Check, Sun, Moon, Eye } from "lucide-react";
+import { Building2, Palette, Check, Sun, Moon, Eye } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllOrganizations, fetchOrgBranding, upsertOrgBranding } from "../../lib/api/platform.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
@@ -32,7 +32,7 @@ export function BrandingScreen() {
   const [logoUrl, setLogoUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#4338CA");
   const [themeMode, setThemeMode] = useState("light");
-  const [borderRadius, setBorderRadius] = useState("12px");
+  const [borderRadius, setBorderRadius] = useState("10px");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -60,27 +60,49 @@ export function BrandingScreen() {
     <div className="ta-fade">
       <TopBar title="Branding & White-Label" sub="Customize logos, brand palettes, and theme tokens per tenant" />
       
-      <div className="ta-content" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 24, alignItems: "start" }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            BRANDING & WHITE-LABEL HERO BANNER
+            ========================================================================= */}
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
+          <div className="tai-glow-magenta" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
+                White-Label &amp; Brand Studio
+              </h1>
+              <p className="ta-hero-desc">
+                Customize institution logos, custom accent palettes, domain hostnames, and CSS design tokens per tenant.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "start" }}>
         
         {/* Controls Card */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 16 }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
           <div className="ta-title" style={{ fontSize: 16 }}>Tenant Customization</div>
           
           <div className="ta-mt16">
             <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Select Tenant Organization</label>
-            <div className="ta-row ta-gap10">
-              <Building2 size={18} color="var(--primary)" />
-              <select
-                className="ta-input"
-                style={{ flex: 1 }}
-                value={selectedOrgId}
-                onChange={(e) => setSelectedOrgId(e.target.value)}
-              >
-                {orgs.map((o) => (
-                  <option key={o.id} value={o.id}>{o.name}</option>
-                ))}
-              </select>
-            </div>
+            {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
+            {!orgsQuery.loading && orgs.length === 0 && <div className="ta-empty">No organizations created yet.</div>}
+            {orgs.length > 0 && (
+              <div className="ta-row ta-gap10">
+                <Building2 size={18} color="var(--primary)" />
+                <select
+                  className="ta-input"
+                  style={{ flex: 1 }}
+                  value={selectedOrgId}
+                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                >
+                  {orgs.map((o) => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="ta-mt20">
@@ -96,13 +118,14 @@ export function BrandingScreen() {
                     height: 32,
                     borderRadius: "50%",
                     background: p.color,
-                    border: primaryColor === p.color ? "3px solid #fff" : "2px solid transparent",
-                    boxShadow: primaryColor === p.color ? `0 0 0 2px ${p.color}` : "none",
+                    border: primaryColor === p.color ? "3px solid var(--surface)" : "2px solid transparent",
+                    boxShadow: primaryColor === p.color ? `0 0 0 2px var(--text)` : "none",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#fff"
+                    color: "#fff",
+                    transition: "all .15s ease"
                   }}
                   title={p.name}
                 >
@@ -156,7 +179,7 @@ export function BrandingScreen() {
               <img
                 src={logoUrl}
                 alt="Logo"
-                style={{ width: 56, height: 56, borderRadius: 12, objectFit: "cover", marginBottom: 10, border: "1px solid var(--border)" }}
+                style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", marginBottom: 10, border: "1px solid var(--border)" }}
               />
             )}
             <FileUploadZone
@@ -175,7 +198,7 @@ export function BrandingScreen() {
         </div>
 
         {/* Live Preview Card */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 16, background: themeMode === "dark" ? "#0F172A" : "var(--surface)", color: themeMode === "dark" ? "#F8FAFC" : "var(--text)" }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10, background: themeMode === "dark" ? "#0F172A" : "var(--surface)", color: themeMode === "dark" ? "#F8FAFC" : "var(--text)" }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
             <div className="ta-row ta-gap8">
               <Eye size={16} color={primaryColor} />
@@ -185,17 +208,17 @@ export function BrandingScreen() {
           </div>
 
           <div style={{ marginTop: 20, padding: 18, borderRadius: borderRadius, background: themeMode === "dark" ? "#1E293B" : "var(--surface-2)", border: "1px solid var(--border)" }}>
-            <div className="ta-row ta-between">
-              <div className="ta-row ta-gap10">
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: primaryColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
+            <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
+              <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 auto" }}>
+                <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 8, background: primaryColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
                   {selectedOrg.name?.charAt(0) || "T"}
                 </div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 14 }}>{selectedOrg.name}</div>
+                <div style={{ minWidth: 0, overflow: "hidden" }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedOrg.name}</div>
                   <div style={{ fontSize: 11, opacity: 0.7 }}>Enterprise AI Academy</div>
                 </div>
               </div>
-              <button style={{ background: primaryColor, color: "#fff", border: "none", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              <button style={{ background: primaryColor, color: "#fff", border: "none", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
                 Enroll
               </button>
             </div>
@@ -208,8 +231,8 @@ export function BrandingScreen() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
-  );
+  </div>
+);
 }

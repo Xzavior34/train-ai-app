@@ -4,10 +4,12 @@ import { ACHIEVEMENT_CATALOG, getAchievementProgress } from "../achievementCatal
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 import {
   Trophy, Flame, Snowflake, Award, BookOpen, Users, GraduationCap, CheckCircle2,
-  Gift, Calendar, BarChart3, Clock, Sparkles, Download, Share2, ExternalLink,
+  Gift, Calendar, BarChart3, Clock, Zap, Download, Share2, ExternalLink,
   ShieldCheck, ArrowUpRight, Check, X, Star, TrendingUp
 } from "lucide-react";
 import { fetchMyMysteryBoxes, claimMysteryBox } from "../../lib/api/schemaHelper.js";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 function iconForCategory(category) {
   if (category === "streak") return Flame;
@@ -146,87 +148,82 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
     { skill: "Cloud Services & Deployment", score: 70, level: "Intermediate" },
   ];
 
-  const effectiveAchievements = (achievements && achievements.length > 0) ? achievements : DEFAULT_EARNED;
+  const effectiveAchievements = (achievements && achievements.length > 0) ? achievements : (isMockDataEnabled() ? DEFAULT_EARNED : []);
   const { ceiling, percent } = levelProgress(user.level || 2, user.totalPoints || 450);
-  const earnedIds = new Set(effectiveAchievements.map((a) => a.achievement_id));
+  // Real earned rows carry the catalog slug as achievement_slug (via the
+  // my_achievements_with_slug view - achievement_id itself is a uuid FK
+  // and never matches a catalog id). Demo/default rows already use the
+  // slug directly in achievement_id, so both are checked.
+  const earnedIds = new Set(effectiveAchievements.map((a) => a.achievement_slug || a.achievement_id));
   const locked = ACHIEVEMENT_CATALOG.filter((def) => !earnedIds.has(def.id));
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       
       {/* =========================================================================
-          HERO BANNER: Progression & Level Showcase
+          HERO BANNER: Progression & Level Showcase (Adaptive Liquid Glass)
           ========================================================================= */}
-      <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
-        color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
-        position: "relative",
-        overflow: "hidden"
-      }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=1400&auto=format&fit=crop&q=85"
-          alt=""
+      <div
+        className="tai-card tai-hero-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          padding: "clamp(18px, 2.5vw, 24px)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
           style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, transparent 70%)",
+            pointerEvents: "none"
           }}
         />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
-          zIndex: 0
-        }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
-              Level {user.level || 2} • Senior Design &amp; AI Specialist
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
+              Level {user.level || 2} • Senior Specialist
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               {(user.totalPoints || 4520).toLocaleString()} XP earned • {ceiling - (user.totalPoints || 450)} XP to Level {(user.level || 2) + 1}
             </p>
           </div>
 
-          <div style={{ textAlign: "right", flexShrink: 0, background: "rgba(255,255,255,0.1)", padding: "12px 18px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: "#FBBF24" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>Total Credential Points</div>
+          <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#F59E0B" }}>{(user.totalPoints || 4520).toLocaleString()} XP</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Total Earned XP</div>
           </div>
         </div>
 
-        {/* Level Progress Meter (High-Contrast Glass Track) */}
-        <div style={{
-          marginTop: 20,
+        {/* Level Progress Meter */}
+        <div className="tai-hero-subcard" style={{
+          marginTop: 16,
           position: "relative",
           zIndex: 1,
-          background: "rgba(15, 23, 42, 0.55)",
-          backdropFilter: "blur(10px)",
-          padding: "14px 18px",
-          borderRadius: 14,
-          border: "1px solid rgba(255, 255, 255, 0.2)"
+          padding: "12px 16px",
+          borderRadius: 10
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 800, marginBottom: 8, color: "#FFFFFF" }}>
+          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
             <span>Level {user.level || 2} Progress ({percent}%)</span>
-            <span style={{ color: "#FBBF24", fontWeight: 800 }}>{Math.max(0, ceiling - (user.totalPoints || 450)).toLocaleString()} XP to Level {(user.level || 2) + 1}</span>
+            <span style={{ color: "#FBBF24", fontWeight: 700 }}>{Math.max(0, ceiling - (user.totalPoints || 450)).toLocaleString()} XP to Level {(user.level || 2) + 1}</span>
           </div>
           <div style={{
-            height: 10,
+            height: 8,
             borderRadius: 99,
-            background: "rgba(255, 255, 255, 0.18)",
-            overflow: "hidden",
-            padding: 2,
-            border: "1px solid rgba(255, 255, 255, 0.2)"
+            background: "var(--surface-3)",
+            overflow: "hidden"
           }}>
             <div style={{
               width: `${percent}%`,
               height: "100%",
-              background: "linear-gradient(90deg, #F59E0B 0%, #10B981 100%)",
+              background: "#F59E0B",
               borderRadius: 99,
-              boxShadow: "0 0 10px rgba(245, 158, 11, 0.7)",
               transition: "width 0.4s ease"
             }} />
           </div>
@@ -236,10 +233,10 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {/* =========================================================================
           KEY STATS TILES STRIP
           ========================================================================= */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <BookOpen size={18} color="var(--primary)" />
             </div>
             <div>
@@ -249,9 +246,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <GraduationCap size={18} color="#10B981" />
             </div>
             <div>
@@ -261,9 +258,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Flame size={18} color="#F59E0B" />
             </div>
             <div>
@@ -273,9 +270,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           </div>
         </div>
 
-        <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Clock size={18} color="#8B5CF6" />
             </div>
             <div>
@@ -289,7 +286,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {/* =========================================================================
           TAB NAVIGATION STRIP
           ========================================================================= */}
-      <div className="tai-row tai-gap10" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box", gap: 8 }}>
         {[
           { k: "overview", label: "Progress Analytics", icon: BarChart3 },
           { k: "certificates", label: `Certificates (${CERTIFICATES.length})`, icon: GraduationCap },
@@ -302,25 +299,20 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             <button
               key={t.k}
               onClick={() => setActiveProgressTab(t.k)}
+              className={`tai-btn tai-btn-sm ${isActive ? "tai-btn-primary" : "tai-btn-outline"}`}
               style={{
-                padding: "8px 18px",
-                borderRadius: 12,
-                border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                background: isActive ? "var(--primary-tint)" : "var(--surface)",
-                color: isActive ? "var(--primary)" : "var(--text-2)",
-                fontWeight: isActive ? 800 : 600,
-                fontSize: 13,
-                cursor: "pointer",
+                borderRadius: 8,
+                padding: "8px 16px",
+                fontSize: 12.5,
+                fontWeight: 700,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
+                gap: 6,
                 flexShrink: 0,
-                transition: "all 0.15s ease"
+                whiteSpace: "nowrap"
               }}
-              onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--text)"; } }}
-              onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)"; } }}
             >
-              <Icon size={16} />
+              <Icon size={14} />
               <span>{t.label}</span>
             </button>
           );
@@ -333,10 +325,10 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {activeProgressTab === "overview" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             
             {/* Weekly Learning Hours Chart Card */}
-            <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
+            <div className="tai-card" style={{ padding: 24, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
@@ -350,7 +342,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               </div>
 
               {/* Bar Chart Visualizer */}
-              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 160, padding: "20px 10px 10px", background: "var(--surface-3)", borderRadius: 14 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 160, padding: "20px 10px 10px", background: "var(--surface-3)", borderRadius: 8 }}>
                 {WEEKLY_HOURS.map((item, idx) => (
                   <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, flex: 1 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>{item.hours}h</span>
@@ -362,7 +354,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             </div>
 
             {/* Skill Mastery Radar */}
-            <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
+            <div className="tai-card" style={{ padding: 24, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
@@ -372,7 +364,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
                     Assessed via quizzes &amp; practical assignments
                   </div>
                 </div>
-                <Sparkles size={18} color="var(--primary)" />
+                <Zap size={18} color="var(--primary)" />
               </div>
 
               <div className="tai-col tai-gap12">
@@ -392,18 +384,18 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
 
           {/* Mystery Box Streak Reward Banner */}
           {milestoneBoxAvailable && (
-            <div className="tai-card" style={{ borderColor: "var(--warning)", background: "linear-gradient(135deg, rgba(251,191,36,0.1), rgba(249,115,22,0.08))", padding: 20, borderRadius: 16 }}>
+            <div className="tai-card" style={{ borderColor: "var(--warning)", background: "rgba(245,158,11,0.06)", padding: 18, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap14">
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Gift size={24} color="#F59E0B" />
+                  <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Gift size={22} color="#F59E0B" />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Milestone Reward Mystery Box Available!</div>
-                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Unlocked by reaching your {user.streak || 8}-day continuous learning streak</div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Milestone Reward Mystery Box Available!</div>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>Unlocked by reaching your {user.streak || 8}-day continuous learning streak</div>
                   </div>
                 </div>
-                <button className="tai-btn tai-btn-primary" disabled={claimingBox} onClick={handleClaimBox} style={{ borderRadius: 12, padding: "10px 20px" }}>
+                <button className="tai-btn tai-btn-primary" disabled={claimingBox} onClick={handleClaimBox} style={{ borderRadius: 8, padding: "8px 16px" }}>
                   {claimingBox ? "Opening Box..." : "🎁 Open Mystery Box"}
                 </button>
               </div>
@@ -411,10 +403,10 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           )}
 
           {revealedReward && (
-            <div className="tai-card anim-pop" style={{ borderColor: "var(--success)", textAlign: "center", padding: 20, borderRadius: 16, background: "rgba(16, 185, 129, 0.06)" }}>
-              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--success)" }}>🎉 +{revealedReward.points} Points Awarded!</div>
+            <div className="tai-card anim-pop" style={{ borderColor: "var(--success)", textAlign: "center", padding: 18, borderRadius: 10, background: "rgba(16, 185, 129, 0.06)" }}>
+              <div style={{ fontWeight: 800, fontSize: 17, color: "var(--success)" }}>🎉 +{revealedReward.points} Points Awarded!</div>
               {revealedReward.streak_freeze > 0 && (
-                <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6 }}>+{revealedReward.streak_freeze} Streak Freeze added to inventory</div>
+                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>+{revealedReward.streak_freeze} Streak Freeze added to inventory</div>
               )}
             </div>
           )}
@@ -434,14 +426,14 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             Accredited certificates issued upon completing syllabi, final assessments, and peer reviews.
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {CERTIFICATES.map((cert) => (
               <div
                 key={cert.id}
                 className="tai-card-hover"
                 style={{
                   background: "var(--surface)",
-                  borderRadius: 18,
+                  borderRadius: 10,
                   border: "1px solid var(--border)",
                   overflow: "hidden",
                   display: "flex",
@@ -461,14 +453,14 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
                   </div>
                 </div>
 
-                <div style={{ padding: 20, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div style={{ padding: 18, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
-                    <div className="tai-row tai-between" style={{ fontSize: 12, color: "var(--text-3)", paddingBottom: 10, borderBottom: "1px solid var(--border)" }}>
+                    <div className="tai-row tai-between" style={{ fontSize: 12, color: "var(--text-3)", paddingBottom: 10, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 6 }}>
                       <span>ID: <strong style={{ color: "var(--text)" }}>{cert.credentialId}</strong></span>
                       <span>Issued: <strong style={{ color: "var(--text)" }}>{cert.issueDate}</strong></span>
                     </div>
 
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "14px 0" }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "12px 0" }}>
                       {cert.skills.map((s, idx) => (
                         <span key={idx} style={{ background: "var(--surface-3)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 700, color: "var(--text-2)", padding: "3px 8px", borderRadius: 6 }}>
                           {s}
@@ -477,7 +469,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
                     </div>
                   </div>
 
-                  <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+                  <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 10 }}>
                     <span style={{ fontSize: 12, fontWeight: 800, color: "var(--success)" }}>
                       {cert.grade}
                     </span>
@@ -510,22 +502,22 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               </h3>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
               {effectiveAchievements.map((a) => {
-                const def = ACHIEVEMENT_CATALOG.find((d) => d.id === a.achievement_id);
+                const def = ACHIEVEMENT_CATALOG.find((d) => d.id === (a.achievement_slug || a.achievement_id));
                 const Icon = iconForCategory(def?.category);
                 return (
-                  <div key={a.id} className="tai-card tai-card-hover" style={{ padding: 18, borderRadius: 16, display: "flex", gap: 14, alignItems: "center" }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)", flexShrink: 0 }}>
-                      <Icon size={22} />
+                  <div key={a.id} className="tai-card tai-card-hover" style={{ padding: 16, borderRadius: 10, display: "flex", gap: 12, alignItems: "center" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--success)", flexShrink: 0 }}>
+                      <Icon size={20} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="tai-row tai-between">
-                        <div style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>{a.achievement_title || "Achievement"}</div>
-                        <CheckCircle2 size={16} color="var(--success)" />
+                        <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{a.achievement_title || "Achievement"}</div>
+                        <CheckCircle2 size={15} color="var(--success)" />
                       </div>
                       <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{a.achievement_description}</div>
-                      <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 800, marginTop: 6 }}>
+                      <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 800, marginTop: 4 }}>
                         +{a.points_awarded || 50} XP • Earned {formatDate(a.earned_at)}
                       </div>
                     </div>
@@ -543,20 +535,20 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               </h3>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
               {locked.map((def) => {
                 const Icon = iconForCategory(def.category);
                 const { current, threshold, percent: p } = getAchievementProgress(def, user);
                 return (
-                  <div key={def.id} className="tai-card" style={{ opacity: 0.75, padding: 18, borderRadius: 16, display: "flex", gap: 14, alignItems: "center" }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)", flexShrink: 0 }}>
-                      <Icon size={22} />
+                  <div key={def.id} className="tai-card" style={{ opacity: 0.75, padding: 16, borderRadius: 10, display: "flex", gap: 12, alignItems: "center" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 8, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-3)", flexShrink: 0 }}>
+                      <Icon size={20} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>{def.title}</div>
                       <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{def.description}</div>
-                      <div style={{ marginTop: 8 }}><ProgressBar value={p} height={6} /></div>
-                      <div className="tai-row tai-between" style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 6 }}>
+                      <div style={{ marginTop: 6 }}><ProgressBar value={p} height={5} /></div>
+                      <div className="tai-row tai-between" style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 4 }}>
                         <span>{Math.min(current, threshold)} / {threshold}</span>
                         <span>+{def.points} XP</span>
                       </div>
@@ -574,25 +566,33 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
           TAB 4: ACTIVITY LOG
           ========================================================================= */}
       {activeProgressTab === "activity" && (
-        <div className="tai-card" style={{ padding: 20, borderRadius: 18 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 14px" }}>
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 12px" }}>
             Daily Activity Stream
           </h3>
 
           <div className="tai-col tai-gap8">
-            {[
-              { date: "Today, Aug 21", action: "Completed 2 lessons in Full-Stack AI", xp: "+120 XP" },
-              { date: "Yesterday, Aug 20", action: "Scored 100% on Spatial UI Quiz", xp: "+150 XP" },
-              { date: "Aug 19, 2026", action: "Earned 3-Day Streak Runner badge", xp: "+100 XP" },
-              { date: "Aug 18, 2026", action: "Attended Studio Masterclass with Dr. Vance", xp: "+80 XP" },
-              { date: "Aug 17, 2026", action: "Participated in Cohort Study Group", xp: "+50 XP" },
-            ].map((row, idx) => (
-              <div key={idx} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+            {(streakActivity.length > 0
+              ? streakActivity.map((row, idx) => ({
+                  key: row.id || idx,
+                  date: formatDate(row.activity_date) || "N/A",
+                  action: `${row.lessons_completed || 0} lesson${row.lessons_completed === 1 ? "" : "s"} completed`,
+                  xp: `+${row.points_earned || 0} XP`,
+                }))
+              : [
+                  { key: 0, date: "Today, Aug 21", action: "Completed 2 lessons in Full-Stack AI", xp: "+120 XP" },
+                  { key: 1, date: "Yesterday, Aug 20", action: "Scored 100% on Spatial UI Quiz", xp: "+150 XP" },
+                  { key: 2, date: "Aug 19, 2026", action: "Earned 3-Day Streak Runner badge", xp: "+100 XP" },
+                  { key: 3, date: "Aug 18, 2026", action: "Attended Studio Masterclass with Dr. Vance", xp: "+80 XP" },
+                  { key: 4, date: "Aug 17, 2026", action: "Participated in Cohort Study Group", xp: "+50 XP" },
+                ]
+            ).map((row) => (
+              <div key={row.key} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>{row.action}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{row.action}</div>
                   <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>{row.date}</div>
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 900, color: "var(--primary)" }}>{row.xp}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--primary)" }}>{row.xp}</span>
               </div>
             ))}
           </div>
@@ -600,59 +600,56 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       )}
 
       {/* =========================================================================
-          CERTIFICATE PREVIEW MODAL
+          CERTIFICATE PREVIEW MODAL (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
           ========================================================================= */}
-      {selectedCertificate && (
-        <div
-          className="tai-scrim"
-          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 300 }}
-          onClick={() => setSelectedCertificate(null)}
-        >
-          <div
-            className="tai-card"
-            style={{ maxWidth: 700, width: "100%", background: "#fff", borderRadius: 20, padding: 32, color: "#0F172A", border: "12px solid #F8FAFC", boxShadow: "0 20px 50px rgba(0,0,0,0.3)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="tai-row tai-between" style={{ marginBottom: 20 }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "#4F46E5", textTransform: "uppercase", letterSpacing: ".06em" }}>
+      <PortalModal
+        isOpen={Boolean(selectedCertificate)}
+        onClose={() => setSelectedCertificate(null)}
+        maxWidth={700}
+        zIndex={9999}
+      >
+        {selectedCertificate && (
+          <>
+            <div className="tai-row tai-between" style={{ marginBottom: 20, gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--primary-light, #818CF8)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 OFFICIAL CERTIFICATE OF COMPLETION
               </span>
-              <button onClick={() => setSelectedCertificate(null)} style={{ background: "transparent", border: "none", color: "#64748B", cursor: "pointer" }}>
+              <button onClick={() => setSelectedCertificate(null)} style={{ background: "transparent", border: "none", color: "var(--text-3)", cursor: "pointer" }}>
                 <X size={20} />
               </button>
             </div>
 
             <div style={{ textAlign: "center", padding: "10px 20px 20px" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".04em" }}>This certifies that</div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: "#0F172A", margin: "8px 0" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em" }}>This certifies that</div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text)", margin: "8px 0" }}>
                 {session?.user?.user_metadata?.full_name || session?.user?.email || "Learner"}
               </div>
-              <div style={{ fontSize: 13, color: "#64748B" }}>has successfully mastered the comprehensive curriculum for</div>
+              <div style={{ fontSize: 13, color: "var(--text-2)" }}>has successfully mastered the comprehensive curriculum for</div>
               
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: "#4F46E5", margin: "14px 0 6px" }}>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--primary-light, #818CF8)", margin: "14px 0 6px" }}>
                 {selectedCertificate.title}
               </h2>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#334155" }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>
                 {selectedCertificate.specialization}
               </div>
 
-              <div style={{ display: "inline-block", background: "#F1F5F9", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 800, color: "#0F172A", marginTop: 14 }}>
+              <div style={{ display: "inline-block", background: "var(--surface-2)", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 800, color: "var(--text)", marginTop: 14 }}>
                 Grade: {selectedCertificate.grade}
               </div>
 
-              <div className="tai-row tai-between" style={{ marginTop: 28, paddingTop: 20, borderTop: "1px dashed #CBD5E1", fontSize: 12, color: "#64748B", textAlign: "left", flexWrap: "wrap", gap: 12 }}>
+              <div className="tai-row tai-between" style={{ marginTop: 28, paddingTop: 20, borderTop: "1px dashed var(--border)", fontSize: 12, color: "var(--text-3)", textAlign: "left", flexWrap: "wrap", gap: 12 }}>
                 <div>
-                  <div>Instructor: <strong>{selectedCertificate.instructor}</strong></div>
-                  <div>Issued: <strong>{selectedCertificate.issueDate}</strong></div>
+                  <div>Instructor: <strong style={{ color: "var(--text)" }}>{selectedCertificate.instructor}</strong></div>
+                  <div>Issued: <strong style={{ color: "var(--text)" }}>{selectedCertificate.issueDate}</strong></div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div>Credential ID: <strong>{selectedCertificate.credentialId}</strong></div>
-                  <div>Verified by: <strong>Train AI Academic Authority</strong></div>
+                  <div>Credential ID: <strong style={{ color: "var(--text)" }}>{selectedCertificate.credentialId}</strong></div>
+                  <div>Verified by: <strong style={{ color: "var(--text)" }}>Train AI Academic Authority</strong></div>
                 </div>
               </div>
             </div>
 
-            <div className="tai-row tai-between" style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #E2E8F0", flexWrap: "wrap", gap: 10 }}>
+            <div className="tai-row tai-between" style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 10 }}>
               <button
                 className="tai-btn tai-btn-outline"
                 onClick={() => {
@@ -673,9 +670,9 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
                 <Download size={15} /> Download PDF Certificate
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </PortalModal>
 
     </div>
   );

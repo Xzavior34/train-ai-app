@@ -36,7 +36,6 @@ import {
   fetchOrCreateAIConversation, fetchAIChatMessages, sendAIChatMessage, requestAIReply
 } from "../lib/api/schemaHelper.js";
 import { updateUserAvatar, fetchOrgBranding } from "../lib/api/platform.js";
-import { fetchMyAIConversations, createAIConversation } from "../lib/api/live/learnerMiscLive.js";
 import { CheckCircle2, Search } from "lucide-react";
 
 // Paystack/Stripe redirect the browser back to this same page (no router in
@@ -257,33 +256,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     if (!session?.user?.id || screen !== "ai") return null;
     return fetchOrCreateAIConversation(session.user.id);
   }, [session?.user?.id, screen === "ai"]);
-  // The AI Coach history sidebar used to be a local array of invented
-  // threads whose selection did nothing. These are the learner's real
-  // `ai_conversations` rows; picking one sets selectedConversationId, which
-  // is what coachMessagesQuery below and handleSendCoachMessage both read,
-  // so selecting a thread actually loads (and continues) that thread.
-  const [selectedConversationId, setSelectedConversationId] = useState(null);
-  const aiConversationsQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id || screen !== "ai") return [];
-    return fetchMyAIConversations(session.user.id);
-  }, [session?.user?.id, screen === "ai"]);
-  const coachConversationId = selectedConversationId || aiConversationQuery.data?.id || null;
+  const coachConversationId = aiConversationQuery.data?.id || null;
   const coachMessagesQuery = useSupabaseQuery(async () => {
     if (!coachConversationId) return [];
     return fetchAIChatMessages(coachConversationId);
   }, [coachConversationId]);
-
-  // "New Conversation" wrote nothing before - it only prepended a row to
-  // component state. This inserts a real ai_conversations row and switches
-  // to it. Returns false so the screen can report a failed write.
-  async function handleStartNewAIConversation() {
-    if (!session?.user?.id) return false;
-    const created = await createAIConversation(session.user.id);
-    if (!created?.id) return false;
-    setSelectedConversationId(created.id);
-    aiConversationsQuery.refetch();
-    return true;
-  }
 
   // Org-level AI Coach controls (enable/disable, Manual Mode) - per the
   // product brief, an org admin can turn AI Coach off entirely or switch it
@@ -353,43 +330,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     }
   }
 
-  // The Lesson screen's "AI Tutor" tab used to fabricate its answers with a
-  // setTimeout and three canned paragraphs. This is the real path, and it has
-  // to go through here rather than inside LessonScreen because an org can turn
-  // AI Coach off entirely or put it in manual mode (fetchOrgAISettings) - a
-  // second, screen-local call would bypass that switch.
-  async function askLessonTutor({ question, lessonTitle, courseTitle }) {
-    if (!orgAISettings.enabled) {
-      return { blocked: true, text: "Your organization has turned the AI assistant off." };
-    }
-    if (orgAISettings.manual_mode) {
-      return { manual: true, text: orgAISettings.manual_message || "An instructor will answer your question shortly." };
-    }
-    if (!session?.user?.id) return { error: true, text: "Sign in to ask the tutor." };
-    try {
-      const conversation = await fetchOrCreateAIConversation(session.user.id);
-      if (!conversation?.id) return { error: true, text: "Could not start an AI conversation." };
-      // Lesson context is prepended so the reply is about what the learner is
-      // actually watching - the edge function only receives this message.
-      const contextual = [
-        courseTitle ? `Course: ${courseTitle}` : null,
-        lessonTitle ? `Lesson: ${lessonTitle}` : null,
-        `Question: ${question}`,
-      ].filter(Boolean).join("\n");
-      await sendAIChatMessage({ conversationId: conversation.id, userId: session.user.id, content: contextual, role: "user" });
-      const reply = await requestAIReply({ conversationId: conversation.id, message: contextual });
-      if (reply?.error) return { error: true, text: reply.error };
-      const messages = await fetchAIChatMessages(conversation.id);
-      const lastAssistant = [...(messages || [])].reverse().find((m) => m.role === "assistant");
-      const text = reply?.reply || reply?.message || lastAssistant?.content;
-      if (!text) return { error: true, text: "The assistant did not return an answer." };
-      aiConversationsQuery?.refetch?.();
-      return { text };
-    } catch (e) {
-      return { error: true, text: e?.message || "The assistant is unavailable right now." };
-    }
-  }
-
   async function handleSendCoachMessage() {
     const content = coachInput.trim();
     if (!content || !coachConversationId || !session?.user?.id || coachSending) return;
@@ -398,8 +338,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     try {
       await sendAIChatMessage({ conversationId: coachConversationId, userId: session.user.id, content, role: "user" });
       coachMessagesQuery.refetch();
-      // Keeps the history sidebar's message counts and snippets truthful.
-      aiConversationsQuery.refetch();
 
       if (!orgAISettings.enabled) {
         // AI Coach turned off for this organization entirely - don't call
@@ -544,9 +482,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     id: m.id,
     userId: m.user_id,
     name: m.user_profiles?.display_name || "Instructor",
-    // This mapper never carried the mentor's real photo through, which is
-    // why MentorsScreen fell back to stock headshots picked by list index.
-    avatarUrl: m.user_profiles?.avatar_url || null,
     title: m.title || "Instructor",
     tagline: m.tagline || "",
     rate: m.hourly_rate || 0,
@@ -834,8 +769,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   lessonProgressQuery={lessonProgressQuery}
                   completedLessonIds={completedLessonIds} setCompletedLessonIds={setCompletedLessonIds}
                   addLessonNote={addLessonNote}
-  orgAISettings={orgAISettings}
-                  askLessonTutor={askLessonTutor}
                 />
               )}
               {screen === "ai" && (
@@ -865,11 +798,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   coachMessages={coachMessagesQuery.data || []} coachMessagesLoading={coachMessagesQuery.loading}
                   coachInput={coachInput} setCoachInput={setCoachInput} coachSending={coachSending}
                   onSendCoachMessage={handleSendCoachMessage}
-                  aiConversations={aiConversationsQuery.data || []}
-                  aiConversationsLoading={aiConversationsQuery.loading}
-                  activeConversationId={coachConversationId}
-                  onSelectConversation={setSelectedConversationId}
-                  onStartNewConversation={handleStartNewAIConversation}
                 />
               )}
               {screen === "community" && (
@@ -904,11 +832,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   cohortSessionsQuery={cohortSessionsQuery}
                   cohortCoursesQuery={cohortCoursesQuery}
                   cohortMembersQuery={cohortMembersQuery}
-                  // The cohort hero's completion % is this learner's own
-                  // progress across the cohort's assigned courses, so the
-                  // screen needs their real enrollment progress.
-                  courses={courses}
-                  session={session} showToast={showToast} back={back} push={push}
+                  session={session} showToast={showToast} back={back}
                 />
               )}
               {screen === "mentors" && (
@@ -923,7 +847,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   bookingDay={bookingDay} setBookingDay={setBookingDay}
                   bookingTime={bookingTime} setBookingTime={setBookingTime}
                   initialSelectedMentorId={params.mentorId}
-                  mentorsLoading={mentorsQuery.loading}
                 />
               )}
               {screen === "messages" && (
@@ -1002,15 +925,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                 />
               )}
               {screen === "schedule" && (
-                // ScheduleView was a hardcoded three-session agenda; it now
-                // reads the learner's real mentorship_sessions and their
-                // cohort's cohort_sessions, so it needs both ids.
-                <ScheduleView
-                  push={push}
-                  back={back}
-                  session={session}
-                  cohortId={cohortMembershipQuery.data?.cohort?.id || null}
-                />
+                <ScheduleView push={push} back={back} />
               )}
             </div>
 

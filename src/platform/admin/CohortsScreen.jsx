@@ -1,8 +1,9 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
-import { Plus, Layers, Users, Calendar, ArrowRight } from "lucide-react";
+import { Plus, Layers, Users, Calendar, ArrowRight, X } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortsWithStats, createCohort } from "../../lib/api/platform.js";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
@@ -17,63 +18,31 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
         title="Cohort Management" sub="Active learning batches & timeline progress"
         orgSelector={orgSelector}
         onNavigate={setScreen}
-        right={<button className="ta-btn ta-btn-primary" onClick={() => setNewCohortOpen(true)}><Plus size={15} /> Create cohort</button>}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
-            COHORTS HERO BANNER
+            COHORT DASHBOARD HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          {/* Background Stock Photo with Overlay */}
-          <img
-            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
-
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <Layers size={13} color="#A5B4FC" /> COHORT GOVERNANCE
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-                }}>
-                  ACTIVE BATCHES
-                </span>
-              </div>
-
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cyan" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
                 Cohort Governance &amp; Pacing
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
-                Track synchronous milestones, manage enrollment windows, oversee student pace, and issue credentials upon graduation.
+              <p className="ta-hero-desc">
+                Manage batch schedules, enrollment windows, synchronous sessions, and student milestone pacing.
               </p>
+            </div>
+
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setNewCohortOpen(true)}
+              >
+                <Plus size={14} /> Create Cohort
+              </button>
             </div>
           </div>
         </div>
@@ -99,27 +68,27 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                   <div
                     key={c.id || c.name}
                     className="ta-card ta-card-hover"
-                    style={{ cursor: onOpenCohort ? "pointer" : "default", borderRadius: 16, padding: 0, overflow: "hidden", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column" }}
+                    style={{ cursor: onOpenCohort ? "pointer" : "default", borderRadius: 10, padding: 0, overflow: "hidden", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column" }}
                     onClick={() => onOpenCohort?.(c.id)}
                   >
                     <div style={{ position: "relative", width: "100%", height: 120, overflow: "hidden" }}>
                       <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.75) 100%)" }} />
                       <div style={{ position: "absolute", top: 10, left: 10, right: 10, display: "flex", justifyContent: "space-between" }}>
-                        <Tag tone="primary">{c.courses || 2} course{c.courses === 1 ? "" : "s"}</Tag>
+                        <Tag tone="primary">{c.courses || 0} course{c.courses === 1 ? "" : "s"}</Tag>
                         <Tag tone={isCompleted ? "warning" : "success"}>{isCompleted ? "Completed" : "Active Batch"}</Tag>
                       </div>
-                      <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 15, textShadow: "0 2px 4px rgba(0,0,0,0.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 14.5, textShadow: "0 2px 4px rgba(0,0,0,0.6)", lineHeight: 1.25, wordBreak: "break-word" }}>
                         {c.name}
                       </div>
                     </div>
 
                     <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
                       <div className="ta-row ta-between" style={{ fontSize: 12, color: "var(--text-2)" }}>
-                        <span className="ta-row ta-gap6"><Users size={13} color="var(--primary)" /> {c.members ?? c.learner_count ?? 48} active members</span>
-                        <span style={{ fontWeight: 700, color: "var(--primary)" }}>{c.progress || 68}%</span>
+                        <span className="ta-row ta-gap6"><Users size={13} color="var(--primary)" /> {c.members ?? c.learner_count ?? 0} active members</span>
+                        <span style={{ fontWeight: 700, color: "var(--primary)" }}>{c.progress || 0}%</span>
                       </div>
-                      <div className="ta-mt8"><ProgressBar value={c.progress || 68} /></div>
+                      <div className="ta-mt8"><ProgressBar value={c.progress || 0} /></div>
                       <div className="ta-row ta-between ta-mt12" style={{ paddingTop: 10, borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)" }}>
                         <span>Schedule: Active</span>
                         <span style={{ fontWeight: 700, color: "var(--primary)", display: "flex", alignItems: "center", gap: 3 }}>Manage Batch <ArrowRight size={12} /></span>
@@ -130,12 +99,33 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
               })}
             </div>
 
-            {newCohortOpen && (
-              <div className="ta-card" style={{ borderColor: "var(--primary)", borderRadius: 16, padding: 20 }}>
-                <div className="ta-title">Create New Cohort</div>
-                <input className="ta-input ta-mt12" placeholder="Cohort name (e.g. Q3 AI Batch)..." value={name} onChange={e => setName(e.target.value)} />
-                <div className="ta-row ta-gap8 ta-mt12">
-                  <button className="ta-btn ta-btn-primary" onClick={async () => {
+            <PortalModal
+              isOpen={newCohortOpen}
+              onClose={() => setNewCohortOpen(false)}
+              maxWidth={480}
+              zIndex={9999}
+            >
+              <div className="ta-row ta-between">
+                <div className="ta-title" style={{ fontSize: 18 }}>Create New Cohort</div>
+                <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setNewCohortOpen(false)}><X size={16} /></button>
+              </div>
+              <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 14 }}>
+                Set up a new synchronous learning batch for your organization.
+              </p>
+              <div className="ta-label">Cohort Name</div>
+              <input
+                className="ta-input ta-mt6"
+                style={{ width: "100%", boxSizing: "border-box" }}
+                placeholder="e.g. Q3 Generative AI Engineering Batch"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                autoFocus
+              />
+              <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
+                <button className="ta-btn ta-btn-outline" onClick={() => setNewCohortOpen(false)}>Cancel</button>
+                <button
+                  className="ta-btn ta-btn-primary"
+                  onClick={async () => {
                     if (!name.trim()) { showToast("Enter a cohort name first."); return; }
                     if (!orgId) {
                       showToast("You need to be part of an organization to create a cohort. This account isn't linked to one yet.");
@@ -144,18 +134,19 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                     await createCohort({ organizationId: orgId, name: name.trim(), createdBy: currentUserId });
                     setNewCohortOpen(false); setName("");
                     cohortsQuery.refetch();
-                    showToast("Cohort created!");
-                  }}>Save cohort</button>
-                  <button className="ta-btn ta-btn-outline" onClick={() => setNewCohortOpen(false)}>Cancel</button>
-                </div>
+                    showToast("Cohort created successfully!");
+                  }}
+                >
+                  Save Cohort
+                </button>
               </div>
-            )}
+            </PortalModal>
           </div>
 
           {/* Right Side Panel */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {/* Cohort Milestones */}
-            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 15 }}>Cohort Milestones</div>
@@ -170,7 +161,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                   { title: "Mid-Term Capstone Submissions", date: "Friday • 11:59 PM", status: "Deadline", tone: "danger" },
                   { title: "Industry Pitch & Demo Day", date: "Next Week • 4:00 PM", status: "Demo Day", tone: "success" }
                 ].map((m, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                  <div key={idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700 }}>{m.title}</div>
                       <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{m.date}</div>
@@ -182,7 +173,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
             </div>
 
             {/* Assigned Facilitators */}
-            <div className="ta-card" style={{ padding: 20, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 15 }}>Lead Instructors</div>

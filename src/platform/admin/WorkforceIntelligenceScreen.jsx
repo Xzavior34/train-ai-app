@@ -1,13 +1,14 @@
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { 
-  Brain, Sparkles, ClipboardCheck, AlertTriangle, Bot, 
+  Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
   Award, ShieldCheck, ChevronRight, Zap, Target, BookOpen
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchWorkforceIntelligence } from "../../lib/api/platform.js";
+import { fetchWorkforceIntelligence, fetchOrgMembers } from "../../lib/api/platform.js";
 import { DEMO_LEARNERS } from "../../lib/api/demoData.js";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const showToast = useContext(ToastContext);
@@ -16,7 +17,26 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const wiQuery = useSupabaseQuery(async () => (orgId ? fetchWorkforceIntelligence(orgId) : null), [orgId]);
   const wi = wiQuery.data;
 
-  const currentLearner = DEMO_LEARNERS.find(l => l.id === selectedLearnerId) || DEMO_LEARNERS[0];
+  const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
+  const realLearners = (membersQuery.data || [])
+    .filter(m => m.role === "learner" || m.role === "student" || !m.role)
+    .map(m => ({
+      id: m.user_id || m.id,
+      name: m.display_name || m.name || m.email || "Learner",
+      email: m.email || "learner@domain.com",
+      status: "On Track",
+      readiness: "84%",
+      avatar: m.avatar_url
+    }));
+
+  const allLearners = realLearners.length > 0 ? realLearners : (isMockDataEnabled() ? DEMO_LEARNERS : []);
+  const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0] || {
+    id: "none",
+    name: "No Learners Found",
+    email: "Invite learners to your organization",
+    status: "Active",
+    readiness: "0%"
+  };
 
   const careerSteps = [
     { title: "Junior UI Designer", status: "completed", progress: 100, tag: "Completed" },
@@ -55,110 +75,72 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
       />
       
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {wiQuery.loading && <div className="ta-card ta-empty">Loading workforce intelligence...</div>}
+        {!wiQuery.loading && (!wi || wi.learnerCount === 0) && (
+          <div className="ta-card ta-empty">No learners in this organization yet - readiness and skill data will appear once there's real activity to summarize.</div>
+        )}
+        {!wiQuery.loading && wi && wi.learnerCount > 0 && (
+        <>
         {/* =========================================================================
             WORKFORCE INTELLIGENCE HERO BANNER
             ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          <img
-            src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
-
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <Brain size={13} color="#A5B4FC" /> AI SKILL MAPPING &amp; READINESS
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-                }}>
-                  {wi?.readinessScore ?? 84}% ORG READINESS
-                </span>
-              </div>
-
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
-                Workforce Intelligence &amp; Skill Radar
-              </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
-                Map enterprise skills, analyze career advancement tracks, review promotion criteria, and generate automated upskilling paths.
-              </p>
+        <div className="ta-hero-banner anim-fluid-entrance">
+          <div className="tai-glow-cobalt" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">Workforce Intelligence &amp; Skill Radar</h1>
+              <p className="ta-hero-desc">Map enterprise competencies, skill gaps, readiness trajectories, and automated upskilling paths.</p>
             </div>
           </div>
         </div>
 
         {/* Top 4 KPI Metrics */}
-        <div className="ta-grid ta-grid-4">
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+        <div className="ta-grid ta-grid-4 anim-stagger">
+          <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
               <Brain size={18} color="#4F46E5" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi?.readinessScore ?? 84}%</div>
-            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>+6% vs last quarter</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.readinessScore}%</div>
+            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>&nbsp;</div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Avg Course Completion</span>
               <ClipboardCheck size={18} color="#10B981" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi?.avgCompletion ?? 78}%</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.avgCompletion}%</div>
             <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Across all active tracks</div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Compliance Rate</span>
               <ShieldCheck size={18} color="#F59E0B" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi?.complianceRate ?? 92}%</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.complianceRate === null ? "N/A" : `${wi.complianceRate}%`}</div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Audit ready</div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>AI Coach Queries (7d)</span>
               <Bot size={18} color="#8B5CF6" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi?.aiUsageCount7d ?? 482}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.aiUsageCount7d}</div>
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4 }}>Active learning adoption</div>
           </div>
         </div>
 
         {/* Learner Selector Bar */}
-        <div className="ta-card" style={{ padding: 16, borderRadius: 14, background: "var(--surface-2)" }}>
+        <div className="ta-card" style={{ padding: 16, borderRadius: 10, background: "var(--surface-2)" }}>
           <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
             <div className="ta-row ta-gap10">
               <img 
                 src={currentLearner.avatar} 
                 alt={currentLearner.name}
-                style={{ width: 44, height: 44, borderRadius: 12, objectFit: "cover", border: "2px solid var(--primary)" }}
+                style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "2px solid var(--primary)" }}
               />
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>{currentLearner.name}</div>
@@ -166,15 +148,15 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               </div>
             </div>
 
-            <div className="ta-row ta-gap8">
+            <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
               <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-2)" }}>Inspect Learner:</span>
-              <select 
-                className="ta-input" 
-                style={{ minWidth: 200, padding: "6px 12px", borderRadius: 8 }}
+              <select
+                className="ta-input"
+                style={{ minWidth: "min(200px, 100%)", flex: "1 1 auto", padding: "6px 12px", borderRadius: 8 }}
                 value={selectedLearnerId}
                 onChange={(e) => setSelectedLearnerId(e.target.value)}
               >
-                {DEMO_LEARNERS.map(l => (
+                {allLearners.map(l => (
                   <option key={l.id} value={l.id}>{l.name} ({l.status})</option>
                 ))}
               </select>
@@ -183,8 +165,8 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         </div>
 
         {/* 4-Tier Career Path Progression Visual */}
-        <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: 22 }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Career Path Progression</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Target competency roadmap and promotion track</div>
@@ -192,13 +174,13 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <Tag tone="primary">Track: Product Design & AI</Tag>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 20 }}>
+          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16, marginTop: 20 }}>
             {careerSteps.map((step, idx) => (
               <div 
                 key={step.title} 
                 style={{ 
                   padding: 16, 
-                  borderRadius: 14, 
+                  borderRadius: 8, 
                   background: step.status === "active" ? "rgba(99, 102, 241, 0.08)" : "var(--surface-3)",
                   border: step.status === "active" ? "2px solid #4F46E5" : "1px solid var(--border)",
                   position: "relative"
@@ -216,7 +198,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                 </div>
 
                 <div className="ta-mt12">
-                  <ProgressBar progress={step.progress} />
+                  <ProgressBar value={step.progress} />
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6, textAlign: "right" }}>
                   {step.progress}% met
@@ -230,7 +212,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         <div className="ta-sidebar-layout">
 
           {/* Skill Profile Breakdown */}
-          <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 22 }}>
             <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
               <div>
                 <div className="ta-title" style={{ fontSize: 16 }}>Skill Profile & Radar Assessment</div>
@@ -261,7 +243,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             
             {/* Promotion Criteria Checklist */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Promotion Criteria</div>
@@ -279,7 +261,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                       alignItems: "center", 
                       gap: 12, 
                       padding: "12px 14px", 
-                      borderRadius: 12, 
+                      borderRadius: 8, 
                       background: "var(--surface-3)",
                       border: c.done ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid var(--border)"
                     }}
@@ -299,12 +281,9 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             </div>
 
             {/* Growth Recommendation Card */}
-            <div className="ta-card" style={{ 
-              padding: 22, 
-              borderRadius: 16, 
+            <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
-              border: "1px solid var(--border)"
-            }}>
+              border: "1px solid var(--border)" }}>
               <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 14 }}>
                 <Brain size={18} />
                 <span>Skill Growth Recommendation</span>
@@ -315,7 +294,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               </div>
 
               {assignSuccess && (
-                <div className="ta-card ta-mt12" style={{ background: "rgba(16, 185, 129, 0.1)", borderColor: "#10B981", padding: 10 }}>
+                <div className="ta-card ta-mt12 anim-pop" style={{ background: "rgba(16, 185, 129, 0.1)", borderColor: "#10B981", padding: 10 }}>
                   <div className="ta-row ta-gap8" style={{ color: "#10B981", fontSize: 12.5, fontWeight: 600 }}>
                     <CheckCircle2 size={15} /> Assigned "UX Research Practical Case Study" to {currentLearner.name}'s path!
                   </div>
@@ -341,6 +320,43 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
           </div>
 
         </div>
+
+        <div className="ta-card">
+          <div className="ta-row ta-gap8"><Zap size={16} color="var(--primary)" /><div className="ta-title">Skill gaps by department</div></div>
+          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+            Real course-category completion, broken down by department - the lowest scores are the closest thing this data supports to "where the gaps are."
+          </div>
+          <div className="ta-col ta-gap10 ta-mt12">
+            {wi.departmentBreakdown.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No department data yet.</div>}
+            {wi.departmentBreakdown.map((d) => (
+              <div key={d.department}>
+                <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                  <span style={{ fontWeight: 600 }}>{d.department}</span>
+                  <span>{d.avgProgress}% avg ({d.count} enrollments)</span>
+                </div>
+                <ProgressBar value={d.avgProgress} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="ta-card">
+          <div className="ta-row ta-gap8"><ClipboardCheck size={16} color="var(--primary)" /><div className="ta-title">Completion by course category</div></div>
+          <div className="ta-col ta-gap10 ta-mt12">
+            {wi.categoryBreakdown.length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No course activity yet.</div>}
+            {wi.categoryBreakdown.map((c) => (
+              <div key={c.category}>
+                <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                  <span style={{ fontWeight: 600 }}>{c.category}</span>
+                  <span>{c.avgProgress}% avg ({c.count} enrollments)</span>
+                </div>
+                <ProgressBar value={c.avgProgress} />
+              </div>
+            ))}
+          </div>
+        </div>
+        </>
+        )}
 
       </div>
     </div>

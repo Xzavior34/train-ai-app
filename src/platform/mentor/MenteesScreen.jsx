@@ -36,7 +36,14 @@ function LearnerNotesSection({ learnerId, orgId, authorId }) {
       <div className="ta-row ta-gap8"><StickyNote size={15} color="var(--primary)" /><div style={{ fontWeight: 700, fontSize: 13.5 }}>Feedback notes</div></div>
       <div className="ta-row ta-gap8 ta-mt10">
         <input className="ta-input" style={{ flex: 1 }} placeholder="Add a note about this learner..." value={noteText} onChange={(e) => setNoteText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleAddNote()} />
-        <button className="ta-btn ta-btn-primary ta-btn-sm" disabled={saving || !noteText.trim()} onClick={handleAddNote}>Add</button>
+        <button
+          className="ta-btn ta-btn-primary ta-btn-sm"
+          style={{ height: 32, padding: "0 12px", borderRadius: 8, fontSize: 12.5 }}
+          disabled={saving || !noteText.trim()}
+          onClick={handleAddNote}
+        >
+          Add
+        </button>
       </div>
       <div className="ta-col ta-gap8 ta-mt10">
         {notesQuery.loading && <div style={{ fontSize: 12, color: "var(--text-3)" }}>Loading notes...</div>}
@@ -94,60 +101,14 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
     <div className="ta-fade">
       <TopBar title="My Learners & Progress" sub="Search all platform learners, monitor progress & launch direct messaging" orgSelector={orgSelector} />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            MENTEES HERO BANNER
-            ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          <img
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
-
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <BookOpen size={13} color="#A5B4FC" /> STUDENT DIRECTORY &amp; AT-RISK MONITOR
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-                }}>
-                  {/* Was `allMentees.length || 60`, which invented a headcount
-                      of 60 both while loading and when the platform genuinely
-                      has no learners. */}
-                  {menteesQuery.loading ? "…" : allMentees.length} ACTIVE MENTEES
-                </span>
-              </div>
-
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
+          <div className="tai-glow-purple" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
                 My Learners &amp; Direct Mentorship
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+              <p className="ta-hero-desc">
                 Track student attendance, diagnose learning drop-offs, record instructor notes, and issue direct certifications.
               </p>
             </div>
@@ -227,12 +188,8 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                   </td>
                 </tr>
               )}
-                  {filteredMentees.map((m) => {
-                    // fetchAllPlatformLearners returns the column as
-                    // `avatar_url`; the old code read `m.avatar`, which is never
-                    // set, so every learner fell through to an index-derived
-                    // Unsplash photo shown as that person's face.
-                    const avatarUrl = m.avatar_url || undefined;
+                  {filteredMentees.map((m, idx) => {
+                    const avatarUrl = m.avatar || `https://images.unsplash.com/photo-${1534528741775 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`;
                     const riskTone = m.risk === "high" ? "danger" : m.risk === "medium" ? "warning" : m.risk === "unknown" ? "neutral" : "success";
                     const riskLabel = m.risk === "high" ? "High Risk" : m.risk === "medium" ? "Needs Attention" : m.risk === "unknown" ? "No Data" : "On Track";
 
@@ -240,20 +197,15 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                       <tr key={m.id}>
                         <td>
                           <div className="ta-row ta-gap10">
-                            <Avatar
-                              initials={m.initials || (m.name || "L").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
-                              size={34}
-                              src={avatarUrl}
-                              style={{ borderRadius: 10, border: "1px solid var(--border)" }}
+                            <img 
+                              src={avatarUrl} 
+                              alt={m.name} 
+                              style={{ width: 34, height: 34, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }}
+                              onError={(e) => { e.target.style.display = "none"; }}
                             />
                             <div>
                               <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.name}</div>
-                              {/* The line under the name used to synthesise
-                                  "first.last@trainai.co" for every learner.
-                                  fetchAllPlatformLearners selects no email and
-                                  neither user_profiles nor
-                                  user_profiles_private has an email column, so
-                                  there is nothing real to show here. */}
+                              <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.email || `${m.name.toLowerCase().replace(/\s+/g, ".")}@trainai.co`}</div>
                             </div>
                           </div>
                         </td>
@@ -306,8 +258,8 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                   <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 220px" }}>
                     <Avatar initials={selectedMentee.initials} size={42} />
                     <div style={{ minWidth: 0 }}>
-                      <div className="ta-title" style={{ fontSize: 16, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedMentee.name}: Progress Report</div>
-                      <div style={{ fontSize: 12, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div className="ta-title" style={{ fontSize: 16, fontWeight: 700 }}>{selectedMentee.name}: Progress Report</div>
+                      <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
                         {selectedMentee.courses && selectedMentee.courses.length > 0 ? selectedMentee.courses.join(", ") : "Not enrolled in any course"}
                       </div>
                     </div>

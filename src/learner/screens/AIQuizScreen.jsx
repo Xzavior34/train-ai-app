@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { TopBar, StatTile, Avatar, optionLabel, optionValue, initialsOf, Tag, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight,
-  GraduationCap, Sparkles, Send, Bot, MessageSquare, BookOpen, Lightbulb,
-  Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck
+  GraduationCap, Send, Bot, MessageSquare, BookOpen, Lightbulb,
+  Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck,
+  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp, Sparkles
 } from "lucide-react";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 
@@ -30,6 +31,15 @@ export function AIQuizScreen({
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
 }) {
   const [copiedMessageId, setCopiedMessageId] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [activeThreadId, setActiveThreadId] = useState("thread-1");
+  const [chatThreads, setChatThreads] = useState([
+    { id: "thread-1", title: "Design Tokens & Variable Governance", date: "Today, 02:40 PM", messagesCount: 6, snippet: "Can you explain how design tokens and variables work in Figma and code..." },
+    { id: "thread-2", title: "RAG Pipeline vs Fine-Tuning Architectures", date: "Yesterday", messagesCount: 12, snippet: "What are the tradeoffs of using vector embeddings vs fine-tuning a base model..." },
+    { id: "thread-3", title: "Spatial UI Gaze Padding in VisionOS", date: "Aug 18", messagesCount: 8, snippet: "Explain minimum 60pt gaze target bounding boxes in spatial computing..." },
+    { id: "thread-4", title: "Prompt Caching & Multi-Modal API Cost Optimization", date: "Aug 15", messagesCount: 4, snippet: "How does prefix caching reduce latency in large context windows..." }
+  ]);
+
   const currentQuiz = (quizzesQuery.data || []).find(q => q.id === quizTopic) || quizzesQuery.data?.[0];
   const questions = activeQuizSource === "ai" ? (aiQuiz?.questions || []) : (selectedQuizQuestionsQuery?.data || []);
   const currentQuestion = questions[quizIndex] || questions[0];
@@ -39,6 +49,26 @@ export function AIQuizScreen({
     setCopiedMessageId(id);
     setTimeout(() => setCopiedMessageId(null), 2000);
     showToast?.("Copied to clipboard!");
+  }
+
+  function handleStartNewChat() {
+    const newThread = {
+      id: `thread-${Date.now()}`,
+      title: "New AI Learning Session",
+      date: "Just now",
+      messagesCount: 0,
+      snippet: "New inquiry started..."
+    };
+    setChatThreads(prev => [newThread, ...prev]);
+    setActiveThreadId(newThread.id);
+    if (setCoachInput) setCoachInput("");
+    showToast?.("Started new chat session");
+  }
+
+  function handleSelectThread(t) {
+    setActiveThreadId(t.id);
+    setShowHistory(false);
+    showToast?.(`Loaded: ${t.title}`);
   }
 
   function handleQuickPromptClick(promptText) {
@@ -145,64 +175,63 @@ export function AIQuizScreen({
       {/* =========================================================================
           HERO COACH BANNER: Clean & Optimized AI Learning Co-Pilot
           ========================================================================= */}
-      <div style={{
-        borderRadius: 22,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-        color: "#FFFFFF",
-        padding: "clamp(22px, 3.5vw, 28px) clamp(20px, 3.5vw, 30px)",
-        boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
-        border: "1px solid rgba(99, 102, 241, 0.35)",
-        position: "relative",
-        overflow: "hidden"
-      }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1400&auto=format&fit=crop&q=85"
-          alt=""
+      {/* =========================================================================
+          HERO COACH BANNER: Adaptive Liquid Glass AI Learning Co-Pilot
+          ========================================================================= */}
+      <div
+        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          padding: "clamp(18px, 2.5vw, 24px)",
+          position: "relative",
+          overflow: "hidden",
+          width: "100%",
+          boxSizing: "border-box"
+        }}
+      >
+        <div
           style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.3, zIndex: 0
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            pointerEvents: "none"
           }}
         />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.82) 55%, rgba(15,23,42,0.65) 100%)",
-          zIndex: 0
-        }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(20px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
-              AI Learning Coach
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ minWidth: 0, flex: "1 1 220px" }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
+              AI Learning Coach &amp; Quiz Arena
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 580, lineHeight: 1.45, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
-              Ask questions, clarify syllabus concepts, debug code, or generate adaptive practice quizzes.
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
+              Ask questions, debug code, and take interactive practice quizzes generated in real-time.
             </p>
           </div>
 
-          <div className="tai-row tai-gap10" style={{ flexShrink: 0, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", flexShrink: 0 }}>
             {typeof credits === "number" && (
-              <div style={{
-                background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.2)", padding: "8px 14px", borderRadius: 12, textAlign: "right"
+              <div className="tai-hero-subcard" style={{
+                padding: "6px 12px", borderRadius: 8,
+                display: "inline-flex", alignItems: "center", gap: 6
               }}>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", fontWeight: 700, textTransform: "uppercase" }}>AI Credits</div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: "#fff" }}>{credits} Available</div>
+                <Zap size={13} color="#818CF8" />
+                <span style={{ fontSize: 12, fontWeight: 700 }}>{credits} credits</span>
               </div>
             )}
 
             <button
-              className="tai-btn"
+              className="tai-btn tai-btn-primary tai-btn-sm"
               onClick={onBuyCredits}
               style={{
-                background: "linear-gradient(135deg, #F59E0B, #EF4444)",
-                color: "#FFFFFF", border: "none", fontWeight: 800, fontSize: 12.5,
-                padding: "9px 16px", borderRadius: 12, cursor: "pointer",
-                boxShadow: "0 4px 14px rgba(245, 158, 11, 0.35)",
-                display: "inline-flex", alignItems: "center", gap: 6
+                borderRadius: 8, fontWeight: 700, fontSize: 12,
+                display: "inline-flex", alignItems: "center", gap: 5
               }}
             >
-              <span>+ Get Credits</span>
+              <Zap size={13} /> Buy Credits
             </button>
           </div>
         </div>
@@ -211,12 +240,12 @@ export function AIQuizScreen({
       {/* =========================================================================
           TAB NAVIGATION STRIP
           ========================================================================= */}
-      <div className="tai-row tai-gap10" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box", gap: 8 }}>
         {[
           { k: "coach", label: "AI Coach & Tutor", icon: MessageSquare },
           { k: "quiz", label: "Adaptive Quizzes", icon: Zap },
           { k: "history", label: "Session History", icon: BookOpen },
-          { k: "insights", label: "Performance Insights", icon: Sparkles },
+          { k: "insights", label: "Performance Insights", icon: Zap },
         ].map(t => {
           const Icon = t.icon;
           const isActive = aiTab === t.k;
@@ -224,25 +253,20 @@ export function AIQuizScreen({
             <button
               key={t.k}
               onClick={() => setAiTab(t.k)}
+              className={`tai-btn tai-btn-sm ${isActive ? "tai-btn-primary" : "tai-btn-outline"}`}
               style={{
-                padding: "8px 18px",
-                borderRadius: 12,
-                border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                background: isActive ? "var(--primary-tint)" : "var(--surface)",
-                color: isActive ? "var(--primary)" : "var(--text-2)",
-                fontWeight: isActive ? 800 : 600,
-                fontSize: 13,
-                cursor: "pointer",
+                borderRadius: 8,
+                padding: "8px 16px",
+                fontSize: 12.5,
+                fontWeight: 700,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 8,
+                gap: 6,
                 flexShrink: 0,
-                transition: "all 0.15s ease"
+                whiteSpace: "nowrap"
               }}
-              onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--text)"; } }}
-              onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)"; } }}
             >
-              <Icon size={16} />
+              <Icon size={14} />
               <span>{t.label}</span>
             </button>
           );
@@ -253,14 +277,105 @@ export function AIQuizScreen({
           TAB 1: AI COACH INTERACTIVE TUTOR CHAT
           ========================================================================= */}
       {aiTab === "coach" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", minWidth: 0, boxSizing: "border-box" }}>
+
+          {/* Chat History Toolbar & New Thread CTA */}
+          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
+            <button
+              onClick={() => setShowHistory(prev => !prev)}
+              style={{
+                background: showHistory ? "var(--primary-tint)" : "var(--surface)",
+                border: showHistory ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                color: showHistory ? "var(--primary)" : "var(--text)",
+                padding: "7px 14px",
+                borderRadius: 10,
+                fontSize: 12.5,
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                cursor: "pointer",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <History size={14} color={showHistory ? "var(--primary)" : "var(--text-3)"} />
+              <span>Chat History ({chatThreads.length})</span>
+              {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            <button
+              onClick={handleStartNewChat}
+              style={{
+                background: "var(--primary)",
+                border: "none",
+                color: "#FFFFFF",
+                padding: "7px 14px",
+                borderRadius: 10,
+                fontSize: 12.5,
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(79, 70, 229, 0.3)",
+                transition: "all 0.15s ease"
+              }}
+            >
+              <MessageSquarePlus size={14} />
+              <span>New Conversation</span>
+            </button>
+          </div>
+
+          {/* Expandable Chat History Drawer */}
+          {showHistory && (
+            <div className="tai-card tai-fade-in" style={{ padding: 16, borderRadius: 8, background: "var(--surface-3)", border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
+                Recent AI Learning Sessions
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+                {chatThreads.map(thread => {
+                  const isSelected = activeThreadId === thread.id;
+                  return (
+                    <div
+                      key={thread.id}
+                      onClick={() => handleSelectThread(thread)}
+                      style={{
+                        padding: "12px 14px",
+                        borderRadius: 8,
+                        background: isSelected ? "var(--surface)" : "var(--surface-2)",
+                        border: isSelected ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                        cursor: "pointer",
+                        boxShadow: isSelected ? "0 4px 12px rgba(79, 70, 229, 0.12)" : "none",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      <div className="tai-row tai-between" style={{ marginBottom: 4, gap: 8 }}>
+                        <div style={{ fontWeight: 800, fontSize: 13, color: isSelected ? "var(--primary)" : "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {thread.title}
+                        </div>
+                        <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{thread.date}</span>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {thread.snippet}
+                      </div>
+                      <div className="tai-row tai-between" style={{ marginTop: 6, fontSize: 11, color: "var(--text-3)" }}>
+                        <span>{thread.messagesCount} messages</span>
+                        {isSelected && <Tag tone="primary">Active Thread</Tag>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Quick Prompt Starters Strip */}
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>
               Suggested Inquiries &amp; Guided Exercises
             </div>
-            <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+            <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
               {COACH_PROMPT_PRESETS.map((cp, idx) => {
                 const Icon = cp.icon;
                 return (
@@ -270,9 +385,9 @@ export function AIQuizScreen({
                     style={{
                       background: "var(--surface)",
                       border: "1px solid var(--border)",
-                      borderRadius: 12,
-                      padding: "8px 14px",
-                      fontSize: 12.5,
+                      borderRadius: 10,
+                      padding: "7px 12px",
+                      fontSize: 12,
                       fontWeight: 600,
                       color: "var(--text)",
                       display: "inline-flex",
@@ -280,13 +395,14 @@ export function AIQuizScreen({
                       gap: 6,
                       cursor: "pointer",
                       whiteSpace: "nowrap",
+                      flexShrink: 0,
                       boxShadow: "0 1px 3px rgba(15,23,42,0.03)",
                       transition: "all 0.15s ease"
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text)"; }}
                   >
-                    <Icon size={14} color="var(--primary)" />
+                    <Icon size={13} color="var(--primary)" />
                     <span>{cp.label}</span>
                   </button>
                 );
@@ -298,16 +414,18 @@ export function AIQuizScreen({
           <div
             className="tai-card"
             style={{
-              minHeight: 420,
-              maxHeight: 560,
+              minHeight: 340,
+              maxHeight: 520,
               overflowY: "auto",
-              padding: 24,
+              padding: "18px 16px",
               display: "flex",
               flexDirection: "column",
-              gap: 16,
+              gap: 14,
               background: "var(--surface)",
-              borderRadius: 18,
-              border: "1px solid var(--border)"
+              borderRadius: 10,
+              border: "1px solid var(--border)",
+              width: "100%",
+              boxSizing: "border-box"
             }}
           >
             {coachMessagesLoading && coachMessages.length === 0 && (
@@ -316,8 +434,8 @@ export function AIQuizScreen({
 
             {!coachMessagesLoading && coachMessages.length === 0 && (
               <div style={{ textAlign: "center", margin: "auto", maxWidth: 460, padding: 30 }}>
-                <div style={{ width: 64, height: 64, borderRadius: 20, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                  <Sparkles size={28} color="var(--primary)" />
+                <div style={{ width: 64, height: 64, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                  <Zap size={28} color="var(--primary)" />
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
                   How can I assist your learning today?
@@ -341,10 +459,10 @@ export function AIQuizScreen({
                   }}
                 >
                   {isUser ? (
-                    <Avatar initials={initialsOf(session?.user?.user_metadata?.full_name || session?.user?.email)} size={34} />
+                    <Avatar initials={initialsOf(session?.user?.user_metadata?.full_name || session?.user?.email)} size={32} />
                   ) : (
-                    <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg, #4F46E5, #7C3AED)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)" }}>
-                      <Bot size={18} />
+                    <div style={{ width: 32, height: 32, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff" }}>
+                      <Bot size={16} />
                     </div>
                   )}
 
@@ -357,12 +475,11 @@ export function AIQuizScreen({
                       style={{
                         background: isUser ? "#4F46E5" : "var(--surface-3)",
                         color: isUser ? "#FFFFFF" : "var(--text)",
-                        padding: "14px 18px",
-                        borderRadius: isUser ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                        fontSize: 13.5,
-                        lineHeight: 1.6,
+                        padding: "10px 14px",
+                        borderRadius: isUser ? "8px 8px 2px 8px" : "8px 8px 8px 2px",
+                        fontSize: 13,
+                        lineHeight: 1.55,
                         border: isUser ? "none" : "1px solid var(--border)",
-                        boxShadow: isUser ? "0 4px 14px rgba(79, 70, 229, 0.25)" : "none",
                         whiteSpace: "pre-wrap"
                       }}
                     >
@@ -370,7 +487,7 @@ export function AIQuizScreen({
                     </div>
 
                     {!isUser && (
-                      <div className="tai-row tai-gap6" style={{ marginTop: 6 }}>
+                      <div className="tai-row tai-gap6" style={{ marginTop: 4 }}>
                         <button
                           onClick={() => handleCopyText(m.id, m.content)}
                           style={{
@@ -393,10 +510,10 @@ export function AIQuizScreen({
 
             {coachSending && (
               <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg, #4F46E5, #7C3AED)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                  <Bot size={18} />
+                <div style={{ width: 32, height: 32, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+                  <Bot size={16} />
                 </div>
-                <div style={{ background: "var(--surface-3)", padding: "10px 16px", borderRadius: 14, fontSize: 12.5, color: "var(--text-2)", fontStyle: "italic", border: "1px solid var(--border)" }}>
+                <div style={{ background: "var(--surface-3)", padding: "8px 14px", borderRadius: 8, fontSize: 12, color: "var(--text-2)", fontStyle: "italic", border: "1px solid var(--border)" }}>
                   Analyzing question and synthesizing learning response...
                 </div>
               </div>
@@ -404,7 +521,7 @@ export function AIQuizScreen({
           </div>
 
           {/* Chat Input Bar */}
-          <div className="tai-row tai-gap10" style={{ background: "var(--surface)", padding: 8, borderRadius: 16, border: "1.5px solid var(--border)", boxShadow: "0 4px 16px rgba(15,23,42,0.03)" }}>
+          <div className="tai-row tai-gap8" style={{ background: "var(--surface)", padding: 6, borderRadius: 8, border: "1px solid var(--border)" }}>
             <input
               type="text"
               placeholder="Ask your AI coach anything (e.g. explain variables, review my code, quiz my knowledge)..."
@@ -414,7 +531,7 @@ export function AIQuizScreen({
               disabled={coachSending}
               style={{
                 flex: 1, border: "none", outline: "none", background: "transparent",
-                fontSize: 13.5, color: "var(--text)", padding: "8px 12px", fontFamily: "inherit"
+                fontSize: 13, color: "var(--text)", padding: "6px 10px", fontFamily: "inherit"
               }}
             />
 
@@ -422,10 +539,10 @@ export function AIQuizScreen({
               className="tai-btn tai-btn-primary"
               disabled={coachSending || !coachInput?.trim()}
               onClick={() => onSendCoachMessage && onSendCoachMessage()}
-              style={{ padding: "10px 18px", borderRadius: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
+              style={{ padding: "8px 14px", borderRadius: 6, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
             >
               <span>Send</span>
-              <Send size={15} />
+              <Send size={14} />
             </button>
           </div>
         </div>
@@ -437,10 +554,10 @@ export function AIQuizScreen({
       {aiTab === "quiz" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {quizStage === "setup" && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
               
               {/* Generator Configuration Card */}
-              <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
+              <div className="tai-card" style={{ padding: 24, borderRadius: 10 }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                   <div>
                     <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
@@ -450,7 +567,7 @@ export function AIQuizScreen({
                       Generate custom quizzes tuned to your target skillset
                     </p>
                   </div>
-                  <Sparkles size={18} color="var(--primary)" />
+                  <Zap size={18} color="var(--primary)" />
                 </div>
 
                 <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>
@@ -465,7 +582,7 @@ export function AIQuizScreen({
                   style={{ height: 42, fontSize: 13.5, marginBottom: 14 }}
                 />
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12, marginBottom: 16 }}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", marginBottom: 6 }}>
                       Difficulty Level
@@ -510,7 +627,7 @@ export function AIQuizScreen({
 
                 <button
                   className="tai-btn tai-btn-primary"
-                  style={{ width: "100%", padding: "12px 0", borderRadius: 12, fontWeight: 800 }}
+                  style={{ width: "100%", padding: "12px 0", borderRadius: 10, fontWeight: 800 }}
                   disabled={quizGenerating || !quizGenTopic?.trim()}
                   onClick={handleGenerateQuiz}
                 >
@@ -520,7 +637,7 @@ export function AIQuizScreen({
 
               {/* Today's Daily Stats Card */}
               <div className="tai-col tai-gap14">
-                <div className="tai-card" style={{ padding: 20, borderRadius: 18 }}>
+                <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
                   <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>Assessment Daily Goal</span>
                     <Tag tone="primary">1 of 3 Done</Tag>
@@ -529,13 +646,13 @@ export function AIQuizScreen({
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-                  <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+                  <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Trophy size={20} color="#F59E0B" />
                     <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>340 XP</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Total Quiz Points</div>
                   </div>
 
-                  <div className="tai-card" style={{ padding: 18, borderRadius: 16 }}>
+                  <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Flame size={20} color="#EF4444" />
                     <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>8 Days</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Practice Streak</div>
@@ -548,7 +665,7 @@ export function AIQuizScreen({
 
           {/* ACTIVE QUIZ VIEW */}
           {quizStage === "active" && currentQuestion && (
-            <div className="tai-card" style={{ padding: 28, borderRadius: 20, maxWidth: 680, margin: "0 auto", width: "100%" }}>
+            <div className="tai-card" style={{ padding: 28, borderRadius: 10, maxWidth: 680, margin: "0 auto", width: "100%" }}>
               <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                 <span style={{ fontSize: 12, fontWeight: 800, color: "var(--primary)", textTransform: "uppercase" }}>
                   Question {quizIndex + 1} of {questions.length}
@@ -570,7 +687,7 @@ export function AIQuizScreen({
                       className="tai-card-hover"
                       style={{
                         padding: "14px 18px",
-                        borderRadius: 12,
+                        borderRadius: 10,
                         border: selected ? "2px solid #4F46E5" : "1.5px solid var(--border)",
                         background: selected ? "var(--primary-tint)" : "var(--surface)",
                         cursor: "pointer",
@@ -607,15 +724,19 @@ export function AIQuizScreen({
             </div>
           )}
 
+          {quizStage === "active" && !currentQuestion && (
+            <div className="tai-empty">No questions available for this quiz.</div>
+          )}
+
           {/* QUIZ RESULT VIEW */}
           {quizStage === "result" && quizResult && (
-            <div className="tai-card" style={{ maxWidth: 680, margin: "0 auto", width: "100%", padding: 32, textAlign: "center", borderRadius: 20 }}>
+            <div className="tai-card" style={{ maxWidth: 680, margin: "0 auto", width: "100%", padding: 32, textAlign: "center", borderRadius: 10 }}>
               <Trophy size={54} color="#F59E0B" style={{ margin: "0 auto 12px" }} />
               <h2 style={{ fontSize: 24, fontWeight: 900, color: "var(--text)", margin: "0 0 6px" }}>
                 {Math.round(quizResult.score || 0)}% Score
               </h2>
               <p style={{ fontSize: 14, color: "var(--text-3)", margin: "0 0 20px" }}>
-                Correct: {quizResult.correct_count} / {quizResult.total} • Awarded +{quizResult.total_points || 0} XP
+                Correct: {quizResult.correct_count}{quizResult.total != null ? ` / ${quizResult.total}` : ""} • Awarded +{quizResult.total_points || 0} XP
               </p>
 
               {quizResult.isAIQuiz && Array.isArray(quizResult.details) && (
@@ -624,10 +745,12 @@ export function AIQuizScreen({
                     Answer Breakdown
                   </div>
                   {quizResult.details.map((d, i) => (
-                    <div key={i} style={{ background: "var(--surface-3)", padding: 14, borderRadius: 12, border: "1px solid var(--border)" }}>
-                      <div className="tai-row tai-between">
-                        <span style={{ fontWeight: 700, fontSize: 13.5 }}>{i + 1}. {d.question}</span>
-                        {d.isCorrect ? <CheckCircle2 size={16} color="var(--success)" /> : <HelpCircle size={16} color="var(--danger)" />}
+                    <div key={i} style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8, border: "1px solid var(--border)" }}>
+                      <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10 }}>
+                        <span style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>{i + 1}. {d.question}</span>
+                        <span style={{ flexShrink: 0, display: "flex", paddingTop: 1 }}>
+                          {d.isCorrect ? <CheckCircle2 size={16} color="var(--success)" /> : <HelpCircle size={16} color="var(--danger)" />}
+                        </span>
                       </div>
                       {!d.isCorrect && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 4 }}>Correct: {d.correctOption}</div>}
                       {d.explanation && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>{d.explanation}</div>}
@@ -638,7 +761,7 @@ export function AIQuizScreen({
 
               <button
                 className="tai-btn tai-btn-primary"
-                style={{ width: "100%", padding: "12px 0", borderRadius: 12, fontWeight: 800 }}
+                style={{ width: "100%", padding: "12px 0", borderRadius: 8, fontWeight: 800 }}
                 onClick={() => { setQuizStage("setup"); setAiQuiz(null); setActiveQuizSource("bank"); setQuizResult(null); }}
               >
                 Take Another Assessment
@@ -659,7 +782,7 @@ export function AIQuizScreen({
             <div className="tai-empty">No conversation history yet. Start a session in the Coach tab!</div>
           )}
           {coachMessages.map((m, i) => (
-            <div key={i} className="tai-card" style={{ padding: 16, borderRadius: 14 }}>
+            <div key={i} className="tai-card" style={{ padding: 16, borderRadius: 8 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", marginBottom: 4 }}>
                 {m.role === "user" ? "You" : "AI Coach"} • {m.created_at ? new Date(m.created_at).toLocaleString() : "Recent"}
               </div>
@@ -676,7 +799,7 @@ export function AIQuizScreen({
         <div className="tai-col tai-gap16">
           <AIInsightsCard session={session} credits={credits} consumeCredit={consumeCredit} onBuyCredits={onBuyCredits} orgId={orgId} />
 
-          <div className="tai-card" style={{ padding: 22, borderRadius: 18 }}>
+          <div className="tai-card" style={{ padding: 22, borderRadius: 10 }}>
             <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 12px" }}>
               Skill Strengths &amp; Growth Opportunities
             </h3>
@@ -686,9 +809,9 @@ export function AIQuizScreen({
             ) : (
               <div className="tai-col tai-gap10">
                 {weakAreas.map((w, i) => (
-                  <div key={i} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13.5 }}>{w.topic}</div>
+                  <div key={i} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 0, flex: "1 1 160px" }}>
+                      <div style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.topic}</div>
                       <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>{w.note}</div>
                     </div>
                     <Tag tone="warning">{w.mastery}% Mastery</Tag>

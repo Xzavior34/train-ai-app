@@ -1,18 +1,21 @@
 import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import { Clock, Layers, Rocket, CheckCircle2, Lock, ChevronRight, Video, Edit3, Send, GraduationCap, Award, X, ArrowRight, Star, Users, ShieldCheck, FileText, MessageSquare } from "lucide-react";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 function CourseCoverImage({ course, children }) {
   const [errored, setErrored] = useState(false);
   const imageUrl = course.coverImageUrl || course.image || `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&auto=format&fit=crop&q=80`;
 
   return (
-    <div style={{
-      position: "relative", width: "100%", padding: "26px 22px", borderRadius: "var(--radius)", overflow: "hidden",
-      background: `linear-gradient(135deg, ${course.grad?.[0] || "#4338CA"}, ${course.grad?.[1] || "#6366F1"})`,
-      minHeight: 160, display: "flex", flexDirection: "column", justifyContent: "space-between",
-      boxShadow: "0 6px 20px rgba(67, 56, 202, 0.25)"
-    }}>
+    <div
+      className="tai-hero-card"
+      style={{
+        position: "relative", width: "100%", padding: "22px 20px", borderRadius: 14, overflow: "hidden",
+        minHeight: 140, display: "flex", flexDirection: "column", justifyContent: "space-between",
+        boxSizing: "border-box"
+      }}
+    >
       {!errored && (
         <img
           src={imageUrl}
@@ -62,7 +65,7 @@ export function CourseDetailScreen({
 
       {/* Progress or Enrollment CTA */}
       {isEnrolled ? (
-        <div className="tai-card tai-card-hover" style={{ padding: 18 }}>
+        <div className="tai-card" style={{ padding: 18 }}>
           <div className="tai-row tai-between" style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>
             <span>Your Learning Progress</span>
             <span style={{ color: "var(--primary)", fontWeight: 800 }}>{course.progress}%</span>
@@ -135,7 +138,7 @@ export function CourseDetailScreen({
           {lessons.length > 0 && (
             <div className="tai-col tai-gap14">
               {/* Module Progress Card matching media_1787304915509.jpg */}
-              <div className="tai-card" style={{ padding: "18px 20px", borderRadius: 16, background: "var(--surface)" }}>
+              <div className="tai-card" style={{ padding: "18px 20px", borderRadius: 10, background: "var(--surface)" }}>
                 <div style={{ fontSize: 13, color: "var(--text-3)", fontWeight: 600 }}>Module Progress</div>
                 <div className="tai-row tai-between" style={{ alignItems: "baseline", marginTop: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", letterSpacing: "-0.02em" }}>
@@ -177,7 +180,7 @@ export function CourseDetailScreen({
                         cursor: locked ? "default" : "pointer",
                         opacity: locked ? 0.6 : 1,
                         padding: "16px 18px",
-                        borderRadius: 16,
+                        borderRadius: 10,
                         background: "var(--surface)",
                         border: "1px solid var(--border)"
                       }}
@@ -186,7 +189,7 @@ export function CourseDetailScreen({
                       <div className="tai-row tai-between" style={{ alignItems: "center" }}>
                         <div className="tai-row tai-gap14" style={{ flex: 1, minWidth: 0 }}>
                           <div style={{
-                            width: 38, height: 38, borderRadius: 12,
+                            width: 38, height: 38, borderRadius: 8,
                             background: isDone ? "var(--success-bg)" : "var(--surface-3)",
                             color: isDone ? "var(--success)" : "var(--primary)",
                             display: "flex", alignItems: "center", justifyContent: "center",
@@ -302,7 +305,7 @@ function DiscussionTab({ discussionQuery, session, discussionInput, setDiscussio
           value={discussionInput}
           onChange={(e) => setDiscussionInput(e.target.value)}
         />
-        <div className="tai-row tai-between tai-mt10">
+        <div className="tai-row tai-between tai-mt10" style={{ flexWrap: "wrap", gap: 8 }}>
           <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Visible to everyone taking this course.</span>
           <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={sending || !discussionInput.trim()} onClick={handleSend}>
             <Send size={14} /> {sending ? "Posting…" : "Post"}
@@ -369,7 +372,7 @@ function NotesTab({ course, notesQuery, session, newNoteText, setNewNoteText, ad
           value={newNoteText}
           onChange={(e) => setNewNoteText(e.target.value)}
         />
-        <div className="tai-row tai-between tai-mt10">
+        <div className="tai-row tai-between tai-mt10" style={{ flexWrap: "wrap", gap: 8 }}>
           <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Only visible to you.</span>
           <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={saving || !newNoteText.trim()} onClick={handleSave}>
             <Edit3 size={14} /> {saving ? "Saving…" : "Save note"}
@@ -470,14 +473,18 @@ function CertificateCard({ template, myAttempt, myCertificate, onRequest, brandi
 function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit }) {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  // Was declared after the loading early-return below, so this component
+  // called a different number of hooks depending on questionsQuery/
+  // myAttemptQuery's loading state - a real Rules-of-Hooks violation that
+  // corrupts hook state (or throws) the moment either query finishes
+  // loading during the same mount.
+  const [localScore, setLocalScore] = useState(null);
   const questions = questionsQuery?.data || [];
   const myAttempt = myAttemptQuery?.data;
 
   if (questionsQuery?.loading || myAttemptQuery?.loading) {
     return <div className="tai-mt16 tai-empty">Loading assessment...</div>;
   }
-
-  const [localScore, setLocalScore] = useState(null);
 
   const DEFAULT_QUESTIONS = [
     {
@@ -515,7 +522,7 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
     }
   ];
 
-  const effectiveQuestions = (questions && questions.length > 0) ? questions : DEFAULT_QUESTIONS;
+  const effectiveQuestions = (questions && questions.length > 0) ? questions : (isMockDataEnabled() ? DEFAULT_QUESTIONS : []);
 
   if (myAttempt || localScore !== null) {
     const score = myAttempt ? myAttempt.score : localScore;
@@ -538,8 +545,8 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
 
   return (
     <div className="tai-mt16 tai-col tai-gap16">
-      <div className="tai-row tai-between">
-        <div>
+      <div className="tai-row tai-between" style={{ gap: 10, flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
           <div className="tai-title-sm">{assessment?.title || "Final Course Assessment"}</div>
           <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{effectiveQuestions.length} multiple-choice questions • Passing score: 70%</div>
         </div>

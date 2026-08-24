@@ -1,17 +1,19 @@
-import React, { useState } from "react";
-import { TopBar, StatCard, Tag } from "../components/PlatformUI.jsx";
+import React, { useState, useContext } from "react";
+import { TopBar, StatCard, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { 
-  Users, Layers, CheckCircle2, Calendar, Radio, Star, 
-  Sparkles, ArrowRight, Video, Clock, AlertTriangle, 
+  Users, Layers, CheckCircle2, Calendar, Radio, Star,
+  ArrowRight, Video, Clock, AlertTriangle,
   CheckSquare, Square, MessageSquare, ExternalLink, Plus,
-  TrendingUp, BookOpen, Brain
+  TrendingUp, BookOpen, Brain, DollarSign
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../../lib/api/platform.js";
+import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId, onNavigate }) {
+  const showToast = useContext(ToastContext);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
   const [tasks, setTasks] = useState([
     { id: 1, text: "Grade Module 3 UI & Wireframe Submissions (8 pending)", done: false, priority: "high" },
@@ -25,10 +27,20 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
   const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
   const activeCohortsQuery = useSupabaseQuery(async () => currentUserId ? fetchMentorActiveCohorts(currentUserId) : [], [currentUserId]);
+  const earningsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorEarnings(mentorId) : [], [mentorId]);
   const mentorSessions = sessionsQuery.data || [];
   const activeCohorts = activeCohortsQuery.data || [];
   const activeLearnerCount = new Set(mentorSessions.map((s) => s.learner_id).filter(Boolean)).size;
   const cohortsEndingSoonCount = activeCohorts.filter((c) => c.ends_at && new Date(c.ends_at).getTime() - Date.now() < 14 * 86400000).length;
+  // fetchMentorEarnings returns raw mentor_earnings rows, not a pre-aggregated
+  // {total, pending} object - sum them here (restored from the earlier
+  // reference dashboard, which computed real rating/earnings stats).
+  const ratedSessions = mentorSessions.filter((s) => typeof s.rating === "number");
+  const avgRating = ratedSessions.length
+    ? (ratedSessions.reduce((sum, s) => sum + s.rating, 0) / ratedSessions.length).toFixed(1)
+    : null;
+  const earningsRows = earningsQuery.data || [];
+  const totalEarnings = earningsRows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
   const toggleTask = (id) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
@@ -43,13 +55,17 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
     }, 1200);
   };
 
-  const studentRisks = [
+  const defaultStudentRisks = [
     { name: "Fatima Diallo", role: "UI Design Fellow", risk: "High Risk", riskTone: "danger", lastActive: "12 days ago", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" },
     { name: "Liam Torres", role: "AI Engineering Track", risk: "Needs Attention", riskTone: "warning", lastActive: "8 days ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
     { name: "Priya Nair", role: "Product Design", risk: "Needs Attention", riskTone: "warning", lastActive: "4 days ago", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80" },
     { name: "Amara Chen", role: "Generative AI Scholar", risk: "On Track", riskTone: "success", lastActive: "Just now", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
     { name: "Marcus Webb", role: "Spatial Systems", risk: "On Track", riskTone: "success", lastActive: "1 hour ago", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" }
   ];
+  const studentRisks = isMockDataEnabled() ? defaultStudentRisks : [];
+
+  const activeLiveSession = mentorSessions.find(s => s.status === "in_progress" || s.status === "live") || null;
+  const upcomingMentorSessions = mentorSessions.filter(s => s.status === "scheduled" || s.status === "pending");
 
   const mentorName = profileQuery?.data?.display_name || "Hazel";
 
@@ -58,94 +74,29 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
       <TopBar 
         title={`Hello, ${mentorName}`} 
         sub="Track learner engagement, review cohort progress, and launch live sessions." 
-        right={
-          <div style={{ position: "relative" }}>
-            <button className="ta-btn ta-btn-primary" onClick={() => setQuickActionOpen(v => !v)}>
-              <Plus size={15} /> Quick action
-            </button>
-            {quickActionOpen && (
-              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 48, right: 0, width: 220, padding: 8, zIndex: 50 }}>
-                {[
-                  { label: "🔴 Start Live Workshop", go: () => window.open("https://meet.google.com/new", "_blank") },
-                  { label: "💬 Message at-risk students", go: () => onNavigate && onNavigate("messages") },
-                  { label: "📝 Grade Submissions", go: () => onNavigate && onNavigate("mentees") },
-                  { label: "📅 Schedule 1:1 Session", go: () => onNavigate && onNavigate("schedule") }
-                ].map(a => (
-                  <div key={a.label} className="ta-nav-item" onClick={() => { a.go(); setQuickActionOpen(false); }}>
-                    {a.label}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        }
       />
 
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
-        {/* =========================================================================
-            INSTRUCTOR WORKSPACE HERO BANNER
-            ========================================================================= */}
-        <div style={{
-          borderRadius: 20,
-          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
-          color: "#FFFFFF",
-          padding: "clamp(22px, 3.5vw, 28px)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-          border: "1px solid rgba(99, 102, 241, 0.4)",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          <img
-            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1400&auto=format&fit=crop&q=85"
-            alt=""
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover", opacity: 0.32, zIndex: 0
-            }}
-          />
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
-            zIndex: 0
-          }} />
-
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-                <span style={{
-                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                  border: "1px solid rgba(165, 180, 252, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-                }}>
-                  <BookOpen size={13} color="#A5B4FC" /> INSTRUCTOR STUDIO
-                </span>
-                <span style={{
-                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                  border: "1px solid rgba(16, 185, 129, 0.5)",
-                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
-                }}>
-                  4 ACTIVE COHORTS UNDER MENTORSHIP
-                </span>
-              </div>
-
-              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
+          <div className="tai-glow-purple" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">
                 Instructor Live Studio &amp; Pacing
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+              <p className="ta-hero-desc">
                 Review student submissions, host office hours, launch interactive clarification sessions, and message struggling learners.
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
+            <div className="ta-hero-actions">
               <button
-                className="ta-btn"
+                className="ta-btn ta-btn-primary"
                 onClick={handleRunAiSession}
                 disabled={aiActionRunning}
                 style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13,
-                  padding: "10px 18px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
+                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
                   boxShadow: "0 4px 16px rgba(79, 70, 229, 0.4)", display: "flex", alignItems: "center", gap: 8
                 }}
               >
@@ -157,7 +108,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
         {/* Top 4 Balanced KPI Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Active Learners</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -170,7 +121,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Active Cohorts</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -183,7 +134,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Pending Reviews</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -196,7 +147,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16 }}>
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Engagement Rate</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(139, 92, 246, 0.12)", color: "#8B5CF6", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -208,6 +159,32 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               <span>+4% vs last batch</span>
             </div>
           </div>
+
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Instructor Rating</span>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Star size={18} />
+              </div>
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{sessionsQuery.loading ? "…" : (avgRating ?? "N/A")}</div>
+            <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>
+              <span>Across rated sessions</span>
+            </div>
+          </div>
+
+          <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Total Earnings</span>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <DollarSign size={18} />
+              </div>
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{earningsQuery.loading ? "…" : `$${totalEarnings.toFixed(2)}`}</div>
+            <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>
+              <span>Lifetime instructor earnings</span>
+            </div>
+          </div>
         </div>
 
         {/* Asymmetric 2-Column Main Workspace */}
@@ -217,7 +194,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
             
             {/* Today's Tasks */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Today's Tasks</div>
@@ -238,7 +215,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                       alignItems: "center", 
                       gap: 12, 
                       padding: "12px 14px", 
-                      borderRadius: 12, 
+                      borderRadius: 8, 
                       background: t.done ? "var(--surface-2)" : "var(--surface-3)",
                       cursor: "pointer",
                       transition: "all 0.15s ease",
@@ -262,7 +239,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
 
             {/* Batch Progress */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Batch Progress</div>
@@ -281,7 +258,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 {activeCohorts.map(c => {
                   const endingSoon = c.ends_at && new Date(c.ends_at).getTime() - Date.now() < 14 * 86400000;
                   return (
-                    <div key={c.id} style={{ padding: "14px 16px", borderRadius: 12, background: "var(--surface-3)" }}>
+                    <div key={c.id} style={{ padding: "14px 16px", borderRadius: 8, background: "var(--surface-3)" }}>
                       <div className="ta-row ta-between">
                         <div className="ta-row ta-gap8" style={{ minWidth: 0 }}>
                           <BookOpen size={16} color="var(--primary)" style={{ flexShrink: 0 }} />
@@ -301,12 +278,9 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
 
             {/* Cohort Diagnostic Insights & Action Plan */}
-            <div className="ta-card" style={{ 
-              padding: 22, 
-              borderRadius: 16, 
+            <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
-              border: "1px solid var(--border)"
-            }}>
+              border: "1px solid var(--border)" }}>
               <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 14 }}>
                 <Brain size={18} />
                 <span>Cohort Diagnostic &amp; Recommendations</span>
@@ -334,7 +308,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 </button>
                 <button 
                   className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => alert("Diagnostic study guide generated and synced to student resource library.")}
+                  onClick={() => showToast("Diagnostic study guide generated and synced to student resource library.")}
                 >
                   Generate study guide
                 </button>
@@ -347,31 +321,36 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             
             {/* Student Risk Monitor */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Student Risk Monitor</div>
                   <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Learners needing academic or attendance support</div>
                 </div>
-                <Tag tone="danger">2 High Risk</Tag>
+                {studentRisks.length > 0 && <Tag tone="danger">{studentRisks.filter(s => s.riskTone === "danger").length} High Risk</Tag>}
               </div>
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
+                {studentRisks.length === 0 && (
+                  <div className="ta-empty" style={{ padding: "16px 8px" }}>
+                    All learners in your assigned cohorts are currently in good academic standing.
+                  </div>
+                )}
                 {studentRisks.map(s => (
-                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}>
-                    <div className="ta-row ta-gap10">
-                      <img 
-                        src={s.avatar} 
-                        alt={s.name} 
-                        style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }} 
+                  <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 10 }}>
+                    <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 160px" }}>
+                      <img
+                        src={s.avatar}
+                        alt={s.name}
+                        style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
                       />
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{s.name}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{s.role} • {s.lastActive}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.role} • {s.lastActive}</div>
                       </div>
                     </div>
 
-                    <div className="ta-row ta-gap8">
+                    <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
                       <Tag tone={s.riskTone}>{s.risk}</Tag>
                       <button 
                         className="ta-btn ta-btn-ghost ta-btn-sm" 
@@ -388,7 +367,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             </div>
 
             {/* My Schedule & Live Session Card */}
-            <div className="ta-card" style={{ padding: 22, borderRadius: 16 }}>
+            <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>My Schedule</div>
@@ -399,62 +378,68 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 </button>
               </div>
 
-              {/* Dark Live Hero Stream Card */}
-              <div style={{ 
-                marginTop: 16,
-                padding: 18, 
-                borderRadius: 14, 
-                background: "linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)",
-                color: "#FFFFFF",
-                boxShadow: "0 8px 24px rgba(49, 46, 129, 0.25)"
-              }}>
-                <div className="ta-row ta-between">
-                  <div className="ta-row ta-gap6" style={{ background: "rgba(239, 68, 68, 0.2)", padding: "4px 10px", borderRadius: 20, color: "#FCA5A5", fontSize: 11, fontWeight: 700 }}>
-                    <Radio size={12} className="anim-pulse" /> LIVE NOW
+              {/* Adaptive Liquid Glass Live Stream Card */}
+              {activeLiveSession && (
+                <div style={{ 
+                  marginTop: 16,
+                  padding: 16, 
+                  borderRadius: 12, 
+                  background: "var(--surface)",
+                  color: "var(--text)",
+                  border: "1px solid var(--border)",
+                  boxShadow: "inset 0 1px 0 var(--glass-specular), 0 8px 24px -6px rgba(0,0,0,0.12)"
+                }}>
+                  <div className="ta-row ta-between">
+                    <div className="ta-row ta-gap6" style={{ background: "rgba(239, 68, 68, 0.12)", padding: "3px 8px", borderRadius: 4, color: "#EF4444", fontSize: 10.5, fontWeight: 700, border: "1px solid rgba(239, 68, 68, 0.3)" }}>
+                      <Radio size={11} className="anim-pulse" /> LIVE NOW
+                    </div>
+                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>Studio Session</span>
                   </div>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>60 mins • 28 joined</span>
-                </div>
 
-                <div style={{ fontSize: 15, fontWeight: 800, marginTop: 12, lineHeight: 1.35 }}>
-                  Spatial UI & Design Systems Critique
-                </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 4 }}>
-                  Cohort Batch 4 interactive portfolio review session
-                </div>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, marginTop: 10, lineHeight: 1.35, color: "var(--text)" }}>
+                    {activeLiveSession.title || "Live Mentorship Studio"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 3 }}>
+                    {activeLiveSession.description || "Cohort Batch interactive review session"}
+                  </div>
 
-                <div className="ta-row ta-between ta-mt16">
-                  <button 
-                    className="ta-btn ta-btn-primary" 
-                    style={{ background: "#4F46E5", border: "none", color: "#FFFFFF", fontWeight: 700 }}
-                    onClick={() => window.open("https://meet.google.com/demo-room-ai", "_blank")}
-                  >
-                    <Video size={14} /> Join Studio
-                  </button>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>Room #082</span>
+                  <div className="ta-row ta-between ta-mt14">
+                    <button 
+                      className="ta-btn ta-btn-primary ta-btn-sm" 
+                      style={{ background: "#4F46E5", border: "none", color: "#FFFFFF", fontWeight: 700, borderRadius: 6 }}
+                      onClick={() => window.open(activeLiveSession.meeting_url || "https://meet.google.com/new", "_blank")}
+                    >
+                      <Video size={13} /> Join Studio
+                    </button>
+                    <span style={{ fontSize: 11, color: "#64748B" }}>Room #{activeLiveSession.id ? activeLiveSession.id.slice(0, 6) : "082"}</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Upcoming sessions timeline */}
               <div className="ta-col ta-gap10 ta-mt16">
-                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700 }}>Cloud Architecture Masterclass</div>
-                    <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
-                      <Clock size={11} /> Tomorrow • 3:00 PM (45m)
-                    </div>
+                {upcomingMentorSessions.length === 0 && !activeLiveSession && (
+                  <div className="ta-empty" style={{ padding: "16px 8px" }}>
+                    No sessions scheduled today.
                   </div>
-                  <Tag tone="primary">Upcoming</Tag>
-                </div>
-
-                <div className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-3)" }}>
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700 }}>Generative AI Prompts Workshop</div>
-                    <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
-                      <Clock size={11} /> Friday • 5:00 PM (90m)
+                )}
+                {upcomingMentorSessions.slice(0, 3).map((sess) => (
+                  <div key={sess.id} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "break-word" }}>{sess.title || "1-on-1 Mentorship"}</div>
+                      <div className="ta-row ta-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                        <Clock size={11} /> {sess.scheduled_at ? new Date(sess.scheduled_at).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "Scheduled"}
+                      </div>
                     </div>
+                    <button
+                      className="ta-btn ta-btn-primary ta-btn-sm"
+                      style={{ padding: "3px 8px", fontSize: 11 }}
+                      onClick={() => window.open(sess.meeting_url || "https://meet.google.com/new", "_blank")}
+                    >
+                      <Video size={12} /> Launch
+                    </button>
                   </div>
-                  <Tag tone="default">Scheduled</Tag>
-                </div>
+                ))}
               </div>
             </div>
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TopBar, StatCard, Tag, exportRowsAsCsv, ProgressBar } from "../components/PlatformUI.jsx";
 import {
-  Building2, Users, Layers, Activity, Download, Clock, Sparkles,
+  Building2, Users, Layers, Activity, Download, Clock,
   Globe, TrendingUp, TrendingDown, Megaphone, ShieldCheck, Zap,
   Server, Database, ArrowUpRight, CheckCircle2, ChevronRight, Plus,
   DollarSign, BarChart2, Radio, Play
@@ -42,6 +42,8 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
   const activityQuery = useSupabaseQuery(async () => fetchRecentPlatformActivity(8), []);
   const aiUsageQuery = useSupabaseQuery(async () => fetchAIUsageStats(), []);
   const websiteStatsQuery = useSupabaseQuery(async () => fetchWebsitePerformanceStats(), []);
+  const churnQuery = useSupabaseQuery(async () => fetchChurnSummary(), []);
+  const campaignQuery = useSupabaseQuery(async () => fetchCampaignAttribution(), []);
   const healthQuery = useSupabaseQuery(async () => checkPlatformHealth(), []);
 
   const aiUsage = aiUsageQuery.data;
@@ -67,96 +69,54 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
   const effectiveActiveInWeek = stats?.activeInWeek || 4120;
 
   return (
-    <div className="ta-fade" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      
+    <div className="ta-fade">
       {/* =========================================================================
           TOP EXECUTIVE CONTROL BAR
           ========================================================================= */}
       <TopBar
-        title="Platform Governance & Control Hub"
-        sub="Executive multi-tenant control, AI cluster consumption & system metrics"
+        title="Superadmin Dashboard"
+        sub="System telemetry, multi-tenant directory, and global platform controls"
         orgSelector={orgSelector}
-        right={
-          <div className="ta-row ta-gap10">
-            <button className="ta-btn ta-btn-outline" onClick={handleExportPlatformReport} disabled={!orgs.length}>
-              <Download size={14} /> Export CSV Audit
-            </button>
-            <button className="ta-btn ta-btn-primary" onClick={() => onNavigate?.("organizations")}>
-              <Plus size={14} /> Add Tenant Org
-            </button>
-          </div>
-        }
+        onNavigate={onNavigate}
       />
 
-      {/* =========================================================================
-          EXECUTIVE HERO TELEMETRY BANNER
-          ========================================================================= */}
-      <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.92) 100%)",
-        color: "#FFFFFF",
-        padding: "clamp(22px, 3.5vw, 28px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
-        position: "relative",
-        overflow: "hidden"
-      }}>
-        {/* Background Network Tech Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1400&auto=format&fit=crop&q=85"
-          alt=""
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* =========================================================================
+            EXECUTIVE HERO TELEMETRY BANNER
+            ========================================================================= */}
+        <div
+          className="ta-card ta-hero-banner ta-hero-dark anim-fluid-entrance"
           style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.28, zIndex: 0
+            borderRadius: 14,
+            padding: "clamp(18px, 2.5vw, 24px)",
+            position: "relative",
+            overflow: "hidden"
           }}
-        />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 60%, rgba(15,23,42,0.7) 100%)",
-          zIndex: 0
-        }} />
+        >
+          <div className="tai-glow-cobalt" />
 
-        <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
-              <span style={{
-                background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
-                border: "1px solid rgba(165, 180, 252, 0.5)",
-                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
-              }}>
-                <Server size={13} color="#A5B4FC" /> ENTERPRISE MULTI-TENANT CLUSTER
-              </span>
-              <span style={{
-                background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
-                border: "1px solid rgba(16, 185, 129, 0.5)",
-                fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
-                display: "inline-flex", alignItems: "center", gap: 5
-              }}>
-                <Radio size={11} color="#34D399" /> 99.98% UPTIME • GLOBAL EDGE
-              </span>
+          <div className="ta-hero-inner" style={{ position: "relative", zIndex: 1 }}>
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
+                Train AI Platform Overview
+              </h1>
+              <p className="ta-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 680, lineHeight: 1.5 }}>
+                Active orchestration across {effectiveTotalOrgs} tenant institutions, powering {effectiveTotalUsers.toLocaleString()} enrolled learners with real-time AI tutor inference.
+              </p>
             </div>
 
-            <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
-              Train AI Platform Overview
-            </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
-              Active orchestration across {effectiveTotalOrgs} tenant institutions, powering {effectiveTotalUsers.toLocaleString()} enrolled learners with real-time AI tutor inference.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", flexShrink: 0 }}>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>AI Inference Speed</div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: "#34D399" }}>18ms avg</div>
-            </div>
-            <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active WebSockets</div>
-              <div style={{ fontSize: 17, fontWeight: 900, color: "#FBBF24" }}>428 Live</div>
+            <div className="ta-hero-actions">
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>AI Speed</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#10B981" }}>18ms avg</div>
+              </div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>WebSockets</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#F59E0B" }}>428 Live</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
       {/* =========================================================================
           TOP 4 EXECUTIVE METRIC CARDS WITH SPARKLINE GROWTH
@@ -164,17 +124,17 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
         
         {/* Card 1 */}
-        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Organizations</span>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Building2 size={18} />
             </div>
           </div>
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalOrgs}
           </div>
-          <div className="ta-row ta-between ta-mt10" style={{ fontSize: 12 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> +20% QoQ
             </span>
@@ -183,17 +143,17 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 2 */}
-        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Platform Users</span>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(79, 70, 229, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(79, 70, 229, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Users size={18} />
             </div>
           </div>
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalUsers.toLocaleString()}
           </div>
-          <div className="ta-row ta-between ta-mt10" style={{ fontSize: 12 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> +14.2% MoM
             </span>
@@ -202,17 +162,17 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 3 */}
-        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Published Courses</span>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Layers size={18} />
             </div>
           </div>
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveTotalCourses}
           </div>
-          <div className="ta-row ta-between ta-mt10" style={{ fontSize: 12 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--primary)", fontWeight: 700 }}>
               <CheckCircle2 size={14} /> 100% Accredited
             </span>
@@ -221,17 +181,17 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Card 4 */}
-        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 16, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Weekly Active Users (7d)</span>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Activity size={18} />
             </div>
           </div>
           <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
             {effectiveActiveInWeek.toLocaleString()}
           </div>
-          <div className="ta-row ta-between ta-mt10" style={{ fontSize: 12 }}>
+          <div className="ta-row ta-between" style={{ fontSize: 12, marginTop: 10, gap: 8, flexWrap: "wrap" }}>
             <span className="ta-row" style={{ gap: 4, color: "var(--success)", fontWeight: 700 }}>
               <TrendingUp size={14} /> 69.8% Engagement
             </span>
@@ -243,11 +203,11 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       {/* =========================================================================
           ANALYTICS VISUALIZATION & AI CONSUMPTION SPLIT
           ========================================================================= */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         
         {/* Multi-Month Growth Chart */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Platform Growth &amp; Enrollment Trajectory</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Monthly active seats and course enrollments</div>
@@ -257,11 +217,9 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 <button
                   key={m}
                   onClick={() => setActiveChartMetric(m)}
+                  className={`ta-btn ta-btn-sm ${activeChartMetric === m ? "ta-btn-primary" : "ta-btn-outline"}`}
                   style={{
-                    padding: "4px 10px", borderRadius: 8, fontSize: 11.5, fontWeight: 700, cursor: "pointer",
-                    background: activeChartMetric === m ? "var(--primary)" : "var(--surface-3)",
-                    color: activeChartMetric === m ? "#FFFFFF" : "var(--text-2)",
-                    border: "none", transition: "all .15s ease"
+                    padding: "4px 10px", borderRadius: 6, fontSize: 11.5, fontWeight: 700, cursor: "pointer"
                   }}
                 >
                   {m === "enrollments" ? "Enrollments" : "ARR / MRR ($)"}
@@ -271,7 +229,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           </div>
 
           {/* Bar Chart Visualization */}
-          <div style={{ height: 210, display: "flex", alignItems: "flex-end", justifyContent: "space-between", paddingTop: 30, paddingBottom: 10, gap: 12 }}>
+          <div style={{ height: 210, display: "flex", alignItems: "flex-end", justifyContent: "space-between", paddingTop: 30, paddingBottom: 10, gap: 12, overflowX: "auto" }}>
             {MONTHLY_GROWTH_DATA.map((item, idx) => {
               const val = activeChartMetric === "enrollments" ? item.enrollments : `$${(item.revenue / 1000).toFixed(1)}k`;
               return (
@@ -284,10 +242,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                       width: "100%", maxWidth: 36,
                       height: `${item.heightPct}%`,
                       background: idx === MONTHLY_GROWTH_DATA.length - 1
-                        ? "linear-gradient(180deg, #4F46E5 0%, #6366F1 100%)"
-                        : "linear-gradient(180deg, rgba(99, 102, 241, 0.4) 0%, rgba(99, 102, 241, 0.15) 100%)",
-                      borderRadius: "6px 6px 0 0",
-                      transition: "all 0.3s ease"
+                        ? "#4F46E5"
+                        : "var(--surface-3)",
+                      borderRadius: "4px 4px 0 0",
+                      transition: "all 0.2s ease"
                     }}
                   />
                   <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 8, fontWeight: 600 }}>
@@ -300,8 +258,8 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* AI Engine Activity & Consumption Matrix */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>AI Inference Engine Telemetry</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Gemini 2.5 Flash query distribution</div>
@@ -309,7 +267,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             <Tag tone="primary"><Activity size={12} /> {aiUsage?.total || "18,450"} Total Calls</Tag>
           </div>
 
-          <div className="ta-col ta-gap16 ta-mt18">
+          <div className="ta-col ta-gap16 anim-stagger" style={{ marginTop: 18 }}>
             {AI_MODEL_BREAKDOWN.map(b => (
               <div key={b.feature}>
                 <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 6 }}>
@@ -322,12 +280,12 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               </div>
             ))}
 
-            <div style={{ background: "var(--surface-3)", padding: 14, borderRadius: 12, marginTop: 8 }}>
+            <div style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8, marginTop: 8 }}>
               <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
                 <span style={{ color: "var(--text-2)", fontWeight: 600 }}>Average Prompt Response Latency:</span>
                 <span style={{ color: "var(--success)", fontWeight: 800 }}>340 ms</span>
               </div>
-              <div className="ta-row ta-between ta-mt6" style={{ fontSize: 12.5 }}>
+              <div className="ta-row ta-between" style={{ fontSize: 12.5, marginTop: 6 }}>
                 <span style={{ color: "var(--text-2)", fontWeight: 600 }}>Inference Error Rate:</span>
                 <span style={{ color: "var(--text)", fontWeight: 800 }}>&lt; 0.01%</span>
               </div>
@@ -339,11 +297,11 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
       {/* =========================================================================
           TENANT ORGANIZATIONS TABLE & AUDIT STREAM
           ========================================================================= */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
         
         {/* Tenant Table */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Tenant Organizations</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Multi-tenant seat allocations &amp; statuses</div>
@@ -363,18 +321,19 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               </thead>
               <tbody>
                 {orgsQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading organizations...</td></tr>}
-                {!orgsQuery.loading && orgs.length === 0 && (
+                {orgsQuery.error && <tr><td colSpan={4} className="ta-empty">Couldn't load organizations: {orgsQuery.error}</td></tr>}
+                {!orgsQuery.loading && !orgsQuery.error && orgs.length === 0 && (
                   <tr><td colSpan={4} className="ta-empty">No organizations registered yet.</td></tr>
                 )}
                 {orgs.map((o) => (
                   <tr key={o.id}>
                     <td>
-                      <div className="ta-row ta-gap10">
-                        <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--primary)" }}>
+                      <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--primary)", flexShrink: 0 }}>
                           <Building2 size={16} />
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{o.name}</div>
+                        <div style={{ minWidth: 0, overflow: "hidden" }}>
+                          <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>
                           <div style={{ fontSize: 11, color: "var(--text-3)" }}>ID: {o.id.slice(0, 8)}...</div>
                         </div>
                       </div>
@@ -400,8 +359,8 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* Real-time Audit Stream */}
-        <div className="ta-card" style={{ padding: 24, borderRadius: 18 }}>
-          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)" }}>
+        <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
+          <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
             <div>
               <div className="ta-title" style={{ fontSize: 16 }}>Live Platform Audit Stream</div>
               <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Real-time events from safe_admin_audit_log</div>
@@ -409,7 +368,10 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             <Tag tone="success">Streaming</Tag>
           </div>
 
-          <div className="ta-col ta-gap12 ta-mt14 anim-stagger">
+          <div className="ta-col ta-gap12 anim-stagger" style={{ marginTop: 14 }}>
+            {activityQuery.error && (
+              <div className="ta-empty">Couldn't load recent activity: {activityQuery.error}</div>
+            )}
             {(activity.length > 0 ? activity : [
               { text: "Sara Foundation provisioned 45 new learner seats for AI Sprint", time: "3m ago" },
               { text: "Digital Training Org published module 'Spatial UI & VisionOS Tokens'", time: "14m ago" },
@@ -417,7 +379,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               { text: "Security audit completed: 0 vulnerabilities found in auth policies", time: "2h ago" },
               { text: "Global Edge CDN cache invalidated & refreshed in 4 regions", time: "4h ago" }
             ]).slice(0, 5).map((a, i) => (
-              <div key={i} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+              <div key={i} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: 1 }}>
                   <Clock size={14} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
                   <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -429,6 +391,64 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                 </span>
               </div>
             ))}
+          </div>
+          </div>
+        </div>
+
+        {/* =========================================================================
+            LIVE DATABASE HEALTH, CHURN & CAMPAIGN ATTRIBUTION (real data)
+            ========================================================================= */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-row ta-gap8" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
+              <Activity size={16} color={healthQuery.data?.ok ? "var(--success)" : "var(--danger)"} />
+              <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Platform Health</div>
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 10, lineHeight: 1.4 }}>
+              Live Supabase database telemetry check on page boot.
+            </div>
+            <div className="ta-row ta-gap10" style={{ marginTop: 14, flexWrap: "wrap" }}>
+              <Tag tone={healthQuery.data?.ok ? "success" : "danger"}>{healthQuery.loading ? "Checking..." : healthQuery.data?.ok ? "Database reachable" : "Database unreachable"}</Tag>
+              {healthQuery.data?.latencyMs != null && <span style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600 }}>{healthQuery.data.latencyMs}ms round trip</span>}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 8 }}>
+              Last checked: {healthQuery.data?.checkedAt ? new Date(healthQuery.data.checkedAt).toLocaleTimeString() : "-"}
+            </div>
+          </div>
+
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-row ta-gap8" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
+              <TrendingDown size={16} color="var(--danger)" />
+              <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Tenant Churn History</div>
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 10, lineHeight: 1.4 }}>
+              Aggregated from real admin audit log events.
+            </div>
+            <div className="ta-row ta-gap16" style={{ marginTop: 14 }}>
+              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{churnQuery.data?.suspendedLast30d ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Suspended, 30d</div></div>
+              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{churnQuery.data?.suspendedLast90d ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Suspended, 90d</div></div>
+              <div><div style={{ fontSize: 20, fontWeight: 800, color: "var(--success)" }}>{churnQuery.data?.totalActive ?? 0}</div><div style={{ fontSize: 11, color: "var(--text-3)" }}>Active Tenants</div></div>
+            </div>
+          </div>
+
+          <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-row ta-gap8" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
+              <Megaphone size={16} color="var(--primary)" />
+              <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Campaign Attribution</div>
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 10, lineHeight: 1.4 }}>
+              UTM tracking grouped by campaign source.
+            </div>
+            <div className="ta-col ta-gap6" style={{ marginTop: 14 }}>
+              {(campaignQuery.data || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No campaign-tagged leads yet.</div>}
+              {(campaignQuery.data || []).slice(0, 5).map((c) => (
+                <div key={c.campaign} className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                  <span style={{ color: "var(--text)", fontWeight: 500 }}>{c.campaign}</span>
+                  <span style={{ fontWeight: 700, color: "var(--primary)" }}>{c.count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

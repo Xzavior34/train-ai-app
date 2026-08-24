@@ -1,62 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { TopBar } from "../components/LearnerUI.jsx";
 import {
-  Bell, BookOpen, Video, Trophy, Sparkles, CheckCheck, Trash2,
-  Search, ArrowRight, MessageSquare, ShieldAlert, Check, X, Filter
+  Bell, BookOpen, Video, Trophy, CheckCheck, Trash2,
+  Search, ArrowRight, MessageSquare, ShieldAlert, Check, X, Filter, ChevronLeft
 } from "lucide-react";
-
-const DEFAULT_NOTIFICATIONS = [
-  {
-    id: "notif-1",
-    title: "Live Critique Session in 15 Minutes",
-    message: "UI Critique & System Architecture Review with Astrid Larsson is about to start. Click to join the live studio stream.",
-    type: "live",
-    time: "15 min ago",
-    read: false,
-    actionUrl: "cohort",
-    actionLabel: "Join Live Stream"
-  },
-  {
-    id: "notif-2",
-    title: "New Assignment Assigned: Design Tokens",
-    message: "Your instructor posted Module 4 deliverables in 'Master Design Systems in Figma'. Due in 3 days.",
-    type: "assignment",
-    time: "2 hours ago",
-    read: false,
-    actionUrl: "courses",
-    actionLabel: "Open Assignment"
-  },
-  {
-    id: "notif-3",
-    title: "Quiz Completed: +50 XP Awarded",
-    message: "You scored 100% on the Prompt Engineering quiz! You're now ranked in the Top 3 of your weekly cohort.",
-    type: "achievement",
-    time: "Yesterday",
-    read: true,
-    actionUrl: "achievements",
-    actionLabel: "View Leaderboard"
-  },
-  {
-    id: "notif-4",
-    title: "Mentor Feedback Received",
-    message: "David Kim left detailed comments on your Capstone Project wireframes.",
-    type: "mentor",
-    time: "Yesterday",
-    read: true,
-    actionUrl: "mentors",
-    actionLabel: "Read Feedback"
-  },
-  {
-    id: "notif-5",
-    title: "Weekly Learning Summary Ready",
-    message: "Your weekly study streak report and personalized skill recommendations are ready in your AI tab.",
-    type: "ai",
-    time: "2 days ago",
-    read: true,
-    actionUrl: "ai-quiz",
-    actionLabel: "Explore Recommendations"
-  }
-];
 
 export function NotificationsScreen({
   notifications = [],
@@ -67,9 +14,16 @@ export function NotificationsScreen({
 }) {
   const [filterTab, setFilterTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [localNotifs, setLocalNotifs] = useState(DEFAULT_NOTIFICATIONS);
+  const [localNotifs, setLocalNotifs] = useState(notifications);
 
-  const baseNotifs = (notifications && notifications.length > 0) ? notifications : localNotifs;
+  // Keep the local read/delete overlay in sync with the real notifications
+  // feed as it loads/updates, instead of ever falling back to fabricated
+  // placeholder data.
+  useEffect(() => {
+    setLocalNotifs(notifications);
+  }, [notifications]);
+
+  const baseNotifs = localNotifs;
 
   const unreadCount = useMemo(() => baseNotifs.filter(n => !n.read).length, [baseNotifs]);
 
@@ -139,46 +93,95 @@ export function NotificationsScreen({
   }
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 860, margin: "0 auto", width: "100%" }}>
-      <TopBar
-        title="Notifications & Updates"
-        sub={`${unreadCount} unread alert${unreadCount === 1 ? "" : "s"} across all courses and cohorts`}
-        onBack={back}
-        hideBell
-        right={
-          <div className="tai-row tai-gap8">
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
+      {/* =========================================================================
+          HERO BANNER: Unified Activity Center (Adaptive Liquid Glass)
+          ========================================================================= */}
+      <div
+        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          padding: "clamp(18px, 2.5vw, 24px)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
+        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="tai-row tai-gap10" style={{ alignItems: "center", marginBottom: 6 }}>
+              {back && (
+                <button
+                  onClick={back}
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  style={{ padding: "4px 8px", borderRadius: 6, color: "#FFFFFF", background: "rgba(255,255,255,0.12)" }}
+                >
+                  <ChevronLeft size={16} /> Back
+                </button>
+              )}
+              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
+                Notifications &amp; Activity Center
+              </h1>
+            </div>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
+              Stay on top of live instructor sessions, cohort assignments, milestone achievements, and platform announcements.
+            </p>
+          </div>
+
+          <div className="tai-row tai-gap8" style={{ flexWrap: "wrap", flexShrink: 0 }}>
             {unreadCount > 0 && (
               <button
                 type="button"
-                className="tai-btn tai-btn-ghost tai-btn-sm"
+                className="tai-btn tai-btn-primary tai-btn-sm"
                 onClick={handleMarkAll}
-                style={{ fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
+                style={{
+                  fontWeight: 700,
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  borderRadius: 8, height: 34, padding: "0 14px"
+                }}
               >
-                <CheckCheck size={15} /> Mark All Read
+                <CheckCheck size={14} /> Mark All Read
               </button>
             )}
             {baseNotifs.length > 0 && (
               <button
                 type="button"
-                className="tai-btn tai-btn-ghost tai-btn-sm"
+                className="tai-btn tai-btn-outline tai-btn-sm"
                 onClick={handleClearAll}
-                style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
+                style={{
+                  color: "var(--danger)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6,
+                  borderRadius: 8, height: 34, padding: "0 12px"
+                }}
                 title="Clear all notifications"
               >
-                <Trash2 size={14} /> Clear
+                <Trash2 size={13} /> Clear History
               </button>
             )}
           </div>
-        }
-      />
+        </div>
+      </div>
 
-      {/* Search & Category Filter Toolbar */}
-      <div className="tai-card" style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* =========================================================================
+          TOOLBAR: Search & Segmented Filter Pills
+          ========================================================================= */}
+      <div className="tai-card" style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10, borderRadius: 10 }}>
         <div style={{ position: "relative", width: "100%" }}>
           <Search
-            size={16}
+            size={15}
             color="var(--text-3)"
-            style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }}
+            style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}
           />
           <input
             type="text"
@@ -186,15 +189,15 @@ export function NotificationsScreen({
             placeholder="Search notification title or message content..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ paddingLeft: 40, height: 42, width: "100%", borderRadius: 12 }}
+            style={{ paddingLeft: 36, height: 38, width: "100%", borderRadius: 8, fontSize: 13 }}
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery("")}
               style={{
-                position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-                background: "none", border: "none", color: "var(--text-3)", cursor: "pointer"
+                position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", display: "flex", alignItems: "center"
               }}
             >
               <X size={14} />
@@ -203,7 +206,7 @@ export function NotificationsScreen({
         </div>
 
         {/* Filter Pills */}
-        <div className="tai-scrollx" style={{ gap: 8, paddingBottom: 2 }}>
+        <div className="tai-scrollx" style={{ gap: 6, paddingBottom: 2 }}>
           {[
             { k: "all", label: `All Updates (${baseNotifs.length})` },
             { k: "unread", label: `Unread (${unreadCount})` },
@@ -216,7 +219,7 @@ export function NotificationsScreen({
               type="button"
               className={`tai-pill ${filterTab === t.k ? "tai-pill-active" : "tai-pill-inactive"}`}
               onClick={() => setFilterTab(t.k)}
-              style={{ whiteSpace: "nowrap", cursor: "pointer", border: "none" }}
+              style={{ whiteSpace: "nowrap", cursor: "pointer", border: "none", fontSize: 12, padding: "5px 12px" }}
             >
               {t.label}
             </button>
@@ -224,15 +227,17 @@ export function NotificationsScreen({
         </div>
       </div>
 
-      {/* Notifications List */}
-      <div className="tai-col tai-gap12 anim-stagger">
+      {/* =========================================================================
+          NOTIFICATIONS LIST
+          ========================================================================= */}
+      <div className="tai-col tai-gap10 anim-stagger">
         {filteredNotifs.length === 0 ? (
-          <div className="tai-card tai-empty" style={{ padding: "48px 20px", textAlign: "center" }}>
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <Bell size={24} color="var(--text-3)" />
+          <div className="tai-card tai-empty" style={{ padding: "48px 20px", textAlign: "center", borderRadius: 10 }}>
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+              <Bell size={22} color="var(--text-3)" />
             </div>
-            <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>No Notifications Found</div>
-            <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 360, margin: "4px auto 0" }}>
+            <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)" }}>No Notifications Found</div>
+            <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 4, maxWidth: 360, margin: "4px auto 0" }}>
               {searchQuery ? "No notifications matched your search keywords." : "You're all caught up! There are no new notifications in this category."}
             </div>
           </div>
@@ -243,18 +248,19 @@ export function NotificationsScreen({
               className="tai-card tai-card-hover"
               style={{
                 background: n.read ? "var(--surface)" : "var(--surface-2)",
-                borderColor: n.read ? "var(--border)" : "var(--primary-light)",
-                boxShadow: n.read ? "none" : "0 4px 14px rgba(79, 70, 229, 0.08)",
-                padding: "16px 20px",
-                transition: "all .18s ease",
+                borderColor: n.read ? "var(--border)" : "var(--border)",
+                borderLeft: n.read ? "1px solid var(--border)" : "3px solid #4F46E5",
+                borderRadius: 10,
+                padding: "14px 16px",
+                transition: "all .16s ease",
                 position: "relative"
               }}
             >
-              <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 14 }}>
+              <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 12 }}>
                 {/* Left icon + content */}
-                <div className="tai-row tai-gap14" style={{ alignItems: "flex-start", flex: 1, minWidth: 0 }}>
+                <div className="tai-row tai-gap12" style={{ alignItems: "flex-start", flex: 1, minWidth: 0 }}>
                   <div style={{
-                    width: 42, height: 42, borderRadius: 12,
+                    width: 38, height: 38, borderRadius: 8,
                     background: n.read ? "var(--surface-3)" : "var(--primary-tint)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0
@@ -263,12 +269,12 @@ export function NotificationsScreen({
                   </div>
 
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                    <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 6, alignItems: "center" }}>
                       <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
-                        <span className="tai-tag" style={{ fontSize: 11, padding: "2px 8px", background: "var(--surface-3)", color: "var(--text-2)" }}>
+                        <span className="tai-tag" style={{ fontSize: 10.5, padding: "2px 7px", background: "var(--surface-3)", color: "var(--text-2)", borderRadius: 4 }}>
                           {typeLabel(n.type)}
                         </span>
-                        <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", letterSpacing: "-0.01em" }}>
+                        <div style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", letterSpacing: "-0.01em" }}>
                           {n.title}
                         </div>
                       </div>
@@ -278,31 +284,31 @@ export function NotificationsScreen({
                         {!n.read && (
                           <span
                             className="anim-pulse"
-                            style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)", flexShrink: 0 }}
+                            style={{ width: 7, height: 7, borderRadius: "50%", background: "#4F46E5", flexShrink: 0 }}
                             title="Unread"
                           />
                         )}
                       </div>
                     </div>
 
-                    <div style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.55, marginTop: 8 }}>
+                    <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.5, marginTop: 6 }}>
                       {n.message}
                     </div>
 
                     {/* Action Bar */}
-                    <div className="tai-row tai-between" style={{ marginTop: 14, paddingTop: 10, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
+                    <div className="tai-row tai-between" style={{ marginTop: 12, paddingTop: 8, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
                       <div>
                         {n.actionLabel && (
                           <button
                             type="button"
                             className="tai-btn tai-btn-primary tai-btn-sm"
-                            style={{ borderRadius: 8, padding: "6px 14px", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
+                            style={{ borderRadius: 6, height: 28, padding: "0 10px", fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5, background: "#4F46E5" }}
                             onClick={() => {
                               if (push && n.actionUrl) push(n.actionUrl);
                             }}
                           >
                             <span>{n.actionLabel}</span>
-                            <ArrowRight size={13} />
+                            <ArrowRight size={12} />
                           </button>
                         )}
                       </div>
@@ -311,7 +317,7 @@ export function NotificationsScreen({
                         <button
                           type="button"
                           className="tai-btn tai-btn-ghost tai-btn-sm"
-                          style={{ padding: "4px 8px", fontSize: 12 }}
+                          style={{ padding: "3px 8px", fontSize: 11.5, height: 28, borderRadius: 6 }}
                           onClick={(e) => handleToggleRead(n.id, e)}
                         >
                           {n.read ? "Mark unread" : "Mark read"}
@@ -319,11 +325,11 @@ export function NotificationsScreen({
                         <button
                           type="button"
                           className="tai-btn tai-btn-ghost tai-btn-sm"
-                          style={{ padding: "4px 8px", color: "var(--danger)" }}
+                          style={{ padding: "3px 8px", fontSize: 11.5, height: 28, borderRadius: 6, color: "var(--danger)" }}
                           onClick={(e) => handleDeleteNotification(n.id, e)}
                           title="Dismiss notification"
                         >
-                          <Trash2 size={13} />
+                          <Trash2 size={12} />
                         </button>
                       </div>
                     </div>

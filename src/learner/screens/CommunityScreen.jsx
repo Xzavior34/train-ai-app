@@ -2,13 +2,14 @@ import React, { useState, useMemo, useEffect } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
-  MessageCircle, Heart, Flame, Sparkles, Rocket, Users, Share2, Send, Plus,
+  MessageCircle, Heart, Flame, Compass, Rocket, Users, Share2, Send, Plus,
   Search, Bookmark, ExternalLink, Calendar, CheckCircle2, Megaphone, Radio,
   Filter, Pin, ThumbsUp, Code2, Award, ChevronRight, Layers, Play, Clock,
   ArrowUpRight, MoreHorizontal, Check, X, HelpCircle, Image as ImageIcon,
-  Palette, Zap, Target, MessageSquare
+  Palette, Zap, Target, MessageSquare, GraduationCap, Video, BookOpen, FileText
 } from "lucide-react";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function CommunityScreen({
   communityTab = "feed", setCommunityTab, posts = [], postsQuery = {}, newPostText = "", setNewPostText,
@@ -32,13 +33,30 @@ export function CommunityScreen({
   const [posting, setPosting] = useState(false);
 
   const [expandedCommentsPostId, setExpandedCommentsPostId] = useState(initialExpandedPostId || null);
+
+  // Deep-link support: when the learner arrives here from a universal-search
+  // "Community" result (see TrainAILearnerApp's onOpenPost -> push("community",
+  // { postId })), expand that post's comments and scroll it into view instead
+  // of just dumping them on top of the feed. Runs on every change (not just
+  // mount) since this screen can stay mounted across repeated deep links, and
+  // also makes sure we're on the feed tab where the post actually renders.
+  useEffect(() => {
+    if (!initialExpandedPostId) return;
+    setActiveTab("feed");
+    setExpandedCommentsPostId(initialExpandedPostId);
+    const t = setTimeout(() => {
+      const el = document.getElementById(`community-post-${initialExpandedPostId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [initialExpandedPostId]);
   const [replyInput, setReplyInput] = useState({});
   const [userReactions, setUserReactions] = useState({});
   const [activeTab, setActiveTab] = useState("feed"); // feed | events | circles | leaderboard
 
   // Rich Community Spaces (Disco LMS Architecture with Professional Icons)
   const SPACES = [
-    { id: "all", label: "All Spaces", icon: Sparkles, count: 28 },
+    { id: "all", label: "All Spaces", icon: Compass, count: 28 },
     { id: "announcements", label: "Announcements", icon: Megaphone, count: 4 },
     { id: "design-critique", label: "Design & UI Critique", icon: Palette, count: 9 },
     { id: "ai-engineering", label: "AI & Full-Stack", icon: Zap, count: 8 },
@@ -259,24 +277,29 @@ export const chartColors = {
       return;
     }
 
+    // Compute nextActive from the functional (guaranteed fresh) previous
+    // state and reuse that same value for the count update below, instead of
+    // reading `userReactions` from the render closure - two rapid clicks
+    // before a re-render used to read stale data and could double-apply (or
+    // miss) the like/fire/insight delta.
     setUserReactions(prev => {
       const current = prev[postId] || {};
       const nextActive = !current[type];
+
+      setFeedPosts(fp => fp.map(p => {
+        if (p.id !== postId) return p;
+        const delta = nextActive ? 1 : -1;
+        if (type === "like") return { ...p, likes: Math.max(0, p.likes + delta) };
+        if (type === "fire") return { ...p, fires: Math.max(0, p.fires + delta) };
+        if (type === "insight") return { ...p, insights: Math.max(0, p.insights + delta) };
+        return p;
+      }));
+
       return {
         ...prev,
         [postId]: { ...current, [type]: nextActive }
       };
     });
-
-    setFeedPosts(prev => prev.map(p => {
-      if (p.id !== postId) return p;
-      const isAlreadyActive = userReactions[postId]?.[type];
-      const delta = isAlreadyActive ? -1 : 1;
-      if (type === "like") return { ...p, likes: Math.max(0, p.likes + delta) };
-      if (type === "fire") return { ...p, fires: Math.max(0, p.fires + delta) };
-      if (type === "insight") return { ...p, insights: Math.max(0, p.insights + delta) };
-      return p;
-    }));
   }
 
   async function handleAddComment(postId) {
@@ -366,7 +389,7 @@ export const chartColors = {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       const matchesTitle = p.title ? p.title.toLowerCase().includes(q) : false;
-      if (!matchesTitle && !p.content.toLowerCase().includes(q)) return false;
+      if (!matchesTitle && !(p.content || "").toLowerCase().includes(q)) return false;
     }
     return true;
   });
@@ -377,51 +400,52 @@ export const chartColors = {
       {/* =========================================================================
           HERO BANNER: DISCO LMS COMMUNITY & COLLABORATIVE KNOWLEDGE HUB
           ========================================================================= */}
-      <div style={{
-        borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(15,23,42,0.92) 0%, rgba(30,27,75,0.85) 100%)",
-        color: "#FFFFFF",
-        padding: "clamp(24px, 4vw, 32px)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
-        border: "1px solid rgba(99, 102, 241, 0.4)",
-        position: "relative",
-        overflow: "hidden"
-      }}>
-        {/* Background Stock Photo with Overlay */}
-        <img
-          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
-          alt=""
+      {/* =========================================================================
+          HERO BANNER: Adaptive Liquid Glass Community & Knowledge Hub
+          ========================================================================= */}
+      <div
+        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          padding: "clamp(18px, 2.5vw, 24px)",
+          position: "relative",
+          overflow: "hidden",
+          width: "100%",
+          boxSizing: "border-box"
+        }}
+      >
+        <div
           style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.38, zIndex: 0
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            pointerEvents: "none"
           }}
         />
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.78) 55%, rgba(15,23,42,0.6) 100%)",
-          zIndex: 0
-        }} />
 
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <div style={{ minWidth: 0, flex: "1 1 240px" }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               Train AI Community Hub
             </h1>
-            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
-              Collaborate with fellow peers, get real-time critique from staff instructors, showcase sprint projects, and join accountability study circles.
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
+              Share projects, ask questions, and collaborate with peers and instructors.
             </p>
           </div>
 
           <button
-            className="tai-btn"
+            className="tai-btn tai-btn-primary"
             onClick={() => setPostComposerOpen(true)}
             style={{
-              background: "#4F46E5", color: "#FFFFFF", fontWeight: 800, fontSize: 13.5,
-              padding: "12px 22px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer",
-              boxShadow: "0 6px 20px rgba(79, 70, 229, 0.45)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0
+              padding: "8px 16px", borderRadius: 8, fontWeight: 700, fontSize: 13,
+              display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
             }}
           >
-            <Plus size={16} /> Share or Ask Question
+            <Plus size={15} /> Share or Ask Question
           </button>
         </div>
       </div>
@@ -433,7 +457,7 @@ export const chartColors = {
         <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
           
           {/* Search Input */}
-          <div style={{ flex: 1, minWidth: 280, position: "relative" }}>
+          <div style={{ flex: "1 1 200px", minWidth: 0, position: "relative" }}>
             <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
             <input
               type="text"
@@ -442,16 +466,17 @@ export const chartColors = {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: "100%", height: 44, paddingLeft: 42, paddingRight: 14,
-                borderRadius: 12, border: "1.5px solid var(--border)", background: "var(--surface)",
+                borderRadius: 8, border: "1.5px solid var(--border)", background: "var(--surface)",
                 fontSize: 13.5, color: "var(--text)", outline: "none"
               }}
             />
           </div>
 
           {/* Primary View Mode Tabs */}
-          <div className="tai-row tai-gap6" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
             {[
               { k: "feed", label: "Community Feed", icon: MessageCircle },
+              { k: "instructors", label: "Instructors & Faculty", icon: GraduationCap },
               { k: "events", label: "Live Events & AMAs", icon: Calendar },
               { k: "circles", label: "Study Circles", icon: Users },
               { k: "leaderboard", label: "Leaderboard", icon: Award },
@@ -461,7 +486,13 @@ export const chartColors = {
               return (
                 <button
                   key={t.k}
-                  onClick={() => setActiveTab(t.k)}
+                  onClick={() => {
+                    if (t.k === "leaderboard") {
+                      push("leaderboard");
+                    } else {
+                      setActiveTab(t.k);
+                    }
+                  }}
                   style={{
                     padding: "8px 14px",
                     borderRadius: 10,
@@ -475,6 +506,7 @@ export const chartColors = {
                     alignItems: "center",
                     gap: 6,
                     flexShrink: 0,
+                    whiteSpace: "nowrap",
                     transition: "all 0.15s ease"
                   }}
                   onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--text)"; } }}
@@ -490,7 +522,7 @@ export const chartColors = {
 
         {/* Space Channels Horizontal Bar */}
         {activeTab === "feed" && (
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
+          <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
             {SPACES.map(sp => {
               const Icon = sp.icon;
               const isActive = selectedSpace === sp.id;
@@ -511,6 +543,7 @@ export const chartColors = {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
+                    flexShrink: 0,
                     transition: "all 0.15s ease"
                   }}
                 >
@@ -525,89 +558,121 @@ export const chartColors = {
       </div>
 
       {/* =========================================================================
-          POST COMPOSER MODAL
+          POST COMPOSER MODAL (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
           ========================================================================= */}
-      {postComposerOpen && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 500,
-          display: "flex", alignItems: "center", justifyContent: "center", padding: 20
-        }}>
-          <div className="tai-card" style={{ maxWidth: 580, width: "100%", padding: 24, borderRadius: 20 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
-              <div className="tai-row tai-gap8">
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <MessageCircle size={16} color="var(--primary)" />
-                </div>
-                <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0 }}>Create Community Post</h3>
-              </div>
-              <button className="tai-iconbtn" onClick={() => setPostComposerOpen(false)}><X size={16} /></button>
+      <PortalModal
+        isOpen={postComposerOpen}
+        onClose={() => setPostComposerOpen(false)}
+        maxWidth={620}
+        zIndex={9999}
+      >
+        <div className="tai-row tai-between" style={{ marginBottom: 16, paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
+          <div className="tai-row tai-gap8">
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <MessageCircle size={18} color="var(--primary)" />
             </div>
-
-            <div className="tai-col tai-gap12">
-              <div>
-                <label className="tai-label">Post Title</label>
-                <input
-                  className="tai-input tai-mt6"
-                  placeholder="e.g. Feedback on my new Figma UI kit tokens..."
-                  value={composerTitle}
-                  onChange={(e) => setComposerTitle(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="tai-label">Details / Question Content</label>
-                <textarea
-                  className="tai-input tai-mt6"
-                  rows={4}
-                  placeholder="Share your progress, describe what you built, or ask a specific question..."
-                  value={composerContent}
-                  onChange={(e) => setComposerContent(e.target.value)}
-                />
-              </div>
-
-              <div className="tai-grid2">
-                <div>
-                  <label className="tai-label">Image or Screenshot URL (optional)</label>
-                  <input
-                    className="tai-input tai-mt6"
-                    placeholder="https://..."
-                    value={composerImage}
-                    onChange={(e) => setComposerImage(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="tai-label">Project / Figma Link (optional)</label>
-                  <input
-                    className="tai-input tai-mt6"
-                    placeholder="https://figma.com/..."
-                    value={composerLink}
-                    onChange={(e) => setComposerLink(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="tai-label">Tags (comma separated)</label>
-                <input
-                  className="tai-input tai-mt6"
-                  placeholder="Design Tokens, Figma, AI, Frontend"
-                  value={composerTags}
-                  onChange={(e) => setComposerTags(e.target.value)}
-                />
-              </div>
-
-              <div className="tai-row tai-between tai-mt14">
-                <button className="tai-btn tai-btn-ghost" onClick={() => setPostComposerOpen(false)}>
-                  Cancel
-                </button>
-                <button className="tai-btn tai-btn-primary" onClick={handleCreatePost} disabled={posting}>
-                  {posting ? "Publishing…" : "Publish Post →"}
-                </button>
-              </div>
+            <div>
+              <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: "var(--text)" }}>Share or Ask Question</h3>
+              <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Publish a question, project, or discussion to the community</div>
             </div>
           </div>
+          <button className="tai-iconbtn" onClick={() => setPostComposerOpen(false)}><X size={16} /></button>
         </div>
-      )}
+
+        {/* Post Category Selectors */}
+        <div className="tai-scrollx" style={{ paddingBottom: 6, marginBottom: 12 }}>
+          {[
+            { id: "discussion", label: "💬 Discussion" },
+            { id: "question", label: "❓ Ask Question" },
+            { id: "showcase", label: "🚀 Project Showcase" },
+            { id: "resource", label: "📚 Resource" },
+          ].map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setComposerType(t.id)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 999,
+                border: composerType === t.id ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                background: composerType === t.id ? "var(--primary-tint)" : "var(--surface-2)",
+                color: composerType === t.id ? "var(--primary)" : "var(--text-2)",
+                fontWeight: composerType === t.id ? 800 : 600,
+                fontSize: 12,
+                cursor: "pointer",
+                marginRight: 6,
+                whiteSpace: "nowrap"
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="tai-col tai-gap12">
+          <div>
+            <label className="tai-label">Post Title</label>
+            <input
+              className="tai-input tai-mt6"
+              placeholder="e.g. How do I optimize context caching for multimodal Gemini?"
+              value={composerTitle}
+              onChange={(e) => setComposerTitle(e.target.value)}
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="tai-label">Details / Question Content</label>
+            <textarea
+              className="tai-input tai-mt6"
+              rows={4}
+              placeholder="Share your code, describe what you are building, or ask a specific question..."
+              value={composerContent}
+              onChange={(e) => setComposerContent(e.target.value)}
+            />
+          </div>
+
+          <div className="tai-grid2">
+            <div>
+              <label className="tai-label">Image or Screenshot URL (Optional)</label>
+              <input
+                className="tai-input tai-mt6"
+                placeholder="https://..."
+                value={composerImage}
+                onChange={(e) => setComposerImage(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="tai-label">Repository or Demo Link (Optional)</label>
+              <input
+                className="tai-input tai-mt6"
+                placeholder="https://github.com/..."
+                value={composerLink}
+                onChange={(e) => setComposerLink(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="tai-label">Tags (Comma Separated)</label>
+            <input
+              className="tai-input tai-mt6"
+              placeholder="Design Tokens, Figma, AI, Frontend"
+              value={composerTags}
+              onChange={(e) => setComposerTags(e.target.value)}
+            />
+          </div>
+
+          <div className="tai-row tai-between tai-mt14">
+            <button className="tai-btn tai-btn-ghost" onClick={() => setPostComposerOpen(false)}>
+              Cancel
+            </button>
+            <button className="tai-btn tai-btn-primary" onClick={handleCreatePost} disabled={posting || !composerContent.trim()}>
+              {posting ? "Publishing…" : "Publish Post →"}
+            </button>
+          </div>
+        </div>
+      </PortalModal>
 
       {/* =========================================================================
           VIEW 1: RICH COMMUNITY FEED (DISCO LMS FEED)
@@ -616,7 +681,7 @@ export const chartColors = {
         <div className="tai-dashboard-grid">
           
           {/* Main Feed Column */}
-          <div className="tai-col tai-gap18">
+          <div className="tai-col tai-gap18" style={{ minWidth: 0, width: "100%" }}>
             
             {filteredFeedPosts.map(post => {
               const reactions = post.isReal
@@ -630,39 +695,41 @@ export const chartColors = {
                   id={`community-post-${post.id}`}
                   className="tai-card"
                   style={{
-                    padding: 22,
-                    borderRadius: 18,
+                    padding: "18px 16px",
+                    borderRadius: 10,
                     border: post.pinned ? "1.5px solid rgba(99, 102, 241, 0.45)" : "1px solid var(--border)",
                     boxShadow: post.pinned ? "0 4px 20px rgba(79, 70, 229, 0.08)" : "var(--shadow-card)",
-                    background: "var(--surface)"
+                    background: "var(--surface)",
+                    width: "100%",
+                    boxSizing: "border-box"
                   }}
                 >
-                  {/* Pinned & Space Tag */}
-                  <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-                    <div className="tai-row tai-gap8">
+                  {/* Pinned & Space Tag - Wrapped Cleanly Without Overlapping */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, minWidth: 0 }}>
                       {post.pinned && (
-                        <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#D97706", fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#D97706", fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                           <Pin size={11} /> PINNED ANNOUNCEMENT
                         </span>
                       )}
                       <Tag tone="primary">{post.spaceLabel}</Tag>
                     </div>
-                    <span style={{ fontSize: 12, color: "var(--text-3)" }}>{post.time}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--text-3)", flexShrink: 0, marginLeft: "auto" }}>{post.time}</span>
                   </div>
 
                   {/* Author Header */}
-                  <div className="tai-row tai-gap12" style={{ marginBottom: 14 }}>
+                  <div className="tai-row tai-gap12" style={{ marginBottom: 14, minWidth: 0 }}>
                     <Avatar src={post.author.avatar} initials={initialsOf(post.author.name)} size={44} />
-                    <div>
-                      <div className="tai-row tai-gap6">
-                        <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>{post.author.name}</span>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="tai-row tai-gap6" style={{ minWidth: 0, flexWrap: "wrap" }}>
+                        <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{post.author.name}</span>
                         {post.author.isStaff && (
-                          <span style={{ background: "#4F46E5", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4 }}>
+                          <span style={{ background: "#4F46E5", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
                             {post.author.badge}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 12, color: "var(--text-3)" }}>{post.author.title}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.author.title}</div>
                     </div>
                   </div>
 
@@ -685,7 +752,7 @@ export const chartColors = {
                   {post.codeSnippet && (
                     <pre style={{
                       background: "#0F172A", color: "#E2E8F0", padding: "14px 16px",
-                      borderRadius: 12, fontSize: 12, lineHeight: 1.5, overflowX: "auto", margin: "0 0 14px",
+                      borderRadius: 8, fontSize: 12, lineHeight: 1.5, overflowX: "auto", margin: "0 0 14px",
                       fontFamily: "monospace"
                     }}>
                       <code>{post.codeSnippet}</code>
@@ -694,7 +761,7 @@ export const chartColors = {
 
                   {/* Image Attachment */}
                   {post.imageUrl && (
-                    <div style={{ width: "100%", height: 220, borderRadius: 14, overflow: "hidden", marginBottom: 14 }}>
+                    <div style={{ width: "100%", height: 220, borderRadius: 8, overflow: "hidden", marginBottom: 14 }}>
                       <img src={post.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
                   )}
@@ -772,7 +839,7 @@ export const chartColors = {
                   {isCommentsOpen && (
                     <div className="tai-col tai-gap10" style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
                       {(post.comments || []).map(c => (
-                        <div key={c.id} style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 12 }}>
+                        <div key={c.id} style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 8 }}>
                           <div className="tai-row tai-between">
                             <div className="tai-row tai-gap8">
                               <Avatar src={c.avatar} initials={initialsOf(c.author)} size={24} />
@@ -823,19 +890,20 @@ export const chartColors = {
             
             {/* Live Studio & AMAs Mini Card */}
             <div className="tai-card" style={{
-              background: "linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)",
-              color: "#FFFFFF", padding: 20, borderRadius: 18
+              background: "#0F172A",
+              color: "#FFFFFF", padding: 18, borderRadius: 10,
+              border: "1px solid #1E293B"
             }}>
               <div className="tai-row tai-between">
-                <span style={{ background: "rgba(239, 68, 68, 0.25)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.4)", fontSize: 10.5, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>
+                <span style={{ background: "rgba(239, 68, 68, 0.2)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.3)", fontSize: 10.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>
                   UPCOMING LIVE
                 </span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)" }}>Studio 1</span>
+                <span style={{ fontSize: 11, color: "#94A3B8" }}>Studio 1</span>
               </div>
-              <h4 style={{ fontSize: 15, fontWeight: 800, margin: "10px 0 4px", color: "#fff" }}>
+              <h4 style={{ fontSize: 14.5, fontWeight: 800, margin: "8px 0 3px", color: "#fff" }}>
                 Spatial UI &amp; Design Systems Critique
               </h4>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", margin: "0 0 14px" }}>
+              <p style={{ fontSize: 12, color: "#94A3B8", margin: "0 0 12px" }}>
                 Tomorrow at 10:00 AM • Astrid Larsson
               </p>
               <button
@@ -843,7 +911,7 @@ export const chartColors = {
                 onClick={() => showToast("RSVP Confirmed! Calendar invite sent.")}
                 style={{
                   width: "100%", background: "#4F46E5", color: "#fff", border: "none",
-                  padding: "9px 14px", borderRadius: 10, fontSize: 12.5, fontWeight: 800, cursor: "pointer"
+                  padding: "8px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer"
                 }}
               >
                 RSVP for Studio Stream →
@@ -856,7 +924,7 @@ export const chartColors = {
             )}
 
             {/* Study Circles Preview Widget */}
-            <div className="tai-card" style={{ padding: 20, borderRadius: 18 }}>
+            <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
                 <h4 style={{ fontSize: 14.5, fontWeight: 800, margin: 0, color: "var(--text)" }}>
                   Featured Study Circles
@@ -871,7 +939,7 @@ export const chartColors = {
 
               <div className="tai-col tai-gap10">
                 {STUDY_CIRCLES.slice(0, 2).map(c => (
-                  <div key={c.id} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 12 }}>
+                  <div key={c.id} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
                     <div className="tai-row tai-between">
                       <span style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>{c.name}</span>
                       <span style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700 }}>{c.membersCount} peers</span>
@@ -903,9 +971,9 @@ export const chartColors = {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {UPCOMING_EVENTS.map(ev => (
-              <div key={ev.id} className="tai-card" style={{ padding: 22, borderRadius: 18, background: "var(--surface)" }}>
+              <div key={ev.id} className="tai-card" style={{ padding: 22, borderRadius: 10, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
                   <span style={{ background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)", fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 8 }}>
                     {ev.type}
@@ -953,18 +1021,18 @@ export const chartColors = {
             const cohortPosts = cohortPostsQuery.data || [];
             const cohortResources = cohortResourcesQuery.data || [];
             if (cohortMembershipQuery.loading) {
-              return <div className="tai-card tai-fade-in" style={{ padding: 20, borderRadius: 18 }}>Loading your cohort…</div>;
+              return <div className="tai-card tai-fade-in" style={{ padding: 20, borderRadius: 10 }}>Loading your cohort…</div>;
             }
             if (!myCohort) return null;
             return (
               <div
                 className="tai-card tai-card-hover tai-fade-in"
-                style={{ padding: 20, borderRadius: 18, background: "var(--grad-subtle)", border: "1px solid var(--primary-light)", cursor: "pointer" }}
+                style={{ padding: 20, borderRadius: 10, background: "var(--grad-subtle)", border: "1px solid var(--primary-light)", cursor: "pointer" }}
                 onClick={() => goTab?.("cohort")}
               >
                 <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                   <div className="tai-row tai-gap10" style={{ minWidth: 0 }}>
-                    <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--grad)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 8, background: "var(--grad)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <Users size={20} color="#fff" />
                     </div>
                     <div style={{ minWidth: 0 }}>
@@ -1026,9 +1094,9 @@ export const chartColors = {
             </button>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {STUDY_CIRCLES.map(sc => (
-              <div key={sc.id} className="tai-card" style={{ padding: 22, borderRadius: 18, background: "var(--surface)" }}>
+              <div key={sc.id} className="tai-card" style={{ padding: 22, borderRadius: 10, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 8 }}>
                   <Tag tone="primary">{sc.topic}</Tag>
                   <span style={{ fontSize: 11, fontWeight: 800, color: "var(--success)", background: "rgba(16, 185, 129, 0.1)", padding: "2px 8px", borderRadius: 6 }}>
@@ -1043,17 +1111,173 @@ export const chartColors = {
                   Sprint: <strong>{sc.activeSprint}</strong>
                 </p>
 
-                <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 10, fontSize: 12, color: "var(--text-2)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+                <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, fontSize: 12, color: "var(--text-2)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
                   <Target size={14} color="var(--primary)" /> <span><strong>Goal:</strong> {sc.goal}</span>
                 </div>
 
-                <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>{sc.membersCount} Members</span>
                   <button
                     className="tai-btn tai-btn-primary tai-btn-sm"
                     onClick={() => showToast(`Joined ${sc.name}!`)}
                   >
                     Join Circle →
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          VIEW: INSTRUCTORS & FACULTY
+          ========================================================================= */}
+      {activeTab === "instructors" && (
+        <div className="tai-col tai-gap20">
+          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 900, color: "var(--text)", margin: "0 0 2px" }}>
+                Course Instructors &amp; Faculty Leads
+              </h2>
+              <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0 }}>
+                Directly connect with course authors, join weekly office hours, or schedule 1:1 mentorship sessions.
+              </p>
+            </div>
+
+            <button
+              className="tai-btn tai-btn-primary tai-btn-sm"
+              onClick={() => push("mentors")}
+            >
+              <GraduationCap size={14} /> View All Mentors &amp; Booking
+            </button>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+            {[
+              {
+                id: "inst-1",
+                name: "Astrid Larsson",
+                role: "Lead AI Design & Spatial Systems Instructor",
+                org: "Ex-Spotify • Lead UX Architect",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80",
+                badge: "FACULTY LEAD",
+                coursesCount: 3,
+                hours: "Today at 4:00 PM EST",
+                rating: 4.98,
+                bio: "Specializes in design token variable architectures, spatial visionOS interfaces, and generative AI design pipelines."
+              },
+              {
+                id: "inst-2",
+                name: "Alex Rivera",
+                role: "Principal AI Engineer & Full-Stack Lead",
+                org: "AI Infrastructure Specialist",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80",
+                badge: "STAFF INSTRUCTOR",
+                coursesCount: 4,
+                hours: "Tomorrow at 2:00 PM EST",
+                rating: 4.95,
+                bio: "Author of Full-Stack AI Engineering. Expert in LangChain, vector databases, multi-agent orchestration, and prompt caching."
+              },
+              {
+                id: "inst-3",
+                name: "Dr. Elena Vance",
+                role: "Academic Director & Machine Learning Lead",
+                org: "PhD Stanford AI Lab",
+                avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=160&auto=format&fit=crop&q=80",
+                badge: "ACADEMIC DIRECTOR",
+                coursesCount: 2,
+                hours: "Thursday at 11:00 AM EST",
+                rating: 5.0,
+                bio: "Leads syllabus rigor, peer review standards, and capstone evaluations across all AI certification batches."
+              },
+              {
+                id: "inst-4",
+                name: "Wale Adebayo",
+                role: "Senior Engineering Lead & Systems Architect",
+                org: "Cloud Architecture Lead",
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80",
+                badge: "SENIOR INSTRUCTOR",
+                coursesCount: 3,
+                hours: "Friday at 3:30 PM EST",
+                rating: 4.92,
+                bio: "Teaches microservices, real-time distributed architecture, and secure enterprise AI application deployment."
+              }
+            ].map(inst => (
+              <div
+                key={inst.id}
+                className="tai-card"
+                style={{
+                  padding: 22,
+                  borderRadius: 10,
+                  background: "var(--surface)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  border: "1px solid var(--border)",
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.03)"
+                }}
+              >
+                <div>
+                  <div className="tai-row tai-gap14" style={{ marginBottom: 14 }}>
+                    <img
+                      src={inst.avatar}
+                      alt={inst.name}
+                      style={{
+                        width: 56, height: 56, borderRadius: 8, objectFit: "cover",
+                        border: "2px solid var(--primary-light)", flexShrink: 0
+                      }}
+                    />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 6 }}>
+                        <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: 0 }}>
+                          {inst.name}
+                        </h3>
+                        <Tag tone="primary">{inst.badge}</Tag>
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--primary)", marginTop: 2 }}>
+                        {inst.role}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>
+                        {inst.org}
+                      </div>
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.45, margin: "0 0 14px" }}>
+                    {inst.bio}
+                  </p>
+
+                  <div style={{
+                    background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8,
+                    border: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-2)",
+                    display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16,
+                    flexWrap: "wrap", gap: 6
+                  }}>
+                    <span className="tai-row tai-gap6" style={{ minWidth: 0 }}>
+                      <Clock size={13} color="var(--primary)" style={{ flexShrink: 0 }} />
+                      <span><strong>Next Live Session:</strong> {inst.hours}</span>
+                    </span>
+                    <span className="tai-row tai-gap4" style={{ fontWeight: 800, color: "#F59E0B", flexShrink: 0 }}>
+                      ★ {inst.rating}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="tai-row tai-gap10">
+                  <button
+                    className="tai-btn tai-btn-outline tai-btn-sm"
+                    style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 700 }}
+                    onClick={() => push("messages", { recipientId: inst.id, recipientName: inst.name })}
+                  >
+                    <MessageSquare size={13} /> Message
+                  </button>
+                  <button
+                    className="tai-btn tai-btn-primary tai-btn-sm"
+                    style={{ flex: 1, padding: "8px 12px", fontSize: 12, fontWeight: 700 }}
+                    onClick={() => push("mentors", { mentorId: inst.id })}
+                  >
+                    <Video size={13} /> Book 1:1 Office Hours
                   </button>
                 </div>
               </div>
@@ -1076,6 +1300,13 @@ export const chartColors = {
                 Earn XP points and league status by completing lessons, submitting assignments, and helping peers.
               </p>
             </div>
+
+            <button
+              className="tai-btn tai-btn-primary tai-btn-sm"
+              onClick={() => push("leaderboard")}
+            >
+              <Award size={14} /> Full Leaderboard &amp; Podium →
+            </button>
           </div>
 
           <WeeklyLeagueCard rows={leaderboardQuery.data || []} loading={leaderboardQuery.loading} />
