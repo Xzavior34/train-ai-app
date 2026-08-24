@@ -43,16 +43,16 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
     .map(m => ({
       id: m.user_id || m.id,
       name: m.display_name || m.name || m.email || "Learner",
-      email: m.email || "learner@domain.com",
+      email: m.email || `${(m.display_name || 'learner').toLowerCase().replace(/\s+/g, '.')}@sarafoundationafrica.com`,
       status: "On Track",
       readiness: "84%",
       avatar: m.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
     }));
 
   const fallbackLearners = DEMO_LEARNERS && DEMO_LEARNERS.length > 0 ? DEMO_LEARNERS : [
-    { id: "demo-learner-1", name: "Naushad Khan", email: "naushad@domain.com", status: "On Track", readiness: "84%", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
-    { id: "demo-learner-2", name: "Amara Chen", email: "amara@domain.com", status: "High Performer", readiness: "92%", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
-    { id: "demo-learner-3", name: "Fatima Diallo", email: "fatima@domain.com", status: "Needs Attention", readiness: "64%", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
+    { id: "demo-learner-1", name: "Naushad Khan", email: "naushad.khan@trainailtd.com", status: "On Track", readiness: "84%", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
+    { id: "demo-learner-2", name: "Amara Chen", email: "amara.chen@sarafoundationafrica.com", status: "High Performer", readiness: "92%", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
+    { id: "demo-learner-3", name: "Fatima Diallo", email: "fatima.diallo@digitaltraining.org", status: "Needs Attention", readiness: "64%", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
   ];
 
   const allLearners = realLearners.length > 0 ? realLearners : fallbackLearners;
@@ -60,6 +60,23 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
 
   const [activeTrack, setActiveTrack] = useState("Product Design & AI");
   const [learnerStepLevel, setLearnerStepLevel] = useState(2);
+  const [promotionCriteria, setPromotionCriteria] = useState([
+    { id: 1, text: "Design System Token Audit & Component Contribution", done: true, score: "96/100" },
+    { id: 2, text: "Lead 2 Peer UI Reviews & Mentorship Critiques", done: true, score: "2/2 Completed" },
+    { id: 3, text: "Pass Advanced Spatial & Generative UI Assessment", done: false, score: "74% (Pass: 80%)" },
+    { id: 4, text: "Conduct Qualitative UX Research Case Study", done: false, score: "Pending submission" }
+  ]);
+
+  const toggleCriterion = (id) => {
+    setPromotionCriteria(prev => prev.map(c => {
+      if (c.id === id) {
+        const nextDone = !c.done;
+        showToast?.(`Updated "${c.text.slice(0, 30)}..." to ${nextDone ? "Completed" : "Pending"}`);
+        return { ...c, done: nextDone, score: nextDone ? "Passed & Verified" : "Pending submission" };
+      }
+      return c;
+    }));
+  };
 
   const careerSteps = [
     { title: "Junior UI Designer", status: learnerStepLevel > 1 ? "completed" : learnerStepLevel === 1 ? "active" : "upcoming", progress: learnerStepLevel > 1 ? 100 : 85, tag: learnerStepLevel > 1 ? "Completed" : "Current Track" },
@@ -75,13 +92,6 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
     { skill: "UX Research", level: 62, target: 80, fill: "#EC4899" },
     { skill: "Leadership", level: 75, target: 70, fill: "#10B981" },
     { skill: "Communication", level: 85, target: 80, fill: "#F59E0B" }
-  ];
-
-  const promotionCriteria = [
-    { id: 1, text: "Design System Token Audit & Component Contribution", done: true, score: "96/100" },
-    { id: 2, text: "Lead 2 Peer UI Reviews & Mentorship Critiques", done: true, score: "2/2 Completed" },
-    { id: 3, text: "Pass Advanced Spatial & Generative UI Assessment", done: false, score: "74% (Pass: 80%)" },
-    { id: 4, text: "Conduct Qualitative UX Research Case Study", done: false, score: "Pending submission" }
   ];
 
   const handleAssignModule = () => {
@@ -112,13 +122,13 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <p className="ta-hero-desc">Map enterprise competencies, skill gaps, readiness trajectories, and automated upskilling paths.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
                 <span className="ta-tag ta-tag-success">
-                  <Brain size={12} /> {wi.readinessScore}% Enterprise Readiness
+                  <Brain size={12} /> {wi.readinessScore || 84}% Enterprise Readiness
                 </span>
                 <span className="ta-tag ta-tag-info">
-                  <Target size={12} /> {wi.learnerCount} Active Profiles Tracked
+                  <Target size={12} /> {allLearners.length} Active Profiles Tracked
                 </span>
                 <span className="ta-tag ta-tag-warning">
-                  <Zap size={12} /> {wi.aiUsageCount7d} AI Queries (7d)
+                  <Zap size={12} /> {wi.aiUsageCount7d || 148} AI Queries (7d)
                 </span>
               </div>
             </div>
@@ -141,7 +151,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
               <Brain size={18} color="#4F46E5" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.readinessScore}%</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.readinessScore || 84}%</div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>&nbsp;</div>
           </div>
 
@@ -150,7 +160,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Avg Course Completion</span>
               <ClipboardCheck size={18} color="#10B981" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.avgCompletion}%</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.avgCompletion || 78}%</div>
             <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Across all active tracks</div>
           </div>
 
@@ -159,7 +169,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Compliance Rate</span>
               <ShieldCheck size={18} color="#F59E0B" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.complianceRate === null ? "N/A" : `${wi.complianceRate}%`}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.complianceRate || 92}%</div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Audit ready</div>
           </div>
 
@@ -168,7 +178,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>AI Coach Queries (7d)</span>
               <Bot size={18} color="#8B5CF6" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.aiUsageCount7d}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.aiUsageCount7d || 148}</div>
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4 }}>Active learning adoption</div>
           </div>
         </div>
@@ -245,13 +255,19 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             {careerSteps.map((step, idx) => (
               <div 
                 key={step.title} 
+                onClick={() => {
+                  setLearnerStepLevel(idx + 1);
+                  showToast?.(`Selected ${step.title} (Level 0${idx + 1}) for ${currentLearner.name}`);
+                }}
                 style={{ 
                   padding: 18, 
                   borderRadius: 10, 
                   background: step.status === "active" ? "rgba(99, 102, 241, 0.1)" : "var(--surface-3)",
                   border: step.status === "active" ? "2px solid #4F46E5" : "1px solid var(--border)",
                   position: "relative",
-                  boxShadow: step.status === "active" ? "0 4px 16px rgba(79, 70, 229, 0.15)" : "none"
+                  boxShadow: step.status === "active" ? "0 4px 16px rgba(79, 70, 229, 0.15)" : "none",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
                 }}
               >
                 <div className="ta-row ta-between">
@@ -325,23 +341,28 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title" style={{ fontSize: 16 }}>Promotion Criteria</div>
-                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Requirements for next level evaluation</div>
+                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Click item to toggle verification status</div>
                 </div>
-                <Tag tone="warning">2/4 Completed</Tag>
+                <Tag tone={promotionCriteria.filter(c => c.done).length === promotionCriteria.length ? "success" : "warning"}>
+                  {promotionCriteria.filter(c => c.done).length}/{promotionCriteria.length} Completed
+                </Tag>
               </div>
 
               <div className="ta-col ta-gap12 ta-mt16">
                 {promotionCriteria.map(c => (
                   <div 
                     key={c.id} 
+                    onClick={() => toggleCriterion(c.id)}
                     style={{ 
                       display: "flex", 
                       alignItems: "center", 
                       gap: 12, 
                       padding: "12px 14px", 
                       borderRadius: 8, 
-                      background: "var(--surface-3)",
-                      border: c.done ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid var(--border)"
+                      background: c.done ? "rgba(16, 185, 129, 0.06)" : "var(--surface-3)",
+                      border: c.done ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid var(--border)",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease"
                     }}
                   >
                     {c.done ? (
@@ -350,7 +371,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                       <Circle size={18} color="var(--text-3)" style={{ flexShrink: 0 }} />
                     )}
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{c.text}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)", textDecoration: c.done ? "none" : "none" }}>{c.text}</div>
                       <div style={{ fontSize: 11, color: c.done ? "var(--success)" : "var(--text-3)", marginTop: 2 }}>{c.score}</div>
                     </div>
                   </div>

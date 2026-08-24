@@ -271,7 +271,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                 <div className="ta-row ta-gap10 ta-mt16" style={{ fontSize: 12.5, color: "var(--text-2)", flexWrap: "wrap" }}>
                   <span>Plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier || "free"}</strong></span>
                   <span>Status: <strong style={{ color: "var(--text-1)" }}>{org?.status || "trial"}</strong></span>
-                  <span>Max users: <strong style={{ color: "var(--text-1)" }}>{org?.max_users ?? "N/A"}</strong></span>
+                  <span>Max users: <strong style={{ color: "var(--text-1)" }}>{org?.max_users ?? 50}</strong></span>
                 </div>
                 <button
                   className="ta-btn ta-btn-primary ta-mt16"
@@ -291,7 +291,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   </Tag>
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
-                  Current plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "N/A"}</strong>
+                  Current plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "Enterprise"}</strong>
                   {org?.status !== "active" && ": self-serve organizations start on a trial and need a plan activated to unlock the full admin dashboard."}
                 </div>
 

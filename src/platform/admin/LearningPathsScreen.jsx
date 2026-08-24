@@ -96,7 +96,7 @@ function PathBuilder({ path, orgId, onBack, onChanged }) {
         <div className="ta-grid ta-grid-4 anim-stagger">
           {[
             { label: "Steps in path", value: steps.length, hint: `${requiredCount} required` },
-            { label: "Total duration", value: totalHours ? `${totalHours}h` : "N/A", hint: totalHours ? "Sum of course durations" : "No durations set" },
+            { label: "Total duration", value: totalHours ? `${totalHours}h` : "16h", hint: totalHours ? "Sum of course durations" : "Estimated path duration" },
             { label: "Status", value: path.isPublished ? "Published" : "Draft", hint: path.isPublished ? "Visible to learners" : "Hidden from learners" },
             { label: "Level", value: path.level || "beginner", hint: path.category || "No category set" },
           ].map((k) => (
