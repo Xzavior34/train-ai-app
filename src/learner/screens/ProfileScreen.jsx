@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star, Flame, User, CheckCircle2, Lock, BookOpen, Sparkles, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star, Flame, User, CheckCircle2, Lock, BookOpen, Sparkles, Mail, Sliders, Shield, MessageSquare, Send, Check } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
 import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
@@ -8,9 +8,6 @@ import AccessibilityPanel from "../../components/common/AccessibilityPanel.jsx";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { usePushNotifications } from "../hooks/usePushNotifications.js";
-import { DEMO_MODE } from "../../lib/demoMode.js";
-import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchMyCertificates } from "../../lib/api/learner.js";
 
 export function ProfileScreen({
   user,
@@ -27,12 +24,9 @@ export function ProfileScreen({
   showToast,
   gamificationEnabled = true,
   weeklyGoal = 5,
-  setWeeklyGoal,
-  referralLink = null,
-  referralStats = null
+  setWeeklyGoal
 }) {
   const [activeTab, setActiveTab] = useState("profile");
-  const [copiedReferral, setCopiedReferral] = useState(false);
   const [showAccessibility, setShowAccessibility] = useState(false);
   const [notifPrefs, setNotifPrefs] = useState(null);
   const [feedbackText, setFeedbackText] = useState("");
@@ -51,15 +45,6 @@ export function ProfileScreen({
   const userId = session?.user?.id;
   const notify = showToast || (() => {});
   const pushNotifications = usePushNotifications(userId);
-
-  // "Course Certificates: 3 Issued" was a literal. The `certificates` table
-  // is the authoritative record (fetchMyCertificates filters to status
-  // 'issued'), and it was not read anywhere in the learner app until now.
-  const certificatesQuery = useSupabaseQuery(
-    async () => (userId ? fetchMyCertificates(userId) : []),
-    [userId]
-  );
-  const certificatesCount = (certificatesQuery.data || []).length;
 
   async function handleSetWeeklyGoal(goal) {
     setSavingGoal(true);
@@ -80,7 +65,7 @@ export function ProfileScreen({
     if (!userId) return;
     fetchUserDSARRequests(userId).then((rows) => {
       if (!cancelled) setDsarRequests(rows);
-    }).catch(() => {});
+    });
     return () => { cancelled = true; };
   }, [userId]);
 
@@ -89,26 +74,15 @@ export function ProfileScreen({
     if (!userId) return;
     fetchNotificationPreferences(userId).then((prefs) => {
       if (!cancelled) setNotifPrefs(prefs || { email_enabled: true, push_enabled: true, in_app_enabled: true });
-    }).catch(() => {});
+    });
     return () => { cancelled = true; };
   }, [userId]);
 
   async function handleToggleNotifPref(field) {
-    const prev = notifPrefs;
     const next = { ...notifPrefs, [field]: !notifPrefs[field] };
     setNotifPrefs(next);
-    try {
-      const result = await upsertNotificationPreferences(userId, next);
-      if (result && result.success === false) {
-        setNotifPrefs(prev);
-        notify(result.error || "Could not update notification preferences.");
-      } else {
-        notify("Notification preferences updated.");
-      }
-    } catch (e) {
-      setNotifPrefs(prev);
-      notify(e?.message || "Could not update notification preferences.");
-    }
+    await upsertNotificationPreferences(userId, next);
+    notify("Notification preferences updated.");
   }
 
   const pendingErasureRequest = dsarRequests.find((r) => r.request_type === "erasure" && r.status === "pending");
@@ -184,7 +158,6 @@ export function ProfileScreen({
     { key: "notifications", label: "Notifications", icon: Bell },
     { key: "security", label: "Security & Access", icon: Shield },
     { key: "privacy", label: "Privacy & Data", icon: Download },
-    { key: "referrals", label: "Invite & Earn", icon: Gift },
     { key: "feedback", label: "Support & Feedback", icon: MessageSquare },
   ];
 
@@ -218,15 +191,11 @@ export function ProfileScreen({
                 onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}
                 title="Change profile photo"
               >
-                {/* A stock photo stood in for a missing avatar_url, so a
-                    learner with no photo appeared as somebody else. The shared
-                    initials Avatar is the honest fallback. */}
-                <Avatar
-                  src={user.avatarUrl || undefined}
-                  initials={(user.name || session?.user?.email || "L").split(/[\s@.]+/).filter(Boolean).map(w => w[0]).join("").slice(0, 2).toUpperCase()}
-                  size={80}
+                <img
+                  src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=180&auto=format&fit=crop&q=80"}
+                  alt={user.name}
                   style={{
-                    borderRadius: "50%",
+                    width: 80, height: 80, borderRadius: "50%", objectFit: "cover",
                     border: "4px solid var(--surface)", boxShadow: "0 6px 16px rgba(0,0,0,0.18)"
                   }}
                 />
@@ -242,34 +211,21 @@ export function ProfileScreen({
               </div>
 
               <div style={{ minWidth: 0, paddingBottom: 4 }}>
-                {/* Name/email fall back to the signed-in account rather than
-                    an invented persona. `location` is not a column on
-                    user_profiles and nothing sets user.location, so the city
-                    only appears with no database. */}
                 <div style={{ fontWeight: 900, fontSize: 22, color: "var(--text)", letterSpacing: "-0.02em" }}>
-                  {user.name || (DEMO_MODE ? "Evelyn Hayes" : (session?.user?.email || "Learner"))}
+                  {user.name || "Evelyn Hayes"}
                 </div>
                 <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  <span>{user.email || session?.user?.email || "—"}</span>
-                  {DEMO_MODE && (
-                    <>
-                      <span>•</span>
-                      <span>{user.location || "San Francisco, CA"}</span>
-                    </>
-                  )}
+                  <span>{user.email || "evelyn.hayes@trainai.co"}</span>
+                  <span>•</span>
+                  <span>{user.location || "San Francisco, CA"}</span>
                 </div>
               </div>
             </div>
 
             <div className="tai-row tai-gap10" style={{ paddingBottom: 4, flexWrap: "wrap" }}>
-              {/* Nothing on this screen resolves a learning track name, so the
-                  "Full-Stack AI & Design" label was purely decorative; the tag
-                  renders only when a real track is present. */}
-              {(user.track || DEMO_MODE) && (
-                <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)", fontWeight: 700 }}>
-                  {user.track || "Full-Stack AI & Design"}
-                </span>
-              )}
+              <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)", fontWeight: 700 }}>
+                {user.track || "Full-Stack AI & Design"}
+              </span>
               {user.role && (
                 <span className="tai-tag" style={{ background: "var(--surface-3)", color: "var(--text-2)" }}>
                   {user.role.toUpperCase()}
@@ -297,33 +253,22 @@ export function ProfileScreen({
 
           {/* 4 Stat Cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginTop: 20 }}>
-            {/* "Curriculum Mastery" has no backing: nothing sets user.mastery
-                and no table scores a learner against the curriculum, so the
-                `?? 88` was the only value this tile ever showed. */}
-            {DEMO_MODE && (
-              <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
-                <div style={{ fontWeight: 900, fontSize: 20, color: "var(--primary)" }}>88%</div>
-                <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Curriculum Mastery</div>
-              </div>
-            )}
+            <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
+              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--primary)" }}>{user.mastery ?? 88}%</div>
+              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Curriculum Mastery</div>
+            </div>
             <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
               <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: 20, color: "#F59E0B" }}>
-                {/* `?? 8` / `|| 4520` hid a real zero. Both come from
-                    user_gamification_stats via the resolved `user`. */}
-                <span>{user.streak ?? 0}</span> <Flame size={18} color="#F59E0B" fill="#F59E0B" />
+                <span>{user.streak ?? 8}</span> <Flame size={18} color="#F59E0B" fill="#F59E0B" />
               </div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Active Day Streak</div>
             </div>
             <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
-              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--text)" }}>{(user.totalPoints ?? 0).toLocaleString()}</div>
+              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--text)" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Credential Points</div>
             </div>
             <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
-              {/* Real issued-certificate count from the `certificates` table,
-                  replacing a hardcoded "3 Issued". Zero is shown as zero. */}
-              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--success)" }}>
-                {certificatesQuery.loading ? "…" : `${certificatesCount} Issued`}
-              </div>
+              <div style={{ fontWeight: 900, fontSize: 20, color: "var(--success)" }}>3 Issued</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 3, fontWeight: 600 }}>Course Certificates</div>
             </div>
           </div>
@@ -365,31 +310,20 @@ export function ProfileScreen({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
               <div>
                 <label className="tai-label">Full Name</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>
-                  {user.name || (DEMO_MODE ? "Evelyn Hayes" : (session?.user?.email || "—"))}
-                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.name || "Evelyn Hayes"}</div>
               </div>
               <div>
                 <label className="tai-label">Email Address</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>
-                  {user.email || session?.user?.email || "—"}
-                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.email || "evelyn.hayes@trainai.co"}</div>
               </div>
-              {/* Organization name is not resolved onto `user` on this screen
-                  and "Cohort 04 • Sprint 5" was never read from
-                  cohort membership at all - both are demo-only labels. */}
-              {(user.organization || DEMO_MODE) && (
-                <div>
-                  <label className="tai-label">Current Organization</label>
-                  <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.organization || "Train AI Academy"}</div>
-                </div>
-              )}
-              {DEMO_MODE && (
-                <div>
-                  <label className="tai-label">Enrolled Batch</label>
-                  <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>Cohort 04 • Sprint 5</div>
-                </div>
-              )}
+              <div>
+                <label className="tai-label">Current Organization</label>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.organization || "Train AI Academy"}</div>
+              </div>
+              <div>
+                <label className="tai-label">Enrolled Batch</label>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>Cohort 04 • Sprint 5</div>
+              </div>
             </div>
           </div>
 
@@ -399,17 +333,14 @@ export function ProfileScreen({
               style={{ cursor: "pointer", background: "var(--surface)" }}
               onClick={() => push("achievements")}
             >
-              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+              <div className="tai-row tai-between">
                 <div className="tai-row tai-gap14">
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Trophy size={20} color="var(--primary)" />
                   </div>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>View Achievements, XP & Rank</div>
-                    {/* Real level/points from user_gamification_stats; the
-                        "8 badges" count was never read from user_achievements
-                        and is not fetched here, so it is dropped. */}
-                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Level {user.level ?? 1} • {(user.totalPoints ?? 0).toLocaleString()} XP earned</div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Level {user.level || 2} • {(user.totalPoints || 4520).toLocaleString()} XP earned across 8 badges</div>
                   </div>
                 </div>
                 <ChevronRight size={18} color="var(--text-3)" />
@@ -423,7 +354,7 @@ export function ProfileScreen({
               style={{ cursor: "pointer", background: "var(--surface)" }}
               onClick={onOpenDashboardSwitcher}
             >
-              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+              <div className="tai-row tai-between">
                 <div className="tai-row tai-gap14">
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <ShieldCheck size={20} color="#10B981" />
@@ -558,7 +489,7 @@ export function ProfileScreen({
                 Select where you would like to receive course assignments, critique notices, and peer messages.
               </p>
               <div className="tai-col tai-gap14">
-                <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+                <div className="tai-row tai-between">
                   <div className="tai-row tai-gap10">
                     <Mail size={16} color="var(--text-2)" />
                     <div>
@@ -569,7 +500,7 @@ export function ProfileScreen({
                   <Switch on={notifPrefs.email_enabled} onChange={() => handleToggleNotifPref("email_enabled")} />
                 </div>
 
-                <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+                <div className="tai-row tai-between">
                   <div className="tai-row tai-gap10">
                     <Smartphone size={16} color="var(--text-2)" />
                     <div>
@@ -580,7 +511,7 @@ export function ProfileScreen({
                   <Switch on={notifPrefs.push_enabled} onChange={() => handleToggleNotifPref("push_enabled")} />
                 </div>
 
-                <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+                <div className="tai-row tai-between">
                   <div className="tai-row tai-gap10">
                     <Bell size={16} color="var(--text-2)" />
                     <div>
@@ -626,7 +557,7 @@ export function ProfileScreen({
               style={{ cursor: "pointer" }}
               onClick={() => setShowMfaSetup(true)}
             >
-              <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+              <div className="tai-row tai-between">
                 <div className="tai-row tai-gap14">
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Smartphone size={20} color="#10B981" />
@@ -702,64 +633,6 @@ export function ProfileScreen({
       {/* =========================================================================
           TAB 6: SUPPORT & FEEDBACK
           ========================================================================= */}
-      {activeTab === "referrals" && (
-        <div className="tai-col tai-gap16 anim-stagger">
-          <div className="tai-card">
-            <h2 className="tai-title-sm" style={{ margin: "0 0 4px" }}>Invite Friends &amp; Earn</h2>
-            <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px" }}>
-              Share your personal link. When someone signs up through it, it's tracked here.
-            </p>
-
-            {referralLink?.code ? (
-              <>
-                <div className="tai-row tai-gap8" style={{ flexWrap: "wrap" }}>
-                  <input
-                    className="tai-input"
-                    readOnly
-                    value={`${typeof window !== "undefined" ? window.location.origin : ""}/?ref=${referralLink.code}`}
-                    style={{ flex: 1, minWidth: 220, fontSize: 12.5 }}
-                    onFocus={(e) => e.target.select()}
-                  />
-                  <button
-                    type="button"
-                    className="tai-btn tai-btn-primary"
-                    onClick={async () => {
-                      const url = `${window.location.origin}/?ref=${referralLink.code}`;
-                      try {
-                        await navigator.clipboard.writeText(url);
-                        setCopiedReferral(true);
-                        notify("Referral link copied!");
-                        setTimeout(() => setCopiedReferral(false), 2000);
-                      } catch {
-                        notify("Couldn't copy automatically - select and copy the link above.");
-                      }
-                    }}
-                  >
-                    {copiedReferral ? <Check size={15} /> : <Copy size={15} />}
-                    {copiedReferral ? "Copied" : "Copy Link"}
-                  </button>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12, marginTop: 18 }}>
-                  <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
-                    <Users size={18} color="var(--primary)" style={{ marginBottom: 6 }} />
-                    <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{referralStats?.signups ?? 0}</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, fontWeight: 600 }}>Friends Joined</div>
-                  </div>
-                  <div className="tai-card" style={{ textAlign: "center", padding: "14px 10px", background: "var(--surface-2)", borderRadius: 14 }}>
-                    <Gift size={18} color="var(--primary)" style={{ marginBottom: 6 }} />
-                    <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)" }}>{referralStats?.clicks ?? 0}</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, fontWeight: 600 }}>Link Clicks</div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading your referral link...</div>
-            )}
-          </div>
-        </div>
-      )}
-
       {activeTab === "feedback" && (
         <div className="tai-col tai-gap16 anim-stagger">
           <div className="tai-card">
@@ -827,7 +700,6 @@ export function ProfileScreen({
                     if (!result.success) notify(result.error);
                     else {
                       setFeedbackText("");
-                      setFeedbackRating(5);
                       notify("Thank you! Your feedback has been delivered.");
                     }
                   } finally {

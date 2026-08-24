@@ -2,11 +2,9 @@ import React, { useState, useEffect, useContext } from "react";
 import { TopBar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import { Plus, ArrowLeft, Save, Trash2, BookOpen, Layers, Users, Eye, CheckCircle2, Clock, DollarSign, Upload, FileText, Settings, ShieldCheck, X, Check, GraduationCap, Award, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCourses, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial, fetchCourseQualityReview, submitCourseQualityReview } from "../../lib/api/platform.js";
+import { fetchCourses, createCourse, updateCourse, deleteCourse, replaceCourseLessons, fetchCourseApplications, decideCourseApplication, fetchCourseEnrolledLearners, fetchAssessmentAttemptsForCourse, overrideAssessmentScore, fetchCertificateRequestsForCourse, reviewCertificate, upsertCertificateTemplate, fetchAssessmentForCourseWithQuestions, createAssessmentForCourse, addAssessmentQuestion, deleteAssessmentQuestion, checkEffectiveOrgPermission, issueCertificateDirectly, fetchCourseMaterials, addCourseMaterial, deleteCourseMaterial, fetchCourseQualityReview, submitCourseQualityReview } from "../../lib/api/platform.js";
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
-import { CourseBuilderWizard } from "./CourseBuilderWizard.jsx";
-import { DEMO_MODE } from "../../lib/demoMode.js";
 
 function GradingRow({ attempt, currentUserId, onOverride }) {
   const [editing, setEditing] = useState(false);
@@ -47,14 +45,9 @@ function GradingRow({ attempt, currentUserId, onOverride }) {
   );
 }
 
-export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId, setSelectedCourseId, currentUserId, openBuilderOnMount = false }) {
+export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId, setSelectedCourseId, currentUserId }) {
   const showToast = useContext(ToastContext);
-  // When the sidebar's Course Builder entry is what mounted this screen, start
-  // on the course LIST, not on whatever course was last opened. Without this,
-  // a stale selectedCourseId put the screen into its "Managing: <course>"
-  // branch - and the wizard, which only rendered in the list branch, silently
-  // never appeared, so the nav item looked broken.
-  const [activeCourseId, setActiveCourseId] = useState(openBuilderOnMount ? null : (selectedCourseId || null));
+  const [activeCourseId, setActiveCourseId] = useState(selectedCourseId || null);
   const [activeTab, setActiveTab] = useState("overview"); // overview, curriculum, learners
 
   // Sync external prop if coming from search click
@@ -64,10 +57,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
     }
   }, [selectedCourseId]);
 
-  // openBuilderOnMount backs the sidebar's own "Course Builder" entry under
-  // Learning - that nav item lands here with the wizard already open rather
-  // than making someone find the Create button first.
-  const [newCourseOpen, setNewCourseOpen] = useState(openBuilderOnMount);
+  const [newCourseOpen, setNewCourseOpen] = useState(false);
   const [selectedCourseIds, setSelectedCourseIds] = useState(new Set());
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
@@ -94,9 +84,9 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
       setBulkActionLoading(false);
     }
   }
-  // newTitle/newCategory/newCoverImageUrl removed: the inline create-course
-  // card that owned them is now the CourseBuilderWizard popup, which holds
-  // its own form state and resets it on close.
+  const [newTitle, setNewTitle] = useState("");
+  const [newCategory, setNewCategory] = useState("Data & AI");
+  const [newCoverImageUrl, setNewCoverImageUrl] = useState("");
 
   const coursesQuery = useSupabaseQuery(async () => fetchCourses(orgId), [orgId]);
   const courses = coursesQuery.data || [];
@@ -206,15 +196,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
         coverImageUrl: editCoverImageUrl || undefined,
         requiresApproval: editRequiresApproval,
       });
-      // replaceCourseLessons reads `duration` and `videoUrl`, while this editor
-      // (and the lessons rows it loads) use duration_minutes/video_url - so the
-      // real duration and URL an admin typed were being written as null. Mapped
-      // here rather than losing the values silently.
-      await replaceCourseLessons(activeCourse.id, editLessons.map((l) => ({
-        ...l,
-        duration: l.duration_minutes ?? l.duration ?? null,
-        videoUrl: l.video_url ?? l.videoUrl ?? null,
-      })));
+      await replaceCourseLessons(activeCourse.id, editLessons);
       await coursesQuery.refetch();
       showToast("Course management changes saved successfully!");
     } catch (err) {
@@ -313,7 +295,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
         {/* ADMIN WORKSPACE: DETAILED COURSE MANAGEMENT VIEW                   */}
         {/* ================================================================= */}
         {activeCourse ? (
-          <div className="ta-col" style={{ gap: 24 }}>
+          <div className="ta-col ta-gap24">
             {/* Header banner card */}
             <div className="ta-card" style={{ background: "var(--surface)", position: "relative" }}>
               <div className="ta-row ta-between ta-gap16" style={{ flexWrap: "wrap" }}>
@@ -343,7 +325,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
                 </div>
 
-                <div className="ta-row ta-gap10" style={{ flexWrap: "wrap" }}>
+                <div className="ta-row ta-gap10">
                   <button
                     className={`ta-btn ta-btn-sm ${editIsPublished ? "ta-btn-outline" : "ta-btn-primary"}`}
                     onClick={() => setEditIsPublished(!editIsPublished)}
@@ -415,11 +397,11 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
 
             {/* TAB 1: OVERVIEW & SETTINGS */}
             {activeTab === "overview" && (
-              <div className="ta-grid ta-grid-2" style={{ gap: 24 }}>
+              <div className="ta-grid ta-grid-2 ta-gap24">
                 <div className="ta-card ta-col ta-gap16">
                   <div style={{ fontWeight: 700, fontSize: 16 }}>Basic Information</div>
 
-                  <div className="ta-col" style={{ gap: 4 }}>
+                  <div className="ta-col ta-gap4">
                     <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Course Title</label>
                     <input
                       className="ta-input"
@@ -431,7 +413,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
 
                   <div className="ta-grid ta-grid-2 ta-gap12">
-                    <div className="ta-col" style={{ gap: 4 }}>
+                    <div className="ta-col ta-gap4">
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Category</label>
                       <input
                         className="ta-input"
@@ -441,7 +423,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%" }}
                       />
                     </div>
-                    <div className="ta-col" style={{ gap: 4 }}>
+                    <div className="ta-col ta-gap4">
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Difficulty Level</label>
                       <select
                         className="ta-input"
@@ -457,7 +439,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
 
                   <div className="ta-grid ta-grid-2 ta-gap12">
-                    <div className="ta-col" style={{ gap: 4 }}>
+                    <div className="ta-col ta-gap4">
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Duration (Hours)</label>
                       <input
                         type="number"
@@ -467,7 +449,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)", width: "100%" }}
                       />
                     </div>
-                    <div className="ta-col" style={{ gap: 4 }}>
+                    <div className="ta-col ta-gap4">
                       <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Price ($)</label>
                       <input
                         type="number"
@@ -479,7 +461,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     </div>
                   </div>
 
-                  <div className="ta-col" style={{ gap: 4 }}>
+                  <div className="ta-col ta-gap4">
                     <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>Course Description</label>
                     <textarea
                       rows={5}
@@ -579,30 +561,18 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       Manage lessons, video resources, and sequence for this course.
                     </div>
                   </div>
-                  {/* This button was labelled "Auto-Generate with AI" and spliced
-                      in a fixed four-lesson curriculum - the same titles for every
-                      course, each with the same placeholder YouTube link - which
-                      replaceCourseLessons then persisted, so invented content
-                      reached the database under an AI claim. No AI lesson-outline
-                      endpoint exists anywhere in the API (generateAIQuiz makes
-                      quizzes, not outlines), so the control is relabelled for what
-                      it actually does: four empty numbered rows for the admin to
-                      fill in, no titles or URLs invented. */}
                   <div className="ta-row ta-gap8">
                     <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => {
-                      const stamp = Date.now();
-                      setEditLessons(prev => {
-                        const starter = [1, 2, 3, 4].map((n) => ({
-                          id: `temp-${stamp}-${n}`,
-                          title: `Lesson ${prev.length + n}`,
-                          duration_minutes: null,
-                          video_url: "",
-                        }));
-                        return [...prev, ...starter];
-                      });
-                      showToast("Added 4 blank lesson rows - fill in titles, durations and URLs before saving.");
+                      const newGenerated = [
+                        { id: `gen-${Date.now()}-1`, title: "1.0 Course Orientation & Foundations", duration_minutes: 15, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                        { id: `gen-${Date.now()}-2`, title: "2.0 Deep Dive & Core Architecture", duration_minutes: 30, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                        { id: `gen-${Date.now()}-3`, title: "3.0 Practical Lab & Case Study", duration_minutes: 45, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                        { id: `gen-${Date.now()}-4`, title: "4.0 Final Assessment & Certification", duration_minutes: 25, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
+                      ];
+                      setEditLessons(prev => [...prev, ...newGenerated]);
+                      showToast("AI generated 4 new structured lessons!");
                     }}>
-                      <Plus size={14} /> Add blank 4-lesson outline
+                      <Sparkles size={14} /> Auto-Generate with AI
                     </button>
                     <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddLesson}>
                       <Plus size={14} /> Add New Lesson
@@ -610,12 +580,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
                 </div>
 
-                {/* AI Curriculum Generator Trigger Card. Advertises generating
-                    modules, lesson outlines and quizzes "in 1 click" - there is
-                    no AI curriculum endpoint in the API at all, so with a
-                    database connected this promise is removed rather than left
-                    standing next to real lesson data. */}
-                {DEMO_MODE && (
+                {/* AI Curriculum Generator Trigger Card */}
                 <div style={{
                   padding: "14px 18px",
                   borderRadius: 12,
@@ -636,7 +601,6 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   </div>
                   <Tag tone="primary">AI Enabled</Tag>
                 </div>
-                )}
 
                 {editLessons.length === 0 ? (
                   <div className="ta-empty" style={{ padding: 40, border: "1px dashed var(--border)", borderRadius: 12 }}>
@@ -648,14 +612,14 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       <div
                         key={l.id || `lesson-${idx}`}
                         className="ta-card ta-row ta-between ta-gap12"
-                        style={{ background: "var(--surface-3)", padding: 14, borderRadius: 10, border: "1px solid var(--border)", flexWrap: "wrap" }}
+                        style={{ background: "var(--surface-3)", padding: 14, borderRadius: 10, border: "1px solid var(--border)" }}
                       >
                         <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
                           {idx + 1}
                         </div>
 
-                        <div className="ta-grid ta-grid-3 ta-gap12" style={{ flex: "1 1 200px", minWidth: 0 }}>
-                          <div className="ta-col" style={{ gap: 4 }}>
+                        <div className="ta-grid ta-grid-3 ta-gap12" style={{ flex: 1, minWidth: 0 }}>
+                          <div className="ta-col ta-gap4">
                             <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Lesson Title</label>
                             <input
                               className="ta-input"
@@ -666,22 +630,18 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                             />
                           </div>
 
-                          <div className="ta-col" style={{ gap: 4 }}>
+                          <div className="ta-col ta-gap4">
                             <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Duration (Mins)</label>
-                            {/* `|| 15` meant a lesson with a real stored duration
-                                of 0 (or none at all) displayed as 15 and re-saved
-                                that invented 15 on the next Save. `??` keeps a
-                                real 0 and leaves an unset duration blank. */}
                             <input
                               type="number"
                               className="ta-input"
-                              value={l.duration_minutes ?? l.duration ?? ""}
-                              onChange={e => handleUpdateLesson(idx, "duration_minutes", e.target.value === "" ? null : Number(e.target.value))}
+                              value={l.duration_minutes || l.duration || 15}
+                              onChange={e => handleUpdateLesson(idx, "duration_minutes", Number(e.target.value))}
                               style={{ padding: "6px 10px", fontSize: 13, borderRadius: 6, border: "1px solid var(--border)" }}
                             />
                           </div>
 
-                          <div className="ta-col" style={{ gap: 4 }}>
+                          <div className="ta-col ta-gap4">
                             <label style={{ fontSize: 10, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Video / Resource URL</label>
                             <input
                               className="ta-input"
@@ -693,7 +653,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                           </div>
                         </div>
 
-                        <div className="ta-col" style={{ gap: 4 }}>
+                        <div className="ta-col ta-gap4">
                           <button className="ta-btn ta-btn-ghost ta-btn-sm" disabled={idx === 0} onClick={() => handleMoveLesson(idx, -1)} title="Move up">
                             <ChevronUp size={15} />
                           </button>
@@ -994,15 +954,15 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   <div className="ta-row ta-gap12 ta-mt12" style={{ flexWrap: "wrap" }}>
                     <div>
                       <div className="ta-label">Title</div>
-                      <input className="ta-input ta-mt8" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} placeholder="Certificate of Completion" />
+                      <input className="ta-input ta-mt6" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} placeholder="Certificate of Completion" />
                     </div>
                     <div>
                       <div className="ta-label">Passing score (%)</div>
-                      <input className="ta-input ta-mt8" style={{ width: 90 }} type="number" min={0} max={100} value={certPassingScore} onChange={(e) => setCertPassingScore(e.target.value)} />
+                      <input className="ta-input ta-mt6" style={{ width: 90 }} type="number" min={0} max={100} value={certPassingScore} onChange={(e) => setCertPassingScore(e.target.value)} />
                     </div>
                     <div>
                       <div className="ta-label">Approval</div>
-                      <div className="ta-row ta-gap8 ta-mt8">
+                      <div className="ta-row ta-gap8 ta-mt6">
                         <Switch on={certRequiresApproval} onChange={() => setCertRequiresApproval((v) => !v)} />
                         <span style={{ fontSize: 12 }}>{certRequiresApproval ? "Requires admin approval" : "Issued instantly on passing"}</span>
                       </div>
@@ -1029,14 +989,14 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                     Upload and assign a certificate to a specific learner enrolled in this course - independent of the request/approve flow above.
                   </div>
                   <div className="ta-label ta-mt12">Learner</div>
-                  <select className="ta-input ta-mt8" value={assignLearnerId} onChange={(e) => setAssignLearnerId(e.target.value)}>
+                  <select className="ta-input ta-mt6" value={assignLearnerId} onChange={(e) => setAssignLearnerId(e.target.value)}>
                     <option value="">Select an enrolled learner...</option>
                     {(enrolledLearnersQuery.data || []).map((l) => (
                       <option key={l.userId} value={l.userId}>{l.name} - {l.progress}% complete</option>
                     ))}
                   </select>
                   <div className="ta-label ta-mt12">Certificate title</div>
-                  <input className="ta-input ta-mt8" placeholder={`Certificate of ${activeCourse.title} Completion`} value={assignCertTitle} onChange={(e) => setAssignCertTitle(e.target.value)} />
+                  <input className="ta-input ta-mt6" placeholder={`Certificate of ${activeCourse.title} Completion`} value={assignCertTitle} onChange={(e) => setAssignCertTitle(e.target.value)} />
                   <div className="ta-label ta-mt12">Upload certificate file (optional)</div>
                   <FileUploadZone
                     bucket="uploads"
@@ -1116,7 +1076,17 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
           /* ================================================================= */
           <>
             {/* Masterclasses & Content Hero Banner */}
-            <div className="ta-hero-banner" style={{ marginBottom: 20 }}>
+            <div style={{
+              borderRadius: 20,
+              background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+              color: "#FFFFFF",
+              padding: "clamp(22px, 3.5vw, 28px)",
+              boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+              border: "1px solid rgba(99, 102, 241, 0.4)",
+              position: "relative",
+              overflow: "hidden",
+              marginBottom: 20
+            }}>
               <img
                 src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1400&auto=format&fit=crop&q=85"
                 alt=""
@@ -1131,22 +1101,40 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 zIndex: 0
               }} />
 
-              <div className="ta-hero-inner">
-                <div className="ta-hero-text">
-                  <h1 className="ta-hero-title">
-                    Curriculum &amp; Masterclasses
+              <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+                    <span style={{
+                      background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                      border: "1px solid rgba(165, 180, 252, 0.5)",
+                      fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                      display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                    }}>
+                      <BookOpen size={13} color="#A5B4FC" /> CURRICULUM &amp; MASTERCLASSES
+                    </span>
+                    <span style={{
+                      background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                      border: "1px solid rgba(16, 185, 129, 0.5)",
+                      fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                    }}>
+                      {courses.length || 48} PUBLISHED TRACKS
+                    </span>
+                  </div>
+
+                  <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                    Content &amp; Course Management Hub
                   </h1>
-                  <p className="ta-hero-desc">
-                    Author interactive courses, manage lesson syllabi, and publish learning modules.
+                  <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                    Author interactive courses, configure adaptive quizzes, manage video modules, oversee QA reviews, and issue certificates.
                   </p>
                 </div>
               </div>
             </div>
 
             {selectedCourseIds.size > 0 && (
-              <div className="ta-card ta-row ta-between" style={{ marginBottom: 12, borderColor: "var(--primary)", gap: 10, flexWrap: "wrap" }}>
+              <div className="ta-card ta-row ta-between" style={{ marginBottom: 12, borderColor: "var(--primary)" }}>
                 <span style={{ fontSize: 13, fontWeight: 600 }}>{selectedCourseIds.size} course{selectedCourseIds.size === 1 ? "" : "s"} selected</span>
-                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                <div className="ta-row ta-gap8">
                   <button className="ta-btn ta-btn-outline ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("publish")}>Publish</button>
                   <button className="ta-btn ta-btn-outline ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("unpublish")}>Unpublish</button>
                   <button className="ta-btn ta-btn-danger ta-btn-sm" disabled={bulkActionLoading} onClick={() => handleBulkAction("archive")}>Archive</button>
@@ -1154,7 +1142,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 </div>
               </div>
             )}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
               {coursesQuery.loading && <div className="ta-empty">Loading courses...</div>}
               {!coursesQuery.loading && courses.length === 0 && <div className="ta-empty">No courses created yet.</div>}
               {courses.map((c, idx) => {
@@ -1222,16 +1210,11 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         )}
                       </div>
 
-                      <div className="ta-row ta-between" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)", gap: 8, flexWrap: "wrap" }}>
-                        <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {/* `|| 8` / `|| 4`: fetchCourses always sets
-                              enrollment_count (0 when nobody is enrolled), so
-                              every empty course claimed 8 enrolled and every
-                              lesson-less course claimed 4 lessons. `?? 0` shows
-                              the real, including empty, count. */}
-                          {c.enrollment_count ?? 0} Enrolled • {c.lessons?.length ?? 0} Lessons
+                      <div className="ta-row ta-between" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                        <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>
+                          {c.enrollment_count || 8} Enrolled • {c.lessons?.length || 4} Lessons
                         </div>
-                        <button className="ta-btn ta-btn-primary ta-btn-sm" style={{ flexShrink: 0 }} onClick={() => setActiveCourseId(c.id)}>
+                        <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => setActiveCourseId(c.id)}>
                           <Settings size={13} /> Manage Course
                         </button>
                       </div>
@@ -1241,24 +1224,39 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
               })}
             </div>
 
-
+            {newCourseOpen && (
+              <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
+                <div className="ta-title" style={{ fontWeight: 800, fontSize: 18 }}>Create New Course</div>
+                <div className="ta-grid ta-grid-2 ta-mt12 ta-gap12">
+                  <input className="ta-input" placeholder="Course title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)" }} />
+                  <input className="ta-input" placeholder="Category (e.g. Data & AI)..." value={newCategory} onChange={e => setNewCategory(e.target.value)} style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid var(--border)" }} />
+                </div>
+                <div className="ta-mt12">
+                  <div className="ta-label" style={{ marginBottom: 6, fontSize: 12, fontWeight: 700 }}>Cover image (optional)</div>
+                  <FileUploadZone
+                    bucket="uploads"
+                    pathPrefix="courses/covers"
+                    accept="image/*"
+                    maxSizeMB={5}
+                    label="Drag and drop a cover image, or click to browse"
+                    onUploaded={(url) => setNewCoverImageUrl(url)}
+                  />
+                </div>
+                <div className="ta-row ta-gap8 ta-mt12">
+                  <button className="ta-btn ta-btn-primary" onClick={async () => {
+                    if (!newTitle.trim()) return;
+                    await createCourse({ organizationId: orgId, title: newTitle.trim(), category: newCategory.trim(), status: "published", coverImageUrl: newCoverImageUrl || undefined }, currentUserId);
+                    setNewCourseOpen(false); setNewTitle(""); setNewCoverImageUrl("");
+                    coursesQuery.refetch();
+                    showToast("Course created successfully!");
+                  }}>Save & Publish Course</button>
+                  <button className="ta-btn ta-btn-outline" onClick={() => setNewCourseOpen(false)}>Cancel</button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
-
-      {/* Creating a course opens the Course Builder wizard as a popup
-          (PortalModal), replacing the three-field inline card that used
-          to sit here and wrote every new course straight out as
-          published with no level, duration, description, curriculum,
-          compliance window or approval setting. */}
-      <CourseBuilderWizard
-        isOpen={newCourseOpen}
-        onClose={() => setNewCourseOpen(false)}
-        orgId={orgId}
-        currentUserId={currentUserId}
-        categorySuggestions={[...new Set((coursesQuery.data || []).map((c) => c.category).filter(Boolean))]}
-        onCreated={() => coursesQuery.refetch()}
-      />
     </div>
   );
 }

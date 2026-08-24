@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
-import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw } from "lucide-react";
-import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
+import { TopBar, ToastContext, Switch, Tag } from "../components/PlatformUI.jsx";
+import { Lock, ShieldCheck, Moon } from "lucide-react";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment, SEAT_PRICE_USD } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment } from "../../lib/api/organizations.js";
 import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 
 // Previously seeded from `profileQuery.data?.organizations?.name`, which
@@ -27,9 +26,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const seatsSummary = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
   const [seatsToBuy, setSeatsToBuy] = useState("");
   const [purchasingSeats, setPurchasingSeats] = useState(false);
-  // SEAT_PRICE_USD removed - it was a second, independent copy of the seat
-// price that could drift from what startSeatPurchasePayment actually charges.
-// The real figure is now imported from lib/api/organizations.js.
+  const SEAT_PRICE_DISPLAY = 10;
   const ticketsQuery = useSupabaseQuery(async () => (orgId ? fetchMyOrgSupportTickets(orgId) : []), [orgId]);
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketDescription, setTicketDescription] = useState("");
@@ -240,7 +237,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
           borderRadius: 20,
           background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
           color: "#FFFFFF",
-          padding: "clamp(18px, 3vw, 26px)",
+          padding: "clamp(22px, 3.5vw, 28px)",
           boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
           border: "1px solid rgba(99, 102, 241, 0.4)",
           position: "relative",
@@ -260,13 +257,13 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             zIndex: 0
           }} />
 
-          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <h1 style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
-                Settings Hub &amp; Preferences
+              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Settings Hub &amp; Institutional Preferences
               </h1>
-              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.4 }}>
-                Manage organization profile, seat licenses, AI policies, and gamification.
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                Configure organization branding, purchase student seat licenses, toggle AI automation policies, and manage gamification.
               </p>
             </div>
           </div>
@@ -280,14 +277,14 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
           <div className="ta-grid ta-grid-2" style={{ gap: 20 }}>
 
             {/* Left Column: Organization, Billing & Seats */}
-            <div className="anim-stagger" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div className="ta-card">
                 <div className="ta-title">Organization Profile</div>
                 <div className="ta-label ta-mt16">Organization Name</div>
                 <input className="ta-input ta-mt6" style={{ width: "100%" }} value={orgName} onChange={(e) => setOrgName(e.target.value)} />
                 <div className="ta-label ta-mt16">Domain (optional)</div>
                 <input className="ta-input ta-mt6" style={{ width: "100%" }} value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="e.g. yourcompany.com" />
-                <div className="ta-row ta-gap10 ta-mt16" style={{ fontSize: 12.5, color: "var(--text-2)", flexWrap: "wrap" }}>
+                <div className="ta-row ta-gap10 ta-mt16" style={{ fontSize: 12.5, color: "var(--text-2)" }}>
                   <span>Plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier || "free"}</strong></span>
                   <span>Status: <strong style={{ color: "var(--text-1)" }}>{org?.status || "trial"}</strong></span>
                   <span>Max users: <strong style={{ color: "var(--text-1)" }}>{org?.max_users ?? "N/A"}</strong></span>
@@ -358,7 +355,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       }
                     }}
                   >
-                    {purchasingSeats ? "Redirecting to checkout..." : `Purchase seats ($${SEAT_PRICE_USD}/seat)`}
+                    {purchasingSeats ? "Redirecting to checkout..." : `Purchase seats ($${SEAT_PRICE_DISPLAY}/seat)`}
                   </button>
                 </div>
               </div>
@@ -387,7 +384,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             </div>
 
             {/* Right Column: AI Automation, Gamification & Leaderboard */}
-            <div className="anim-stagger" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div className="ta-card">
                 <div className="ta-title">AI Neural Coach</div>
                 <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
@@ -494,74 +491,6 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                 {savingLeaderboard && <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 8 }}>Saving...</div>}
               </div>
 
-              {/* Database & Mock Data Management Card */}
-              <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #818CF8)" }}>
-                <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
-                  <div className="ta-row ta-gap10">
-                    <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Database size={17} color="var(--primary)" />
-                    </div>
-                    <div>
-                      <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Database &amp; Mock Data Mode</div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
-                        Toggle demo prototype data vs live production database records
-                      </div>
-                    </div>
-                  </div>
-
-                  <span style={{
-                    fontSize: 10.5, fontWeight: 800, padding: "2px 8px", borderRadius: 6,
-                    background: isMockDataEnabled() ? "var(--warning-bg, #FEF3C7)" : "var(--success-bg, #DCFCE7)",
-                    color: isMockDataEnabled() ? "var(--warning, #D97706)" : "var(--success, #16A34A)"
-                  }}>
-                    {isMockDataEnabled() ? "DEMO ACTIVE" : "REAL DB ONLY"}
-                  </span>
-                </div>
-
-                <div style={{ marginTop: 14 }}>
-                  <div className="ta-row ta-between" style={{ alignItems: "center" }}>
-                    <div style={{ minWidth: 0, flex: 1, paddingRight: 14 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13 }}>Include Mock &amp; Demo Courses</div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 3, lineHeight: 1.4 }}>
-                        When connecting your live Supabase database, turn this off to show only your real organization tables.
-                      </div>
-                    </div>
-                    <Switch
-                      on={isMockDataEnabled()}
-                      onChange={() => {
-                        const next = !isMockDataEnabled();
-                        setMockDataEnabled(next);
-                        showToast(next ? "Mock data enabled" : "Real database mode active");
-                      }}
-                    />
-                  </div>
-
-                  <div className="ta-row ta-gap8 ta-mt14" style={{ flexWrap: "wrap" }}>
-                    <button
-                      className="ta-btn ta-btn-danger ta-btn-sm"
-                      onClick={() => {
-                        if (window.confirm("Purge all mock data and switch to real database records only?")) {
-                          purgeAllMockData();
-                          showToast("All mock data purged! Live database mode active.");
-                        }
-                      }}
-                    >
-                      <Trash2 size={13} /> Purge All Mock Data
-                    </button>
-
-                    <button
-                      className="ta-btn ta-btn-outline ta-btn-sm"
-                      onClick={() => {
-                        restoreMockData();
-                        showToast("Demo & mock masterclasses restored.");
-                      }}
-                    >
-                      <RefreshCw size={13} /> Restore Demo Data
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               <div className="ta-card">
                 <div className="ta-row ta-between">
                   <div className="ta-row ta-gap10">
@@ -578,7 +507,11 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     onChange={() => {
                       const next = !isDark;
                       setIsDark(next);
-                      setGlobalThemeDark(next);
+                      try {
+                        localStorage.setItem("trainai_theme_dark", next ? "true" : "false");
+                        if (next) document.documentElement.classList.add("dark");
+                        else document.documentElement.classList.remove("dark");
+                      } catch {}
                       showToast(next ? "Dark mode activated" : "Light mode activated");
                     }}
                   />

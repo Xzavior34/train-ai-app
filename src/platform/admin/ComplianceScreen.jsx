@@ -3,7 +3,6 @@ import { TopBar, Tag, ToastContext, ProgressBar, StatCard, exportRowsAsCsv } fro
 import { ShieldCheck, RefreshCw, Download, AlertTriangle, CheckCircle2, Clock, Plus, X, Search, Trash2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail } from "../../lib/api/platform.js";
-import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
@@ -152,54 +151,86 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
         sub="Track progress across all learners, by course, and who's behind - plus compliance tracking"
         orgSelector={orgSelector}
         onNavigate={setScreen}
+        right={
+          <div className="ta-row ta-gap8">
+            <button className="ta-btn ta-btn-outline" onClick={handleExportCompliance}>
+              <Download size={14} /> Export Report
+            </button>
+            <button className="ta-btn ta-btn-primary" onClick={async () => {
+              if (!orgId) return;
+              await refreshComplianceStatus(orgId);
+              complianceQuery.refetch();
+              showToast("Compliance audit refreshed!");
+            }}>
+              <RefreshCw size={14} /> Refresh Audit
+            </button>
+            <button className="ta-btn ta-btn-primary" onClick={() => setShowAssignModal(true)}>
+              <Plus size={14} /> Assign Course
+            </button>
+          </div>
+        }
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <div className="ta-hero-banner anim-fluid-entrance">
-          <div className="tai-glow-amber" />
-          <div className="ta-hero-inner">
-            <div className="ta-hero-text">
-              <h1 className="ta-hero-title">
-                Progress &amp; Compliance Hub
-              </h1>
-              <p className="ta-hero-desc">
-                Track student progress, mandatory certifications, regulatory audit readiness, and automated status reports.
-              </p>
-            </div>
+        {/* =========================================================================
+            LEARNER PROGRESS & COMPLIANCE HERO BANNER
+            ========================================================================= */}
+        <div style={{
+          borderRadius: 20,
+          background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(22px, 3.5vw, 28px)",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)",
+          border: "1px solid rgba(99, 102, 241, 0.4)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <img
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&auto=format&fit=crop&q=85"
+            alt=""
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover", opacity: 0.32, zIndex: 0
+            }}
+          />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.8) 55%, rgba(15,23,42,0.65) 100%)",
+            zIndex: 0
+          }} />
 
-            <div className="ta-hero-actions">
-              <button
-                className="ta-btn ta-btn-outline"
-                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-                onClick={handleExportCompliance}
-              >
-                <Download size={13} /> Export Report
-              </button>
-              <button
-                className="ta-btn ta-btn-outline"
-                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-                onClick={async () => {
-                  if (!orgId) return;
-                  await refreshComplianceStatus(orgId);
-                  complianceQuery.refetch();
-                  showToast("Compliance audit refreshed!");
-                }}
-              >
-                <RefreshCw size={13} /> Refresh Audit
-              </button>
-              <button
-                className="ta-btn ta-btn-primary"
-                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 5 }}
-                onClick={() => setShowAssignModal(true)}
-              >
-                <Plus size={14} /> Assign Course
-              </button>
+          <div className="ta-row ta-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 18, alignItems: "center" }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap", marginBottom: 10 }}>
+                <span style={{
+                  background: "rgba(99, 102, 241, 0.35)", color: "#E0E7FF",
+                  border: "1px solid rgba(165, 180, 252, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99,
+                  display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: "0.03em"
+                }}>
+                  <ShieldCheck size={13} color="#A5B4FC" /> AUDIT TRAIL &amp; PACING
+                </span>
+                <span style={{
+                  background: "rgba(16, 185, 129, 0.28)", color: "#A7F3D0",
+                  border: "1px solid rgba(16, 185, 129, 0.5)",
+                  fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 99
+                }}>
+                  {overallRate}% AUDIT COMPLIANCE
+                </span>
+              </div>
+
+              <h1 style={{ fontSize: "clamp(22px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF" }}>
+                Learner Progress, Skill Gaps &amp; Compliance Hub
+              </h1>
+              <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 620, lineHeight: 1.5 }}>
+                Monitor individual student pace, surface institutional skill gaps, audit mandatory course completions, and assign certifications.
+              </p>
             </div>
           </div>
         </div>
 
         {/* Top 4 KPI Metric Cards */}
-        <div className="ta-grid ta-grid-4 anim-stagger">
-          <div className="ta-card">
+        <div className="ta-grid ta-grid-4">
+          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Enrolled Learners</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
               {learnerProgress.length || 68}
@@ -207,7 +238,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4, fontWeight: 600 }}>Active across tracks</div>
           </div>
 
-          <div className="ta-card">
+          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Cohort Avg Progress</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
               {learnerProgress.length ? Math.round(learnerProgress.reduce((sum, r) => sum + (r.avgProgress || 0), 0) / learnerProgress.length) : 74}%
@@ -215,7 +246,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4, fontWeight: 600 }}>On track pace</div>
           </div>
 
-          <div className="ta-card">
+          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Overdue Compliance</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: totalOverdue > 0 ? "var(--danger)" : "var(--text)", marginTop: 4 }}>
               {totalOverdue}
@@ -225,7 +256,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             </div>
           </div>
 
-          <div className="ta-card">
+          <div className="ta-card" style={{ padding: 18, borderRadius: 16 }}>
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>At-Risk Learners</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: behindLearners.length > 0 ? "#F59E0B" : "var(--text)", marginTop: 4 }}>
               {behindLearners.length}
@@ -236,7 +267,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           </div>
         </div>
 
-        <div className="ta-row ta-gap8" style={{ marginBottom: 8 }}>
+        <div className="ta-row ta-gap8 ta-mt4" style={{ marginBottom: 8 }}>
           {[{ k: "progress", label: "Progress Overview" }, { k: "skillgaps", label: "Skill Gaps" }, { k: "compliance", label: "Compliance" }].map((t) => (
             <div key={t.k} className={`ta-pill ${mainTab === t.k ? "ta-pill-active" : "ta-pill-inactive"}`} style={{ cursor: "pointer" }} onClick={() => setMainTab(t.k)}>{t.label}</div>
           ))}
@@ -244,7 +275,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
 
         {mainTab === "progress" && (
           <div className="ta-col ta-gap16">
-            <div className="ta-grid ta-grid-2">
+            <div className="ta-grid ta-grid-2" style={{ gap: 20 }}>
               <div className="ta-card">
                 <div className="ta-label">Leaderboard • Top Performers</div>
                 <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Ranked by average course progress</div>
@@ -301,10 +332,10 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
             {!skillGapsQuery.loading && (skillGapsQuery.data || []).length === 0 && <div className="ta-empty">No learners yet.</div>}
             <div className="ta-col ta-gap8 ta-mt12">
               {(skillGapsQuery.data || []).map((l) => (
-                <div key={l.learnerId} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 8, cursor: "pointer" }} onClick={() => setExpandedLearnerId(expandedLearnerId === l.learnerId ? null : l.learnerId)}>
-                  <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
-                    <span style={{ fontWeight: 600, fontSize: 13, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{l.name}</span>
-                    <span style={{ fontSize: 11.5, color: "var(--text-2)", flexShrink: 0 }}>{l.completedSkills.length} demonstrated - {l.gapSkills.length} gaps</span>
+                <div key={l.learnerId} style={{ padding: 12, background: "var(--surface-3)", borderRadius: 12, cursor: "pointer" }} onClick={() => setExpandedLearnerId(expandedLearnerId === l.learnerId ? null : l.learnerId)}>
+                  <div className="ta-row ta-between">
+                    <span style={{ fontWeight: 600, fontSize: 13 }}>{l.name}</span>
+                    <span style={{ fontSize: 11.5, color: "var(--text-2)" }}>{l.completedSkills.length} demonstrated - {l.gapSkills.length} gaps</span>
                   </div>
                   {expandedLearnerId === l.learnerId && (
                     <div className="ta-row ta-gap16 ta-mt10" style={{ flexWrap: "wrap" }}>
@@ -328,7 +359,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
 
         {mainTab === "compliance" && (
           <>
-        <div className="ta-grid ta-grid-4 anim-stagger">
+        <div className="ta-grid ta-grid-4">
           <StatCard stat={{ label: "Overall Compliance", value: `${overallRate}%`, icon: ShieldCheck, delta: "Target 95%", up: overallRate >= 90 }} />
           <StatCard stat={{ label: "Total Assigned Learners", value: totalAssigned, icon: Clock }} />
           <StatCard stat={{ label: "Compliant Learners", value: totalCompleted, icon: CheckCircle2, delta: `${totalCompleted} verified`, up: true }} />
@@ -386,7 +417,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
                       <td><span style={{ fontWeight: 600 }}>{a.title}</span></td>
                       <td style={{ fontSize: 12.5, color: "var(--text-2)" }}>{a.department}</td>
                       <td>
-                        <div className="ta-col" style={{ width: 140, gap: 4 }}>
+                        <div className="ta-col ta-gap4" style={{ width: 140 }}>
                           <div className="ta-row ta-between" style={{ fontSize: 11 }}>
                             <span>{a.completedCount} of {a.assignedCount}</span>
                             <span style={{ fontWeight: 700 }}>{pct}%</span>
@@ -442,88 +473,90 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
       </>
         )}
 
-      <PortalModal
-        isOpen={showAssignModal}
-        onClose={closeAssignModal}
-        maxWidth={500}
-        zIndex={9999}
-      >
-        <div className="ta-row ta-between">
-          <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Assign course to learners</div>
-          <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={closeAssignModal} aria-label="Close"><X size={16} /></button>
-        </div>
+      {showAssignModal && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(10,12,25,.55)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          onClick={closeAssignModal}
+        >
+          <div className="ta-card" style={{ maxWidth: 480, width: "100%", maxHeight: "85vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+            <div className="ta-row ta-between">
+              <div style={{ fontWeight: 800, fontSize: 15 }}>Assign course to learners</div>
+              <button className="ta-iconbtn" onClick={closeAssignModal} aria-label="Close"><X size={16} /></button>
+            </div>
 
-        <div className="ta-col ta-gap10 ta-mt14">
-          <div>
-            <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Course</label>
-            <select className="ta-input" style={{ width: "100%" }} value={assignCourseId} onChange={(e) => setAssignCourseId(e.target.value)}>
-              <option value="">Select a published course...</option>
-              {publishedCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-            </select>
-            {publishedCourses.length === 0 && !coursesQuery.loading && (
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>No published courses yet. Publish a course first.</div>
-            )}
+            <div className="ta-col ta-gap10 ta-mt14">
+              <div>
+                <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Course</label>
+                <select className="ta-input" style={{ width: "100%" }} value={assignCourseId} onChange={(e) => setAssignCourseId(e.target.value)}>
+                  <option value="">Select a published course...</option>
+                  {publishedCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+                {publishedCourses.length === 0 && !coursesQuery.loading && (
+                  <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>No published courses yet. Publish a course first.</div>
+                )}
+              </div>
+
+              <div className="ta-row ta-gap10" style={{ flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Type</label>
+                  <select className="ta-input" style={{ width: "100%" }} value={assignType} onChange={(e) => setAssignType(e.target.value)}>
+                    <option value="mandatory">Mandatory</option>
+                    <option value="recommended">Recommended</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1, minWidth: 140 }}>
+                  <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Due date (optional)</label>
+                  <input type="date" className="ta-input" style={{ width: "100%" }} value={assignDueAt} onChange={(e) => setAssignDueAt(e.target.value)} />
+                </div>
+              </div>
+
+              <div>
+                <div className="ta-row ta-between" style={{ marginBottom: 6 }}>
+                  <label style={{ fontSize: 11.5, color: "var(--text-2)" }}>Learners ({selectedLearnerIds.size} selected)</label>
+                  {filteredLearners.length > 0 && (
+                    <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={toggleAllLearners}>
+                      {selectedLearnerIds.size === filteredLearners.length ? "Deselect all" : "Select all"}
+                    </button>
+                  )}
+                </div>
+                <div className="ta-search" style={{ width: "100%", background: "var(--surface-3)", marginBottom: 8 }}>
+                  <Search size={14} color="var(--text-3)" />
+                  <input
+                    type="text"
+                    placeholder="Search learners..."
+                    value={learnerSearch}
+                    onChange={(e) => setLearnerSearch(e.target.value)}
+                    style={{ border: "none", background: "transparent", width: "100%", fontSize: 12.5, color: "var(--text)", outline: "none" }}
+                  />
+                </div>
+                <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--border)", borderRadius: 8, padding: 6 }}>
+                  {orgUsersQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}>Loading learners...</div>}
+                  {!orgUsersQuery.loading && filteredLearners.length === 0 && (
+                    <div className="ta-empty" style={{ fontSize: 12 }}>No learners found.</div>
+                  )}
+                  {filteredLearners.map(u => (
+                    <label key={u.id} className="ta-row ta-gap8" style={{ padding: "6px 4px", fontSize: 12.5, cursor: "pointer" }}>
+                      <input type="checkbox" checked={selectedLearnerIds.has(u.id)} onChange={() => toggleLearner(u.id)} />
+                      {u.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="ta-row ta-gap8 ta-mt16">
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{ flex: 1 }}
+                disabled={!assignCourseId || selectedLearnerIds.size === 0 || assigning}
+                onClick={handleAssignCourse}
+              >
+                {assigning ? "Assigning..." : `Assign to ${selectedLearnerIds.size || 0} learner${selectedLearnerIds.size === 1 ? "" : "s"}`}
+              </button>
+            </div>
           </div>
-
-          <div className="ta-row ta-gap10" style={{ flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 140 }}>
-              <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Type</label>
-              <select className="ta-input" style={{ width: "100%" }} value={assignType} onChange={(e) => setAssignType(e.target.value)}>
-                <option value="mandatory">Mandatory</option>
-                <option value="recommended">Recommended</option>
-              </select>
-            </div>
-            <div style={{ flex: 1, minWidth: 140 }}>
-              <label style={{ fontSize: 11.5, color: "var(--text-2)", display: "block", marginBottom: 4 }}>Due date (optional)</label>
-              <input type="date" className="ta-input" style={{ width: "100%" }} value={assignDueAt} onChange={(e) => setAssignDueAt(e.target.value)} />
-            </div>
-          </div>
-
-          <div>
-            <div className="ta-row ta-between" style={{ marginBottom: 6 }}>
-              <label style={{ fontSize: 11.5, color: "var(--text-2)" }}>Learners ({selectedLearnerIds.size} selected)</label>
-              {filteredLearners.length > 0 && (
-                <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={toggleAllLearners}>
-                  {selectedLearnerIds.size === filteredLearners.length ? "Deselect all" : "Select all"}
-                </button>
-              )}
-            </div>
-            <div className="ta-search" style={{ width: "100%", background: "var(--surface-3)", marginBottom: 8 }}>
-              <Search size={14} color="var(--text-3)" />
-              <input
-                type="text"
-                placeholder="Search learners..."
-                value={learnerSearch}
-                onChange={(e) => setLearnerSearch(e.target.value)}
-                style={{ border: "none", background: "transparent", width: "100%", fontSize: 12.5, color: "var(--text)", outline: "none" }}
-              />
-            </div>
-            <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--border)", borderRadius: 8, padding: 6 }}>
-              {orgUsersQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}>Loading learners...</div>}
-              {!orgUsersQuery.loading && filteredLearners.length === 0 && (
-                <div className="ta-empty" style={{ fontSize: 12 }}>No learners found.</div>
-              )}
-              {filteredLearners.map(u => (
-                <label key={u.id} className="ta-row ta-gap8" style={{ padding: "6px 4px", fontSize: 12.5, cursor: "pointer" }}>
-                  <input type="checkbox" checked={selectedLearnerIds.has(u.id)} onChange={() => toggleLearner(u.id)} />
-                  {u.name}
-                </label>
-              ))}
-            </div>
-          </div>
         </div>
-
-        <div className="ta-row ta-gap8 ta-mt16">
-          <button
-            className="ta-btn ta-btn-primary"
-            style={{ flex: 1 }}
-            disabled={!assignCourseId || selectedLearnerIds.size === 0 || assigning}
-            onClick={handleAssignCourse}
-          >
-            {assigning ? "Assigning..." : `Assign to ${selectedLearnerIds.size || 0} learner${selectedLearnerIds.size === 1 ? "" : "s"}`}
-          </button>
-        </div>
-      </PortalModal>
+      )}
     </div>
     </div>
   );

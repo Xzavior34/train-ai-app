@@ -1,14 +1,9 @@
-import React, { useState, useContext, useMemo } from "react";
-import { DEMO_MODE, liveOr } from "../../lib/demoMode.js";
-import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import {
-  fetchLearnerScheduleSessions, fetchCohortSessionsWithFacilitator
-} from "../../lib/api/live/learnerMiscLive.js";
+import React, { useState, useContext } from "react";
 import {
   Home, BookOpen, Zap, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
   Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Sparkles, Flame, MessageSquare, Calendar,
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
-  PanelLeftClose, PanelLeftOpen, Video
+  PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 
 // Lets any screen's shared TopBar show a real unread-notifications bell
@@ -67,51 +62,48 @@ export const TOKENS = `
     --warning-bg: #451A03;
     --danger-bg: #450A0A;
   }
-  .tai-app-outer { min-height: 100vh; min-height: 100dvh; background: var(--bg); display:flex; flex-direction:column; width: 100%; box-sizing: border-box; }
+  .tai-app-outer { min-height: 100vh; min-height: 100dvh; background: var(--bg); display:flex; flex-direction:column; overscroll-behavior: none; width: 100%; }
   
   /* Top Full-Width Learner Global Header */
   .tai-global-header {
-    height: 58px; min-height: 58px; width: 100%; max-width: 100%; background: var(--surface); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 24px);
-    position: sticky; top: 0; z-index: 60; box-shadow: 0 1px 3px rgba(15,23,42,0.03); box-sizing: border-box;
+    height: 72px; width: 100%; background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    position: sticky; top: 0; z-index: 60; box-shadow: 0 1px 3px rgba(15,23,42,0.03);
   }
-  .tai-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
-  .tai-header-brand { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; flex-shrink: 0; }
-  .tai-header-brand-mark { width: 30px; height: 30px; border-radius: 8px; background: var(--grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(79,70,229,0.3); }
-  .tai-header-brand-name { font-size: 15.5px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
-  .tai-header-search { display: flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 6px 11px; width: clamp(140px, 15vw, 210px); font-size: 12px; color: var(--text-2); }
-  .tai-header-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 12px; font-family: inherit; color: var(--text); }
+  .tai-header-left { display: flex; align-items: center; gap: 20px; }
+  .tai-header-brand { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
+  .tai-header-brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--grad); display: flex; align-items: center; justify-content: center; box-shadow: 0 3px 10px rgba(79,70,229,0.3); }
+  .tai-header-brand-name { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+  .tai-header-search { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 7px 14px; width: clamp(180px, 22vw, 320px); font-size: 13px; color: var(--text-2); }
+  .tai-header-search input { border: none; background: transparent; outline: none; width: 100%; font-size: 13px; font-family: inherit; color: var(--text); }
   
-  .tai-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-  .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-workspace-pill { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .14s ease; flex-shrink: 0; }
+  .tai-header-right { display: flex; align-items: center; gap: 12px; }
+  .tai-streak-pill { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .tai-credits-pill { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; background: #EEF2FF; border: 1px solid #E0E7FF; color: #4F46E5; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+  .tai-workspace-pill { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .14s ease; }
   .tai-workspace-pill:hover { background: var(--surface-2); border-color: #CBD5E1; }
   
-  .tai-desktop-shell { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; align-items: stretch; min-height: calc(100vh - 58px); box-sizing: border-box; }
+  .tai-desktop-shell { display: flex; width: 100%; max-width: 1440px; margin: 0 auto; align-items: stretch; min-height: calc(100vh - 72px); }
   .tai-app {
-    width: 100%; max-width: 100%; flex: 1; min-height: calc(100vh - 58px);
-    background: var(--bg); position: relative; display: flex; flex-direction: column; min-width: 0; box-sizing: border-box;
+    width: 100%; flex: 1; min-height: calc(100vh - 72px);
+    background: var(--bg); position: relative; display: flex; flex-direction: column; min-width: 0;
   }
   .tai-body {
-    flex: 1; padding: 20px 24px calc(88px + env(safe-area-inset-bottom));
-    width: 100%; max-width: 1240px; margin: 0 auto; box-sizing: border-box;
+    flex: 1; padding: 24px 28px calc(90px + env(safe-area-inset-bottom));
+    width: 100%; box-sizing: border-box; max-width: 1240px; margin: 0 auto;
   }
-
+  
   /* Collapsible Accordion Sidebar */
   .tai-desktop-sidebar { display: none; }
   @media (min-width: 900px) {
     .tai-desktop-sidebar {
-      display: flex; flex-direction: column; width: 250px; flex-shrink: 0;
-      position: fixed; top: 58px; left: max(0px, calc((100vw - 1440px) / 2));
-      height: calc(100vh - 58px); height: calc(100dvh - 58px); background: var(--surface); border-right: 1px solid var(--border);
-      padding: 16px 12px; box-shadow: 2px 0 12px -6px rgba(15, 23, 42, 0.03); z-index: 40; overflow-y: auto;
+      display: flex; flex-direction: column; width: 250px; flex-shrink: 0; position: sticky; top: 72px;
+      height: calc(100vh - 72px); height: calc(100dvh - 72px); background: var(--surface); border-right: 1px solid var(--border);
+      padding: 18px 12px; box-shadow: 2px 0 12px -6px rgba(15, 23, 42, 0.03); z-index: 40; overflow-y: auto;
       transition: width .2s ease, padding .2s ease;
     }
-    .tai-app { margin-left: 250px; transition: margin-left .2s ease; }
-    .tai-desktop-sidebar.tai-sidebar-minimized + .tai-app { margin-left: 72px; }
     .tai-desktop-sidebar.tai-sidebar-minimized {
-      width: 72px; padding: 16px 8px;
+      width: 72px; padding: 18px 8px;
     }
     .tai-desktop-sidebar.tai-sidebar-minimized .tai-group-header span,
     .tai-desktop-sidebar.tai-sidebar-minimized .tai-single-nav span,
@@ -163,123 +155,69 @@ export const TOKENS = `
     padding: 6px 12px; z-index: 100;
   }
   .tai, .tai * { -webkit-tap-highlight-color: transparent; }
+  .tai button, .tai [role="switch"], .tai-navitem, .tai-pill, .tai-iconbtn { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
   .tai-toast {
     position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%); z-index: 200;
     background: #0F172A; color: #FFFFFF; padding: 12px 20px; border-radius: 14px; font-size: 13.5px; font-weight: 600;
     box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.35); display: flex; align-items: center; gap: 10px; max-width: 90%;
     animation: slideUp .22s cubic-bezier(.16,1,.3,1) both; border: 1px solid rgba(255,255,255,0.1);
   }
-  .tai-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap: nowrap; gap: 10px; padding: 6px 0 14px; width: 100%; box-sizing: border-box; }
-  .tai-topbar > .tai-row.tai-gap12 { min-width: 0; flex: 1; }
-  .tai-topbar-actions { flex-wrap: nowrap; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
-  .tai-h1 { font-size: clamp(17px, 2.5vw, 20px); font-weight: 800; letter-spacing: -0.02em; margin:0; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-  .tai-sub { font-size: 12px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-  .tai-iconbtn { width:34px; height:34px; border-radius:10px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border:1px solid var(--border);
-    box-shadow: 0 2px 8px -1px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  @media (min-width: 900px) {
+    .tai-toast { bottom: 32px; }
+    .tai-navbar { display: none !important; }
+    .tai-body { padding: 24px 32px 60px; }
+  }
+  @media (max-width: 899px) {
+    .tai-header-search { display: none; }
+    .tai-workspace-pill span { display: none; }
+    .tai-global-header { padding: 0 14px; height: 58px; }
+    .tai-body { padding: 16px 16px calc(86px + env(safe-area-inset-bottom)); }
+  }
+  .tai-topbar { display:flex; justify-content:space-between; align-items:center; padding: 8px 0 18px; }
+  .tai-h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.025em; margin:0; color: var(--text); }
+  .tai-sub { font-size: 13.5px; color: var(--text-2); margin: 3px 0 0; font-weight: 500; }
+  .tai-iconbtn { width:40px; height:40px; border-radius:11px; background: var(--surface); border:1px solid var(--border);
+    box-shadow: var(--shadow-card);
     display:flex; align-items:center; justify-content:center; color: var(--text); flex-shrink:0; cursor:pointer;
-    transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); }
-  .tai-iconbtn:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-2px) scale(1.04); box-shadow: 0 6px 16px -2px rgba(79, 70, 229, 0.18); }
-  .tai-iconbtn:active { transform: scale(0.94); }
-  
-  /* Card surface with a subtle specular highlight - no backdrop-filter on
-     cards: this screen stacks many of them per page, and blurring flat
-     background colors costs real scroll/render performance for no visible
-     benefit. (.tai-iconbtn and .tai-navbar keep their blur - those are single,
-     small, fixed elements, not repeated per-card.) */
-  .tai-card {
-    background: rgba(255, 255, 255, 0.96);
-    border-radius: 18px;
-    padding: 22px;
-    border: 1px solid rgba(226, 232, 240, 0.85);
-    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
-    transition: transform .24s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow .24s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color .24s ease,
-                background .24s ease;
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-  .tai.dark .tai-card {
-    background: rgba(18, 24, 43, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 28px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
-  }
-  .tai-card-hover {
-    cursor: pointer;
-  }
-  .tai-card-hover:hover {
-    box-shadow: 0 16px 36px -6px rgba(79, 70, 229, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
-    border-color: rgba(99, 102, 241, 0.35);
-    transform: translateY(-3px) scale(1.006);
-  }
-  .tai.dark .tai-card-hover:hover {
-    box-shadow: 0 18px 40px -6px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(99, 102, 241, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
-    border-color: rgba(129, 140, 248, 0.35);
-    transform: translateY(-3px) scale(1.006);
-  }
-  .tai-card-hover:active {
-    transform: translateY(-1px) scale(0.995);
-  }
-  
-  /* Card image dynamic zoom */
-  .tai-card-hover img.tai-zoomable,
-  .tai-card:hover img.tai-zoomable {
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  .tai-card-hover:hover img.tai-zoomable,
-  .tai-card:hover img.tai-zoomable {
-    transform: scale(1.04);
-  }
-
+    transition: all .16s ease; }
+  .tai-iconbtn:hover { background: var(--surface-2); border-color: #CBD5E1; }
+  .tai-iconbtn:active { transform: scale(0.95); }
+  .tai-card { background: var(--surface); border-radius: 16px; padding: 20px; border: 1px solid var(--border);
+    box-shadow: var(--shadow-card); transition: all .2s cubic-bezier(.16,1,.3,1); }
+  .tai-card-hover:hover { box-shadow: var(--shadow-hover); border-color: #CBD5E1; transform: translateY(-2px); }
   .tai-row { display:flex; align-items:center; }
   .tai-between { justify-content:space-between; }
-  .tai-gap4 { gap:4px; } .tai-gap6 { gap:6px; } .tai-gap8 { gap:8px; } .tai-gap10 { gap:10px; } .tai-gap12 { gap:12px; } .tai-gap14 { gap:14px; } .tai-gap16 { gap:16px; } .tai-gap18 { gap:18px; } .tai-gap20 { gap:20px; }
+  .tai-gap6 { gap:6px; } .tai-gap8 { gap:8px; } .tai-gap10 { gap:10px; } .tai-gap12 { gap:12px; } .tai-gap16 { gap:16px; } .tai-gap20 { gap:20px; }
   .tai-col { display:flex; flex-direction:column; }
-  .tai-mt4 { margin-top:4px; } .tai-mt6 { margin-top:6px; } .tai-mt8 { margin-top:8px; } .tai-mt10 { margin-top:10px; } .tai-mt12 { margin-top:12px; } .tai-mt14 { margin-top:14px; } .tai-mt16 { margin-top:16px; } .tai-mt20 { margin-top:20px; } .tai-mt24 { margin-top:24px; }
+  .tai-mt8 { margin-top:8px; } .tai-mt10 { margin-top:10px; } .tai-mt12 { margin-top:12px; } .tai-mt14 { margin-top:14px; } .tai-mt16 { margin-top:16px; } .tai-mt20 { margin-top:20px; } .tai-mt24 { margin-top:24px; }
   .tai-label { font-size:11.5px; font-weight:700; color: var(--text-3); text-transform:uppercase; letter-spacing:.06em; }
   .tai-title-sm { font-size:16px; font-weight:800; letter-spacing: -0.01em; color: var(--text); }
   .tai-body-text { font-size: 13.5px; color: var(--text-2); line-height:1.5; }
-  
-  /* Buttons with micro spring animations */
   .tai-btn { border:none; cursor:pointer; border-radius: 12px; font-weight:700; font-size:14px; padding: 12px 20px;
-    display:flex; align-items:center; justify-content:center; gap:8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
-  .tai-btn-primary { background: var(--grad); color:#fff; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.32); }
-  .tai-btn-primary:hover { opacity: 0.96; transform: translateY(-2px); box-shadow: 0 8px 22px -2px rgba(79, 70, 229, 0.48); }
-  .tai-btn-primary:active { transform: scale(.96); }
+    display:flex; align-items:center; justify-content:center; gap:8px; transition: all .16s ease; font-family: var(--font); }
+  .tai-btn-primary { background: var(--grad); color:#fff; box-shadow: var(--shadow-btn); }
+  .tai-btn-primary:hover { opacity: 0.95; transform: translateY(-1px); box-shadow: 0 6px 18px -2px rgba(79, 70, 229, 0.42); }
+  .tai-btn-primary:active { transform: scale(.98); }
   .tai-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
-  .tai-btn-ghost:hover { background: #E0E7FF; color: var(--primary-dark); transform: translateY(-1px); }
-  .tai-btn-ghost:active { transform: scale(.96); }
+  .tai-btn-ghost:hover { background: #E0E7FF; color: var(--primary-dark); }
   .tai-btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); font-weight: 600; }
-  .tai-btn-outline:hover { background: var(--surface-2); border-color: rgba(99, 102, 241, 0.3); transform: translateY(-1px); }
-  .tai-btn-outline:active { transform: scale(.96); }
+  .tai-btn-outline:hover { background: var(--surface-2); border-color: #CBD5E1; }
   .tai-btn-sm { padding: 8px 14px; font-size:12.5px; border-radius:10px; }
-  
-  /* Interactive Pills with spring motion */
-  .tai-pill { padding:7px 16px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); }
-  .tai-pill:hover { transform: translateY(-1px); }
-  .tai-pill:active { transform: scale(0.96); }
-  .tai-pill-active { background: var(--primary); color:#fff; box-shadow: 0 4px 14px -2px rgba(79, 70, 229, 0.4); }
+  .tai-pill { padding:7px 16px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: all .14s ease; }
+  .tai-pill-active { background: var(--primary); color:#fff; box-shadow: 0 3px 10px -2px rgba(79, 70, 229, 0.35); }
   .tai-pill-inactive { background: var(--surface); color: var(--text-2); border-color: var(--border); }
-  .tai-pill-inactive:hover { background: var(--surface-2); color: var(--text); border-color: #CBD5E1; }
-  
-  /* Dynamic tags */
-  .tai-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight:700; background: var(--surface-2); color: var(--primary); letter-spacing: 0.02em; transition: all .16s ease; }
-  .tai-tag:hover { transform: scale(1.03); }
-  
+  .tai-pill-inactive:hover { background: var(--surface-2); color: var(--text); }
+  .tai-tag { padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight:700; background: var(--surface-2); color: var(--primary); letter-spacing: 0.02em; }
   .tai-scrollx { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; -ms-overflow-style:none; scrollbar-width:none; }
   .tai-scrollx::-webkit-scrollbar { display:none; }
   .tai-progress-track { width:100%; height:8px; border-radius:99px; background: var(--surface-2); overflow:hidden; }
-  .tai-progress-fill { height:100%; border-radius:99px; background: var(--grad); transition: width .35s cubic-bezier(0.16, 1, 0.3, 1); }
+  .tai-progress-fill { height:100%; border-radius:99px; background: var(--grad); transition: width .3s ease; }
   .tai-avatar { border-radius:50%; background: var(--grad); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0; box-shadow: 0 2px 8px rgba(79,70,229,0.25); }
   .tai-divider { height:1px; background: var(--border); border:none; margin: 14px 0; }
-  
   /* Full-width attached bottom navigation on mobile with dynamic glowing pill motion */
   .tai-navbar {
     position: fixed; left: 0; right: 0; bottom: 0; width: 100vw; max-width: 100%;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid rgba(226, 232, 240, 0.85);
     display: flex; justify-content: space-around; align-items: center;
@@ -288,13 +226,13 @@ export const TOKENS = `
     transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
   .tai.dark .tai-navbar {
-    background: rgba(13, 18, 34, 0.94);
+    background: rgba(13, 18, 34, 0.92);
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
   }
   .tai-navitem {
     display: flex; flex-direction: row; align-items: center; justify-content: center;
-    cursor: pointer; color: var(--text-3); padding: 8px 14px; border-radius: 999px;
+    cursor: pointer; color: var(--text-3); padding: 8px 12px; border-radius: 999px;
     background: transparent; border: none; outline: none;
     transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -308,7 +246,7 @@ export const TOKENS = `
   .tai-navitem-label {
     max-width: 0; opacity: 0; transform: scale(0.7);
     overflow: hidden; white-space: nowrap; margin-left: 0;
-    font-size: 12.5px; font-weight: 800; letter-spacing: 0.02em;
+    font-size: 12px; font-weight: 800; letter-spacing: 0.02em;
     transition: max-width 0.28s cubic-bezier(0.16, 1, 0.3, 1),
                 opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1),
                 transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
@@ -331,125 +269,21 @@ export const TOKENS = `
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
   .tai-input { width:100%; border-radius:12px; border:1px solid var(--border); background: var(--surface); padding: 12px 16px;
-    font-size:13.5px; color: var(--text); font-family: var(--font); transition: all .18s ease; }
-  .tai-input:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); transform: translateY(-1px); }
-  .tai-fade-in { animation: fadeIn .18s ease-out both; }
-  .tai-switch { width:44px; height:26px; border-radius:99px; background: var(--surface-2); position:relative; cursor:pointer; flex-shrink:0; transition: background .18s ease; border: 1px solid var(--border); }
+    font-size:13.5px; color: var(--text); font-family: var(--font); transition: all .15s ease; }
+  .tai-input:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+  .tai-fade-in { animation: fadeInScale .22s cubic-bezier(.16,1,.3,1) both; }
+  .tai-switch { width:44px; height:26px; border-radius:99px; background: var(--surface-2); position:relative; cursor:pointer; flex-shrink:0; transition: background .15s ease; border: 1px solid var(--border); }
   .tai-switch.on { background: var(--primary); border-color: var(--primary); }
-  .tai-switch-knob { width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition: left .18s cubic-bezier(.16,1,.3,1); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .tai-switch-knob { width:20px; height:20px; border-radius:50%; background:#fff; position:absolute; top:2px; left:2px; transition: left .15s cubic-bezier(.16,1,.3,1); box-shadow: 0 1px 3px rgba(0,0,0,.2); }
   .tai-switch.on .tai-switch-knob { left:20px; }
   .tai-empty { text-align:center; padding: 42px 18px; color: var(--text-2); }
-  .tai-grid2 { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
-  .tai-grid3 { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
-  .tai-grid4 { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:18px; width:100%; box-sizing:border-box; }
-  .tai-link { color: var(--primary); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:3px; transition: all .16s ease; }
-  .tai-link:hover { transform: translateX(2px); }
-  .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 24px; align-items: start; width: 100%; max-width: 100%; box-sizing: border-box; }
-
-  /* Learner Hero & Career Roadmap responsive classes */
-  .tai-hero-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
-  .tai-hero-btn { flex-shrink: 0; }
-  .tai-roadmap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; box-sizing: border-box; }
-  .tai-roadmap-item {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 8px 6px; border-radius: 10px; border: 1px solid var(--border);
-    text-align: center; box-sizing: border-box; min-width: 0;
-  }
-  .tai-roadmap-item-title { font-size: 11px; font-weight: 700; margin-top: 4px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-  .tai-roadmap-item-status { font-size: 9.5px; color: var(--text-3); margin-top: 2px; white-space: nowrap; }
-
-  /* =========================================================================
-     RESPONSIVE MEDIA QUERIES (AT END OF STYLESHEET TO GUARANTEE CASCADE)
-     ========================================================================= */
-  @media (min-width: 900px) {
-    .tai-toast { bottom: 32px; }
-    .tai-navbar { display: none !important; }
-    .tai-body { padding: 28px clamp(24px, 2.5vw, 40px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-  }
-  @media (max-width: 899px) {
-    .tai-header-search { display: none; }
-    .tai-desktop-only { display: none !important; }
-    .tai-global-header { padding: 0 16px; height: 56px; width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-header-brand img, .tai-header-logo { height: 20px !important; }
-    .tai-body { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-streak-pill, .tai-credits-pill { padding: 6px 10px; font-size: 12px; gap: 5px; }
-    .tai-header-right { gap: 8px; }
-    .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-card { padding: 16px 14px !important; border-radius: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-hero-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
-    .tai-hero-btn { width: 100% !important; justify-content: center !important; padding: 10px 16px !important; font-size: 13px !important; }
-    .tai-roadmap-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
-    .tai-roadmap-item { padding: 7px 4px !important; }
-    .tai-roadmap-item-title { font-size: 10px !important; }
-    .tai-roadmap-item-status { font-size: 8.5px !important; }
-  }
-  @media (max-width: 480px) {
-    .tai-global-header { padding: 0 14px; height: 54px; width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-header-brand img, .tai-header-logo { height: 19px !important; }
-    .tai-body { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-card { padding: 14px 14px !important; border-radius: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-iconbtn { width: 34px; height: 34px; border-radius: 10px; }
-    .tai-topbar { padding: 4px 0 12px; }
-    .tai-h1 { font-size: 19px; }
-    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-roadmap-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 4px !important; }
-    .tai-roadmap-item { padding: 6px 2px !important; border-radius: 8px !important; }
-    .tai-roadmap-item-title { font-size: 9.5px !important; }
-    .tai-roadmap-item-status { font-size: 8px !important; }
-  }
-
-  /* Universal Cinema Video & Lesson Responsive Rules */
-  .tai-lesson-cinema-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    gap: 18px;
-    align-items: start;
-    transition: all 0.25s ease;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .tai-lesson-cinema-layout.tai-cinema-full {
-    grid-template-columns: 1fr !important;
-  }
-  .tai-lesson-nav-container {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .tai-lesson-nav-complete { flex: 2 1 240px; order: 2; }
-  .tai-lesson-nav-subrow { display: flex; gap: 12px; flex: 2 1 300px; }
-  .tai-lesson-nav-subrow > button:first-child { order: 1; }
-  .tai-lesson-nav-subrow > button:last-child { order: 3; }
-
-  @media (max-width: 899px) {
-    .tai-lesson-cinema-layout {
-      grid-template-columns: 1fr !important;
-      gap: 14px !important;
-    }
-  }
-  @media (max-width: 768px) {
-    .tai-lesson-nav-container {
-      flex-direction: column !important;
-      gap: 10px !important;
-    }
-    .tai-lesson-nav-complete {
-      width: 100% !important;
-      flex: none !important;
-      order: 1 !important;
-    }
-    .tai-lesson-nav-subrow {
-      width: 100% !important;
-      display: flex !important;
-      gap: 8px !important;
-      flex: none !important;
-      order: 2 !important;
-    }
-    .tai-header-full-text { display: none !important; }
+  .tai-grid2 { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }
+  .tai-grid3 { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; }
+  .tai-grid4 { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px; }
+  .tai-link { color: var(--primary); font-weight:700; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:3px; }
+  .tai-dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 980px) {
+    .tai-dashboard-grid { grid-template-columns: 1fr; }
   }
 `;
 
@@ -532,7 +366,7 @@ export function TopBar({ title, sub, onBack, right }) {
           {sub && <p className="tai-sub">{sub}</p>}
         </div>
       </div>
-      {right && <div className="tai-row tai-gap8 tai-topbar-actions">{right}</div>}
+      {right && <div className="tai-row tai-gap8">{right}</div>}
     </div>
   );
 }
@@ -574,7 +408,7 @@ export function BottomNav({ active, go }) {
             aria-label={item.label}
           >
             <div className="tai-navitem-icon-wrap">
-              <Icon size={19} strokeWidth={isActive ? 2.5 : 1.8} />
+              <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
             </div>
             <span className="tai-navitem-label">{item.label}</span>
           </button>
@@ -606,12 +440,11 @@ export function LearnerHeader({
   return (
     <header className="tai-global-header">
       <div className="tai-header-left">
-        <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
+        <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer" }}>
           <img
             src={brandLogoUrl || defaultLogo}
             alt="Train AI"
-            className="tai-header-logo"
-            style={{ height: 22, width: "auto", maxWidth: 100, objectFit: "contain", display: "block" }}
+            style={{ height: 52, width: "auto", objectFit: "contain", display: "block" }}
           />
         </div>
         {searchComponent}
@@ -619,20 +452,20 @@ export function LearnerHeader({
 
       <div className="tai-header-right">
         {/* Streak Pill */}
-        <div className="tai-streak-pill" onClick={() => go?.("achievements")} title="Active Streak">
-          <Flame size={14} color="#EA580C" />
-          <span>{user?.streak || 8} <span className="tai-pill-unit">days</span></span>
+        <div className="tai-streak-pill" onClick={() => go?.("achievements")}>
+          <Flame size={15} color="#EA580C" />
+          <span>{user?.streak || 10} days</span>
         </div>
 
         {/* AI Credits Pill */}
-        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
-          <Sparkles size={13} color="#4F46E5" />
-          <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
+        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))}>
+          <Sparkles size={14} color="#4F46E5" />
+          <span>{typeof credits === "number" ? credits : 10} credits</span>
         </div>
 
-        {/* Workspace Switcher Button (Desktop only) */}
+        {/* Workspace Switcher Button */}
         {onOpenDashboardSwitcher && (
-          <button className="tai-workspace-pill tai-desktop-only" onClick={onOpenDashboardSwitcher} title="Switch workspace">
+          <button className="tai-workspace-pill" onClick={onOpenDashboardSwitcher} title="Switch workspace">
             <ShieldCheck size={15} color="var(--primary)" />
             <span>Admin workspace</span>
           </button>
@@ -646,13 +479,13 @@ export function LearnerHeader({
             aria-label="Notifications"
             style={{ position: "relative" }}
           >
-            <Bell size={17} />
+            <Bell size={18} />
             {unreadNotifs > 0 && (
               <span style={{
-                position: "absolute", top: 5, right: 5, minWidth: 15, height: 15,
+                position: "absolute", top: 6, right: 6, minWidth: 16, height: 16,
                 borderRadius: 99, background: "var(--danger)", color: "#fff",
-                fontSize: 9.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center",
-                padding: "0 3px", border: "2px solid #fff"
+                fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "0 4px", border: "2px solid #fff"
               }}>
                 {unreadNotifs}
               </span>
@@ -663,20 +496,20 @@ export function LearnerHeader({
         {/* User Avatar with Profile link */}
         <div
           onClick={onProfile}
-          style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+          style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
           title={user?.name || "My Account"}
         >
           <Avatar
             initials={initialsOf(user?.name || user?.email || "Learner")}
-            size={34}
+            size={36}
             src={user?.avatarUrl}
           />
         </div>
 
-        {/* Sign Out Button (Desktop only) */}
+        {/* Sign Out Button */}
         {onSignOut && (
           <button
-            className="tai-iconbtn tai-desktop-only"
+            className="tai-iconbtn"
             onClick={onSignOut}
             title="Sign out"
             style={{ color: "var(--danger)" }}
@@ -829,6 +662,14 @@ export function DesktopSidebar({
                 <Users size={15} />
                 <span>Cohorts</span>
               </div>
+              <div
+                className={`tai-sub-item ${activeScreen === "community" && currentTab === "leaderboard" ? "active" : ""}`}
+                onClick={() => go("leaderboard")}
+                title="Leaderboard & Rank"
+              >
+                <Trophy size={15} />
+                <span>Rank</span>
+              </div>
             </div>
           )}
         </div>
@@ -891,14 +732,6 @@ export function DesktopSidebar({
           </div>
           {(!isMinimized ? accountOpen : false) && (
             <div className="tai-sub-items">
-              <div
-                className={`tai-sub-item ${activeScreen === "achievements" ? "active" : ""}`}
-                onClick={() => go("achievements")}
-                title="Achievements & Badges"
-              >
-                <Award size={15} />
-                <span>Achievements</span>
-              </div>
               <div
                 className={`tai-sub-item ${activeScreen === "settings" ? "active" : ""}`}
                 onClick={() => onProfile ? onProfile() : go("settings")}
@@ -1009,7 +842,7 @@ export function CourseCard({ course, onClick, onEnroll, onToggleBookmark }) {
           <div className="tai-row tai-between" style={{ paddingRight: onToggleBookmark ? 24 : 0 }}>
             <Tag>{course.category}</Tag>
           </div>
-          <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4, lineHeight: 1.35, wordBreak: "break-word", color: "var(--text)" }}>
+          <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>
             {course.title}
           </div>
           <div className="tai-row tai-gap12 tai-mt8" style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 500 }}>
@@ -1067,156 +900,174 @@ export function QuickWinCard({ title, duration, points, onClick }) {
   );
 }
 
-// LearningPathsView used to live here: a hardcoded three-entry TRACKS array
-// with invented progress percentages, invented step lists and a button that
-// sent every learner to the same stock course id. It is replaced by
-// learner/screens/LearningPathsScreen.jsx, which reads the real
-// learning_paths / learning_path_courses / learning_path_enrollments tables
-// the admin path builder writes to, evaluates each step's real unlock rule
-// against the learner's own course completions, and lets a learner add and
-// drop their own tracks (user_personalization.learning_tracks).
+export function LearningPathsView({ push, back }) {
+  const TRACKS = [
+    {
+      id: "track-1",
+      title: "AI & Product Engineering Career Track",
+      category: "Full-Stack AI",
+      progress: 68,
+      hours: "48 hours",
+      coursesCount: 4,
+      skills: ["React 19", "Figma AI", "Supabase", "Vector DBs", "LLM APIs"],
+      steps: [
+        { title: "Master Design Systems in Figma with AI", status: "completed", hours: "12h" },
+        { title: "Full-Stack AI Application Engineering", status: "in_progress", hours: "16h" },
+        { title: "Cloud Infrastructure & Microservices", status: "upcoming", hours: "10h" },
+        { title: "Capstone: Production AI Agent Deployment", status: "upcoming", hours: "10h" }
+      ]
+    },
+    {
+      id: "track-2",
+      title: "Generative AI & Autonomous Agent Architect",
+      category: "AI & Agents",
+      progress: 25,
+      hours: "36 hours",
+      coursesCount: 3,
+      skills: ["LangChain", "Autonomous Agents", "Prompt Design", "RAG Pipelines"],
+      steps: [
+        { title: "Prompt Engineering & Multi-Modal Generation", status: "completed", hours: "8h" },
+        { title: "Building Autonomous Agent Workflows", status: "in_progress", hours: "14h" },
+        { title: "Enterprise RAG & Knowledge Graphs", status: "upcoming", hours: "14h" }
+      ]
+    },
+    {
+      id: "track-3",
+      title: "Spatial UI & Modern Frontend Mastery",
+      category: "Design & UX",
+      progress: 0,
+      hours: "40 hours",
+      coursesCount: 4,
+      skills: ["Spatial Design", "Figma Variables", "Motion UI", "Accessibility"],
+      steps: [
+        { title: "UI/UX Principles for Modern Web & Mobile", status: "upcoming", hours: "10h" },
+        { title: "Micro-interactions & After Effects for UI", status: "upcoming", hours: "10h" },
+        { title: "Spatial Computing Interfaces in Three.js", status: "upcoming", hours: "12h" },
+        { title: "Design Systems Governance & Tokens", status: "upcoming", hours: "8h" }
+      ]
+    }
+  ];
 
-// Illustrative agenda, for the no-database walkthrough only. The whole
-// "Schedule & Live Sessions" screen used to be this array: a permanently
-// "Live Now (10:00 AM - 11:30 AM)" session, three invented instructors with
-// stock headshots, attendee counts, and a Join button that opened
-// meet.google.com for everyone regardless of the session.
-const DEMO_SCHEDULE_SESSIONS = [
-  {
-    id: "live-now",
-    title: "UI Critique & System Architecture Review",
-    track: "Design & UX",
-    time: "Live Now (10:00 AM - 11:30 AM)",
-    instructor: "Astrid Larsson",
-    isLive: true,
-    attendees: 18,
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-    joinUrl: "https://meet.google.com"
-  },
-  {
-    id: "live-2",
-    title: "Full-Stack GenAI: Vector Embeddings & Supabase",
-    track: "AI & Engineering",
-    time: "Tomorrow at 02:00 PM UTC",
-    instructor: "Alex Rivera",
-    isLive: false,
-    attendees: 24,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-    joinUrl: "https://meet.google.com"
-  },
-  {
-    id: "live-3",
-    title: "Axon AI Prompting & Autonomous Workflows",
-    track: "AI Tools",
-    time: "Thursday at 04:30 PM UTC",
-    instructor: "Marcus Vance",
-    isLive: false,
-    attendees: 31,
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-    joinUrl: "https://meet.google.com"
-  }
-];
+  return (
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <TopBar title="Learning Paths & Career Tracks" sub="Structured milestone journeys designed for job-ready skill mastery" onBack={back} />
 
-function formatSessionTime(startsAt, durationMinutes, isLive) {
-  if (!startsAt) return "Time to be confirmed";
-  const start = new Date(startsAt);
-  if (Number.isNaN(start.getTime())) return "Time to be confirmed";
-  const timeOpts = { hour: "2-digit", minute: "2-digit" };
-  const startLabel = start.toLocaleTimeString(undefined, timeOpts);
-  if (isLive) {
-    if (!durationMinutes) return `Live Now (started ${startLabel})`;
-    const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
-    return `Live Now (${startLabel} - ${end.toLocaleTimeString(undefined, timeOpts)})`;
-  }
-  const isToday = start.toDateString() === new Date().toDateString();
-  const dayLabel = isToday
-    ? "Today"
-    : start.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-  return `${dayLabel} at ${startLabel}`;
+      <div className="tai-col tai-gap16">
+        {TRACKS.map((track) => (
+          <div
+            key={track.id}
+            className="tai-card tai-card-hover"
+            style={{ padding: 22, background: "var(--surface)", border: "1px solid var(--border)" }}
+          >
+            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <Tag tone="primary">{track.category}</Tag>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text)", margin: "8px 0 4px" }}>
+                  {track.title}
+                </h3>
+                <div style={{ fontSize: 12.5, color: "var(--text-3)", fontWeight: 600 }}>
+                  {track.coursesCount} courses • {track.hours} total duration
+                </div>
+              </div>
+
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "var(--primary)" }}>{track.progress}% Complete</div>
+                <div style={{ width: 140, marginTop: 6 }}><ProgressBar value={track.progress} height={7} /></div>
+              </div>
+            </div>
+
+            {/* Skills Pills */}
+            <div className="tai-row tai-gap6 tai-mt12" style={{ flexWrap: "wrap" }}>
+              {track.skills.map((s) => (
+                <span key={s} style={{ fontSize: 11, fontWeight: 700, background: "var(--surface-2)", color: "var(--text-2)", padding: "3px 8px", borderRadius: 6 }}>
+                  {s}
+                </span>
+              ))}
+            </div>
+
+            {/* Step-by-Step Curriculum Roadmap */}
+            <div className="tai-col tai-gap8 tai-mt16" style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 14 }}>
+              {track.steps.map((step, idx) => (
+                <div key={idx} className="tai-row tai-between" style={{ padding: "8px 12px", background: "var(--surface-3)", borderRadius: 10 }}>
+                  <div className="tai-row tai-gap10">
+                    <div style={{
+                      width: 24, height: 24, borderRadius: "50%",
+                      background: step.status === "completed" ? "var(--success-bg)" : step.status === "in_progress" ? "var(--primary-tint)" : "var(--surface-2)",
+                      color: step.status === "completed" ? "var(--success)" : step.status === "in_progress" ? "var(--primary)" : "var(--text-3)",
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800
+                    }}>
+                      {step.status === "completed" ? "✓" : idx + 1}
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{step.title}</span>
+                  </div>
+                  <div className="tai-row tai-gap10">
+                    <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{step.hours}</span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 800, textTransform: "uppercase",
+                      color: step.status === "completed" ? "var(--success)" : step.status === "in_progress" ? "var(--primary)" : "var(--text-3)"
+                    }}>
+                      {step.status === "completed" ? "Completed" : step.status === "in_progress" ? "In Progress" : "Locked"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="tai-row tai-between tai-mt16" style={{ paddingTop: 12, borderTop: "1px solid var(--border-subtle)" }}>
+              <span style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Includes Verified Certificate upon completion</span>
+              <button
+                className="tai-btn tai-btn-primary tai-btn-sm"
+                onClick={() => push("courseDetail", { id: "stock-1" })}
+              >
+                {track.progress > 0 ? "Continue Track →" : "Start Learning Path →"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-export function ScheduleView({ push, back, session, cohortId = null }) {
-  const userId = session?.user?.id || null;
-
-  // The learner's own booked 1-on-1s (mentorship_sessions, with the real
-  // mentor profile resolved) plus the live sessions scheduled for their
-  // cohort (cohort_sessions, with the real facilitator behind created_by).
-  const mySessionsQuery = useSupabaseQuery(
-    async () => (userId ? fetchLearnerScheduleSessions(userId) : []),
-    [userId]
-  );
-  const cohortSessionsQuery = useSupabaseQuery(
-    async () => (cohortId ? fetchCohortSessionsWithFacilitator(cohortId) : []),
-    [cohortId]
-  );
-
-  const liveSessions = useMemo(() => {
-    const now = Date.now();
-    // "LIVE NOW" is derived from real timestamps instead of a hardcoded
-    // flag. mentorship_sessions carries duration_minutes; cohort_sessions
-    // has no duration column, so a 60-minute window off starts_at is used
-    // for the badge only - nothing about it is displayed as fact.
-    const COHORT_LIVE_WINDOW_MINUTES = 60;
-
-    const mine = (mySessionsQuery.data || []).map((s) => {
-      const start = s.scheduled_at ? new Date(s.scheduled_at).getTime() : null;
-      const duration = s.duration_minutes || null;
-      const isLive = Boolean(
-        start && now >= start && now <= start + (duration || COHORT_LIVE_WINDOW_MINUTES) * 60 * 1000
-      );
-      return {
-        id: s.id,
-        title: s.title || "Mentorship session",
-        // The mentor's real title, not an invented track name.
-        track: s.facilitatorTitle || "1-on-1 mentorship",
-        startsAt: s.scheduled_at || null,
-        durationMinutes: duration,
-        isLive,
-        instructor: s.facilitatorName || null,
-        avatar: s.facilitatorAvatarUrl || null,
-        joinUrl: s.meeting_url || null,
-      };
-    });
-
-    const cohort = (cohortSessionsQuery.data || []).map((s) => {
-      const start = s.starts_at ? new Date(s.starts_at).getTime() : null;
-      const isLive = Boolean(
-        start && now >= start && now <= start + COHORT_LIVE_WINDOW_MINUTES * 60 * 1000
-      );
-      return {
-        id: s.id,
-        title: s.title || "Cohort session",
-        track: "Cohort session",
-        startsAt: s.starts_at || null,
-        durationMinutes: null,
-        isLive,
-        instructor: s.facilitatorName || null,
-        avatar: s.facilitatorAvatarUrl || null,
-        joinUrl: s.join_url || s.recording_url || null,
-      };
-    });
-
-    return [...mine, ...cohort].sort((a, b) => {
-      const at = a.startsAt ? new Date(a.startsAt).getTime() : Infinity;
-      const bt = b.startsAt ? new Date(b.startsAt).getTime() : Infinity;
-      return at - bt;
-    });
-  }, [mySessionsQuery.data, cohortSessionsQuery.data]);
-
-  const SESSIONS = liveOr(liveSessions, DEMO_SCHEDULE_SESSIONS);
-  const loading = !DEMO_MODE && (mySessionsQuery.loading || cohortSessionsQuery.loading);
+export function ScheduleView({ push, back }) {
+  const SESSIONS = [
+    {
+      id: "live-now",
+      title: "UI Critique & System Architecture Review",
+      track: "Design & UX",
+      time: "Live Now (10:00 AM - 11:30 AM)",
+      instructor: "Astrid Larsson",
+      isLive: true,
+      attendees: 18,
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "live-2",
+      title: "Full-Stack GenAI: Vector Embeddings & Supabase",
+      track: "AI & Engineering",
+      time: "Tomorrow at 02:00 PM UTC",
+      instructor: "Alex Rivera",
+      isLive: false,
+      attendees: 24,
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "live-3",
+      title: "Axon AI Prompting & Autonomous Workflows",
+      track: "AI Tools",
+      time: "Thursday at 04:30 PM UTC",
+      instructor: "Marcus Vance",
+      isLive: false,
+      attendees: 31,
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80"
+    }
+  ];
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <TopBar title="Schedule & Live Sessions" sub="Join live mentor workshops, critiques, and cohort sessions" onBack={back} />
 
       <div className="tai-col tai-gap14">
-        {loading && <div className="tai-empty">Loading your schedule...</div>}
-        {!loading && SESSIONS.length === 0 && (
-          <div className="tai-empty">
-            Nothing scheduled yet. Book a 1-on-1 with an instructor, or wait for your cohort's next live session.
-          </div>
-        )}
         {SESSIONS.map((sess) => (
           <div
             key={sess.id}
@@ -1246,9 +1097,7 @@ export function ScheduleView({ push, back, session, cohortId = null }) {
               </div>
 
               <span style={{ fontSize: 12.5, fontWeight: 700, color: sess.isLive ? "#F87171" : "var(--primary)" }}>
-                {/* Real scheduled_at / starts_at, formatted in the viewer's
-                    locale - the old label was a fixed string. */}
-                {sess.time || formatSessionTime(sess.startsAt, sess.durationMinutes, sess.isLive)}
+                {sess.time}
               </span>
             </div>
 
@@ -1258,37 +1107,22 @@ export function ScheduleView({ push, back, session, cohortId = null }) {
 
             <div className="tai-row tai-between tai-mt16" style={{ flexWrap: "wrap", gap: 12 }}>
               <div className="tai-row tai-gap10">
-                {/* Real facilitator: the mentor behind mentorship_sessions,
-                    or the cohort_sessions.created_by profile. Their own
-                    avatar_url, initials otherwise - never a stock photo. */}
-                <Avatar initials={initialsOf(sess.instructor || "?")} size={38} src={sess.avatar} />
+                <Avatar initials={sess.instructor.slice(0, 2)} size={38} src={sess.avatar} />
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>{sess.instructor || "Facilitator to be confirmed"}</div>
-                  <div style={{ fontSize: 11.5, opacity: 0.75 }}>
-                    {/* Case C: no table records session registrations or
-                        attendance, so the attendee count can only ever be
-                        illustrative. */}
-                    Instructor{DEMO_MODE && sess.attendees != null ? ` • ${sess.attendees} learners registered` : ""}
-                  </div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700 }}>{sess.instructor}</div>
+                  <div style={{ fontSize: 11.5, opacity: 0.75 }}>Instructor • {sess.attendees} learners registered</div>
                 </div>
               </div>
 
-              {/* Every card used to open meet.google.com. The button now
-                  uses the session's real meeting_url / join_url, and says
-                  so when the organiser hasn't published a link yet. */}
-              {sess.joinUrl ? (
-                <button
-                  className="tai-btn tai-btn-primary tai-btn-sm"
-                  style={{ padding: "10px 20px" }}
-                  onClick={() => { window.open(sess.joinUrl, "_blank", "noopener"); }}
-                >
-                  <Video size={14} /> {sess.isLive ? "Join Live Stream Room" : "Open Session Link"}
-                </button>
-              ) : (
-                <span style={{ fontSize: 11.5, opacity: 0.75, fontWeight: 600 }}>
-                  Joining link not published yet
-                </span>
-              )}
+              <button
+                className="tai-btn tai-btn-primary tai-btn-sm"
+                style={{ padding: "10px 20px" }}
+                onClick={() => {
+                  window.open("https://meet.google.com", "_blank");
+                }}
+              >
+                <Video size={14} /> {sess.isLive ? "Join Live Stream Room" : "Add to Calendar"}
+              </button>
             </div>
           </div>
         ))}

@@ -3,8 +3,7 @@ import { TopBar, StatTile, Avatar, optionLabel, optionValue, initialsOf, Tag, Pr
 import {
   Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight,
   GraduationCap, Sparkles, Send, Bot, MessageSquare, BookOpen, Lightbulb,
-  Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck,
-  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp
+  Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck
 } from "lucide-react";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 
@@ -29,18 +28,8 @@ export function AIQuizScreen({
   quizAttemptsQuery, quizHistory, weakAreas, session, showToast, submitQuizAnswers,
   generateAIQuiz, awardAIQuizCompletionPoints, credits, consumeCredit, onBuyCredits,
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
-  // Real AI Coach threads. The sidebar used to be a useState array of four
-  // invented conversations, and selecting one only fired a toast - it never
-  // loaded any messages. These come from the learner's own
-  // `ai_conversations` rows (with message counts and first-message snippets
-  // from `ai_messages`, see fetchMyAIConversations); selecting one switches
-  // the conversation the message list and the composer are bound to.
-  aiConversations = [], aiConversationsLoading = false,
-  activeConversationId = null, onSelectConversation, onStartNewConversation,
 }) {
   const [copiedMessageId, setCopiedMessageId] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
-
   const currentQuiz = (quizzesQuery.data || []).find(q => q.id === quizTopic) || quizzesQuery.data?.[0];
   const questions = activeQuizSource === "ai" ? (aiQuiz?.questions || []) : (selectedQuizQuestionsQuery?.data || []);
   const currentQuestion = questions[quizIndex] || questions[0];
@@ -50,33 +39,6 @@ export function AIQuizScreen({
     setCopiedMessageId(id);
     setTimeout(() => setCopiedMessageId(null), 2000);
     showToast?.("Copied to clipboard!");
-  }
-
-  // Writes a real ai_conversations row (createAIConversation) and switches
-  // to it, instead of prepending a fabricated thread to local state that
-  // vanished on reload.
-  async function handleStartNewChat() {
-    if (setCoachInput) setCoachInput("");
-    const created = await onStartNewConversation?.();
-    if (created === false) showToast?.("Couldn't start a new chat session.");
-  }
-
-  function handleSelectThread(t) {
-    onSelectConversation?.(t.id);
-    setShowHistory(false);
-  }
-
-  // ai_conversations only stores created_at, so the label is that timestamp
-  // (or the thread's last message) rather than an invented "Today, 02:40 PM".
-  function formatThreadDate(iso) {
-    if (!iso) return "";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "";
-    const today = new Date();
-    const isToday = d.toDateString() === today.toDateString();
-    return isToday
-      ? d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-      : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   }
 
   function handleQuickPromptClick(promptText) {
@@ -184,16 +146,14 @@ export function AIQuizScreen({
           HERO COACH BANNER: Clean & Optimized AI Learning Co-Pilot
           ========================================================================= */}
       <div style={{
-        borderRadius: 18,
+        borderRadius: 22,
         background: "linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%)",
         color: "#FFFFFF",
-        padding: "clamp(16px, 2.5vw, 24px)",
-        boxShadow: "0 10px 28px -4px rgba(15, 23, 42, 0.35)",
+        padding: "clamp(22px, 3.5vw, 28px) clamp(20px, 3.5vw, 30px)",
+        boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
         border: "1px solid rgba(99, 102, 241, 0.35)",
         position: "relative",
-        overflow: "hidden",
-        width: "100%",
-        boxSizing: "border-box"
+        overflow: "hidden"
       }}>
         {/* Background Stock Photo with Overlay */}
         <img
@@ -201,7 +161,7 @@ export function AIQuizScreen({
           alt=""
           style={{
             position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.28, zIndex: 0
+            objectFit: "cover", opacity: 0.3, zIndex: 0
           }}
         />
         <div style={{
@@ -210,25 +170,24 @@ export function AIQuizScreen({
           zIndex: 0
         }} />
 
-        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <div style={{ minWidth: 0, flex: "1 1 220px" }}>
-            <h1 style={{ fontSize: "clamp(19px, 2.2vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
+        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h1 style={{ fontSize: "clamp(20px, 2.6vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>
               AI Learning Coach
             </h1>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 580, lineHeight: 1.45 }}>
-              Ask questions, debug code, and take interactive practice quizzes.
+            <p style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: 0, maxWidth: 580, lineHeight: 1.45, textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+              Ask questions, clarify syllabus concepts, debug code, or generate adaptive practice quizzes.
             </p>
           </div>
 
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", flexShrink: 0 }}>
+          <div className="tai-row tai-gap10" style={{ flexShrink: 0, alignItems: "center" }}>
             {typeof credits === "number" && (
               <div style={{
-                background: "rgba(255,255,255,0.12)", backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.2)", padding: "6px 10px", borderRadius: 10,
-                display: "inline-flex", alignItems: "center", gap: 6
+                background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255,255,255,0.2)", padding: "8px 14px", borderRadius: 12, textAlign: "right"
               }}>
-                <Sparkles size={13} color="#818CF8" />
-                <span style={{ fontSize: 12.5, fontWeight: 800, color: "#fff" }}>{credits} credits</span>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", fontWeight: 700, textTransform: "uppercase" }}>AI Credits</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#fff" }}>{credits} Available</div>
               </div>
             )}
 
@@ -236,11 +195,11 @@ export function AIQuizScreen({
               className="tai-btn"
               onClick={onBuyCredits}
               style={{
-                background: "linear-gradient(135deg, #F59E0B, #EA580C)",
-                color: "#FFFFFF", border: "none", fontWeight: 800, fontSize: 12,
-                padding: "8px 14px", borderRadius: 10, cursor: "pointer",
+                background: "linear-gradient(135deg, #F59E0B, #EF4444)",
+                color: "#FFFFFF", border: "none", fontWeight: 800, fontSize: 12.5,
+                padding: "9px 16px", borderRadius: 12, cursor: "pointer",
                 boxShadow: "0 4px 14px rgba(245, 158, 11, 0.35)",
-                display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
+                display: "inline-flex", alignItems: "center", gap: 6
               }}
             >
               <span>+ Get Credits</span>
@@ -252,7 +211,7 @@ export function AIQuizScreen({
       {/* =========================================================================
           TAB NAVIGATION STRIP
           ========================================================================= */}
-      <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box" }}>
+      <div className="tai-row tai-gap10" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         {[
           { k: "coach", label: "AI Coach & Tutor", icon: MessageSquare },
           { k: "quiz", label: "Adaptive Quizzes", icon: Zap },
@@ -266,25 +225,24 @@ export function AIQuizScreen({
               key={t.k}
               onClick={() => setAiTab(t.k)}
               style={{
-                padding: "8px 16px",
+                padding: "8px 18px",
                 borderRadius: 12,
                 border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                 background: isActive ? "var(--primary-tint)" : "var(--surface)",
                 color: isActive ? "var(--primary)" : "var(--text-2)",
                 fontWeight: isActive ? 800 : 600,
-                fontSize: 12.5,
+                fontSize: 13,
                 cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 6,
+                gap: 8,
                 flexShrink: 0,
-                whiteSpace: "nowrap",
                 transition: "all 0.15s ease"
               }}
               onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--text)"; } }}
               onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-2)"; } }}
             >
-              <Icon size={15} />
+              <Icon size={16} />
               <span>{t.label}</span>
             </button>
           );
@@ -295,118 +253,14 @@ export function AIQuizScreen({
           TAB 1: AI COACH INTERACTIVE TUTOR CHAT
           ========================================================================= */}
       {aiTab === "coach" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", minWidth: 0, boxSizing: "border-box" }}>
-
-          {/* Chat History Toolbar & New Thread CTA */}
-          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
-            <button
-              onClick={() => setShowHistory(prev => !prev)}
-              style={{
-                background: showHistory ? "var(--primary-tint)" : "var(--surface)",
-                border: showHistory ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                color: showHistory ? "var(--primary)" : "var(--text)",
-                padding: "7px 14px",
-                borderRadius: 10,
-                fontSize: 12.5,
-                fontWeight: 700,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                cursor: "pointer",
-                transition: "all 0.15s ease"
-              }}
-            >
-              <History size={14} color={showHistory ? "var(--primary)" : "var(--text-3)"} />
-              <span>Chat History ({aiConversations.length})</span>
-              {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-
-            <button
-              onClick={handleStartNewChat}
-              style={{
-                background: "var(--primary)",
-                border: "none",
-                color: "#FFFFFF",
-                padding: "7px 14px",
-                borderRadius: 10,
-                fontSize: 12.5,
-                fontWeight: 700,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(79, 70, 229, 0.3)",
-                transition: "all 0.15s ease"
-              }}
-            >
-              <MessageSquarePlus size={14} />
-              <span>New Conversation</span>
-            </button>
-          </div>
-
-          {/* Expandable Chat History Drawer */}
-          {showHistory && (
-            <div className="tai-card tai-fade-in" style={{ padding: 16, borderRadius: 14, background: "var(--surface-3)", border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
-                Recent AI Learning Sessions
-              </div>
-
-              {aiConversationsLoading && (
-                <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>Loading your conversations…</div>
-              )}
-              {!aiConversationsLoading && aiConversations.length === 0 && (
-                <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>
-                  No AI Coach conversations yet. Ask a question below to start one.
-                </div>
-              )}
-
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-                {aiConversations.map(thread => {
-                  const isSelected = activeConversationId === thread.id;
-                  return (
-                    <div
-                      key={thread.id}
-                      onClick={() => handleSelectThread(thread)}
-                      style={{
-                        padding: "12px 14px",
-                        borderRadius: 12,
-                        background: isSelected ? "var(--surface)" : "var(--surface-2)",
-                        border: isSelected ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                        cursor: "pointer",
-                        boxShadow: isSelected ? "0 4px 12px rgba(79, 70, 229, 0.12)" : "none",
-                        transition: "all 0.15s ease"
-                      }}
-                    >
-                      <div className="tai-row tai-between" style={{ marginBottom: 4, gap: 8 }}>
-                        <div style={{ fontWeight: 800, fontSize: 13, color: isSelected ? "var(--primary)" : "var(--text)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {thread.title || "Untitled conversation"}
-                        </div>
-                        <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>
-                          {formatThreadDate(thread.lastMessageAt || thread.created_at)}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-2)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {/* First real user message in the thread; an empty
-                            thread shows nothing rather than filler copy. */}
-                        {thread.snippet || ""}
-                      </div>
-                      <div className="tai-row tai-between" style={{ marginTop: 6, fontSize: 11, color: "var(--text-3)" }}>
-                        <span>{thread.messagesCount ?? 0} message{(thread.messagesCount ?? 0) === 1 ? "" : "s"}</span>
-                        {isSelected && <Tag tone="primary">Active Thread</Tag>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          
           {/* Quick Prompt Starters Strip */}
           <div>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>
               Suggested Inquiries &amp; Guided Exercises
             </div>
-            <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
               {COACH_PROMPT_PRESETS.map((cp, idx) => {
                 const Icon = cp.icon;
                 return (
@@ -416,9 +270,9 @@ export function AIQuizScreen({
                     style={{
                       background: "var(--surface)",
                       border: "1px solid var(--border)",
-                      borderRadius: 10,
-                      padding: "7px 12px",
-                      fontSize: 12,
+                      borderRadius: 12,
+                      padding: "8px 14px",
+                      fontSize: 12.5,
                       fontWeight: 600,
                       color: "var(--text)",
                       display: "inline-flex",
@@ -426,14 +280,13 @@ export function AIQuizScreen({
                       gap: 6,
                       cursor: "pointer",
                       whiteSpace: "nowrap",
-                      flexShrink: 0,
                       boxShadow: "0 1px 3px rgba(15,23,42,0.03)",
                       transition: "all 0.15s ease"
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text)"; }}
                   >
-                    <Icon size={13} color="var(--primary)" />
+                    <Icon size={14} color="var(--primary)" />
                     <span>{cp.label}</span>
                   </button>
                 );
@@ -445,18 +298,16 @@ export function AIQuizScreen({
           <div
             className="tai-card"
             style={{
-              minHeight: 340,
-              maxHeight: 520,
+              minHeight: 420,
+              maxHeight: 560,
               overflowY: "auto",
-              padding: "18px 16px",
+              padding: 24,
               display: "flex",
               flexDirection: "column",
-              gap: 14,
+              gap: 16,
               background: "var(--surface)",
-              borderRadius: 16,
-              border: "1px solid var(--border)",
-              width: "100%",
-              boxSizing: "border-box"
+              borderRadius: 18,
+              border: "1px solid var(--border)"
             }}
           >
             {coachMessagesLoading && coachMessages.length === 0 && (
@@ -586,7 +437,7 @@ export function AIQuizScreen({
       {aiTab === "quiz" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {quizStage === "setup" && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
               
               {/* Generator Configuration Card */}
               <div className="tai-card" style={{ padding: 24, borderRadius: 18 }}>
@@ -614,7 +465,7 @@ export function AIQuizScreen({
                   style={{ height: 42, fontSize: 13.5, marginBottom: 14 }}
                 />
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12, marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", marginBottom: 6 }}>
                       Difficulty Level
@@ -756,10 +607,6 @@ export function AIQuizScreen({
             </div>
           )}
 
-          {quizStage === "active" && !currentQuestion && (
-            <div className="tai-empty">No questions available for this quiz.</div>
-          )}
-
           {/* QUIZ RESULT VIEW */}
           {quizStage === "result" && quizResult && (
             <div className="tai-card" style={{ maxWidth: 680, margin: "0 auto", width: "100%", padding: 32, textAlign: "center", borderRadius: 20 }}>
@@ -768,7 +615,7 @@ export function AIQuizScreen({
                 {Math.round(quizResult.score || 0)}% Score
               </h2>
               <p style={{ fontSize: 14, color: "var(--text-3)", margin: "0 0 20px" }}>
-                Correct: {quizResult.correct_count}{quizResult.total != null ? ` / ${quizResult.total}` : ""} • Awarded +{quizResult.total_points || 0} XP
+                Correct: {quizResult.correct_count} / {quizResult.total} • Awarded +{quizResult.total_points || 0} XP
               </p>
 
               {quizResult.isAIQuiz && Array.isArray(quizResult.details) && (
@@ -778,11 +625,9 @@ export function AIQuizScreen({
                   </div>
                   {quizResult.details.map((d, i) => (
                     <div key={i} style={{ background: "var(--surface-3)", padding: 14, borderRadius: 12, border: "1px solid var(--border)" }}>
-                      <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10 }}>
-                        <span style={{ fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>{i + 1}. {d.question}</span>
-                        <span style={{ flexShrink: 0, display: "flex", paddingTop: 1 }}>
-                          {d.isCorrect ? <CheckCircle2 size={16} color="var(--success)" /> : <HelpCircle size={16} color="var(--danger)" />}
-                        </span>
+                      <div className="tai-row tai-between">
+                        <span style={{ fontWeight: 700, fontSize: 13.5 }}>{i + 1}. {d.question}</span>
+                        {d.isCorrect ? <CheckCircle2 size={16} color="var(--success)" /> : <HelpCircle size={16} color="var(--danger)" />}
                       </div>
                       {!d.isCorrect && <div style={{ fontSize: 12, color: "var(--danger)", marginTop: 4 }}>Correct: {d.correctOption}</div>}
                       {d.explanation && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>{d.explanation}</div>}
@@ -841,9 +686,9 @@ export function AIQuizScreen({
             ) : (
               <div className="tai-col tai-gap10">
                 {weakAreas.map((w, i) => (
-                  <div key={i} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
-                    <div style={{ minWidth: 0, flex: "1 1 160px" }}>
-                      <div style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{w.topic}</div>
+                  <div key={i} className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 12, border: "1px solid var(--border)" }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 13.5 }}>{w.topic}</div>
                       <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>{w.note}</div>
                     </div>
                     <Tag tone="warning">{w.mastery}% Mastery</Tag>

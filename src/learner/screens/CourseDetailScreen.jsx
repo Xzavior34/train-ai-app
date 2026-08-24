@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import { Clock, Layers, Rocket, CheckCircle2, Lock, ChevronRight, Video, Edit3, Send, GraduationCap, Award, X, ArrowRight, Star, Users, ShieldCheck, FileText, MessageSquare } from "lucide-react";
-import { DEMO_MODE } from "../../lib/demoMode.js";
 
 function CourseCoverImage({ course, children }) {
   const [errored, setErrored] = useState(false);
@@ -63,7 +62,7 @@ export function CourseDetailScreen({
 
       {/* Progress or Enrollment CTA */}
       {isEnrolled ? (
-        <div className="tai-card" style={{ padding: 18 }}>
+        <div className="tai-card tai-card-hover" style={{ padding: 18 }}>
           <div className="tai-row tai-between" style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>
             <span>Your Learning Progress</span>
             <span style={{ color: "var(--primary)", fontWeight: 800 }}>{course.progress}%</span>
@@ -303,7 +302,7 @@ function DiscussionTab({ discussionQuery, session, discussionInput, setDiscussio
           value={discussionInput}
           onChange={(e) => setDiscussionInput(e.target.value)}
         />
-        <div className="tai-row tai-between tai-mt10" style={{ flexWrap: "wrap", gap: 8 }}>
+        <div className="tai-row tai-between tai-mt10">
           <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Visible to everyone taking this course.</span>
           <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={sending || !discussionInput.trim()} onClick={handleSend}>
             <Send size={14} /> {sending ? "Posting…" : "Post"}
@@ -370,7 +369,7 @@ function NotesTab({ course, notesQuery, session, newNoteText, setNewNoteText, ad
           value={newNoteText}
           onChange={(e) => setNewNoteText(e.target.value)}
         />
-        <div className="tai-row tai-between tai-mt10" style={{ flexWrap: "wrap", gap: 8 }}>
+        <div className="tai-row tai-between tai-mt10">
           <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Only visible to you.</span>
           <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={saving || !newNoteText.trim()} onClick={handleSave}>
             <Edit3 size={14} /> {saving ? "Saving…" : "Save note"}
@@ -471,12 +470,6 @@ function CertificateCard({ template, myAttempt, myCertificate, onRequest, brandi
 function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit }) {
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  // Was declared after the loading early-return below, so this component
-  // called a different number of hooks depending on questionsQuery/
-  // myAttemptQuery's loading state - a real Rules-of-Hooks violation that
-  // corrupts hook state (or throws) the moment either query finishes
-  // loading during the same mount.
-  const [localScore, setLocalScore] = useState(null);
   const questions = questionsQuery?.data || [];
   const myAttempt = myAttemptQuery?.data;
 
@@ -484,12 +477,9 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
     return <div className="tai-mt16 tai-empty">Loading assessment...</div>;
   }
 
-  // Sample questions, kept for the no-database walkthrough only. They used
-  // to stand in whenever fetchSafeAssessmentQuestions returned nothing, so a
-  // course with no assessment at all presented a generic gradeable quiz -
-  // three questions about design tokens and pgvector, submittable, scored -
-  // that belonged to no course in the database.
-  const DEMO_QUESTIONS = [
+  const [localScore, setLocalScore] = useState(null);
+
+  const DEFAULT_QUESTIONS = [
     {
       id: "q-1",
       question: "What is the primary advantage of design token architectures in production design systems?",
@@ -525,9 +515,7 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
     }
   ];
 
-  const effectiveQuestions = (questions && questions.length > 0)
-    ? questions
-    : (DEMO_MODE ? DEMO_QUESTIONS : []);
+  const effectiveQuestions = (questions && questions.length > 0) ? questions : DEFAULT_QUESTIONS;
 
   if (myAttempt || localScore !== null) {
     const score = myAttempt ? myAttempt.score : localScore;
@@ -548,30 +536,10 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
     );
   }
 
-  // With a database connected, no assessment - or an assessment whose
-  // questions have not been published yet - is the honest answer, not a quiz
-  // to sit. Checked after the completed-attempt branch so an existing score
-  // still shows.
-  if (effectiveQuestions.length === 0) {
-    return (
-      <div className="tai-mt16 tai-card" style={{ padding: 22 }}>
-        <div className="tai-row tai-gap10">
-          <FileText size={22} color="var(--text-3)" />
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>No assessment for this course yet</div>
-            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
-              Your instructor has not published a graded assessment here. You will see it on this tab as soon as they do.
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="tai-mt16 tai-col tai-gap16">
-      <div className="tai-row tai-between" style={{ gap: 10, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
+      <div className="tai-row tai-between">
+        <div>
           <div className="tai-title-sm">{assessment?.title || "Final Course Assessment"}</div>
           <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{effectiveQuestions.length} multiple-choice questions • Passing score: 70%</div>
         </div>

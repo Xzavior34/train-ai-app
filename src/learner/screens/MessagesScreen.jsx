@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, initialsOf } from "../components/LearnerUI.jsx";
-import { Send, ChevronLeft, Search, X, MessageSquare, CheckCheck, Users } from "lucide-react";
+import { Send, ChevronLeft } from "lucide-react";
 
-function useIsNarrow(breakpoint = 680) {
+function useIsNarrow(breakpoint = 640) {
   const [narrow, setNarrow] = useState(typeof window !== "undefined" && window.innerWidth < breakpoint);
   useEffect(() => {
     const onResize = () => setNarrow(window.innerWidth < breakpoint);
@@ -12,33 +12,90 @@ function useIsNarrow(breakpoint = 680) {
   return narrow;
 }
 
+const DEFAULT_THREADS = [
+  {
+    counterpartId: "mentor-astrid",
+    name: "Astrid Larsson",
+    title: "Senior UI/UX & Design Systems Lead",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+    last: "Great job on the Module 4 auto-layout assignment! Let's review tokens tonight.",
+    unread: 1,
+    history: [
+      { id: "m-1", sender_id: "mentor-astrid", content: "Hi there! I reviewed your Figma auto-layout project. The nested auto-layouts are very clean." },
+      { id: "m-2", sender_id: "me", content: "Thank you Astrid! I had a quick question regarding component variants vs boolean variables." },
+      { id: "m-3", sender_id: "mentor-astrid", content: "Great question! Boolean variables are ideal for visibility toggles, whereas variants are better for distinct layout state changes." },
+      { id: "m-4", sender_id: "mentor-astrid", content: "Great job on the Module 4 auto-layout assignment! Let's review tokens tonight." }
+    ]
+  },
+  {
+    counterpartId: "mentor-alex",
+    name: "Alex Rivera",
+    title: "AI Engineer & Full-Stack Architect",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
+    last: "Shared the updated vector embedding architecture template in the resources tab.",
+    unread: 0,
+    history: [
+      { id: "m-1", sender_id: "mentor-alex", content: "Welcome to the Full-Stack GenAI track! Feel free to ping me if you encounter any vector DB index errors." },
+      { id: "m-2", sender_id: "mentor-alex", content: "Shared the updated vector embedding architecture template in the resources tab." }
+    ]
+  },
+  {
+    counterpartId: "mentor-marcus",
+    name: "Marcus Vance",
+    title: "Autonomous Agent Specialist",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
+    last: "Let me know when you finish the Prompt Engineering quiz!",
+    unread: 0,
+    history: [
+      { id: "m-1", sender_id: "mentor-marcus", content: "Hey! Ready to dive into Axon AI autonomous agent workflows?" },
+      { id: "m-2", sender_id: "mentor-marcus", content: "Let me know when you finish the Prompt Engineering quiz!" }
+    ]
+  }
+];
+
 export function MessagesScreen({
   activeMentorThread, setActiveMentorThread, messageInput, setMessageInput,
   messageThreads = [], threadsLoading, conversationMessages = [], conversationLoading,
   session, back, handleSendMessage
 }) {
   const isNarrow = useIsNarrow();
+  const [localCustomThreads, setLocalCustomThreads] = useState(DEFAULT_THREADS);
   const [localInput, setLocalInput] = useState("");
-  const [searchThread, setSearchThread] = useState("");
 
-  const currentThread = activeMentorThread;
+  const effectiveThreads = (messageThreads && messageThreads.length > 0) ? messageThreads : localCustomThreads;
+  const currentThread = activeMentorThread || effectiveThreads[0];
 
   const showThreadList = !isNarrow || !activeMentorThread;
   const showConversation = !isNarrow || !!activeMentorThread;
 
-  const currentMessages = conversationMessages || [];
-
-  const filteredThreads = messageThreads.filter(t =>
-    t.name?.toLowerCase().includes(searchThread.toLowerCase()) ||
-    t.last?.toLowerCase().includes(searchThread.toLowerCase())
-  );
+  const currentMessages = (conversationMessages && conversationMessages.length > 0)
+    ? conversationMessages
+    : (currentThread?.history || []);
 
   function handleSendLocal() {
-    const text = messageInput !== undefined ? messageInput : localInput;
+    const text = messageInput || localInput;
     if (!text || !text.trim()) return;
 
     if (handleSendMessage) {
       handleSendMessage();
+    }
+
+    if (currentThread) {
+      const newMsg = {
+        id: `msg-${Date.now()}`,
+        sender_id: session?.user?.id || "me",
+        content: text.trim()
+      };
+      setLocalCustomThreads(prev => prev.map(t => {
+        if (t.counterpartId === currentThread.counterpartId) {
+          return {
+            ...t,
+            last: text.trim(),
+            history: [...(t.history || []), newMsg]
+          };
+        }
+        return t;
+      }));
     }
 
     if (setMessageInput) setMessageInput("");
@@ -46,190 +103,84 @@ export function MessagesScreen({
   }
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
-      {/* =========================================================================
-          HERO BANNER: Direct Messages & Mentorship (Adaptive Liquid Glass)
-          ========================================================================= */}
-      <div
-        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
-        style={{
-          borderRadius: 14,
-          padding: "clamp(18px, 2.5vw, 24px)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 180,
-            height: 180,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
-            pointerEvents: "none"
-          }}
-        />
-
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div className="tai-row tai-gap10" style={{ alignItems: "center", marginBottom: 6 }}>
-              {back && (
-                <button
-                  onClick={back}
-                  className="tai-btn tai-btn-ghost tai-btn-sm"
-                  style={{ padding: "4px 8px", borderRadius: 6, color: "#FFFFFF", background: "rgba(255,255,255,0.12)" }}
-                >
-                  <ChevronLeft size={16} /> Back
-                </button>
-              )}
-              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
-                Direct Messages &amp; Mentorship
-              </h1>
-            </div>
-            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
-              Ask project questions, receive code review guidance, and communicate directly with your academy instructors.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* =========================================================================
-          MESSAGING INTERFACE
-          ========================================================================= */}
-      <div className="tai-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "300px 1fr", minHeight: 540, borderRadius: 10 }}>
+    <div className="tai-fade-in">
+      <TopBar title="Direct Messages" sub="Chat with your instructor" onBack={back} />
+      <div className="tai-card" style={{ padding: 0, overflow: "hidden", display: "grid", gridTemplateColumns: isNarrow ? "1fr" : "260px 1fr", minHeight: 480 }}>
 
         {/* Thread list */}
         {showThreadList && (
-        <div style={{ borderRight: isNarrow ? "none" : "1px solid var(--border)", background: "var(--surface-3)", display: "flex", flexDirection: "column" }}>
-          
-          {/* Thread Search Bar */}
-          <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
-            <div style={{ position: "relative", width: "100%" }}>
-              <Search size={14} color="var(--text-3)" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
-              <input
-                type="text"
-                placeholder="Find conversation..."
-                value={searchThread}
-                onChange={(e) => setSearchThread(e.target.value)}
+        <div style={{ borderRight: isNarrow ? "none" : "1px solid var(--border)", background: "var(--surface-2)", overflowY: "auto" }}>
+          {threadsLoading && <div className="tai-empty" style={{ padding: 16, fontSize: 12.5 }}>Loading...</div>}
+          {effectiveThreads.map(t => {
+            const isActive = currentThread?.counterpartId === t.counterpartId;
+            return (
+              <div
+                key={t.counterpartId}
+                onClick={() => setActiveMentorThread ? setActiveMentorThread(t) : null}
                 style={{
-                  width: "100%", height: 34, paddingLeft: 32, paddingRight: 28,
-                  borderRadius: 8, border: "1px solid var(--border)", background: "var(--surface-2)",
-                  fontSize: 12.5, color: "var(--text)", outline: "none"
+                  padding: "12px 14px",
+                  cursor: "pointer",
+                  background: isActive ? "var(--surface)" : "transparent",
+                  borderLeft: isActive ? "3px solid var(--primary)" : "3px solid transparent",
+                  borderBottom: "1px solid var(--border)",
+                  transition: "background .16s ease"
                 }}
-              />
-              {searchThread && (
-                <button
-                  type="button"
-                  onClick={() => setSearchThread("")}
-                  style={{
-                    position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-                    background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", display: "flex", alignItems: "center"
-                  }}
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div style={{ flex: 1, overflowY: "auto" }}>
-            {threadsLoading && <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}>Loading conversations...</div>}
-            {!threadsLoading && messageThreads.length === 0 && (
-              <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}>
-                No conversations yet. Message an instructor from Community or Instructors to start one.
-              </div>
-            )}
-            {!threadsLoading && messageThreads.length > 0 && filteredThreads.length === 0 && (
-              <div className="tai-empty" style={{ padding: 24, fontSize: 12.5 }}>
-                No conversations matched "{searchThread}".
-              </div>
-            )}
-            {filteredThreads.map(t => {
-              const isActive = currentThread?.counterpartId === t.counterpartId;
-              return (
-                <div
-                  key={t.counterpartId}
-                  onClick={() => setActiveMentorThread ? setActiveMentorThread(t) : null}
-                  style={{
-                    padding: "12px 14px",
-                    cursor: "pointer",
-                    background: isActive ? "var(--surface)" : "transparent",
-                    borderLeft: isActive ? "3px solid #4F46E5" : "3px solid transparent",
-                    borderBottom: "1px solid var(--border)",
-                    transition: "background .15s ease"
-                  }}
-                >
-                  <div className="tai-row tai-gap10">
-                    <Avatar initials={initialsOf(t.name)} size={36} src={t.avatar} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div className="tai-row tai-between">
-                        <span style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{t.name}</span>
-                        {t.unread > 0 && (
-                          <span style={{ fontSize: 10, fontWeight: 800, background: "#4F46E5", color: "#fff", borderRadius: 99, padding: "2px 7px" }}>{t.unread}</span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{t.last || "No messages yet"}</div>
+              >
+                <div className="tai-row tai-gap10">
+                  <Avatar initials={initialsOf(t.name)} size={36} src={t.avatar} />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="tai-row tai-between">
+                      <span style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{t.name}</span>
+                      {t.unread > 0 && (
+                        <span style={{ fontSize: 10, fontWeight: 800, background: "var(--primary)", color: "#fff", borderRadius: 99, padding: "2px 7px" }}>{t.unread}</span>
+                      )}
                     </div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{t.last}</div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
         )}
 
-        {/* Conversation Area */}
+        {/* Conversation */}
         {showConversation && (
-        <div style={{ display: "flex", flexDirection: "column", background: "var(--surface)", height: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", background: "var(--surface)" }}>
           {!currentThread ? (
-            <div className="tai-empty" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32 }}>
-              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <MessageSquare size={22} color="var(--text-3)" />
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text)" }}>Select an Instructor Conversation</div>
-              <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 4 }}>Choose a thread from the left to view messages and ask questions.</div>
+            <div className="tai-empty" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              Select a conversation to start chatting.
             </div>
           ) : (
             <>
-              {/* Header */}
-              <div className="tai-row tai-between" style={{ padding: "12px 18px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
-                <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
+              <div className="tai-row tai-between" style={{ padding: "12px 18px", borderBottom: "1px solid var(--border)" }}>
+                <div className="tai-row tai-gap10">
                   {isNarrow && (
                     <button className="tai-iconbtn" style={{ marginLeft: -6 }} onClick={() => setActiveMentorThread(null)} aria-label="Back to conversations">
                       <ChevronLeft size={18} />
                     </button>
                   )}
-                  <Avatar initials={initialsOf(currentThread.name)} size={34} src={currentThread.avatar} />
+                  <Avatar initials={initialsOf(currentThread.name)} size={32} src={currentThread.avatar} />
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{currentThread.name}</div>
-                    <div style={{ fontSize: 11, color: "var(--success)", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--success)" }} /> Verified Instructor
-                    </div>
+                    <div style={{ fontSize: 11, color: "var(--success)", fontWeight: 700 }}>● Online • Instructor</div>
                   </div>
                 </div>
               </div>
 
-              {/* Messages Stream */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "18px 20px" }} className="tai-col tai-gap12">
+              <div style={{ flex: 1, overflowY: "auto", padding: 18 }} className="tai-col tai-gap12">
                 {conversationLoading && <div className="tai-empty">Loading messages...</div>}
-                {!conversationLoading && currentMessages.length === 0 && (
-                  <div className="tai-empty" style={{ padding: "32px 0", textAlign: "center" }}>
-                    No messages in this conversation yet. Send a message to start the conversation!
-                  </div>
-                )}
                 {currentMessages.map((m, idx) => {
                   const isMe = m.sender_id === session?.user?.id || m.sender_id === "me";
                   return (
                     <div key={m.id || idx} className="tai-row tai-gap10" style={{ alignSelf: isMe ? "flex-end" : "flex-start", maxWidth: "80%", flexDirection: isMe ? "row-reverse" : "row" }}>
                       {!isMe && <Avatar initials={initialsOf(currentThread.name)} size={28} src={currentThread.avatar} />}
                       <div style={{
-                        background: isMe ? "#4F46E5" : "var(--surface-2)",
-                        color: isMe ? "#FFFFFF" : "var(--text)",
-                        padding: "10px 14px", borderRadius: 10, fontSize: 13.5,
-                        lineHeight: 1.45,
-                        boxShadow: isMe ? "0 1px 4px rgba(79, 70, 229, 0.15)" : "none"
+                        background: isMe ? "var(--primary)" : "var(--surface-2)",
+                        color: isMe ? "#fff" : "var(--text)",
+                        padding: "10px 14px", borderRadius: 14, fontSize: 13.5,
+                        lineHeight: 1.4,
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.04)"
                       }}>
                         {m.content}
                       </div>
@@ -238,21 +189,15 @@ export function MessagesScreen({
                 })}
               </div>
 
-              {/* Reply Input Bar */}
-              <div className="tai-row tai-gap10" style={{ padding: "12px 16px", borderTop: "1px solid var(--border)", background: "var(--surface-2)", alignItems: "center" }}>
+              <div className="tai-row tai-gap10" style={{ padding: "14px 18px", borderTop: "1px solid var(--border)", background: "var(--surface-2)" }}>
                 <input
-                  className="tai-input"
-                  style={{ flex: 1, background: "var(--surface)", height: 38, borderRadius: 8, fontSize: 13 }}
+                  className="tai-input" style={{ flex: 1, background: "var(--surface)" }}
                   placeholder={`Reply to ${currentThread.name}...`}
                   value={messageInput !== undefined ? messageInput : localInput}
                   onChange={e => setMessageInput ? setMessageInput(e.target.value) : setLocalInput(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") handleSendLocal(); }}
                 />
-                <button
-                  className="tai-btn tai-btn-primary"
-                  style={{ height: 38, padding: "0 16px", borderRadius: 8, background: "#4F46E5", color: "#FFFFFF", fontWeight: 700 }}
-                  onClick={handleSendLocal}
-                >
+                <button className="tai-btn tai-btn-primary" style={{ padding: "0 18px" }} onClick={handleSendLocal}>
                   <Send size={15} />
                 </button>
               </div>

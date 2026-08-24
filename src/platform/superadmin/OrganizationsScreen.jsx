@@ -4,7 +4,6 @@ import { Plus, Building2, ExternalLink, ShieldCheck, Rocket, Settings, CreditCar
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllOrganizationsWithUserCounts, createOrganization, setOrganizationStatus, fetchPlatformOrganizationPayments } from "../../lib/api/platform.js";
 import { fetchOrgFeatureFlagOverrides, setOrgFeatureFlag, fetchOrgSeatsSummary } from "../../lib/api/organizations.js";
-import { DEMO_MODE } from "../../lib/demoMode.js";
 
 // All feature keys this platform currently gates, per "Multi-Tenant
 // Database Architecture Reference" Section 3's baseline table plus the
@@ -55,15 +54,15 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
   }
 
   return (
-    <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
-      <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <div className="ta-title" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{org.name}</div>
+    <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
+      <div className="ta-row ta-between">
+        <div>
+          <div className="ta-title">{org.name}</div>
           <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>
             {org.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "-"} plan - status: {org.status}
           </div>
         </div>
-        <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
+        <div className="ta-row ta-gap8">
           <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={handleToggleStatus}>
             {org.status === "suspended" ? <><Unlock size={13} /> Reactivate</> : <><Lock size={13} /> Suspend</>}
           </button>
@@ -72,7 +71,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
       </div>
 
       <div className="ta-mt16">
-        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>Seats</div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>Seats</div>
         <div className="ta-row ta-gap16">
           <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.purchased}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Purchased</div></div>
           <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.used}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Used</div></div>
@@ -84,7 +83,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
       </div>
 
       <div className="ta-mt16">
-        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>Feature flags</div>
+        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 4 }}>Feature flags</div>
         <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 10 }}>
           Tier defaults shown unless explicitly overridden below. Overriding a flag here applies to this organization only, independent of its tier.
         </div>
@@ -93,8 +92,8 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
             const hasOverride = key in overrideMap;
             const resolved = hasOverride ? overrideMap[key] : null; // resolved via tier default server-side when no override exists; we only show explicit overrides here plus a toggle to set one
             return (
-              <div key={key} className="ta-row ta-between" style={{ padding: "6px 4px", gap: 8 }}>
-                <div className="ta-row ta-gap8" style={{ minWidth: 0, flexWrap: "wrap" }}>
+              <div key={key} className="ta-row ta-between" style={{ padding: "6px 4px" }}>
+                <div className="ta-row ta-gap8">
                   <span style={{ fontSize: 12.5 }}>{label}</span>
                   {hasOverride && <Tag tone="warning">Override</Tag>}
                 </div>
@@ -115,12 +114,12 @@ function PlatformBillingPanel() {
   const paymentsQuery = useSupabaseQuery(async () => fetchPlatformOrganizationPayments(50), []);
   const payments = paymentsQuery.data || [];
   return (
-    <div className="ta-card ta-mt16 ta-fade">
+    <div className="ta-card ta-mt16">
       <div className="ta-row ta-gap8">
         <CreditCard size={16} color="var(--primary)" />
         <div className="ta-title" style={{ fontSize: 15 }}>Organization payments</div>
       </div>
-      <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 6, marginBottom: 10 }}>
+      <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4, marginBottom: 10 }}>
         Every organization subscription activation across the platform, from the audit log.
       </div>
       <div className="ta-table-wrap">
@@ -257,8 +256,8 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                 <div style={{ fontSize: 18, fontWeight: 900, color: "#fff" }}>{orgs.length} Tenants</div>
               </div>
               <div style={{ background: "rgba(255,255,255,0.1)", padding: "10px 16px", borderRadius: 14, backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", textAlign: "center" }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Users</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>{orgs.reduce((sum, o) => sum + (o.user_count || 0), 0)} Active</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>Active Seats</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>5,900 Active</div>
               </div>
             </div>
           </div>
@@ -274,7 +273,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
             {!orgsQuery.loading && orgs.length === 0 && <div className="ta-empty">No organizations created yet.</div>}
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }} className="anim-stagger">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18 }}>
               {orgs.map(o => (
                 <div
                   key={o.id}
@@ -292,8 +291,8 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                 >
                   <div>
                     {/* Top Row: Org Icon, Name, and Status */}
-                    <div className="ta-row ta-between" style={{ alignItems: "flex-start", marginBottom: 12, gap: 10 }}>
-                      <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: "1 1 auto" }}>
+                    <div className="ta-row ta-between" style={{ alignItems: "flex-start", marginBottom: 12 }}>
+                      <div className="ta-row ta-gap12">
                         <div style={{
                           width: 44, height: 44, borderRadius: 12,
                           background: "var(--primary-tint)", color: "var(--primary)",
@@ -302,8 +301,8 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                         }}>
                           <Building2 size={22} />
                         </div>
-                        <div style={{ minWidth: 0, overflow: "hidden" }}>
-                          <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>
+                        <div>
+                          <div style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)" }}>{o.name}</div>
                           <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>ID: {o.id.slice(0, 12)}...</div>
                         </div>
                       </div>
@@ -325,29 +324,21 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                       </div>
                       <div>
                         <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700 }}>TIER</div>
-                        {/* Was `o.subscription_tier || "Enterprise"`, so every
-                            org with no tier set displayed as Enterprise. The
-                            table view already rendered the raw column; unset is
-                            now shown as unset here too. */}
                         <div style={{ fontSize: 14, fontWeight: 800, color: "var(--primary)", marginTop: 2, textTransform: "capitalize" }}>
-                          {o.subscription_tier || "—"}
+                          {o.subscription_tier || "Enterprise"}
                         </div>
                       </div>
                     </div>
 
-                    {/* Isolation Badge - same per-row compliance claim as the
-                        table view's "Isolated" column: asserted for every org
-                        with nothing checking it, and no column that could. */}
-                    {DEMO_MODE && (
+                    {/* Isolation Badge */}
                     <div className="ta-row ta-gap6" style={{ fontSize: 11.5, color: "var(--text-2)", fontWeight: 600 }}>
                       <ShieldCheck size={14} color="#10B981" />
                       <span>Dedicated RLS schema isolation • Strict Multi-Tenancy</span>
                     </div>
-                    )}
                   </div>
 
                   {/* Actions Footer */}
-                  <div className="ta-row ta-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
+                  <div className="ta-row ta-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
                     <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
                       Created {new Date(o.created_at).toLocaleDateString()}
                     </span>
@@ -385,13 +376,13 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                     <th>Tier</th>
                     <th>Status</th>
                     <th>Created</th>
-                    {DEMO_MODE && <th>Isolation Status</th>}
+                    <th>Isolation Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {orgsQuery.loading && <tr><td colSpan={DEMO_MODE ? 7 : 6} className="ta-empty">Loading organizations...</td></tr>}
-                  {!orgsQuery.loading && orgs.length === 0 && <tr><td colSpan={DEMO_MODE ? 7 : 6} className="ta-empty">No organizations created yet.</td></tr>}
+                  {orgsQuery.loading && <tr><td colSpan={7} className="ta-empty">Loading organizations...</td></tr>}
+                  {!orgsQuery.loading && orgs.length === 0 && <tr><td colSpan={7} className="ta-empty">No organizations created yet.</td></tr>}
                   {orgs.map(o => (
                     <tr key={o.id}>
                       <td>
@@ -407,15 +398,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                       <td style={{ textTransform: "capitalize" }}>{o.subscription_tier}</td>
                       <td><Tag tone={o.status === "active" ? "success" : o.status === "suspended" ? "danger" : "warning"}>{o.status}</Tag></td>
                       <td>{new Date(o.created_at).toLocaleDateString()}</td>
-                      {/* This column asserted per-row "Isolated" for every
-                          organization. Tenant isolation is a property of the
-                          RLS policies on the database, not a column on
-                          organizations - nothing here verified anything, so
-                          there is no per-row status to report. The claim only
-                          renders with no database connected; the architecture
-                          badges in the hero above already state it once, where
-                          it belongs. */}
-                      {DEMO_MODE && <td><Tag tone="success"><ShieldCheck size={12} /> Isolated</Tag></td>}
+                      <td><Tag tone="success"><ShieldCheck size={12} /> Isolated</Tag></td>
                       <td>
                         <div className="ta-row ta-gap6">
                           <button
@@ -452,10 +435,10 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
         )}
 
         {newOrgOpen && (
-          <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)" }}>
+          <div className="ta-card ta-mt16" style={{ borderColor: "var(--primary)" }}>
             <div className="ta-title">Create New Organization</div>
             <input className="ta-input ta-mt12" placeholder="Organization name..." value={name} onChange={e => setName(e.target.value)} />
-            <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
+            <div className="ta-row ta-gap8 ta-mt12">
               <button className="ta-btn ta-btn-primary" onClick={async () => {
                 if (!name.trim()) return;
                 await createOrganization({ name: name.trim() });

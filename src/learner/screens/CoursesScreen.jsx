@@ -7,16 +7,6 @@ import {
   BookOpen, ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Heart,
   Flame, Zap, Laptop, FileText, Check
 } from "lucide-react";
-import { PortalModal } from "../../components/common/PortalModal.jsx";
-// Illustrative catalog content (specializations, recorded masterclasses, the
-// spotlight carousel) used to be gated on isMockDataEnabled() - a client-side
-// toggle that says nothing about whether a database is connected, so those
-// invented ratings and enrolment counts rendered against live data. They are
-// now gated on DEMO_MODE: no database configured, or nothing.
-import { DEMO_MODE } from "../../lib/demoMode.js";
-import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCourseReviewSummaries } from "../../lib/api/learner.js";
-import { fetchCourseInstructors, fetchCourseEnrollmentCounts } from "../../lib/api/live/learnerCourseLive.js";
 
 const CATEGORIES = [
   { id: "all", label: "All Topics" },
@@ -130,18 +120,6 @@ export function CoursesScreen({
   const [activeSpecialization, setActiveSpecialization] = useState(null);
   const [bookmarkedIds, setBookmarkedIds] = useState({});
 
-  // Real rating / review count (course_reviews), real instructor identity
-  // (courses.instructor_id -> user_profiles) and real enrolled-learner counts
-  // (course_enrollments) for the courses actually on this page. These three
-  // values were previously taken from the sample array below by list index,
-  // so every real course showed a 4.9 rating, "1,840 reviews", "12.4k
-  // students" and a stranger's headshot.
-  const courseIds = (courses || []).map((c) => c.id).filter(Boolean);
-  const courseIdsKey = courseIds.join(",");
-  const reviewSummariesQuery = useSupabaseQuery(async () => fetchCourseReviewSummaries(), []);
-  const instructorsQuery = useSupabaseQuery(async () => fetchCourseInstructors(courseIds), [courseIdsKey]);
-  const enrollmentCountsQuery = useSupabaseQuery(async () => fetchCourseEnrollmentCounts(courseIds), [courseIdsKey]);
-
   function toggleLocalBookmark(e, courseId) {
     e.stopPropagation();
     setBookmarkedIds(prev => ({ ...prev, [courseId]: !prev[courseId] }));
@@ -167,9 +145,6 @@ export function CoursesScreen({
       isBestseller: true,
       hasCertificate: true,
       enrolled: true,
-      assigned: true,
-      source: "assigned",
-      partner: "Figma Official",
       progress: 72,
       coverImageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"
     },
@@ -191,9 +166,6 @@ export function CoursesScreen({
       isBestseller: true,
       hasCertificate: true,
       enrolled: false,
-      assigned: false,
-      source: "internal",
-      isInternal: true,
       progress: 0,
       coverImageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
     },
@@ -215,9 +187,6 @@ export function CoursesScreen({
       isTrending: true,
       hasCertificate: true,
       enrolled: true,
-      assigned: true,
-      source: "assigned",
-      partner: "Anthropic / OpenAI",
       progress: 100,
       coverImageUrl: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80"
     },
@@ -238,9 +207,6 @@ export function CoursesScreen({
       projectsCount: 5,
       hasCertificate: true,
       enrolled: false,
-      assigned: false,
-      source: "partner",
-      partner: "Google Cloud",
       progress: 0,
       coverImageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80"
     },
@@ -262,9 +228,6 @@ export function CoursesScreen({
       isTrending: true,
       hasCertificate: true,
       enrolled: false,
-      assigned: false,
-      source: "partner",
-      partner: "Apple VisionOS",
       progress: 0,
       coverImageUrl: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80"
     },
@@ -285,67 +248,32 @@ export function CoursesScreen({
       projectsCount: 4,
       hasCertificate: true,
       enrolled: false,
-      assigned: false,
-      source: "internal",
-      isInternal: true,
       progress: 0,
       coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80"
     }
   ];
 
-  // Real courses are no longer merged with `defaultCourses[idx % length]`.
-  // That merge gave every database course the sample entry's rating, review
-  // count, student count, cover image and instructor - picked by its position
-  // in the list - because the real course objects carry none of those fields.
-  // Each one now comes from its own table (course_reviews,
-  // course_enrollments, courses.instructor_id) and stays empty when there is
-  // nothing there; the cards below omit the row rather than print a figure.
-  const allAvailableCourses = (() => {
-    const summaries = reviewSummariesQuery.data || {};
-    const instructors = instructorsQuery.data || {};
-    const enrollmentCounts = enrollmentCountsQuery.data || {};
-
-    const liveCourses = (courses || []).map((c) => {
-      const summary = summaries[c.id];
-      const instructor = instructors[c.id] || null;
-      return {
-        ...c,
-        // useLearnerData names these `tagline` / `lessons`; the card markup
-        // reads the catalog names.
-        description: c.description ?? c.tagline ?? "",
-        lessonsCount: c.lessonsCount ?? c.lessons ?? 0,
-        rating: summary ? Number(summary.avg.toFixed(1)) : null,
-        reviewsCount: summary?.count ?? 0,
-        studentsCount: enrollmentCounts[c.id] ?? 0,
-        instructor: instructor?.name || null,
-        instructorRole: null,
-        instructorAvatar: instructor?.avatarUrl || null,
-      };
-    });
-
-    // With no database at all there is nothing to list, so the sample catalog
-    // stands in; it never mixes with real rows.
-    if (DEMO_MODE && liveCourses.length === 0) return defaultCourses;
-    return liveCourses;
-  })();
+  const allAvailableCourses = (courses && courses.length > 0) ? courses.map((c, idx) => {
+    const fallback = defaultCourses[idx % defaultCourses.length];
+    return {
+      ...fallback,
+      ...c,
+      coverImageUrl: c.coverImageUrl || fallback.coverImageUrl,
+      rating: c.rating || fallback.rating,
+      reviewsCount: c.reviewsCount || fallback.reviewsCount,
+      studentsCount: c.studentsCount || fallback.studentsCount,
+      hours: c.hours || fallback.hours,
+      lessonsCount: c.lessonsCount || fallback.lessonsCount,
+      instructor: c.instructor || fallback.instructor,
+      instructorRole: c.instructorRole || fallback.instructorRole,
+      instructorAvatar: c.instructorAvatar || fallback.instructorAvatar
+    };
+  }) : defaultCourses;
 
   const enrolledList = allAvailableCourses.filter(c => c.enrolled);
 
-  // External partner courses are meant to be a small, curated selection
-  // (3-5 courses), not an open marketplace listing.
-  const EXTERNAL_COURSE_LIMIT = 5;
-
-  const filteredCatalogUnsorted = allAvailableCourses.filter(c => {
+  const filteredCatalog = allAvailableCourses.filter(c => {
     if (showMyCoursesOnly && !c.enrolled) return false;
-    if (courseSourceTab === "assigned") {
-      if (!c.assigned && !c.enrolled && c.source !== "assigned") return false;
-    }
-    if (courseSourceTab === "internal") {
-      if (!c.isInternal && c.source !== "internal") return false;
-    }
-    if (courseSourceTab === "partners") {
-      if (!c.partner && c.source !== "partner") return false;
-    }
     if (courseSourceTab === "bookmarks" && !bookmarkedIds[c.id]) return false;
     if (courseSearch && courseSearch.trim()) {
       const q = courseSearch.toLowerCase();
@@ -353,9 +281,9 @@ export function CoursesScreen({
       const matchDesc = c.description?.toLowerCase().includes(q);
       const matchCat = c.category?.toLowerCase().includes(q);
       const matchInst = c.instructor?.toLowerCase().includes(q);
-      const matchPartner = c.partner?.toLowerCase().includes(q);
-      if (!matchTitle && !matchDesc && !matchCat && !matchInst && !matchPartner) return false;
+      if (!matchTitle && !matchDesc && !matchCat && !matchInst) return false;
     }
+    if (courseLevelFilter !== "all" && c.level?.toLowerCase() !== courseLevelFilter.toLowerCase()) return false;
     if (selectedCategory !== "all") {
       const catObj = CATEGORIES.find(cat => cat.id === selectedCategory);
       if (catObj && !c.category?.toLowerCase().includes(catObj.label.split(" ")[0].toLowerCase())) {
@@ -363,17 +291,7 @@ export function CoursesScreen({
       }
     }
     return true;
-  }).sort((a, b) => {
-    // Bookmarked courses surface first; otherwise preserve existing order.
-    const aBm = !!bookmarkedIds[a.id];
-    const bBm = !!bookmarkedIds[b.id];
-    if (aBm === bBm) return 0;
-    return aBm ? -1 : 1;
   });
-
-  const filteredCatalog = courseSourceTab === "partners"
-    ? filteredCatalogUnsorted.slice(0, EXTERNAL_COURSE_LIMIT)
-    : filteredCatalogUnsorted;
 
   // Dynamic Moving Multi-Course Spotlight Carousel
   const SPOTLIGHT_SLIDES = [
@@ -482,46 +400,37 @@ export function CoursesScreen({
       {/* =========================================================================
           DYNAMIC MOVING SPOTLIGHT CAROUSEL (Multi-Course Learning Simulation)
           ========================================================================= */}
-      {DEMO_MODE && (
-        <div
-          onMouseEnter={() => setIsCarouselPaused(true)}
-          onMouseLeave={() => setIsCarouselPaused(false)}
-          style={{
-            position: "relative",
-            borderRadius: 20,
-            overflow: "hidden",
-            background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)",
-            color: "#FFFFFF",
-            padding: "clamp(18px, 3vw, 26px)",
-            boxShadow: "0 14px 34px -6px rgba(15, 23, 42, 0.4)",
-            border: "1px solid rgba(99, 102, 241, 0.35)",
-            transition: "all 0.3s ease"
-          }}
-        >
-        {/* Hero Background Cover Image with Dark Overlay */}
-        <img
-          key={currentSpotlight.id + "-bg"}
-          src={currentSpotlight.coverImage}
-          alt=""
-          className="tai-fade-in"
-          style={{
-            position: "absolute", inset: 0, width: "100%", height: "100%",
-            objectFit: "cover", opacity: 0.28, zIndex: 0
-          }}
-        />
+      <div
+        onMouseEnter={() => setIsCarouselPaused(true)}
+        onMouseLeave={() => setIsCarouselPaused(false)}
+        style={{
+          position: "relative",
+          borderRadius: 22,
+          overflow: "hidden",
+          background: "linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%)",
+          color: "#FFFFFF",
+          padding: "clamp(26px, 4vw, 36px)",
+          boxShadow: "0 18px 40px -8px rgba(15, 23, 42, 0.45)",
+          border: "1px solid rgba(99, 102, 241, 0.35)",
+          transition: "all 0.3s ease"
+        }}
+      >
         <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(100deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.85) 55%, rgba(15,23,42,0.7) 100%)",
-          zIndex: 0
+          position: "absolute",
+          top: -100, right: -100,
+          width: 350, height: 350,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99, 102, 241, 0.28) 0%, transparent 70%)",
+          pointerEvents: "none"
         }} />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, alignItems: "center", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 28, alignItems: "center", position: "relative", zIndex: 1 }}>
           
           {/* Left Column: Course details */}
           <div>
-            <div className="tai-row tai-between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
+            <div className="tai-row tai-between" style={{ marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
               <div className="tai-row tai-gap8">
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.9)", fontWeight: 800, background: "rgba(99, 102, 241, 0.3)", padding: "4px 10px", borderRadius: 8, border: "1px solid rgba(99, 102, 241, 0.4)" }}>
+                <span style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", fontWeight: 700 }}>
                   {currentSpotlight.cohortTag} • {currentSpotlight.badge}
                 </span>
               </div>
@@ -532,106 +441,106 @@ export function CoursesScreen({
                   aria-label="Previous Slide"
                   onClick={() => setActiveSlide(prev => (prev - 1 + SPOTLIGHT_SLIDES.length) % SPOTLIGHT_SLIDES.length)}
                   style={{
-                    width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.25)",
+                    width: 32, height: 32, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)",
                     background: "rgba(255,255,255,0.1)", color: "#fff", display: "flex", alignItems: "center",
-                    justifyContent: "center", cursor: "pointer", backdropFilter: "blur(6px)"
+                    justifyContent: "center", cursor: "pointer", backdropFilter: "blur(6px)", transition: "all 0.15s ease"
                   }}
                 >
-                  <ChevronLeft size={15} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button
                   aria-label="Next Slide"
                   onClick={() => setActiveSlide(prev => (prev + 1) % SPOTLIGHT_SLIDES.length)}
                   style={{
-                    width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.25)",
+                    width: 32, height: 32, borderRadius: 10, border: "1px solid rgba(255,255,255,0.25)",
                     background: "rgba(255,255,255,0.1)", color: "#fff", display: "flex", alignItems: "center",
-                    justifyContent: "center", cursor: "pointer", backdropFilter: "blur(6px)"
+                    justifyContent: "center", cursor: "pointer", backdropFilter: "blur(6px)", transition: "all 0.15s ease"
                   }}
                 >
-                  <ChevronRight size={15} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
             </div>
 
-            <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in" style={{ fontSize: "clamp(18px, 2.4vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", lineHeight: 1.25 }}>
+            <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in" style={{ fontSize: "clamp(22px, 2.8vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 10px", lineHeight: 1.25 }}>
               {currentSpotlight.title}
             </h1>
 
-            <p key={currentSpotlight.id + "-desc"} className="tai-fade-in" style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", margin: "0 0 14px", lineHeight: 1.45, maxWidth: 540 }}>
+            <p key={currentSpotlight.id + "-desc"} className="tai-fade-in" style={{ fontSize: 13.5, color: "rgba(255,255,255,0.85)", margin: "0 0 16px", lineHeight: 1.5, maxWidth: 540 }}>
               {currentSpotlight.description}
             </p>
 
             {/* In-Progress Track Bar if user is enrolled */}
             {currentSpotlight.progress > 0 && (
-              <div style={{ background: "rgba(0,0,0,0.3)", padding: "8px 12px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", marginBottom: 14 }}>
-                <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 5, color: "#E0E7FF" }}>
-                  <span>Active Sprint Pace</span>
-                  <span style={{ color: "#34D399", fontWeight: 800 }}>{currentSpotlight.progress}% ({currentSpotlight.lessonsRemaining})</span>
+              <div style={{ background: "rgba(0,0,0,0.3)", padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)", marginBottom: 16 }}>
+                <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, color: "#E0E7FF" }}>
+                  <span>Simultaneous Learning: Active Track</span>
+                  <span style={{ color: "#34D399", fontWeight: 800 }}>{currentSpotlight.progress}% Done ({currentSpotlight.lessonsRemaining})</span>
                 </div>
-                <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
+                <div style={{ height: 7, borderRadius: 99, background: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
                   <div style={{ width: `${currentSpotlight.progress}%`, height: "100%", background: "linear-gradient(90deg, #10B981, #6366F1)", borderRadius: 99 }} />
                 </div>
               </div>
             )}
 
-            <div className="tai-row tai-gap12" style={{ flexWrap: "wrap", marginBottom: 16, fontSize: 12 }}>
-              <div className="tai-row tai-gap4">
-                <Star size={13} fill="#F59E0B" color="#F59E0B" />
+            <div className="tai-row tai-gap14" style={{ flexWrap: "wrap", marginBottom: 20, fontSize: 12.5 }}>
+              <div className="tai-row tai-gap6">
+                <Star size={14} fill="#F59E0B" color="#F59E0B" />
                 <span style={{ fontWeight: 800 }}>{currentSpotlight.rating}</span>
                 <span style={{ opacity: 0.75 }}>({currentSpotlight.reviews})</span>
               </div>
               <span>•</span>
-              <div className="tai-row tai-gap4">
-                <Users size={13} color="#818CF8" />
+              <div className="tai-row tai-gap6">
+                <Users size={14} color="#818CF8" />
                 <span style={{ fontWeight: 700 }}>{currentSpotlight.enrolled}</span>
               </div>
               <span>•</span>
-              <div className="tai-row tai-gap4">
-                <ShieldCheck size={13} color="#34D399" />
-                <span style={{ fontWeight: 700 }}>Certificate</span>
+              <div className="tai-row tai-gap6">
+                <ShieldCheck size={14} color="#34D399" />
+                <span style={{ fontWeight: 700 }}>Certified Credential</span>
               </div>
             </div>
 
-            <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
+            <div className="tai-row tai-gap12" style={{ flexWrap: "wrap" }}>
               <button
                 className="tai-btn"
                 style={{
                   background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
-                  padding: "10px 18px", borderRadius: 10, border: "none", fontSize: 13,
+                  padding: "12px 24px", borderRadius: 12, border: "none",
                   boxShadow: "0 6px 20px rgba(79, 70, 229, 0.4)",
-                  display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer"
+                  display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer"
                 }}
                 onClick={() => push("courseDetail", { id: currentSpotlight.id })}
               >
                 <span>{currentSpotlight.cta}</span>
-                <ArrowRight size={15} />
+                <ArrowRight size={16} />
               </button>
 
               <button
                 className="tai-btn"
                 style={{
                   background: "rgba(255,255,255,0.1)", color: "#FFFFFF", fontWeight: 700,
-                  padding: "10px 16px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.2)", fontSize: 13,
-                  display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer",
+                  padding: "12px 20px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.2)",
+                  display: "inline-flex", alignItems: "center", gap: 8, cursor: "pointer",
                   backdropFilter: "blur(8px)"
                 }}
                 onClick={() => setActiveRecording(RECENT_RECORDINGS[0])}
               >
-                <Play size={14} fill="#fff" />
+                <Play size={15} fill="#fff" />
                 <span>Watch Trailer</span>
               </button>
             </div>
           </div>
 
-          {/* Right Column: Visual Cover & Multi-Track Carousel switcher (Desktop Only) */}
-          <div className="tai-desktop-only" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Right Column: Visual Cover & Multi-Track Carousel switcher */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.18)" }}>
               <img
                 key={currentSpotlight.id + "-img"}
                 src={currentSpotlight.coverImage}
                 alt={currentSpotlight.title}
                 className="tai-fade-in"
-                style={{ width: "100%", height: 210, objectFit: "cover", display: "block" }}
+                style={{ width: "100%", height: 230, objectFit: "cover", display: "block" }}
               />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.88) 0%, transparent 60%)" }} />
               
@@ -655,7 +564,7 @@ export function CoursesScreen({
             </div>
 
             {/* Interactive Multi-Course Quick Switcher Tabs */}
-            <div className="tai-scrollx tai-gap8" style={{ paddingBottom: 2, width: "100%", boxSizing: "border-box" }}>
+            <div className="tai-row tai-gap8" style={{ overflowX: "auto", paddingBottom: 2 }}>
               {SPOTLIGHT_SLIDES.map((slide, idx) => {
                 const isSelected = idx === activeSlide;
                 return (
@@ -687,7 +596,7 @@ export function CoursesScreen({
         </div>
 
         {/* Bottom Carousel Dot Indicators */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 18 }}>
           {SPOTLIGHT_SLIDES.map((_, idx) => (
             <button
               key={idx}
@@ -707,68 +616,15 @@ export function CoursesScreen({
           ))}
         </div>
       </div>
-      )}
 
       <div className="tai-col tai-gap16">
-        {/* Prominent High-Priority Category & Source Filters */}
-        <div className="tai-scrollx tai-gap10" style={{ padding: "4px 2px", width: "100%", boxSizing: "border-box" }}>
-          {[
-            { id: "all", label: "All Courses", icon: BookOpen, count: allAvailableCourses.length },
-            { id: "assigned", label: "Assigned to Me", icon: ShieldCheck, count: allAvailableCourses.filter(c => c.assigned || c.enrolled || c.source === "assigned").length, highlight: true },
-            { id: "internal", label: "Internal Courses", icon: Laptop, count: allAvailableCourses.filter(c => c.isInternal || c.source === "internal").length },
-            { id: "partners", label: "External Partners", icon: Sparkles, count: allAvailableCourses.filter(c => c.partner || c.source === "partner").length },
-            { id: "bookmarks", label: "Bookmarked", icon: Heart, count: Object.values(bookmarkedIds).filter(Boolean).length }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = !showMyCoursesOnly && courseSourceTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab(tab.id); }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 18px",
-                  borderRadius: 14,
-                  border: isActive ? "1.5px solid var(--primary, #4F46E5)" : "1px solid var(--border)",
-                  background: isActive ? "var(--primary-gradient, linear-gradient(135deg, #4F46E5 0%, #6366F1 100%))" : "var(--surface)",
-                  color: isActive ? "#FFFFFF" : "var(--text)",
-                  fontWeight: isActive ? 800 : 600,
-                  fontSize: 13.5,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                  boxShadow: isActive ? "0 4px 16px -2px rgba(79, 70, 229, 0.35)" : "0 1px 3px rgba(15, 23, 42, 0.03)",
-                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
-                }}
-              >
-                <Icon size={16} color={isActive ? "#FFFFFF" : (tab.highlight ? "var(--primary)" : "var(--text-2)")} />
-                <span>{tab.label}</span>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 800,
-                    padding: "2px 8px",
-                    borderRadius: 99,
-                    background: isActive ? "rgba(255, 255, 255, 0.25)" : "var(--surface-2, #F1F5F9)",
-                    color: isActive ? "#FFFFFF" : "var(--text-2)"
-                  }}
-                >
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search Bar and Sort Options */}
-        <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
+        
+        <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 14 }}>
           <div className="tai-row tai-gap10" style={{ flex: 1, minWidth: 260, position: "relative" }}>
             <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
             <input
               type="text"
-              placeholder="Search masterclasses, skills, instructors, or certifications..."
+              placeholder="Search 100+ courses, skills, instructors, or certifications..."
               value={courseSearch}
               onChange={(e) => setCourseSearch(e.target.value)}
               style={{
@@ -787,7 +643,22 @@ export function CoursesScreen({
             />
           </div>
 
-          <div className="tai-row tai-gap10" style={{ flexShrink: 0 }}>
+          <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
+            <select
+              value={courseLevelFilter}
+              onChange={(e) => setCourseLevelFilter(e.target.value)}
+              style={{
+                height: 44, padding: "0 14px", borderRadius: 12,
+                border: "1.5px solid var(--border)", background: "var(--surface)",
+                fontSize: 13, fontWeight: 600, color: "var(--text)", cursor: "pointer", outline: "none"
+              }}
+            >
+              <option value="all">All Levels</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -805,8 +676,7 @@ export function CoursesScreen({
           </div>
         </div>
 
-        {/* Topic Subcategory Pills */}
-        <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none" }}>
           {CATEGORIES.map(cat => {
             const isActive = selectedCategory === cat.id;
             return (
@@ -814,19 +684,21 @@ export function CoursesScreen({
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
                 style={{
-                  padding: "7px 14px",
+                  padding: "8px 16px",
                   borderRadius: 99,
-                  border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                  background: isActive ? "var(--primary)" : "var(--surface)",
+                  border: isActive ? "1.5px solid #4F46E5" : "1px solid var(--border)",
+                  background: isActive ? "#4F46E5" : "var(--surface)",
                   color: isActive ? "#FFFFFF" : "var(--text)",
                   fontWeight: isActive ? 800 : 600,
-                  fontSize: 12.5,
+                  fontSize: 13,
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   flexShrink: 0,
                   transition: "all 0.15s ease",
                   boxShadow: isActive ? "0 4px 12px rgba(79, 70, 229, 0.25)" : "none"
                 }}
+                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--primary-light)"; e.currentTarget.style.color = "var(--primary)"; } }}
+                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text)"; } }}
               >
                 {cat.label}
               </button>
@@ -834,22 +706,50 @@ export function CoursesScreen({
           })}
         </div>
 
-        <div className="tai-row tai-between" style={{ paddingBottom: 4, marginTop: 2 }}>
+        <div className="tai-row tai-between" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, marginTop: 4, flexWrap: "wrap", gap: 10 }}>
+          <div className="tai-row tai-gap14" style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+            <span
+              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("all"); }}
+              style={{
+                fontSize: 14, fontWeight: 800, cursor: "pointer", paddingBottom: 8,
+                color: (!showMyCoursesOnly && courseSourceTab === "all") ? "var(--primary)" : "var(--text-3)",
+                borderBottom: (!showMyCoursesOnly && courseSourceTab === "all") ? "2.5px solid var(--primary)" : "none"
+              }}
+            >
+              All Courses ({filteredCatalog.length})
+            </span>
+
+            <span
+              onClick={() => { setShowMyCoursesOnly(true); setCourseSourceTab("assigned"); }}
+              style={{
+                fontSize: 14, fontWeight: 800, cursor: "pointer", paddingBottom: 8,
+                color: showMyCoursesOnly ? "var(--primary)" : "var(--text-3)",
+                borderBottom: showMyCoursesOnly ? "2.5px solid var(--primary)" : "none"
+              }}
+            >
+              My Learning ({enrolledList.length})
+            </span>
+
+            <span
+              onClick={() => { setShowMyCoursesOnly(false); setCourseSourceTab("bookmarks"); }}
+              style={{
+                fontSize: 14, fontWeight: 800, cursor: "pointer", paddingBottom: 8,
+                color: courseSourceTab === "bookmarks" ? "var(--primary)" : "var(--text-3)",
+                borderBottom: courseSourceTab === "bookmarks" ? "2.5px solid var(--primary)" : "none"
+              }}
+            >
+              Bookmarked ({Object.values(bookmarkedIds).filter(Boolean).length})
+            </span>
+          </div>
+
           <span style={{ fontSize: 12.5, color: "var(--text-3)", fontWeight: 600 }}>
             Showing {filteredCatalog.length} curated masterclasses
-            {courseSourceTab === "partners" && filteredCatalogUnsorted.length > EXTERNAL_COURSE_LIMIT ? " (curated selection)" : ""}
           </span>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
-        {coursesLoading ? (
-          /* The catalog previously rendered the sample courses while the real
-             query was still in flight, so the first paint was always fake. */
-          <div className="tai-card tai-empty" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 24px", borderRadius: 20 }}>
-            Loading the course catalog...
-          </div>
-        ) : filteredCatalog.length === 0 ? (
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 24 }}>
+        {filteredCatalog.length === 0 ? (
           <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 24px", borderRadius: 20 }}>
             <div style={{ width: 64, height: 64, borderRadius: 20, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
               {courseSourceTab === "bookmarks" ? <Heart size={28} color="var(--primary)" /> : <BookOpen size={28} color="var(--primary)" />}
@@ -899,19 +799,11 @@ export function CoursesScreen({
               }}
             >
               <div style={{ position: "relative", height: 180, width: "100%", overflow: "hidden" }}>
-                {/* courses.cover_image_url is optional; a course without one
-                    used to borrow the sample entry's photo. */}
-                {course.coverImageUrl ? (
-                  <img
-                    src={course.coverImageUrl}
-                    alt={course.title}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }}
-                  />
-                ) : (
-                  <div style={{ width: "100%", height: "100%", background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <BookOpen size={30} color="var(--text-3)" />
-                  </div>
-                )}
+                <img
+                  src={course.coverImageUrl}
+                  alt={course.title}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }}
+                />
                 <div style={{
                   position: "absolute", inset: 0,
                   background: "linear-gradient(to top, rgba(15,23,42,0.6) 0%, transparent 60%)"
@@ -950,7 +842,7 @@ export function CoursesScreen({
 
                 {isEnrolled && (
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 5, background: "rgba(255,255,255,0.3)" }}>
-                    <div style={{ height: "100%", width: `${course.progress || 0}%`, background: isCompleted ? "#10B981" : "#4F46E5" }} />
+                    <div style={{ height: "100%", width: `${course.progress || 50}%`, background: isCompleted ? "#10B981" : "#4F46E5" }} />
                   </div>
                 )}
               </div>
@@ -969,54 +861,35 @@ export function CoursesScreen({
                     {course.description}
                   </p>
 
-                  {/* Only shown when courses.instructor_id resolves to a real
-                      profile - an unassigned course now shows no byline
-                      instead of a sample name and headshot. */}
-                  {course.instructor && (
-                    <div className="tai-row tai-gap8" style={{ marginBottom: 14 }}>
-                      {course.instructorAvatar && (
-                        <img
-                          src={course.instructorAvatar}
-                          alt={course.instructor}
-                          style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }}
-                        />
-                      )}
-                      <div style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600 }}>
-                        {course.instructor}
-                      </div>
+                  <div className="tai-row tai-gap8" style={{ marginBottom: 14 }}>
+                    <img
+                      src={course.instructorAvatar}
+                      alt={course.instructor}
+                      style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }}
+                    />
+                    <div style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600 }}>
+                      {course.instructor}
                     </div>
-                  )}
+                  </div>
 
-                  {/* rating comes from course_reviews; a course nobody has
-                      reviewed shows the real review count (0) and no star,
-                      rather than an inherited 4.9. */}
                   <div className="tai-row tai-gap8" style={{ fontSize: 12, marginBottom: 16 }}>
-                    {course.rating != null && (
-                      <div className="tai-row tai-gap4" style={{ fontWeight: 800, color: "var(--text)" }}>
-                        <Star size={14} fill="#F59E0B" color="#F59E0B" />
-                        <span>{course.rating}</span>
-                      </div>
-                    )}
-                    <span style={{ color: "var(--text-3)" }}>({course.reviewsCount ?? 0} reviews)</span>
+                    <div className="tai-row tai-gap4" style={{ fontWeight: 800, color: "var(--text)" }}>
+                      <Star size={14} fill="#F59E0B" color="#F59E0B" />
+                      <span>{course.rating}</span>
+                    </div>
+                    <span style={{ color: "var(--text-3)" }}>({course.reviewsCount || 1200})</span>
                     <span style={{ color: "var(--text-3)" }}>•</span>
-                    <span style={{ color: "var(--text-3)", fontWeight: 600 }}>{course.studentsCount ?? 0} students</span>
+                    <span style={{ color: "var(--text-3)", fontWeight: 600 }}>{course.studentsCount || "8.5k"} students</span>
                   </div>
                 </div>
 
                 <div>
-                  <div className="tai-row" style={{ padding: "10px 0", borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)", fontWeight: 600, gap: 6, flexWrap: "wrap" }}>
-                    <span>{course.hours ?? 0} Total Hours</span>
+                  <div className="tai-row tai-between" style={{ padding: "10px 0", borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
+                    <span>{course.hours} Total Hours</span>
                     <span>•</span>
-                    <span>{course.lessonsCount ?? 0} Modules</span>
-                    {/* No column records whether a course issues a
-                        certificate, so this claim is only made where the
-                        sample catalog states it. */}
-                    {course.hasCertificate !== undefined && (
-                      <>
-                        <span>•</span>
-                        <span>{course.hasCertificate ? "Certificate" : "Audited"}</span>
-                      </>
-                    )}
+                    <span>{course.lessonsCount} Modules</span>
+                    <span>•</span>
+                    <span>{course.hasCertificate ? "Certificate" : "Audited"}</span>
                   </div>
 
                   {isEnrolled ? (
@@ -1048,172 +921,170 @@ export function CoursesScreen({
         }))}
       </div>
 
-      {DEMO_MODE && (
-        <>
+      <div>
+        <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
           <div>
-            <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
+            <div className="tai-row tai-gap8">
+              <Award size={20} color="var(--primary)" />
+              <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
+                Professional Certificates &amp; Specializations
+              </h2>
+            </div>
+            <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
+              Comprehensive multi-course career tracks accredited by Train AI
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 20 }}>
+          {SPECIALIZATIONS.map((spec) => (
+            <div
+              key={spec.id}
+              className="tai-card-hover"
+              onClick={() => setActiveSpecialization(spec)}
+              style={{
+                background: "var(--surface)",
+                borderRadius: 18,
+                border: "1px solid var(--border)",
+                padding: 24,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                boxShadow: "0 4px 16px rgba(15,23,42,0.04)"
+              }}
+            >
               <div>
-                <div className="tai-row tai-gap8">
-                  <Award size={20} color="var(--primary)" />
-                  <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
-                    Professional Certificates &amp; Specializations
-                  </h2>
+                <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
+                  <span style={{ background: spec.badgeBg, color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 6 }}>
+                    {spec.badge}
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>
+                    {spec.coursesCount} Course Series
+                  </span>
                 </div>
-                <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
-                  Comprehensive multi-course career tracks accredited by Train AI
+
+                <h3 style={{ fontSize: 17, fontWeight: 800, margin: "0 0 8px", color: "var(--text)", lineHeight: 1.3 }}>
+                  {spec.title}
+                </h3>
+
+                <p style={{ fontSize: 13, color: "var(--text-3)", margin: "0 0 16px", lineHeight: 1.5 }}>
+                  {spec.description}
                 </p>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
+                  {spec.skills.map((skill, idx) => (
+                    <span key={idx} style={{ background: "var(--surface-3)", border: "1px solid var(--border)", color: "var(--text-2)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", alignItems: "center" }}>
+                <div className="tai-col">
+                  <span style={{ fontSize: 11, color: "var(--text-3)" }}>Duration: {spec.months}</span>
+                  <span className="tai-row tai-gap4" style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
+                    <Star size={13} fill="#F59E0B" color="#F59E0B" /> {spec.rating} ({spec.reviews})
+                  </span>
+                </div>
+
+                <button
+                  className="tai-btn tai-btn-outline tai-btn-sm"
+                  style={{ fontWeight: 700 }}
+                  onClick={(e) => { e.stopPropagation(); setActiveSpecialization(spec); }}
+                >
+                  View Track Details →
+                </button>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-              {SPECIALIZATIONS.map((spec) => (
-                <div
-                  key={spec.id}
-                  className="tai-card-hover"
-                  onClick={() => setActiveSpecialization(spec)}
-                  style={{
-                    background: "var(--surface)",
-                    borderRadius: 18,
-                    border: "1px solid var(--border)",
-                    padding: 24,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    boxShadow: "0 4px 16px rgba(15,23,42,0.04)"
-                  }}
-                >
-                  <div>
-                    <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-                      <span style={{ background: spec.badgeBg, color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 6 }}>
-                        {spec.badge}
-                      </span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>
-                        {spec.coursesCount} Course Series
-                      </span>
-                    </div>
-
-                    <h3 style={{ fontSize: 17, fontWeight: 800, margin: "0 0 8px", color: "var(--text)", lineHeight: 1.3 }}>
-                      {spec.title}
-                    </h3>
-
-                    <p style={{ fontSize: 13, color: "var(--text-3)", margin: "0 0 16px", lineHeight: 1.5 }}>
-                      {spec.description}
-                    </p>
-
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
-                      {spec.skills.map((skill, idx) => (
-                        <span key={idx} style={{ background: "var(--surface-3)", border: "1px solid var(--border)", color: "var(--text-2)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-                    <div className="tai-col">
-                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>Duration: {spec.months}</span>
-                      <span className="tai-row tai-gap4" style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
-                        <Star size={13} fill="#F59E0B" color="#F59E0B" /> {spec.rating} ({spec.reviews})
-                      </span>
-                    </div>
-
-                    <button
-                      className="tai-btn tai-btn-outline tai-btn-sm"
-                      style={{ fontWeight: 700 }}
-                      onClick={(e) => { e.stopPropagation(); setActiveSpecialization(spec); }}
-                    >
-                      View Track Details →
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
+      <div>
+        <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
           <div>
-            <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
-              <div>
-                <div className="tai-row tai-gap8">
-                  <Video size={20} color="var(--primary)" />
-                  <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
-                    Live Workshop &amp; Studio Replays
-                  </h2>
+            <div className="tai-row tai-gap8">
+              <Video size={20} color="var(--primary)" />
+              <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
+                Live Workshop &amp; Studio Replays
+              </h2>
+            </div>
+            <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
+              Missed a live studio session? Watch recorded breakdowns with full transcripts
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+          {RECENT_RECORDINGS.map((rec) => (
+            <div
+              key={rec.id}
+              className="tai-card-hover"
+              onClick={() => setActiveRecording(rec)}
+              style={{
+                background: "var(--surface)",
+                borderRadius: 16,
+                border: "1px solid var(--border)",
+                overflow: "hidden",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column"
+              }}
+            >
+              <div style={{ position: "relative", height: 140, width: "100%" }}>
+                <img src={rec.thumbnail} alt={rec.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.7) 0%, transparent 60%)" }} />
+
+                <span style={{ position: "absolute", top: 10, left: 10, background: rec.badgeColor, color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>
+                  {rec.badge}
+                </span>
+
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
+                    <Play size={16} color="var(--primary)" fill="var(--primary)" style={{ marginLeft: 2 }} />
+                  </div>
                 </div>
-                <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
-                  Missed a live studio session? Watch recorded breakdowns with full transcripts
-                </p>
+
+                <span style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>
+                  {rec.duration}
+                </span>
+              </div>
+
+              <div style={{ padding: 14, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div>
+                  <h4 style={{ fontSize: 13.5, fontWeight: 800, margin: "0 0 4px", color: "var(--text)", lineHeight: 1.35 }}>
+                    {rec.title}
+                  </h4>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                    {rec.instructor} • {rec.role}
+                  </div>
+                </div>
+
+                <div className="tai-row tai-between" style={{ marginTop: 10, fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>
+                  <span>{rec.date}</span>
+                  <span>{rec.views}</span>
+                </div>
               </div>
             </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
-              {RECENT_RECORDINGS.map((rec) => (
-                <div
-                  key={rec.id}
-                  className="tai-card-hover"
-                  onClick={() => setActiveRecording(rec)}
-                  style={{
-                    background: "var(--surface)",
-                    borderRadius: 16,
-                    border: "1px solid var(--border)",
-                    overflow: "hidden",
-                    cursor: "pointer",
-                    display: "flex",
-                    flexDirection: "column"
-                  }}
-                >
-                  <div style={{ position: "relative", height: 140, width: "100%" }}>
-                    <img src={rec.thumbnail} alt={rec.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.7) 0%, transparent 60%)" }} />
-
-                    <span style={{ position: "absolute", top: 10, left: 10, background: rec.badgeColor, color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>
-                      {rec.badge}
-                    </span>
-
-                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}>
-                        <Play size={16} color="var(--primary)" fill="var(--primary)" style={{ marginLeft: 2 }} />
-                      </div>
-                    </div>
-
-                    <span style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>
-                      {rec.duration}
-                    </span>
-                  </div>
-
-                  <div style={{ padding: 14, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                    <div>
-                      <h4 style={{ fontSize: 13.5, fontWeight: 800, margin: "0 0 4px", color: "var(--text)", lineHeight: 1.35 }}>
-                        {rec.title}
-                      </h4>
-                      <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
-                        {rec.instructor} • {rec.role}
-                      </div>
-                    </div>
-
-                    <div className="tai-row tai-between" style={{ marginTop: 10, fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>
-                      <span>{rec.date}</span>
-                      <span>{rec.views}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
+          ))}
+        </div>
+      </div>
 
       {/* =========================================================================
-          VIDEO PLAYER MODAL (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
+          VIDEO PLAYER MODAL
           ========================================================================= */}
-      <PortalModal
-        isOpen={Boolean(activeRecording)}
-        onClose={() => setActiveRecording(null)}
-        maxWidth={760}
-        zIndex={9999}
-        style={{ background: "#0F172A", color: "#fff", padding: 0, overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}
-      >
-        {activeRecording && (
-          <>
+      {activeRecording && (
+        <div
+          className="tai-scrim"
+          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 300 }}
+          onClick={() => setActiveRecording(null)}
+        >
+          <div
+            className="tai-card"
+            style={{ maxWidth: 760, width: "100%", background: "#0F172A", color: "#fff", borderRadius: 20, overflow: "hidden", padding: 0, border: "1px solid rgba(255,255,255,0.15)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
               <div>
                 <span style={{ fontSize: 11, fontWeight: 800, color: "#818CF8", textTransform: "uppercase" }}>{activeRecording.badge}</span>
@@ -1234,38 +1105,40 @@ export function CoursesScreen({
               />
             </div>
 
-            <div style={{ padding: 18, background: "#1E293B", display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", alignItems: "center" }}>
-              <div className="tai-row tai-gap10" style={{ minWidth: 0 }}>
-                <img src={activeRecording.thumbnail} alt="" style={{ width: 34, height: 34, flexShrink: 0, borderRadius: "50%", objectFit: "cover" }} />
-                <div style={{ minWidth: 0, overflow: "hidden" }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeRecording.instructor}</div>
-                  <div style={{ fontSize: 11, color: "#94A3B8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{activeRecording.role} • {activeRecording.duration}</div>
+            <div style={{ padding: 18, background: "#1E293B", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div className="tai-row tai-gap10">
+                <img src={activeRecording.thumbnail} alt="" style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover" }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff" }}>{activeRecording.instructor}</div>
+                  <div style={{ fontSize: 11, color: "#94A3B8" }}>{activeRecording.role} • {activeRecording.duration}</div>
                 </div>
               </div>
 
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ flexShrink: 0 }}
                 onClick={() => { setActiveRecording(null); push("courseDetail", { id: "course-figma-ai" }); }}
               >
                 Enroll in Full Track →
               </button>
             </div>
-          </>
-        )}
-      </PortalModal>
+          </div>
+        </div>
+      )}
 
       {/* =========================================================================
-          SPECIALIZATION MODAL (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY)
+          SPECIALIZATION MODAL
           ========================================================================= */}
-      <PortalModal
-        isOpen={Boolean(activeSpecialization)}
-        onClose={() => setActiveSpecialization(null)}
-        maxWidth={640}
-        zIndex={9999}
-      >
-        {activeSpecialization && (
-          <>
+      {activeSpecialization && (
+        <div
+          className="tai-scrim"
+          style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 300 }}
+          onClick={() => setActiveSpecialization(null)}
+        >
+          <div
+            className="tai-card"
+            style={{ maxWidth: 640, width: "100%", background: "var(--surface)", borderRadius: 20, padding: 28 }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
               <span style={{ background: activeSpecialization.badgeBg, color: "#fff", fontSize: 11, fontWeight: 800, padding: "4px 12px", borderRadius: 8 }}>
                 {activeSpecialization.badge}
@@ -1296,13 +1169,13 @@ export function CoursesScreen({
               </div>
             </div>
 
-            <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center" }}>
               <div>
                 <div style={{ fontSize: 12, color: "var(--text-3)" }}>Estimated Duration</div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>{activeSpecialization.months}</div>
               </div>
 
-              <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
+              <div className="tai-row tai-gap10">
                 <button className="tai-btn tai-btn-outline" onClick={() => setActiveSpecialization(null)}>
                   Close
                 </button>
@@ -1317,9 +1190,9 @@ export function CoursesScreen({
                 </button>
               </div>
             </div>
-          </>
-        )}
-      </PortalModal>
+          </div>
+        </div>
+      )}
 
     </div>
   );
