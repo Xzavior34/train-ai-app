@@ -451,7 +451,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
             ref={iframeRef}
             key={source.videoId}
             title={lessonTitle}
-            src={`https://www.youtube-nocookie.com/embed/${source.videoId}?enablejsapi=1&rel=0&modestbranding=1&controls=1&playsinline=1&origin=${encodeURIComponent(typeof window !== "undefined" ? window.location.origin : "")}`}
+            src={`https://www.youtube.com/embed/${source.videoId}?rel=0&modestbranding=1&controls=1&playsinline=1`}
             style={{
               position: "absolute",
               top: 0,
@@ -460,7 +460,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
               height: "100%",
               border: "none"
             }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           />
         )}

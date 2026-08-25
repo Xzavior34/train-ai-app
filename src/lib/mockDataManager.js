@@ -89,7 +89,7 @@ export function subscribeToMockDataChanges(callback) {
   };
 }
 
-// Educational Real YouTube Video Maps for Mock Masterclasses
+// Educational Real YouTube Video Maps for all course topics
 export const MOCK_YOUTUBE_VIDEOS = {
   "course-figma-ai": {
     defaultVideoId: "jwEbff6X3vY", // Figma Design Systems & Variables Masterclass
@@ -105,58 +105,89 @@ export const MOCK_YOUTUBE_VIDEOS = {
     lessons: {
       "l-fullstack-1": "2F3TfH3Yf-A",
       "l-fullstack-2": "aywZrzNaKjs",
-      "l-fullstack-3": "L_W_tXq3u3k"
+      "l-fullstack-3": "L_W_tXq3u3k",
+      "l-fullstack-4": "8pDqJVdNa44"
     }
   },
   "course-prompt-pro": {
     defaultVideoId: "jC4v5AS4RIM", // Prompt Engineering & LLM Architecture
     lessons: {
       "l-prompt-1": "jC4v5AS4RIM",
-      "l-prompt-2": "94S35K3mZ_k"
+      "l-prompt-2": "94S35K3mZ_k",
+      "l-prompt-3": "sal78ACtGTk"
     }
   },
   "course-cloud-devops": {
     defaultVideoId: "d6WC5n9G_sM", // Docker & Kubernetes Full Course
     lessons: {
       "l-cloud-1": "d6WC5n9G_sM",
-      "l-cloud-2": "X48VuDVv0do"
+      "l-cloud-2": "X48VuDVv0do",
+      "l-cloud-3": "R8_veQiYtZA"
     }
   },
   "course-spatial-ui": {
     defaultVideoId: "Vb0nP_R590k", // VisionOS Spatial Computing UI Design
     lessons: {
       "l-spatial-1": "Vb0nP_R590k",
-      "l-spatial-2": "7pL4f-O1o34"
+      "l-spatial-2": "7pL4f-O1o34",
+      "l-spatial-3": "fU_gZ5HwH3A"
     }
   },
   "course-data-python": {
     defaultVideoId: "LHBE6Q9XlzI", // Python for Data Science & Vector Stores
     lessons: {
       "l-data-1": "LHBE6Q9XlzI",
-      "l-data-2": "nLRL_NcnK-4"
+      "l-data-2": "nLRL_NcnK-4",
+      "l-data-3": "0B5eIE_1vpU"
     }
   }
 };
 
 /**
- * Resolves the YouTube embed video ID or URL for any course / lesson
+ * Resolves the YouTube embed video ID for any course / lesson topic
  */
-export function getYouTubeEmbedId(courseId, lessonId) {
-  if (!isMockDataEnabled()) return null;
-  if (!courseId) return "jwEbff6X3vY";
-  const courseConfig = MOCK_YOUTUBE_VIDEOS[courseId];
-  if (courseConfig) {
+export function getYouTubeEmbedId(courseId, lessonId, courseTitle = "", category = "") {
+  if (courseId && MOCK_YOUTUBE_VIDEOS[courseId]) {
+    const courseConfig = MOCK_YOUTUBE_VIDEOS[courseId];
     if (lessonId && courseConfig.lessons?.[lessonId]) {
       return courseConfig.lessons[lessonId];
     }
     return courseConfig.defaultVideoId;
   }
+
+  // Keyword and topic matching for database / custom courses
+  const text = `${courseId || ""} ${courseTitle || ""} ${category || ""}`.toLowerCase();
+  if (text.includes("figma") || text.includes("design") || text.includes("ux") || text.includes("ui")) {
+    return "jwEbff6X3vY";
+  }
+  if (text.includes("full-stack") || text.includes("react") || text.includes("web") || text.includes("engineer")) {
+    return "2F3TfH3Yf-A";
+  }
+  if (text.includes("prompt") || text.includes("llm") || text.includes("agent") || text.includes("ai")) {
+    return "jC4v5AS4RIM";
+  }
+  if (text.includes("cloud") || text.includes("devops") || text.includes("docker") || text.includes("kubernetes")) {
+    return "d6WC5n9G_sM";
+  }
+  if (text.includes("spatial") || text.includes("visionos") || text.includes("3d")) {
+    return "Vb0nP_R590k";
+  }
+  if (text.includes("data") || text.includes("python") || text.includes("analytics")) {
+    return "LHBE6Q9XlzI";
+  }
+  if (text.includes("leadership") || text.includes("management") || text.includes("strategy")) {
+    return "P3t8i_p4zJ8";
+  }
+  if (text.includes("compliance") || text.includes("policy") || text.includes("security")) {
+    return "VwT_uG-Z7qA";
+  }
+
   return "jwEbff6X3vY";
 }
 
 /**
  * Universal video source parser supporting direct HTML5 videos (mp4, webm),
- * YouTube URLs/IDs, Vimeo URLs, and mock video fallbacks.
+ * YouTube URLs/IDs, Vimeo URLs, and topic video fallbacks.
  */
 export function parseVideoSource(rawUrl, courseId, lessonId) {
   const cleanUrl = typeof rawUrl === "string" ? rawUrl.trim() : "";
@@ -192,13 +223,7 @@ export function parseVideoSource(rawUrl, courseId, lessonId) {
     return { type: "html5", src: cleanUrl };
   }
 
-  // 6. If mock data is enabled, check mock YouTube dictionary
-  if (isMockDataEnabled()) {
-    const mockId = getYouTubeEmbedId(courseId, lessonId);
-    if (mockId) {
-      return { type: "youtube", videoId: mockId, isMock: true };
-    }
-  }
-
-  return { type: "none" };
+  // 6. Universal topic fallback for all courses and lessons
+  const resolvedId = getYouTubeEmbedId(courseId, lessonId);
+  return { type: "youtube", videoId: resolvedId || "jwEbff6X3vY" };
 }
