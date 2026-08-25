@@ -125,7 +125,8 @@ const SPOTLIGHT_SLIDES = [
     id: "course-figma-ai",
     badge: "ENROLLED • SPRINT 5",
     badgeGradient: "#059669",
-    cohortTag: "Spring Cohort 2026",
+    cohortTag: "UI/UX Design Track",
+    pathwayName: "UI/UX & Design Systems",
     trackKeyword: "design",
     title: "Master Design Systems in Figma with Generative AI",
     description: "Building production design systems, auto-layout 5.0, design tokens, and AI acceleration for enterprise design teams.",
@@ -141,13 +142,19 @@ const SPOTLIGHT_SLIDES = [
     coverImage: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
     cta: "Resume Lesson 14",
     action: "continue",
-    lessonsText: "24 Lessons • 18 hrs"
+    lessonsText: "24 Lessons • 18 hrs",
+    requiredCourses: [
+      { id: "course-figma-ai", title: "Figma Design Systems & AI Tokens", progress: 72 },
+      { id: "course-spatial-ui", title: "Spatial UI & Glass Ergonomics", progress: 0 },
+      { id: "spec-1", title: "Interactive Micro-Interactions Lab", progress: 0 }
+    ]
   },
   {
     id: "course-fullstack-ai",
     badge: "ACTIVE MULTI-COURSE LEARNING",
     badgeGradient: "#2563EB",
-    cohortTag: "Advanced Engineering Track",
+    cohortTag: "Full-Stack AI Track",
+    pathwayName: "Full-Stack & Web Dev",
     trackKeyword: "engineering",
     title: "Full-Stack AI Application Engineering with React 19",
     description: "Architecting end-to-end LLM applications with vector embeddings, Supabase pgvector, FastAPI, and autonomous agents.",
@@ -163,13 +170,19 @@ const SPOTLIGHT_SLIDES = [
     coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
     cta: "Continue Module 2",
     action: "continue",
-    lessonsText: "32 Lessons • 24 hrs"
+    lessonsText: "32 Lessons • 24 hrs",
+    requiredCourses: [
+      { id: "course-fullstack-ai", title: "Full-Stack AI with React 19", progress: 19 },
+      { id: "course-figma-ai", title: "Vector Embeddings & API Services", progress: 0 },
+      { id: "course-cloud-devops", title: "CI/CD & Cloud Deployment", progress: 0 }
+    ]
   },
   {
     id: "course-spatial-ui",
     badge: "NEW MASTERCLASS SPOTLIGHT",
     badgeGradient: "#2563EB",
-    cohortTag: "Executive Masterclass",
+    cohortTag: "AI & Machine Learning Track",
+    pathwayName: "Data & AI Systems",
     trackKeyword: "ai",
     title: "Spatial Computing & VisionOS Design Foundations",
     description: "Immersive 3D spatial user experiences, depth layering, glassmorphism tokens, and spatial ergonomics for next-gen apps.",
@@ -185,13 +198,19 @@ const SPOTLIGHT_SLIDES = [
     coverImage: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80",
     cta: "Explore Masterclass",
     action: "explore",
-    lessonsText: "18 Lessons • 14 hrs"
+    lessonsText: "18 Lessons • 14 hrs",
+    requiredCourses: [
+      { id: "course-spatial-ui", title: "Spatial UI & VisionOS Foundations", progress: 0 },
+      { id: "course-figma-ai", title: "AI Prototyping & Generative Assets", progress: 0 },
+      { id: "course-fullstack-ai", title: "Multi-Agent Neural Workflows", progress: 0 }
+    ]
   },
   {
     id: "course-cloud-devops",
     badge: "TRENDING IN YOUR COHORT",
     badgeGradient: "#D97706",
-    cohortTag: "Infrastructure Batch",
+    cohortTag: "Cloud & Infrastructure Track",
+    pathwayName: "Cloud & DevOps",
     trackKeyword: "cloud",
     title: "Cloud Infrastructure, Kubernetes & AI Microservices",
     description: "Production CI/CD pipelines, container orchestration, edge deployment, and GPU scaling for high-throughput AI workloads.",
@@ -207,7 +226,12 @@ const SPOTLIGHT_SLIDES = [
     coverImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
     cta: "Start Learning Path",
     action: "explore",
-    lessonsText: "28 Lessons • 22 hrs"
+    lessonsText: "28 Lessons • 22 hrs",
+    requiredCourses: [
+      { id: "course-cloud-devops", title: "Kubernetes & AI Microservices", progress: 0 },
+      { id: "course-fullstack-ai", title: "Vector DB Scaling & Cloud Ops", progress: 0 },
+      { id: "course-spatial-ui", title: "GPU Optimization & Edge Labs", progress: 0 }
+    ]
   }
 ];
 
@@ -515,6 +539,54 @@ export function CoursesScreen({
                   </div>
                   <div style={{ height: 6, borderRadius: 99, background: "rgba(255, 255, 255, 0.12)", overflow: "hidden" }}>
                     <div style={{ width: `${currentSpotlight.progress}%`, height: "100%", background: "#10B981", borderRadius: 99 }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Pathway Required Courses Sequence Stepper */}
+              {currentSpotlight.requiredCourses && currentSpotlight.requiredCourses.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", marginBottom: 6 }}>
+                    <span className="tai-row tai-gap4" style={{ alignItems: "center" }}>
+                      <Map size={11} color="#60A5FA" />
+                      <span>PATHWAY: {currentSpotlight.pathwayName || "LEARNING TRACK"}</span>
+                    </span>
+                    <span style={{ color: "#60A5FA" }}>
+                      {currentSpotlight.requiredCourses.filter(c => (c.progress || 0) >= 100).length} of {currentSpotlight.requiredCourses.length} Courses Complete
+                    </span>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 6 }}>
+                    {currentSpotlight.requiredCourses.map((rc, i) => {
+                      const isDone = (rc.progress || 0) >= 100;
+                      const isInProgress = (rc.progress || 0) > 0 && !isDone;
+                      return (
+                        <div
+                          key={rc.id || i}
+                          onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: rc.id }); }}
+                          style={{
+                            padding: "6px 8px",
+                            borderRadius: 6,
+                            background: isInProgress ? "rgba(37, 99, 235, 0.28)" : isDone ? "rgba(16, 185, 129, 0.15)" : "rgba(255, 255, 255, 0.06)",
+                            border: isInProgress ? "1px solid #60A5FA" : isDone ? "1px solid rgba(16, 185, 129, 0.35)" : "1px solid rgba(255, 255, 255, 0.1)",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease"
+                          }}
+                          title={`Click to open course: ${rc.title}`}
+                        >
+                          <div className="tai-row tai-between" style={{ marginBottom: 2 }}>
+                            <span style={{ fontSize: 9.5, fontWeight: 800, color: isDone ? "#34D399" : isInProgress ? "#93C5FD" : "#94A3B8" }}>
+                              Step 0{i + 1}
+                            </span>
+                            <span style={{ fontSize: 9.5, fontWeight: 700, color: isDone ? "#34D399" : isInProgress ? "#60A5FA" : "#64748B" }}>
+                              {isDone ? "✓ Done" : isInProgress ? `${rc.progress}%` : "Required"}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {rc.title}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

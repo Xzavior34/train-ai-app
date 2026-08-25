@@ -683,92 +683,16 @@ export const chartColors = {
       </PortalModal>
 
       {/* =========================================================================
-          VIEW 1: COMMUNITY FEED — SUMMARY ZONE
+          VIEW 1: COMMUNITY FEED
           ========================================================================= */}
       {activeTab === "feed" && (
         <div className="tai-dashboard-grid">
           
           {/* Main Feed Column */}
           <div className="tai-col tai-gap18" style={{ minWidth: 0, width: "100%" }}>
-
-            {/* ── Summary Zone: Quick access cards ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-
-              {/* Cohort Highlight */}
-              <div
-                className="tai-card tai-card-hover"
-                style={{ padding: 16, borderRadius: 10, cursor: "pointer", border: "1px solid var(--border)" }}
-                onClick={() => push("cohort")}
-              >
-                <div className="tai-row tai-gap10" style={{ marginBottom: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(37,99,235,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Users size={17} color="var(--primary)" />
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Your Cohort</div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>Sprint 5 • 68 peers</div>
-                  </div>
-                </div>
-                <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 700 }}>Enter Cohort Space →</div>
-              </div>
-
-              {/* Instructor Highlight */}
-              <div
-                className="tai-card tai-card-hover"
-                style={{ padding: 16, borderRadius: 10, cursor: "pointer", border: "1px solid var(--border)" }}
-                onClick={() => setActiveTab("instructors")}
-              >
-                <div className="tai-row tai-gap10" style={{ marginBottom: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(37,99,235,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <GraduationCap size={17} color="var(--primary)" />
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Instructors</div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>4 available • Book or DM</div>
-                  </div>
-                </div>
-                <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 700 }}>View Instructors →</div>
-              </div>
-
-              {/* Study Circles Highlight */}
-              <div
-                className="tai-card tai-card-hover"
-                style={{ padding: 16, borderRadius: 10, cursor: "pointer", border: "1px solid var(--border)" }}
-                onClick={() => setActiveTab("circles")}
-              >
-                <div className="tai-row tai-gap10" style={{ marginBottom: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(16,185,129,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Users size={17} color="var(--success)" />
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Study Circles</div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>{STUDY_CIRCLES.length} active groups</div>
-                  </div>
-                </div>
-                <div style={{ fontSize: 11.5, color: "var(--success)", fontWeight: 700 }}>Browse Circles →</div>
-              </div>
-
-              {/* Leaderboard Highlight */}
-              <div
-                className="tai-card tai-card-hover"
-                style={{ padding: 16, borderRadius: 10, cursor: "pointer", border: "1px solid var(--border)" }}
-                onClick={() => push("leaderboard")}
-              >
-                <div className="tai-row tai-gap10" style={{ marginBottom: 8 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(245,158,11,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Award size={17} color="#F59E0B" />
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Leaderboard</div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>Weekly rankings</div>
-                  </div>
-                </div>
-                <div style={{ fontSize: 11.5, color: "#F59E0B", fontWeight: 700 }}>View Rankings →</div>
-              </div>
-            </div>
-
+            
             {/* ── Discussion Feed ── */}
-            <div style={{ borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+            <div>
               <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
                 <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Recent Discussions</div>
               </div>
