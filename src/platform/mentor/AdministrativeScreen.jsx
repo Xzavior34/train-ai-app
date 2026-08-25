@@ -416,9 +416,19 @@ export function AdministrativeScreen({ mentorId, mentorProfileQuery, currentUser
                   <div style={{ fontSize: 12.5, marginTop: 8, color: "var(--text-2)" }}>"{r.details || "Requesting review of session attendance fee."}"</div>
                   
                   {r.status === "pending" && (
-                    <div className="ta-row ta-gap8 ta-mt12">
-                      <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => handleRefundResponse(r.id, "approved")}>Approve Refund</button>
-                      <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleRefundResponse(r.id, "declined")}>Decline</button>
+                    <div className="ta-col ta-gap8 ta-mt12">
+                      <input
+                        type="text"
+                        className="ta-input"
+                        placeholder="Optional response note..."
+                        value={refundResponses[r.id] || ""}
+                        onChange={e => setRefundResponses(prev => ({ ...prev, [r.id]: e.target.value }))}
+                        style={{ fontSize: 12.5, padding: "6px 10px", borderRadius: 6 }}
+                      />
+                      <div className="ta-row ta-gap8">
+                        <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => handleRefundResponse(r.id, "approved")}>Approve Refund</button>
+                        <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleRefundResponse(r.id, "declined")}>Decline</button>
+                      </div>
                     </div>
                   )}
                 </div>

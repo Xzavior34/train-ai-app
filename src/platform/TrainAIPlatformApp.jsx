@@ -98,6 +98,14 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   }
 
   function navigateToScreen(targetScreen, targetWs = null, extraState = {}) {
+    // Normalize mentor screen keys to match render block expectations
+    const MENTOR_KEY_MAP = {
+      "mentor-dashboard": "dashboard",
+      "mentor-analytics": "analytics",
+      "administrative": "admin",
+      "mentor-settings": "settings",
+    };
+    const normalizedScreen = MENTOR_KEY_MAP[targetScreen] || targetScreen;
     let ws = targetWs;
     if (!ws) {
       if (["mentor-dashboard", "schedule", "mentees", "messages", "discussions", "mentor-analytics", "administrative", "mentor-settings"].includes(targetScreen)) {
@@ -112,7 +120,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
       setSelectedCourseId(extraState.courseId);
     }
     setWorkspace(ws);
-    setScreenByWorkspace(prev => ({ ...prev, [ws]: targetScreen }));
+    setScreenByWorkspace(prev => ({ ...prev, [ws]: normalizedScreen }));
   }
 
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -230,7 +238,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
 
               {workspace === "mentor" && (
                 <>
-                  {screen === "dashboard" && <MentorDashboardScreen mentorId={mentorId} orgSelector={orgSelector} currentUserId={session?.user?.id} profileQuery={profileQuery} orgId={effectiveOrgId} />}
+                  {screen === "dashboard" && <MentorDashboardScreen mentorId={mentorId} orgSelector={orgSelector} currentUserId={session?.user?.id} profileQuery={profileQuery} orgId={effectiveOrgId} onNavigate={navigateToScreen} />}
                   {screen === "cohorts" && (
                     <CohortsScreen
                       orgId={effectiveOrgId}
@@ -259,7 +267,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
                   {screen === "messages" && <MentorMessagesScreen userId={session?.user?.id} mentorId={mentorId} orgSelector={orgSelector} selectedLearnerForChat={selectedLearnerForChat} setScreen={setScreen} orgId={effectiveOrgId} />}
                   {screen === "discussions" && <DiscussionsScreen mentorId={mentorId} orgSelector={orgSelector} />}
-                  {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} />}
+                  {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} onNavigate={navigateToScreen} />}
                   {screen === "admin" && <AdministrativeScreen mentorId={mentorId} orgSelector={orgSelector} mentorProfileQuery={mentorProfileQuery} currentUserId={session?.user?.id} />}
                   {screen === "settings" && <MentorSettingsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} currentUserId={session?.user?.id} userProfileQuery={profileQuery} />}
                 </>

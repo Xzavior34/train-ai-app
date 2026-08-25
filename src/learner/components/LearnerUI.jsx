@@ -698,7 +698,14 @@ export function Tag({ children, tone }) {
 
 export function Switch({ on, onChange }) {
   return (
-    <div className={`tai-switch ${on ? "on" : ""}`} onClick={onChange} role="switch" aria-checked={on}>
+    <div
+      className={`tai-switch ${on ? "on" : ""}`}
+      onClick={onChange}
+      role="switch"
+      aria-checked={on}
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onChange?.(!on); }}}
+    >
       <div className="tai-switch-knob" />
     </div>
   );

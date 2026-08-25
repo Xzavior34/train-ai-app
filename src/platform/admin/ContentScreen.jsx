@@ -557,10 +557,10 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   <div className="ta-row ta-gap8">
                     <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => {
                       const newGenerated = [
-                        { id: `gen-${Date.now()}-1`, title: "1.0 Course Orientation & Foundations", duration_minutes: 15, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                        { id: `gen-${Date.now()}-2`, title: "2.0 Deep Dive & Core Architecture", duration_minutes: 30, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                        { id: `gen-${Date.now()}-3`, title: "3.0 Practical Lab & Case Study", duration_minutes: 45, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                        { id: `gen-${Date.now()}-4`, title: "4.0 Final Assessment & Certification", duration_minutes: 25, video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }
+                        { id: `gen-${Date.now()}-1`, title: "1.0 Course Orientation & Foundations", duration_minutes: 15, video_url: "https://www.youtube.com/watch?v=gHGN6hs2gZY" },
+                        { id: `gen-${Date.now()}-2`, title: "2.0 Deep Dive & Core Architecture", duration_minutes: 30, video_url: "https://www.youtube.com/watch?v=2xxziIWmaSA" },
+                        { id: `gen-${Date.now()}-3`, title: "3.0 Practical Lab & Case Study", duration_minutes: 45, video_url: "https://www.youtube.com/watch?v=bMknfKXIFA8" },
+                        { id: `gen-${Date.now()}-4`, title: "4.0 Final Assessment & Certification", duration_minutes: 25, video_url: "https://www.youtube.com/watch?v=jC4v5AS4RIM" }
                       ];
                       setEditLessons(prev => [...prev, ...newGenerated]);
                       showToast("AI generated 4 new structured lessons!");

@@ -431,7 +431,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <div key={d.department}>
                 <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
                   <span style={{ fontWeight: 600 }}>{d.department}</span>
-                  <span>{d.avgProgress}% avg ({d.count} enrollments)</span>
+                  <span>{d.avgProgress}% avg ({d.count || d.learnerCount || 0} enrollments)</span>
                 </div>
                 <ProgressBar value={d.avgProgress} />
               </div>
@@ -447,7 +447,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               <div key={c.category}>
                 <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
                   <span style={{ fontWeight: 600 }}>{c.category}</span>
-                  <span>{c.avgProgress}% avg ({c.count} enrollments)</span>
+                  <span>{c.avgProgress}% avg ({c.count || c.learnerCount || 0} enrollments)</span>
                 </div>
                 <ProgressBar value={c.avgProgress} />
               </div>

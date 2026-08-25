@@ -5,7 +5,7 @@ import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockDat
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment, SEAT_PRICE_USD } from "../../lib/api/organizations.js";
 import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 
 // organization's name with that fake placeholder if an admin didn't notice
@@ -21,7 +21,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const seatsSummary = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
   const [seatsToBuy, setSeatsToBuy] = useState("");
   const [purchasingSeats, setPurchasingSeats] = useState(false);
-  const SEAT_PRICE_DISPLAY = 10;
+  const SEAT_PRICE_DISPLAY = SEAT_PRICE_USD;
   const ticketsQuery = useSupabaseQuery(async () => (orgId ? fetchMyOrgSupportTickets(orgId) : []), [orgId]);
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketDescription, setTicketDescription] = useState("");

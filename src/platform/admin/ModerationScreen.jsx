@@ -78,10 +78,10 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
               <h1 className="ta-hero-title">Content &amp; Safety Moderation</h1>
               <p className="ta-hero-desc">Review flagged posts, policy violations, AI confidence scores, and community safety reports.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <span className="ta-tag ta-tag-success">
+                <span className="ta-tag" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.3)" }}>
                   <ShieldCheck size={13} /> AI Guardrails Active
                 </span>
-                <span className="ta-tag ta-tag-info">
+                <span className="ta-tag" style={{ background: "rgba(59, 130, 246, 0.15)", color: "#3B82F6", border: "1px solid rgba(59, 130, 246, 0.3)" }}>
                   <Bot size={13} /> Automated Moderation Engine
                 </span>
               </div>
@@ -158,10 +158,10 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
                     <td><Tag tone="warning">{item.reason}</Tag></td>
                     <td>
                       <div className="ta-row ta-gap6">
-                        <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => handleResolve(item.id, "approved")}>
+                        <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={() => handleAction(item, "approved")}>
                           <Check size={14} /> Approve
                         </button>
-                        <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleResolve(item.id, "removed")}>
+                        <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleAction(item, "removed")}>
                           <X size={14} /> Remove
                         </button>
                       </div>

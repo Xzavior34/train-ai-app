@@ -179,7 +179,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                   <div className="ta-title" style={{ fontSize: 15 }}>Lead Instructors</div>
                   <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Active cohort mentors</div>
                 </div>
-                <Tag tone="success">3 Active</Tag>
+                <Tag tone="success">{cohorts.filter(c => c.status === "active" || !c.status).length || cohorts.length} Active</Tag>
               </div>
 
               <div className="ta-col ta-gap10 ta-mt14">

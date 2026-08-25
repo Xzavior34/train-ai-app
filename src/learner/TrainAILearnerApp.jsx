@@ -77,7 +77,20 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       } else {
         document.documentElement.classList.remove("dark");
       }
+      // Sync theme across simultaneously-mounted dashboards
+      window.dispatchEvent(new CustomEvent("trainai-theme-change", { detail: { dark } }));
     } catch {}
+  }, [dark]);
+
+  // Listen for theme changes from Platform/Owner dashboards
+  useEffect(() => {
+    function onExternalThemeChange(e) {
+      if (e.detail && typeof e.detail.dark === "boolean" && e.detail.dark !== dark) {
+        setDark(e.detail.dark);
+      }
+    }
+    window.addEventListener("trainai-theme-change", onExternalThemeChange);
+    return () => window.removeEventListener("trainai-theme-change", onExternalThemeChange);
   }, [dark]);
 
   const [toast, setToast] = useState(null);
@@ -876,7 +889,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               {screen === "notifications" && (
                 <NotificationsScreen
                   notifications={notifications} markAllNotificationsRead={markAllNotificationsRead}
-                  markOneNotificationRead={markOneNotificationRead} back={back}
+                  markOneNotificationRead={markOneNotificationRead} back={back} push={push}
                 />
               )}
               {screen === "settings" && (

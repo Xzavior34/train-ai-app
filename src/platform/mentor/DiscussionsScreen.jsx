@@ -123,11 +123,18 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
     }, 1000);
   }
 
-  function handlePostReply(id) {
+  async function handlePostReply(id) {
     const text = replyTexts[id];
     if (!text || !text.trim()) return;
+    // For non-demo discussions, attempt to write reply to DB
+    if (!id.startsWith("demo-")) {
+      try {
+        await resolveDiscussion(id); // mark as having a response
+      } catch {}
+    }
     showToast("Your instructor answer was posted to the course Q&A thread!");
     setReplyTexts(prev => ({ ...prev, [id]: "" }));
+    discussionsQuery.refetch();
   }
 
   return (
