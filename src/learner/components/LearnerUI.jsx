@@ -5,7 +5,6 @@ import {
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
   PanelLeftClose, PanelLeftOpen, Video
 } from "lucide-react";
-import { LearningPathsScreen } from "../screens/LearningPathsScreen.jsx";
 
 // Lets any screen's shared TopBar show a real unread-notifications bell
 // without threading unreadNotifs/push down through every screen's props.
