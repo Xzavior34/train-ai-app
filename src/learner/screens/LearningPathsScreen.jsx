@@ -4,7 +4,7 @@ import {
   Map, Award, BookOpen, Clock, CheckCircle2, 
   Users, ArrowRight, ChevronRight, Layers, 
   ShieldCheck, Filter, Search, Play, Check, X, Laptop,
-  Compass
+  Compass, Star
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";

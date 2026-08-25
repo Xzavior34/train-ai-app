@@ -5,7 +5,7 @@ import {
   ArrowRight, ExternalLink, Bookmark, CheckCircle2,
   Calendar, Layers, Filter, X, Award, Users,
   BookOpen, ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Heart,
-  Flame, Laptop, FileText, Check, Compass, Map, Target, GraduationCap, BarChart3
+  Flame, Laptop, FileText, Check, Compass, Map, Target, GraduationCap, BarChart3, Star
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";

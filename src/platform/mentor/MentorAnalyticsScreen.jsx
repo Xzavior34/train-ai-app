@@ -3,7 +3,7 @@ import { TopBar, Tag, ProgressBar } from "../components/PlatformUI.jsx";
 import { 
   Users, Calendar, DollarSign, TrendingUp, Clock, 
   MessageCircle, CheckCircle2, Award, Brain, ThumbsUp,
-  BarChart3, ShieldCheck, ArrowUpRight, BookOpen
+  BarChart3, ShieldCheck, ArrowUpRight, BookOpen, Star
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorEarnings, fetchMentorSessions } from "../../lib/api/schemaHelper.js";

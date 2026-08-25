@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users, Star } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
 import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
