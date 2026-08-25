@@ -90,6 +90,8 @@ const TOPIC_STOCK_PHOTOS = {
   technical_leadership: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80",
 };
 
+const CURATED_STOCK_PHOTOS = Object.values(TOPIC_STOCK_PHOTOS);
+
 function getSafeCoverImage(course, idx = 0) {
   if (course?.coverImageUrl && course.coverImageUrl.startsWith("http") && !course.coverImageUrl.includes("picsum.photos") && !course.coverImageUrl.includes("placeholder")) {
     return course.coverImageUrl;
