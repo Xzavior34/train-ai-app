@@ -3,9 +3,59 @@ import { TopBar, Tag, ProgressBar, Avatar, timeAgo, initialsOf } from "../compon
 import { Clock, Layers, Rocket, CheckCircle2, Lock, ChevronRight, Video, Edit3, Send, GraduationCap, Award, X, ArrowRight, Star, Users, ShieldCheck, FileText, MessageSquare } from "lucide-react";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
+const TOPIC_STOCK_PHOTOS = {
+  figma_design_systems: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=1000&auto=format&fit=crop&q=80",
+  design_thinking: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1000&auto=format&fit=crop&q=80",
+  spatial_visionos: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=1000&auto=format&fit=crop&q=80",
+  ui_prototyping: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=1000&auto=format&fit=crop&q=80",
+  fullstack_ai: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&auto=format&fit=crop&q=80",
+  frontend_react: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1000&auto=format&fit=crop&q=80",
+  backend_node_api: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1000&auto=format&fit=crop&q=80",
+  prompt_engineering: "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=1000&auto=format&fit=crop&q=80",
+  cloud_kubernetes: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1000&auto=format&fit=crop&q=80",
+  python_data_science: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1000&auto=format&fit=crop&q=80",
+  data_analyst_sql: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1000&auto=format&fit=crop&q=80",
+  product_management: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1000&auto=format&fit=crop&q=80",
+  cybersecurity_compliance: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1000&auto=format&fit=crop&q=80",
+  digital_marketing_growth: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1000&auto=format&fit=crop&q=80",
+  entrepreneurship_venture: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1000&auto=format&fit=crop&q=80",
+  business_opportunity: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1000&auto=format&fit=crop&q=80",
+  technical_leadership: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1000&auto=format&fit=crop&q=80",
+};
+
+function getSafeCoverImage(course) {
+  if (course?.coverImageUrl && course.coverImageUrl.startsWith("http") && !course.coverImageUrl.includes("picsum.photos") && !course.coverImageUrl.includes("placeholder")) {
+    return course.coverImageUrl;
+  }
+  if (course?.image && course.image.startsWith("http") && !course.image.includes("picsum.photos") && !course.image.includes("placeholder")) {
+    return course.image;
+  }
+  
+  const text = `${course?.title || ""} ${course?.category || ""} ${course?.tagline || ""} ${course?.description || ""}`.toLowerCase();
+  
+  if (text.includes("figma") || text.includes("design system") || (text.includes("ui") && text.includes("system"))) return TOPIC_STOCK_PHOTOS.figma_design_systems;
+  if (text.includes("spatial") || text.includes("visionos") || text.includes("3d")) return TOPIC_STOCK_PHOTOS.spatial_visionos;
+  if (text.includes("design think") || text.includes("wireframe") || text.includes("ux research")) return TOPIC_STOCK_PHOTOS.design_thinking;
+  if (text.includes("prototyp") || text.includes("ui design") || text.includes("ux design")) return TOPIC_STOCK_PHOTOS.ui_prototyping;
+  if (text.includes("prompt") || text.includes("llm") || text.includes("agent") || text.includes("gpt")) return TOPIC_STOCK_PHOTOS.prompt_engineering;
+  if (text.includes("full-stack") || text.includes("fullstack")) return TOPIC_STOCK_PHOTOS.fullstack_ai;
+  if (text.includes("react") || text.includes("frontend") || text.includes("javascript")) return TOPIC_STOCK_PHOTOS.frontend_react;
+  if (text.includes("node") || text.includes("backend") || text.includes("fastapi") || text.includes("database")) return TOPIC_STOCK_PHOTOS.backend_node_api;
+  if (text.includes("cloud") || text.includes("kubernetes") || text.includes("docker") || text.includes("devops")) return TOPIC_STOCK_PHOTOS.cloud_kubernetes;
+  if (text.includes("python") || text.includes("pandas") || text.includes("data science")) return TOPIC_STOCK_PHOTOS.python_data_science;
+  if (text.includes("analytics") || text.includes("data analyst") || text.includes("statistics")) return TOPIC_STOCK_PHOTOS.data_analyst_sql;
+  if (text.includes("security") || text.includes("cyber") || text.includes("compliance")) return TOPIC_STOCK_PHOTOS.cybersecurity_compliance;
+  if (text.includes("product") || text.includes("scrum") || text.includes("agile")) return TOPIC_STOCK_PHOTOS.product_management;
+  if (text.includes("marketing") || text.includes("growth") || text.includes("seo")) return TOPIC_STOCK_PHOTOS.digital_marketing_growth;
+  if (text.includes("entrepreneur") || text.includes("startup") || text.includes("founder")) return TOPIC_STOCK_PHOTOS.entrepreneurship_venture;
+  if (text.includes("business") || text.includes("opportunity")) return TOPIC_STOCK_PHOTOS.business_opportunity;
+  if (text.includes("leadership") || text.includes("management")) return TOPIC_STOCK_PHOTOS.technical_leadership;
+  return TOPIC_STOCK_PHOTOS.fullstack_ai;
+}
+
 function CourseCoverImage({ course, children }) {
   const [errored, setErrored] = useState(false);
-  const imageUrl = course.coverImageUrl || course.image || `https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1000&auto=format&fit=crop&q=80`;
+  const imageUrl = getSafeCoverImage(course);
 
   return (
     <div

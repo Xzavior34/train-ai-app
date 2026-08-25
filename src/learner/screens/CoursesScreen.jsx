@@ -69,55 +69,91 @@ const CATEGORIES = [
   { id: "business", label: "Tech-Preneur & Business" }
 ];
 
-const CURATED_STOCK_PHOTOS = [
-  "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80", // Design systems
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80", // Abstract AI 3D
-  "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80", // Code & prompt eng
-  "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80", // Cloud & devops
-  "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80", // Spatial visionOS
-  "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80", // Analytics & growth
-  "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80", // Python data science
-  "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80", // Microchip & AI RAG
-  "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&auto=format&fit=crop&q=80", // UI prototyping
-  "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80", // Design thinking
-  "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=80", // Tech-preneurship
-  "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80", // Business opportunity
-  "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80", // Teamwork
-  "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80", // Presentation
-  "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80", // Cyber tech
-  "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80"  // Workspace
-];
+// Topic-accurate curated photography for courses across all tracks
+const TOPIC_STOCK_PHOTOS = {
+  figma_design_systems: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
+  design_thinking: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80",
+  spatial_visionos: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80",
+  ui_prototyping: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&auto=format&fit=crop&q=80",
+  fullstack_ai: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
+  frontend_react: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80",
+  backend_node_api: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80",
+  prompt_engineering: "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=80",
+  cloud_kubernetes: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
+  python_data_science: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+  data_analyst_sql: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80",
+  product_management: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=80",
+  cybersecurity_compliance: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80",
+  digital_marketing_growth: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80",
+  entrepreneurship_venture: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80",
+  business_opportunity: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=80",
+  technical_leadership: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80",
+};
 
 function getSafeCoverImage(course, idx = 0) {
-  if (course?.coverImageUrl && course.coverImageUrl.startsWith("http") && !course.coverImageUrl.includes("picsum.photos")) {
+  if (course?.coverImageUrl && course.coverImageUrl.startsWith("http") && !course.coverImageUrl.includes("picsum.photos") && !course.coverImageUrl.includes("placeholder")) {
     return course.coverImageUrl;
   }
-  if (course?.image && course.image.startsWith("http") && !course.image.includes("picsum.photos")) {
+  if (course?.image && course.image.startsWith("http") && !course.image.includes("picsum.photos") && !course.image.includes("placeholder")) {
     return course.image;
   }
-  const title = (course?.title || "").toLowerCase();
-  if (title.includes("design think") || title.includes("ux") || title.includes("figma")) {
-    return CURATED_STOCK_PHOTOS[9];
+  
+  const text = `${course?.title || ""} ${course?.category || ""} ${course?.tagline || ""} ${course?.description || ""}`.toLowerCase();
+  
+  if (text.includes("figma") || text.includes("design system") || (text.includes("ui") && text.includes("system"))) {
+    return TOPIC_STOCK_PHOTOS.figma_design_systems;
   }
-  if (title.includes("entrepreneur") || title.includes("business") || title.includes("venture")) {
-    return CURATED_STOCK_PHOTOS[10];
+  if (text.includes("spatial") || text.includes("visionos") || text.includes("3d") || text.includes("realitykit")) {
+    return TOPIC_STOCK_PHOTOS.spatial_visionos;
   }
-  if (title.includes("opportunity") || title.includes("market") || title.includes("strategy")) {
-    return CURATED_STOCK_PHOTOS[11];
+  if (text.includes("design think") || text.includes("wireframe") || text.includes("user experience") || text.includes("ux research")) {
+    return TOPIC_STOCK_PHOTOS.design_thinking;
   }
-  if (title.includes("ai") || title.includes("prompt") || title.includes("llm")) {
-    return CURATED_STOCK_PHOTOS[2];
+  if (text.includes("prototyp") || text.includes("ui design") || text.includes("ux design")) {
+    return TOPIC_STOCK_PHOTOS.ui_prototyping;
   }
-  if (title.includes("full-stack") || title.includes("react") || title.includes("web")) {
-    return CURATED_STOCK_PHOTOS[1];
+  if (text.includes("prompt") || text.includes("llm") || text.includes("agent") || text.includes("langchain") || text.includes("gpt")) {
+    return TOPIC_STOCK_PHOTOS.prompt_engineering;
   }
-  if (title.includes("cloud") || title.includes("devops") || title.includes("kubernetes")) {
-    return CURATED_STOCK_PHOTOS[3];
+  if (text.includes("full-stack") || text.includes("fullstack") || text.includes("web app")) {
+    return TOPIC_STOCK_PHOTOS.fullstack_ai;
   }
-  if (title.includes("data") || title.includes("python") || title.includes("machine")) {
-    return CURATED_STOCK_PHOTOS[6];
+  if (text.includes("react") || text.includes("frontend") || text.includes("javascript") || text.includes("html") || text.includes("css")) {
+    return TOPIC_STOCK_PHOTOS.frontend_react;
   }
-  return CURATED_STOCK_PHOTOS[idx % CURATED_STOCK_PHOTOS.length];
+  if (text.includes("node") || text.includes("backend") || text.includes("fastapi") || text.includes("database") || text.includes("postgres") || text.includes("sql")) {
+    return TOPIC_STOCK_PHOTOS.backend_node_api;
+  }
+  if (text.includes("cloud") || text.includes("kubernetes") || text.includes("docker") || text.includes("devops") || text.includes("ci/cd")) {
+    return TOPIC_STOCK_PHOTOS.cloud_kubernetes;
+  }
+  if (text.includes("python") || text.includes("machine learning") || text.includes("pandas") || text.includes("data science")) {
+    return TOPIC_STOCK_PHOTOS.python_data_science;
+  }
+  if (text.includes("analytics") || text.includes("data analyst") || text.includes("statistics") || text.includes("bi")) {
+    return TOPIC_STOCK_PHOTOS.data_analyst_sql;
+  }
+  if (text.includes("security") || text.includes("cyber") || text.includes("compliance") || text.includes("protection")) {
+    return TOPIC_STOCK_PHOTOS.cybersecurity_compliance;
+  }
+  if (text.includes("product") || text.includes("scrum") || text.includes("agile") || text.includes("roadmap")) {
+    return TOPIC_STOCK_PHOTOS.product_management;
+  }
+  if (text.includes("marketing") || text.includes("seo") || text.includes("growth") || text.includes("funnel")) {
+    return TOPIC_STOCK_PHOTOS.digital_marketing_growth;
+  }
+  if (text.includes("entrepreneur") || text.includes("startup") || text.includes("founder")) {
+    return TOPIC_STOCK_PHOTOS.entrepreneurship_venture;
+  }
+  if (text.includes("business") || text.includes("opportunity") || text.includes("venture")) {
+    return TOPIC_STOCK_PHOTOS.business_opportunity;
+  }
+  if (text.includes("leadership") || text.includes("management") || text.includes("executive")) {
+    return TOPIC_STOCK_PHOTOS.technical_leadership;
+  }
+
+  const keys = Object.keys(TOPIC_STOCK_PHOTOS);
+  return TOPIC_STOCK_PHOTOS[keys[idx % keys.length]];
 }
 
 const SPOTLIGHT_SLIDES = [
@@ -700,31 +736,69 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
                 </div>
               </div>
 
-              {/* Quick Switcher Tabs for Track Courses */}
+              {/* Quick Switcher Tabs for Track Courses (Compact & Guaranteed Fit) */}
               {dynamicSpotlightSlides.length > 1 && (
-                <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2, width: "100%" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 4,
+                    width: "100%",
+                    boxSizing: "border-box",
+                    paddingTop: 2
+                  }}
+                >
                   {dynamicSpotlightSlides.map((slide, idx) => {
                     const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
+                    const cleanTitle = (slide.title || "")
+                      .replace(/^Master\s+/i, "")
+                      .replace(/^Foundations of\s+/i, "")
+                      .replace(/^Introduction to\s+/i, "")
+                      .split(" in ")[0]
+                      .split(" with ")[0]
+                      .split(" & ")[0]
+                      .trim();
                     return (
                       <button
                         key={slide.id}
                         onClick={() => setActiveSlide(idx)}
+                        title={slide.title}
                         style={{
-                          flex: 1, minWidth: 110, padding: "7px 10px",
-                          borderRadius: 10,
-                          border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)",
+                          flex: "1 1 0",
+                          minWidth: 0,
+                          padding: "5px 4px",
+                          borderRadius: 6,
+                          border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.12)",
                           background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
                           color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
                           cursor: "pointer",
-                          textAlign: "left",
-                          transition: "all 0.2s ease"
+                          textAlign: "center",
+                          transition: "all 0.15s ease"
                         }}
                       >
-                        <div style={{ fontSize: 9.5, fontWeight: 800, color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)" }}>
-                          COURSE 0{idx + 1}
+                        <div
+                          style={{
+                            fontSize: 8.5,
+                            fontWeight: 800,
+                            color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)",
+                            letterSpacing: "0.02em",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                          }}
+                        >
+                          C0{idx + 1}
                         </div>
-                        <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {slide.title.split(" in ")[0].split(" with ")[0]}
+                        <div
+                          style={{
+                            fontSize: 9.5,
+                            fontWeight: 700,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            lineHeight: 1.2
+                          }}
+                        >
+                          {cleanTitle}
                         </div>
                       </button>
                     );
