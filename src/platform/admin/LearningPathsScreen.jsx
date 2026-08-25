@@ -619,13 +619,29 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
           )}
           <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 16 }}>
           {paths.map((p, idx) => {
-            const pathImages = [
-              "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80",
-              "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
-              "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&auto=format&fit=crop&q=80",
-              "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=80"
-            ];
-            const img = pathImages[idx % pathImages.length];
+            const text = `${p.title || ""} ${p.category || ""} ${p.description || ""}`.toLowerCase();
+            let img = "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80";
+            if (text.includes("design") || text.includes("ui") || text.includes("ux")) img = "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80";
+            else if (text.includes("product")) img = "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80";
+            else if (text.includes("cyber") || text.includes("security") || text.includes("compliance")) img = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&auto=format&fit=crop&q=80";
+            else if (text.includes("data") || text.includes("python") || text.includes("analytics")) img = "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80";
+            else if (text.includes("marketing") || text.includes("growth")) img = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80";
+            else if (text.includes("full-stack") || text.includes("web") || text.includes("frontend")) img = "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80";
+            else if (text.includes("cloud") || text.includes("devops")) img = "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80";
+            else if (text.includes("founder") || text.includes("techpreneur") || text.includes("startup") || text.includes("business")) img = "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&auto=format&fit=crop&q=80";
+            else {
+              const fallbackTrackImages = [
+                "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80",
+                "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&auto=format&fit=crop&q=80"
+              ];
+              img = fallbackTrackImages[idx % fallbackTrackImages.length];
+            }
             const uptake = enrollmentCounts[p.id] || { total: 0, completed: 0 };
 
             return (

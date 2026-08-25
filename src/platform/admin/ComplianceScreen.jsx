@@ -202,7 +202,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Enrolled Learners</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
-              {learnerProgress.length || 68}
+              {learnerProgress.length}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4, fontWeight: 600 }}>Active across tracks</div>
           </div>
@@ -210,7 +210,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           <div className="ta-card">
             <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Cohort Avg Progress</div>
             <div style={{ fontSize: 24, fontWeight: 800, color: "var(--text)", marginTop: 4 }}>
-              {learnerProgress.length ? Math.round(learnerProgress.reduce((sum, r) => sum + (r.avgProgress || 0), 0) / learnerProgress.length) : 74}%
+              {learnerProgress.length ? Math.round(learnerProgress.reduce((sum, r) => sum + (r.avgProgress || 0), 0) / learnerProgress.length) : 0}%
             </div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4, fontWeight: 600 }}>On track pace</div>
           </div>

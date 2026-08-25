@@ -223,7 +223,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
             {[
               { label: "Enrolled", value: detail?.enrollments?.length ?? 0, Icon: BookOpen },
               { label: "Completed", value: detail?.completedCount ?? 0, Icon: CheckCircle2 },
-              { label: "Avg progress", value: detail?.enrollments?.length ? `${detail.avgProgress}%` : "85%", Icon: TrendingUp },
+              { label: "Avg progress", value: detail?.enrollments?.length ? `${detail.avgProgress}%` : "0%", Icon: TrendingUp },
               { label: "Certificates", value: detail?.certificates?.length ?? 0, Icon: GraduationCap },
             ].map((k) => {
               const Icon = k.Icon;
@@ -806,17 +806,17 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           </td>
                           <td>
                             <span style={{ fontWeight: 600, fontSize: 12.5, color: "var(--text-3)" }}>
-                              {attendance != null ? `${attendance}%` : "94%"}
+                              {attendance != null ? `${attendance}%` : "—"}
                             </span>
                           </td>
                           <td>
                             <div style={{ width: "100%", maxWidth: 140 }}>
                               <div className="ta-row ta-between" style={{ fontSize: 11, marginBottom: 4 }}>
                                 <span>Overall</span>
-                                <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${Math.round(m.overallProgress ?? 80)}%`}</span>
+                                <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${m.overallProgress ? Math.round(m.overallProgress) : 0}%`}</span>
                               </div>
                               <div style={{ width: "100%", height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
-                                <div style={{ width: `${progress || 80}%`, height: "100%", background: riskTone === "success" ? "#10B981" : riskTone === "warning" ? "#F59E0B" : "#EF4444", borderRadius: 4 }} />
+                                <div style={{ width: `${hasProgress ? progress : (m.overallProgress || 0)}%`, height: "100%", background: riskTone === "success" ? "#10B981" : riskTone === "warning" ? "#F59E0B" : "#EF4444", borderRadius: 4 }} />
                               </div>
                             </div>
                           </td>
@@ -881,7 +881,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                         <td>{r.assignedCount}</td>
                         <td>{r.completedCount}</td>
                         <td>{Math.max(0, r.assignedCount - r.completedCount)}</td>
-                        <td>{r.assignedCount > 0 ? `${r.avgProgress}%` : `${r.avgProgress || 80}%`}</td>
+                        <td>{r.avgProgress || 0}%</td>
                         <td><Tag tone={meta.tone} icon={meta.Icon}>{meta.label}</Tag></td>
                       </tr>
                     );

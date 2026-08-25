@@ -209,23 +209,34 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               </div>
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {[
-                  { user: "Sarah Connor", action: "Completed Lesson 4 in Spatial UI", time: "5m ago", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" },
-                  { user: "Marcus Wright", action: "Submitted UX Audit Report", time: "18m ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" },
-                  { user: "Elena Rostova", action: "Joined Design Systems Batch 04", time: "1h ago", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" },
-                  { user: "David Vance", action: "Passed AI Vector Embeddings Quiz (100%)", time: "2h ago", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" }
-                ].map((act, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10, border: "1px solid var(--border)" }}>
-                    <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: 1, marginRight: 10 }}>
-                      <img src={act.avatar} alt={act.user} style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text)" }}>{act.user}</div>
-                        <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{act.action}</div>
+                {(() => {
+                  const fallbackActs = [
+                    { user: "Sarah Connor", action: "Completed Lesson 4 in Spatial UI", time: "5m ago", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" },
+                    { user: "Marcus Wright", action: "Submitted UX Audit Report", time: "18m ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" },
+                    { user: "Elena Rostova", action: "Joined Design Systems Batch 04", time: "1h ago", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" },
+                    { user: "David Vance", action: "Passed AI Vector Embeddings Quiz (100%)", time: "2h ago", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" }
+                  ];
+                  const liveActs = (activityLogQuery.data || []).map((l, i) => ({
+                    user: l.text?.includes(":") ? l.text.split(":")[1]?.trim() : l.text || "Member",
+                    action: l.text?.includes(":") ? l.text.split(":")[0]?.trim() : "Completed activity",
+                    time: l.time || "Recent",
+                    avatar: fallbackActs[i % fallbackActs.length].avatar
+                  }));
+                  const acts = liveActs.length > 0 ? liveActs : fallbackActs;
+
+                  return acts.map((act, idx) => (
+                    <div key={idx} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10, border: "1px solid var(--border)" }}>
+                      <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: 1, marginRight: 10 }}>
+                        <img src={act.avatar} alt={act.user} style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text)" }}>{act.user}</div>
+                          <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{act.action}</div>
+                        </div>
                       </div>
+                      <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600, flexShrink: 0 }}>{act.time}</span>
                     </div>
-                    <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600, flexShrink: 0 }}>{act.time}</span>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             </div>
           </div>
@@ -233,50 +244,61 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
           {/* Right Side Monitoring Panel */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             {/* Live Studio Hero Card */}
-            <div className="ta-card" style={{
-              background: "#0F172A",
-              color: "#FFFFFF",
-              padding: 18,
-              borderRadius: "var(--radius)",
-              border: "1px solid #1E293B",
-              position: "relative",
-              overflow: "hidden"
-            }}>
-              <div>
-                <div className="ta-row ta-between">
-                  <span className="ta-tag" style={{ background: "rgba(239, 68, 68, 0.2)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.3)", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
-                    <Radio size={11} color="#F87171" /> LIVE NOW • 08:30 AM
-                  </span>
-                  <span style={{ fontSize: 11, color: "#94A3B8" }}>Studio 1</span>
-                </div>
+            {(() => {
+              const liveSess = (sessionsQuery.data || [])[0] || {
+                title: "Spatial UI & Design Systems Critique",
+                mentor: "Astrid Larsson",
+                time: "LIVE NOW • 08:30 AM",
+                status: "live",
+                room_url: "https://meet.google.com/new"
+              };
+              return (
+                <div className="ta-card" style={{
+                  background: "#0F172A",
+                  color: "#FFFFFF",
+                  padding: 18,
+                  borderRadius: "var(--radius)",
+                  border: "1px solid #1E293B",
+                  position: "relative",
+                  overflow: "hidden"
+                }}>
+                  <div>
+                    <div className="ta-row ta-between">
+                      <span className="ta-tag" style={{ background: "rgba(239, 68, 68, 0.2)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.3)", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <Radio size={11} color="#F87171" /> {liveSess.status === "live" ? "LIVE NOW" : "UPCOMING"} • {liveSess.time}
+                      </span>
+                      <span style={{ fontSize: 11, color: "#94A3B8" }}>Studio 1</span>
+                    </div>
 
-                <div style={{ fontWeight: 800, fontSize: 15, marginTop: 10 }}>Spatial UI &amp; Design Systems Critique</div>
-                <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>
-                  Batch 04 live cohort review with Lead Instructors &amp; 24 learners online.
-                </div>
+                    <div style={{ fontWeight: 800, fontSize: 15, marginTop: 10 }}>{liveSess.title}</div>
+                    <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>
+                      Live cohort review with Lead Instructors &amp; active learners online.
+                    </div>
 
-                <div className="ta-row ta-between ta-mt14">
-                  <div className="ta-row ta-gap8">
-                    <img 
-                      src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                      alt="Instructor"
-                      style={{ width: 30, height: 30, borderRadius: 6, objectFit: "cover" }}
-                    />
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 700 }}>Astrid Larsson</div>
-                      <div style={{ fontSize: 10.5, color: "#94A3B8" }}>Lead Facilitator</div>
+                    <div className="ta-row ta-between ta-mt14">
+                      <div className="ta-row ta-gap8">
+                        <img 
+                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+                          alt="Instructor"
+                          style={{ width: 30, height: 30, borderRadius: 6, objectFit: "cover" }}
+                        />
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 700 }}>{liveSess.mentor || "Astrid Larsson"}</div>
+                          <div style={{ fontSize: 10.5, color: "#94A3B8" }}>Lead Facilitator</div>
+                        </div>
+                      </div>
+                      <button 
+                        className="ta-btn ta-btn-primary ta-btn-sm"
+                        style={{ background: "#2563EB", border: "none", borderRadius: 6 }}
+                        onClick={() => window.open(liveSess.room_url || "https://meet.google.com/new", "_blank")}
+                      >
+                        Join Studio →
+                      </button>
                     </div>
                   </div>
-                  <button 
-                    className="ta-btn ta-btn-primary ta-btn-sm"
-                    style={{ background: "#2563EB", border: "none", borderRadius: 6 }}
-                    onClick={() => window.open("https://meet.google.com/new", "_blank")}
-                  >
-                    Join Studio →
-                  </button>
                 </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Cohort Diagnostic Insights Card */}
             <div className="ta-card" style={{ padding: 20,
