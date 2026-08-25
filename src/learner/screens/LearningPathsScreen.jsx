@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar } from "../components/LearnerUI.jsx";
 import { 
-  Map, Award, BookOpen, Clock, CheckCircle2, 
+  Map as MapIcon, Award, BookOpen, Clock, CheckCircle2, 
   Users, ArrowRight, ChevronRight, Layers, 
   ShieldCheck, Filter, Search, Play, Check, X, Laptop,
   Compass, Star, Sparkles, CheckSquare, Zap, BookMarked
@@ -704,7 +704,7 @@ export function LearningPathsScreen({
       <div className="tai-col tai-gap20 anim-stagger">
         {filteredTracks.length === 0 ? (
           <div className="tai-card" style={{ textAlign: "center", padding: "48px 24px", borderRadius: 10 }}>
-            <Map size={36} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
+            <MapIcon size={36} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
             <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
               No learning pathways found
             </div>
