@@ -244,7 +244,6 @@ export function AIQuizScreen({
         {[
           { k: "coach", label: "AI Coach & Tutor", icon: MessageSquare },
           { k: "quiz", label: "Adaptive Quizzes", icon: Zap },
-          { k: "history", label: "Session History", icon: BookOpen },
           { k: "insights", label: "Performance Insights", icon: Zap },
         ].map(t => {
           const Icon = t.icon;
