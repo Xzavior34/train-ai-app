@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TopBar, StatTile, ProgressBar, Tag } from "../components/LearnerUI.jsx";
 import { ACHIEVEMENT_CATALOG, getAchievementProgress } from "../achievementCatalog.js";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";

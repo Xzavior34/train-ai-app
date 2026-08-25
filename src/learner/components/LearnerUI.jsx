@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useContext, useRef, useMemo, createContext } from "react";
 import {
   Home, BookOpen, Zap, Plus, Users, Settings, ArrowLeft, GraduationCap, Bookmark, Clock, CheckCircle2,
   Repeat, ChevronRight, ChevronDown, ChevronUp, Bell, Flame, MessageSquare, Calendar,
