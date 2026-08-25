@@ -27,7 +27,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
   autoPlay = false
 }, ref) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(145);
+  const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(durationMinutes * 60);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(0.85);
@@ -56,29 +56,107 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
     }
   }, [durationMinutes]);
 
-  // Universal Simulated Progress Timer (Ensures scrub, elapsed time and chapters update in all modes)
+  // Helper to send command to YouTube iframe
+  const sendYouTubeCommand = (func, args = []) => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({
+          event: "command",
+          func: func,
+          args: args
+        }),
+        "*"
+      );
+    }
+  };
+
+  // Bidirectional YouTube Iframe Message Listener & State Synchronizer
   useEffect(() => {
-    let interval = null;
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentTime((prev) => {
-          const next = prev + 1 * playbackSpeed;
-          if (next >= duration) {
+    const handleWindowMessage = (e) => {
+      if (!e.data) return;
+      let data = null;
+      if (typeof e.data === "string") {
+        try {
+          data = JSON.parse(e.data);
+        } catch {
+          return;
+        }
+      } else if (typeof e.data === "object") {
+        data = e.data;
+      }
+      if (!data) return;
+
+      // Handle info delivery events from YouTube API
+      if (data.event === "infoDelivery" && data.info) {
+        const info = data.info;
+        if (typeof info.currentTime === "number") {
+          setCurrentTime(info.currentTime);
+          onProgress?.(info.currentTime, info.duration || duration);
+        }
+        if (typeof info.duration === "number" && info.duration > 0) {
+          setDuration(info.duration);
+        }
+        if (typeof info.playerState === "number") {
+          if (info.playerState === 1) { // playing
+            setIsPlaying(true);
+          } else if (info.playerState === 2) { // paused
+            setIsPlaying(false);
+          } else if (info.playerState === 0) { // ended
             setIsPlaying(false);
             onEnded?.();
-            return duration;
           }
-          onProgress?.(next, duration);
-          return next;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
+        }
+        if (typeof info.playbackRate === "number") {
+          setPlaybackSpeed(info.playbackRate);
+        }
+        if (typeof info.volume === "number") {
+          setVolume(info.volume / 100);
+        }
+        if (typeof info.muted === "boolean") {
+          setIsMuted(info.muted);
+        }
+        if (info.playbackQuality) {
+          const qMap = {
+            hd1080: "1080p HD",
+            hd720: "720p",
+            large: "480p",
+            medium: "360p",
+            small: "240p",
+            auto: "Auto"
+          };
+          setVideoQuality(qMap[info.playbackQuality] || info.playbackQuality.toUpperCase());
+        }
+      } else if (data.event === "onStateChange") {
+        if (data.info === 1) setIsPlaying(true);
+        else if (data.info === 2) setIsPlaying(false);
+        else if (data.info === 0) {
+          setIsPlaying(false);
+          onEnded?.();
+        }
+      } else if (data.event === "initialDelivery") {
+        if (data.info?.duration) {
+          setDuration(data.info.duration);
+        }
+      }
     };
-  }, [isPlaying, playbackSpeed, duration, onProgress, onEnded]);
 
-  // Expose imperative methods to parent (for Chapters and Transcript click)
+    window.addEventListener("message", handleWindowMessage);
+    return () => {
+      window.removeEventListener("message", handleWindowMessage);
+    };
+  }, [duration, onProgress, onEnded]);
+
+  // Handle iframe initial load: establish listening connection
+  const handleIframeLoad = () => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        JSON.stringify({ event: "listening", id: source.videoId }),
+        "*"
+      );
+    }
+  };
+
+  // Expose imperative methods to parent (for Chapters, Notes, and External Controls)
   useImperativeHandle(ref, () => ({
     seekTo: (seconds) => {
       const targetSec = Math.max(0, Math.min(seconds, duration || 9999));
@@ -91,38 +169,34 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
           videoRef.current.play().catch(() => {});
           setIsPlaying(true);
         }
-      } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: "command", func: "seekTo", args: [targetSec, true] }),
-          "*"
-        );
+      } else if (source.type === "youtube") {
+        sendYouTubeCommand("seekTo", [targetSec, true]);
+        if (!isPlaying) {
+          sendYouTubeCommand("playVideo");
+          setIsPlaying(true);
+        }
       }
     },
     play: () => {
       setIsPlaying(true);
       if (source.type === "html5" && videoRef.current) {
         videoRef.current.play().catch(() => {});
-      } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: "command", func: "playVideo", args: [] }),
-          "*"
-        );
+      } else if (source.type === "youtube") {
+        sendYouTubeCommand("playVideo");
       }
     },
     pause: () => {
       setIsPlaying(false);
       if (source.type === "html5" && videoRef.current) {
         videoRef.current.pause();
-      } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage(
-          JSON.stringify({ event: "command", func: "pauseVideo", args: [] }),
-          "*"
-        );
+      } else if (source.type === "youtube") {
+        sendYouTubeCommand("pauseVideo");
       }
     },
     setSpeed: (spd) => handleSpeedChange(spd),
-    setQuality: (q) => setVideoQuality(q)
-  }), [source.type, duration, isPlaying, playbackSpeed]);
+    setQuality: (q) => handleQualityChange(q),
+    toggleMute: () => handleMuteToggle()
+  }), [source.type, duration, isPlaying, playbackSpeed, isMuted]);
 
   // HTML5 Video Handlers
   const handleTimeUpdate = () => {
@@ -155,15 +229,8 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
       } else {
         videoRef.current.pause();
       }
-    } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({
-          event: "command",
-          func: nextPlay ? "playVideo" : "pauseVideo",
-          args: []
-        }),
-        "*"
-      );
+    } else if (source.type === "youtube") {
+      sendYouTubeCommand(nextPlay ? "playVideo" : "pauseVideo");
     }
   };
 
@@ -174,11 +241,8 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
 
     if (source.type === "html5" && videoRef.current) {
       videoRef.current.currentTime = nextTime;
-    } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: "seekTo", args: [nextTime, true] }),
-        "*"
-      );
+    } else if (source.type === "youtube") {
+      sendYouTubeCommand("seekTo", [nextTime, true]);
     }
   };
 
@@ -189,11 +253,8 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
 
     if (source.type === "html5" && videoRef.current) {
       videoRef.current.currentTime = nextTime;
-    } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: "seekTo", args: [nextTime, true] }),
-        "*"
-      );
+    } else if (source.type === "youtube") {
+      sendYouTubeCommand("seekTo", [nextTime, true]);
     }
   };
 
@@ -203,11 +264,8 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
 
     if (source.type === "html5" && videoRef.current) {
       videoRef.current.muted = nextMute;
-    } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: nextMute ? "mute" : "unMute", args: [] }),
-        "*"
-      );
+    } else if (source.type === "youtube") {
+      sendYouTubeCommand(nextMute ? "mute" : "unMute");
     }
   };
 
@@ -219,11 +277,11 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
     if (source.type === "html5" && videoRef.current) {
       videoRef.current.volume = newVol;
       videoRef.current.muted = newVol === 0;
-    } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: "setVolume", args: [newVol * 100] }),
-        "*"
-      );
+    } else if (source.type === "youtube") {
+      sendYouTubeCommand("setVolume", [newVol * 100]);
+      if (newVol > 0 && isMuted) {
+        sendYouTubeCommand("unMute");
+      }
     }
   };
 
@@ -233,12 +291,25 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
 
     if (source.type === "html5" && videoRef.current) {
       videoRef.current.playbackRate = speed;
-    } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: "setPlaybackRate", args: [speed] }),
-        "*"
-      );
+    } else if (source.type === "youtube") {
+      sendYouTubeCommand("setPlaybackRate", [speed]);
     }
+  };
+
+  const handleQualityChange = (qualityStr) => {
+    setVideoQuality(qualityStr);
+    setShowQualityMenu(false);
+
+    const qualityMap = {
+      "1080p HD": "hd1080",
+      "720p": "hd720",
+      "480p": "large",
+      "360p": "medium",
+      "Auto": "default"
+    };
+    const ytQuality = qualityMap[qualityStr] || "default";
+    sendYouTubeCommand("setPlaybackQuality", [ytQuality]);
+    sendYouTubeCommand("setPlaybackQualityRange", [ytQuality, ytQuality]);
   };
 
   const handleScrub = (e) => {
@@ -251,11 +322,8 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
 
     if (source.type === "html5" && videoRef.current) {
       videoRef.current.currentTime = targetTime;
-    } else if (source.type === "youtube" && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({ event: "command", func: "seekTo", args: [targetTime, true] }),
-        "*"
-      );
+    } else if (source.type === "youtube") {
+      sendYouTubeCommand("seekTo", [targetTime, true]);
     }
   };
 
@@ -451,7 +519,8 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
             ref={iframeRef}
             key={source.videoId}
             title={lessonTitle}
-            src={`https://www.youtube.com/embed/${source.videoId}?rel=0&modestbranding=1&controls=1&playsinline=1`}
+            src={`https://www.youtube.com/embed/${source.videoId}?enablejsapi=1&rel=0&modestbranding=1&controls=1&playsinline=1${typeof window !== "undefined" && window.location.origin ? `&origin=${encodeURIComponent(window.location.origin)}` : ""}`}
+            onLoad={handleIframeLoad}
             style={{
               position: "absolute",
               top: 0,

@@ -104,8 +104,8 @@ export function LessonScreen({
 
   // Video Player States
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTimeSec, setCurrentTimeSec] = useState(145);
-  const [totalDurationSec] = useState(1320); // 22:00 mins
+  const [currentTimeSec, setCurrentTimeSec] = useState(0);
+  const [totalDurationSec, setTotalDurationSec] = useState(1320); // 22:00 mins
   const [isMuted, setIsMuted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
@@ -329,6 +329,7 @@ export function LessonScreen({
             onToggleTheatreMode={() => setIsTheatreMode(v => !v)}
             onProgress={(cur, dur) => {
               setCurrentTimeSec(Math.round(cur));
+              if (dur && dur > 0) setTotalDurationSec(Math.round(dur));
             }}
             onEnded={() => {
               if (!isCompleted) handleMarkDone();
