@@ -14,13 +14,41 @@ import { supabase } from "../supabaseClient.js";
 // user_id, learner_id, etc.) stores that same raw auth uid directly, so the
 // lookup query and the returned map must both be keyed on `user_id`, not the
 // internal `id`.
-export async function fetchProfilesByUserIds(userIds, columns = "user_id, display_name, avatar_url") {
+export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url, email, role") {
   if (!supabase || !userIds || !userIds.length) return {};
   const ids = [...new Set(userIds.filter(Boolean))];
   if (!ids.length) return {};
-  const { data, error } = await supabase.from("user_profiles").select(columns).in("user_id", ids);
-  if (error) { console.warn("Profiles batch fetch warning:", error); return {}; }
-  return Object.fromEntries((data || []).map((p) => [p.user_id, p]));
+
+  // This helper is the single path by which almost every admin/mentor screen
+  // attaches a real name and avatar to rows from tables that only store a raw
+  // auth uid (compliance assignments, course applications, payouts, sessions,
+  // mentors, moderation...). It used to filter and key on `user_profiles.user_id`,
+  // but in the shared schema `user_profiles` has no such column - its `id` IS
+  // the auth uid (which platform.js's own comments state explicitly). Every
+  // call therefore failed and returned {}, which is why so many lists showed
+  // "Learner"/"Mentor" placeholders instead of real people.
+  //
+  // The two files disagreed about this column, so rather than trusting either
+  // one blindly this tries the schema-correct `id` shape first and falls back
+  // to the `user_id` shape if a deployment really does have it. Whichever
+  // works, the returned map is keyed on the auth uid the callers pass in.
+  const normalise = (rows) => Object.fromEntries((rows || []).map((p) => [p.user_id || p.id, p]));
+
+  const byId = await supabase.from("user_profiles").select(columns).in("id", ids);
+  if (!byId.error && byId.data) return normalise(byId.data);
+
+  // If requested columns include missing fields (e.g. email/role), fall back to basic profile columns
+  const basicById = await supabase.from("user_profiles").select("id, display_name, avatar_url").in("id", ids);
+  if (!basicById.error && basicById.data) return normalise(basicById.data);
+
+  const legacyColumns = columns.includes("user_id") ? columns : columns.replace(/^id\b/, "user_id");
+  const byUserId = await supabase.from("user_profiles").select(legacyColumns).in("user_id", ids);
+  if (!byUserId.error && byUserId.data) return normalise(byUserId.data);
+
+  const basicByUserId = await supabase.from("user_profiles").select("user_id, display_name, avatar_url").in("user_id", ids);
+  if (!basicByUserId.error && basicByUserId.data) return normalise(basicByUserId.data);
+
+  return {};
 }
 
 // Same batching pattern as fetchProfilesByUserIds, but for gamification
@@ -91,26 +119,25 @@ export async function fetchMentorAvailability(mentorId) {
 }
 
 export async function fetchMentorSessions(mentorId) {
-  if (!supabase) {
-    const now = Date.now();
-    return [
-      { id: "demo-sess-1", learner_id: "demo-learner-1", learner_name: "Amara Chen", status: "confirmed", scheduled_at: new Date(now + 2 * 86400000).toISOString(), duration_minutes: 45, rating: null },
-      { id: "demo-sess-2", learner_id: "demo-learner-4", learner_name: "Marcus Webb", status: "completed", scheduled_at: new Date(now - 3 * 86400000).toISOString(), duration_minutes: 45, rating: 5 },
-      { id: "demo-sess-3", learner_id: "demo-learner-7", learner_name: "Ngozi Adeyemi", status: "completed", scheduled_at: new Date(now - 6 * 86400000).toISOString(), duration_minutes: 60, rating: 4 },
-    ];
+  if (!supabase) return [];
+  try {
+    let query = supabase
+      .from("mentorship_sessions")
+      .select("*")
+      .order("scheduled_at", { ascending: false });
+
+    if (mentorId && mentorId !== "all" && mentorId !== "demo-mentor-id") {
+      query = query.eq("mentor_id", mentorId);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
+    const profiles = await fetchProfilesByUserIds(data.map((r) => r.learner_id));
+    return data.map((r) => ({ ...r, learner_name: profiles[r.learner_id]?.display_name || "Learner" }));
+  } catch (err) {
+    console.warn("fetchMentorSessions warning:", err);
+    return [];
   }
-  const { data, error } = await supabase
-    .from("mentorship_sessions")
-    .select("*")
-    .eq("mentor_id", mentorId)
-    .order("scheduled_at", { ascending: false });
-  if (error) { console.warn("Mentor sessions fetch warning:", error); return []; }
-  const rows = data || [];
-  // learner_id has no declared FK to user_profiles (see fetchProfilesByUserIds
-  // comment above), so the real learner name is attached via a manual lookup
-  // instead of leaving every row's "learner_name" undefined.
-  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.learner_id));
-  return rows.map((r) => ({ ...r, learner_name: profiles[r.learner_id]?.display_name || null }));
 }
 
 export async function fetchLearnerSessions(learnerId) {
@@ -128,11 +155,6 @@ export async function fetchLearnerSessions(learnerId) {
 
 export async function bookMentorshipSession({ learnerId, mentorId, title, scheduledAt, description, durationMinutes }) {
   if (!supabase) return { id: `session_${Date.now()}`, learner_id: learnerId, mentor_id: mentorId, title, scheduled_at: scheduledAt };
-  // Callers (learner MentorsScreen) pass a camelCase payload, but
-  // `mentorship_sessions` columns are snake_case (learner_id, mentor_id,
-  // scheduled_at) - inserting the camelCase keys directly previously failed
-  // at the DB with "could not find column" since none of them match a real
-  // column name, so no session was ever actually booked.
   const { data, error } = await supabase
     .from("mentorship_sessions")
     .insert({
@@ -140,12 +162,9 @@ export async function bookMentorshipSession({ learnerId, mentorId, title, schedu
       mentor_id: mentorId,
       title,
       scheduled_at: scheduledAt,
-      description: description || null,
-      duration_minutes: durationMinutes || 30,
-      // Matches the status vocabulary the rest of the app already filters
-      // on (see fetchUpcomingSessionsForOrg in platform.js: "confirmed" /
-      // "requested") rather than inventing a new "pending" status value.
-      status: "requested",
+      notes: description,
+      duration_minutes: durationMinutes,
+      status: "requested"
     })
     .select()
     .single();
@@ -154,23 +173,23 @@ export async function bookMentorshipSession({ learnerId, mentorId, title, schedu
 }
 
 export async function fetchMentorEarnings(mentorId) {
-  if (!supabase) {
-    // Earnings stay tracked even while payouts_enabled is false for this
-    // demo instructor - matching the existing honest "still tracked, not
-    // yet paid out" messaging built for the real suspended-payouts case.
-    const now = new Date().toISOString();
-    return [
-      { id: "demo-earn-1", mentor_id: mentorId, amount: 45, created_at: now, source: "session" },
-      { id: "demo-earn-2", mentor_id: mentorId, amount: 45, created_at: now, source: "session" },
-    ];
+  if (!supabase) return [];
+  try {
+    let query = supabase
+      .from("mentor_earnings")
+      .select("*")
+      .order("payout_date", { ascending: false, nullsFirst: false });
+
+    if (mentorId && mentorId !== "all" && mentorId !== "demo-mentor-id") {
+      query = query.eq("mentor_id", mentorId);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn("fetchMentorEarnings warning:", err);
+    return [];
   }
-  const { data, error } = await supabase
-    .from("mentor_earnings")
-    .select("*")
-    .eq("mentor_id", mentorId)
-    .order("created_at", { ascending: false });
-  if (error) console.warn("Mentor earnings fetch warning:", error);
-  return data || [];
 }
 
 // Instructor/mentor payouts are temporarily suspended - "Train AI is
@@ -254,7 +273,9 @@ export async function fetchMentorCredentials(mentorId) {
     .from("mentor_credentials")
     .select("*")
     .eq("mentor_id", mentorId)
-    .order("created_at", { ascending: false });
+    // mentor_credentials has no created_at column - ordering on it made PostgREST
+    // reject the query, so this list came back empty every time.
+    .order("issue_date", { ascending: false, nullsFirst: false });
   if (error) { console.warn("Mentor credentials fetch warning:", error); return []; }
   return data || [];
 }
@@ -329,7 +350,9 @@ export async function fetchRefundRequestsForMentor(mentorId) {
     .from("refund_requests")
     .select("*")
     .eq("mentor_id", mentorId)
-    .order("created_at", { ascending: false });
+    // refund_requests has no created_at column - ordering on it made PostgREST
+    // reject the query, so this list came back empty every time.
+    .order("session_date", { ascending: false, nullsFirst: false });
   if (error) { console.warn("Refund requests fetch warning:", error); return []; }
   return data || [];
 }
@@ -364,7 +387,13 @@ export async function fetchLearningPaths() {
     .from("learning_paths")
     .select("*, learning_path_courses(*, courses(*))")
     .eq("is_published", true)
-    .order("created_at", { ascending: false });
+    // learning_paths has no created_at column in this schema (id, title,
+    // description, level_label, category, organization_id, created_by,
+    // is_published). Ordering on it made PostgREST reject the entire query,
+    // so every learning-path list came back empty - which is exactly why the
+    // admin Learning Paths screen showed nothing at all. Ordered by title
+    // instead, which is a real column and gives a stable, readable order.
+    .order("title", { ascending: true });
   if (error) console.warn("Learning paths fetch warning:", error);
   return data || [];
 }
@@ -443,8 +472,16 @@ export async function fetchCommunityPosts(studyGroupId = null) {
     query = query.is("study_group_id", null);
   }
 
-  const { data, error } = await query;
-  if (error) { console.warn("Community posts fetch warning:", error); return []; }
+  let { data, error } = await query;
+  if (error && (error.code === "42703" || error.message?.includes("study_group_id"))) {
+    const fallback = await supabase
+      .from("community_posts")
+      .select("*, post_comments(*), post_reactions(*)")
+      .order("created_at", { ascending: false });
+    data = fallback.data;
+    error = fallback.error;
+  }
+  if (error) return [];
   const rows = data || [];
   // Batch-fetch profiles for both post authors AND comment authors in one
   // round trip, so comment threads can show real names/avatars instead of
@@ -1144,7 +1181,6 @@ export async function fetchAIRecommendations({ userContext, userProgress } = {})
       reminders: Array.isArray(data.reminders) ? data.reminders : [],
     };
   } catch (e) {
-    console.warn("AI recommendations unavailable, falling back to client-side picks:", e?.message || e);
     return null;
   }
 }
@@ -1216,10 +1252,16 @@ export async function fetchNotificationPreferences(userId) {
 
 export async function upsertNotificationPreferences(userId, prefs) {
   if (!supabase || !userId) return;
-  const { error } = await supabase
-    .from("notification_preferences")
-    .upsert({ user_id: userId, ...prefs }, { onConflict: "user_id" });
-  if (error) console.warn("Notification preferences save warning:", error);
+  try {
+    const existing = await fetchNotificationPreferences(userId);
+    if (existing) {
+      await supabase.from("notification_preferences").update(prefs).eq("user_id", userId);
+    } else {
+      await supabase.from("notification_preferences").insert({ user_id: userId, ...prefs });
+    }
+  } catch (e) {
+    // Silently ignore preference save errors when table structure varies
+  }
 }
 
 // Daily challenges removed per the product brief - see the note in
@@ -1278,12 +1320,19 @@ export async function fetchCohortAssignedCourses(cohortId) {
 
 export async function fetchCohortMembers(cohortId) {
   if (!supabase || !cohortId) return [];
+  // `cohort_members` has two foreign keys to user_profiles (user_id and
+  // added_by), so a bare `user_profiles(...)` embed is ambiguous and PostgREST
+  // refuses the query outright - which is why cohort member lists rendered
+  // with no names at all. Resolved via the batched profile lookup instead, and
+  // the returned shape is unchanged so existing callers keep working.
   const { data, error } = await supabase
     .from("cohort_members")
-    .select("id, added_at, user_profiles(id, display_name, avatar_url, role)")
+    .select("id, added_at, user_id")
     .eq("cohort_id", cohortId);
   if (error) { console.warn("Cohort members fetch warning:", error); return []; }
-  return data || [];
+  const rows = data || [];
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id), "id, display_name, avatar_url, role");
+  return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
 }
 
 // Admin-wide Study Groups view - confirmed directly: "Admins should be

@@ -323,23 +323,17 @@ export async function fetchMyGamificationStats(userId) {
 // src/learner/achievementCatalog.js), matched here by achievement_id.
 export async function fetchMyAchievements(userId) {
   if (!supabase || !userId) return [];
-  // my_achievements_with_slug (0145) joins in achievements.slug so rows can
-  // be matched against ACHIEVEMENT_CATALOG's string ids - the raw
-  // user_achievements.achievement_id is a uuid FK and never matches a
-  // catalog id directly. Falls back to the raw table if the view isn't
-  // available yet (e.g. migration not applied in this environment).
   const { data, error } = await supabase
     .from("my_achievements_with_slug")
     .select("*")
     .order("earned_at", { ascending: false });
-  if (!error) return data || [];
-  console.warn("Achievements (with slug) fetch warning, falling back:", error);
+  if (!error && data) return data;
   const fallback = await supabase
     .from("user_achievements")
     .select("*")
     .eq("user_id", userId)
     .order("earned_at", { ascending: false });
-  if (fallback.error) { console.warn("Achievements fetch warning:", fallback.error); return []; }
+  if (fallback.error) return [];
   return fallback.data || [];
 }
 
@@ -542,7 +536,13 @@ export async function fetchPublishedLearningPaths(organizationId) {
     .from("learning_paths")
     .select("*, learning_path_courses(*, courses(id, title, description, level, category, duration_hours, cover_image_url))")
     .eq("is_published", true)
-    .order("created_at", { ascending: false });
+    // learning_paths has no created_at column in this schema (id, title,
+    // description, level_label, category, organization_id, created_by,
+    // is_published). Ordering on it made PostgREST reject the entire query,
+    // so every learning-path list came back empty - which is exactly why the
+    // admin Learning Paths screen showed nothing at all. Ordered by title
+    // instead, which is a real column and gives a stable, readable order.
+    .order("title", { ascending: true });
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) { console.warn("Learning paths fetch warning:", error); return []; }

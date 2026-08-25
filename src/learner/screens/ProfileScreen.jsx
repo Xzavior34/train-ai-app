@@ -280,7 +280,7 @@ export function ProfileScreen({
               <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 5, display: "flex", alignItems: "center", gap: "clamp(6px, 1.5vw, 10px)", flexWrap: "wrap", lineHeight: 1.4 }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 4, wordBreak: "break-all" }}>
                   <Mail size={12} color="var(--text-3)" />
-                  {user.email || "evelyn.hayes@trainai.co"}
+                  {user.email || session?.user?.email || "learner@sarafoundationafrica.com"}
                 </span>
                 <span style={{ opacity: 0.4 }}>•</span>
                 <span>{user.location || "San Francisco, CA"}</span>
@@ -409,7 +409,7 @@ export function ProfileScreen({
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Email Address</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.email || "evelyn.hayes@trainai.co"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.email || session?.user?.email || "learner@sarafoundationafrica.com"}</div>
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Current Organization</label>

@@ -433,8 +433,12 @@ export async function purchaseSeats(organizationId, seats, amount, paymentRefere
 // payment reference) only ever runs from OrgPaymentCallbackScreen.jsx
 // after a real payment verification succeeds, not from this function
 // directly.
-const SEAT_PRICE_USD = 10;
-const SEAT_PRICE_NGN = 15000;
+// Exported so the seat-purchase UI can show the real price it is about to
+// charge instead of re-declaring its own copy of the figure. SettingsHubScreen
+// previously kept a separate local SEAT_PRICE_DISPLAY constant, which could
+// drift out of step with what startSeatPurchasePayment actually bills.
+export const SEAT_PRICE_USD = 10;
+export const SEAT_PRICE_NGN = 15000;
 
 export async function startSeatPurchasePayment({ orgId, seats, email, provider = "paystack" }) {
   if (!orgId || !email) return { success: false, error: "Missing organization or email." };

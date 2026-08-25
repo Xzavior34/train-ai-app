@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { TopBar, Avatar, Tag, ProgressBar } from "../components/LearnerUI.jsx";
+import { PortalModal } from "../../components/common/PortalModal.jsx";
 import {
   Bookmark, BookOpen, Video, Code2, FileText, Trash2, ExternalLink, Play,
-  FolderPlus, Search, Check, Heart, Clock, Star, ArrowRight, Share2, Copy, Plus
+  FolderPlus, Search, Check, Heart, Clock, Star, ArrowRight, Share2, Copy, Plus, X
 } from "lucide-react";
 
 export function BookmarksScreen({ push, back, showToast, session }) {
@@ -10,6 +11,14 @@ export function BookmarksScreen({ push, back, showToast, session }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCollection, setSelectedCollection] = useState("all");
   const [copiedSnippetId, setCopiedSnippetId] = useState(null);
+
+  // Add Note / Snippet Modal State
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newType, setNewType] = useState("note"); // "note" | "snippet"
+  const [newCollection, setNewCollection] = useState("Design Systems");
+  const [newContent, setNewContent] = useState("");
+  const [newLanguage, setNewLanguage] = useState("JavaScript");
 
   const [savedCourses, setSavedCourses] = useState([
     {
@@ -159,49 +168,46 @@ results = vector_store.similarity_search(query, k=4)`
     showToast?.("Snippet removed from bookmarks.");
   }
 
-  function handleRemoveNote(id) {
-    setSavedNotes(prev => prev.filter(n => n.id !== id));
-    showToast?.("Note removed from bookmarks.");
+  function handleAddNoteOrSnippet() {
+    if (!newTitle.trim() || !newContent.trim()) {
+      showToast?.("Please enter a title and content.");
+      return;
+    }
+
+    if (newType === "snippet") {
+      const item = {
+        id: `snippet-${Date.now()}`,
+        title: newTitle.trim(),
+        language: newLanguage,
+        source: `Saved Note • ${newCollection}`,
+        collection: newCollection,
+        code: newContent.trim()
+      };
+      setSavedSnippets(prev => [item, ...prev]);
+      setActiveTab("snippets");
+      showToast?.("New code snippet added to library!");
+    } else {
+      const item = {
+        id: `note-${Date.now()}`,
+        title: newTitle.trim(),
+        source: `Saved Note • ${newCollection}`,
+        content: newContent.trim(),
+        date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        collection: newCollection
+      };
+      setSavedNotes(prev => [item, ...prev]);
+      setActiveTab("notes");
+      showToast?.("New study note added to library!");
+    }
+
+    setAddModalOpen(false);
+    setNewTitle("");
+    setNewContent("");
   }
-
-  // Filter items by collection and search
-  const filteredCourses = savedCourses.filter(c => {
-    if (selectedCollection !== "all" && c.collection !== selectedCollection) return false;
-    if (searchQuery && !c.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
-
-  const filteredLessons = savedLessons.filter(l => {
-    if (selectedCollection !== "all" && l.collection !== selectedCollection) return false;
-    if (searchQuery && !l.title.toLowerCase().includes(searchQuery.toLowerCase()) && !l.courseTitle.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
-
-  const filteredSnippets = savedSnippets.filter(s => {
-    if (selectedCollection !== "all" && s.collection !== selectedCollection) return false;
-    if (searchQuery && !s.title.toLowerCase().includes(searchQuery.toLowerCase()) && !s.code.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
-
-  const filteredNotes = savedNotes.filter(n => {
-    if (selectedCollection !== "all" && n.collection !== selectedCollection) return false;
-    if (searchQuery && !n.title.toLowerCase().includes(searchQuery.toLowerCase()) && !n.content.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
-
-  const totalFilteredCount =
-    (activeTab === "all" ? (filteredCourses.length + filteredLessons.length + filteredSnippets.length + filteredNotes.length) :
-    activeTab === "courses" ? filteredCourses.length :
-    activeTab === "lessons" ? filteredLessons.length :
-    activeTab === "snippets" ? filteredSnippets.length :
-    filteredNotes.length);
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       
-      {/* =========================================================================
-          HERO BANNER: Dedicated Bookmarks & Study Library
-          ========================================================================= */}
       {/* =========================================================================
           HERO BANNER: Dedicated Bookmarks & Study Library (Adaptive Liquid Glass)
           ========================================================================= */}
@@ -609,6 +615,154 @@ results = vector_store.similarity_search(query, k=4)`
             Browse Courses Catalog →
           </button>
         </div>
+      )}
+
+      {/* =========================================================================
+          ADD NOTE / CODE SNIPPET MODAL
+          ========================================================================= */}
+      {addModalOpen && (
+        <PortalModal isOpen={addModalOpen} onClose={() => setAddModalOpen(false)}>
+          <div style={{ padding: 24, maxWidth: 520, width: "100%", position: "relative" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Plus size={20} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: "var(--text)" }}>Add New Note or Snippet</h3>
+                  <div style={{ fontSize: 12, color: "var(--text-3)" }}>Save custom study notes or reusable code to your library</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAddModalOpen(false)}
+                style={{ background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", padding: 4 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: 6 }}>
+                  Item Type
+                </label>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    type="button"
+                    onClick={() => setNewType("note")}
+                    className={`tai-btn ${newType === "note" ? "tai-btn-primary" : "tai-btn-outline"}`}
+                    style={{ flex: 1, padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                  >
+                    <FileText size={15} /> Study Note
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewType("snippet")}
+                    className={`tai-btn ${newType === "snippet" ? "tai-btn-primary" : "tai-btn-outline"}`}
+                    style={{ flex: 1, padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                  >
+                    <Code2 size={15} /> Code Snippet
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: 6 }}>
+                  Title / Subject
+                </label>
+                <input
+                  type="text"
+                  placeholder={newType === "snippet" ? "e.g. LangChain RAG Vector Retriever" : "e.g. Key Takeaways from Spatial UX Lesson"}
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8,
+                    border: "1px solid var(--border)", background: "var(--surface)",
+                    color: "var(--text)", fontSize: 13
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: 6 }}>
+                    Collection
+                  </label>
+                  <select
+                    value={newCollection}
+                    onChange={(e) => setNewCollection(e.target.value)}
+                    style={{
+                      width: "100%", padding: "10px 12px", borderRadius: 8,
+                      border: "1px solid var(--border)", background: "var(--surface)",
+                      color: "var(--text)", fontSize: 13
+                    }}
+                  >
+                    <option value="Design Systems">Design Systems</option>
+                    <option value="Full-Stack AI">Full-Stack AI</option>
+                    <option value="Spatial Design">Spatial Design</option>
+                    <option value="General">General Notes</option>
+                  </select>
+                </div>
+
+                {newType === "snippet" && (
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: 6 }}>
+                      Language
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Python, TypeScript, SQL"
+                      value={newLanguage}
+                      onChange={(e) => setNewLanguage(e.target.value)}
+                      style={{
+                        width: "100%", padding: "10px 12px", borderRadius: 8,
+                        border: "1px solid var(--border)", background: "var(--surface)",
+                        color: "var(--text)", fontSize: 13
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", display: "block", marginBottom: 6 }}>
+                  {newType === "snippet" ? "Code Block" : "Note Content"}
+                </label>
+                <textarea
+                  rows={5}
+                  placeholder={newType === "snippet" ? "// Paste code snippet here..." : "Type your study summary or notes here..."}
+                  value={newContent}
+                  onChange={(e) => setNewContent(e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: 8,
+                    border: "1px solid var(--border)", background: "var(--surface)",
+                    color: "var(--text)", fontSize: 13, fontFamily: newType === "snippet" ? "monospace" : "inherit"
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 10 }}>
+                <button
+                  type="button"
+                  className="tai-btn tai-btn-outline"
+                  onClick={() => setAddModalOpen(false)}
+                  style={{ padding: "9px 16px", borderRadius: 8 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="tai-btn tai-btn-primary"
+                  onClick={handleAddNoteOrSnippet}
+                  style={{ padding: "9px 20px", borderRadius: 8, fontWeight: 800 }}
+                >
+                  Save Item
+                </button>
+              </div>
+            </div>
+          </div>
+        </PortalModal>
       )}
 
     </div>

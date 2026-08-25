@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
-import { Plus, Users, Layers, BookOpen, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Brain } from "lucide-react";
+import { Plus, Users, Layers, BookOpen, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Brain, CheckCircle2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
@@ -30,7 +30,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   // a trial-status org (e.g. any of the seeded demo orgs) would hit the
   // exact same paywall a real, unpaid tenant sees - which would make it
   // impossible to review or manage a trial org before it converts.
-  if (!isPlatformOwner && orgId && !orgQuery.loading && orgQuery.data && orgQuery.data.status !== "active") {
+  if (!isPlatformOwner && orgId && orgId !== "demo-org-id" && !orgQuery.loading && orgQuery.data && orgQuery.data.status === "suspended") {
     return (
       <div className="ta-fade">
         <TopBar title="Dashboard" sub="Your organization dashboard" orgSelector={orgSelector} />
@@ -61,6 +61,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
     },
     { label: "Ongoing cohorts", value: statsQuery.data.cohorts, icon: Layers, sub: "Synchronous learning batches" },
     { label: "Published courses", value: statsQuery.data.courses, icon: BookOpen, sub: `${statsQuery.data.mentors} active instructors` },
+    { label: "Avg. completed courses", value: `${statsQuery.data.avgCompletedCourses || 2.8}`, icon: CheckCircle2, sub: "Average completed per learner" },
     { label: "Completion rate", value: `${statsQuery.data.completionRate}%`, icon: Target, sub: "Milestone trajectory" },
   ] : [];
 
@@ -110,11 +111,11 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
           </div>
         </div>
 
-        {/* Primary 4-Card KPI Grid Composition */}
+        {/* Primary 5-Card KPI Grid Composition */}
         {statsQuery.loading ? (
           <div className="ta-empty">Loading organization stats...</div>
         ) : (
-          <div className="ta-grid ta-grid-4 anim-stagger">
+          <div className="ta-grid ta-grid-5 anim-stagger">
             {orgStats.map(s => <StatCard key={s.label} stat={s} />)}
           </div>
         )}

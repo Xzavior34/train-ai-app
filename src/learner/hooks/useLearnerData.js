@@ -92,6 +92,7 @@ export function useLearnerData(session, screen, params) {
   }, [session?.user?.id, screen === "achievements"]);
 
   const user = {
+    email: userProfileQuery.data?.email || session?.user?.email || "learner@sarafoundationafrica.com",
     name: userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner",
     initials: initialsOf(userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email),
     avatarUrl: userProfileQuery.data?.avatar_url || null,

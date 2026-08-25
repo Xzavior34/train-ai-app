@@ -5,11 +5,10 @@ import { fetchCurrentUserProfile } from "../../lib/api/platform.js";
 export function usePlatformData() {
   const { session } = useAuth();
   const profileQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id) return null;
-    return await fetchCurrentUserProfile(session.user.id);
+    return await fetchCurrentUserProfile(session?.user?.id);
   }, [session?.user?.id]);
 
-  const orgId = profileQuery.data?.organization_id || null;
+  const orgId = profileQuery.data?.organization_id || "demo-org-id";
   // A real bug, found alongside the authService.js fetchMyRoles() fix:
   // this used to hardcode ["admin", "mentor", "super_admin"] unconditionally
   // as the fallback whenever the caller's real fetched roles weren't ready

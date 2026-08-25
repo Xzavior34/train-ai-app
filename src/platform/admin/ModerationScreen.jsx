@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { TopBar, Avatar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
-import { Check, X, Flag, Bot } from "lucide-react";
+import { Check, X, Flag, Bot, ShieldCheck } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchModerationQueue, resolveModerationItem } from "../../lib/api/platform.js";
 import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings } from "../../lib/api/organizations.js";
@@ -29,43 +29,39 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
   // should also be able to turn off AI features for manual mode, where it
   // won't work with AI and they can send their own message via the chat
   // bot/assistant." Reuses the exact same settings already built for
-  // Settings Hub several rounds ago (fetchOrgAISettings/
-  // fetchOrgAIInsightsSettings) rather than a second, competing toggle -
-  // both places read and write the same underlying value, surfaced here
-  // too since Content Moderation is a more natural place to think about
-  // "should AI be making decisions here at all."
-  const aiSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgAISettings(orgId) : null), [orgId]);
-  const aiInsightsSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgAIInsightsSettings(orgId) : null), [orgId]);
   const [coachManual, setCoachManual] = useState(false);
   const [insightsManual, setInsightsManual] = useState(false);
 
-  useEffect(() => { if (aiSettingsQuery.data) setCoachManual(!!aiSettingsQuery.data.manual_mode); }, [aiSettingsQuery.data]);
-  useEffect(() => { if (aiInsightsSettingsQuery.data) setInsightsManual(!!aiInsightsSettingsQuery.data.manual_mode); }, [aiInsightsSettingsQuery.data]);
+  useEffect(() => {
+    fetchOrgAISettings().then((res) => { if (res && res.manual_mode !== undefined) setCoachManual(res.manual_mode); });
+    fetchOrgAIInsightsSettings().then((res) => { if (res && res.manual_mode !== undefined) setInsightsManual(res.manual_mode); });
+  }, []);
 
-  async function handleToggleCoachManual() {
+  const handleToggleCoachManual = async () => {
     const next = !coachManual;
     setCoachManual(next);
-    const result = await updateOrgAISettings(orgId, { manual_mode: next });
-    if (!result.success) { showToast(result.error); setCoachManual(!next); }
-    else showToast(next ? "AI Coach is now in manual mode." : "AI Coach is back to automatic replies.");
-  }
-  async function handleToggleInsightsManual() {
+    const res = await updateOrgAISettings(next);
+    if (res.success) showToast(`AI Coach manual mode ${next ? "enabled" : "disabled"}`);
+    else { setCoachManual(!next); showToast(res.error || "Failed to update AI settings"); }
+  };
+
+  const handleToggleInsightsManual = async () => {
     const next = !insightsManual;
     setInsightsManual(next);
-    const result = await updateOrgAIInsightsSettings(orgId, { manual_mode: next });
-    if (!result.success) { showToast(result.error); setInsightsManual(!next); }
-    else showToast(next ? "AI Insights is now in manual mode." : "AI Insights is back to automatic.");
-  }
+    const res = await updateOrgAIInsightsSettings(next);
+    if (res.success) showToast(`AI Insights manual mode ${next ? "enabled" : "disabled"}`);
+    else { setInsightsManual(!next); showToast(res.error || "Failed to update AI settings"); }
+  };
 
-  async function handleResolve(id, action) {
+  const handleAction = async (item, action) => {
     try {
-      await resolveModerationItem(id, action);
+      await resolveModerationItem(item.id, action);
+      showToast(`Item ${action === "approved" ? "approved" : "rejected"}.`);
       queueQuery.refetch();
-      showToast(action === "approved" ? "Content approved." : "Content removed.");
     } catch (e) {
-      showToast(e.message || "Could not update this item.");
+      showToast(e?.message || `Could not ${action} item.`);
     }
-  }
+  };
 
   return (
     <div className="ta-fade">
@@ -81,10 +77,37 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Content &amp; Safety Moderation</h1>
               <p className="ta-hero-desc">Review flagged posts, policy violations, AI confidence scores, and community safety reports.</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <span className="ta-tag ta-tag-success">
+                  <ShieldCheck size={13} /> AI Guardrails Active
+                </span>
+                <span className="ta-tag ta-tag-info">
+                  <Bot size={13} /> Automated Moderation Engine
+                </span>
+              </div>
             </div>
 
             <div className="ta-hero-actions">
-              <Tag tone={queue.length ? "warning" : "success"}><Flag size={12} /> {queue.length} awaiting review</Tag>
+              <button
+                className="ta-btn"
+                style={{
+                  background: queue.length ? "rgba(245, 158, 11, 0.3)" : "rgba(16, 185, 129, 0.3)",
+                  color: queue.length ? "#FBBF24" : "#34D399",
+                  border: queue.length ? "1px solid rgba(245, 158, 11, 0.6)" : "1px solid rgba(16, 185, 129, 0.6)",
+                  fontWeight: 800,
+                  fontSize: 13,
+                  padding: "8px 16px",
+                  borderRadius: 10,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.2)"
+                }}
+                onClick={() => showToast(queue.length ? `${queue.length} items in moderation queue.` : "Moderation queue is clean and up to date.")}
+              >
+                <Flag size={14} /> {queue.length} {queue.length === 1 ? "item" : "items"} awaiting review
+              </button>
             </div>
           </div>
         </div>

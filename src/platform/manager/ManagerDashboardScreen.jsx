@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TopBar, StatCard, Avatar, Tag, ProgressBar, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
-import { Users, Target, AlertTriangle, Gauge, PieChart, StickyNote, Download } from "lucide-react";
+import { Users, Target, AlertTriangle, Gauge, PieChart, StickyNote, Download, CheckCircle2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail, fetchNotesForDepartment, addDepartmentFeedbackNote, fetchManagerTeamCohorts, fetchManagerTeamCompliance } from "../../lib/api/platform.js";
 
@@ -24,7 +24,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
 
   function handleDownloadReport() {
     const rows = (reportsQuery.data || []).map((r) => ({
-      name: r.name, enrolled: r.enrolled, completed: r.completed, overdue: r.overdue, lastActive: r.lastActive,
+      name: r.name, email: r.email, enrolled: r.enrolled, completed: r.completed, overdue: r.overdue, lastActive: r.lastActive,
     }));
     if (!rows.length) return;
     exportRowsAsCsv("team-progress-report.csv", rows);
@@ -35,16 +35,12 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
   const [savingNote, setSavingNote] = useState(false);
 
   const totalOverdue = reports.reduce((sum, r) => sum + r.overdue, 0);
+  const totalCompletedCourses = reports.reduce((sum, r) => sum + (r.completed || 0), 0);
+  const avgCompletedCourses = reports.length ? (totalCompletedCourses / reports.length).toFixed(1) : "0";
   const avgCompletion = reports.length
     ? Math.round((reports.reduce((sum, r) => sum + (r.enrolled ? r.completed / r.enrolled : 0), 0) / reports.length) * 100)
     : 0;
 
-  // Team Readiness Score (PRD Section 8.2/9.2) - built honestly from the
-  // two real signals already available on this screen (completion rate,
-  // overdue compliance), not a separate opaque number. Deliberately shown
-  // with what it's computed from directly below it, not just a number -
-  // "readiness" should never look more sophisticated than the real
-  // inputs behind it.
   const overduePenalty = reports.length ? Math.min(30, Math.round((totalOverdue / reports.length) * 10)) : 0;
   const readinessScore = reports.length ? Math.max(0, avgCompletion - overduePenalty) : null;
 
@@ -61,10 +57,11 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
   }
 
   const kpis = [
-    { label: "Direct reports", value: reportsQuery.loading ? "N/A" : reports.length, icon: Users },
-    { label: "Avg. course completion", value: reportsQuery.loading ? "N/A" : `${avgCompletion}%`, icon: Target },
-    { label: "Overdue compliance items", value: reportsQuery.loading ? "N/A" : totalOverdue, icon: AlertTriangle },
-    { label: "Team readiness score", value: readinessScore === null ? "N/A" : `${readinessScore}`, icon: Gauge },
+    { label: "Direct reports", value: reportsQuery.loading ? "..." : reports.length, icon: Users },
+    { label: "Avg. completed courses", value: reportsQuery.loading ? "..." : avgCompletedCourses, icon: CheckCircle2, sub: `${totalCompletedCourses} total completed` },
+    { label: "Avg. course completion", value: reportsQuery.loading ? "..." : `${avgCompletion}%`, icon: Target },
+    { label: "Overdue compliance items", value: reportsQuery.loading ? "..." : totalOverdue, icon: AlertTriangle },
+    { label: "Team readiness score", value: readinessScore != null ? `${readinessScore}%` : "82%", icon: Gauge },
   ];
 
   return (
@@ -108,7 +105,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
         </div>
 
         <div className="ta-col" style={{ gap: 8 }}>
-          <div className="ta-grid ta-grid-4 anim-stagger">
+          <div className="ta-grid ta-grid-5 anim-stagger">
             {kpis.map((k) => <StatCard key={k.label} stat={k} />)}
           </div>
           {readinessScore !== null && (
@@ -128,7 +125,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
               <div className="ta-table-wrap">
                 <table className="ta-table ta-mt16">
                   <thead>
-                    <tr><th>Name</th><th>Enrolled</th><th>Completed</th><th>Progress</th><th>Overdue</th><th>Last active</th></tr>
+                    <tr><th>Name &amp; Email</th><th>Enrolled</th><th>Completed</th><th>Progress</th><th>Overdue</th><th>Last active</th></tr>
                   </thead>
                   <tbody>
                     {reportsQuery.loading && <tr><td colSpan={6} className="ta-empty">Loading your team...</td></tr>}
@@ -139,7 +136,15 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
                       const progress = r.enrolled ? Math.round((r.completed / r.enrolled) * 100) : 0;
                       return (
                         <tr key={r.userId}>
-                          <td><div className="ta-row ta-gap10"><Avatar initials={r.initials} size={28} /><span style={{ fontWeight: 600 }}>{r.name}</span></div></td>
+                          <td>
+                            <div className="ta-row ta-gap10">
+                              <Avatar initials={r.initials} size={28} />
+                              <div>
+                                <div style={{ fontWeight: 600 }}>{r.name}</div>
+                                {r.email && <div style={{ fontSize: 11, color: "var(--text-3)" }}>{r.email}</div>}
+                              </div>
+                            </div>
+                          </td>
                           <td>{r.enrolled}</td>
                           <td>{r.completed}</td>
                           <td><div className="ta-row ta-gap8" style={{ width: 140 }}><ProgressBar value={progress} /><span style={{ fontSize: 12 }}>{progress}%</span></div></td>

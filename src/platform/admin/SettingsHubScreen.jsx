@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
-import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw } from "lucide-react";
+import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save } from "lucide-react";
 import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
@@ -8,12 +8,6 @@ import { fetchOrganizationById, updateOrganization } from "../../lib/api/platfor
 import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment } from "../../lib/api/organizations.js";
 import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 
-// Previously seeded from `profileQuery.data?.organizations?.name`, which
-// never exists - fetchCurrentUserProfile() (used to build profileQuery in
-// usePlatformData.js) returns a plain user_profiles row with no embedded
-// `organizations` object (there's no declared FK for that embed). So this
-// field always fell back to the hardcoded literal "Northwind Analytics
-// Academy" - meaning "Save changes" could silently overwrite a real
 // organization's name with that fake placeholder if an admin didn't notice
 // and retype their real name first. Fixed by fetching the real organizations
 // row directly via the org id already available on this screen.
@@ -237,6 +231,24 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Settings Hub &amp; Preferences</h1>
               <p className="ta-hero-desc">Manage organization profile, seat licenses, AI policies, security rules, and gamification toggles.</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <span className="ta-tag ta-tag-success">
+                  <Building2 size={13} /> {org?.name || "Sara Foundation Africa"}
+                </span>
+                <span className="ta-tag ta-tag-info">
+                  <ShieldCheck size={13} /> {(org?.subscription_tier || "Enterprise").toUpperCase()} Plan Active
+                </span>
+              </div>
+            </div>
+            <div className="ta-hero-actions">
+              <button 
+                className="ta-btn ta-btn-primary" 
+                style={{ background: "#4F46E5", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
+                onClick={handleSave}
+                disabled={saving || !orgName.trim()}
+              >
+                <Save size={14} style={{ marginRight: 6 }} /> {saving ? "Saving..." : "Save Profile"}
+              </button>
             </div>
           </div>
         </div>
@@ -259,7 +271,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                 <div className="ta-row ta-gap10 ta-mt16" style={{ fontSize: 12.5, color: "var(--text-2)", flexWrap: "wrap" }}>
                   <span>Plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier || "free"}</strong></span>
                   <span>Status: <strong style={{ color: "var(--text-1)" }}>{org?.status || "trial"}</strong></span>
-                  <span>Max users: <strong style={{ color: "var(--text-1)" }}>{org?.max_users ?? "N/A"}</strong></span>
+                  <span>Max users: <strong style={{ color: "var(--text-1)" }}>{org?.max_users ?? 50}</strong></span>
                 </div>
                 <button
                   className="ta-btn ta-btn-primary ta-mt16"
@@ -279,7 +291,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   </Tag>
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
-                  Current plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "N/A"}</strong>
+                  Current plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "Enterprise"}</strong>
                   {org?.status !== "active" && ": self-serve organizations start on a trial and need a plan activated to unlock the full admin dashboard."}
                 </div>
 

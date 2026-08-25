@@ -46,8 +46,16 @@ function isValidHttpUrl(string) {
 }
 
 function buildClient(urlEnvKey, anonKeyEnvKey) {
-  const url = (import.meta.env[urlEnvKey] || "").trim();
-  const anonKey = (import.meta.env[anonKeyEnvKey] || "").trim();
+  let url = (import.meta.env[urlEnvKey] || "").trim();
+  let anonKey = (import.meta.env[anonKeyEnvKey] || "").trim();
+
+  if (!url || url.toLowerCase().includes("your-")) {
+    url = (import.meta.env.VITE_SUPABASE_URL || "").trim();
+  }
+  if (!anonKey || anonKey.toLowerCase().includes("your-") || anonKey.toLowerCase().includes("anon-public-key")) {
+    anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim();
+  }
+
   const isValidUrl = isValidHttpUrl(url);
   const isPlaceholderKey =
     !anonKey ||
