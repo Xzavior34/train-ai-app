@@ -66,17 +66,25 @@ function ProjectSwitcherBanner({ activeProject: current, projectSessionStatus, o
 // dashboard is "owner", the same way it mounts TrainAILearnerApp for
 // "learner" and TrainAIPlatformApp for "organisation" - three real
 // dashboards, not one dashboard with a hidden extra tab.
-export default function PlatformOwnerApp({ onSwitchDashboard, userRoles: userRolesProp } = {}) {
+export default function PlatformOwnerApp({
+  onSwitchDashboard,
+  userRoles: userRolesProp,
+  superAdminSelectedOrgId: controlledOrgId,
+  setSuperAdminSelectedOrgId: controlledSetOrgId,
+  onSignOut
+} = {}) {
   const { session, profileQuery, userRoles: hookRoles } = usePlatformData();
   const userRoles = userRolesProp || hookRoles;
 
   const allOrgsQuery = useSupabaseQuery(async () => fetchAllOrganizationsWithUserCounts(), [activeProject]);
   const allOrgs = allOrgsQuery.data || [];
-  const [superAdminSelectedOrgId, setSuperAdminSelectedOrgId] = useState("");
+  const [internalOrgId, setInternalOrgId] = useState("");
+  const selectedOrgId = controlledOrgId !== undefined ? controlledOrgId : internalOrgId;
+  const setSelectedOrgId = controlledSetOrgId || setInternalOrgId;
   const orgSelector = {
     orgs: allOrgs,
-    selectedOrgId: superAdminSelectedOrgId,
-    onSelectOrg: (id) => setSuperAdminSelectedOrgId(id),
+    selectedOrgId: selectedOrgId,
+    onSelectOrg: (id) => setSelectedOrgId(id),
   };
 
   const [projectSessionStatus, setProjectSessionStatus] = useState({});

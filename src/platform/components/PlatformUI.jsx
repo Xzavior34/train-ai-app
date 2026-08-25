@@ -647,6 +647,7 @@ const ADMIN_NAV = [
       { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
       { key: "compliance", label: "Learner Progress", icon: ShieldCheck },
       { key: "studygroups", label: "Study Groups", icon: Users },
+      { key: "gjp", label: "Graduate Placement (GJP)", icon: GraduationCap },
     ],
   },
   {
@@ -664,6 +665,7 @@ const ADMIN_NAV = [
       { key: "payouts", label: "Payouts", icon: Briefcase },
       { key: "integrations", label: "Integrations", icon: Plug },
       { key: "moderation", label: "Content Moderation", icon: Flag },
+      { key: "forums", label: "Forums Management", icon: MessageSquare },
     ],
   },
   {
