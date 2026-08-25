@@ -949,4 +949,3 @@ export function LearningPathsScreen({
 }
 
 export default LearningPathsScreen;
-ngPathsScreen;
