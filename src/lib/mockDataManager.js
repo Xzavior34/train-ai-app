@@ -91,54 +91,141 @@ export function subscribeToMockDataChanges(callback) {
 
 // Educational Real YouTube Video Maps for all course topics
 export const MOCK_YOUTUBE_VIDEOS = {
+  // 1. Figma & Spatial Design Systems
   "course-figma-ai": {
-    defaultVideoId: "jwEbff6X3vY", // Figma Design Systems & Variables Masterclass
+    defaultVideoId: "jwEbff6X3vY",
     lessons: {
-      "l-figma-1": "jwEbff6X3vY",
-      "l-figma-2": "7gqG2_v-s_s",
-      "l-figma-3": "b_3gLp0r-2w",
-      "l-figma-4": "5A4Q4DqM3E8"
-    }
-  },
-  "course-fullstack-ai": {
-    defaultVideoId: "2F3TfH3Yf-A", // LangChain & Multi-Agent AI Python Architecture
-    lessons: {
-      "l-fullstack-1": "2F3TfH3Yf-A",
-      "l-fullstack-2": "aywZrzNaKjs",
-      "l-fullstack-3": "L_W_tXq3u3k",
-      "l-fullstack-4": "8pDqJVdNa44"
-    }
-  },
-  "course-prompt-pro": {
-    defaultVideoId: "jC4v5AS4RIM", // Prompt Engineering & LLM Architecture
-    lessons: {
-      "l-prompt-1": "jC4v5AS4RIM",
-      "l-prompt-2": "94S35K3mZ_k",
-      "l-prompt-3": "sal78ACtGTk"
-    }
-  },
-  "course-cloud-devops": {
-    defaultVideoId: "d6WC5n9G_sM", // Docker & Kubernetes Full Course
-    lessons: {
-      "l-cloud-1": "d6WC5n9G_sM",
-      "l-cloud-2": "X48VuDVv0do",
-      "l-cloud-3": "R8_veQiYtZA"
+      "l-figma-1": "jwEbff6X3vY", // Figma Design Systems & Variables Masterclass
+      "l-figma-2": "7gqG2_v-s_s", // Figma Variables & Dark Mode Systems
+      "l-figma-3": "b_3gLp0r-2w", // Figma Auto Layout 5.0 in Depth
+      "l-figma-4": "5A4Q4DqM3E8"  // Figma to Code & AI Plugins
     }
   },
   "course-spatial-ui": {
-    defaultVideoId: "Vb0nP_R590k", // VisionOS Spatial Computing UI Design
+    defaultVideoId: "Vb0nP_R590k",
     lessons: {
-      "l-spatial-1": "Vb0nP_R590k",
-      "l-spatial-2": "7pL4f-O1o34",
-      "l-spatial-3": "fU_gZ5HwH3A"
+      "l-spatial-1": "Vb0nP_R590k", // VisionOS Spatial Computing UI Design
+      "l-spatial-2": "7pL4f-O1o34", // Spatial UI & Glass Tokens
+      "l-spatial-3": "fU_gZ5HwH3A"  // Spatial Prototyping Workshop
     }
   },
-  "course-data-python": {
-    defaultVideoId: "LHBE6Q9XlzI", // Python for Data Science & Vector Stores
+
+  // 2. Full-Stack AI & Web Dev
+  "course-fullstack-ai": {
+    defaultVideoId: "2xxziIWmaSA",
     lessons: {
-      "l-data-1": "LHBE6Q9XlzI",
-      "l-data-2": "nLRL_NcnK-4",
-      "l-data-3": "0B5eIE_1vpU"
+      "l-fullstack-1": "2xxziIWmaSA", // LangChain GEN AI Tutorial – 6 Projects
+      "l-fullstack-2": "aywZrzNaKjs", // LangChain Crash Course
+      "l-fullstack-3": "N4tD1rFkSow", // Production RAG & Vector Databases
+      "l-fullstack-4": "zR27t1908mQ"  // Next.js & Full-Stack App Engineering
+    }
+  },
+  "demo-course-ai-fundamentals": {
+    defaultVideoId: "2xxziIWmaSA",
+    lessons: {
+      "demo-ai-1": "2xxziIWmaSA",
+      "demo-ai-2": "aywZrzNaKjs",
+      "demo-ai-3": "N4tD1rFkSow"
+    }
+  },
+  "d0000000-0000-0000-0000-000000000020": {
+    defaultVideoId: "2xxziIWmaSA",
+    lessons: {
+      "d0000000-0000-0000-0000-000000000020-l1": "2xxziIWmaSA",
+      "d0000000-0000-0000-0000-000000000020-l2": "aywZrzNaKjs"
+    }
+  },
+
+  // 3. Prompt Engineering & LLM Architecture
+  "course-prompt-pro": {
+    defaultVideoId: "s5R-5B-H62E",
+    lessons: {
+      "l-prompt-1": "s5R-5B-H62E", // Prompt Engineering Tutorial – Master ChatGPT & LLMs
+      "l-prompt-2": "d76oHq4G4zM", // Prompt Engineering for Web Devs
+      "l-prompt-3": "L_G8zYv863w"  // Prompt Engineering Full Course 2025
+    }
+  },
+
+  // 4. Cloud DevOps & Microservices
+  "course-cloud-devops": {
+    defaultVideoId: "fqMOX6JJhGo",
+    lessons: {
+      "l-cloud-1": "fqMOX6JJhGo", // Docker Tutorial for Beginners - Full DevOps Course
+      "l-cloud-2": "s_o8gnlrWoU", // Kubernetes Course - Full Beginners Tutorial
+      "l-cloud-3": "pWbMrnB-J_w"  // Master Full-Stack Docker & CI/CD
+    }
+  },
+
+  // 5. Python & Data Science
+  "course-data-python": {
+    defaultVideoId: "N4tqz8yP8T4",
+    lessons: {
+      "l-data-1": "N4tqz8yP8T4", // Python for Data Science Course – Hands-on Projects
+      "l-data-2": "ua-CiDNq95s", // Learn Data Science Tutorial - Full Course
+      "l-data-3": "7eh4d6sabA0"  // Machine Learning with Python Full Course
+    }
+  },
+  "d0000000-0000-0000-0000-000000000023": {
+    defaultVideoId: "N4tqz8yP8T4",
+    lessons: {
+      "d0000000-0000-0000-0000-000000000023-l1": "N4tqz8yP8T4"
+    }
+  },
+
+  // 6. Applied Machine Learning & Foundations of Algebra
+  "course-foundations": {
+    defaultVideoId: "7eh4d6sabA0",
+    lessons: {
+      "l-foundations-1": "7eh4d6sabA0", // Machine Learning with Python
+      "l-foundations-2": "0B5eIE_1v-o", // Scikit-Learn Course
+      "l-foundations-3": "fXpMTcqms80"  // Linear Algebra Course for ML
+    }
+  },
+  "c0000000-0000-0000-0000-000000000001": {
+    defaultVideoId: "7eh4d6sabA0",
+    lessons: {
+      "c0000000-0000-0000-0000-000000000001-l1": "7eh4d6sabA0",
+      "c0000000-0000-0000-0000-000000000001-l2": "0B5eIE_1v-o"
+    }
+  },
+  "c0000000-0000-0000-0000-000000000002": {
+    defaultVideoId: "fXpMTcqms80",
+    lessons: {
+      "c0000000-0000-0000-0000-000000000002-l1": "fXpMTcqms80",
+      "c0000000-0000-0000-0000-000000000002-l2": "B18o7rP82sY"
+    }
+  },
+
+  // 7. Leadership, Management & Workplace Compliance
+  "demo-course-external-leadership": {
+    defaultVideoId: "P3t8i_p4zJ8",
+    lessons: {
+      "demo-lead-1": "P3t8i_p4zJ8",
+      "demo-lead-2": "8Tvy_g8bUfI"
+    }
+  },
+  "d0000000-0000-0000-0000-000000000021": {
+    defaultVideoId: "P3t8i_p4zJ8",
+    lessons: {
+      "d0000000-0000-0000-0000-000000000021-l1": "P3t8i_p4zJ8"
+    }
+  },
+  "d0000000-0000-0000-0000-000000000024": {
+    defaultVideoId: "pWbMrnB-J_w",
+    lessons: {
+      "d0000000-0000-0000-0000-000000000024-l1": "pWbMrnB-J_w"
+    }
+  },
+  "demo-course-compliance-101": {
+    defaultVideoId: "VwT_uG-Z7qA",
+    lessons: {
+      "demo-comp-1": "VwT_uG-Z7qA"
+    }
+  },
+  "d0000000-0000-0000-0000-000000000022": {
+    defaultVideoId: "VwT_uG-Z7qA",
+    lessons: {
+      "d0000000-0000-0000-0000-000000000022-l1": "VwT_uG-Z7qA"
     }
   }
 };
@@ -161,21 +248,27 @@ export function getYouTubeEmbedId(courseId, lessonId, courseTitle = "", category
     return "jwEbff6X3vY";
   }
   if (text.includes("full-stack") || text.includes("react") || text.includes("web") || text.includes("engineer")) {
-    return "2F3TfH3Yf-A";
+    return "2xxziIWmaSA";
   }
   if (text.includes("prompt") || text.includes("llm") || text.includes("agent") || text.includes("ai")) {
-    return "jC4v5AS4RIM";
+    return "s5R-5B-H62E";
   }
   if (text.includes("cloud") || text.includes("devops") || text.includes("docker") || text.includes("kubernetes")) {
-    return "d6WC5n9G_sM";
+    return "fqMOX6JJhGo";
   }
   if (text.includes("spatial") || text.includes("visionos") || text.includes("3d")) {
     return "Vb0nP_R590k";
   }
-  if (text.includes("data") || text.includes("python") || text.includes("analytics")) {
-    return "LHBE6Q9XlzI";
+  if (text.includes("algebra") || text.includes("math")) {
+    return "fXpMTcqms80";
   }
-  if (text.includes("leadership") || text.includes("management") || text.includes("strategy")) {
+  if (text.includes("machine learning") || text.includes("ml") || text.includes("neural")) {
+    return "7eh4d6sabA0";
+  }
+  if (text.includes("data") || text.includes("python") || text.includes("analytics")) {
+    return "N4tqz8yP8T4";
+  }
+  if (text.includes("leadership") || text.includes("management") || text.includes("strategy") || text.includes("project")) {
     return "P3t8i_p4zJ8";
   }
   if (text.includes("compliance") || text.includes("policy") || text.includes("security")) {
