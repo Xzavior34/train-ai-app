@@ -110,6 +110,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   const { credits, addCredits, consume: consumeCredit } = useCredits(session?.user?.id);
 
   function push(nextScreen, nextParams = {}) {
+    if (nextScreen === "aiQuiz") {
+      setAiTab("quiz");
+      setStack(s => [...s, { screen, params }]);
+      setScreen("ai");
+      setParams(nextParams);
+      return;
+    }
     setStack(s => [...s, { screen, params }]);
     setScreen(nextScreen);
     setParams(nextParams);
@@ -141,6 +148,10 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     } else if (key === "myCourses" || key === "myProgress") {
       push("myProgress");
     } else if (key === "ai") {
+      setAiTab("coach");
+      goTab("ai");
+    } else if (key === "aiQuiz") {
+      setAiTab("quiz");
       goTab("ai");
     } else if (key === "communityFeed") {
       setCommunityTab("posts");

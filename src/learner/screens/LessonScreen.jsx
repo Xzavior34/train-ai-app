@@ -40,7 +40,7 @@ const LESSON_RESOURCES = [
   { id: "res-1", title: "Starter Code Repository (GitHub)", type: "GitHub Repo", size: "ZIP • 4.2 MB", icon: Code2, url: "https://github.com" },
   { id: "res-2", title: "Complete Figma Design Tokens & Variables Kit", type: "Figma File", size: "FIG • 18.5 MB", icon: Layers, url: "https://figma.com" },
   { id: "res-3", title: "Masterclass Slide Deck & Architecture Diagrams", type: "PDF Document", size: "PDF • 8.1 MB", icon: FileText, url: "#" },
-  { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: Zap, url: "#" }
+  { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: BookOpen, url: "#" }
 ];
 
 // Lesson Q&A Discussions
@@ -557,7 +557,7 @@ export function LessonScreen({
               { id: "qa", label: `Q&A (${qaThreads.length})`, icon: MessageSquare },
               { id: "transcript", label: "Transcript", icon: Terminal },
               { id: "resources", label: `Resources (${LESSON_RESOURCES.length})`, icon: Paperclip },
-              { id: "reviews", label: "Feedback", icon: Star }
+              { id: "reviews", label: "Feedback", icon: Award }
             ].map(tabItem => {
               const Icon = tabItem.icon;
               const isActive = activeTab === tabItem.id;

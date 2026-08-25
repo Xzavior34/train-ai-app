@@ -4,8 +4,8 @@ import { ACHIEVEMENT_CATALOG, getAchievementProgress } from "../achievementCatal
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 import {
   Trophy, Flame, Snowflake, Award, BookOpen, Users, GraduationCap, CheckCircle2,
-  Gift, Calendar, BarChart3, Clock, Zap, Download, Share2, ExternalLink,
-  ShieldCheck, ArrowUpRight, Check, X, Star, TrendingUp
+  Gift, Calendar, BarChart3, Clock, Download, Share2, ExternalLink,
+  ShieldCheck, ArrowUpRight, Check, X, TrendingUp, Target
 } from "lucide-react";
 import { fetchMyMysteryBoxes, claimMysteryBox } from "../../lib/api/schemaHelper.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
@@ -362,7 +362,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
                     Assessed via quizzes &amp; practical assignments
                   </div>
                 </div>
-                <Zap size={18} color="var(--primary)" />
+                <Target size={18} color="var(--primary)" />
               </div>
 
               <div className="tai-col tai-gap12">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Zap, ArrowRight, X } from "lucide-react";
+import { Clock, ArrowRight, X } from "lucide-react";
 
 function dismissKey(userId) {
   return `trainai_comeback_dismissed:${userId}:${new Date().toISOString().split("T")[0]}`;
@@ -61,7 +61,7 @@ export function ComebackBanner({ userId, daysAway, course, onContinue, onBrowse 
       </button>
       <div className="tai-row tai-gap12">
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--primary-tint)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Zap size={18} color="var(--primary)" />
+          <Clock size={18} color="var(--primary)" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Welcome back!</div>

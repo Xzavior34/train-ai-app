@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Zap, ArrowRight, BellRing, AlertTriangle } from "lucide-react";
+import { Brain, ArrowRight, BellRing, AlertTriangle } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAIRecommendations } from "../../lib/api/schemaHelper.js";
 
@@ -69,7 +69,7 @@ export function AIRecommendationsCard({ user, courses = [], session, goTab, maxI
     <>
       <div className="tai-row tai-between tai-mt20">
         <div className="tai-row tai-gap8">
-          <Zap size={16} color="var(--primary)" />
+          <Brain size={16} color="var(--primary)" />
           <div className="tai-title-sm">AI Recommended for you</div>
         </div>
         {showSeeAll && goTab && <span className="tai-link" onClick={() => goTab("ai")}>Open AI Coach</span>}

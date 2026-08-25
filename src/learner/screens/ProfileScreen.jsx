@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Star, Flame, User, CheckCircle2, Lock, BookOpen, Zap, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
 import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
@@ -290,7 +290,7 @@ export function ProfileScreen({
 
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                 <span className="tai-tag" style={{ fontWeight: 700, padding: "3px 8px", fontSize: 11 }}>
-                  <Zap size={11} style={{ marginRight: 4 }} />
+                  <Target size={11} style={{ marginRight: 4 }} />
                   {user.track || "Full-Stack AI & Design"}
                 </span>
                 {user.role && (
@@ -313,7 +313,7 @@ export function ProfileScreen({
                 onClick={onBuyCredits}
                 style={{ padding: "7px 12px", fontWeight: 700, fontSize: 12 }}
               >
-                <Zap size={13} color="var(--primary)" />
+                <CreditCard size={13} color="var(--primary)" />
                 <span>{typeof credits === "number" ? credits : 10} Credits</span>
               </button>
             )}
@@ -513,7 +513,7 @@ export function ProfileScreen({
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap12">
                   <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Zap size={18} color="var(--primary)" />
+                    <Brain size={18} color="var(--primary)" />
                   </div>
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>AI Neural Credits</div>

@@ -59,7 +59,7 @@ export function CommunityScreen({
     { id: "all", label: "All Spaces", icon: Compass, count: 28 },
     { id: "announcements", label: "Announcements", icon: Megaphone, count: 4 },
     { id: "design-critique", label: "Design & UI Critique", icon: Palette, count: 9 },
-    { id: "ai-engineering", label: "AI & Full-Stack", icon: Zap, count: 8 },
+    { id: "ai-engineering", label: "AI & Full-Stack", icon: Code2, count: 8 },
     { id: "showcase", label: "Project Showcase", icon: Rocket, count: 5 },
     { id: "general", label: "Lounge & Networking", icon: MessageSquare, count: 12 },
   ];

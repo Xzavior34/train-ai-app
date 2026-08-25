@@ -3,7 +3,7 @@ import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/
 import { 
   Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
-  Award, ShieldCheck, ChevronRight, Zap, Target, BookOpen
+  Award, ShieldCheck, ChevronRight, Activity, BarChart3, Target, BookOpen
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchWorkforceIntelligence, fetchOrgMembers } from "../../lib/api/platform.js";
@@ -128,7 +128,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                   <Target size={12} /> {allLearners.length} Active Profiles Tracked
                 </span>
                 <span className="ta-tag ta-tag-warning">
-                  <Zap size={12} /> {wi.aiUsageCount7d || 148} AI Queries (7d)
+                  <Activity size={12} /> {wi.aiUsageCount7d || 148} AI Queries (7d)
                 </span>
               </div>
             </div>
@@ -421,7 +421,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
         </div>
 
         <div className="ta-card">
-          <div className="ta-row ta-gap8"><Zap size={16} color="var(--primary)" /><div className="ta-title">Skill gaps by department</div></div>
+          <div className="ta-row ta-gap8"><BarChart3 size={16} color="var(--primary)" /><div className="ta-title">Skill gaps by department</div></div>
           <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
             Real course-category completion, broken down by department - the lowest scores are the closest thing this data supports to "where the gaps are."
           </div>

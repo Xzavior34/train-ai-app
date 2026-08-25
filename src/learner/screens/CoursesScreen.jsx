@@ -3,9 +3,9 @@ import { TopBar, CourseCard, ProgressBar, Tag } from "../components/LearnerUI.js
 import {
   Search, Play, Clock, Video, Eye,
   ArrowRight, ExternalLink, Bookmark, CheckCircle2,
-  Calendar, Layers, Filter, X, Star, Award, Users,
+  Calendar, Layers, Filter, X, Award, Users,
   BookOpen, ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Heart,
-  Flame, Zap, Laptop, FileText, Check, Compass
+  Flame, Laptop, FileText, Check, Compass
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";

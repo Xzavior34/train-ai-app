@@ -907,7 +907,7 @@ export function DesktopSidebar({
       screens: ["ai", "aiQuiz"],
       subItems: [
         { key: "ai", label: "AI Coach", icon: Zap },
-        { key: "aiQuiz", label: "Quizzes", icon: GraduationCap }
+        { key: "aiQuiz", label: "AI Quiz", icon: HelpCircle }
       ]
     },
     {

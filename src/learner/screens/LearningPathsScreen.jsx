@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { TopBar, Tag, ProgressBar } from "../components/LearnerUI.jsx";
 import { 
-  Map, Award, BookOpen, Clock, CheckCircle2, Star, 
+  Map, Award, BookOpen, Clock, CheckCircle2, 
   Users, ArrowRight, ChevronRight, Layers, 
   ShieldCheck, Filter, Search, Play, Check, X, Laptop,
-  Compass, Zap
+  Compass
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";

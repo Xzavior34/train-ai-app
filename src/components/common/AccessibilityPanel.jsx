@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Accessibility, Type, Eye, Zap } from "lucide-react";
+import { X, Accessibility, Type, Eye, Activity } from "lucide-react";
 
 const STORAGE_KEY = "trainai_accessibility_v1";
 
@@ -160,7 +160,7 @@ export default function AccessibilityPanel({ onClose }) {
         <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 700, color: "#10142A" }}>
-              <Zap size={14} color="#2563EB" /> Reduce motion
+              <Activity size={14} color="#2563EB" /> Reduce motion
             </div>
             <div style={{ fontSize: 11.5, color: "#9AA1B9", marginTop: 2 }}>Minimise animations and transitions</div>
           </div>

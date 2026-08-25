@@ -3,14 +3,14 @@ import { TopBar, StatTile, Avatar, optionLabel, optionValue, initialsOf, Tag, Pr
 import {
   Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight,
   GraduationCap, Send, Bot, MessageSquare, BookOpen, Lightbulb,
-  Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck,
-  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp, Sparkles, Plus
+  Code2, Briefcase, RefreshCw, Copy, Check, ArrowRight, ShieldCheck,
+  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp, Plus, Brain, TrendingUp
 } from "lucide-react";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 
 const COACH_PROMPT_PRESETS = [
   { label: "Explain Design Tokens simply", icon: Lightbulb, prompt: "Can you explain how design tokens and variables work in Figma and code with a clear analogy?" },
-  { label: "Generate Spatial UI Quiz", icon: Zap, prompt: "Generate a quick 3-question conceptual quiz on Spatial Computing and VisionOS design principles." },
+  { label: "Generate Spatial UI Quiz", icon: HelpCircle, prompt: "Generate a quick 3-question conceptual quiz on Spatial Computing and VisionOS design principles." },
   { label: "Review UX Deliverable", icon: CheckCircle2, prompt: "What are the most critical components of an enterprise UX audit report before client presentation?" },
   { label: "Full-Stack AI Study Plan", icon: Target, prompt: "Create a focused 5-day study schedule for mastering LangChain, vector databases, and RAG architectures." },
   { label: "Senior Designer Interview Prep", icon: Briefcase, prompt: "Ask me a realistic behavioral interview question for a Senior Product Designer role, then critique my answer." }
@@ -243,8 +243,8 @@ export function AIQuizScreen({
       <div className="tai-scrollx" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 8, width: "100%", boxSizing: "border-box", gap: 8 }}>
         {[
           { k: "coach", label: "AI Coach & Tutor", icon: MessageSquare },
-          { k: "quiz", label: "Adaptive Quizzes", icon: Zap },
-          { k: "insights", label: "Performance Insights", icon: Zap },
+          { k: "quiz", label: "AI Quiz", icon: HelpCircle },
+          { k: "insights", label: "Performance Insights", icon: TrendingUp },
         ].map(t => {
           const Icon = t.icon;
           const isActive = aiTab === t.k;
@@ -434,7 +434,7 @@ export function AIQuizScreen({
             {!coachMessagesLoading && coachMessages.length === 0 && (
               <div style={{ textAlign: "center", margin: "auto", maxWidth: 460, padding: 30 }}>
                 <div style={{ width: 64, height: 64, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                  <Zap size={28} color="var(--primary)" />
+                  <Brain size={28} color="var(--primary)" />
                 </div>
                 <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
                   How can I assist your learning today?
@@ -566,7 +566,7 @@ export function AIQuizScreen({
                       Generate custom quizzes tuned to your target skillset
                     </p>
                   </div>
-                  <Zap size={18} color="var(--primary)" />
+                  <HelpCircle size={18} color="var(--primary)" />
                 </div>
 
                 <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>
@@ -630,7 +630,7 @@ export function AIQuizScreen({
                   disabled={quizGenerating || !quizGenTopic?.trim()}
                   onClick={handleGenerateQuiz}
                 >
-                  {quizGenerating ? "Generating Adaptive Quiz..." : "⚡ Generate & Start Quiz"}
+                  {quizGenerating ? "Generating AI Quiz..." : "Generate & Start AI Quiz"}
                 </button>
               </div>
 
