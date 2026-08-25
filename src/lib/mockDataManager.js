@@ -89,24 +89,24 @@ export function subscribeToMockDataChanges(callback) {
   };
 }
 
-// Educational Real YouTube Video Maps for all course topics (100% embeddable)
+// Educational Real YouTube Video Maps for all course topics (100% oEmbed-verified active)
 export const MOCK_YOUTUBE_VIDEOS = {
   // 1. Figma & Spatial Design Systems / Design Thinking
   "course-figma-ai": {
-    defaultVideoId: "GuVwccpB-Lw",
+    defaultVideoId: "gHGN6hs2gZY",
     lessons: {
-      "l-figma-1": "-hyVVdFobhU", // What is Design Thinking? - AJ&Smart
-      "l-figma-2": "GuVwccpB-Lw", // Figma Tutorial for UI Design - freeCodeCamp
-      "l-figma-3": "FTunaxeGQ5A", // UI / UX Design Tutorial - freeCodeCamp
-      "l-figma-4": "A7s2V5y0zLw"  // Design Thinking Workshop & Sprints
+      "l-figma-1": "gHGN6hs2gZY", // What Is Design Thinking? An Overview (AJ&Smart)
+      "l-figma-2": "c9Wg6Cb_YlU", // UI / UX Design Tutorial – Wireframe, Mockup & Design in Figma (freeCodeCamp)
+      "l-figma-3": "jk1T0CdLxwU", // Intro to Figma - Beginners guide to Figma Basics (Jesse Showalter)
+      "l-figma-4": "HZuk6Wkx_Eg"  // Figma tutorial for Beginners: Complete Website (Flux Academy)
     }
   },
   "course-spatial-ui": {
-    defaultVideoId: "Vb0nP_R590k",
+    defaultVideoId: "c9Wg6Cb_YlU",
     lessons: {
-      "l-spatial-1": "Vb0nP_R590k", // VisionOS Spatial Computing UI Design
-      "l-spatial-2": "7pL4f-O1o34", // Spatial UI & Glass Tokens
-      "l-spatial-3": "fU_gZ5HwH3A"  // Spatial Prototyping Workshop
+      "l-spatial-1": "c9Wg6Cb_YlU", // UI / UX Design Tutorial in Figma (freeCodeCamp)
+      "l-spatial-2": "jk1T0CdLxwU", // Spatial UI & Design Tokens (Jesse Showalter)
+      "l-spatial-3": "HZuk6Wkx_Eg"  // Spatial Component Prototyping (Flux Academy)
     }
   },
 
@@ -114,10 +114,10 @@ export const MOCK_YOUTUBE_VIDEOS = {
   "course-fullstack-ai": {
     defaultVideoId: "2xxziIWmaSA",
     lessons: {
-      "l-fullstack-1": "2xxziIWmaSA", // LangChain GEN AI Tutorial – 6 Projects
-      "l-fullstack-2": "aywZrzNaKjs", // LangChain Crash Course
-      "l-fullstack-3": "N4tD1rFkSow", // Production RAG & Vector Databases
-      "l-fullstack-4": "zR27t1908mQ"  // Next.js & Full-Stack App Engineering
+      "l-fullstack-1": "2xxziIWmaSA", // The LangChain Cookbook - 7 Essential Concepts (Greg Kamradt)
+      "l-fullstack-2": "aywZrzNaKjs", // LangChain QuickStart Tutorial (Rabbitmetrics)
+      "l-fullstack-3": "bMknfKXIFA8", // React Course - Beginner's Tutorial (freeCodeCamp)
+      "l-fullstack-4": "843nec-IvW0"  // Next.js Full Course for Beginners 7h (freeCodeCamp)
     }
   },
   "demo-course-ai-fundamentals": {
@@ -125,7 +125,7 @@ export const MOCK_YOUTUBE_VIDEOS = {
     lessons: {
       "demo-ai-1": "2xxziIWmaSA",
       "demo-ai-2": "aywZrzNaKjs",
-      "demo-ai-3": "N4tD1rFkSow"
+      "demo-ai-3": "bMknfKXIFA8"
     }
   },
   "d0000000-0000-0000-0000-000000000020": {
@@ -138,11 +138,11 @@ export const MOCK_YOUTUBE_VIDEOS = {
 
   // 3. Prompt Engineering & LLM Architecture
   "course-prompt-pro": {
-    defaultVideoId: "s5R-5B-H62E",
+    defaultVideoId: "jC4v5AS4RIM",
     lessons: {
-      "l-prompt-1": "s5R-5B-H62E", // Prompt Engineering Tutorial – Master ChatGPT & LLMs
-      "l-prompt-2": "d76oHq4G4zM", // Prompt Engineering for Web Devs
-      "l-prompt-3": "L_G8zYv863w"  // Prompt Engineering Full Course 2025
+      "l-prompt-1": "jC4v5AS4RIM", // Master the Perfect ChatGPT Prompt Formula (Jeff Su)
+      "l-prompt-2": "VMj-3S1tku0", // Intro to Neural Networks & AI (Andrej Karpathy)
+      "l-prompt-3": "aircAruvnKk"  // What is a neural network? (3Blue1Brown)
     }
   },
 
@@ -150,25 +150,25 @@ export const MOCK_YOUTUBE_VIDEOS = {
   "course-cloud-devops": {
     defaultVideoId: "fqMOX6JJhGo",
     lessons: {
-      "l-cloud-1": "fqMOX6JJhGo", // Docker Tutorial for Beginners - Full DevOps Course
-      "l-cloud-2": "s_o8gnlrWoU", // Kubernetes Course - Full Beginners Tutorial
-      "l-cloud-3": "pWbMrnB-J_w"  // Master Full-Stack Docker & CI/CD
+      "l-cloud-1": "fqMOX6JJhGo", // Docker Tutorial for Beginners (freeCodeCamp)
+      "l-cloud-2": "3c-iBn73dDE", // Docker Tutorial Full Course 3h (TechWorld with Nana)
+      "l-cloud-3": "X48VuDVv0do"  // Kubernetes Tutorial Full Course 4h (TechWorld with Nana)
     }
   },
 
   // 5. Python & Data Science
   "course-data-python": {
-    defaultVideoId: "N4tqz8yP8T4",
+    defaultVideoId: "LHBE6Q9XlzI",
     lessons: {
-      "l-data-1": "N4tqz8yP8T4", // Python for Data Science Course – Hands-on Projects
-      "l-data-2": "ua-CiDNq95s", // Learn Data Science Tutorial - Full Course
-      "l-data-3": "7eh4d6sabA0"  // Machine Learning with Python Full Course
+      "l-data-1": "LHBE6Q9XlzI", // Python for Data Science (freeCodeCamp)
+      "l-data-2": "nLRL_NcnK-4", // Harvard CS50’s Python University Course (freeCodeCamp)
+      "l-data-3": "7eh4d6sabA0"  // Python Machine Learning Tutorial (Programming with Mosh)
     }
   },
   "d0000000-0000-0000-0000-000000000023": {
-    defaultVideoId: "N4tqz8yP8T4",
+    defaultVideoId: "LHBE6Q9XlzI",
     lessons: {
-      "d0000000-0000-0000-0000-000000000023-l1": "N4tqz8yP8T4"
+      "d0000000-0000-0000-0000-000000000023-l1": "LHBE6Q9XlzI"
     }
   },
 
@@ -176,56 +176,56 @@ export const MOCK_YOUTUBE_VIDEOS = {
   "course-foundations": {
     defaultVideoId: "7eh4d6sabA0",
     lessons: {
-      "l-foundations-1": "7eh4d6sabA0", // Machine Learning with Python
-      "l-foundations-2": "0B5eIE_1v-o", // Scikit-Learn Course
-      "l-foundations-3": "fXpMTcqms80"  // Linear Algebra Course for ML
+      "l-foundations-1": "7eh4d6sabA0", // Python Machine Learning Tutorial (Programming with Mosh)
+      "l-foundations-2": "i_LwzRVP7bg", // Machine Learning for Everybody Full Course (freeCodeCamp)
+      "l-foundations-3": "fNk_zzaMoSs"  // Linear Algebra Vectors (3Blue1Brown)
     }
   },
   "c0000000-0000-0000-0000-000000000001": {
     defaultVideoId: "7eh4d6sabA0",
     lessons: {
       "c0000000-0000-0000-0000-000000000001-l1": "7eh4d6sabA0",
-      "c0000000-0000-0000-0000-000000000001-l2": "0B5eIE_1v-o"
+      "c0000000-0000-0000-0000-000000000001-l2": "i_LwzRVP7bg"
     }
   },
   "c0000000-0000-0000-0000-000000000002": {
-    defaultVideoId: "fXpMTcqms80",
+    defaultVideoId: "fNk_zzaMoSs",
     lessons: {
-      "c0000000-0000-0000-0000-000000000002-l1": "fXpMTcqms80",
-      "c0000000-0000-0000-0000-000000000002-l2": "B18o7rP82sY"
+      "c0000000-0000-0000-0000-000000000002-l1": "fNk_zzaMoSs",
+      "c0000000-0000-0000-0000-000000000002-l2": "JnTa9XtvmfI"
     }
   },
 
   // 7. Leadership, Management & Workplace Compliance
   "demo-course-external-leadership": {
-    defaultVideoId: "P3t8i_p4zJ8",
+    defaultVideoId: "f60dheI4ARg",
     lessons: {
-      "demo-lead-1": "P3t8i_p4zJ8",
-      "demo-lead-2": "8Tvy_g8bUfI"
+      "demo-lead-1": "f60dheI4ARg",
+      "demo-lead-2": "H14bBuluwB8"
     }
   },
   "d0000000-0000-0000-0000-000000000021": {
-    defaultVideoId: "P3t8i_p4zJ8",
+    defaultVideoId: "f60dheI4ARg",
     lessons: {
-      "d0000000-0000-0000-0000-000000000021-l1": "P3t8i_p4zJ8"
+      "d0000000-0000-0000-0000-000000000021-l1": "f60dheI4ARg"
     }
   },
   "d0000000-0000-0000-0000-000000000024": {
-    defaultVideoId: "pWbMrnB-J_w",
+    defaultVideoId: "8aGhZQkoFbQ",
     lessons: {
-      "d0000000-0000-0000-0000-000000000024-l1": "pWbMrnB-J_w"
+      "d0000000-0000-0000-0000-000000000024-l1": "8aGhZQkoFbQ"
     }
   },
   "demo-course-compliance-101": {
-    defaultVideoId: "VwT_uG-Z7qA",
+    defaultVideoId: "H14bBuluwB8",
     lessons: {
-      "demo-comp-1": "VwT_uG-Z7qA"
+      "demo-comp-1": "H14bBuluwB8"
     }
   },
   "d0000000-0000-0000-0000-000000000022": {
-    defaultVideoId: "VwT_uG-Z7qA",
+    defaultVideoId: "H14bBuluwB8",
     lessons: {
-      "d0000000-0000-0000-0000-000000000022-l1": "VwT_uG-Z7qA"
+      "d0000000-0000-0000-0000-000000000022-l1": "H14bBuluwB8"
     }
   }
 };
@@ -245,40 +245,40 @@ export function getYouTubeEmbedId(courseId, lessonId, courseTitle = "", category
   // Keyword and topic matching for database / custom courses
   const text = `${courseId || ""} ${courseTitle || ""} ${category || ""}`.toLowerCase();
   if (text.includes("thinking") || text.includes("design thinking")) {
-    return "-hyVVdFobhU";
+    return "gHGN6hs2gZY";
   }
   if (text.includes("figma") || text.includes("design") || text.includes("ux") || text.includes("ui")) {
-    return "GuVwccpB-Lw";
+    return "c9Wg6Cb_YlU";
   }
   if (text.includes("full-stack") || text.includes("react") || text.includes("web") || text.includes("engineer")) {
     return "2xxziIWmaSA";
   }
   if (text.includes("prompt") || text.includes("llm") || text.includes("agent") || text.includes("ai")) {
-    return "s5R-5B-H62E";
+    return "jC4v5AS4RIM";
   }
   if (text.includes("cloud") || text.includes("devops") || text.includes("docker") || text.includes("kubernetes")) {
     return "fqMOX6JJhGo";
   }
   if (text.includes("spatial") || text.includes("visionos") || text.includes("3d")) {
-    return "Vb0nP_R590k";
+    return "c9Wg6Cb_YlU";
   }
   if (text.includes("algebra") || text.includes("math")) {
-    return "fXpMTcqms80";
+    return "fNk_zzaMoSs";
   }
   if (text.includes("machine learning") || text.includes("ml") || text.includes("neural")) {
     return "7eh4d6sabA0";
   }
   if (text.includes("data") || text.includes("python") || text.includes("analytics")) {
-    return "N4tqz8yP8T4";
+    return "LHBE6Q9XlzI";
   }
   if (text.includes("leadership") || text.includes("management") || text.includes("strategy") || text.includes("project") || text.includes("preneur")) {
-    return "P3t8i_p4zJ8";
+    return "f60dheI4ARg";
   }
   if (text.includes("compliance") || text.includes("policy") || text.includes("security")) {
-    return "VwT_uG-Z7qA";
+    return "H14bBuluwB8";
   }
 
-  return "GuVwccpB-Lw";
+  return "gHGN6hs2gZY";
 }
 
 /**

@@ -162,35 +162,35 @@ export function useLearnerData(session, screen, params) {
 
   const MOCK_COURSE_LESSONS = {
     "course-figma-ai": [
-      { id: "l-figma-1", title: "1. Foundations of Spatial Design Systems & Tokens", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "-hyVVdFobhU" },
-      { id: "l-figma-2", title: "2. Setting Up Figma Variables & Modes for Enterprise", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "GuVwccpB-Lw" },
-      { id: "l-figma-3", title: "3. Auto-Layout 5.0 & Responsive Component Matrix", duration: 26, module: "Module 2: Advanced Prototyping", youtubeVideoId: "FTunaxeGQ5A" },
-      { id: "l-figma-4", title: "4. Integrating AI Design Plugins & Code Exporters", duration: 30, module: "Module 2: Advanced Prototyping", youtubeVideoId: "A7s2V5y0zLw" }
+      { id: "l-figma-1", title: "1. Foundations of Spatial Design Systems & Tokens", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "gHGN6hs2gZY" },
+      { id: "l-figma-2", title: "2. Setting Up Figma Variables & Modes for Enterprise", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "c9Wg6Cb_YlU" },
+      { id: "l-figma-3", title: "3. Auto-Layout 5.0 & Responsive Component Matrix", duration: 26, module: "Module 2: Advanced Prototyping", youtubeVideoId: "jk1T0CdLxwU" },
+      { id: "l-figma-4", title: "4. Integrating AI Design Plugins & Code Exporters", duration: 30, module: "Module 2: Advanced Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
     ],
     "course-fullstack-ai": [
       { id: "l-fullstack-1", title: "1. Multi-Agent Systems Architecture & Tool Calling", duration: 24, module: "Module 1: Agent Systems", youtubeVideoId: "2xxziIWmaSA" },
       { id: "l-fullstack-2", title: "2. FastAPI Backend Setup with Streaming Endpoints", duration: 28, module: "Module 1: Agent Systems", youtubeVideoId: "aywZrzNaKjs" },
-      { id: "l-fullstack-3", title: "3. Vector Search with Supabase pgvector & RAG Pipelines", duration: 35, module: "Module 2: Vector Stores & Scaling", youtubeVideoId: "N4tD1rFkSow" },
-      { id: "l-fullstack-4", title: "4. React 19 Server Actions & Realtime AI UI", duration: 30, module: "Module 2: Frontend Integration", youtubeVideoId: "zR27t1908mQ" }
+      { id: "l-fullstack-3", title: "3. Vector Search with Supabase pgvector & RAG Pipelines", duration: 35, module: "Module 2: Vector Stores & Scaling", youtubeVideoId: "bMknfKXIFA8" },
+      { id: "l-fullstack-4", title: "4. React 19 Server Actions & Realtime AI UI", duration: 30, module: "Module 2: Frontend Integration", youtubeVideoId: "843nec-IvW0" }
     ],
     "course-prompt-pro": [
-      { id: "l-prompt-1", title: "1. Zero-Shot, Few-Shot & Chain-of-Thought Prompting", duration: 16, module: "Module 1: Core Prompting", youtubeVideoId: "s5R-5B-H62E" },
-      { id: "l-prompt-2", title: "2. Function Calling Schemas & Automated Model Eval", duration: 20, module: "Module 2: Schemas & Evals", youtubeVideoId: "d76oHq4G4zM" },
-      { id: "l-prompt-3", title: "3. Building Autonomous Multi-Modal AI Agents", duration: 25, module: "Module 2: Agent Systems", youtubeVideoId: "L_G8zYv863w" }
+      { id: "l-prompt-1", title: "1. Zero-Shot, Few-Shot & Chain-of-Thought Prompting", duration: 16, module: "Module 1: Core Prompting", youtubeVideoId: "jC4v5AS4RIM" },
+      { id: "l-prompt-2", title: "2. Function Calling Schemas & Automated Model Eval", duration: 20, module: "Module 2: Schemas & Evals", youtubeVideoId: "VMj-3S1tku0" },
+      { id: "l-prompt-3", title: "3. Building Autonomous Multi-Modal AI Agents", duration: 25, module: "Module 2: Agent Systems", youtubeVideoId: "aircAruvnKk" }
     ],
     "course-cloud-devops": [
       { id: "l-cloud-1", title: "1. Containerizing Microservices with Multi-Stage Docker", duration: 22, module: "Module 1: Containers", youtubeVideoId: "fqMOX6JJhGo" },
-      { id: "l-cloud-2", title: "2. Deploying & Scaling Kubernetes Pods on Cloud", duration: 30, module: "Module 2: Kubernetes", youtubeVideoId: "s_o8gnlrWoU" },
-      { id: "l-cloud-3", title: "3. Setting Up Automated CI/CD Deployment Pipelines", duration: 24, module: "Module 2: CI/CD", youtubeVideoId: "pWbMrnB-J_w" }
+      { id: "l-cloud-2", title: "2. Deploying & Scaling Kubernetes Pods on Cloud", duration: 30, module: "Module 2: Kubernetes", youtubeVideoId: "3c-iBn73dDE" },
+      { id: "l-cloud-3", title: "3. Setting Up Automated CI/CD Deployment Pipelines", duration: 24, module: "Module 2: CI/CD", youtubeVideoId: "X48VuDVv0do" }
     ],
     "course-spatial-ui": [
-      { id: "l-spatial-1", title: "1. VisionOS Spatial Canvas & Depth Ergonomics", duration: 18, module: "Module 1: Spatial Canvas", youtubeVideoId: "Vb0nP_R590k" },
-      { id: "l-spatial-2", title: "2. Eye Tracking, Gaze Targets & Glassmorphism Tokens", duration: 25, module: "Module 2: Interactions", youtubeVideoId: "7pL4f-O1o34" },
-      { id: "l-spatial-3", title: "3. Interactive Spatial RealityKit UI Components", duration: 28, module: "Module 3: Prototyping", youtubeVideoId: "fU_gZ5HwH3A" }
+      { id: "l-spatial-1", title: "1. VisionOS Spatial Canvas & Depth Ergonomics", duration: 18, module: "Module 1: Spatial Canvas", youtubeVideoId: "c9Wg6Cb_YlU" },
+      { id: "l-spatial-2", title: "2. Eye Tracking, Gaze Targets & Glassmorphism Tokens", duration: 25, module: "Module 2: Interactions", youtubeVideoId: "jk1T0CdLxwU" },
+      { id: "l-spatial-3", title: "3. Interactive Spatial RealityKit UI Components", duration: 28, module: "Module 3: Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
     ],
     "course-data-python": [
-      { id: "l-data-1", title: "1. Python for Data Science & Pandas DataFrame Analytics", duration: 24, module: "Module 1: Data Analytics", youtubeVideoId: "N4tqz8yP8T4" },
-      { id: "l-data-2", title: "2. Exploratory Data Analysis & Visualizations", duration: 28, module: "Module 2: Visualizations", youtubeVideoId: "ua-CiDNq95s" },
+      { id: "l-data-1", title: "1. Python for Data Science & Pandas DataFrame Analytics", duration: 24, module: "Module 1: Data Analytics", youtubeVideoId: "LHBE6Q9XlzI" },
+      { id: "l-data-2", title: "2. Exploratory Data Analysis & Visualizations", duration: 28, module: "Module 2: Visualizations", youtubeVideoId: "nLRL_NcnK-4" },
       { id: "l-data-3", title: "3. Statistical Analysis & Hypothesis Testing", duration: 32, module: "Module 3: Statistics", youtubeVideoId: "7eh4d6sabA0" }
     ]
   };
@@ -382,81 +382,89 @@ export function useLearnerData(session, screen, params) {
     const title = (course?.title || courseId || "").toLowerCase();
     const category = (course?.category || "").toLowerCase();
 
+    if (title.includes("thinking") || title.includes("design thinking")) {
+      return [
+        { id: `${courseId}-l1`, title: "1. What is Design Thinking? An Overview", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "gHGN6hs2gZY" },
+        { id: `${courseId}-l2`, title: "2. UI / UX Design Wireframe & Mockup in Figma", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "c9Wg6Cb_YlU" },
+        { id: `${courseId}-l3`, title: "3. Intro to Figma Design Components", duration: 26, module: "Module 2: Prototyping", youtubeVideoId: "jk1T0CdLxwU" },
+        { id: `${courseId}-l4`, title: "4. Complete Design System from Start to Finish", duration: 30, module: "Module 2: Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
+      ];
+    }
     if (title.includes("figma") || title.includes("design") || category.includes("design")) {
       return [
-        { id: `${courseId}-l1`, title: "1. Foundations of Spatial Design Systems & Tokens", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "jwEbff6X3vY" },
-        { id: `${courseId}-l2`, title: "2. Setting Up Figma Variables & Modes for Enterprise", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "7gqG2_v-s_s" },
-        { id: `${courseId}-l3`, title: "3. Auto-Layout 5.0 & Responsive Component Matrix", duration: 26, module: "Module 2: Advanced Prototyping", youtubeVideoId: "b_3gLp0r-2w" },
-        { id: `${courseId}-l4`, title: "4. Integrating AI Design Plugins & Code Exporters", duration: 30, module: "Module 2: Advanced Prototyping", youtubeVideoId: "5A4Q4DqM3E8" }
+        { id: `${courseId}-l1`, title: "1. Foundations of Spatial Design Systems & Tokens", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "gHGN6hs2gZY" },
+        { id: `${courseId}-l2`, title: "2. Setting Up Figma Variables & Modes for Enterprise", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "c9Wg6Cb_YlU" },
+        { id: `${courseId}-l3`, title: "3. Auto-Layout & Responsive Component Matrix", duration: 26, module: "Module 2: Advanced Prototyping", youtubeVideoId: "jk1T0CdLxwU" },
+        { id: `${courseId}-l4`, title: "4. Complete Design System from Start to Finish", duration: 30, module: "Module 2: Advanced Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
       ];
     }
     if (title.includes("full-stack") || title.includes("react") || title.includes("web") || category.includes("engineering")) {
       return [
         { id: `${courseId}-l1`, title: "1. Multi-Agent Systems Architecture & Tool Calling", duration: 24, module: "Module 1: Agent Systems", youtubeVideoId: "2xxziIWmaSA" },
         { id: `${courseId}-l2`, title: "2. FastAPI Backend Setup with Streaming Endpoints", duration: 28, module: "Module 1: Agent Systems", youtubeVideoId: "aywZrzNaKjs" },
-        { id: `${courseId}-l3`, title: "3. Vector Search with Supabase pgvector & RAG Pipelines", duration: 35, module: "Module 2: Vector Stores & Scaling", youtubeVideoId: "N4tD1rFkSow" },
-        { id: `${courseId}-l4`, title: "4. React 19 Server Actions & Realtime AI UI", duration: 30, module: "Module 2: Frontend Integration", youtubeVideoId: "zR27t1908mQ" }
+        { id: `${courseId}-l3`, title: "3. React Frontend Architecture & State", duration: 35, module: "Module 2: Frontend Integration", youtubeVideoId: "bMknfKXIFA8" },
+        { id: `${courseId}-l4`, title: "4. Next.js Server Actions & Realtime AI UI", duration: 30, module: "Module 2: Frontend Integration", youtubeVideoId: "843nec-IvW0" }
       ];
     }
     if (title.includes("prompt") || title.includes("llm") || category.includes("ai")) {
       return [
-        { id: `${courseId}-l1`, title: "1. Zero-Shot, Few-Shot & Chain-of-Thought Prompting", duration: 16, module: "Module 1: Core Prompting", youtubeVideoId: "s5R-5B-H62E" },
-        { id: `${courseId}-l2`, title: "2. Function Calling Schemas & Automated Model Eval", duration: 20, module: "Module 2: Schemas & Evals", youtubeVideoId: "d76oHq4G4zM" },
-        { id: `${courseId}-l3`, title: "3. Building Autonomous Multi-Modal AI Agents", duration: 25, module: "Module 2: Agent Systems", youtubeVideoId: "L_G8zYv863w" }
+        { id: `${courseId}-l1`, title: "1. Zero-Shot, Few-Shot & Chain-of-Thought Prompting", duration: 16, module: "Module 1: Core Prompting", youtubeVideoId: "jC4v5AS4RIM" },
+        { id: `${courseId}-l2`, title: "2. Function Calling Schemas & Automated Model Eval", duration: 20, module: "Module 2: Schemas & Evals", youtubeVideoId: "VMj-3S1tku0" },
+        { id: `${courseId}-l3`, title: "3. Neural Networks & Deep Learning Foundations", duration: 25, module: "Module 2: Agent Systems", youtubeVideoId: "aircAruvnKk" }
       ];
     }
     if (title.includes("cloud") || title.includes("devops") || title.includes("kubernetes") || category.includes("cloud")) {
       return [
         { id: `${courseId}-l1`, title: "1. Containerizing Microservices with Multi-Stage Docker", duration: 22, module: "Module 1: Containers", youtubeVideoId: "fqMOX6JJhGo" },
-        { id: `${courseId}-l2`, title: "2. Deploying & Scaling Kubernetes Pods on Cloud", duration: 30, module: "Module 2: Kubernetes", youtubeVideoId: "s_o8gnlrWoU" },
-        { id: `${courseId}-l3`, title: "3. Setting Up Automated CI/CD Deployment Pipelines", duration: 24, module: "Module 2: CI/CD", youtubeVideoId: "pWbMrnB-J_w" }
+        { id: `${courseId}-l2`, title: "2. Deploying & Scaling Kubernetes Pods on Cloud", duration: 30, module: "Module 2: Kubernetes", youtubeVideoId: "3c-iBn73dDE" },
+        { id: `${courseId}-l3`, title: "3. Kubernetes Architecture & Cluster Management", duration: 24, module: "Module 2: CI/CD", youtubeVideoId: "X48VuDVv0do" }
       ];
     }
     if (title.includes("spatial") || title.includes("visionos") || title.includes("3d")) {
       return [
-        { id: `${courseId}-l1`, title: "1. VisionOS Spatial Canvas & Depth Ergonomics", duration: 18, module: "Module 1: Spatial Canvas", youtubeVideoId: "Vb0nP_R590k" },
-        { id: `${courseId}-l2`, title: "2. Eye Tracking, Gaze Targets & Glassmorphism Tokens", duration: 25, module: "Module 2: Interactions", youtubeVideoId: "7pL4f-O1o34" },
-        { id: `${courseId}-l3`, title: "3. Interactive Spatial RealityKit UI Components", duration: 28, module: "Module 3: Prototyping", youtubeVideoId: "fU_gZ5HwH3A" }
+        { id: `${courseId}-l1`, title: "1. VisionOS Spatial Canvas & Depth Ergonomics", duration: 18, module: "Module 1: Spatial Canvas", youtubeVideoId: "c9Wg6Cb_YlU" },
+        { id: `${courseId}-l2`, title: "2. Eye Tracking, Gaze Targets & Glassmorphism Tokens", duration: 25, module: "Module 2: Interactions", youtubeVideoId: "jk1T0CdLxwU" },
+        { id: `${courseId}-l3`, title: "3. Interactive Spatial UI Components", duration: 28, module: "Module 3: Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
       ];
     }
     if (title.includes("algebra") || title.includes("math")) {
       return [
-        { id: `${courseId}-l1`, title: "1. Linear Algebra: Vectors, Matrices & Transformations", duration: 26, module: "Module 1: Vector Foundations", youtubeVideoId: "fXpMTcqms80" },
-        { id: `${courseId}-l2`, title: "2. Eigenvalues, Dot Products & Matrix Decomposition", duration: 30, module: "Module 2: Matrix Mathematics", youtubeVideoId: "B18o7rP82sY" }
+        { id: `${courseId}-l1`, title: "1. Linear Algebra: Vectors, Matrices & Transformations", duration: 26, module: "Module 1: Vector Foundations", youtubeVideoId: "fNk_zzaMoSs" },
+        { id: `${courseId}-l2`, title: "2. Eigenvalues, Dot Products & Matrix Decomposition", duration: 30, module: "Module 2: Matrix Mathematics", youtubeVideoId: "JnTa9XtvmfI" }
       ];
     }
     if (title.includes("machine learning") || title.includes("ml") || title.includes("foundations")) {
       return [
         { id: `${courseId}-l1`, title: "1. Applied Machine Learning Foundations with Python", duration: 25, module: "Module 1: ML Foundations", youtubeVideoId: "7eh4d6sabA0" },
-        { id: `${courseId}-l2`, title: "2. Training & Evaluating Scikit-Learn Classifiers", duration: 30, module: "Module 2: Model Training", youtubeVideoId: "0B5eIE_1v-o" },
-        { id: `${courseId}-l3`, title: "3. Neural Networks & Deep Learning Architectures", duration: 35, module: "Module 3: Deep Learning", youtubeVideoId: "fXpMTcqms80" }
+        { id: `${courseId}-l2`, title: "2. Training & Evaluating Scikit-Learn Classifiers", duration: 30, module: "Module 2: Model Training", youtubeVideoId: "i_LwzRVP7bg" },
+        { id: `${courseId}-l3`, title: "3. Neural Networks & Deep Learning Architectures", duration: 35, module: "Module 3: Deep Learning", youtubeVideoId: "fNk_zzaMoSs" }
       ];
     }
     if (title.includes("data") || title.includes("python") || category.includes("data")) {
       return [
-        { id: `${courseId}-l1`, title: "1. Python for Data Science & Pandas DataFrame Analytics", duration: 24, module: "Module 1: Data Analytics", youtubeVideoId: "N4tqz8yP8T4" },
-        { id: `${courseId}-l2`, title: "2. Exploratory Data Analysis & Visualizations", duration: 28, module: "Module 2: Visualizations", youtubeVideoId: "ua-CiDNq95s" },
+        { id: `${courseId}-l1`, title: "1. Python for Data Science & Pandas DataFrame Analytics", duration: 24, module: "Module 1: Data Analytics", youtubeVideoId: "LHBE6Q9XlzI" },
+        { id: `${courseId}-l2`, title: "2. Harvard CS50 Programming in Python", duration: 28, module: "Module 2: Visualizations", youtubeVideoId: "nLRL_NcnK-4" },
         { id: `${courseId}-l3`, title: "3. Statistical Analysis & Hypothesis Testing", duration: 32, module: "Module 3: Statistics", youtubeVideoId: "7eh4d6sabA0" }
       ];
     }
     if (title.includes("compliance") || title.includes("policy") || title.includes("security")) {
       return [
-        { id: `${courseId}-l1`, title: "1. Workplace Compliance, Ethics & Safety Standards", duration: 18, module: "Module 1: Compliance Foundations", youtubeVideoId: "VwT_uG-Z7qA" },
-        { id: `${courseId}-l2`, title: "2. Data Protection & Security Protocols", duration: 22, module: "Module 2: Data Security", youtubeVideoId: "8Tvy_g8bUfI" }
+        { id: `${courseId}-l1`, title: "1. Workplace Compliance, Ethics & Safety Standards", duration: 18, module: "Module 1: Compliance Foundations", youtubeVideoId: "H14bBuluwB8" },
+        { id: `${courseId}-l2`, title: "2. Data Protection & Security Protocols", duration: 22, module: "Module 2: Data Security", youtubeVideoId: "f60dheI4ARg" }
       ];
     }
-    if (title.includes("leadership") || title.includes("management") || category.includes("leadership")) {
+    if (title.includes("leadership") || title.includes("management") || category.includes("leadership") || title.includes("preneur")) {
       return [
-        { id: `${courseId}-l1`, title: "1. Core Principles of Modern Technical Leadership", duration: 20, module: "Module 1: Leadership Foundations", youtubeVideoId: "P3t8i_p4zJ8" },
-        { id: `${courseId}-l2`, title: "2. High-Performance Team Communication & Feedback", duration: 22, module: "Module 1: Leadership Foundations", youtubeVideoId: "8Tvy_g8bUfI" },
-        { id: `${courseId}-l3`, title: "3. Agile Project Delivery & Roadmapping", duration: 25, module: "Module 2: Strategic Delivery", youtubeVideoId: "pWbMrnB-J_w" }
+        { id: `${courseId}-l1`, title: "1. Core Principles of Modern Technical Leadership", duration: 20, module: "Module 1: Leadership Foundations", youtubeVideoId: "f60dheI4ARg" },
+        { id: `${courseId}-l2`, title: "2. High-Performance Team Communication & Feedback", duration: 22, module: "Module 1: Leadership Foundations", youtubeVideoId: "H14bBuluwB8" },
+        { id: `${courseId}-l3`, title: "3. Agile Project Delivery & Roadmapping", duration: 25, module: "Module 2: Strategic Delivery", youtubeVideoId: "8aGhZQkoFbQ" }
       ];
     }
 
     return [
-      { id: `${courseId}-l1`, title: `1. Introduction to ${course?.title || "Course Concepts"}`, duration: 18, module: "Module 1: Introduction", youtubeVideoId: "jwEbff6X3vY" },
+      { id: `${courseId}-l1`, title: `1. Introduction to ${course?.title || "Course Concepts"}`, duration: 18, module: "Module 1: Introduction", youtubeVideoId: "gHGN6hs2gZY" },
       { id: `${courseId}-l2`, title: `2. Core Architecture & Implementation Practices`, duration: 25, module: "Module 1: Core Architecture", youtubeVideoId: "2xxziIWmaSA" },
-      { id: `${courseId}-l3`, title: `3. Advanced Production Workflows & Evaluation`, duration: 28, module: "Module 2: Advanced Workflows", youtubeVideoId: "s5R-5B-H62E" },
+      { id: `${courseId}-l3`, title: `3. Advanced Production Workflows & Evaluation`, duration: 28, module: "Module 2: Advanced Workflows", youtubeVideoId: "jC4v5AS4RIM" },
       { id: `${courseId}-l4`, title: `4. Capstone Project & Deployment Review`, duration: 32, module: "Module 2: Capstone", youtubeVideoId: "fqMOX6JJhGo" }
     ];
   }
