@@ -192,6 +192,28 @@ export function useLearnerData(session, screen, params) {
       { id: "l-data-1", title: "1. Python for Data Science & Pandas DataFrame Analytics", duration: 24, module: "Module 1: Data Analytics", youtubeVideoId: "LHBE6Q9XlzI" },
       { id: "l-data-2", title: "2. Exploratory Data Analysis & Visualizations", duration: 28, module: "Module 2: Visualizations", youtubeVideoId: "nLRL_NcnK-4" },
       { id: "l-data-3", title: "3. Statistical Analysis & Hypothesis Testing", duration: 32, module: "Module 3: Statistics", youtubeVideoId: "7eh4d6sabA0" }
+    ],
+    "course-product-analytics": [
+      { id: "l-prod-1", title: "1. Product Analytics 101: Cohorts, Funnels & Retention", duration: 18, module: "Module 1: Metrics", youtubeVideoId: "nLRL_NcnK-4" },
+      { id: "l-prod-2", title: "2. Setting Up Telemetry & User Event Tracking", duration: 22, module: "Module 1: Telemetry", youtubeVideoId: "aywZrzNaKjs" },
+      { id: "l-prod-3", title: "3. A/B Experimentation & Conversion Optimization", duration: 26, module: "Module 2: Experimentation", youtubeVideoId: "843nec-IvW0" }
+    ],
+    "course-compliance-101": [
+      { id: "l-comp-1", title: "1. Workplace Compliance, Ethics & SOC2 Standards", duration: 18, module: "Module 1: Compliance", youtubeVideoId: "H14bBuluwB8" },
+      { id: "l-comp-2", title: "2. Zero-Trust Cloud Access Controls & Identity", duration: 22, module: "Module 1: Security", youtubeVideoId: "fqMOX6JJhGo" },
+      { id: "l-comp-3", title: "3. Audit Logging, Data Privacy & GDPR Safeguards", duration: 25, module: "Module 2: Governance", youtubeVideoId: "X48VuDVv0do" }
+    ],
+    "course-techpreneur-business": [
+      { id: "l-biz-1", title: "1. Identifying High-Value Market Inefficiencies", duration: 18, module: "Module 1: Opportunity Discovery", youtubeVideoId: "gHGN6hs2gZY" },
+      { id: "l-biz-2", title: "2. Customer Discovery & Validation Interviews", duration: 22, module: "Module 1: Opportunity Discovery", youtubeVideoId: "c9Wg6Cb_YlU" },
+      { id: "l-biz-3", title: "3. Business Model Canvas & Moat Architecture", duration: 26, module: "Module 2: Business Models", youtubeVideoId: "jk1T0CdLxwU" },
+      { id: "l-biz-4", title: "4. Unit Economics & Go-To-Market Strategy", duration: 30, module: "Module 2: Business Models", youtubeVideoId: "HZuk6Wkx_Eg" }
+    ],
+    "course-techpreneur-experimentation": [
+      { id: "l-exp-1", title: "1. Rapid Prototyping & Lean MVP Design", duration: 20, module: "Module 1: Lean Execution", youtubeVideoId: "2xxziIWmaSA" },
+      { id: "l-exp-2", title: "2. Running High-Velocity Acquisition Experiments", duration: 24, module: "Module 1: Lean Execution", youtubeVideoId: "aywZrzNaKjs" },
+      { id: "l-exp-3", title: "3. Measuring Product-Market Fit with Cohort Retention", duration: 28, module: "Module 2: Traction & Scaling", youtubeVideoId: "bMknfKXIFA8" },
+      { id: "l-exp-4", title: "4. Crafting the Winning Investor Pitch Deck", duration: 32, module: "Module 2: Traction & Scaling", youtubeVideoId: "843nec-IvW0" }
     ]
   };
 
@@ -223,7 +245,7 @@ export function useLearnerData(session, screen, params) {
       category: "Full-Stack & Web Dev",
       level: "advanced",
       hours: 26,
-      lessons: 3,
+      lessons: 4,
       enrolled: false,
       isBookmarked: false,
       progress: 0,
@@ -243,7 +265,7 @@ export function useLearnerData(session, screen, params) {
       category: "AI & Prompt Engineering",
       level: "beginner",
       hours: 12,
-      lessons: 2,
+      lessons: 3,
       enrolled: true,
       isBookmarked: false,
       progress: 100,
@@ -263,7 +285,7 @@ export function useLearnerData(session, screen, params) {
       category: "Cloud & DevOps",
       level: "intermediate",
       hours: 22,
-      lessons: 2,
+      lessons: 3,
       enrolled: false,
       isBookmarked: false,
       progress: 0,
@@ -283,7 +305,7 @@ export function useLearnerData(session, screen, params) {
       category: "UI/UX & Design Systems",
       level: "advanced",
       hours: 14,
-      lessons: 2,
+      lessons: 3,
       enrolled: false,
       isBookmarked: false,
       progress: 0,
@@ -303,7 +325,7 @@ export function useLearnerData(session, screen, params) {
       category: "Data Science & Python",
       level: "intermediate",
       hours: 20,
-      lessons: 2,
+      lessons: 3,
       enrolled: false,
       isBookmarked: false,
       progress: 0,
@@ -312,6 +334,85 @@ export function useLearnerData(session, screen, params) {
       coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
       instructor: "David Kim",
       grad: gradForIndex(5),
+      mandatory: false,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-product-analytics",
+      title: "Product Analytics 101 & Metric Architecture",
+      tagline: "Cohort retention analysis, conversion funnels, data instrumentation, and feature telemetry frameworks.",
+      category: "Product Management",
+      level: "intermediate",
+      hours: 16,
+      lessons: 3,
+      enrolled: false,
+      isBookmarked: false,
+      progress: 0,
+      source: "internal",
+      isInternal: true,
+      coverImageUrl: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=80",
+      instructor: "Elena Rostova",
+      grad: gradForIndex(6),
+      mandatory: false,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-compliance-101",
+      title: "Workplace Compliance & Data Protection 101",
+      tagline: "Enterprise confidentiality, ethical governance, zero-trust protocols, and information security safeguards.",
+      category: "Cybersecurity & Compliance",
+      level: "beginner",
+      hours: 12,
+      lessons: 3,
+      enrolled: false,
+      isBookmarked: false,
+      progress: 0,
+      source: "assigned",
+      coverImageUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80",
+      instructor: "David Vance",
+      grad: gradForIndex(7),
+      mandatory: true,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-techpreneur-business",
+      title: "Recognizing a Business Opportunity & Market Fit",
+      tagline: "Market sizing, competitive moat analysis, unit economics, validation interviews, and business model design.",
+      category: "Tech-preneur & Founders",
+      level: "intermediate",
+      hours: 18,
+      lessons: 4,
+      enrolled: false,
+      isBookmarked: false,
+      progress: 0,
+      source: "internal",
+      isInternal: true,
+      coverImageUrl: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80",
+      instructor: "Astrid Larsson",
+      grad: gradForIndex(0),
+      mandatory: false,
+      price: 0,
+      requiresApproval: false
+    },
+    {
+      id: "course-techpreneur-experimentation",
+      title: "Entrepreneurial Experimentation & MVP Launch",
+      tagline: "Lean MVP builds, beta tester acquisition, pricing experiments, product-market fit metrics, and pitch decks.",
+      category: "Tech-preneur & Founders",
+      level: "advanced",
+      hours: 20,
+      lessons: 4,
+      enrolled: false,
+      isBookmarked: false,
+      progress: 0,
+      source: "internal",
+      isInternal: true,
+      coverImageUrl: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=80",
+      instructor: "Alex Rivera",
+      grad: gradForIndex(1),
       mandatory: false,
       price: 0,
       requiresApproval: false
@@ -346,25 +447,50 @@ export function useLearnerData(session, screen, params) {
       };
     });
 
-    if (!mockEnabled) {
-      return dbCourses;
-    }
+    const merged = new Map();
+    DEFAULT_FALLBACK_COURSES.forEach(c => {
+      const enrollment = enrollmentByCourseId.get(c.id);
+      merged.set(c.id, {
+        ...c,
+        enrolled: !!enrollment || c.enrolled,
+        progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : c.progress,
+        isBookmarked: bookmarkedIds.has(c.id) || c.isBookmarked
+      });
+    });
+    dbCourses.forEach(c => {
+      merged.set(c.id, c);
+    });
 
-    if (dbCourses.length > 0) {
-      return dbCourses;
-    }
-
-    return DEFAULT_FALLBACK_COURSES;
+    return Array.from(merged.values());
   })();
 
   function courseById(id) {
-    if (!id) return courses[0];
+    if (!id) return courses[0] || DEFAULT_FALLBACK_COURSES[0];
     const found = courses.find(c => c.id === id);
     if (found) return found;
-    if (mockEnabled) {
-      return DEFAULT_FALLBACK_COURSES.find(c => c.id === id) || courses[0];
+    const fallback = DEFAULT_FALLBACK_COURSES.find(c => c.id === id);
+    if (fallback) {
+      const enrollment = (enrollmentsQuery.data || []).find(e => e.course_id === id);
+      return {
+        ...fallback,
+        enrolled: !!enrollment || fallback.enrolled,
+        progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : fallback.progress
+      };
     }
-    return null;
+    return {
+      id: id,
+      title: "Course Curriculum",
+      tagline: "Comprehensive course modules and video lessons.",
+      category: "Specialization",
+      level: "intermediate",
+      hours: 18,
+      lessons: 4,
+      enrolled: false,
+      progress: 0,
+      source: "internal",
+      instructor: "Curriculum Specialist",
+      grad: gradForIndex(0)
+    };
   }
 
   const courseLessonsQuery = useSupabaseQuery(async () => {
