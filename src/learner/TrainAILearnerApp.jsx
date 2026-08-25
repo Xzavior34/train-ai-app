@@ -735,6 +735,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "courses" && (
                 <CoursesScreen
+                  user={user}
                   courses={courses.map(c => ({ ...c, applicationStatus: myApplicationForCourse(c.id)?.status || null }))}
                   coursesLoading={coursesLoading}
                   courseSearch={courseSearch} setCourseSearch={setCourseSearch}

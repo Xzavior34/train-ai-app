@@ -5,10 +5,58 @@ import {
   ArrowRight, ExternalLink, Bookmark, CheckCircle2,
   Calendar, Layers, Filter, X, Award, Users,
   BookOpen, ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Heart,
-  Flame, Laptop, FileText, Check, Compass
+  Flame, Laptop, FileText, Check, Compass, Map, Target, GraduationCap, BarChart3
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
+
+const TRACK_DEFINITIONS = {
+  design: {
+    id: "design",
+    name: "UI/UX & Design Systems",
+    category: "design",
+    description: "Master modern UI/UX architecture, spatial interfaces, design tokens, Figma auto-layout 5.0, and AI-accelerated design workflows.",
+    targetRole: "Senior Product Designer / UI/UX Architect",
+    skills: ["Figma AI", "Design Tokens", "Spatial UX", "Design Systems", "Interactive Prototyping"],
+    keywords: ["design", "ux", "ui", "figma", "spatial", "visual", "prototyping"]
+  },
+  ai: {
+    id: "ai",
+    name: "AI & Prompt Engineering",
+    category: "ai",
+    description: "Architect LLM-powered applications, prompt optimization pipelines, autonomous agents, and multi-modal neural workflows.",
+    targetRole: "AI Application Specialist / Prompt Engineer",
+    skills: ["Prompt Systems", "Vector Search", "LLM APIs", "Autonomous Agents", "RAG"],
+    keywords: ["ai", "prompt", "llm", "neural", "agent", "gpt", "gemini"]
+  },
+  engineering: {
+    id: "engineering",
+    name: "Full-Stack & Web Dev",
+    category: "engineering",
+    description: "Build robust full-stack web applications with React 19, TypeScript, PostgreSQL, microservices, and serverless infrastructure.",
+    targetRole: "Full-Stack Software Engineer",
+    skills: ["React 19", "Node.js", "PostgreSQL", "REST & GraphQL", "DevOps"],
+    keywords: ["full-stack", "engineering", "web", "react", "node", "javascript", "code"]
+  },
+  data: {
+    id: "data",
+    name: "Data Science & Python",
+    category: "data",
+    description: "Analyze complex datasets, build predictive machine learning models, and deploy scalable data analytics pipelines in Python.",
+    targetRole: "Data Scientist / ML Engineer",
+    skills: ["Python", "Pandas", "Scikit-Learn", "Data Viz", "Statistical Modeling"],
+    keywords: ["data", "python", "machine learning", "analytics", "statistics"]
+  },
+  cloud: {
+    id: "cloud",
+    name: "Cloud & DevOps",
+    category: "cloud",
+    description: "Deploy scalable cloud infrastructure, Kubernetes clusters, CI/CD automated deployment pipelines, and GPU workloads.",
+    targetRole: "Cloud / DevOps Engineer",
+    skills: ["Kubernetes", "Docker", "CI/CD", "AWS/GCP", "Infrastructure as Code"],
+    keywords: ["cloud", "devops", "kubernetes", "docker", "infrastructure"]
+  }
+};
 
 const CATEGORIES = [
   { id: "all", label: "All Topics" },
@@ -71,93 +119,6 @@ function getSafeCoverImage(course, idx = 0) {
   }
   return CURATED_STOCK_PHOTOS[idx % CURATED_STOCK_PHOTOS.length];
 }
-
-const SPOTLIGHT_SLIDES = [
-  {
-    id: "course-figma-ai",
-    badge: "ENROLLED • SPRINT 5",
-    badgeGradient: "#059669",
-    cohortTag: "Spring Cohort 2026",
-    title: "Master Design Systems in Figma with Generative AI",
-    description: "Building production design systems, auto-layout 5.0, design tokens, and AI acceleration for enterprise design teams.",
-    rating: 4.9,
-    reviews: "1,840 reviews",
-    enrolled: "12,400+ Enrolled",
-    status: "In Progress",
-    progress: 72,
-    lessonsRemaining: "4 lessons left",
-    instructor: "Astrid Larsson",
-    instructorRole: "Lead Design Systems Architect",
-    instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-    coverImage: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
-    cta: "Resume Lesson 14",
-    action: "continue",
-    lessonsText: "24 Lessons • 18 hrs"
-  },
-  {
-    id: "course-fullstack-ai",
-    badge: "ACTIVE MULTI-COURSE LEARNING",
-    badgeGradient: "#2563EB",
-    cohortTag: "Advanced Engineering Track",
-    title: "Full-Stack AI Application Engineering with React 19",
-    description: "Architecting end-to-end LLM applications with vector embeddings, Supabase pgvector, FastAPI, and autonomous agents.",
-    rating: 4.9,
-    reviews: "2,150 reviews",
-    enrolled: "8,900+ Enrolled",
-    status: "In Progress",
-    progress: 19,
-    lessonsRemaining: "Module 2: Function Calling",
-    instructor: "Alex Rivera",
-    instructorRole: "Principal AI Engineer",
-    instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-    coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
-    cta: "Continue Module 2",
-    action: "continue",
-    lessonsText: "32 Lessons • 24 hrs"
-  },
-  {
-    id: "course-spatial-ui",
-    badge: "NEW MASTERCLASS SPOTLIGHT",
-    badgeGradient: "#2563EB",
-    cohortTag: "Executive Masterclass",
-    title: "Spatial Computing & VisionOS Design Foundations",
-    description: "Immersive 3D spatial user experiences, depth layering, glassmorphism tokens, and spatial ergonomics for next-gen apps.",
-    rating: 5.0,
-    reviews: "640 reviews",
-    enrolled: "4,100+ Enrolled",
-    status: "Featured Masterclass",
-    progress: 0,
-    lessonsRemaining: "Includes 3D Asset Kit",
-    instructor: "Sarah Connor",
-    instructorRole: "Spatial Experience Designer",
-    instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-    coverImage: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80",
-    cta: "Explore Masterclass",
-    action: "explore",
-    lessonsText: "18 Lessons • 14 hrs"
-  },
-  {
-    id: "course-cloud-devops",
-    badge: "TRENDING IN YOUR COHORT",
-    badgeGradient: "#D97706",
-    cohortTag: "Infrastructure Batch",
-    title: "Cloud Infrastructure, Kubernetes & AI Microservices",
-    description: "Production CI/CD pipelines, container orchestration, edge deployment, and GPU scaling for high-throughput AI workloads.",
-    rating: 4.9,
-    reviews: "1,420 reviews",
-    enrolled: "9,300+ Enrolled",
-    status: "Recommended",
-    progress: 0,
-    lessonsRemaining: "Hands-on Cloud Lab",
-    instructor: "David Vance",
-    instructorRole: "DevOps Infrastructure Lead",
-    instructorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-    coverImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
-    cta: "Start Learning Path",
-    action: "explore",
-    lessonsText: "28 Lessons • 22 hrs"
-  }
-];
 
 const SPECIALIZATIONS = [
   {
@@ -248,13 +209,20 @@ const RECENT_RECORDINGS = [
 ];
 
 export function CoursesScreen({
+  user = {},
   courses = [], coursesLoading, courseSearch = "", setCourseSearch,
   courseLevelFilter = "all", setCourseLevelFilter, courseSourceTab = "all", setCourseSourceTab,
   showMyCoursesOnly = false, setShowMyCoursesOnly, push, handleEnroll, handleRequestJoin,
   onToggleBookmark
 }) {
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [activeTrackKey, setActiveTrackKey] = useState(() => {
+    const raw = (user?.track || "").toLowerCase();
+    if (raw.includes("ai") || raw.includes("prompt") || raw.includes("machine")) return "ai";
+    if (raw.includes("stack") || raw.includes("engineer") || raw.includes("web") || raw.includes("react")) return "engineering";
+    if (raw.includes("data") || raw.includes("python")) return "data";
+    if (raw.includes("cloud") || raw.includes("devops")) return "cloud";
+    return "design"; // default UI/UX & Design Systems
+  });
   const [activeRecording, setActiveRecording] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("popular");
@@ -265,15 +233,6 @@ export function CoursesScreen({
   useEffect(() => {
     return subscribeToMockDataChanges((enabled) => setMockEnabled(enabled));
   }, []);
-
-  // Auto-rotating Spotlight Carousel
-  useEffect(() => {
-    if (isCarouselPaused) return;
-    const interval = setInterval(() => {
-      setActiveSlide(prev => (prev + 1) % SPOTLIGHT_SLIDES.length);
-    }, 4600);
-    return () => clearInterval(interval);
-  }, [isCarouselPaused]);
 
   function toggleLocalBookmark(e, courseId) {
     if (e && e.stopPropagation) e.stopPropagation();
@@ -299,34 +258,28 @@ export function CoursesScreen({
   });
 
   const enrolledList = allAvailableCourses.filter(c => c.enrolled);
-  
-  const dynamicSpotlightSlides = (courses && courses.length > 0)
-    ? courses.slice(0, 4).map((c, idx) => ({
-        id: c.id,
-        badge: c.enrolled ? "ENROLLED • IN PROGRESS" : "FEATURED MASTERCLASS",
-        badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#2563EB" : "#D97706",
-        cohortTag: c.category || "Professional Track",
-        title: c.title,
-        description: c.tagline || c.description || "Master core industry competencies, practical design token workflows, and production implementations.",
-        rating: c.rating || 4.9,
-        reviews: `${c.reviewsCount || 420} reviews`,
-        enrolled: `${c.studentsCount || "1.2k"} Enrolled`,
-        status: c.enrolled ? "In Progress" : "Available",
-        progress: c.progress || 0,
-        lessonsRemaining: `${c.lessons || 12} lessons`,
-        instructor: c.instructor || "Curriculum Specialist",
-        instructorRole: c.instructorRole || "Lead Instructor",
-        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-        coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
-        cta: c.enrolled ? "Resume Lesson" : "Explore Course",
-        action: c.enrolled ? "continue" : "explore",
-        lessonsText: `${c.lessons || 12} Lessons • ${c.hours || 8} hrs`
-      }))
-    : (mockEnabled ? SPOTLIGHT_SLIDES : []);
 
-  const currentSpotlight = dynamicSpotlightSlides.length > 0
-    ? dynamicSpotlightSlides[activeSlide % dynamicSpotlightSlides.length]
-    : null;
+  const activeTrack = TRACK_DEFINITIONS[activeTrackKey] || TRACK_DEFINITIONS.design;
+
+  // Resolve courses in learner's real track
+  const matchedTrackCourses = allAvailableCourses.filter(c => {
+    const text = `${c.title || ""} ${c.category || ""} ${c.description || ""} ${c.tagline || ""}`.toLowerCase();
+    return activeTrack.keywords.some(kw => text.includes(kw));
+  });
+
+  // Ensure 3-4 structured curriculum items for the roadmap
+  const trackCourses = matchedTrackCourses.length >= 2
+    ? matchedTrackCourses
+    : allAvailableCourses.slice(0, 4);
+
+  const completedTrackCourses = trackCourses.filter(c => (c.progress || 0) >= 100);
+  const inProgressTrackCourses = trackCourses.filter(c => (c.progress || 0) > 0 && (c.progress || 0) < 100);
+  const remainingTrackCourses = trackCourses.filter(c => (c.progress || 0) < 100);
+  const trackOverallProgress = trackCourses.length 
+    ? Math.round(trackCourses.reduce((sum, c) => sum + (c.progress || 0), 0) / trackCourses.length) 
+    : 0;
+
+  const nextCourseToTake = inProgressTrackCourses[0] || remainingTrackCourses[0] || trackCourses[0];
 
   // Filtering logic
   const filteredCatalogUnsorted = allAvailableCourses.filter(c => {
@@ -369,222 +322,244 @@ export function CoursesScreen({
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       
       {/* =========================================================================
-          DYNAMIC MOVING SPOTLIGHT HERO CAROUSEL
+          REAL LEARNING TRACK PROGRESS HERO CARD
           ========================================================================= */}
-      {currentSpotlight && (
+      <div
+        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
+        style={{
+          position: "relative",
+          borderRadius: 14,
+          overflow: "hidden",
+          padding: "clamp(20px, 2.8vw, 28px)",
+          transition: "all 0.3s ease"
+        }}
+      >
         <div
-          className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
-          onMouseEnter={() => setIsCarouselPaused(true)}
-          onMouseLeave={() => setIsCarouselPaused(false)}
           style={{
-            position: "relative",
-            borderRadius: 14,
-            overflow: "hidden",
-            padding: "clamp(18px, 2.5vw, 24px)",
-            transition: "all 0.3s ease"
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 220,
+            height: 220,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, transparent 70%)",
+            pointerEvents: "none"
           }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              top: -40,
-              right: -40,
-              width: 180,
-              height: 180,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
-              pointerEvents: "none"
-            }}
-          />
+        />
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, alignItems: "center", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))", gap: 24, alignItems: "stretch", position: "relative", zIndex: 1 }}>
+          
+          {/* Left Column: Track Details, Real Progress, & Pathway Curriculum Roadmap */}
+          <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
             
-            {/* Left Column: Spotlight details */}
-            <div>
-              <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8" }}>
-                  Featured Masterclass {(activeSlide % dynamicSpotlightSlides.length) + 1} of {dynamicSpotlightSlides.length}
-                </div>
-
-                {/* Prev / Next Controls */}
-                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                  <button
-                    aria-label="Previous Slide"
-                    onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
-                    style={{
-                      width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
-                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
-                    }}
-                  >
-                    <ChevronLeft size={14} />
-                  </button>
-                  <button
-                    aria-label="Next Slide"
-                    onClick={() => setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length)}
-                    style={{
-                      width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
-                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
-                    }}
-                  >
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
+            {/* Pathway Header & Track Switcher Tabs */}
+            <div className="tai-row tai-between" style={{ marginBottom: 14, alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                <span
+                  style={{
+                    background: "rgba(37, 99, 235, 0.2)",
+                    color: "#93C5FD",
+                    border: "1px solid rgba(96, 165, 250, 0.35)",
+                    borderRadius: 6,
+                    padding: "3px 10px",
+                    fontSize: 11,
+                    fontWeight: 800,
+                    letterSpacing: "0.04em",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5
+                  }}
+                >
+                  <Map size={12} />
+                  <span>ACTIVE PATHWAY • {activeTrack.name.toUpperCase()}</span>
+                </span>
+                <span style={{ fontSize: 11.5, color: "#94A3B8" }}>
+                  {completedTrackCourses.length}/{trackCourses.length} Courses Complete ({trackOverallProgress}%)
+                </span>
               </div>
 
-              <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.25 }}>
-                {currentSpotlight.title}
-              </h1>
-
-              <p key={currentSpotlight.id + "-desc"} className="tai-fade-in tai-hero-desc" style={{ fontSize: 13, margin: "0 0 12px", lineHeight: 1.45, maxWidth: 540 }}>
-                {currentSpotlight.description}
-              </p>
-
-            {/* In-Progress Sprint Pace Meter */}
-            {currentSpotlight.progress > 0 && (
-              <div className="tai-hero-subcard" style={{ padding: "10px 14px", borderRadius: 8, marginBottom: 12 }}>
-                <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#DBEAFE" }}>
-                  <span>Active Sprint Pace</span>
-                  <span style={{ color: "#34D399", fontWeight: 700 }}>{currentSpotlight.progress}% ({currentSpotlight.lessonsRemaining})</span>
-                </div>
-                <div style={{ height: 6, borderRadius: 99, background: "rgba(255, 255, 255, 0.12)", overflow: "hidden" }}>
-                  <div style={{ width: `${currentSpotlight.progress}%`, height: "100%", background: "#10B981", borderRadius: 99 }} />
-                </div>
-              </div>
-            )}
-
-            <div className="tai-row tai-gap12" style={{ flexWrap: "wrap", marginBottom: 14, fontSize: 12, color: "#94A3B8" }}>
-              <div className="tai-row tai-gap4">
-                <Star size={13} fill="#F59E0B" color="#F59E0B" />
-                <span style={{ fontWeight: 800, color: "#fff" }}>{currentSpotlight.rating}</span>
-                <span style={{ opacity: 0.75 }}>({currentSpotlight.reviews})</span>
-              </div>
-              <span>•</span>
-              <div className="tai-row tai-gap4">
-                <Users size={13} color="#60A5FA" />
-                <span style={{ fontWeight: 700, color: "#fff" }}>{currentSpotlight.enrolled}</span>
-              </div>
-              <span>•</span>
-              <div className="tai-row tai-gap4">
-                <ShieldCheck size={13} color="#34D399" />
-                <span style={{ fontWeight: 700, color: "#34D399" }}>Certificate Guaranteed</span>
+              {/* Quick Switch Track Pills */}
+              <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                {Object.values(TRACK_DEFINITIONS).map(td => {
+                  const isSel = td.id === activeTrackKey;
+                  return (
+                    <button
+                      key={td.id}
+                      onClick={() => setActiveTrackKey(td.id)}
+                      style={{
+                        padding: "3px 8px",
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        border: isSel ? "1px solid #60A5FA" : "1px solid rgba(255,255,255,0.12)",
+                        background: isSel ? "rgba(37, 99, 235, 0.35)" : "rgba(255,255,255,0.05)",
+                        color: isSel ? "#FFFFFF" : "#94A3B8",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {td.id === "design" ? "UI/UX" : td.id === "ai" ? "AI Eng" : td.id === "engineering" ? "Full-Stack" : td.id === "data" ? "Data" : "Cloud"}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="tai-row tai-gap10" style={{ flexWrap: "wrap" }}>
-              <button
-                className="tai-btn tai-btn-primary"
-                style={{
-                  padding: "8px 16px", borderRadius: 8, fontSize: 13,
-                  display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer"
-                }}
-                onClick={() => push("courseDetail", { id: currentSpotlight.id })}
-              >
-                <span>{currentSpotlight.cta}</span>
-                <ArrowRight size={14} />
-              </button>
+            {/* Title & Description */}
+            <h1 className="tai-fade-in tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", lineHeight: 1.25, color: "#FFFFFF" }}>
+              {activeTrack.name} Learning Pathway
+            </h1>
+            <p className="tai-fade-in tai-hero-desc" style={{ fontSize: 13, margin: "0 0 16px", lineHeight: 1.45, color: "#CBD5E1", maxWidth: 640 }}>
+              {activeTrack.description}
+            </p>
+
+            {/* Real Track Progress Meter Bar */}
+            <div className="tai-hero-subcard" style={{ padding: "12px 14px", borderRadius: 10, marginBottom: 16, border: "1px solid rgba(255,255,255,0.12)" }}>
+              <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 6, color: "#DBEAFE" }}>
+                <span>Pathway Completion Rate</span>
+                <span style={{ color: trackOverallProgress === 100 ? "#34D399" : "#60A5FA", fontWeight: 800 }}>
+                  {trackOverallProgress}% • {remainingTrackCourses.length === 0 ? "Pathway Completed!" : `${remainingTrackCourses.length} course${remainingTrackCourses.length === 1 ? "" : "s"} left`}
+                </span>
+              </div>
+              <div style={{ height: 7, borderRadius: 99, background: "rgba(255, 255, 255, 0.12)", overflow: "hidden" }}>
+                <div style={{ width: `${Math.max(4, trackOverallProgress)}%`, height: "100%", background: trackOverallProgress === 100 ? "#10B981" : "#2563EB", borderRadius: 99, transition: "width 0.4s ease" }} />
+              </div>
+            </div>
+
+            {/* Curriculum Roadmap — Courses Required to Finish Path */}
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+                Required Courses to Complete Pathway:
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 8 }}>
+                {trackCourses.map((tc, idx) => {
+                  const isDone = (tc.progress || 0) >= 100;
+                  const isInProgress = (tc.progress || 0) > 0 && !isDone;
+                  const isNext = tc.id === nextCourseToTake?.id && !isDone;
+                  return (
+                    <div
+                      key={tc.id || idx}
+                      onClick={() => push("courseDetail", { id: tc.id })}
+                      style={{
+                        padding: "8px 10px",
+                        borderRadius: 8,
+                        background: isNext ? "rgba(37, 99, 235, 0.22)" : isDone ? "rgba(16, 185, 129, 0.1)" : "rgba(255, 255, 255, 0.05)",
+                        border: isNext ? "1.5px solid #3B82F6" : isDone ? "1px solid rgba(16, 185, 129, 0.35)" : "1px solid rgba(255, 255, 255, 0.1)",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                      title={`Click to open ${tc.title}`}
+                    >
+                      <div className="tai-row tai-between" style={{ marginBottom: 3 }}>
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: isDone ? "#34D399" : isNext ? "#93C5FD" : "#94A3B8" }}>
+                          Course {idx + 1}
+                        </span>
+                        {isDone ? (
+                          <span style={{ fontSize: 10, fontWeight: 800, color: "#34D399", display: "flex", alignItems: "center", gap: 3 }}>
+                            <CheckCircle2 size={11} /> Done
+                          </span>
+                        ) : isInProgress ? (
+                          <span style={{ fontSize: 10, fontWeight: 800, color: "#60A5FA" }}>{tc.progress}%</span>
+                        ) : isNext ? (
+                          <span style={{ fontSize: 10, fontWeight: 800, color: "#93C5FD" }}>Next Up</span>
+                        ) : (
+                          <span style={{ fontSize: 10, color: "#64748B" }}>Required</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11.5, fontWeight: 700, color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {tc.title}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Action CTAs */}
+            <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", marginTop: "auto" }}>
+              {nextCourseToTake && (
+                <button
+                  className="tai-btn tai-btn-primary"
+                  style={{
+                    padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                    display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer"
+                  }}
+                  onClick={() => push("courseDetail", { id: nextCourseToTake.id })}
+                >
+                  <span>{(nextCourseToTake.progress || 0) > 0 ? `Resume: ${nextCourseToTake.title.slice(0, 22)}...` : `Start: ${nextCourseToTake.title.slice(0, 22)}...`}</span>
+                  <ArrowRight size={14} />
+                </button>
+              )}
 
               <button
                 className="tai-btn"
                 style={{
                   background: "rgba(255,255,255,0.08)", color: "#FFFFFF", fontWeight: 700,
-                  padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)", fontSize: 13,
+                  padding: "9px 16px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.15)", fontSize: 13,
                   display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer"
                 }}
-                onClick={() => setActiveRecording(RECENT_RECORDINGS[0])}
+                onClick={() => push("learningPaths")}
               >
-                <Play size={13} fill="#fff" />
-                <span>Watch Trailer</span>
+                <Map size={13} />
+                <span>Explore All Learning Pathways</span>
+              </button>
+            </div>
+
+          </div>
+
+          {/* Right Column: Track Credential & Milestone Summary (Desktop view) */}
+          <div className="tai-desktop-only" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", background: "rgba(15, 23, 42, 0.65)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", padding: 18 }}>
+            <div>
+              <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(37, 99, 235, 0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Award size={17} color="#60A5FA" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: "#FFFFFF" }}>Verified Pathway Credential</div>
+                    <div style={{ fontSize: 11, color: "#94A3B8" }}>Industry recognized certificate</div>
+                  </div>
+                </div>
+                <span style={{ fontSize: 10.5, fontWeight: 700, color: trackOverallProgress === 100 ? "#34D399" : "#60A5FA", background: trackOverallProgress === 100 ? "rgba(16,185,129,0.15)" : "rgba(37,99,235,0.15)", padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.1)" }}>
+                  {trackOverallProgress === 100 ? "Unlocked" : `${completedTrackCourses.length}/${trackCourses.length} Met`}
+                </span>
+              </div>
+
+              <div style={{ fontSize: 12, color: "#E2E8F0", marginBottom: 12, lineHeight: 1.4 }}>
+                Target Outcome: <strong style={{ color: "#FFFFFF" }}>{activeTrack.targetRole}</strong>
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", marginBottom: 6 }}>Key Competencies Covered:</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                  {activeTrack.skills.map((sk, i) => (
+                    <span key={i} style={{ fontSize: 10.5, background: "rgba(255,255,255,0.08)", color: "#E2E8F0", padding: "2px 7px", borderRadius: 4, border: "1px solid rgba(255,255,255,0.08)" }}>
+                      {sk}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ fontSize: 11.5, color: "#94A3B8", marginBottom: 10, lineHeight: 1.4 }}>
+                {remainingTrackCourses.length === 0
+                  ? "All courses completed! Your verified certificate is ready to download."
+                  : `Finish the remaining ${remainingTrackCourses.length} course${remainingTrackCourses.length === 1 ? "" : "s"} to claim your verified certificate.`}
+              </div>
+              <button
+                className="tai-btn tai-btn-outline"
+                style={{ width: "100%", padding: "7px 12px", fontSize: 12, fontWeight: 700, color: "#FFFFFF", borderColor: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                onClick={() => push("achievements")}
+              >
+                <span>View My Certificates &amp; Credentials</span>
+                <ChevronRight size={13} />
               </button>
             </div>
           </div>
 
-          {/* Right Column: Visual Cover & Multi-Track Carousel switcher */}
-          <div className="tai-desktop-only" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.18)" }}>
-              <img
-                key={currentSpotlight.id + "-img"}
-                src={currentSpotlight.coverImage}
-                alt={currentSpotlight.title}
-                style={{ width: "100%", height: 190, objectFit: "cover", display: "block" }}
-              />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(11,15,25,0.88) 0%, transparent 60%)" }} />
-              
-              <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div className="tai-row tai-gap10">
-                  <img
-                    src={currentSpotlight.instructorAvatar}
-                    alt={currentSpotlight.instructor}
-                    style={{ width: 34, height: 34, borderRadius: "50%", border: "2px solid #fff", objectFit: "cover" }}
-                  />
-                  <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 800, color: "#fff" }}>{currentSpotlight.instructor}</div>
-                    <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.75)" }}>{currentSpotlight.instructorRole}</div>
-                  </div>
-                </div>
-
-                <span style={{ background: "rgba(0,0,0,0.6)", padding: "3px 8px", borderRadius: 6, fontSize: 10.5, fontWeight: 700, border: "1px solid rgba(255,255,255,0.2)" }}>
-                  {currentSpotlight.lessonsText}
-                </span>
-              </div>
-            </div>
-
-            {/* Quick Track Switcher Tabs */}
-            <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2, width: "100%" }}>
-              {dynamicSpotlightSlides.map((slide, idx) => {
-                const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
-                return (
-                  <button
-                    key={slide.id}
-                    onClick={() => setActiveSlide(idx)}
-                    style={{
-                      flex: 1, minWidth: 110, padding: "7px 10px",
-                      borderRadius: 10,
-                      border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)",
-                      background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
-                      color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      transition: "all 0.2s ease"
-                    }}
-                  >
-                    <div style={{ fontSize: 9.5, fontWeight: 800, color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)" }}>
-                      TRACK 0{idx + 1}
-                    </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {slide.title.split(" in ")[0].split(" with ")[0]}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-        </div>
-
-        {/* Carousel Dot Indicators */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
-          {dynamicSpotlightSlides.map((_, idx) => (
-            <button
-              key={idx}
-              aria-label={`Go to slide ${idx + 1}`}
-              onClick={() => setActiveSlide(idx)}
-              style={{
-                width: idx === (activeSlide % dynamicSpotlightSlides.length) ? 22 : 7,
-                height: 7,
-                borderRadius: 99,
-                background: idx === (activeSlide % dynamicSpotlightSlides.length) ? "#60A5FA" : "rgba(255,255,255,0.3)",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                transition: "all 0.25s ease"
-              }}
-            />
-          ))}
         </div>
       </div>
-      )}
 
       {/* =========================================================================
           FILTER STRIP & SEARCH CONTROL

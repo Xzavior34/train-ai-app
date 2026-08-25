@@ -3,7 +3,8 @@ import { Avatar, ProgressBar, Tag } from "../components/LearnerUI.jsx";
 import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
 import {
   BookOpen, Users, Zap, ChevronRight, Target,
-  BarChart3, Video, Code2, Bookmark
+  BarChart3, Video, Code2, Bookmark, Award, Trophy,
+  GraduationCap, HelpCircle
 } from "lucide-react";
 
 export function HomeScreen({
