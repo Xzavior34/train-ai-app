@@ -361,63 +361,138 @@ export function CoursesScreen({
       hours: c.hours || (12 + (idx % 4) * 4),
       lessonsCount: c.lessonsCount || (16 + (idx % 3) * 6),
       instructor: c.instructor || (idx % 3 === 0 ? "Astrid Larsson" : idx % 3 === 1 ? "Alex Rivera" : "Elena Rostova"),
-      instructorRole: c.instructorRole || "Lead Curriculum Specialist",
+instructorRole: c.instructorRole || "Lead Curriculum Specialist",
       instructorAvatar: c.instructorAvatar || (idx % 2 === 0 ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80")
     };
   });
 
-  const enrolledList = allAvailableCourses.filter(c => c.enrolled);
+  // Track taxonomy helper: Code Track, No Code Track, and Techpreneur Track
+  function resolveUserTrackKey(userTrack) {
+    const t = (userTrack || "").toLowerCase();
+    if (t.includes("ui") || t.includes("ux") || t.includes("design") || t.includes("figma") || t.includes("spatial")) return "ui_ux";
+    if (t.includes("product") || t.includes("pm") || t.includes("strategy")) return "product_management";
+    if (t.includes("cyber") || t.includes("security") || t.includes("compliance")) return "cybersecurity";
+    if (t.includes("data") || t.includes("analyst") || t.includes("python") || t.includes("science")) return "data_analyst";
+    if (t.includes("marketing") || t.includes("digital") || t.includes("growth")) return "digital_marketing";
+    if (t.includes("frontend") || t.includes("front-end")) return "frontend";
+    if (t.includes("backend") || t.includes("back-end")) return "backend";
+    if (t.includes("full") || t.includes("stack") || t.includes("engineering") || t.includes("code") || t.includes("web")) return "full_stack";
+    if (t.includes("techpreneur") || t.includes("founder") || t.includes("business") || t.includes("leadership") || t.includes("venture")) return "techpreneur";
+    return "ui_ux";
+  }
 
-  // Build spotlight slides for ALL true courses and tracks in the catalog without hardcoded limits
-  const baseSlides = (allAvailableCourses && allAvailableCourses.length > 0)
-    ? allAvailableCourses.map((c, idx) => ({
+  function getTrackDisplayName(trackKey) {
+    switch (trackKey) {
+      case "ui_ux": return "UI/UX Design Track";
+      case "product_management": return "Product Management Track";
+      case "cybersecurity": return "Cybersecurity Track";
+      case "data_analyst": return "Data Analyst Track";
+      case "digital_marketing": return "Digital Marketing Track";
+      case "frontend": return "Frontend Engineering Track";
+      case "backend": return "Backend Engineering Track";
+      case "full_stack": return "Full-Stack Web Dev Track";
+      case "techpreneur": return "Tech-Preneur (Founders) Track";
+      default: return "Learning Track";
+    }
+  }
+
+  function doesCourseMatchTrack(course, trackKey) {
+    const cat = (course?.category || "").toLowerCase();
+    const title = (course?.title || "").toLowerCase();
+    const desc = (course?.tagline || course?.description || "").toLowerCase();
+    const combined = `${cat} ${title} ${desc}`;
+
+    switch (trackKey) {
+      case "ui_ux":
+        return combined.includes("design") || combined.includes("ui") || combined.includes("ux") || combined.includes("figma") || combined.includes("spatial") || combined.includes("prototyp");
+      case "product_management":
+        return combined.includes("product") || combined.includes("roadmap") || combined.includes("strategy") || combined.includes("scrum") || combined.includes("agile");
+      case "cybersecurity":
+        return combined.includes("security") || combined.includes("compliance") || combined.includes("cyber") || combined.includes("policy") || combined.includes("protocols");
+      case "data_analyst":
+        return combined.includes("data") || combined.includes("python") || combined.includes("analytics") || combined.includes("statistics") || combined.includes("machine learning");
+      case "digital_marketing":
+        return combined.includes("marketing") || combined.includes("growth") || combined.includes("seo") || combined.includes("funnel") || combined.includes("campaign");
+      case "frontend":
+        return (combined.includes("frontend") || combined.includes("front-end") || combined.includes("react") || combined.includes("javascript") || combined.includes("css") || combined.includes("html") || combined.includes("web")) && !combined.includes("backend");
+      case "backend":
+        return combined.includes("backend") || combined.includes("back-end") || combined.includes("node") || combined.includes("sql") || combined.includes("fastapi") || combined.includes("microservice") || combined.includes("postgres");
+      case "full_stack":
+        return combined.includes("full-stack") || combined.includes("full stack") || combined.includes("engineering") || combined.includes("web dev") || combined.includes("react 19") || combined.includes("cloud") || combined.includes("devops");
+      case "techpreneur":
+        return combined.includes("preneur") || combined.includes("founder") || combined.includes("leadership") || combined.includes("venture") || combined.includes("opportunity") || combined.includes("experimentation") || combined.includes("business");
+      default:
+        return true;
+    }
+  }
+
+  // 1. Identify learner's chosen track
+  const userTrackKey = resolveUserTrackKey(user?.track);
+  const trackDisplayName = getTrackDisplayName(userTrackKey);
+
+  // 2. Filter available courses for ONLY those in the learner's specific track
+  const userTrackCourses = allAvailableCourses.filter(c => doesCourseMatchTrack(c, userTrackKey));
+  const fallbackTrackCourses = userTrackCourses.length > 0 ? userTrackCourses : allAvailableCourses;
+
+  // 3. Queue only UNCOMPLETED courses needed to start/continue with
+  // When a course reaches 100% completion, it is automatically removed from this queue,
+  // and the next uncompleted course in the track is automatically added/shown!
+  const uncompletedTrackCourses = fallbackTrackCourses.filter(c => (c.progress || 0) < 100);
+  const isTrackCompleted = fallbackTrackCourses.length > 0 && uncompletedTrackCourses.length === 0;
+
+  // Build the active spotlight slides
+  const dynamicSpotlightSlides = isTrackCompleted
+    ? [
+        {
+          id: "track-mastery-complete",
+          isTrackCompleted: true,
+          badge: "TRACK COMPLETED • 100% CERTIFIED",
+          badgeGradient: "#059669",
+          cohortTag: trackDisplayName,
+          pathwayName: trackDisplayName,
+          title: `🎉 All ${trackDisplayName} Courses Completed!`,
+          description: `Outstanding achievement! You have completed every required course in your ${trackDisplayName}. Review lessons, practice with the AI Coach, or request your official Certificate.`,
+          rating: 5.0,
+          reviews: "Track Mastered",
+          enrolled: "Certified",
+          status: "Completed",
+          progress: 100,
+          lessonsRemaining: "All lessons complete",
+          instructor: "Train AI Academy",
+          instructorRole: "Certification Board",
+          instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+          coverImage: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80",
+          cta: "Review Completed Material",
+          action: "explore",
+          lessonsText: `${fallbackTrackCourses.length} Courses Complete`
+        }
+      ]
+    : uncompletedTrackCourses.map((c, idx) => ({
         id: c.id,
-        badge: c.enrolled ? (c.progress > 0 ? `ENROLLED • ${c.progress}% COMPLETED` : "ENROLLED • READY TO START") : "FEATURED TRACK SPOTLIGHT",
-        badgeGradient: idx % 3 === 0 ? "#059669" : idx % 3 === 1 ? "#2563EB" : "#D97706",
-        cohortTag: c.category ? `${c.category} Track` : "Professional Track",
-        pathwayName: c.category || "Professional Track",
+        badge: c.enrolled ? (c.progress > 0 ? `IN PROGRESS • ${c.progress}% DONE` : "ENROLLED • READY TO START") : `COURSE 0${idx + 1} • REQUIRED FOR TRACK`,
+        badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#2563EB" : "#D97706",
+        cohortTag: trackDisplayName,
+        pathwayName: trackDisplayName,
         title: c.title,
-        description: c.tagline || c.description || "Master core industry competencies, practical design token workflows, and production implementations.",
+        description: c.tagline || c.description || `Essential course for your ${trackDisplayName}. Master production workflows and hands-on competencies.`,
         rating: c.rating || 4.9,
         reviews: `${c.reviewsCount || 420} reviews`,
         enrolled: `${c.studentsCount || "1.2k"} Enrolled`,
-        status: c.enrolled ? "In Progress" : "Available",
+        status: c.enrolled ? "In Progress" : "Required",
         progress: c.progress || 0,
         lessonsRemaining: `${c.lessons || c.lessonsCount || 12} lessons`,
         instructor: c.instructor || "Curriculum Specialist",
         instructorRole: c.instructorRole || "Lead Instructor",
         instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
         coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
-        cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Lesson") : "Explore Course",
+        cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Course") : "Enroll & Start Course",
         action: c.enrolled ? "continue" : "explore",
         lessonsText: `${c.lessons || c.lessonsCount || 12} Lessons • ${c.hours || 8} hrs`
-      }))
-    : SPOTLIGHT_SLIDES;
-
-  // Reorder slides so learner's survey track is displayed first
-  const userTrackRaw = (user?.track || "").toLowerCase();
-  const dynamicSpotlightSlides = [...baseSlides].sort((a, b) => {
-    if (!userTrackRaw) return 0;
-    const aText = `${a.title} ${a.cohortTag} ${a.pathwayName || ""}`.toLowerCase();
-    const bText = `${b.title} ${b.cohortTag} ${b.pathwayName || ""}`.toLowerCase();
-    const aMatch = aText.includes(userTrackRaw) || 
-      (userTrackRaw.includes("design") && (aText.includes("figma") || aText.includes("ux") || aText.includes("ui"))) || 
-      (userTrackRaw.includes("ai") && aText.includes("ai")) || 
-      (userTrackRaw.includes("data") && aText.includes("data")) || 
-      (userTrackRaw.includes("engineering") && (aText.includes("react") || aText.includes("web") || aText.includes("full-stack")));
-    const bMatch = bText.includes(userTrackRaw) || 
-      (userTrackRaw.includes("design") && (bText.includes("figma") || bText.includes("ux") || bText.includes("ui"))) || 
-      (userTrackRaw.includes("ai") && bText.includes("ai")) || 
-      (userTrackRaw.includes("data") && bText.includes("data")) || 
-      (userTrackRaw.includes("engineering") && (bText.includes("react") || bText.includes("web") || bText.includes("full-stack")));
-    if (aMatch && !bMatch) return -1;
-    if (!aMatch && bMatch) return 1;
-    return 0;
-  });
+      }));
 
   const currentSpotlight = dynamicSpotlightSlides[activeSlide % dynamicSpotlightSlides.length] || dynamicSpotlightSlides[0];
 
-  // Auto-rotating Spotlight Carousel
+  // Auto-rotating Spotlight Carousel (only rotates if there are multiple active uncompleted courses in the track)
   useEffect(() => {
     if (isCarouselPaused || dynamicSpotlightSlides.length <= 1) return;
     const interval = setInterval(() => {
@@ -425,6 +500,8 @@ export function CoursesScreen({
     }, 4800);
     return () => clearInterval(interval);
   }, [isCarouselPaused, dynamicSpotlightSlides.length]);
+
+  const enrolledList = allAvailableCourses.filter(c => c.enrolled);
 
   // Filtering logic
   const filteredCatalogUnsorted = allAvailableCourses.filter(c => {
@@ -467,7 +544,7 @@ export function CoursesScreen({
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       
       {/* =========================================================================
-          DYNAMIC MOVING SPOTLIGHT HERO CAROUSEL (SLEEK LOOK)
+          DYNAMIC MOVING SPOTLIGHT HERO CAROUSEL (LEARNER TRACK FOCUSED)
           ========================================================================= */}
       {currentSpotlight && (
         <div
@@ -501,34 +578,36 @@ export function CoursesScreen({
             <div>
               <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8" }}>
-                  Featured Track {(activeSlide % dynamicSpotlightSlides.length) + 1} of {dynamicSpotlightSlides.length}
+                  {trackDisplayName} • Course {(activeSlide % dynamicSpotlightSlides.length) + 1} of {dynamicSpotlightSlides.length}
                 </div>
 
-                {/* Prev / Next Controls */}
-                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                  <button
-                    aria-label="Previous Slide"
-                    onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
-                    style={{
-                      width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
-                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
-                    }}
-                  >
-                    <ChevronLeft size={14} />
-                  </button>
-                  <button
-                    aria-label="Next Slide"
-                    onClick={() => setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length)}
-                    style={{
-                      width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
-                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
-                    }}
-                  >
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
+                {/* Prev / Next Controls if multiple active uncompleted courses */}
+                {dynamicSpotlightSlides.length > 1 && (
+                  <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                    <button
+                      aria-label="Previous Slide"
+                      onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
+                      style={{
+                        width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
+                        background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
+                        justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
+                      }}
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <button
+                      aria-label="Next Slide"
+                      onClick={() => setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length)}
+                      style={{
+                        width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
+                        background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
+                        justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
+                      }}
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.25 }}>
@@ -540,7 +619,7 @@ export function CoursesScreen({
               </p>
 
               {/* In-Progress Sprint Pace Meter */}
-              {currentSpotlight.progress > 0 && (
+              {currentSpotlight.progress > 0 && !currentSpotlight.isTrackCompleted && (
                 <div className="tai-hero-subcard" style={{ padding: "10px 14px", borderRadius: 8, marginBottom: 12 }}>
                   <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#DBEAFE" }}>
                     <span>Active Sprint Pace</span>
@@ -577,7 +656,13 @@ export function CoursesScreen({
                     padding: "8px 18px", borderRadius: 8, fontSize: 13, fontWeight: 700,
                     display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer"
                   }}
-                  onClick={() => push("courseDetail", { id: currentSpotlight.id })}
+                  onClick={() => {
+                    if (currentSpotlight.isTrackCompleted) {
+                      setShowMyCoursesOnly(true);
+                    } else {
+                      push("courseDetail", { id: currentSpotlight.id });
+                    }
+                  }}
                 >
                   <span>{currentSpotlight.cta}</span>
                   <ArrowRight size={14} />
@@ -615,59 +700,63 @@ export function CoursesScreen({
                 </div>
               </div>
 
-              {/* Quick Track Switcher Tabs */}
-              <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2, width: "100%" }}>
-                {dynamicSpotlightSlides.map((slide, idx) => {
-                  const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
-                  return (
-                    <button
-                      key={slide.id}
-                      onClick={() => setActiveSlide(idx)}
-                      style={{
-                        flex: 1, minWidth: 110, padding: "7px 10px",
-                        borderRadius: 10,
-                        border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)",
-                        background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
-                        color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      <div style={{ fontSize: 9.5, fontWeight: 800, color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)" }}>
-                        TRACK 0{idx + 1}
-                      </div>
-                      <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {slide.title.split(" in ")[0].split(" with ")[0]}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+              {/* Quick Switcher Tabs for Track Courses */}
+              {dynamicSpotlightSlides.length > 1 && (
+                <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2, width: "100%" }}>
+                  {dynamicSpotlightSlides.map((slide, idx) => {
+                    const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
+                    return (
+                      <button
+                        key={slide.id}
+                        onClick={() => setActiveSlide(idx)}
+                        style={{
+                          flex: 1, minWidth: 110, padding: "7px 10px",
+                          borderRadius: 10,
+                          border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)",
+                          background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
+                          color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          transition: "all 0.2s ease"
+                        }}
+                      >
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)" }}>
+                          COURSE 0{idx + 1}
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {slide.title.split(" in ")[0].split(" with ")[0]}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
           </div>
 
-          {/* Carousel Dot Indicators */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
-            {dynamicSpotlightSlides.map((_, idx) => (
-              <button
-                key={idx}
-                aria-label={`Go to slide ${idx + 1}`}
-                onClick={() => setActiveSlide(idx)}
-                style={{
-                  width: idx === (activeSlide % dynamicSpotlightSlides.length) ? 22 : 7,
-                  height: 7,
-                  borderRadius: 99,
-                  background: idx === (activeSlide % dynamicSpotlightSlides.length) ? "#60A5FA" : "rgba(255,255,255,0.3)",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  transition: "all 0.25s ease"
-                }}
-              />
-            ))}
-          </div>
+          {/* Carousel Dot Indicators if multiple courses */}
+          {dynamicSpotlightSlides.length > 1 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
+              {dynamicSpotlightSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  aria-label={`Slide ${idx + 1}`}
+                  onClick={() => setActiveSlide(idx)}
+                  style={{
+                    width: idx === (activeSlide % dynamicSpotlightSlides.length) ? 24 : 7,
+                    height: 7,
+                    borderRadius: 99,
+                    background: idx === (activeSlide % dynamicSpotlightSlides.length) ? "#60A5FA" : "rgba(255,255,255,0.22)",
+                    border: "none",
+                    padding: 0,
+                    cursor: "pointer",
+                    transition: "all 0.25s ease"
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
