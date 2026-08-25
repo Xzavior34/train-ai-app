@@ -89,16 +89,16 @@ export function subscribeToMockDataChanges(callback) {
   };
 }
 
-// Educational Real YouTube Video Maps for all course topics
+// Educational Real YouTube Video Maps for all course topics (100% embeddable)
 export const MOCK_YOUTUBE_VIDEOS = {
-  // 1. Figma & Spatial Design Systems
+  // 1. Figma & Spatial Design Systems / Design Thinking
   "course-figma-ai": {
-    defaultVideoId: "jwEbff6X3vY",
+    defaultVideoId: "GuVwccpB-Lw",
     lessons: {
-      "l-figma-1": "jwEbff6X3vY", // Figma Design Systems & Variables Masterclass
-      "l-figma-2": "7gqG2_v-s_s", // Figma Variables & Dark Mode Systems
-      "l-figma-3": "b_3gLp0r-2w", // Figma Auto Layout 5.0 in Depth
-      "l-figma-4": "5A4Q4DqM3E8"  // Figma to Code & AI Plugins
+      "l-figma-1": "-hyVVdFobhU", // What is Design Thinking? - AJ&Smart
+      "l-figma-2": "GuVwccpB-Lw", // Figma Tutorial for UI Design - freeCodeCamp
+      "l-figma-3": "FTunaxeGQ5A", // UI / UX Design Tutorial - freeCodeCamp
+      "l-figma-4": "A7s2V5y0zLw"  // Design Thinking Workshop & Sprints
     }
   },
   "course-spatial-ui": {
@@ -244,8 +244,11 @@ export function getYouTubeEmbedId(courseId, lessonId, courseTitle = "", category
 
   // Keyword and topic matching for database / custom courses
   const text = `${courseId || ""} ${courseTitle || ""} ${category || ""}`.toLowerCase();
+  if (text.includes("thinking") || text.includes("design thinking")) {
+    return "-hyVVdFobhU";
+  }
   if (text.includes("figma") || text.includes("design") || text.includes("ux") || text.includes("ui")) {
-    return "jwEbff6X3vY";
+    return "GuVwccpB-Lw";
   }
   if (text.includes("full-stack") || text.includes("react") || text.includes("web") || text.includes("engineer")) {
     return "2xxziIWmaSA";
@@ -268,14 +271,14 @@ export function getYouTubeEmbedId(courseId, lessonId, courseTitle = "", category
   if (text.includes("data") || text.includes("python") || text.includes("analytics")) {
     return "N4tqz8yP8T4";
   }
-  if (text.includes("leadership") || text.includes("management") || text.includes("strategy") || text.includes("project")) {
+  if (text.includes("leadership") || text.includes("management") || text.includes("strategy") || text.includes("project") || text.includes("preneur")) {
     return "P3t8i_p4zJ8";
   }
   if (text.includes("compliance") || text.includes("policy") || text.includes("security")) {
     return "VwT_uG-Z7qA";
   }
 
-  return "jwEbff6X3vY";
+  return "GuVwccpB-Lw";
 }
 
 /**
