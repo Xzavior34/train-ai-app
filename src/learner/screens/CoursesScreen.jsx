@@ -370,37 +370,99 @@ export function CoursesScreen({
 
   // Build spotlight slides with learner's track course (from survey / user.track) automatically first
   const baseSlides = (courses && courses.length > 0)
-    ? courses.slice(0, 4).map((c, idx) => ({
-        id: c.id,
-        badge: c.enrolled ? "ENROLLED • IN PROGRESS" : "FEATURED TRACK SPOTLIGHT",
-        badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#2563EB" : "#D97706",
-        cohortTag: c.category || "Professional Track",
-        title: c.title,
-        description: c.tagline || c.description || "Master core industry competencies, practical design token workflows, and production implementations.",
-        rating: c.rating || 4.9,
-        reviews: `${c.reviewsCount || 420} reviews`,
-        enrolled: `${c.studentsCount || "1.2k"} Enrolled`,
-        status: c.enrolled ? "In Progress" : "Available",
-        progress: c.progress || 0,
-        lessonsRemaining: `${c.lessons || 12} lessons`,
-        instructor: c.instructor || "Curriculum Specialist",
-        instructorRole: c.instructorRole || "Lead Instructor",
-        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-        coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
-        cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Lesson") : "Explore Course",
-        action: c.enrolled ? "continue" : "explore",
-        lessonsText: `${c.lessons || 12} Lessons • ${c.hours || 8} hrs`
-      }))
+    ? courses.slice(0, 5).map((c, idx) => {
+        // Find sibling courses in the same category/track to build the required track pathway
+        const cCat = (c.category || "").toLowerCase();
+        const cTitle = (c.title || "").toLowerCase();
+        const siblingCourses = courses
+          .filter(other => {
+            const oCat = (other.category || "").toLowerCase();
+            const oTitle = (other.title || "").toLowerCase();
+            if (other.id === c.id) return false;
+            return (
+              (cCat && oCat && (cCat.includes(oCat) || oCat.includes(cCat))) ||
+              (cTitle.includes("design") && oTitle.includes("design")) ||
+              (cTitle.includes("ai") && oTitle.includes("ai")) ||
+              (cTitle.includes("web") && oTitle.includes("web")) ||
+              (cTitle.includes("cloud") && oTitle.includes("cloud")) ||
+              (cTitle.includes("data") && oTitle.includes("data"))
+            );
+          })
+          .slice(0, 2);
+
+        const required = [
+          { id: c.id, title: c.title, progress: c.progress || 0 },
+          ...siblingCourses.map(sc => ({ id: sc.id, title: sc.title, progress: sc.progress || 0 }))
+        ];
+
+        // If fewer than 3 sibling courses exist, pad with track milestones
+        if (required.length < 3) {
+          if (cTitle.includes("design") || cCat.includes("design")) {
+            if (!required.some(r => r.id === "course-spatial-ui")) {
+              required.push({ id: "course-spatial-ui", title: "Spatial UI & VisionOS Tokens", progress: 0 });
+            }
+            if (required.length < 3) {
+              required.push({ id: "spec-design-lab", title: "Interactive Prototyping Capstone", progress: 0 });
+            }
+          } else if (cTitle.includes("web") || cTitle.includes("full") || cCat.includes("engineering")) {
+            if (!required.some(r => r.id === "course-cloud-devops")) {
+              required.push({ id: "course-cloud-devops", title: "Cloud DevOps & CI/CD Deployment", progress: 0 });
+            }
+            if (required.length < 3) {
+              required.push({ id: "spec-fullstack-capstone", title: "Production App Capstone Review", progress: 0 });
+            }
+          } else {
+            if (!required.some(r => r.id === "course-prompt-pro")) {
+              required.push({ id: "course-prompt-pro", title: "Advanced Autonomous Agent Schemas", progress: 0 });
+            }
+            if (required.length < 3) {
+              required.push({ id: "spec-ai-capstone", title: "Multi-Modal Capstone Evaluation", progress: 0 });
+            }
+          }
+        }
+
+        return {
+          id: c.id,
+          badge: c.enrolled ? "ENROLLED • IN PROGRESS" : "FEATURED TRACK SPOTLIGHT",
+          badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#2563EB" : "#D97706",
+          cohortTag: c.category ? `${c.category} Track` : "Professional Track",
+          pathwayName: c.category || "Professional Track",
+          title: c.title,
+          description: c.tagline || c.description || "Master core industry competencies, practical design token workflows, and production implementations.",
+          rating: c.rating || 4.9,
+          reviews: `${c.reviewsCount || 420} reviews`,
+          enrolled: `${c.studentsCount || "1.2k"} Enrolled`,
+          status: c.enrolled ? "In Progress" : "Available",
+          progress: c.progress || 0,
+          lessonsRemaining: `${c.lessons || 12} lessons left`,
+          instructor: c.instructor || "Curriculum Specialist",
+          instructorRole: c.instructorRole || "Lead Instructor",
+          instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+          coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
+          cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Lesson") : "Explore Course",
+          action: c.enrolled ? "continue" : "explore",
+          lessonsText: `${c.lessons || 12} Lessons • ${c.hours || 8} hrs`,
+          requiredCourses: required
+        };
+      })
     : SPOTLIGHT_SLIDES;
 
   // Reorder slides so learner's survey track is displayed first
   const userTrackRaw = (user?.track || "").toLowerCase();
   const dynamicSpotlightSlides = [...baseSlides].sort((a, b) => {
     if (!userTrackRaw) return 0;
-    const aText = `${a.title} ${a.cohortTag} ${a.trackKeyword || ""}`.toLowerCase();
-    const bText = `${b.title} ${b.cohortTag} ${b.trackKeyword || ""}`.toLowerCase();
-    const aMatch = aText.includes(userTrackRaw) || (userTrackRaw.includes("design") && aText.includes("figma")) || (userTrackRaw.includes("ai") && aText.includes("ai")) || (userTrackRaw.includes("engineering") && aText.includes("react"));
-    const bMatch = bText.includes(userTrackRaw) || (userTrackRaw.includes("design") && bText.includes("figma")) || (userTrackRaw.includes("ai") && bText.includes("ai")) || (userTrackRaw.includes("engineering") && bText.includes("react"));
+    const aText = `${a.title} ${a.cohortTag} ${a.pathwayName || ""}`.toLowerCase();
+    const bText = `${b.title} ${b.cohortTag} ${b.pathwayName || ""}`.toLowerCase();
+    const aMatch = aText.includes(userTrackRaw) || 
+      (userTrackRaw.includes("design") && (aText.includes("figma") || aText.includes("ux") || aText.includes("ui"))) || 
+      (userTrackRaw.includes("ai") && aText.includes("ai")) || 
+      (userTrackRaw.includes("data") && aText.includes("data")) || 
+      (userTrackRaw.includes("engineering") && (aText.includes("react") || aText.includes("web") || aText.includes("full-stack")));
+    const bMatch = bText.includes(userTrackRaw) || 
+      (userTrackRaw.includes("design") && (bText.includes("figma") || bText.includes("ux") || bText.includes("ui"))) || 
+      (userTrackRaw.includes("ai") && bText.includes("ai")) || 
+      (userTrackRaw.includes("data") && bText.includes("data")) || 
+      (userTrackRaw.includes("engineering") && (bText.includes("react") || bText.includes("web") || bText.includes("full-stack")));
     if (aMatch && !bMatch) return -1;
     if (!aMatch && bMatch) return 1;
     return 0;

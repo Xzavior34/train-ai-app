@@ -122,57 +122,105 @@ export async function fetchLessonsForCourse(courseId) {
 }
 
 export async function fetchMyLessonProgress(userId, lessonIds) {
-  if (!supabase || !userId || !lessonIds || lessonIds.length === 0) return [];
-  const { data, error } = await supabase
-    .from("lesson_progress")
-    .select("*")
-    .eq("user_id", userId)
-    .in("lesson_id", lessonIds);
-  if (error) {
-    console.warn("Could not fetch lesson progress:", error);
-    return [];
+  const localKey = `trainai_completed_lessons_${userId || "anon"}`;
+  let localCompleted = [];
+  try {
+    const raw = localStorage.getItem(localKey);
+    if (raw) localCompleted = JSON.parse(raw);
+  } catch {}
+
+  const localMap = new Map(localCompleted.map(id => [id, { lesson_id: id, is_completed: true, user_id: userId }]));
+
+  if (!supabase || !userId || !lessonIds || lessonIds.length === 0) {
+    return Array.from(localMap.values());
   }
-  return data || [];
+
+  try {
+    const { data, error } = await supabase
+      .from("lesson_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .in("lesson_id", lessonIds);
+    if (error) {
+      console.warn("Could not fetch lesson progress from database:", error);
+      return Array.from(localMap.values());
+    }
+    const dbList = data || [];
+    // Merge DB results with local cache
+    const merged = new Map(localMap);
+    dbList.forEach(item => {
+      merged.set(item.lesson_id, item);
+    });
+    return Array.from(merged.values());
+  } catch (e) {
+    console.warn("fetchMyLessonProgress catch:", e);
+    return Array.from(localMap.values());
+  }
 }
 
 export async function markLessonComplete(userId, lessonId, courseId = null) {
-  if (!supabase || !userId || !lessonId) return;
+  if (!userId || !lessonId) return;
 
   const timestamp = new Date().toISOString();
 
-  // 1. Sync to lesson_progress table
-  const { error: lpErr } = await supabase
-    .from("lesson_progress")
-    .upsert(
-      { user_id: userId, lesson_id: lessonId, is_completed: true, completed_at: timestamp },
-      { onConflict: "user_id,lesson_id" }
-    );
-  if (lpErr) console.warn("lesson_progress sync warning:", lpErr);
+  // 1. Resilient local cache sync
+  try {
+    const localKey = `trainai_completed_lessons_${userId}`;
+    const existing = JSON.parse(localStorage.getItem(localKey) || "[]");
+    if (!existing.includes(lessonId)) {
+      existing.push(lessonId);
+      localStorage.setItem(localKey, JSON.stringify(existing));
+    }
+    if (courseId) {
+      const courseKey = `trainai_course_completed_lessons_${userId}_${courseId}`;
+      const courseLessons = JSON.parse(localStorage.getItem(courseKey) || "[]");
+      if (!courseLessons.includes(lessonId)) {
+        courseLessons.push(lessonId);
+        localStorage.setItem(courseKey, JSON.stringify(courseLessons));
+      }
+    }
+  } catch {}
 
-  // 2. Recalculate and update course enrollment progress
-  // (there is no separate `user_progress` table in this schema - course
-  // completion % is derived straight from lesson_progress + course
-  // enrollment, which is all that's needed here)
+  if (!supabase) return;
+
+  // 2. Sync to lesson_progress table
+  try {
+    const { error: lpErr } = await supabase
+      .from("lesson_progress")
+      .upsert(
+        { user_id: userId, lesson_id: lessonId, is_completed: true, completed_at: timestamp },
+        { onConflict: "user_id,lesson_id" }
+      );
+    if (lpErr) console.warn("lesson_progress sync notice:", lpErr.message || lpErr);
+  } catch (e) {
+    console.warn("lesson_progress upsert catch:", e);
+  }
+
+  // 3. Recalculate and update course enrollment progress
   if (courseId) {
     try {
       const { data: allLessons } = await supabase.from("lessons").select("id").eq("course_id", courseId);
       const { data: doneLessons } = await supabase.from("lesson_progress").select("lesson_id").eq("user_id", userId).eq("is_completed", true);
       
-      const total = allLessons?.length || 1;
+      const total = allLessons?.length || 4;
       const completedCount = doneLessons ? doneLessons.filter(l => allLessons?.some(al => al.id === l.lesson_id)).length : 1;
       const percentage = Math.min(100, Math.round((completedCount / total) * 100));
 
       await supabase
         .from("course_enrollments")
-        .update({ progress_percentage: percentage, updated_at: timestamp, ...(percentage === 100 ? { completed_at: timestamp } : {}) })
-        .eq("user_id", userId)
-        .eq("course_id", courseId);
+        .upsert({
+          user_id: userId,
+          course_id: courseId,
+          progress_percentage: percentage,
+          updated_at: timestamp,
+          ...(percentage === 100 ? { completed_at: timestamp } : {})
+        }, { onConflict: "user_id,course_id" });
     } catch (e) {
-      console.warn("Enrollment progress calculation warning:", e);
+      console.warn("Enrollment progress calculation notice:", e);
     }
   }
 
-  // 3. Update user gamification stats
+  // 4. Update user gamification stats
   try {
     const { data: stats } = await supabase.from("user_gamification_stats").select("*").eq("user_id", userId).maybeSingle();
     const currentPoints = stats?.total_points || 0;
@@ -187,7 +235,7 @@ export async function markLessonComplete(userId, lessonId, courseId = null) {
         updated_at: timestamp
       }, { onConflict: "user_id" });
   } catch (e) {
-    console.warn("Gamification stats sync warning:", e);
+    console.warn("Gamification stats sync notice:", e);
   }
 }
 
