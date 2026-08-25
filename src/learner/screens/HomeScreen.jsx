@@ -1,81 +1,27 @@
-import React, { useState } from "react";
-import { Avatar, ProgressBar, Tag, CourseThumb } from "../components/LearnerUI.jsx";
+import React from "react";
+import { Avatar, ProgressBar, Tag } from "../components/LearnerUI.jsx";
 import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
-import { fetchAIInsights } from "../../lib/api/schemaHelper.js";
-import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 import {
-  Bell, GraduationCap, Play, BookOpen, Users, Zap, ChevronRight, Layers, Trophy, Clock, Flame, Target,
-  Calendar, CheckCircle2, TrendingUp, BarChart3, AlertCircle, ArrowUpRight, Video, Award, Star, Palette, Lock, Radio,
-  Bookmark
+  BookOpen, Users, Zap, ChevronRight, Target,
+  BarChart3, Video, Code2, Bookmark
 } from "lucide-react";
-
-const STOCK_COURSES = [
-  {
-    id: "stock-1",
-    title: "Master Design Systems in Figma with AI",
-    category: "Design & UX",
-    hours: 6,
-    lessons: 14,
-    rating: 4.9,
-    enrolled: false,
-    image: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80"
-  },
-  {
-    id: "stock-2",
-    title: "Full-Stack AI Application Engineering",
-    category: "AI & Engineering",
-    hours: 12,
-    lessons: 22,
-    rating: 4.8,
-    enrolled: false,
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80"
-  },
-  {
-    id: "stock-3",
-    title: "Cloud Infrastructure & Microservices",
-    category: "DevOps & Cloud",
-    hours: 8,
-    lessons: 16,
-    rating: 4.9,
-    enrolled: false,
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&auto=format&fit=crop&q=80"
-  }
-];
 
 export function HomeScreen({
   user = {}, courses = [], coursesLoading, unreadNotifs = 0, weeklyGoal = 5,
   session, push, goTab, goToMyCourses, cohort = null, cohortLoading = false,
 }) {
   const enrolledCourses = (courses || []).filter(c => c.enrolled);
-  // Only fall back to another enrolled course, never an unenrolled catalog
-  // item - showing "Continue learning" progress/CTA for a course the
-  // learner isn't even enrolled in was a real bug, not a display choice.
   const continueCourse = enrolledCourses.find(c => c.progress < 100) || enrolledCourses[0] || null;
-  const otherAssignedCount = Math.max(0, enrolledCourses.length - (continueCourse ? 1 : 0));
+
+  const completedCourses = enrolledCourses.filter(c => (c.progress || 0) >= 100);
+  const avgProgress = enrolledCourses.length
+    ? Math.round(enrolledCourses.reduce((sum, c) => sum + (c.progress || 0), 0) / enrolledCourses.length)
+    : 0;
 
   const goal = weeklyGoal || 5;
   const done = user?.weeklyDone || 0;
   const goalPercent = Math.min(100, Math.round((done / goal) * 100));
   const userFirstName = (user?.name || "Learner").split(" ")[0];
-
-  const [activeDayIndex, setActiveDayIndex] = useState(2); // Wednesday active
-
-  const WEEK_DAYS = [
-    { day: "Mon", hours: 2.5, height: "65%" },
-    { day: "Tue", hours: 1.8, height: "45%" },
-    { day: "Wed", hours: 4.5, height: "100%", active: true },
-    { day: "Thu", hours: 2.2, height: "55%" },
-    { day: "Fri", hours: 3.1, height: "78%" },
-    { day: "Sat", hours: 1.4, height: "35%" },
-    { day: "Sun", hours: 2.0, height: "50%" },
-  ];
-
-  const ASSIGNMENTS = [
-    { id: 1, title: "UX Audit Report", module: "Module 4 • UX Research", due: "Due Tomorrow, 05:00 PM", status: "Pending", tone: "danger" },
-    { id: 2, title: "Mobile App Wireframe", module: "Module 3 • Prototyping", due: "Due Friday, 11:59 PM", status: "In Progress", tone: "warning" },
-    { id: 3, title: "Create Design Tokens", module: "Module 2 • Design System", due: "Completed Yesterday", status: "Completed", tone: "success" },
-  ];
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -310,60 +256,138 @@ export function HomeScreen({
           {/* AI Insights Summary */}
           <AIRecommendationsCard user={user} courses={courses} session={session} goTab={goTab} maxItems={1} showSeeAll />
 
-
         </div>
-      </div>
 
-      {/* My Progress & Bookmarks - real navigation screens that exist
-          elsewhere in the app but had dropped out of Home's links. */}
-      <div className="tai-grid2" style={{ gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div className="tai-card tai-card-hover" style={{ cursor: "pointer", padding: 16 }} onClick={() => push("myProgress")}>
-          <div className="tai-row tai-between">
-            <div className="tai-row tai-gap10">
-              <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <BarChart3 size={18} color="var(--primary)" />
+        {/* RIGHT COLUMN: Fleshed-out My Progress & Saved Bookmarks Cards */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
+          
+          {/* Fleshed-out My Learning Progress Card */}
+          <div className="tai-card" style={{ padding: 18, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
+              <div className="tai-row tai-gap8">
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <BarChart3 size={17} color="var(--primary)" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>My Learning Progress</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Curriculum &amp; course analytics</div>
+                </div>
               </div>
-              <div>
-                <div className="tai-label">My Progress</div>
-                <div style={{ fontWeight: 700, fontSize: 14.5, marginTop: 2 }}>Detailed breakdown</div>
+              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => push("myProgress")}>Details →</span>
+            </div>
+
+            {/* Metrics Snapshot Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Avg Completion</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "var(--primary)", marginTop: 2 }}>{avgProgress}%</div>
+              </div>
+              <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Courses Enrolled</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)", marginTop: 2 }}>{enrolledCourses.length} Active</div>
               </div>
             </div>
-            <ChevronRight size={18} color="var(--text-3)" />
-          </div>
-        </div>
 
-        <div className="tai-card tai-card-hover" style={{ cursor: "pointer", padding: 16 }} onClick={() => push("bookmarks")}>
-          <div className="tai-row tai-between">
-            <div className="tai-row tai-gap10">
-              <div style={{ width: 38, height: 38, borderRadius: 11, background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Bookmark size={18} color="var(--primary)" />
+            {/* Progress Breakdown bar */}
+            <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 14 }}>
+              <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6 }}>
+                <span style={{ color: "var(--text-2)" }}>Completed vs Assigned</span>
+                <span style={{ color: "var(--primary)" }}>{completedCourses.length} of {enrolledCourses.length} Complete</span>
               </div>
-              <div>
-                <div className="tai-label">Bookmarks</div>
-                <div style={{ fontWeight: 700, fontSize: 14.5, marginTop: 2 }}>Saved lessons & snippets</div>
+              <ProgressBar value={enrolledCourses.length ? Math.round((completedCourses.length / enrolledCourses.length) * 100) : 0} height={6} />
+            </div>
+
+            <button
+              className="tai-btn tai-btn-outline"
+              style={{ width: "100%", padding: "8px 14px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+              onClick={() => push("myProgress")}
+            >
+              <span>View Full Progress Breakdown</span>
+              <ChevronRight size={14} />
+            </button>
+          </div>
+
+          {/* Fleshed-out Bookmarks & Saved Library Card */}
+          <div className="tai-card" style={{ padding: 18, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
+              <div className="tai-row tai-gap8">
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Bookmark size={17} color="var(--primary)" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Saved Library</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Bookmarks, lessons &amp; snippets</div>
+                </div>
+              </div>
+              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => push("bookmarks")}>View All →</span>
+            </div>
+
+            {/* Quick Preview List of Bookmarked Items */}
+            <div className="tai-col tai-gap8" style={{ marginBottom: 14 }}>
+              {[
+                { title: "Master Design Systems in Figma", type: "Course", icon: BookOpen, meta: "Design & UX" },
+                { title: "Vector Chunking & Hybrid Search", type: "Lesson", icon: Video, meta: "Full-Stack AI" },
+                { title: "Figma Variables Exporter Script", type: "Code", icon: Code2, meta: "JavaScript" }
+              ].map((item, idx) => {
+                const ItemIcon = item.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="tai-row tai-between"
+                    style={{
+                      padding: "8px 10px",
+                      background: "var(--surface-3)",
+                      borderRadius: 8,
+                      border: "1px solid var(--border)",
+                      cursor: "pointer",
+                      gap: 8
+                    }}
+                    onClick={() => push("bookmarks")}
+                  >
+                    <div className="tai-row tai-gap8" style={{ minWidth: 0, flex: 1 }}>
+                      <ItemIcon size={14} color="var(--primary)" style={{ flexShrink: 0 }} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {item.title}
+                        </div>
+                        <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{item.type} • {item.meta}</div>
+                      </div>
+                    </div>
+                    <ChevronRight size={14} color="var(--text-3)" style={{ flexShrink: 0 }} />
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              className="tai-btn tai-btn-outline"
+              style={{ width: "100%", padding: "8px 14px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+              onClick={() => push("bookmarks")}
+            >
+              <span>Explore All Bookmarked Items</span>
+              <ChevronRight size={14} />
+            </button>
+          </div>
+
+          {/* Quick Hub Links */}
+          <div className="tai-card" style={{ padding: 16, borderRadius: 12 }}>
+            <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", marginBottom: 10 }}>Quick Access</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "10px 6px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }} onClick={() => goTab("courses")}>
+                <BookOpen size={18} color="var(--primary)" style={{ margin: "0 auto" }} />
+                <div style={{ fontWeight: 700, fontSize: 11.5, marginTop: 4 }}>Courses</div>
+              </div>
+              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "10px 6px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }} onClick={() => goTab("ai")}>
+                <Zap size={18} color="var(--primary)" style={{ margin: "0 auto" }} />
+                <div style={{ fontWeight: 700, fontSize: 11.5, marginTop: 4 }}>AI Coach</div>
+              </div>
+              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "10px 6px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }} onClick={() => goTab("community")}>
+                <Users size={18} color="var(--primary)" style={{ margin: "0 auto" }} />
+                <div style={{ fontWeight: 700, fontSize: 11.5, marginTop: 4 }}>Community</div>
               </div>
             </div>
-            <ChevronRight size={18} color="var(--text-3)" />
           </div>
-        </div>
-      </div>
 
-      {/* Quick links to the other 3 sections */}
-      <div style={{ marginTop: 4 }}>
-        <div className="tai-title-sm" style={{ marginBottom: 10 }}>Jump to</div>
-        <div className="tai-grid2" style={{ gridTemplateColumns: "1fr 1fr 1fr" }}>
-          <div className="tai-card" style={{ cursor: "pointer", padding: 14, textAlign: "center" }} onClick={() => goTab("courses")}>
-            <BookOpen size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
-            <div style={{ fontWeight: 700, fontSize: 12.5, marginTop: 6 }}>Courses</div>
-          </div>
-          <div className="tai-card" style={{ cursor: "pointer", padding: 14, textAlign: "center" }} onClick={() => goTab("ai")}>
-            <Zap size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
-            <div style={{ fontWeight: 700, fontSize: 12.5, marginTop: 6 }}>AI Coach</div>
-          </div>
-          <div className="tai-card" style={{ cursor: "pointer", padding: 14, textAlign: "center" }} onClick={() => goTab("community")}>
-            <Users size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
-            <div style={{ fontWeight: 700, fontSize: 12.5, marginTop: 6 }}>Community</div>
-          </div>
         </div>
       </div>
     </div>

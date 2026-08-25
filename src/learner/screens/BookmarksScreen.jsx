@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TopBar, Avatar, Tag, ProgressBar } from "../components/LearnerUI.jsx";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import {
@@ -139,11 +139,54 @@ results = vector_store.similarity_search(query, k=4)`
     }
   ]);
 
+  const query = (searchQuery || "").trim().toLowerCase();
+
+  const filteredCourses = useMemo(() => {
+    return savedCourses.filter(c => {
+      const matchesColl = selectedCollection === "all" || c.collection === selectedCollection;
+      const matchesQuery = !query || c.title?.toLowerCase().includes(query) || c.category?.toLowerCase().includes(query) || c.instructor?.toLowerCase().includes(query);
+      return matchesColl && matchesQuery;
+    });
+  }, [savedCourses, selectedCollection, query]);
+
+  const filteredLessons = useMemo(() => {
+    return savedLessons.filter(l => {
+      const matchesColl = selectedCollection === "all" || l.collection === selectedCollection;
+      const matchesQuery = !query || l.title?.toLowerCase().includes(query) || l.courseTitle?.toLowerCase().includes(query) || l.instructor?.toLowerCase().includes(query);
+      return matchesColl && matchesQuery;
+    });
+  }, [savedLessons, selectedCollection, query]);
+
+  const filteredSnippets = useMemo(() => {
+    return savedSnippets.filter(s => {
+      const matchesColl = selectedCollection === "all" || s.collection === selectedCollection;
+      const matchesQuery = !query || s.title?.toLowerCase().includes(query) || s.language?.toLowerCase().includes(query) || s.code?.toLowerCase().includes(query);
+      return matchesColl && matchesQuery;
+    });
+  }, [savedSnippets, selectedCollection, query]);
+
+  const filteredNotes = useMemo(() => {
+    return savedNotes.filter(n => {
+      const matchesColl = selectedCollection === "all" || n.collection === selectedCollection;
+      const matchesQuery = !query || n.title?.toLowerCase().includes(query) || n.content?.toLowerCase().includes(query);
+      return matchesColl && matchesQuery;
+    });
+  }, [savedNotes, selectedCollection, query]);
+
+  const totalFilteredCount = useMemo(() => {
+    if (activeTab === "all") return filteredCourses.length + filteredLessons.length + filteredSnippets.length + filteredNotes.length;
+    if (activeTab === "courses") return filteredCourses.length;
+    if (activeTab === "lessons") return filteredLessons.length;
+    if (activeTab === "snippets") return filteredSnippets.length;
+    if (activeTab === "notes") return filteredNotes.length;
+    return 0;
+  }, [activeTab, filteredCourses, filteredLessons, filteredSnippets, filteredNotes]);
+
   const COLLECTIONS = [
     { id: "all", label: "All Items", count: savedCourses.length + savedLessons.length + savedSnippets.length + savedNotes.length },
-    { id: "Design Systems", label: "Design Systems", count: 3 },
-    { id: "Full-Stack AI", label: "Full-Stack AI", count: 3 },
-    { id: "Spatial Design", label: "Spatial Design", count: 2 }
+    { id: "Design Systems", label: "Design Systems", count: savedCourses.filter(c => c.collection === "Design Systems").length + savedLessons.filter(l => l.collection === "Design Systems").length + savedSnippets.filter(s => s.collection === "Design Systems").length + savedNotes.filter(n => n.collection === "Design Systems").length },
+    { id: "Full-Stack AI", label: "Full-Stack AI", count: savedCourses.filter(c => c.collection === "Full-Stack AI").length + savedLessons.filter(l => l.collection === "Full-Stack AI").length + savedSnippets.filter(s => s.collection === "Full-Stack AI").length + savedNotes.filter(n => n.collection === "Full-Stack AI").length },
+    { id: "Spatial Design", label: "Spatial Design", count: savedCourses.filter(c => c.collection === "Spatial Design").length + savedLessons.filter(l => l.collection === "Spatial Design").length + savedSnippets.filter(s => s.collection === "Spatial Design").length + savedNotes.filter(n => n.collection === "Spatial Design").length }
   ];
 
   function handleCopySnippet(id, code) {

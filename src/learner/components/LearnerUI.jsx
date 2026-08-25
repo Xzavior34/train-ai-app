@@ -708,7 +708,7 @@ export function Switch({ on, onChange }) {
 export const NAV_ITEMS = [
   { key: "home", label: "Home", icon: Home },
   { key: "courses", label: "Courses", icon: BookOpen },
-  { key: "ai", label: "AI Coach", icon: Plus },
+  { key: "ai", label: "AI Coach", icon: Zap },
   { key: "community", label: "Community", icon: Users },
 ];
 
@@ -902,11 +902,11 @@ export function DesktopSidebar({
     {
       key: "ai",
       label: "AI Coach",
-      icon: Plus,
+      icon: Zap,
       defaultScreen: "ai",
       screens: ["ai", "aiQuiz"],
       subItems: [
-        { key: "ai", label: "AI Coach", icon: Plus },
+        { key: "ai", label: "AI Coach", icon: Zap },
         { key: "aiQuiz", label: "Quizzes", icon: GraduationCap }
       ]
     },
