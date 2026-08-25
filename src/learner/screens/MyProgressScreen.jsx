@@ -7,6 +7,20 @@ import {
 } from "lucide-react";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
+const COURSE_UNIQUE_THUMBNAILS = {
+  "course-figma-ai": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
+  "course-spatial-ui": "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80",
+  "course-fullstack-ai": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80",
+  "course-prompt-pro": "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=80",
+  "course-cloud-devops": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
+  "course-data-python": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+  "course-product-analytics": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80",
+  "course-compliance-101": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80",
+  "course-techpreneur-business": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80",
+  "course-techpreneur-experimentation": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=80",
+  "course-foundations": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&auto=format&fit=crop&q=80"
+};
+
 export function MyProgressScreen({ user = {}, courses = [], push, back, session, showToast }) {
   const [filterStatus, setFilterStatus] = useState("all"); // "all" | "in_progress" | "completed"
 
@@ -96,7 +110,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
         status: isDone ? "completed" : "in_progress",
         lastActive: "Recent",
         nextLesson: isDone ? "All modules completed" : "Continue current module",
-        coverImageUrl: c.coverImageUrl || c.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
+        coverImageUrl: (c.id && COURSE_UNIQUE_THUMBNAILS[c.id]) || c.coverImageUrl || c.image || "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"
       };
     });
 

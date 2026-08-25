@@ -23,7 +23,25 @@ const TOPIC_STOCK_PHOTOS = {
   technical_leadership: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1000&auto=format&fit=crop&q=80",
 };
 
+const COURSE_UNIQUE_THUMBNAILS = {
+  "course-figma-ai": "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=1000&auto=format&fit=crop&q=80",
+  "course-spatial-ui": "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=1000&auto=format&fit=crop&q=80",
+  "course-fullstack-ai": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1000&auto=format&fit=crop&q=80",
+  "course-prompt-pro": "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=1000&auto=format&fit=crop&q=80",
+  "course-cloud-devops": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1000&auto=format&fit=crop&q=80",
+  "course-data-python": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1000&auto=format&fit=crop&q=80",
+  "course-product-analytics": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1000&auto=format&fit=crop&q=80",
+  "course-compliance-101": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=1000&auto=format&fit=crop&q=80",
+  "course-techpreneur-business": "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1000&auto=format&fit=crop&q=80",
+  "course-techpreneur-experimentation": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1000&auto=format&fit=crop&q=80",
+  "course-foundations": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1000&auto=format&fit=crop&q=80",
+  "course-design-thinking": "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=1000&auto=format&fit=crop&q=80"
+};
+
 function getSafeCoverImage(course) {
+  if (course?.id && COURSE_UNIQUE_THUMBNAILS[course.id]) {
+    return COURSE_UNIQUE_THUMBNAILS[course.id];
+  }
   if (course?.coverImageUrl && course.coverImageUrl.startsWith("http") && !course.coverImageUrl.includes("picsum.photos") && !course.coverImageUrl.includes("placeholder")) {
     return course.coverImageUrl;
   }
@@ -50,7 +68,10 @@ function getSafeCoverImage(course) {
   if (text.includes("entrepreneur") || text.includes("startup") || text.includes("founder")) return TOPIC_STOCK_PHOTOS.entrepreneurship_venture;
   if (text.includes("business") || text.includes("opportunity")) return TOPIC_STOCK_PHOTOS.business_opportunity;
   if (text.includes("leadership") || text.includes("management")) return TOPIC_STOCK_PHOTOS.technical_leadership;
-  return TOPIC_STOCK_PHOTOS.fullstack_ai;
+
+  const keys = Object.keys(TOPIC_STOCK_PHOTOS);
+  const hash = (course?.id || course?.title || "").split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return TOPIC_STOCK_PHOTOS[keys[hash % keys.length]];
 }
 
 function CourseCoverImage({ course, children }) {
