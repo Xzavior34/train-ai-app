@@ -99,7 +99,7 @@ export function MentorsScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />

@@ -220,7 +220,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
             <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Flame size={18} color="#8B5CF6" />
+              <Flame size={18} color="#3B82F6" />
             </div>
             <div>
               <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{user.streak || 8} Days</div>
@@ -260,7 +260,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
                     width: "45%",
                     maxWidth: 32,
                     height: `${d.heightPct}%`,
-                    background: d.active ? "#4F46E5" : "var(--primary-tint)",
+                    background: d.active ? "#2563EB" : "var(--primary-tint)",
                     borderRadius: "6px 6px 0 0",
                     transition: "height 0.3s ease"
                   }}
@@ -284,7 +284,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
                 Evaluated from assessments &amp; projects
               </div>
             </div>
-            <span className="tai-tag" style={{ background: "rgba(79, 70, 229, 0.1)", color: "var(--primary)", fontWeight: 700 }}>
+            <span className="tai-tag" style={{ background: "rgba(37, 99, 235, 0.1)", color: "var(--primary)", fontWeight: 700 }}>
               Level 2
             </span>
           </div>

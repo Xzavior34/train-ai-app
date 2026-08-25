@@ -44,7 +44,7 @@ export default function OnboardingScreen({ onComplete }) {
         .ob-card { animation: obFadeUp .3s ease; }
         .ob-option { transition: border-color .12s ease, background-color .12s ease, transform .12s ease; }
         .ob-option:hover { transform: translateY(-1px); }
-        .ob-continue:not(:disabled):hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
+        .ob-continue:not(:disabled):hover { box-shadow: 0 14px 28px -8px rgba(37,99,235,.55); transform: translateY(-1px); }
       `}</style>
 
       <div style={styles.glow} />
@@ -57,7 +57,7 @@ export default function OnboardingScreen({ onComplete }) {
 
         <div style={styles.progressRow}>
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} style={{ ...styles.progressBar, background: i <= step ? "#4F46E5" : "#EEF2FF" }} />
+            <div key={i} style={{ ...styles.progressBar, background: i <= step ? "#2563EB" : "#EFF6FF" }} />
           ))}
         </div>
 
@@ -74,11 +74,11 @@ export default function OnboardingScreen({ onComplete }) {
                     key={t.name} className="ob-option" onClick={() => toggleTrack(t.name)}
                     style={{ ...styles.option, ...(active ? styles.optionActive : {}) }}
                   >
-                    <div style={{ ...styles.optionIcon, background: active ? "rgba(79,70,229,.12)" : "#F4F6FC" }}>
-                      <Icon size={16} color={active ? "#4F46E5" : "#656C86"} />
+                    <div style={{ ...styles.optionIcon, background: active ? "rgba(37,99,235,.12)" : "#F4F6FC" }}>
+                      <Icon size={16} color={active ? "#2563EB" : "#656C86"} />
                     </div>
                     <span style={styles.optionLabel}>{t.name}</span>
-                    {active && <Check size={17} color="#4F46E5" style={{ marginLeft: "auto" }} />}
+                    {active && <Check size={17} color="#2563EB" style={{ marginLeft: "auto" }} />}
                   </div>
                 );
               })}
@@ -97,7 +97,7 @@ export default function OnboardingScreen({ onComplete }) {
                   <div key={l.key} className="ob-option" onClick={() => setLevel(l.key)} style={{ ...styles.option, ...(active ? styles.optionActive : {}), alignItems: "flex-start", flexDirection: "column", gap: 2 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, width: "100%" }}>
                       <span style={{ ...styles.optionLabel, fontWeight: 700 }}>{l.label}</span>
-                      {active && <Check size={16} color="#4F46E5" style={{ marginLeft: "auto" }} />}
+                      {active && <Check size={16} color="#2563EB" style={{ marginLeft: "auto" }} />}
                     </div>
                     <span style={styles.optionDesc}>{l.desc}</span>
                   </div>
@@ -131,7 +131,7 @@ const styles = {
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 18 },
   brandMark: {
     width: 30, height: 30, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#4F46E5",
+    background: "#2563EB",
   },
   brandName: { fontWeight: 800, fontSize: 15, color: "#10142A" },
   progressRow: { display: "flex", gap: 6, marginBottom: 24 },
@@ -143,14 +143,14 @@ const styles = {
     display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 8,
     border: "1px solid #E2E8F0", background: "#fff", cursor: "pointer", userSelect: "none",
   },
-  optionActive: { borderColor: "#4F46E5", background: "#F8FAFC" },
+  optionActive: { borderColor: "#2563EB", background: "#F8FAFC" },
   optionIcon: { width: 32, height: 32, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   optionLabel: { fontSize: 13.5, fontWeight: 600, color: "#10142A" },
   optionDesc: { fontSize: 12, color: "#656C86" },
   continue: {
     width: "100%", border: "none", borderRadius: 8, padding: "11px 16px", fontWeight: 700, fontSize: 14,
     color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-    background: "#4F46E5",
+    background: "#2563EB",
     transition: "background .12s ease",
   },
 };

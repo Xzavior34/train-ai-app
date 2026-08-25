@@ -239,7 +239,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
                           width: 44, height: 44, borderRadius: 8,
                           background: "var(--primary-tint)", color: "var(--primary)",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          border: "1px solid rgba(99, 102, 241, 0.2)", flexShrink: 0
+                          border: "1px solid rgba(59, 130, 246, 0.2)", flexShrink: 0
                         }}>
                           <Building2 size={22} />
                         </div>

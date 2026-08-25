@@ -500,8 +500,8 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
               textAlign: "center"
             }}
           >
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(99, 102, 241, 0.25)", border: "1px solid rgba(165, 180, 252, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-              <Video size={24} color="#A5B4FC" />
+            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(59, 130, 246, 0.25)", border: "1px solid rgba(165, 180, 252, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+              <Video size={24} color="#93C5FD" />
             </div>
             <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 4 }}>{lessonTitle}</div>
             <div style={{ fontSize: 13, color: "#94A3B8", maxWidth: 440, lineHeight: 1.45 }}>
@@ -534,7 +534,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
           <span style={{ fontSize: 11.5, fontWeight: 800, color: "#FFFFFF", wordBreak: "break-word", lineHeight: 1.25 }}>
             {lessonTitle}
           </span>
-          <span style={{ fontSize: 10.5, color: "#A5B4FC", fontWeight: 700, flexShrink: 0, background: "rgba(99, 102, 241, 0.25)", padding: "1px 6px", borderRadius: 4, border: "1px solid rgba(165, 180, 252, 0.3)" }}>
+          <span style={{ fontSize: 10.5, color: "#93C5FD", fontWeight: 700, flexShrink: 0, background: "rgba(59, 130, 246, 0.25)", padding: "1px 6px", borderRadius: 4, border: "1px solid rgba(165, 180, 252, 0.3)" }}>
             {videoQuality}
           </span>
         </div>
@@ -601,11 +601,11 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
           <div style={{
             width: `${progressPercent}%`,
             height: "100%",
-            background: "#4F46E5",
+            background: "#2563EB",
             borderRadius: 99,
             position: "relative",
             transition: "width 0.1s linear",
-            boxShadow: "0 0 8px rgba(79, 70, 229, 0.6)"
+            boxShadow: "0 0 8px rgba(37, 99, 235, 0.6)"
           }}>
             <div style={{
               position: "absolute", right: -5, top: isHoveringScrubber ? -3.5 : -4,
@@ -613,7 +613,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
               borderRadius: "50%",
               background: "#FFFFFF",
               boxShadow: "0 0 10px rgba(255, 255, 255, 0.8)",
-              border: "2px solid #4F46E5"
+              border: "2px solid #2563EB"
             }} />
           </div>
         </div>
@@ -630,7 +630,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
               style={{
                 width: 36, height: 36, borderRadius: "50%",
                 padding: 0, justifyContent: "center",
-                background: "#4F46E5"
+                background: "#2563EB"
               }}
               onClick={handlePlayPauseToggle}
               aria-label={isPlaying ? "Pause Video" : "Play Video"}
@@ -685,7 +685,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
                 style={{
                   width: 54,
                   height: 4,
-                  accentColor: "#818CF8",
+                  accentColor: "#60A5FA",
                   cursor: "pointer"
                 }}
               />

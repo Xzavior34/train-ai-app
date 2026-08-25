@@ -34,7 +34,7 @@ function MiniSwitch({ on, onChange, disabled }) {
       role="switch"
       aria-checked={on}
       style={{
-        width: 36, height: 21, borderRadius: 99, background: on ? "#4F46E5" : "#EEF2FF",
+        width: 36, height: 21, borderRadius: 99, background: on ? "#2563EB" : "#EFF6FF",
         position: "relative", cursor: disabled ? "default" : "pointer", flexShrink: 0,
         opacity: disabled ? 0.6 : 1, transition: "background .15s"
       }}
@@ -51,7 +51,7 @@ function MiniSwitch({ on, onChange, disabled }) {
 
 const primaryBtnStyle = {
   border: "none", cursor: "pointer", borderRadius: 8, fontWeight: 700, fontSize: 12.5, padding: "9px 14px",
-  background: "#4F46E5", color: "#fff"
+  background: "#2563EB", color: "#fff"
 };
 const outlineBtnStyle = {
   border: "1.5px solid #E6E9F5", cursor: "pointer", borderRadius: 8, fontWeight: 700, fontSize: 12.5,
@@ -59,7 +59,7 @@ const outlineBtnStyle = {
 };
 const ghostBtnStyle = {
   border: "none", cursor: "pointer", borderRadius: 8, fontWeight: 700, fontSize: 12.5, padding: "9px 14px",
-  background: "#EEF2FF", color: "#4F46E5"
+  background: "#EFF6FF", color: "#2563EB"
 };
 
 // Bottom-of-screen GDPR-style cookie consent banner. Shown once per policy
@@ -137,10 +137,10 @@ export default function ConsentBanner({ session }) {
       >
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
           <div style={{
-            width: 36, height: 36, borderRadius: "50%", background: "#EEF2FF",
+            width: 36, height: 36, borderRadius: "50%", background: "#EFF6FF",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
           }}>
-            <Cookie size={17} color="#4F46E5" />
+            <Cookie size={17} color="#2563EB" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontWeight: 800, fontSize: 15, color: "#10142A" }}>We value your privacy</div>

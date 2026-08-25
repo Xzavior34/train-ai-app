@@ -148,7 +148,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     } else if (key === "cohort") {
       goTab("cohort");
     } else if (key === "leaderboard") {
-      setCommunityTab("leaderboard");
+      push("leaderboard");
+    } else if (key === "communityCircles") {
+      setCommunityTab("circles");
       goTab("community");
     } else if (key === "messages") {
       push("messages");

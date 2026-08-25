@@ -150,11 +150,22 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
               </p>
             </div>
 
-            <div className="ta-hero-actions">
-              <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 8, backdropFilter: "blur(8px)", textAlign: "center" }}>
-                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Avg Response Time</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>1.4 Hours</div>
+            <div className="ta-hero-actions" style={{ flexWrap: "wrap", gap: 8 }}>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Unresolved</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: openCount > 0 ? "#FBBF24" : "#34D399" }}>{openCount} Open</div>
               </div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 8, backdropFilter: "blur(8px)", textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Avg Response Time</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#34D399" }}>1.4 Hours</div>
+              </div>
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, color: "#FFFFFF", borderColor: "rgba(255,255,255,0.2)", display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setFilterTab(filterTab === "open" ? "all" : "open")}
+              >
+                <Filter size={13} /> {filterTab === "open" ? "Show All" : "Focus Unresolved"}
+              </button>
             </div>
           </div>
         </div>
@@ -219,24 +230,24 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
             return (
               <div
                 key={d.id}
-                className="ta-card" style={{ padding: "20px 22px",
+                className="ta-card" style={{ padding: "18px 20px",
                   background: "var(--surface)",
-                  border: d.resolved ? "1px solid var(--border)" : "1.5px solid rgba(99, 102, 241, 0.35)",
+                  border: d.resolved ? "1px solid var(--border)" : "1.5px solid rgba(59, 130, 246, 0.35)",
                   boxShadow: "0 2px 12px -2px rgba(15, 23, 42, 0.04)" }}
               >
                 {/* Question Header: Student info & Status */}
-                <div className="ta-row ta-between" style={{ alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-                  <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 220, flex: "1 1 260px" }}>
                     <img
                       src={d.menteeAvatar}
                       alt=""
-                      style={{ width: 42, height: 42, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid var(--border)" }}
+                      style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", flexShrink: 0, border: "1px solid var(--border)" }}
                     />
-                    <div style={{ minWidth: 0 }}>
-                      <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center" }}>
-                        <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>{d.mentee}</span>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", whiteSpace: "nowrap" }}>{d.mentee}</span>
                         <Tag tone="primary">{d.course}</Tag>
-                        <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>• {d.module}</span>
+                        <span style={{ fontSize: 11.5, color: "var(--text-3)", whiteSpace: "nowrap" }}>• {d.module}</span>
                       </div>
                       <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
                         Asked {d.createdAt} • {d.upvotes} students found this relevant
@@ -244,7 +255,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
                     </div>
                   </div>
 
-                  <div className="ta-row ta-gap8" style={{ flexShrink: 0, alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", flexShrink: 0, marginLeft: "auto" }}>
                     <Tag tone={d.resolved ? "success" : "warning"}>
                       {d.resolved ? "RESOLVED" : "NEEDS ANSWER"}
                     </Tag>
@@ -294,7 +305,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
                               padding: "12px 14px",
                               borderRadius: 8,
                               background: rep.role === "Instructor" ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)",
-                              border: `1px solid ${rep.role === "Instructor" ? "rgba(99, 102, 241, 0.3)" : "var(--border)"}`
+                              border: `1px solid ${rep.role === "Instructor" ? "rgba(59, 130, 246, 0.3)" : "var(--border)"}`
                             }}
                           >
                             <div className="ta-row ta-between" style={{ marginBottom: 4 }}>

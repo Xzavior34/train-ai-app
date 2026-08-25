@@ -96,8 +96,8 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 onClick={handleRunAiSession}
                 disabled={aiActionRunning}
                 style={{
-                  background: "#4F46E5", color: "#FFFFFF", fontWeight: 800,
-                  boxShadow: "0 4px 16px rgba(79, 70, 229, 0.4)", display: "flex", alignItems: "center", gap: 8
+                  background: "#2563EB", color: "#FFFFFF", fontWeight: 800,
+                  boxShadow: "0 4px 16px rgba(37, 99, 235, 0.4)", display: "flex", alignItems: "center", gap: 8
                 }}
               >
                 <TrendingUp size={15} /> {aiActionRunning ? "Analyzing Cohort Gaps..." : "Run Cohort Clarification"}
@@ -111,7 +111,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Active Learners</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Users size={18} />
               </div>
             </div>
@@ -150,7 +150,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Engagement Rate</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(139, 92, 246, 0.12)", color: "#8B5CF6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(139, 92, 246, 0.12)", color: "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <TrendingUp size={18} />
               </div>
             </div>
@@ -281,7 +281,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
             <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
               border: "1px solid var(--border)" }}>
-              <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 14 }}>
+              <div className="ta-row ta-gap8" style={{ color: "#2563EB", fontWeight: 700, fontSize: 14 }}>
                 <Brain size={18} />
                 <span>Cohort Diagnostic &amp; Recommendations</span>
               </div>
@@ -406,7 +406,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                   <div className="ta-row ta-between ta-mt14">
                     <button 
                       className="ta-btn ta-btn-primary ta-btn-sm" 
-                      style={{ background: "#4F46E5", border: "none", color: "#FFFFFF", fontWeight: 700, borderRadius: 6 }}
+                      style={{ background: "#2563EB", border: "none", color: "#FFFFFF", fontWeight: 700, borderRadius: 6 }}
                       onClick={() => window.open(activeLiveSession.meeting_url || "https://meet.google.com/new", "_blank")}
                     >
                       <Video size={13} /> Join Studio

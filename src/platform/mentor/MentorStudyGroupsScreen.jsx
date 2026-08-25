@@ -97,8 +97,8 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                 rel="noreferrer"
                 className="ta-btn ta-btn-primary"
                 style={{
-                  background: "#4F46E5", color: "#fff", border: "none", fontWeight: 800,
-                  boxShadow: "0 4px 16px rgba(79, 70, 229, 0.4)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6
+                  background: "#2563EB", color: "#fff", border: "none", fontWeight: 800,
+                  boxShadow: "0 4px 16px rgba(37, 99, 235, 0.4)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6
                 }}
               >
                 <Video size={15} /> Launch Circle Room
@@ -166,7 +166,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                       background: "var(--surface)",
                       border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border)",
                       overflow: "hidden",
-                      boxShadow: isSelected ? "0 4px 20px rgba(99, 102, 241, 0.15)" : "none",
+                      boxShadow: isSelected ? "0 4px 20px rgba(59, 130, 246, 0.15)" : "none",
                       transition: "all 0.2s ease"
                     }}
                   >

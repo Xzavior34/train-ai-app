@@ -202,7 +202,7 @@ export function CohortScreen({
               style={{
                 padding: 22,
                 borderRadius: 10,
-                border: cp.is_announcement ? "1.5px solid rgba(99, 102, 241, 0.4)" : "1px solid var(--border)",
+                border: cp.is_announcement ? "1.5px solid rgba(59, 130, 246, 0.4)" : "1px solid var(--border)",
                 background: "var(--surface)"
               }}
             >
@@ -212,7 +212,7 @@ export function CohortScreen({
                   <div style={{ minWidth: 0 }}>
                     <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
                       <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{cp.user_profiles?.display_name || "Cohort Facilitator"}</span>
-                      <span style={{ background: "#4F46E5", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
+                      <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
                         INSTRUCTOR
                       </span>
                     </div>

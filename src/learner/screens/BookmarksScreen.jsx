@@ -217,7 +217,7 @@ results = vector_store.similarity_search(query, k=4)`
         <div className="tai-glow-rose" />
 
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ minWidth: 0, flex: "1 1 300px" }}>
             <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               Saved Library &amp; Bookmarks
             </h1>
@@ -226,16 +226,22 @@ results = vector_store.similarity_search(query, k=4)`
             </p>
           </div>
 
-          <button
-            className="tai-btn tai-btn-primary"
-            onClick={() => setActiveTab("snippets")}
-            style={{
-              padding: "9px 16px", borderRadius: 8, fontWeight: 700,
-              display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
-            }}
-          >
-            <Plus size={15} /> Add Note / Snippet
-          </button>
+          <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", alignItems: "center" }}>
+            <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+              <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Total Saved</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "var(--text)" }}>{savedCourses.length + savedLessons.length + savedSnippets.length + savedNotes.length} Items</div>
+            </div>
+            <button
+              className="tai-btn tai-btn-primary"
+              onClick={() => setActiveTab("snippets")}
+              style={{
+                padding: "9px 16px", borderRadius: 8, fontWeight: 700,
+                display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
+              }}
+            >
+              <Plus size={15} /> Add Snippet
+            </button>
+          </div>
         </div>
       </div>
 
@@ -387,7 +393,7 @@ results = vector_store.similarity_search(query, k=4)`
 
                   {course.progress > 0 && (
                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 4, background: "rgba(255,255,255,0.3)" }}>
-                      <div style={{ height: "100%", width: `${course.progress}%`, background: "#4F46E5" }} />
+                      <div style={{ height: "100%", width: `${course.progress}%`, background: "#2563EB" }} />
                     </div>
                   )}
                 </div>
@@ -497,7 +503,7 @@ results = vector_store.similarity_search(query, k=4)`
               <div key={snippet.id} className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10, gap: 10, flexWrap: "wrap" }}>
                   <div style={{ minWidth: 0, flex: "1 1 160px" }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: "#818CF8", background: "rgba(99, 102, 241, 0.1)", padding: "2px 8px", borderRadius: 6 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "#60A5FA", background: "rgba(59, 130, 246, 0.1)", padding: "2px 8px", borderRadius: 6 }}>
                       {snippet.language}
                     </span>
                     <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "6px 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

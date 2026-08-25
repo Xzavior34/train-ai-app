@@ -593,7 +593,7 @@ export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
                   height: 34,
                   padding: "0 12px",
                   borderRadius: 8,
-                  background: "#4F46E5",
+                  background: "#2563EB",
                   color: "#FFFFFF",
                   fontWeight: 700,
                   fontSize: 12.5,

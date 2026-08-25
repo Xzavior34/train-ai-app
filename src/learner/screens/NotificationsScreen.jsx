@@ -114,13 +114,13 @@ export function NotificationsScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
 
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ minWidth: 0, flex: "1 1 300px" }}>
             <div className="tai-row tai-gap10" style={{ alignItems: "center", marginBottom: 6 }}>
               {back && (
                 <button
@@ -140,7 +140,11 @@ export function NotificationsScreen({
             </p>
           </div>
 
-          <div className="tai-row tai-gap8" style={{ flexWrap: "wrap", flexShrink: 0 }}>
+          <div className="tai-row tai-gap8" style={{ flexWrap: "wrap", flexShrink: 0, alignItems: "center" }}>
+            <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+              <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Unread</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: unreadCount > 0 ? "#FBBF24" : "#34D399" }}>{unreadCount} Alerts</div>
+            </div>
             {unreadCount > 0 && (
               <button
                 type="button"
@@ -249,7 +253,7 @@ export function NotificationsScreen({
               style={{
                 background: n.read ? "var(--surface)" : "var(--surface-2)",
                 borderColor: n.read ? "var(--border)" : "var(--border)",
-                borderLeft: n.read ? "1px solid var(--border)" : "3px solid #4F46E5",
+                borderLeft: n.read ? "1px solid var(--border)" : "3px solid #2563EB",
                 borderRadius: 10,
                 padding: "14px 16px",
                 transition: "all .16s ease",
@@ -284,7 +288,7 @@ export function NotificationsScreen({
                         {!n.read && (
                           <span
                             className="anim-pulse"
-                            style={{ width: 7, height: 7, borderRadius: "50%", background: "#4F46E5", flexShrink: 0 }}
+                            style={{ width: 7, height: 7, borderRadius: "50%", background: "#2563EB", flexShrink: 0 }}
                             title="Unread"
                           />
                         )}
@@ -302,7 +306,7 @@ export function NotificationsScreen({
                           <button
                             type="button"
                             className="tai-btn tai-btn-primary tai-btn-sm"
-                            style={{ borderRadius: 6, height: 28, padding: "0 10px", fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5, background: "#4F46E5" }}
+                            style={{ borderRadius: 6, height: 28, padding: "0 10px", fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5, background: "#2563EB" }}
                             onClick={() => {
                               if (push && n.actionUrl) push(n.actionUrl);
                             }}

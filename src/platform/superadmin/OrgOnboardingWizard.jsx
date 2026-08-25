@@ -59,7 +59,7 @@ function StepIndicator({ stepIndex }) {
                 width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 12, fontWeight: 700,
-                background: i < stepIndex ? "var(--success)" : i === stepIndex ? "#4F46E5" : "var(--surface-2)",
+                background: i < stepIndex ? "var(--success)" : i === stepIndex ? "#2563EB" : "var(--surface-2)",
                 color: i <= stepIndex ? "#fff" : "var(--text-3)",
               }}
             >
@@ -201,14 +201,14 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
   const showToast = useContext(ToastContext);
   const existingQuery = useSupabaseQuery(async () => (org?.id ? fetchOrgBranding(org.id) : null), [org?.id]);
   const [logoUrl, setLogoUrl] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#4F46E5");
+  const [primaryColor, setPrimaryColor] = useState("#2563EB");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (existingQuery.data) {
       setLogoUrl(existingQuery.data.logo_url || "");
-      setPrimaryColor(existingQuery.data.primary_color || "#4F46E5");
+      setPrimaryColor(existingQuery.data.primary_color || "#2563EB");
     }
   }, [existingQuery.data]);
 
@@ -226,7 +226,7 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
     }
   }
 
-  const hasInput = !!(logoUrl || (primaryColor && primaryColor !== "#4F46E5"));
+  const hasInput = !!(logoUrl || (primaryColor && primaryColor !== "#2563EB"));
   const alreadyBranded = !!(existingQuery.data?.logo_url || existingQuery.data?.primary_color);
 
   return (
@@ -256,11 +256,11 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
       <div className="ta-row ta-gap10" style={{ marginTop: 10 }}>
         <input
           type="color"
-          value={/^#[0-9a-fA-F]{6}$/.test(primaryColor) ? primaryColor : "#4F46E5"}
+          value={/^#[0-9a-fA-F]{6}$/.test(primaryColor) ? primaryColor : "#2563EB"}
           onChange={(e) => setPrimaryColor(e.target.value)}
           style={{ width: 48, height: 36, padding: 0, border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer" }}
         />
-        <input className="ta-input" style={{ flex: 1 }} value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} placeholder="#4F46E5" />
+        <input className="ta-input" style={{ flex: 1 }} value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} placeholder="#2563EB" />
         <Palette size={18} color="var(--primary)" />
       </div>
 

@@ -322,7 +322,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
               className="tai-btn"
               onClick={() => setTimeframe(tf.k)}
               style={{
-                background: timeframe === tf.k ? "#4F46E5" : "var(--surface)",
+                background: timeframe === tf.k ? "#2563EB" : "var(--surface)",
                 color: timeframe === tf.k ? "#FFFFFF" : "var(--text-2)",
                 border: "1px solid var(--border)",
                 padding: "7px 12px", borderRadius: 10, fontSize: 12, fontWeight: 700,
@@ -351,14 +351,14 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           STICKY CURRENT USER RANK BAR
           ========================================================================= */}
       <div className="tai-card" style={{
-        background: "rgba(79, 70, 229, 0.05)",
-        border: "1px solid rgba(79, 70, 229, 0.2)",
+        background: "rgba(37, 99, 235, 0.05)",
+        border: "1px solid rgba(37, 99, 235, 0.2)",
         padding: "10px 14px", borderRadius: 8
       }}>
         <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
           <div className="tai-row tai-gap10">
             <span style={{
-              width: 30, height: 30, borderRadius: 8, background: "#4F46E5", color: "#FFFFFF",
+              width: 30, height: 30, borderRadius: 8, background: "#2563EB", color: "#FFFFFF",
               display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12
             }}>
               #4
@@ -406,7 +406,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     key={l.id}
                     style={{
                       borderBottom: "1px solid var(--border)",
-                      background: l.isCurrentUser ? "rgba(79, 70, 229, 0.05)" : "transparent",
+                      background: l.isCurrentUser ? "rgba(37, 99, 235, 0.05)" : "transparent",
                       transition: "background .15s ease"
                     }}
                   >
@@ -437,7 +437,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                       </span>
                     </td>
                     <td style={{ padding: "10px 14px" }}>
-                      <span className="tai-row tai-gap4" style={{ fontWeight: 700, color: "#8B5CF6", fontSize: 11.5 }}>
+                      <span className="tai-row tai-gap4" style={{ fontWeight: 700, color: "#3B82F6", fontSize: 11.5 }}>
                         <Award size={13} /> {l.badgesCount}
                       </span>
                     </td>

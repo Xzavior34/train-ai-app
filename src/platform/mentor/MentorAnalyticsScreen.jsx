@@ -127,7 +127,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Teaching Sessions</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Calendar size={18} />
               </div>
             </div>
@@ -157,7 +157,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Gross Earnings</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(79, 70, 229, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(37, 99, 235, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <DollarSign size={18} />
               </div>
             </div>
@@ -225,7 +225,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
                   <span style={{ fontWeight: 700, color: "var(--primary)" }}>94.2% (Industry Avg: 68%)</span>
                 </div>
                 <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ width: "94.2%", height: "100%", background: "#4F46E5", borderRadius: 3 }} />
+                  <div style={{ width: "94.2%", height: "100%", background: "#2563EB", borderRadius: 3 }} />
                 </div>
               </div>
 
@@ -245,7 +245,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
                   <span style={{ fontWeight: 700, color: "var(--primary)" }}>91.5% on 1st submission</span>
                 </div>
                 <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ width: "91.5%", height: "100%", background: "#4F46E5", borderRadius: 3 }} />
+                  <div style={{ width: "91.5%", height: "100%", background: "#2563EB", borderRadius: 3 }} />
                 </div>
               </div>
 

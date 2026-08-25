@@ -204,7 +204,7 @@ export function ProfileScreen({
             width: 200,
             height: 200,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(79, 70, 229, 0.18) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -239,13 +239,13 @@ export function ProfileScreen({
                     width: 26,
                     height: 26,
                     borderRadius: "50%",
-                    background: "#4F46E5",
+                    background: "#2563EB",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     border: "2px solid var(--surface)",
                     color: "#FFFFFF",
-                    boxShadow: "0 2px 8px rgba(79, 70, 229, 0.45)"
+                    boxShadow: "0 2px 8px rgba(37, 99, 235, 0.45)"
                   }}
                 >
                   <Camera size={12} />
@@ -512,7 +512,7 @@ export function ProfileScreen({
             <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap12">
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <Zap size={18} color="var(--primary)" />
                   </div>
                   <div>
@@ -634,7 +634,7 @@ export function ProfileScreen({
           >
             <div className="tai-row tai-between">
               <div className="tai-row tai-gap14">
-                <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(99, 102, 241, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 8, background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Accessibility size={20} color="var(--primary)" />
                 </div>
                 <div>

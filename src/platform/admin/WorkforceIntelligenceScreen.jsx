@@ -46,9 +46,9 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   ];
 
   const skillProfile = [
-    { skill: "UX Design", level: 92, target: 85, fill: "#4F46E5" },
-    { skill: "Design Systems", level: 94, target: 90, fill: "#6366F1" },
-    { skill: "Prototyping", level: 88, target: 80, fill: "#8B5CF6" },
+    { skill: "UX Design", level: 92, target: 85, fill: "#2563EB" },
+    { skill: "Design Systems", level: 94, target: 90, fill: "#3B82F6" },
+    { skill: "Prototyping", level: 88, target: 80, fill: "#3B82F6" },
     { skill: "UX Research", level: 62, target: 80, fill: "#EC4899" },
     { skill: "Leadership", level: 75, target: 70, fill: "#10B981" },
     { skill: "Communication", level: 85, target: 80, fill: "#F59E0B" }
@@ -99,7 +99,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
           <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
-              <Brain size={18} color="#4F46E5" />
+              <Brain size={18} color="#2563EB" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.readinessScore}%</div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>&nbsp;</div>
@@ -126,7 +126,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
           <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>AI Coach Queries (7d)</span>
-              <Bot size={18} color="#8B5CF6" />
+              <Bot size={18} color="#3B82F6" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.aiUsageCount7d}</div>
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4 }}>Active learning adoption</div>
@@ -181,8 +181,8 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                 style={{ 
                   padding: 16, 
                   borderRadius: 8, 
-                  background: step.status === "active" ? "rgba(99, 102, 241, 0.08)" : "var(--surface-3)",
-                  border: step.status === "active" ? "2px solid #4F46E5" : "1px solid var(--border)",
+                  background: step.status === "active" ? "rgba(59, 130, 246, 0.08)" : "var(--surface-3)",
+                  border: step.status === "active" ? "2px solid #2563EB" : "1px solid var(--border)",
                   position: "relative"
                 }}
               >
@@ -284,7 +284,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
               border: "1px solid var(--border)" }}>
-              <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 14 }}>
+              <div className="ta-row ta-gap8" style={{ color: "#2563EB", fontWeight: 700, fontSize: 14 }}>
                 <Brain size={18} />
                 <span>Skill Growth Recommendation</span>
               </div>

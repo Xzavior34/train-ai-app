@@ -268,7 +268,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   </div>
                   <button 
                     className="ta-btn ta-btn-primary ta-btn-sm"
-                    style={{ background: "#4F46E5", border: "none", borderRadius: 6 }}
+                    style={{ background: "#2563EB", border: "none", borderRadius: 6 }}
                     onClick={() => window.open("https://meet.google.com/new", "_blank")}
                   >
                     Join Studio →
@@ -282,7 +282,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               background: "var(--surface-2)",
               border: "1px solid var(--border)" }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
-                <div className="ta-row ta-gap8" style={{ color: "#4F46E5", fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>
+                <div className="ta-row ta-gap8" style={{ color: "#2563EB", fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>
                   <Brain size={16} style={{ flexShrink: 0 }} />
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Cohort Diagnostic Insights</span>
                 </div>

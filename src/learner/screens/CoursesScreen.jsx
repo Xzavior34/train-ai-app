@@ -97,7 +97,7 @@ const SPOTLIGHT_SLIDES = [
   {
     id: "course-fullstack-ai",
     badge: "ACTIVE MULTI-COURSE LEARNING",
-    badgeGradient: "#4F46E5",
+    badgeGradient: "#2563EB",
     cohortTag: "Advanced Engineering Track",
     title: "Full-Stack AI Application Engineering with React 19",
     description: "Architecting end-to-end LLM applications with vector embeddings, Supabase pgvector, FastAPI, and autonomous agents.",
@@ -118,7 +118,7 @@ const SPOTLIGHT_SLIDES = [
   {
     id: "course-spatial-ui",
     badge: "NEW MASTERCLASS SPOTLIGHT",
-    badgeGradient: "#7C3AED",
+    badgeGradient: "#2563EB",
     cohortTag: "Executive Masterclass",
     title: "Spatial Computing & VisionOS Design Foundations",
     description: "Immersive 3D spatial user experiences, depth layering, glassmorphism tokens, and spatial ergonomics for next-gen apps.",
@@ -170,7 +170,7 @@ const SPECIALIZATIONS = [
     reviews: "3,420",
     level: "Intermediate",
     badge: "PROFESSIONAL CERTIFICATE",
-    badgeBg: "#4F46E5",
+    badgeBg: "#2563EB",
     description: "Master modern AI design workflows, generative prototyping, vector tokens, and spatial interfaces with direct industry credentialing.",
     skills: ["Figma AI", "Design Systems", "Spatial UI", "Token Architecture", "UX Research"],
     image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80"
@@ -204,7 +204,7 @@ const RECENT_RECORDINGS = [
     thumbnail: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     badge: "UI/UX MASTERCLASS",
-    badgeColor: "#4F46E5"
+    badgeColor: "#2563EB"
   },
   {
     id: "rec-2",
@@ -217,7 +217,7 @@ const RECENT_RECORDINGS = [
     thumbnail: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     badge: "UX + AI TOKENS",
-    badgeColor: "#7C3AED"
+    badgeColor: "#2563EB"
   },
   {
     id: "rec-3",
@@ -304,7 +304,7 @@ export function CoursesScreen({
     ? courses.slice(0, 4).map((c, idx) => ({
         id: c.id,
         badge: c.enrolled ? "ENROLLED • IN PROGRESS" : "FEATURED MASTERCLASS",
-        badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#4F46E5" : "#D97706",
+        badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#2563EB" : "#D97706",
         cohortTag: c.category || "Professional Track",
         title: c.title,
         description: c.tagline || c.description || "Master core industry competencies, practical design token workflows, and production implementations.",
@@ -392,7 +392,7 @@ export function CoursesScreen({
               width: 180,
               height: 180,
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+              background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
               pointerEvents: "none"
             }}
           />
@@ -444,7 +444,7 @@ export function CoursesScreen({
             {/* In-Progress Sprint Pace Meter */}
             {currentSpotlight.progress > 0 && (
               <div className="tai-hero-subcard" style={{ padding: "10px 14px", borderRadius: 8, marginBottom: 12 }}>
-                <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#E0E7FF" }}>
+                <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6, color: "#DBEAFE" }}>
                   <span>Active Sprint Pace</span>
                   <span style={{ color: "#34D399", fontWeight: 700 }}>{currentSpotlight.progress}% ({currentSpotlight.lessonsRemaining})</span>
                 </div>
@@ -462,7 +462,7 @@ export function CoursesScreen({
               </div>
               <span>•</span>
               <div className="tai-row tai-gap4">
-                <Users size={13} color="#818CF8" />
+                <Users size={13} color="#60A5FA" />
                 <span style={{ fontWeight: 700, color: "#fff" }}>{currentSpotlight.enrolled}</span>
               </div>
               <span>•</span>
@@ -541,15 +541,15 @@ export function CoursesScreen({
                     style={{
                       flex: 1, minWidth: 110, padding: "7px 10px",
                       borderRadius: 10,
-                      border: isSelected ? "1.5px solid #818CF8" : "1px solid rgba(255,255,255,0.15)",
-                      background: isSelected ? "rgba(99, 102, 241, 0.35)" : "rgba(255,255,255,0.06)",
+                      border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)",
+                      background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
                       color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
                       cursor: "pointer",
                       textAlign: "left",
                       transition: "all 0.2s ease"
                     }}
                   >
-                    <div style={{ fontSize: 9.5, fontWeight: 800, color: isSelected ? "#A5B4FC" : "rgba(255,255,255,0.5)" }}>
+                    <div style={{ fontSize: 9.5, fontWeight: 800, color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)" }}>
                       TRACK 0{idx + 1}
                     </div>
                     <div style={{ fontSize: 11, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -574,7 +574,7 @@ export function CoursesScreen({
                 width: idx === (activeSlide % dynamicSpotlightSlides.length) ? 22 : 7,
                 height: 7,
                 borderRadius: 99,
-                background: idx === (activeSlide % dynamicSpotlightSlides.length) ? "#818CF8" : "rgba(255,255,255,0.3)",
+                background: idx === (activeSlide % dynamicSpotlightSlides.length) ? "#60A5FA" : "rgba(255,255,255,0.3)",
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
@@ -619,7 +619,7 @@ export function CoursesScreen({
                     fontSize: 13,
                     cursor: "pointer",
                     whiteSpace: "nowrap",
-                    boxShadow: isActive ? "0 4px 12px rgba(79, 70, 229, 0.25)" : "none"
+                    boxShadow: isActive ? "0 4px 12px rgba(37, 99, 235, 0.25)" : "none"
                   }}
                 >
                   <span>{tab.label}</span>
@@ -795,7 +795,7 @@ export function CoursesScreen({
                   {/* Progress Line */}
                   {isEnrolled && (
                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 5, background: "rgba(255,255,255,0.3)", zIndex: 1 }}>
-                      <div style={{ height: "100%", width: `${course.progress || 0}%`, background: isCompleted ? "#10B981" : "#4F46E5" }} />
+                      <div style={{ height: "100%", width: `${course.progress || 0}%`, background: isCompleted ? "#10B981" : "#2563EB" }} />
                     </div>
                   )}
                 </div>
@@ -885,11 +885,11 @@ export function CoursesScreen({
             <div className="tai-row tai-gap8">
               <Award size={20} color="var(--primary)" />
               <h2 style={{ fontSize: 19, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
-                Professional Certificates &amp; Specializations
+                Learning Pathways
               </h2>
             </div>
             <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
-              Comprehensive multi-course career tracks accredited by Train AI
+              Instructor-assigned multi-course learning pathways
             </p>
           </div>
         </div>
@@ -952,7 +952,7 @@ export function CoursesScreen({
                   style={{ fontWeight: 700 }}
                   onClick={(e) => { e.stopPropagation(); setActiveSpecialization(spec); }}
                 >
-                  View Track Details →
+                  View Pathway →
                 </button>
               </div>
             </div>

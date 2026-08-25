@@ -144,7 +144,7 @@ export default function MfaSetupScreen({ onClose }) {
           .mfa2-close-btn { transition: background .15s ease, color .15s ease; }
           .mfa2-close-btn:hover { background: #F1F5F9; color: #10142A; }
           .mfa2-primary-btn { transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease; }
-          .mfa2-primary-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(79,70,229,.5); }
+          .mfa2-primary-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(37,99,235,.5); }
           .mfa2-primary-btn:not(:disabled):active { transform: scale(.98); }
           .mfa2-outline-btn { transition: background .15s ease, border-color .15s ease; }
           .mfa2-outline-btn:not(:disabled):hover { background: #F8FAFC; border-color: #C7D2FE; }
@@ -157,7 +157,7 @@ export default function MfaSetupScreen({ onClose }) {
             {view.kind === "active" ? (
               <ShieldCheck size={18} color="#16A34A" />
             ) : (
-              <ShieldAlert size={18} color="#4F46E5" />
+              <ShieldAlert size={18} color="#2563EB" />
             )}
             <div style={{ fontWeight: 800, fontSize: 15.5, color: "#10142A" }}>Two-factor authentication</div>
           </div>
@@ -196,7 +196,7 @@ export default function MfaSetupScreen({ onClose }) {
               style={{
                 width: "100%", border: "none", cursor: busy ? "default" : "pointer", borderRadius: 8,
                 fontWeight: 700, fontSize: 14, padding: "11px 16px", color: "#fff", opacity: busy ? 0.75 : 1,
-                background: "#4F46E5",
+                background: "#2563EB",
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               }}
             >
@@ -233,7 +233,7 @@ export default function MfaSetupScreen({ onClose }) {
                   </div>
                   <code style={{
                     display: "inline-block", marginTop: 4, padding: "4px 8px", background: "#fff",
-                    border: "1px solid #D8DEF5", borderRadius: 6, fontSize: 12, color: "#4F46E5",
+                    border: "1px solid #D8DEF5", borderRadius: 6, fontSize: 12, color: "#2563EB",
                     fontFamily: "ui-monospace, Menlo, Monaco, monospace", wordBreak: "break-all",
                   }}>
                     {view.secret}
@@ -295,7 +295,7 @@ export default function MfaSetupScreen({ onClose }) {
                 style={{
                   flex: 1.4, border: "none", cursor: (busy || code.length !== 6) ? "default" : "pointer",
                   borderRadius: 8, fontWeight: 700, fontSize: 13.5, padding: "10px 16px", color: "#fff",
-                  background: "#4F46E5", opacity: (busy || code.length !== 6) ? 0.6 : 1,
+                  background: "#2563EB", opacity: (busy || code.length !== 6) ? 0.6 : 1,
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                 }}
               >

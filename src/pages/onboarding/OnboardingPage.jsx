@@ -41,7 +41,7 @@ export default function OnboardingPage({ onComplete }) {
         .ob-card { animation: obFadeUp .2s ease; }
         .ob-option { transition: border-color .12s ease, background-color .12s ease; }
         .ob-option:hover { border-color: #CBD5E1; }
-        .ob-continue:not(:disabled):hover { background-color: #4338CA !important; }
+        .ob-continue:not(:disabled):hover { background-color: #1D4ED8 !important; }
         .ob-continue:not(:disabled):active { transform: scale(.99); }
       `}</style>
 
@@ -52,7 +52,7 @@ export default function OnboardingPage({ onComplete }) {
 
         <div style={styles.progressRow}>
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} style={{ ...styles.progressBar, background: i <= step ? "#4F46E5" : "#EEF2FF" }} />
+            <div key={i} style={{ ...styles.progressBar, background: i <= step ? "#2563EB" : "#EFF6FF" }} />
           ))}
         </div>
 
@@ -69,11 +69,11 @@ export default function OnboardingPage({ onComplete }) {
                     key={t.name} className="ob-option" onClick={() => toggleTrack(t.name)}
                     style={{ ...styles.option, ...(active ? styles.optionActive : {}) }}
                   >
-                    <div style={{ ...styles.optionIcon, background: active ? "rgba(79,70,229,.12)" : "#F1F5F9" }}>
-                      <Icon size={15} color={active ? "#4F46E5" : "#64748B"} />
+                    <div style={{ ...styles.optionIcon, background: active ? "rgba(37,99,235,.12)" : "#F1F5F9" }}>
+                      <Icon size={15} color={active ? "#2563EB" : "#64748B"} />
                     </div>
                     <span style={styles.optionLabel}>{t.name}</span>
-                    {active && <Check size={16} color="#4F46E5" style={{ marginLeft: "auto" }} />}
+                    {active && <Check size={16} color="#2563EB" style={{ marginLeft: "auto" }} />}
                   </div>
                 );
               })}
@@ -92,7 +92,7 @@ export default function OnboardingPage({ onComplete }) {
                   <div key={l.key} className="ob-option" onClick={() => setLevel(l.key)} style={{ ...styles.option, ...(active ? styles.optionActive : {}), alignItems: "flex-start", flexDirection: "column", gap: 2 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
                       <span style={{ ...styles.optionLabel, fontWeight: 700 }}>{l.label}</span>
-                      {active && <Check size={15} color="#4F46E5" style={{ marginLeft: "auto" }} />}
+                      {active && <Check size={15} color="#2563EB" style={{ marginLeft: "auto" }} />}
                     </div>
                     <span style={styles.optionDesc}>{l.desc}</span>
                   </div>
@@ -133,13 +133,13 @@ const styles = {
     display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 8,
     border: "1px solid #E2E8F0", background: "#FFFFFF", cursor: "pointer", userSelect: "none",
   },
-  optionActive: { borderColor: "#4F46E5", background: "#EEF2FF" },
+  optionActive: { borderColor: "#2563EB", background: "#EFF6FF" },
   optionIcon: { width: 28, height: 28, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   optionLabel: { fontSize: 13, fontWeight: 600, color: "#0F172A" },
   optionDesc: { fontSize: 11.5, color: "#64748B" },
   continue: {
     width: "100%", border: "none", borderRadius: 8, padding: "10px 16px", fontWeight: 700, fontSize: 13,
     color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-    background: "#4F46E5", transition: "background-color .15s ease",
+    background: "#2563EB", transition: "background-color .15s ease",
   },
 };

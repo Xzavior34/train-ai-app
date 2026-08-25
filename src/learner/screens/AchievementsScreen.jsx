@@ -273,7 +273,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
             <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Clock size={18} color="#8B5CF6" />
+              <Clock size={18} color="#3B82F6" />
             </div>
             <div>
               <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>15.8 hrs</div>
@@ -290,8 +290,6 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
         {[
           { k: "overview", label: "Progress Analytics", icon: BarChart3 },
           { k: "certificates", label: `Certificates (${CERTIFICATES.length})`, icon: GraduationCap },
-          { k: "badges", label: `Badges (${effectiveAchievements.length})`, icon: Award },
-          { k: "activity", label: "Activity Stream", icon: Calendar },
         ].map(t => {
           const Icon = t.icon;
           const isActive = activeProgressTab === t.k;
@@ -346,7 +344,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
                 {WEEKLY_HOURS.map((item, idx) => (
                   <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, flex: 1 }}>
                     <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>{item.hours}h</span>
-                    <div style={{ width: 28, height: `${item.heightPct}%`, background: idx === 2 ? "var(--primary)" : "rgba(99, 102, 241, 0.4)", borderRadius: 6, transition: "all 0.2s ease" }} />
+                    <div style={{ width: 28, height: `${item.heightPct}%`, background: idx === 2 ? "var(--primary)" : "rgba(59, 130, 246, 0.4)", borderRadius: 6, transition: "all 0.2s ease" }} />
                     <span style={{ fontSize: 11.5, fontWeight: idx === 2 ? 800 : 600, color: idx === 2 ? "var(--primary)" : "var(--text-2)" }}>{item.day}</span>
                   </div>
                 ))}
@@ -611,7 +609,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
         {selectedCertificate && (
           <>
             <div className="tai-row tai-between" style={{ marginBottom: 20, gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--primary-light, #818CF8)", textTransform: "uppercase", letterSpacing: ".06em" }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--primary-light, #60A5FA)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                 OFFICIAL CERTIFICATE OF COMPLETION
               </span>
               <button onClick={() => setSelectedCertificate(null)} style={{ background: "transparent", border: "none", color: "var(--text-3)", cursor: "pointer" }}>
@@ -626,7 +624,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               </div>
               <div style={{ fontSize: 13, color: "var(--text-2)" }}>has successfully mastered the comprehensive curriculum for</div>
               
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--primary-light, #818CF8)", margin: "14px 0 6px" }}>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--primary-light, #60A5FA)", margin: "14px 0 6px" }}>
                 {selectedCertificate.title}
               </h2>
               <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>

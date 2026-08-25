@@ -146,7 +146,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
         {!settingsQuery.loading && (
           <>
             {/* Database & Mock Data Management Card */}
-            <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #818CF8)", background: "var(--surface)", borderRadius: 10 }}>
+            <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #60A5FA)", background: "var(--surface)", borderRadius: 10 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div className="ta-row ta-gap10">
                   <div style={{ width: 36, height: 36, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>

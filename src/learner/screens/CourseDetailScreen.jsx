@@ -117,15 +117,15 @@ export function CourseDetailScreen({
 
       {/* Tabs */}
       <div className="tai-row tai-gap10 tai-mt6" style={{ flexWrap: "wrap" }}>
-        {["lessons", "discussion", "notes", "assessment"].map((t) => (
-          <div
+        {["lessons", "assessment"].map((t) => (
+          <button
             key={t}
             className={`tai-pill ${tab === t ? "tai-pill-active" : "tai-pill-inactive"}`}
             onClick={() => setTabLocal(t)}
-            style={{ textTransform: "capitalize" }}
+            style={{ fontSize: 12.5 }}
           >
-            {t === "lessons" ? "Curriculum & Lessons" : t === "discussion" ? "Discussion" : t === "notes" ? "My Notes" : "Final Assessment"}
-          </div>
+            {t === "lessons" ? "Curriculum & Lessons" : "Final Assessment"}
+          </button>
         ))}
       </div>
 
@@ -154,13 +154,13 @@ export function CourseDetailScreen({
                   <div style={{
                     position: "absolute", left: 0, top: 0, bottom: 0,
                     width: `${Math.max(15, (lessons.filter(l => l.completed || completedLessonIds.has(`${course.id}-${l.id}`)).length / (lessons.length || 1)) * 100)}%`,
-                    background: "#6366F1", borderRadius: 99
+                    background: "#3B82F6", borderRadius: 99
                   }} />
                   <div style={{
                     position: "absolute",
                     left: `calc(${Math.max(15, (lessons.filter(l => l.completed || completedLessonIds.has(`${course.id}-${l.id}`)).length / (lessons.length || 1)) * 100)}% - 6px)`,
                     top: -3, width: 12, height: 12, borderRadius: "50%",
-                    background: "#4338CA", border: "2px solid #FFFFFF",
+                    background: "#1D4ED8", border: "2px solid #FFFFFF",
                     boxShadow: "0 2px 6px rgba(67, 56, 202, 0.4)"
                   }} />
                 </div>
@@ -211,11 +211,11 @@ export function CourseDetailScreen({
                         <div
                           style={{
                             width: 36, height: 36, borderRadius: "50%",
-                            background: isDone ? "var(--success-bg)" : "#6366F1",
+                            background: isDone ? "var(--success-bg)" : "#3B82F6",
                             color: isDone ? "var(--success)" : "#FFFFFF",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             flexShrink: 0,
-                            boxShadow: isDone ? "none" : "0 3px 10px rgba(99, 102, 241, 0.35)"
+                            boxShadow: isDone ? "none" : "0 3px 10px rgba(59, 130, 246, 0.35)"
                           }}
                         >
                           {isDone ? <CheckCircle2 size={16} /> : <ArrowRight size={16} />}

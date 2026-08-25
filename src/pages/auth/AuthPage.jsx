@@ -120,12 +120,12 @@ export default function AuthPage({
       <style>{`
         @keyframes authFadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         .auth-card { animation: authFadeUp .2s ease; }
-        .auth-input:focus { outline: none; border-color: #4F46E5 !important; box-shadow: 0 0 0 2px rgba(79,70,229,.15); }
-        .auth-submit:hover { background-color: #4338CA !important; }
+        .auth-input:focus { outline: none; border-color: #2563EB !important; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+        .auth-submit:hover { background-color: #1D4ED8 !important; }
         .auth-switch:hover { text-decoration: underline; }
         .role-picker-card { transition: border-color .15s ease, background-color .15s ease; }
         .role-picker-card:hover { border-color: #CBD5E1; }
-        .role-picker-card.active { border-color: #4F46E5 !important; background: #EEF2FF !important; }
+        .role-picker-card.active { border-color: #2563EB !important; background: #EFF6FF !important; }
         @media (max-width: 440px) {
           .auth-card { padding: 24px 18px !important; }
           .role-picker-header { flex-wrap: wrap; row-gap: 4px; }
@@ -235,9 +235,9 @@ export default function AuthPage({
                   }}
                 >
                   <div className="role-picker-header" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Building2 size={15} color={accountType === "organization" ? "#4F46E5" : "#64748B"} />
+                    <Building2 size={15} color={accountType === "organization" ? "#2563EB" : "#64748B"} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Organization</span>
-                    <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
+                    <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
                   </div>
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
                     Workforce readiness, team cohorts, and org-wide reporting. You become the organization's admin.
@@ -253,7 +253,7 @@ export default function AuthPage({
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <User size={15} color={accountType === "learner" ? "#4F46E5" : "#64748B"} />
+                    <User size={15} color={accountType === "learner" ? "#2563EB" : "#64748B"} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Individual learner</span>
                   </div>
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>Access courses, AI quizzes, and community independently.</span>
@@ -367,8 +367,8 @@ const styles = {
   submit: {
     width: "100%", marginTop: 20, border: "none", borderRadius: 8, padding: "11px 16px", fontWeight: 700, fontSize: 14,
     color: "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-    background: "#4F46E5", transition: "background-color .15s ease",
+    background: "#2563EB", transition: "background-color .15s ease",
   },
   switchRow: { textAlign: "center", marginTop: 16, fontSize: 13, color: "#64748B" },
-  switchLink: { color: "#4F46E5", fontWeight: 700, cursor: "pointer" },
+  switchLink: { color: "#2563EB", fontWeight: 700, cursor: "pointer" },
 };

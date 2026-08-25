@@ -67,13 +67,13 @@ export function MessagesScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
 
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ minWidth: 0, flex: "1 1 300px" }}>
             <div className="tai-row tai-gap10" style={{ alignItems: "center", marginBottom: 6 }}>
               {back && (
                 <button
@@ -91,6 +91,19 @@ export function MessagesScreen({
             <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
               Ask project questions, receive code review guidance, and communicate directly with your academy instructors.
             </p>
+          </div>
+
+          <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", alignItems: "center" }}>
+            <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+              <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Active Chats</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{messageThreads.length} Mentors</div>
+            </div>
+            <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+              <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Unread</div>
+              <div style={{ fontSize: 16, fontWeight: 900, color: messageThreads.reduce((s, t) => s + (t.unread || 0), 0) > 0 ? "#FBBF24" : "#34D399" }}>
+                {messageThreads.reduce((s, t) => s + (t.unread || 0), 0)} New
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -156,7 +169,7 @@ export function MessagesScreen({
                     padding: "12px 14px",
                     cursor: "pointer",
                     background: isActive ? "var(--surface)" : "transparent",
-                    borderLeft: isActive ? "3px solid #4F46E5" : "3px solid transparent",
+                    borderLeft: isActive ? "3px solid #2563EB" : "3px solid transparent",
                     borderBottom: "1px solid var(--border)",
                     transition: "background .15s ease"
                   }}
@@ -167,7 +180,7 @@ export function MessagesScreen({
                       <div className="tai-row tai-between">
                         <span style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{t.name}</span>
                         {t.unread > 0 && (
-                          <span style={{ fontSize: 10, fontWeight: 800, background: "#4F46E5", color: "#fff", borderRadius: 99, padding: "2px 7px" }}>{t.unread}</span>
+                          <span style={{ fontSize: 10, fontWeight: 800, background: "#2563EB", color: "#fff", borderRadius: 99, padding: "2px 7px" }}>{t.unread}</span>
                         )}
                       </div>
                       <div style={{ fontSize: 11.5, color: "var(--text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{t.last || "No messages yet"}</div>
@@ -225,11 +238,11 @@ export function MessagesScreen({
                     <div key={m.id || idx} className="tai-row tai-gap10" style={{ alignSelf: isMe ? "flex-end" : "flex-start", maxWidth: "80%", flexDirection: isMe ? "row-reverse" : "row" }}>
                       {!isMe && <Avatar initials={initialsOf(currentThread.name)} size={28} src={currentThread.avatar} />}
                       <div style={{
-                        background: isMe ? "#4F46E5" : "var(--surface-2)",
+                        background: isMe ? "#2563EB" : "var(--surface-2)",
                         color: isMe ? "#FFFFFF" : "var(--text)",
                         padding: "10px 14px", borderRadius: 10, fontSize: 13.5,
                         lineHeight: 1.45,
-                        boxShadow: isMe ? "0 1px 4px rgba(79, 70, 229, 0.15)" : "none"
+                        boxShadow: isMe ? "0 1px 4px rgba(37, 99, 235, 0.15)" : "none"
                       }}>
                         {m.content}
                       </div>
@@ -250,7 +263,7 @@ export function MessagesScreen({
                 />
                 <button
                   className="tai-btn tai-btn-primary"
-                  style={{ height: 38, padding: "0 16px", borderRadius: 8, background: "#4F46E5", color: "#FFFFFF", fontWeight: 700 }}
+                  style={{ height: 38, padding: "0 16px", borderRadius: 8, background: "#2563EB", color: "#FFFFFF", fontWeight: 700 }}
                   onClick={handleSendLocal}
                 >
                   <Send size={15} />

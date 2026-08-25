@@ -28,7 +28,7 @@ const MONTHLY_GROWTH_DATA = [
 ];
 
 const AI_MODEL_BREAKDOWN = [
-  { feature: "AI Neural Coach (Gemini 2.5 Flash)", count: "10,240 calls", pct: 55, color: "#6366F1" },
+  { feature: "AI Neural Coach (Gemini 2.5 Flash)", count: "10,240 calls", pct: 55, color: "#3B82F6" },
   { feature: "Adaptive Assessment & Quiz Generator", count: "4,820 calls", pct: 26, color: "#EC4899" },
   { feature: "Automated Code Diagnostics & Linting", count: "3,390 calls", pct: 19, color: "#10B981" },
 ];
@@ -127,7 +127,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Organizations</span>
-            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Building2 size={18} />
             </div>
           </div>
@@ -146,7 +146,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between">
             <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Platform Users</span>
-            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(79, 70, 229, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(37, 99, 235, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Users size={18} />
             </div>
           </div>
@@ -242,7 +242,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                       width: "100%", maxWidth: 36,
                       height: `${item.heightPct}%`,
                       background: idx === MONTHLY_GROWTH_DATA.length - 1
-                        ? "#4F46E5"
+                        ? "#2563EB"
                         : "var(--surface-3)",
                       borderRadius: "4px 4px 0 0",
                       transition: "all 0.2s ease"

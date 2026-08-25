@@ -76,7 +76,7 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
         @keyframes ownerFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         .owner-card { animation: ownerFadeUp .3s ease; }
         .owner-input { transition: border-color .12s ease, box-shadow .12s ease; }
-        .owner-input:focus { outline: none; border-color: #4F46E5; box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+        .owner-input:focus { outline: none; border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
         .owner-submit { transition: transform .12s ease, opacity .12s ease; }
         .owner-submit:not(:disabled):hover { opacity: .92; }
         .owner-submit:not(:disabled):active { transform: scale(.98); }

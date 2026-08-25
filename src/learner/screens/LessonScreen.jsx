@@ -292,7 +292,7 @@ export function LessonScreen({
               <div style={{ fontSize: 11, fontWeight: 800, color: "var(--primary)" }}>{courseProgressPercent}%</div>
             </div>
             <div style={{ width: 32, height: 5, background: "var(--surface-3)", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ width: `${courseProgressPercent}%`, height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 99 }} />
+              <div style={{ width: `${courseProgressPercent}%`, height: "100%", background: "var(--primary, #2563EB)", borderRadius: 99 }} />
             </div>
           </div>
 
@@ -377,14 +377,14 @@ export function LessonScreen({
                     <span style={{
                       fontSize: 11,
                       fontWeight: 800,
-                      color: "#A5B4FC",
+                      color: "#93C5FD",
                       textTransform: "uppercase",
                       letterSpacing: ".04em",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 5
                     }}>
-                      <Sliders size={12} color="#A5B4FC" /> Video Controls &amp; Quick Actions
+                      <Sliders size={12} color="#93C5FD" /> Video Controls &amp; Quick Actions
                     </span>
                   </div>
                   <button
@@ -493,7 +493,7 @@ export function LessonScreen({
                           }}
                           title={`Jump to ${ch.title}`}
                         >
-                          <span style={{ color: "#A5B4FC", fontWeight: 800, marginRight: 3 }}>{ch.time}</span> {ch.title.split(" ")[0]}
+                          <span style={{ color: "#93C5FD", fontWeight: 800, marginRight: 3 }}>{ch.time}</span> {ch.title.split(" ")[0]}
                         </button>
                       ))}
                     </div>
@@ -510,7 +510,7 @@ export function LessonScreen({
               className={`tai-btn ${isCompleted ? "tai-btn-outline" : "tai-btn-primary"} tai-lesson-nav-complete`}
               style={{
                 padding: "11px 18px", borderRadius: 8, fontSize: 13.5, fontWeight: 800,
-                boxShadow: isCompleted ? "none" : "0 4px 16px rgba(79, 70, 229, 0.3)"
+                boxShadow: isCompleted ? "none" : "0 4px 16px rgba(37, 99, 235, 0.3)"
               }}
               onClick={handleMarkDone}
             >
@@ -580,7 +580,7 @@ export function LessonScreen({
                     whiteSpace: "nowrap",
                     flexShrink: 0,
                     transition: "all 0.15s ease",
-                    boxShadow: isActive ? "0 3px 10px rgba(79, 70, 229, 0.25)" : "none"
+                    boxShadow: isActive ? "0 3px 10px rgba(37, 99, 235, 0.25)" : "none"
                   }}
                 >
                   <Icon size={14} />
@@ -1164,13 +1164,13 @@ export function LessonScreen({
                               padding: "10px 12px",
                               borderRadius: 8,
                               background: isCurrent ? "var(--primary-tint)" : "var(--surface-2)",
-                              border: `1.5px solid ${isCurrent ? "var(--primary-light, #818CF8)" : "transparent"}`,
+                              border: `1.5px solid ${isCurrent ? "var(--primary-light, #60A5FA)" : "transparent"}`,
                               cursor: "pointer",
                               display: "flex",
                               alignItems: "flex-start",
                               gap: 10,
                               transition: "all 0.15s ease",
-                              boxShadow: isCurrent ? "0 2px 8px rgba(79, 70, 229, 0.15)" : "none"
+                              boxShadow: isCurrent ? "0 2px 8px rgba(37, 99, 235, 0.15)" : "none"
                             }}
                           >
                             <div style={{ marginTop: 2, flexShrink: 0 }}>
@@ -1215,8 +1215,8 @@ export function LessonScreen({
 
             {/* Quick Capstone Project Certificate Unlock Card */}
             <div className="tai-card" style={{
-              background: "rgba(79, 70, 229, 0.05)",
-              border: "1px solid rgba(79, 70, 229, 0.2)", padding: 12, borderRadius: 8
+              background: "rgba(37, 99, 235, 0.05)",
+              border: "1px solid rgba(37, 99, 235, 0.2)", padding: 12, borderRadius: 8
             }}>
               <div className="tai-row tai-gap8" style={{ marginBottom: 4 }}>
                 <Award size={15} color="var(--primary)" />

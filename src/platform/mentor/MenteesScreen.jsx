@@ -112,6 +112,26 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                 Track student attendance, diagnose learning drop-offs, record instructor notes, and issue direct certifications.
               </p>
             </div>
+
+            <div className="ta-hero-actions" style={{ flexWrap: "wrap", gap: 8 }}>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 8, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Total Mentees</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{allMentees.length} Learners</div>
+              </div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 8, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>At Risk</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: allMentees.filter(m => m.risk === "high").length > 0 ? "#EF4444" : "#34D399" }}>
+                  {allMentees.filter(m => m.risk === "high").length} High Risk
+                </div>
+              </div>
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, color: "#FFFFFF", borderColor: "rgba(255,255,255,0.2)", display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setRiskFilter(riskFilter === "high" ? "all" : "high")}
+              >
+                <Filter size={13} /> {riskFilter === "high" ? "All Learners" : "Focus High Risk"}
+              </button>
+            </div>
           </div>
         </div>
 

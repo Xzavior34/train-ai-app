@@ -128,11 +128,11 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
         @keyframes inviteSpin { to { transform: rotate(360deg); } }
         .invite-card { animation: inviteFadeUp .35s ease; }
         .invite-spin { animation: inviteSpin .8s linear infinite; }
-        .invite-input:focus { outline: none; border-color: #818CF8 !important; box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
-        .invite-submit:hover { box-shadow: 0 14px 28px -8px rgba(79,70,229,.55); transform: translateY(-1px); }
+        .invite-input:focus { outline: none; border-color: #60A5FA !important; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+        .invite-submit:hover { box-shadow: 0 14px 28px -8px rgba(37,99,235,.55); transform: translateY(-1px); }
         .invite-submit:active { transform: scale(.98); }
         .invite-link { transition: color .15s ease; }
-        .invite-link:hover { text-decoration: underline; color: #4F46E5; }
+        .invite-link:hover { text-decoration: underline; color: #2563EB; }
       `}</style>
 
       <div style={styles.glowTop} />
@@ -279,7 +279,7 @@ const styles = {
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 },
   brandMark: {
     width: 34, height: 34, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#4F46E5",
+    background: "#2563EB",
   },
   brandName: { fontWeight: 800, fontSize: 15.5, letterSpacing: "-0.01em", color: "#10142A" },
   h1: { fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: "#10142A", letterSpacing: "-0.01em" },
@@ -302,7 +302,7 @@ const styles = {
   submit: {
     width: "100%", marginTop: 20, border: "none", borderRadius: 8, padding: "11px 16px", fontWeight: 700, fontSize: 14,
     color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-    background: "#4F46E5",
+    background: "#2563EB",
     transition: "background .12s ease",
   },
 };

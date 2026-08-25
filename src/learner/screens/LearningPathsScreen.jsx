@@ -10,7 +10,7 @@ import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 const TRACK_CATEGORIES = [
-  { id: "all", label: "All Career Tracks" },
+  { id: "all", label: "All Learning Pathways" },
   { id: "ai", label: "AI & Machine Learning" },
   { id: "design", label: "UI/UX & Spatial Design" },
   { id: "engineering", label: "Full-Stack & Web Dev" },
@@ -26,7 +26,7 @@ export const LEARNING_TRACKS = [
     categoryLabel: "UI/UX & Spatial Design",
     provider: "Train AI Academy • Apple & Figma Partner",
     badge: "PROFESSIONAL CERTIFICATE",
-    badgeColor: "#4F46E5",
+    badgeColor: "#2563EB",
     image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80",
     description: "Master modern AI design workflows, generative prototyping, vector token pipelines, and visionOS spatial interface design with direct industry certification.",
     progress: 68,
@@ -218,12 +218,12 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
     const isEnrolled = (pathEnrollmentsQuery?.data || []).some(e => e.learning_path_id === p.id);
     return {
       id: p.id,
-      title: p.title || "Career Track",
+      title: p.title || "Learning Pathway",
       category: p.category || "ai",
-      categoryLabel: p.category || "Specialization Track",
+      categoryLabel: p.category || "Learning Pathway",
       provider: p.provider || "Train AI Academy",
       badge: p.badge_title || "PROFESSIONAL CERTIFICATE",
-      badgeColor: idx % 2 === 0 ? "#4F46E5" : "#7C3AED",
+      badgeColor: idx % 2 === 0 ? "#2563EB" : "#2563EB",
       image: p.cover_image_url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80",
       description: p.description || "Master core competencies, practical workflows, and real-world project deliverables.",
       progress: isEnrolled ? 25 : 0,
@@ -285,14 +285,14 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
 
         <div style={{ position: "relative", zIndex: 1 }}>
           <h1 className="tai-hero-title" style={{ fontSize: "clamp(22px, 3vw, 28px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 8px", lineHeight: 1.2 }}>
-            Learning Paths &amp; Career Tracks
+            Learning Paths &amp; Learning Pathways
           </h1>
           <p className="tai-hero-desc" style={{ fontSize: 13.5, margin: 0, maxWidth: 640, lineHeight: 1.5 }}>
             Master job-ready competencies through sequenced, multi-course roadmaps. Complete progressive capstones and earn verified industry certificates.
@@ -334,7 +334,7 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
                     fontSize: 12.5,
                     cursor: "pointer",
                     whiteSpace: "nowrap",
-                    boxShadow: isSelected ? "0 4px 12px rgba(79, 70, 229, 0.25)" : "none"
+                    boxShadow: isSelected ? "0 4px 12px rgba(37, 99, 235, 0.25)" : "none"
                   }}
                 >
                   {cat.label}
@@ -362,7 +362,7 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
         </div>
       </div>
 
-      {/* Career Tracks Cards Grid */}
+      {/* Learning Pathways Cards Grid */}
       <div className="tai-col tai-gap20 anim-stagger">
         {filteredTracks.length === 0 && (
           <div className="tai-card" style={{ textAlign: "center", padding: "48px 24px", borderRadius: 10 }}>
@@ -371,7 +371,7 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
               {searchQuery || selectedCategory !== "all" ? "No learning paths match your filter" : "No learning paths available"}
             </div>
             <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 440, margin: "4px auto 0" }}>
-              {searchQuery || selectedCategory !== "all" ? "Try selecting a different category or clearing your search term." : "Career roadmaps and specialization tracks created by administrators will appear here."}
+              {searchQuery || selectedCategory !== "all" ? "Try selecting a different category or clearing your search term." : "Career roadmaps and Learning Pathways created by administrators will appear here."}
             </div>
           </div>
         )}
@@ -408,7 +408,7 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
               </div>
 
               <div style={{ position: "absolute", bottom: 12, left: 16, right: 16 }} className="tai-row tai-between">
-                <div style={{ fontSize: 12, color: "#E0E7FF", fontWeight: 700 }}>
+                <div style={{ fontSize: 12, color: "#DBEAFE", fontWeight: 700 }}>
                   {track.provider}
                 </div>
                 <div className="tai-row tai-gap6" style={{ color: "#FDE68A", fontSize: 12, fontWeight: 800 }}>
@@ -535,7 +535,7 @@ export function LearningPathsScreen({ push, back, pathsQuery, pathEnrollmentsQue
               <img src={selectedTrack.image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.85) 0%, transparent 60%)" }} />
               <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, color: "#fff" }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#A5B4FC" }}>{selectedTrack.provider}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#93C5FD" }}>{selectedTrack.provider}</div>
                 <div style={{ fontSize: 16, fontWeight: 900 }}>{selectedTrack.title}</div>
               </div>
             </div>

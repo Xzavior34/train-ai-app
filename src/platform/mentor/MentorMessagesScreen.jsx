@@ -118,6 +118,17 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
                 Provide 1:1 guidance, answer assignment queries in real-time, and collaborate with fellow academy instructors.
               </p>
             </div>
+
+            <div className="ta-hero-actions" style={{ flexWrap: "wrap", gap: 8 }}>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 8, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Total Contacts</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "#FFFFFF" }}>{contacts.length} Available</div>
+              </div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 8, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Active Chats</div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: "#34D399" }}>{threads.length} Active</div>
+              </div>
+            </div>
           </div>
         </div>
 

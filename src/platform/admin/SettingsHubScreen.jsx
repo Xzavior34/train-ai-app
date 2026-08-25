@@ -469,7 +469,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
               </div>
 
               {/* Database & Mock Data Management Card */}
-              <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #818CF8)" }}>
+              <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #60A5FA)" }}>
                 <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                   <div className="ta-row ta-gap10">
                     <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>

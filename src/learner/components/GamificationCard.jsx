@@ -37,7 +37,7 @@ export function GamificationCard({ level = 1, totalPoints = 0, streak = 0, strea
     <div className="tai-card tai-mt12" style={{ borderRadius: 10 }}>
       <div className="tai-row tai-between">
         <div className="tai-row tai-gap10">
-          <div className="tai-iconbtn" style={{ background: "#4F46E5", border: "none", color: "#fff", borderRadius: 8 }}>
+          <div className="tai-iconbtn" style={{ background: "#2563EB", border: "none", color: "#fff", borderRadius: 8 }}>
             <Trophy size={18} />
           </div>
           <div>

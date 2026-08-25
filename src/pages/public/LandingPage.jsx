@@ -259,7 +259,7 @@ export default function LandingPage({ onNavigate }) {
           font-size: 13.5px;
         }
         .lp-nav-link:hover {
-          color: #4F46E5 !important;
+          color: #2563EB !important;
         }
 
         .lp-pill-hover {
@@ -272,12 +272,12 @@ export default function LandingPage({ onNavigate }) {
         }
 
         .action-btn-primary {
-          background: #4F46E5;
+          background: #2563EB;
           color: #FFFFFF;
           transition: background-color .14s ease;
         }
         .action-btn-primary:hover {
-          background: #4338CA;
+          background: #1D4ED8;
         }
         .action-btn-primary:active {
           transform: scale(.99);
@@ -324,9 +324,9 @@ export default function LandingPage({ onNavigate }) {
           cursor: pointer;
         }
         .lp-social-btn:hover {
-          background: #4F46E5;
+          background: #2563EB;
           color: #FFFFFF;
-          border-color: #4F46E5;
+          border-color: #2563EB;
         }
 
         /* Interactive Phone Nav Pill Tabs */
@@ -344,7 +344,7 @@ export default function LandingPage({ onNavigate }) {
           transition: background-color .14s ease, color .14s ease;
         }
         .phone-nav-item.active {
-          background: #4F46E5;
+          background: #2563EB;
           color: #FFFFFF !important;
         }
 
@@ -498,10 +498,10 @@ export default function LandingPage({ onNavigate }) {
               {/* Badge */}
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 6,
-                background: "#EEF2FF", border: "1px solid #C7D2FE",
-                color: "#4F46E5", fontSize: 11, fontWeight: 700, marginBottom: 16, letterSpacing: ".02em"
+                background: "#EFF6FF", border: "1px solid #C7D2FE",
+                color: "#2563EB", fontSize: 11, fontWeight: 700, marginBottom: 16, letterSpacing: ".02em"
               }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} />
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#2563EB", display: "inline-block" }} />
                 <span>AI WORKFORCE INTELLIGENCE PLATFORM</span>
               </div>
 
@@ -509,7 +509,7 @@ export default function LandingPage({ onNavigate }) {
               <h1 className="lp-hero-h1" style={{ fontSize: "clamp(32px, 4vw, 52px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0F172A", margin: "0 0 14px", lineHeight: 1.1 }}>
                 Measure<br />
                 readiness,<br />
-                <span style={{ color: "#4F46E5" }}>
+                <span style={{ color: "#2563EB" }}>
                   not completion.
                 </span>
               </h1>
@@ -532,7 +532,7 @@ export default function LandingPage({ onNavigate }) {
               {/* 3 Metric Badges */}
               <div className="lp-hero-pills lp-hero-pill-wrap" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
-                  <Layers size={15} color="#4F46E5" />
+                  <Layers size={15} color="#2563EB" />
                   <div>
                     <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Skill Graph</div>
                     <div style={{ fontSize: 10.5, color: "#64748B" }}>Held • developing • missing</div>
@@ -540,7 +540,7 @@ export default function LandingPage({ onNavigate }) {
                 </div>
 
                 <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
-                  <Gauge size={15} color="#4F46E5" />
+                  <Gauge size={15} color="#2563EB" />
                   <div>
                     <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Readiness Score</div>
                     <div style={{ fontSize: 10.5, color: "#64748B" }}>Team • function • org</div>
@@ -548,7 +548,7 @@ export default function LandingPage({ onNavigate }) {
                 </div>
 
                 <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("learners")}>
-                  <Activity size={15} color="#4F46E5" />
+                  <Activity size={15} color="#2563EB" />
                   <div>
                     <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Live Signals</div>
                     <div style={{ fontSize: 10.5, color: "#64748B" }}>Assessments • progress</div>
@@ -583,8 +583,8 @@ export default function LandingPage({ onNavigate }) {
                     <div style={{ fontSize: 10, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".04em" }}>WORKFORCE INTELLIGENCE</div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", marginTop: 1 }}>Readiness by team</div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, color: "#4F46E5", background: "#EEF2FF", padding: "2px 6px", borderRadius: 4 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#4F46E5", display: "inline-block" }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10.5, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "2px 6px", borderRadius: 4 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#2563EB", display: "inline-block" }} />
                     <span>Live Telemetry</span>
                   </div>
                 </div>
@@ -600,40 +600,40 @@ export default function LandingPage({ onNavigate }) {
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       <span style={{ color: "#334155" }}>Engineering</span>
-                      <span style={{ color: "#4F46E5", fontWeight: 700 }}>82 (+6)</span>
+                      <span style={{ color: "#2563EB", fontWeight: 700 }}>82 (+6)</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "#EEF2FF", overflow: "hidden" }}>
-                      <div className="lp-bar-1" style={{ height: "100%", background: "#4F46E5", borderRadius: 2 }} />
+                    <div style={{ height: 4, borderRadius: 2, background: "#EFF6FF", overflow: "hidden" }}>
+                      <div className="lp-bar-1" style={{ height: "100%", background: "#2563EB", borderRadius: 2 }} />
                     </div>
                   </div>
 
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       <span style={{ color: "#334155" }}>Operations</span>
-                      <span style={{ color: "#4F46E5", fontWeight: 700 }}>74 (+3)</span>
+                      <span style={{ color: "#2563EB", fontWeight: 700 }}>74 (+3)</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "#EEF2FF", overflow: "hidden" }}>
-                      <div className="lp-bar-2" style={{ height: "100%", background: "#4F46E5", borderRadius: 2 }} />
+                    <div style={{ height: 4, borderRadius: 2, background: "#EFF6FF", overflow: "hidden" }}>
+                      <div className="lp-bar-2" style={{ height: "100%", background: "#2563EB", borderRadius: 2 }} />
                     </div>
                   </div>
 
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       <span style={{ color: "#334155" }}>Compliance</span>
-                      <span style={{ color: "#4F46E5", fontWeight: 700 }}>61 (-2)</span>
+                      <span style={{ color: "#2563EB", fontWeight: 700 }}>61 (-2)</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "#EEF2FF", overflow: "hidden" }}>
-                      <div className="lp-bar-3" style={{ height: "100%", background: "#4F46E5", borderRadius: 2 }} />
+                    <div style={{ height: 4, borderRadius: 2, background: "#EFF6FF", overflow: "hidden" }}>
+                      <div className="lp-bar-3" style={{ height: "100%", background: "#2563EB", borderRadius: 2 }} />
                     </div>
                   </div>
 
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, fontWeight: 600, marginBottom: 3 }}>
                       <span style={{ color: "#334155" }}>Sales</span>
-                      <span style={{ color: "#4F46E5", fontWeight: 700 }}>55 (+9)</span>
+                      <span style={{ color: "#2563EB", fontWeight: 700 }}>55 (+9)</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 2, background: "#EEF2FF", overflow: "hidden" }}>
-                      <div className="lp-bar-4" style={{ height: "100%", background: "#4F46E5", borderRadius: 2 }} />
+                    <div style={{ height: 4, borderRadius: 2, background: "#EFF6FF", overflow: "hidden" }}>
+                      <div className="lp-bar-4" style={{ height: "100%", background: "#2563EB", borderRadius: 2 }} />
                     </div>
                   </div>
                 </div>
@@ -669,7 +669,7 @@ export default function LandingPage({ onNavigate }) {
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "36px 20px 44px" }}>
           
           <div style={{ textAlign: "left", marginBottom: 14 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>HOW WE BUILD IT</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", letterSpacing: ".06em" }}>HOW WE BUILD IT</span>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, textAlign: "left" }}>
@@ -677,8 +677,8 @@ export default function LandingPage({ onNavigate }) {
               const Icon = item.icon;
               return (
                 <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "18px 18px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                    <Icon size={16} color="#4F46E5" />
+                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                    <Icon size={16} color="#2563EB" />
                   </div>
                   <h3 style={{ fontSize: 14.5, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>{item.title}</h3>
                   <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.45 }}>{item.desc}</p>
@@ -697,7 +697,7 @@ export default function LandingPage({ onNavigate }) {
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 58px", textAlign: "left" }}>
           
           <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>THE WORKFORCE INTELLIGENCE LAYER</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", letterSpacing: ".06em" }}>THE WORKFORCE INTELLIGENCE LAYER</span>
           </div>
 
           <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
@@ -711,8 +711,8 @@ export default function LandingPage({ onNavigate }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
             
             <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <Brain size={18} color="#4F46E5" />
+              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                <Brain size={18} color="#2563EB" />
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>AI Skill Graph</h3>
               <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
@@ -721,8 +721,8 @@ export default function LandingPage({ onNavigate }) {
             </div>
 
             <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <Gauge size={18} color="#4F46E5" />
+              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                <Gauge size={18} color="#2563EB" />
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Workforce Readiness Score</h3>
               <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
@@ -731,8 +731,8 @@ export default function LandingPage({ onNavigate }) {
             </div>
 
             <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
-                <BarChart3 size={18} color="#4F46E5" />
+              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>
+                <BarChart3 size={18} color="#2563EB" />
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Intelligence Dashboard</h3>
               <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
@@ -758,7 +758,7 @@ export default function LandingPage({ onNavigate }) {
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {SIGNALS.map((sig) => (
-                <span key={sig} style={{ background: "#EEF2FF", color: "#4F46E5", fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 4, border: "1px solid #C7D2FE" }}>
+                <span key={sig} style={{ background: "#EFF6FF", color: "#2563EB", fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 4, border: "1px solid #C7D2FE" }}>
                   {sig}
                 </span>
               ))}
@@ -767,7 +767,7 @@ export default function LandingPage({ onNavigate }) {
 
           {/* The Learner App Grid */}
           <div style={{ textAlign: "left", marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>THE LEARNER APP</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", letterSpacing: ".06em" }}>THE LEARNER APP</span>
           </div>
 
           <h2 className="lp-section-h2" style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 6px", textAlign: "left" }}>
@@ -788,20 +788,20 @@ export default function LandingPage({ onNavigate }) {
                 className="lp-card-hover"
                 onClick={() => setMobileLearnerTab("home")}
                 style={{
-                  background: mobileLearnerTab === "home" ? "#EEF2FF" : "#FFFFFF",
+                  background: mobileLearnerTab === "home" ? "#EFF6FF" : "#FFFFFF",
                   padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "home" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
+                  border: mobileLearnerTab === "home" ? "2px solid #2563EB" : "1px solid #E2E8F0",
                   cursor: "pointer", transition: "background-color .15s ease, border-color .15s ease"
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "home" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "home" ? "#fff" : "#4F46E5" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "home" ? "#2563EB" : "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "home" ? "#fff" : "#2563EB" }}>
                       <Home size={13} />
                     </div>
                     <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Home Workspace</h3>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "home" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "home" ? "rgba(79,70,229,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "home" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "home" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
                     {mobileLearnerTab === "home" ? "Active Preview" : "Personalized"}
                   </span>
                 </div>
@@ -815,20 +815,20 @@ export default function LandingPage({ onNavigate }) {
                 className="lp-card-hover"
                 onClick={() => setMobileLearnerTab("courses")}
                 style={{
-                  background: mobileLearnerTab === "courses" ? "#EEF2FF" : "#FFFFFF",
+                  background: mobileLearnerTab === "courses" ? "#EFF6FF" : "#FFFFFF",
                   padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "courses" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
+                  border: mobileLearnerTab === "courses" ? "2px solid #2563EB" : "1px solid #E2E8F0",
                   cursor: "pointer", transition: "background-color .15s ease, border-color .15s ease"
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "courses" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "courses" ? "#fff" : "#4F46E5" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "courses" ? "#2563EB" : "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "courses" ? "#fff" : "#2563EB" }}>
                       <BookOpen size={13} />
                     </div>
                     <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Courses &amp; Masterclasses</h3>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "courses" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "courses" ? "rgba(79,70,229,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "courses" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "courses" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
                     {mobileLearnerTab === "courses" ? "Active Preview" : "49 Courses"}
                   </span>
                 </div>
@@ -842,20 +842,20 @@ export default function LandingPage({ onNavigate }) {
                 className="lp-card-hover"
                 onClick={() => setMobileLearnerTab("ai")}
                 style={{
-                  background: mobileLearnerTab === "ai" ? "#EEF2FF" : "#FFFFFF",
+                  background: mobileLearnerTab === "ai" ? "#EFF6FF" : "#FFFFFF",
                   padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "ai" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
+                  border: mobileLearnerTab === "ai" ? "2px solid #2563EB" : "1px solid #E2E8F0",
                   cursor: "pointer", transition: "background-color .15s ease, border-color .15s ease"
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "ai" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "ai" ? "#fff" : "#4F46E5" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "ai" ? "#2563EB" : "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "ai" ? "#fff" : "#2563EB" }}>
                       <Zap size={13} />
                     </div>
                     <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>AI Neural Coach</h3>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "ai" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "ai" ? "rgba(79,70,229,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "ai" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "ai" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
                     {mobileLearnerTab === "ai" ? "Active Preview" : "24/7 Neural Tutor"}
                   </span>
                 </div>
@@ -869,20 +869,20 @@ export default function LandingPage({ onNavigate }) {
                 className="lp-card-hover"
                 onClick={() => setMobileLearnerTab("community")}
                 style={{
-                  background: mobileLearnerTab === "community" ? "#EEF2FF" : "#FFFFFF",
+                  background: mobileLearnerTab === "community" ? "#EFF6FF" : "#FFFFFF",
                   padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "community" ? "2px solid #4F46E5" : "1px solid #E2E8F0",
+                  border: mobileLearnerTab === "community" ? "2px solid #2563EB" : "1px solid #E2E8F0",
                   cursor: "pointer", transition: "background-color .15s ease, border-color .15s ease"
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "community" ? "#4F46E5" : "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "community" ? "#fff" : "#4F46E5" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "community" ? "#2563EB" : "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "community" ? "#fff" : "#2563EB" }}>
                       <Users size={13} />
                     </div>
                     <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Community Hub</h3>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "community" ? "#4F46E5" : "#64748B", background: mobileLearnerTab === "community" ? "rgba(79,70,229,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "community" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "community" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
                     {mobileLearnerTab === "community" ? "Active Preview" : "Peer Network"}
                   </span>
                 </div>
@@ -897,7 +897,7 @@ export default function LandingPage({ onNavigate }) {
                   <Flame size={12} color="#EA580C" /> Daily Streaks
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#334155" }}>
-                  <Target size={12} color="#4F46E5" /> Adaptive Quizzes
+                  <Target size={12} color="#2563EB" /> Adaptive Quizzes
                 </span>
                 <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#334155" }}>
                   <CheckCircle2 size={12} color="#16A34A" /> Micro-Certs
@@ -929,7 +929,7 @@ export default function LandingPage({ onNavigate }) {
                       <div style={{ display: "flex", alignItems: "center", gap: 2, background: "#FFF7ED", padding: "1px 5px", borderRadius: 4, fontSize: 8.5, fontWeight: 700, color: "#EA580C" }}>
                         <Flame size={9} color="#EA580C" /> 1
                       </div>
-                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#4F46E5", color: "#fff", fontSize: 8.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#2563EB", color: "#fff", fontSize: 8.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>
                         J
                       </div>
                     </div>
@@ -952,11 +952,11 @@ export default function LandingPage({ onNavigate }) {
                               <div style={{ fontSize: 10.5, color: "#94A3B8" }}>Welcome back,</div>
                               <div style={{ fontSize: 12, fontWeight: 800, color: "#FFFFFF" }}>John</div>
                             </div>
-                            <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#4F46E5", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>J</div>
+                            <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#2563EB", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>J</div>
                           </div>
 
                           <div style={{ fontSize: 8.5, color: "#94A3B8", marginTop: 2 }}>
-                            0 of 5 lessons done. Continue in <span style={{ color: "#818CF8", fontWeight: 600 }}>AI Fundamentals</span>.
+                            0 of 5 lessons done. Continue in <span style={{ color: "#60A5FA", fontWeight: 600 }}>AI Fundamentals</span>.
                           </div>
 
                           {/* Sprint Goal */}
@@ -976,7 +976,7 @@ export default function LandingPage({ onNavigate }) {
                           <div style={{ fontSize: 9, color: "#475569" }}>No active course yet. Browse catalog to start.</div>
                           <button
                             onClick={() => setMobileLearnerTab("courses")}
-                            style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 6, padding: "5px 8px", fontSize: 9.5, fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer" }}
+                            style={{ width: "100%", background: "#2563EB", color: "#fff", border: "none", borderRadius: 6, padding: "5px 8px", fontSize: 9.5, fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer" }}
                           >
                             <BookOpen size={10} /> Browse courses
                           </button>
@@ -984,8 +984,8 @@ export default function LandingPage({ onNavigate }) {
 
                         {/* Cohort Status */}
                         <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "6px 8px", display: "flex", alignItems: "center", gap: 6 }}>
-                          <div style={{ width: 20, height: 20, borderRadius: 4, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Users size={10} color="#4F46E5" />
+                          <div style={{ width: 20, height: 20, borderRadius: 4, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Users size={10} color="#2563EB" />
                           </div>
                           <div>
                             <div style={{ fontSize: 7.5, fontWeight: 700, color: "#64748B", textTransform: "uppercase" }}>YOUR COHORT</div>
@@ -995,7 +995,7 @@ export default function LandingPage({ onNavigate }) {
 
                         {/* Roadmap */}
                         <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "7px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 3, color: "#4F46E5", fontSize: 9, fontWeight: 700 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 3, color: "#2563EB", fontSize: 9, fontWeight: 700 }}>
                             <TrendingUp size={10} /> Career Roadmap • UX &amp; AI
                           </div>
                           <div style={{ fontSize: 8, color: "#64748B", marginTop: 1 }}>
@@ -1007,9 +1007,9 @@ export default function LandingPage({ onNavigate }) {
                               <CheckCircle2 size={7} color="#10B981" style={{ margin: "0 auto" }} />
                               <div style={{ fontSize: 7, fontWeight: 700, color: "#0F172A" }}>Junior</div>
                             </div>
-                            <div style={{ background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: 4, padding: "2px", textAlign: "center" }}>
-                              <Zap size={7} color="#4F46E5" style={{ margin: "0 auto" }} />
-                              <div style={{ fontSize: 7, fontWeight: 700, color: "#4F46E5" }}>Tokens</div>
+                            <div style={{ background: "#EFF6FF", border: "1px solid #C7D2FE", borderRadius: 4, padding: "2px", textAlign: "center" }}>
+                              <Zap size={7} color="#2563EB" style={{ margin: "0 auto" }} />
+                              <div style={{ fontSize: 7, fontWeight: 700, color: "#2563EB" }}>Tokens</div>
                             </div>
                             <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 4, padding: "2px", textAlign: "center" }}>
                               <Lock size={7} color="#94A3B8" style={{ margin: "0 auto" }} />
@@ -1045,13 +1045,13 @@ export default function LandingPage({ onNavigate }) {
                             3D spatial user experiences and tokens.
                           </div>
 
-                          <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 4, padding: "4px 6px", fontSize: 8.5, fontWeight: 700, marginTop: 5 }}>
+                          <button style={{ width: "100%", background: "#2563EB", color: "#fff", border: "none", borderRadius: 4, padding: "4px 6px", fontSize: 8.5, fontWeight: 700, marginTop: 5 }}>
                             Explore Masterclass →
                           </button>
                         </div>
 
                         <div style={{ display: "flex", gap: 3 }}>
-                          <span style={{ background: "#4F46E5", color: "#fff", padding: "1px 6px", borderRadius: 4, fontSize: 8.5, fontWeight: 700 }}>All Courses (49)</span>
+                          <span style={{ background: "#2563EB", color: "#fff", padding: "1px 6px", borderRadius: 4, fontSize: 8.5, fontWeight: 700 }}>All Courses (49)</span>
                           <span style={{ background: "#FFFFFF", color: "#64748B", border: "1px solid #E2E8F0", padding: "1px 6px", borderRadius: 4, fontSize: 8.5, fontWeight: 600 }}>Assigned (2)</span>
                         </div>
 
@@ -1060,8 +1060,8 @@ export default function LandingPage({ onNavigate }) {
                         </div>
 
                         <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "5px 7px", display: "flex", gap: 5, alignItems: "center" }}>
-                          <div style={{ width: 24, height: 24, borderRadius: 4, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <Brain size={12} color="#4F46E5" />
+                          <div style={{ width: 24, height: 24, borderRadius: 4, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <Brain size={12} color="#2563EB" />
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 8.5, fontWeight: 700, color: "#0F172A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Prompt Engineering &amp; LLMs</div>
@@ -1098,7 +1098,7 @@ export default function LandingPage({ onNavigate }) {
                             e.g. LangChain RAG, Figma
                           </div>
 
-                          <button style={{ width: "100%", background: "#4F46E5", color: "#fff", border: "none", borderRadius: 4, padding: "4px 6px", fontSize: 8.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
+                          <button style={{ width: "100%", background: "#2563EB", color: "#fff", border: "none", borderRadius: 4, padding: "4px 6px", fontSize: 8.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 3 }}>
                             ⚡ Generate &amp; Start Quiz
                           </button>
                         </div>
@@ -1106,10 +1106,10 @@ export default function LandingPage({ onNavigate }) {
                         <div style={{ background: "#FFFFFF", borderRadius: 6, border: "1px solid #E2E8F0", padding: "5px 7px" }}>
                           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 8, fontWeight: 700 }}>
                             <span style={{ color: "#0F172A" }}>Daily Goal</span>
-                            <span style={{ color: "#4F46E5" }}>1 of 3 Done</span>
+                            <span style={{ color: "#2563EB" }}>1 of 3 Done</span>
                           </div>
-                          <div style={{ height: 3, borderRadius: 2, background: "#EEF2FF", overflow: "hidden", marginTop: 2 }}>
-                            <div style={{ width: "33%", height: "100%", background: "#4F46E5", borderRadius: 2 }} />
+                          <div style={{ height: 3, borderRadius: 2, background: "#EFF6FF", overflow: "hidden", marginTop: 2 }}>
+                            <div style={{ width: "33%", height: "100%", background: "#2563EB", borderRadius: 2 }} />
                           </div>
                         </div>
 
@@ -1131,7 +1131,7 @@ export default function LandingPage({ onNavigate }) {
                         </div>
 
                         <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "7px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 7.5, fontWeight: 700, color: "#4F46E5", marginBottom: 2 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 7.5, fontWeight: 700, color: "#2563EB", marginBottom: 2 }}>
                             <BarChart2 size={9} /> POLL • 218 Votes
                           </div>
                           <div style={{ fontSize: 9, fontWeight: 700, color: "#0F172A", marginBottom: 3 }}>
@@ -1142,27 +1142,27 @@ export default function LandingPage({ onNavigate }) {
                             <div
                               onClick={() => { setPollVoted(true); setSelectedPollOption(0); }}
                               style={{
-                                background: selectedPollOption === 0 && pollVoted ? "#EEF2FF" : "#F8FAFC",
-                                border: selectedPollOption === 0 && pollVoted ? "1px solid #4F46E5" : "1px solid #E2E8F0",
+                                background: selectedPollOption === 0 && pollVoted ? "#EFF6FF" : "#F8FAFC",
+                                border: selectedPollOption === 0 && pollVoted ? "1px solid #2563EB" : "1px solid #E2E8F0",
                                 borderRadius: 3, padding: "2px 5px", fontSize: 8, fontWeight: 600,
                                 display: "flex", justifyContent: "space-between", cursor: "pointer"
                               }}
                             >
                               <span>LangChain / LangGraph</span>
-                              <span style={{ color: "#4F46E5" }}>{pollVoted ? "64%" : "Vote"}</span>
+                              <span style={{ color: "#2563EB" }}>{pollVoted ? "64%" : "Vote"}</span>
                             </div>
 
                             <div
                               onClick={() => { setPollVoted(true); setSelectedPollOption(1); }}
                               style={{
-                                background: selectedPollOption === 1 && pollVoted ? "#EEF2FF" : "#F8FAFC",
-                                border: selectedPollOption === 1 && pollVoted ? "1px solid #4F46E5" : "1px solid #E2E8F0",
+                                background: selectedPollOption === 1 && pollVoted ? "#EFF6FF" : "#F8FAFC",
+                                border: selectedPollOption === 1 && pollVoted ? "1px solid #2563EB" : "1px solid #E2E8F0",
                                 borderRadius: 3, padding: "2px 5px", fontSize: 8, fontWeight: 600,
                                 display: "flex", justifyContent: "space-between", cursor: "pointer"
                               }}
                             >
                               <span>Vercel AI SDK</span>
-                              <span style={{ color: "#4F46E5" }}>{pollVoted ? "28%" : "Vote"}</span>
+                              <span style={{ color: "#2563EB" }}>{pollVoted ? "28%" : "Vote"}</span>
                             </div>
                           </div>
                         </div>
@@ -1239,7 +1239,7 @@ export default function LandingPage({ onNavigate }) {
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 58px", textAlign: "left" }}>
           
           <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>THE ORGANISATION APP</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", letterSpacing: ".06em" }}>THE ORGANISATION APP</span>
           </div>
 
           <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
@@ -1256,8 +1256,8 @@ export default function LandingPage({ onNavigate }) {
             {/* Instructor View */}
             <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <GraduationCap size={16} color="#4F46E5" />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".05em" }}>INSTRUCTOR VIEW</span>
+                <GraduationCap size={16} color="#2563EB" />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", letterSpacing: ".05em" }}>INSTRUCTOR VIEW</span>
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>Run programmes, not spreadsheets</h3>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5, color: "#475569" }}>
@@ -1272,8 +1272,8 @@ export default function LandingPage({ onNavigate }) {
             {/* Manager View */}
             <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <TrendingUp size={16} color="#4F46E5" />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".05em" }}>MANAGER VIEW</span>
+                <TrendingUp size={16} color="#2563EB" />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", letterSpacing: ".05em" }}>MANAGER VIEW</span>
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>See who is ready and who needs support</h3>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5, color: "#475569" }}>
@@ -1288,8 +1288,8 @@ export default function LandingPage({ onNavigate }) {
             {/* Admin View */}
             <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                <ShieldCheck size={16} color="#4F46E5" />
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".05em" }}>ADMIN VIEW</span>
+                <ShieldCheck size={16} color="#2563EB" />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", letterSpacing: ".05em" }}>ADMIN VIEW</span>
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 10px" }}>Manage learning at scale</h3>
               <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6, fontSize: 12.5, color: "#475569" }}>
@@ -1308,7 +1308,7 @@ export default function LandingPage({ onNavigate }) {
             
             <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "16px 18px", borderRadius: 8, border: "1px solid #E2E8F0" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <Users size={15} color="#4F46E5" />
+                <Users size={15} color="#2563EB" />
                 <h4 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Learner side, connected</h4>
               </div>
               <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.45 }}>
@@ -1318,7 +1318,7 @@ export default function LandingPage({ onNavigate }) {
 
             <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "16px 18px", borderRadius: 8, border: "1px solid #E2E8F0" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <Database size={15} color="#4F46E5" />
+                <Database size={15} color="#2563EB" />
                 <h4 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Multi-tenant by design</h4>
               </div>
               <p style={{ fontSize: 12, color: "#64748B", margin: 0, lineHeight: 1.45 }}>
@@ -1348,7 +1348,7 @@ export default function LandingPage({ onNavigate }) {
             
             {/* Step 1 */}
             <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
                 <UserPlus size={17} />
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>1. Onboard Your People</h3>
@@ -1359,7 +1359,7 @@ export default function LandingPage({ onNavigate }) {
 
             {/* Step 2 */}
             <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
                 <BookOpen size={17} />
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>2. Assign &amp; Develop</h3>
@@ -1370,7 +1370,7 @@ export default function LandingPage({ onNavigate }) {
 
             {/* Step 3 */}
             <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", marginBottom: 12 }}>
                 <TrendingUp size={17} />
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>3. Measure Readiness</h3>
@@ -1391,7 +1391,7 @@ export default function LandingPage({ onNavigate }) {
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "44px 20px 54px", textAlign: "left" }}>
           
           <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "#4F46E5", letterSpacing: ".06em" }}>ENTERPRISE TRUST</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", letterSpacing: ".06em" }}>ENTERPRISE TRUST</span>
           </div>
 
           <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
@@ -1407,8 +1407,8 @@ export default function LandingPage({ onNavigate }) {
               const Icon = item.icon;
               return (
                 <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "18px 18px", borderRadius: 8, border: "1px solid #E2E8F0" }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-                    <Icon size={16} color="#4F46E5" />
+                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                    <Icon size={16} color="#2563EB" />
                   </div>
                   <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>{item.title}</h3>
                   <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.45 }}>{item.desc}</p>
@@ -1484,21 +1484,21 @@ export default function LandingPage({ onNavigate }) {
       <section style={{ width: "100%", background: "#FFFFFF", padding: "36px 20px" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <div style={{
-            background: "#4F46E5",
+            background: "#2563EB",
             borderRadius: 8, padding: "40px 24px", textAlign: "center"
           }}>
             <h2 style={{ fontSize: "clamp(22px, 3.2vw, 34px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 10px", color: "#FFFFFF", lineHeight: 1.15 }}>
               Ready to Build a Workforce That Is Ready for<br />What's Next?
             </h2>
             
-            <p style={{ fontSize: 14.5, color: "#EEF2FF", maxWidth: 600, margin: "0 auto 20px", lineHeight: 1.5 }}>
+            <p style={{ fontSize: 14.5, color: "#EFF6FF", maxWidth: 600, margin: "0 auto 20px", lineHeight: 1.5 }}>
               Bring courses, cohorts, compliance and workforce intelligence together in one business LMS.
             </p>
 
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 18 }}>
               <button
                 className="action-btn-primary"
-                style={{ background: "#FFFFFF", color: "#4F46E5", fontWeight: 700, padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                style={{ background: "#FFFFFF", color: "#2563EB", fontWeight: 700, padding: "10px 20px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13.5, display: "inline-flex", alignItems: "center", gap: 6 }}
                 onClick={() => handleNav("signin")}
               >
                 Get Started <ArrowRight size={14} />
@@ -1517,7 +1517,7 @@ export default function LandingPage({ onNavigate }) {
               </button>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap", fontSize: 11.5, color: "#EEF2FF", fontWeight: 600 }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap", fontSize: 11.5, color: "#EFF6FF", fontWeight: 600 }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#34D399" }} />
                 Role-based access

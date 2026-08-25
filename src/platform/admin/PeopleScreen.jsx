@@ -591,14 +591,22 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               </p>
             </div>
 
-            <div className="ta-hero-actions">
+            <div className="ta-hero-actions" style={{ flexWrap: "wrap", gap: 8 }}>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 8, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Total Members</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)" }}>{members.length} Users</div>
+              </div>
+              <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 8, textAlign: "center" }}>
+                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>At Risk</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: behindCount > 0 ? "#EF4444" : "#10B981" }}>{behindCount} Needs Help</div>
+              </div>
               <button
                 className="ta-btn ta-btn-primary"
                 style={{
                   height: 36,
                   padding: "0 14px",
                   borderRadius: 8,
-                  background: "#4F46E5",
+                  background: "#2563EB",
                   color: "#FFFFFF",
                   fontWeight: 700,
                   fontSize: 12.5,
@@ -654,7 +662,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               </div>
               <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
                 <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Point Earners</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "#4F46E5", marginTop: 4 }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#2563EB", marginTop: 4 }}>
                   {kpisQuery.loading ? "..." : (kpis?.topAchievers ?? 0)}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 2 }}>Members with points on the board</div>
@@ -789,16 +797,16 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                               }}
                             />
                           </td>
-                          <td>
+                          <td style={{ minWidth: 180 }}>
                             {/* Avatars used to be built by adding idx*10000 to a
                                 hardcoded Unsplash photo id, producing a
                                 different broken stock-photo URL per row. Real
                                 avatar_url when set, initials otherwise. */}
-                            <div className="ta-row ta-gap10" style={{ cursor: "pointer" }} onClick={() => setDetailMember(m)}>
+                            <div className="ta-row ta-gap10" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => setDetailMember(m)}>
                               <Avatar initials={initials} size={34} src={m.avatar_url || undefined} />
                               <div style={{ minWidth: 0 }}>
-                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflowWrap: "anywhere" }}>{m.display_name || "Member"}</div>
-                                <div style={{ fontSize: 11, color: "var(--text-3)", overflowWrap: "anywhere" }}>{m.email || "No email on file"}</div>
+                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", whiteSpace: "nowrap" }}>{m.display_name || "Member"}</div>
+                                <div style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "nowrap" }}>{m.email || "No email on file"}</div>
                               </div>
                             </div>
                           </td>

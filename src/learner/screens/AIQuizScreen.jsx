@@ -4,7 +4,7 @@ import {
   Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight,
   GraduationCap, Send, Bot, MessageSquare, BookOpen, Lightbulb,
   Code2, Briefcase, RefreshCw, Copy, Check, Star, ArrowRight, ShieldCheck,
-  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp, Sparkles
+  History, MessageSquarePlus, Clock, ChevronDown, ChevronUp, Sparkles, Plus
 } from "lucide-react";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 
@@ -197,7 +197,7 @@ export function AIQuizScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -218,7 +218,7 @@ export function AIQuizScreen({
                 padding: "6px 12px", borderRadius: 8,
                 display: "inline-flex", alignItems: "center", gap: 6
               }}>
-                <Zap size={13} color="#818CF8" />
+                <Zap size={13} color="#60A5FA" />
                 <span style={{ fontSize: 12, fontWeight: 700 }}>{credits} credits</span>
               </div>
             )}
@@ -231,7 +231,7 @@ export function AIQuizScreen({
                 display: "inline-flex", alignItems: "center", gap: 5
               }}
             >
-              <Zap size={13} /> Buy Credits
+              <Plus size={13} /> Buy Credits
             </button>
           </div>
         </div>
@@ -317,7 +317,7 @@ export function AIQuizScreen({
                 alignItems: "center",
                 gap: 6,
                 cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(79, 70, 229, 0.3)",
+                boxShadow: "0 2px 8px rgba(37, 99, 235, 0.3)",
                 transition: "all 0.15s ease"
               }}
             >
@@ -346,7 +346,7 @@ export function AIQuizScreen({
                         background: isSelected ? "var(--surface)" : "var(--surface-2)",
                         border: isSelected ? "1.5px solid var(--primary)" : "1px solid var(--border)",
                         cursor: "pointer",
-                        boxShadow: isSelected ? "0 4px 12px rgba(79, 70, 229, 0.12)" : "none",
+                        boxShadow: isSelected ? "0 4px 12px rgba(37, 99, 235, 0.12)" : "none",
                         transition: "all 0.15s ease"
                       }}
                     >
@@ -461,7 +461,7 @@ export function AIQuizScreen({
                   {isUser ? (
                     <Avatar initials={initialsOf(session?.user?.user_metadata?.full_name || session?.user?.email)} size={32} />
                   ) : (
-                    <div style={{ width: 32, height: 32, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff" }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff" }}>
                       <Bot size={16} />
                     </div>
                   )}
@@ -473,7 +473,7 @@ export function AIQuizScreen({
 
                     <div
                       style={{
-                        background: isUser ? "#4F46E5" : "var(--surface-3)",
+                        background: isUser ? "#2563EB" : "var(--surface-3)",
                         color: isUser ? "#FFFFFF" : "var(--text)",
                         padding: "10px 14px",
                         borderRadius: isUser ? "8px 8px 2px 8px" : "8px 8px 8px 2px",
@@ -510,7 +510,7 @@ export function AIQuizScreen({
 
             {coachSending && (
               <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
-                <div style={{ width: 32, height: 32, borderRadius: 6, background: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 6, background: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
                   <Bot size={16} />
                 </div>
                 <div style={{ background: "var(--surface-3)", padding: "8px 14px", borderRadius: 8, fontSize: 12, color: "var(--text-2)", fontStyle: "italic", border: "1px solid var(--border)" }}>
@@ -688,7 +688,7 @@ export function AIQuizScreen({
                       style={{
                         padding: "14px 18px",
                         borderRadius: 10,
-                        border: selected ? "2px solid #4F46E5" : "1.5px solid var(--border)",
+                        border: selected ? "2px solid #2563EB" : "1.5px solid var(--border)",
                         background: selected ? "var(--primary-tint)" : "var(--surface)",
                         cursor: "pointer",
                         display: "flex",
@@ -700,7 +700,7 @@ export function AIQuizScreen({
                       <span style={{ fontSize: 14, fontWeight: selected ? 800 : 500, color: selected ? "var(--primary)" : "var(--text)" }}>
                         {optionLabel(opt)}
                       </span>
-                      {selected ? <CheckCircle2 size={18} color="#4F46E5" /> : <div style={{ width: 18, height: 18, borderRadius: "50%", border: "1.5px solid var(--border)" }} />}
+                      {selected ? <CheckCircle2 size={18} color="#2563EB" /> : <div style={{ width: 18, height: 18, borderRadius: "50%", border: "1.5px solid var(--border)" }} />}
                     </div>
                   );
                 })}

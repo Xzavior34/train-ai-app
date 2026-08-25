@@ -6,9 +6,9 @@ import { fetchAllOrganizations, fetchOrgBranding, upsertOrgBranding } from "../.
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 
 const PRESET_PALETTES = [
-  { name: "Train AI Bluish-Purple", color: "#4338CA" },
-  { name: "Electric Indigo", color: "#4F46E5" },
-  { name: "Cyber Lavender", color: "#6366F1" },
+  { name: "Train AI Bluish-Purple", color: "#1D4ED8" },
+  { name: "Electric Indigo", color: "#2563EB" },
+  { name: "Cyber Lavender", color: "#3B82F6" },
   { name: "Emerald Tech", color: "#059669" },
   { name: "Midnight Teal", color: "#0D9488" },
   { name: "Royal Amber", color: "#D97706" }
@@ -30,14 +30,14 @@ export function BrandingScreen() {
   }, [selectedOrgId]);
 
   const [logoUrl, setLogoUrl] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#4338CA");
+  const [primaryColor, setPrimaryColor] = useState("#1D4ED8");
   const [themeMode, setThemeMode] = useState("light");
   const [borderRadius, setBorderRadius] = useState("10px");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setLogoUrl(brandingQuery.data?.logo_url || "");
-    setPrimaryColor(brandingQuery.data?.primary_color || "#4338CA");
+    setPrimaryColor(brandingQuery.data?.primary_color || "#1D4ED8");
   }, [brandingQuery.data, selectedOrgId]);
 
   async function handleSave() {
@@ -137,14 +137,14 @@ export function BrandingScreen() {
             <div className="ta-row ta-gap10">
               <input
                 type="color"
-                value={/^#[0-9a-fA-F]{6}$/.test(primaryColor) ? primaryColor : "#4338CA"}
+                value={/^#[0-9a-fA-F]{6}$/.test(primaryColor) ? primaryColor : "#1D4ED8"}
                 onChange={(e) => setPrimaryColor(e.target.value)}
                 style={{ width: 44, height: 38, padding: 0, border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer" }}
               />
               <input
                 className="ta-input"
                 style={{ flex: 1 }}
-                placeholder="#4338CA"
+                placeholder="#1D4ED8"
                 value={primaryColor}
                 onChange={(e) => setPrimaryColor(e.target.value)}
               />

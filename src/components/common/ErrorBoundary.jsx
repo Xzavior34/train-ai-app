@@ -89,7 +89,7 @@ export default class ErrorBoundary extends React.Component {
               WebkitBackdropFilter: "blur(24px)",
               borderRadius: 16,
               border: "1px solid rgba(255, 255, 255, 0.12)",
-              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 20px 50px -10px rgba(0, 0, 0, 0.6), 0 0 30px rgba(79, 70, 229, 0.2)",
+              boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 20px 50px -10px rgba(0, 0, 0, 0.6), 0 0 30px rgba(37, 99, 235, 0.2)",
               padding: "clamp(24px, 3.5vw, 36px)",
               textAlign: "left",
               position: "relative",
@@ -104,8 +104,8 @@ export default class ErrorBoundary extends React.Component {
                     width: 36,
                     height: 36,
                     borderRadius: 8,
-                    background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)",
-                    boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(79, 70, 229, 0.45)",
+                    background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
+                    boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(37, 99, 235, 0.45)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -176,7 +176,7 @@ export default class ErrorBoundary extends React.Component {
                   cursor: "pointer",
                   fontSize: 12,
                   fontWeight: 700,
-                  color: "#A5B4FC"
+                  color: "#93C5FD"
                 }}
               >
                 <span>Diagnostic summary: {errorMsg.substring(0, 45)}{errorMsg.length > 45 ? "..." : ""}</span>
@@ -260,7 +260,7 @@ export default class ErrorBoundary extends React.Component {
                   style={{
                     background: "transparent",
                     border: "none",
-                    color: "#818CF8",
+                    color: "#60A5FA",
                     fontSize: 12.5,
                     fontWeight: 700,
                     cursor: "pointer",
@@ -329,7 +329,7 @@ export default class ErrorBoundary extends React.Component {
                         textAlign: "center",
                         transition: "all .14s ease"
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(79, 70, 229, 0.25)"; e.currentTarget.style.color = "#FFFFFF"; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(37, 99, 235, 0.25)"; e.currentTarget.style.color = "#FFFFFF"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"; e.currentTarget.style.color = "#E2E8F0"; }}
                     >
                       {item.label}

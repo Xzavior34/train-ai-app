@@ -5,8 +5,8 @@ export default function LoadingScreen({ message = "Preparing your workspace..." 
     <div style={styles.container}>
       <style>{`
         @keyframes pulseLogo {
-          0%, 100% { transform: scale(1); opacity: 0.95; filter: drop-shadow(0 4px 20px rgba(79, 70, 229, 0.25)); }
-          50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 8px 30px rgba(79, 70, 229, 0.5)); }
+          0%, 100% { transform: scale(1); opacity: 0.95; filter: drop-shadow(0 4px 20px rgba(37, 99, 235, 0.25)); }
+          50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 8px 30px rgba(37, 99, 235, 0.5)); }
         }
         @keyframes progressShimmer {
           0% { transform: translateX(-100%); }
@@ -97,7 +97,7 @@ const styles = {
     left: 0,
     width: "60%",
     height: "100%",
-    background: "#4F46E5",
+    background: "#2563EB",
     borderRadius: 99,
   },
   message: {

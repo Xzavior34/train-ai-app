@@ -104,7 +104,7 @@ export function HomeScreen({
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
@@ -116,7 +116,7 @@ export function HomeScreen({
                 Welcome back, {userFirstName || "Learner"}
               </h1>
               <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
-                {done} of {goal} weekly lessons done. Continue in <strong style={{ color: "#A5B4FC" }}>{continueCourse?.title || "AI Fundamentals"}</strong>.
+                {done} of {goal} weekly lessons done. Continue in <strong style={{ color: "#93C5FD" }}>{continueCourse?.title || "AI Fundamentals"}</strong>.
               </p>
             </div>
 
@@ -141,8 +141,8 @@ export function HomeScreen({
             borderRadius: 10
           }}>
             <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
-              <span className="tai-row tai-gap6" style={{ color: "#E0E7FF" }}>
-                <Target size={14} color="#818CF8" />
+              <span className="tai-row tai-gap6" style={{ color: "#DBEAFE" }}>
+                <Target size={14} color="#60A5FA" />
                 <span>Weekly Sprint Goal ({done}/{goal})</span>
               </span>
               <span style={{ color: "#34D399", fontWeight: 700 }}>{goalPercent}% Completed</span>
@@ -266,7 +266,7 @@ export function HomeScreen({
           }}>
             <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 12 }}>
               <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(99, 102, 241, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Users size={17} color="var(--primary)" />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
@@ -287,7 +287,7 @@ export function HomeScreen({
                 <span style={{ color: "var(--primary)" }}>42% Completed</span>
               </div>
               <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ width: "42%", height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 3 }} />
+                <div style={{ width: "42%", height: "100%", background: "var(--primary, #2563EB)", borderRadius: 3 }} />
               </div>
             </div>
 
@@ -306,427 +306,10 @@ export function HomeScreen({
           </div>
           )}
 
-          {/* Career Path & Skill Growth Progression */}
-          <div className="tai-card" style={{ padding: 16, borderRadius: 10, background: "rgba(79, 70, 229, 0.04)", border: "1px solid rgba(79, 70, 229, 0.18)" }}>
-            <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 8 }}>
-              <div>
-                <div className="tai-row tai-gap8" style={{ fontWeight: 800, fontSize: 14.5, color: "var(--primary)" }}>
-                  <TrendingUp size={16} />
-                  <span>Your Career Roadmap • UX & AI Designer</span>
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-                  Current Level: <strong>Junior Designer</strong> (Next: <em>Middle UI Designer</em> in 4 modules)
-                </div>
-              </div>
-              <Tag tone="primary">Level 2 of 4</Tag>
-            </div>
 
-            <div className="tai-roadmap-grid tai-mt14">
-              {[
-                { title: "Junior UI", status: "Completed", icon: CheckCircle2, active: true, tone: "var(--success)" },
-                { title: "Design Tokens", status: "In Progress", icon: Zap, active: true, tone: "var(--primary)" },
-                { title: "Spatial UI", status: "Next Up", icon: Lock, active: false, tone: "var(--text-3)" },
-                { title: "Senior Lead", status: "Locked", icon: Lock, active: false, tone: "var(--text-3)" }
-              ].map((step, idx) => {
-                const StepIcon = step.icon;
-                return (
-                  <div key={idx} className="tai-roadmap-item" style={{ background: step.active ? "var(--surface)" : "var(--surface-3)" }}>
-                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 2 }}>
-                      <StepIcon size={14} color={step.tone} />
-                    </div>
-                    <div className="tai-roadmap-item-title">{step.title}</div>
-                    <div className="tai-roadmap-item-status">{step.status}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Recommended Courses For You Grid */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
-              <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 14 }}>
-                <Zap size={16} color="var(--primary)" />
-                <span>Recommended Courses</span>
-              </div>
-              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => goTab("courses")}>View Catalog</span>
-            </div>
-
-            {(() => {
-              const catalogList = (courses && courses.length > 0)
-                ? courses.slice(0, 3).map((c, i) => ({
-                    id: c.id,
-                    title: c.title,
-                    category: c.category || "General",
-                    hours: c.hours || 6,
-                    lessons: c.lessons || 12,
-                    rating: c.rating || 4.9,
-                    image: c.coverImageUrl || c.image || STOCK_COURSES[i % STOCK_COURSES.length].image
-                  }))
-                : (isMockDataEnabled() ? STOCK_COURSES : []);
-
-              if (catalogList.length === 0) {
-                return <div className="tai-empty" style={{ padding: "16px 0", fontSize: 13 }}>No catalog courses published yet.</div>;
-              }
-
-              return (
-                <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
-                  {catalogList.map((sc) => (
-                    <div
-                      key={sc.id}
-                      className="tai-card-hover"
-                      style={{
-                        borderRadius: 8,
-                        overflow: "hidden",
-                        background: "var(--surface-3)",
-                        border: "1px solid var(--border)",
-                        cursor: "pointer",
-                        display: "flex",
-                        flexDirection: "column",
-                        transition: "all .2s cubic-bezier(.16,1,.3,1)"
-                      }}
-                      onClick={() => push("courseDetail", { id: sc.id })}
-                    >
-                      <div style={{ height: 110, position: "relative" }}>
-                        <img src={sc.image} alt={sc.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        <div style={{ position: "absolute", top: 8, left: 8 }}>
-                          <Tag>{sc.category}</Tag>
-                        </div>
-                      </div>
-                      <div style={{ padding: 12, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)", lineHeight: 1.3 }}>{sc.title}</div>
-                          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>
-                            {sc.hours} hours • {sc.lessons} lessons
-                          </div>
-                        </div>
-                        <div className="tai-row tai-between tai-mt10" style={{ paddingTop: 8, borderTop: "1px solid var(--border)" }}>
-                          <span className="tai-row tai-gap4" style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>
-                            <Star size={12} fill="var(--primary)" color="var(--primary)" /> {sc.rating}
-                          </span>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-2)" }}>Explore →</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Real personalized AI recommendation - was imported but never
-              rendered, leaving only the hardcoded stock grid above. */}
+          {/* AI Insights Summary */}
           <AIRecommendationsCard user={user} courses={courses} session={session} goTab={goTab} maxItems={1} showSeeAll />
 
-          {/* Learning Activity Chart */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
-              <div>
-                <div className="tai-title-sm" style={{ fontSize: 14 }}>Learning Activity</div>
-                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Weekly study hours &amp; performance</div>
-              </div>
-              <span className="tai-tag" style={{ background: "rgba(79, 70, 229, 0.1)", color: "#4F46E5", fontWeight: 700, fontSize: 11, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                <TrendingUp size={12} /> 4.5h Peak Study
-              </span>
-            </div>
-
-            {/* Bar Chart Visualization */}
-            <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 120, padding: "0 10px 10px", borderBottom: "1px solid var(--border)" }}>
-              {WEEK_DAYS.map((d, i) => {
-                const isActive = i === activeDayIndex;
-                return (
-                  <div key={d.day} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: isActive ? "var(--primary)" : "var(--text-3)" }}>
-                      {d.hours}h
-                    </div>
-                    <div
-                      style={{
-                        width: 22, height: d.height, borderRadius: "6px 6px 2px 2px",
-                        background: isActive ? "var(--grad)" : "var(--surface-2)",
-                        boxShadow: isActive ? "0 4px 12px rgba(79, 70, 229, 0.35)" : "none",
-                        cursor: "pointer", transition: "all .16s ease"
-                      }}
-                      onClick={() => setActiveDayIndex(i)}
-                    />
-                    <div style={{ fontSize: 11, fontWeight: 600, color: isActive ? "var(--text)" : "var(--text-3)" }}>
-                      {d.day}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Assignment Tracker Section */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
-              <div>
-                <div className="tai-title-sm">Assignment Tracker</div>
-                <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 2 }}>Tasks and deliverables for your enrolled courses</div>
-              </div>
-              <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)" }}>
-                {ASSIGNMENTS.filter((a) => a.status !== "Completed").length} Active
-              </span>
-            </div>
-
-            <div className="tai-col tai-gap10">
-              {ASSIGNMENTS.map((a) => (
-                <div
-                  key={a.id}
-                  className="tai-row tai-between"
-                  style={{
-                    padding: "12px 14px", background: "var(--surface-3)", borderRadius: 8,
-                    border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease",
-                    flexWrap: "wrap", gap: 8
-                  }}
-                  onClick={() => goToMyCourses()}
-                >
-                  <div className="tai-row tai-gap12" style={{ flex: "1 1 180px", minWidth: 0 }}>
-                    <div style={{
-                      width: 34, height: 34, borderRadius: 10,
-                      background: a.tone === "danger" ? "var(--danger-bg)" : a.tone === "warning" ? "var(--warning-bg)" : "var(--success-bg)",
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-                    }}>
-                      <BookOpen size={16} color={a.tone === "danger" ? "var(--danger)" : a.tone === "warning" ? "var(--warning)" : "var(--success)"} />
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis" }}>{a.title}</div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>{a.module} • {a.due}</div>
-                    </div>
-                  </div>
-
-                  <Tag tone={a.tone}>{a.status}</Tag>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Peer Study Groups & Virtual Audio Lounge */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-              <div className="tai-row tai-gap8">
-                <Users size={16} color="var(--primary)" />
-                <span style={{ fontWeight: 700, fontSize: 14 }}>Active Study Lounges</span>
-              </div>
-              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => goTab("community")}>All groups →</span>
-            </div>
-
-            <div className="tai-col tai-gap10">
-              {[
-                { name: "Figma UI Critique Room", peers: 6, topic: "Design Systems", active: true },
-                { name: "Full-Stack AI Engineering Lab", peers: 4, topic: "LangChain & APIs", active: true }
-              ].map((grp, idx) => (
-                <div key={idx} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
-                  <div style={{ flex: "1 1 160px", minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis" }}>{grp.name}</div>
-                    <div className="tai-row tai-gap6" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, flexWrap: "wrap" }}>
-                      <span>{grp.topic}</span>
-                      <span>•</span>
-                      <span className="tai-row tai-gap4" style={{ color: "var(--success)", fontWeight: 700 }}>
-                        <Radio size={11} /> {grp.peers} active now
-                      </span>
-                    </div>
-                  </div>
-                  <button className="tai-btn tai-btn-primary tai-btn-sm" style={{ padding: "6px 12px", fontSize: 11.5, flexShrink: 0 }} onClick={() => goTab("community")}>
-                    Join Room
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        {/* RIGHT COLUMN: Streak Days, Today's Schedule, Leaderboard, Mentor 1:1, Badges */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
-          
-          {/* Achievements: Your Level, Streak & Badges */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-              <div className="tai-row tai-gap6" style={{ fontWeight: 800, fontSize: 14 }}>
-                <Award size={18} color="var(--primary)" />
-                <span>Your Level &amp; Badges</span>
-              </div>
-              <span className="tai-link" style={{ fontSize: 12, fontWeight: 700 }} onClick={() => push("achievements")}>
-                View All →
-              </span>
-            </div>
-
-            {/* Level & XP Meter */}
-            <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 6, fontSize: 11.5, fontWeight: 700, marginBottom: 5 }}>
-                <span style={{ color: "var(--text)" }}>Level {user?.level || 2} • Senior Specialist</span>
-                <span style={{ color: "var(--primary)", flexShrink: 0 }}>{(user?.totalPoints || 4520).toLocaleString()} / 5,000 XP</span>
-              </div>
-              <div style={{ height: 6, background: "var(--surface)", borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ width: "90%", height: "100%", background: "var(--primary, #4F46E5)", borderRadius: 3 }} />
-              </div>
-            </div>
-
-            {/* Streak Tracker */}
-            <div style={{ marginBottom: 14 }}>
-              <div className="tai-row tai-between" style={{ marginBottom: 8 }}>
-                <div className="tai-row tai-gap6" style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>
-                  <Flame size={15} color="#F59E0B" />
-                  <span>{user?.streak || 8} Day Learning Streak</span>
-                </div>
-                <Tag tone="warning">Active</Tag>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 4 }}>
-                {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => {
-                  const isActive = idx < 5;
-                  return (
-                    <div 
-                      key={idx}
-                      style={{
-                        width: 28, height: 28, borderRadius: "50%",
-                        background: isActive ? "#F59E0B" : "var(--surface-3)",
-                        color: isActive ? "#fff" : "var(--text-3)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontWeight: 800, fontSize: 11,
-                        boxShadow: isActive ? "0 2px 6px rgba(245, 158, 11, 0.3)" : "none"
-                      }}
-                    >
-                      {day}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Earned Badges Row */}
-            <div className="tai-row tai-between" style={{ gap: 6 }}>
-              {[
-                { name: "Figma Master", icon: Palette, color: "#6366F1", bg: "#EEF2FF" },
-                { name: "Prompt Pro", icon: Zap, color: "#10B981", bg: "#ECFDF5" },
-                { name: "7-Day Streak", icon: Flame, color: "#F59E0B", bg: "#FFFBEB" }
-              ].map((b, idx) => {
-                const BadgeIcon = b.icon;
-                return (
-                  <div key={idx} style={{ flex: 1, padding: "8px 4px", background: "var(--surface-3)", borderRadius: 8, textAlign: "center", border: "1px solid var(--border)" }}>
-                    <div style={{ width: 28, height: 28, borderRadius: 6, background: b.bg, display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 2 }}>
-                      <BadgeIcon size={14} color={b.color} />
-                    </div>
-                    <div style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text)" }}>{b.name}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Today's Schedule Card */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Today's Schedule</div>
-                <div style={{ fontSize: 11, color: "var(--text-3)" }}>Wednesday, 12 March 2024</div>
-              </div>
-              <Calendar size={16} color="var(--primary)" />
-            </div>
-
-            <div className="tai-col tai-gap10">
-              <div style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                <div className="tai-row tai-between">
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>08:30 AM • PREVIEW</span>
-                  <button 
-                    style={{ background: "#4F46E5", color: "#fff", border: "none", padding: "3px 10px", borderRadius: 99, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
-                    onClick={() => window.open("https://meet.google.com/new", "_blank")}
-                  >
-                    Join meeting
-                  </button>
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginTop: 6 }}>
-                  How to success in Marketing
-                </div>
-              </div>
-
-              <div
-                style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease" }}
-                onClick={() => goToMyCourses()}
-              >
-                <div className="tai-row tai-between">
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#EF4444" }}>10:00 AM • DEADLINE</span>
-                  <Tag tone="danger">Deadline</Tag>
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginTop: 6 }}>
-                  Marketing Campaign Capstone Due
-                </div>
-              </div>
-
-              <div
-                style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all .16s ease" }}
-                onClick={() => goTab("community")}
-              >
-                <div className="tai-row tai-between">
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>11:30 AM • PREVIEW</span>
-                  <Tag tone="primary">Workshop</Tag>
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginTop: 6 }}>
-                  UI/UX Design Systems Architecture
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Book 1:1 Mentor Session */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-              <div className="tai-row tai-gap6" style={{ fontWeight: 700, fontSize: 13.5 }}>
-                <GraduationCap size={16} color="var(--primary)" />
-                <span>Mentor Office Hours</span>
-              </div>
-              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => push("mentors")}>Book</span>
-            </div>
-
-            <div className="tai-col tai-gap8">
-              {[
-                { name: "Astrid Larsson", title: "Principal Design Mentor", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80", time: "Available Today 4 PM" },
-                { name: "Alex Rivera", title: "AI Lead Instructor", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80", time: "Available Tomorrow" }
-              ].map((m, idx) => (
-                <div key={idx} className="tai-row tai-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 8 }}>
-                  <div className="tai-row tai-gap8">
-                    <img src={m.avatar} alt={m.name} style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover" }} />
-                    <div>
-                      <div style={{ fontSize: 12.5, fontWeight: 700 }}>{m.name}</div>
-                      <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>{m.time}</div>
-                    </div>
-                  </div>
-                  <button className="tai-btn tai-btn-outline tai-btn-sm" style={{ padding: "4px 8px", fontSize: 11 }} onClick={() => push("mentors")}>
-                    1:1 Call
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Leaderboard Card */}
-          <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-            <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-              <div className="tai-row tai-gap6" style={{ fontWeight: 700, fontSize: 13.5 }}>
-                <Trophy size={16} color="#F59E0B" />
-                <span>Leaderboard</span>
-              </div>
-              <span className="tai-link" style={{ fontSize: 12 }} onClick={() => push("leaderboard")}>View All</span>
-            </div>
-
-            <div className="tai-col tai-gap8">
-              {[
-                { name: "Anna Marie", xp: "1,512 XP", rank: 1, avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" },
-                { name: "David Vance", xp: "1,380 XP", rank: 2, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" },
-                { name: "Elena Rostova", xp: "1,220 XP", rank: 3, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" }
-              ].map((s) => (
-                <div key={s.name} className="tai-row tai-between" style={{ padding: "6px 10px", background: "var(--surface-3)", borderRadius: 8 }}>
-                  <div className="tai-row tai-gap10">
-                    <span style={{ fontSize: 12, fontWeight: 800, color: s.rank === 1 ? "#F59E0B" : "var(--text-3)" }}>#{s.rank}</span>
-                    <img src={s.avatar} alt={s.name} style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
-                    <span style={{ fontSize: 13, fontWeight: 600 }}>{s.name}</span>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)" }}>{s.xp}</span>
-                </div>
-              ))}
-            </div>
-          </div>
 
         </div>
       </div>

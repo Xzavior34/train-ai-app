@@ -153,9 +153,9 @@ export function CommunityScreen({
       content: "I'm refining the color tokens for our enterprise chart library. On 10% opacity fills, WCAG AA passes, but AAA fails on some OLED displays. Which token mapping strategy do you recommend for secondary metric lines?",
       codeSnippet: `// Token Definition
 export const chartColors = {
-  primaryGlow: "rgba(99, 102, 241, 0.25)",
+  primaryGlow: "rgba(59, 130, 246, 0.25)",
   gridStroke: "var(--border-subtle)",
-  activeNode: "#818CF8"
+  activeNode: "#60A5FA"
 };`,
       tags: ["Design Critique", "Accessibility", "Design Tokens"],
       likes: 21,
@@ -422,13 +422,13 @@ export const chartColors = {
             width: 180,
             height: 180,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
 
-        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <div style={{ minWidth: 0, flex: "1 1 240px" }}>
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+          <div style={{ minWidth: 0, flex: "1 1 260px" }}>
             <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
               Train AI Community Hub
             </h1>
@@ -437,16 +437,22 @@ export const chartColors = {
             </p>
           </div>
 
-          <button
-            className="tai-btn tai-btn-primary"
-            onClick={() => setPostComposerOpen(true)}
-            style={{
-              padding: "8px 16px", borderRadius: 8, fontWeight: 700, fontSize: 13,
-              display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
-            }}
-          >
-            <Plus size={15} /> Share or Ask Question
-          </button>
+          <div className="tai-row tai-gap10" style={{ flexWrap: "wrap", alignItems: "center" }}>
+            <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
+              <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Discussions</div>
+              <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)" }}>{feedPosts.length} Threads</div>
+            </div>
+            <button
+              className="tai-btn tai-btn-primary"
+              onClick={() => setPostComposerOpen(true)}
+              style={{
+                padding: "8px 16px", borderRadius: 8, fontWeight: 700, fontSize: 13,
+                display: "inline-flex", alignItems: "center", gap: 6, flexShrink: 0
+              }}
+            >
+              <Plus size={15} /> Share / Ask
+            </button>
+          </div>
         </div>
       </div>
 
@@ -476,8 +482,8 @@ export const chartColors = {
           <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
             {[
               { k: "feed", label: "Community Feed", icon: MessageCircle },
-              { k: "instructors", label: "Instructors & Faculty", icon: GraduationCap },
-              { k: "events", label: "Live Events & AMAs", icon: Calendar },
+              { k: "cohort", label: "Cohort", icon: Users },
+              { k: "instructors", label: "Instructors", icon: GraduationCap },
               { k: "circles", label: "Study Circles", icon: Users },
               { k: "leaderboard", label: "Leaderboard", icon: Award },
             ].map(t => {
@@ -489,6 +495,8 @@ export const chartColors = {
                   onClick={() => {
                     if (t.k === "leaderboard") {
                       push("leaderboard");
+                    } else if (t.k === "cohort") {
+                      push("cohort");
                     } else {
                       setActiveTab(t.k);
                     }
@@ -697,8 +705,8 @@ export const chartColors = {
                   style={{
                     padding: "18px 16px",
                     borderRadius: 10,
-                    border: post.pinned ? "1.5px solid rgba(99, 102, 241, 0.45)" : "1px solid var(--border)",
-                    boxShadow: post.pinned ? "0 4px 20px rgba(79, 70, 229, 0.08)" : "var(--shadow-card)",
+                    border: post.pinned ? "1.5px solid rgba(59, 130, 246, 0.45)" : "1px solid var(--border)",
+                    boxShadow: post.pinned ? "0 4px 20px rgba(37, 99, 235, 0.08)" : "var(--shadow-card)",
                     background: "var(--surface)",
                     width: "100%",
                     boxSizing: "border-box"
@@ -724,7 +732,7 @@ export const chartColors = {
                       <div className="tai-row tai-gap6" style={{ minWidth: 0, flexWrap: "wrap" }}>
                         <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{post.author.name}</span>
                         {post.author.isStaff && (
-                          <span style={{ background: "#4F46E5", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
+                          <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
                             {post.author.badge}
                           </span>
                         )}
@@ -910,7 +918,7 @@ export const chartColors = {
                 className="tai-btn"
                 onClick={() => showToast("RSVP Confirmed! Calendar invite sent.")}
                 style={{
-                  width: "100%", background: "#4F46E5", color: "#fff", border: "none",
+                  width: "100%", background: "#2563EB", color: "#fff", border: "none",
                   padding: "8px 12px", borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: "pointer"
                 }}
               >
@@ -975,7 +983,7 @@ export const chartColors = {
             {UPCOMING_EVENTS.map(ev => (
               <div key={ev.id} className="tai-card" style={{ padding: 22, borderRadius: 10, background: "var(--surface)" }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10 }}>
-                  <span style={{ background: "rgba(99, 102, 241, 0.12)", color: "var(--primary)", fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 8 }}>
+                  <span style={{ background: "rgba(59, 130, 246, 0.12)", color: "var(--primary)", fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 8 }}>
                     {ev.type}
                   </span>
                   <span className="tai-row tai-gap4" style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>

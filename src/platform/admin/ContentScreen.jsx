@@ -577,8 +577,8 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 <div style={{
                   padding: "12px 16px",
                   borderRadius: 8,
-                  background: "rgba(79, 70, 229, 0.05)",
-                  border: "1px solid rgba(79, 70, 229, 0.2)",
+                  background: "rgba(37, 99, 235, 0.05)",
+                  border: "1px solid rgba(37, 99, 235, 0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -586,7 +586,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                   gap: 12
                 }}>
                   <div className="ta-row ta-gap10">
-                    <Zap size={18} color="#4F46E5" />
+                    <Zap size={18} color="#2563EB" />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>AI-Powered Curriculum Builder</div>
                       <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Generate modules, lesson outlines, and quizzes aligned with industry benchmarks in 1 click.</div>
@@ -1088,7 +1088,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                       height: 36,
                       padding: "0 14px",
                       borderRadius: 8,
-                      background: "#4F46E5",
+                      background: "#2563EB",
                       color: "#FFFFFF",
                       fontWeight: 700,
                       fontSize: 12.5,
