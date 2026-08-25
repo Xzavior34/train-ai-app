@@ -929,6 +929,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "learningPaths" && (
                 <LearningPathsScreen
+                  user={user}
+                  courses={courses}
                   session={session}
                   push={push}
                   back={back}
@@ -936,6 +938,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   pathsQuery={learningPathsQuery}
                   pathEnrollmentsQuery={pathEnrollmentsQuery}
                   enrollments={enrollmentsQuery.data || []}
+                  enrollInCourse={enrollInCourse}
+                  enrollmentsQuery={enrollmentsQuery}
                 />
               )}
               {screen === "schedule" && (

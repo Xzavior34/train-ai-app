@@ -824,36 +824,74 @@ export async function syncLearningPathProgress(userId, pathId, { currentIndex, i
 }
 
 export async function fetchMyLearningPathEnrollments(userId) {
-  if (!supabase || !userId) return [];
-  const { data, error } = await supabase
-    .from("learning_path_enrollments")
-    .select("*")
-    .eq("user_id", userId);
-  if (error) { console.warn("Learning path enrollments fetch warning:", error); return []; }
-  return data || [];
+  let localList = [];
+  try {
+    const localKey = `trainai_path_enrollments_${userId}`;
+    localList = JSON.parse(localStorage.getItem(localKey) || "[]");
+  } catch {}
+
+  if (!supabase || !userId) return localList;
+
+  try {
+    const { data, error } = await supabase
+      .from("learning_path_enrollments")
+      .select("*")
+      .eq("user_id", userId);
+    if (error) {
+      console.warn("Learning path enrollments fetch warning:", error);
+      return localList;
+    }
+    const dbList = data || [];
+    const merged = new Map(localList.map(e => [e.path_id || e.id, e]));
+    dbList.forEach(e => merged.set(e.path_id || e.id, e));
+    return Array.from(merged.values());
+  } catch (e) {
+    console.warn("fetchMyLearningPathEnrollments catch:", e);
+    return localList;
+  }
 }
 
-// `learning_path_enrollments` has no declared unique constraint on
-// (user_id, path_id) in the shared schema (unlike course_enrollments, whose
-// `onConflict: "user_id,course_id"` upsert relies on one that IS confirmed
-// there) - so this checks for an existing row first rather than assuming an
-// upsert target that may not exist.
 export async function enrollInLearningPath(userId, pathId) {
-  if (!supabase || !userId || !pathId) return null;
-  const { data: existing } = await supabase
-    .from("learning_path_enrollments")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("path_id", pathId)
-    .maybeSingle();
-  if (existing) return existing;
-  const { data, error } = await supabase
-    .from("learning_path_enrollments")
-    .insert({ user_id: userId, path_id: pathId, status: "in_progress", current_course_index: 0 })
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  if (!userId || !pathId) return null;
+  const timestamp = new Date().toISOString();
+  const enrollmentObj = { user_id: userId, path_id: pathId, status: "in_progress", current_course_index: 0, created_at: timestamp };
+
+  // 1. Resilient local storage write
+  try {
+    const localKey = `trainai_path_enrollments_${userId}`;
+    const list = JSON.parse(localStorage.getItem(localKey) || "[]");
+    if (!list.some(e => (e.path_id || e.id) === pathId)) {
+      list.push(enrollmentObj);
+      localStorage.setItem(localKey, JSON.stringify(list));
+    }
+  } catch {}
+
+  if (!supabase) return enrollmentObj;
+
+  // 2. Supabase write
+  try {
+    const { data: existing } = await supabase
+      .from("learning_path_enrollments")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("path_id", pathId)
+      .maybeSingle();
+    if (existing) return existing;
+
+    const { data, error } = await supabase
+      .from("learning_path_enrollments")
+      .insert(enrollmentObj)
+      .select()
+      .maybeSingle();
+    if (error) {
+      console.warn("enrollInLearningPath DB notice:", error);
+      return enrollmentObj;
+    }
+    return data || enrollmentObj;
+  } catch (e) {
+    console.warn("enrollInLearningPath catch:", e);
+    return enrollmentObj;
+  }
 }
 
 // Course bookmarking (Course UI brief: "Keep: ... Bookmarking. Bookmarked
