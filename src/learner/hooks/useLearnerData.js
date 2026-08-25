@@ -122,13 +122,21 @@ export function useLearnerData(session, screen, params) {
     if (!session) return [];
     const rows = await fetchLeaderboard(50);
     return rows.map((r, i) => ({
+      user_id: r.user_id,
       rank: i + 1,
       name: r.display_name || "Learner",
       initials: (r.display_name || "L").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
-      points: r.total_points,
-      streak: r.streak_days,
-      level: r.current_level,
-      you: r.user_id === session.user.id,
+      avatar_url: r.avatar_url || null,
+      avatar: r.avatar_url || null,
+      role: r.role || "Specialist",
+      cohort_name: r.cohort_name || "Active Batch",
+      points: r.total_points || 0,
+      total_points: r.total_points || 0,
+      streak: r.streak_days || r.streak || 1,
+      level: r.current_level || 1,
+      completed_courses: r.completed_courses || 0,
+      badges_count: r.badges_count || 1,
+      you: r.user_id === session?.user?.id,
     }));
   }, [session?.user?.id]);
 

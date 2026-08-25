@@ -6,6 +6,24 @@ import {
 } from "lucide-react";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
+const FALLBACK_AVATARS = [
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=140&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=140&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=140&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=140&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=140&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=140&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=140&auto=format&fit=crop&q=80",
+  "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=140&auto=format&fit=crop&q=80"
+];
+
+function resolveAvatar(l, index = 0) {
+  if (l?.avatar && typeof l.avatar === "string" && l.avatar.startsWith("http")) return l.avatar;
+  if (l?.avatar_url && typeof l.avatar_url === "string" && l.avatar_url.startsWith("http")) return l.avatar_url;
+  if (l?.avatarUrl && typeof l.avatarUrl === "string" && l.avatarUrl.startsWith("http")) return l.avatarUrl;
+  return FALLBACK_AVATARS[index % FALLBACK_AVATARS.length];
+}
+
 export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, push }) {
   const [timeframe, setTimeframe] = useState("week"); // "all" | "month" | "week" | "cohort"
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,21 +136,26 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
     }
   ];
 
-  const learners = (leaderboardQuery?.data && leaderboardQuery.data.length > 0)
+  const rawLearners = (leaderboardQuery?.data && leaderboardQuery.data.length > 0)
     ? leaderboardQuery.data.map((l, i) => ({
         id: l.user_id || `l-${i}`,
         rank: i + 1,
         name: l.display_name || l.name || "Learner",
         role: l.role || "Specialist",
         cohort: l.cohort_name || "Active Batch",
-        avatar: l.avatar_url,
-        xp: l.total_points || l.xp || 1000,
-        streak: l.streak || 5,
-        completedCourses: l.completed_courses || 2,
-        badgesCount: l.badges_count || 4,
-        isCurrentUser: l.user_id === session?.user?.id
+        avatar: resolveAvatar(l, i),
+        xp: l.total_points || l.points || l.xp || 1000,
+        streak: l.streak || l.streak_days || 5,
+        completedCourses: l.completed_courses || l.completedCourses || 2,
+        badgesCount: l.badges_count || l.badgesCount || 4,
+        isCurrentUser: l.user_id === session?.user?.id || l.you || false
       }))
-    : (isMockDataEnabled() ? DEFAULT_LEADERBOARD : []);
+    : DEFAULT_LEADERBOARD;
+
+  const learners = rawLearners.map((l, i) => ({
+    ...l,
+    avatar: l.avatar || resolveAvatar(l, i)
+  }));
 
   const filteredLearners = learners.filter(l =>
     l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -196,12 +219,13 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                 padding: "14px 10px", borderRadius: 12
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
-                  <img
+                  <Avatar
+                    size={52}
                     src={learners[1].avatar}
-                    alt={learners[1].name}
+                    initials={learners[1].name?.[0] || "L"}
                     style={{
-                      width: 52, height: 52, borderRadius: "50%",
-                      border: "3px solid #94A3B8", objectFit: "cover",
+                      borderRadius: "50%",
+                      border: "3px solid #94A3B8",
                       boxShadow: "0 4px 12px rgba(148, 163, 184, 0.4)"
                     }}
                   />
@@ -237,12 +261,13 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
                   <Crown size={22} color="#F59E0B" style={{ position: "absolute", top: -18, left: "50%", transform: "translateX(-50%)", filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
-                  <img
+                  <Avatar
+                    size={66}
                     src={learners[0].avatar}
-                    alt={learners[0].name}
+                    initials={learners[0].name?.[0] || "L"}
                     style={{
-                      width: 66, height: 66, borderRadius: "50%",
-                      border: "3.5px solid #F59E0B", objectFit: "cover",
+                      borderRadius: "50%",
+                      border: "3.5px solid #F59E0B",
                       boxShadow: "0 0 20px rgba(245, 158, 11, 0.4)"
                     }}
                   />
@@ -274,12 +299,13 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                 padding: "14px 10px", borderRadius: 12
               }}>
                 <div style={{ position: "relative", marginBottom: 6 }}>
-                  <img
+                  <Avatar
+                    size={52}
                     src={learners[2].avatar}
-                    alt={learners[2].name}
+                    initials={learners[2].name?.[0] || "L"}
                     style={{
-                      width: 52, height: 52, borderRadius: "50%",
-                      border: "3px solid #D97706", objectFit: "cover",
+                      borderRadius: "50%",
+                      border: "3px solid #D97706",
                       boxShadow: "0 4px 12px rgba(217, 119, 6, 0.3)"
                     }}
                   />
@@ -363,7 +389,7 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
             }}>
               #4
             </span>
-            <Avatar size={32} src={user?.avatarUrl} initials={user?.name?.[0] || "E"} />
+            <Avatar size={32} src={resolveAvatar(user, 3)} initials={user?.name?.[0] || "E"} />
             <div>
               <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{user?.name || "Evelyn Hayes"} (You)</div>
               <div style={{ fontSize: 11, color: "var(--text-3)" }}>Top 5% of all active learners</div>
@@ -398,12 +424,12 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
               </tr>
             </thead>
             <tbody>
-              {filteredLearners.map((l) => {
+              {filteredLearners.map((l, idx) => {
                 const isTop3 = l.rank <= 3;
                 const rankColor = l.rank === 1 ? "#F59E0B" : l.rank === 2 ? "#94A3B8" : l.rank === 3 ? "#D97706" : "var(--text-2)";
                 return (
                   <tr
-                    key={l.id}
+                    key={l.id || idx}
                     style={{
                       borderBottom: "1px solid var(--border)",
                       background: l.isCurrentUser ? "rgba(37, 99, 235, 0.05)" : "transparent",
@@ -415,10 +441,11 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
                     </td>
                     <td style={{ padding: "10px 14px" }}>
                       <div className="tai-row tai-gap8">
-                        <img
-                          src={l.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80"}
-                          alt={l.name}
-                          style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover" }}
+                        <Avatar
+                          size={32}
+                          src={l.avatar || resolveAvatar(l, idx)}
+                          initials={l.name?.[0] || "L"}
+                          style={{ borderRadius: "50%", flexShrink: 0 }}
                         />
                         <div>
                           <div style={{ fontWeight: 700, color: "var(--text)", fontSize: 13 }}>
