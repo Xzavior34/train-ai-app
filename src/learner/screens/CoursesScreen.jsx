@@ -368,83 +368,30 @@ export function CoursesScreen({
 
   const enrolledList = allAvailableCourses.filter(c => c.enrolled);
 
-  // Build spotlight slides with learner's track course (from survey / user.track) automatically first
-  const baseSlides = (courses && courses.length > 0)
-    ? courses.slice(0, 5).map((c, idx) => {
-        // Find sibling courses in the same category/track to build the required track pathway
-        const cCat = (c.category || "").toLowerCase();
-        const cTitle = (c.title || "").toLowerCase();
-        const siblingCourses = courses
-          .filter(other => {
-            const oCat = (other.category || "").toLowerCase();
-            const oTitle = (other.title || "").toLowerCase();
-            if (other.id === c.id) return false;
-            return (
-              (cCat && oCat && (cCat.includes(oCat) || oCat.includes(cCat))) ||
-              (cTitle.includes("design") && oTitle.includes("design")) ||
-              (cTitle.includes("ai") && oTitle.includes("ai")) ||
-              (cTitle.includes("web") && oTitle.includes("web")) ||
-              (cTitle.includes("cloud") && oTitle.includes("cloud")) ||
-              (cTitle.includes("data") && oTitle.includes("data"))
-            );
-          })
-          .slice(0, 2);
-
-        const required = [
-          { id: c.id, title: c.title, progress: c.progress || 0 },
-          ...siblingCourses.map(sc => ({ id: sc.id, title: sc.title, progress: sc.progress || 0 }))
-        ];
-
-        // If fewer than 3 sibling courses exist, pad with track milestones
-        if (required.length < 3) {
-          if (cTitle.includes("design") || cCat.includes("design")) {
-            if (!required.some(r => r.id === "course-spatial-ui")) {
-              required.push({ id: "course-spatial-ui", title: "Spatial UI & VisionOS Tokens", progress: 0 });
-            }
-            if (required.length < 3) {
-              required.push({ id: "spec-design-lab", title: "Interactive Prototyping Capstone", progress: 0 });
-            }
-          } else if (cTitle.includes("web") || cTitle.includes("full") || cCat.includes("engineering")) {
-            if (!required.some(r => r.id === "course-cloud-devops")) {
-              required.push({ id: "course-cloud-devops", title: "Cloud DevOps & CI/CD Deployment", progress: 0 });
-            }
-            if (required.length < 3) {
-              required.push({ id: "spec-fullstack-capstone", title: "Production App Capstone Review", progress: 0 });
-            }
-          } else {
-            if (!required.some(r => r.id === "course-prompt-pro")) {
-              required.push({ id: "course-prompt-pro", title: "Advanced Autonomous Agent Schemas", progress: 0 });
-            }
-            if (required.length < 3) {
-              required.push({ id: "spec-ai-capstone", title: "Multi-Modal Capstone Evaluation", progress: 0 });
-            }
-          }
-        }
-
-        return {
-          id: c.id,
-          badge: c.enrolled ? "ENROLLED • IN PROGRESS" : "FEATURED TRACK SPOTLIGHT",
-          badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#2563EB" : "#D97706",
-          cohortTag: c.category ? `${c.category} Track` : "Professional Track",
-          pathwayName: c.category || "Professional Track",
-          title: c.title,
-          description: c.tagline || c.description || "Master core industry competencies, practical design token workflows, and production implementations.",
-          rating: c.rating || 4.9,
-          reviews: `${c.reviewsCount || 420} reviews`,
-          enrolled: `${c.studentsCount || "1.2k"} Enrolled`,
-          status: c.enrolled ? "In Progress" : "Available",
-          progress: c.progress || 0,
-          lessonsRemaining: `${c.lessons || 12} lessons left`,
-          instructor: c.instructor || "Curriculum Specialist",
-          instructorRole: c.instructorRole || "Lead Instructor",
-          instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-          coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
-          cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Lesson") : "Explore Course",
-          action: c.enrolled ? "continue" : "explore",
-          lessonsText: `${c.lessons || 12} Lessons • ${c.hours || 8} hrs`,
-          requiredCourses: required
-        };
-      })
+  // Build spotlight slides for ALL true courses and tracks in the catalog without hardcoded limits
+  const baseSlides = (allAvailableCourses && allAvailableCourses.length > 0)
+    ? allAvailableCourses.map((c, idx) => ({
+        id: c.id,
+        badge: c.enrolled ? (c.progress > 0 ? `ENROLLED • ${c.progress}% COMPLETED` : "ENROLLED • READY TO START") : "FEATURED TRACK SPOTLIGHT",
+        badgeGradient: idx % 3 === 0 ? "#059669" : idx % 3 === 1 ? "#2563EB" : "#D97706",
+        cohortTag: c.category ? `${c.category} Track` : "Professional Track",
+        pathwayName: c.category || "Professional Track",
+        title: c.title,
+        description: c.tagline || c.description || "Master core industry competencies, practical design token workflows, and production implementations.",
+        rating: c.rating || 4.9,
+        reviews: `${c.reviewsCount || 420} reviews`,
+        enrolled: `${c.studentsCount || "1.2k"} Enrolled`,
+        status: c.enrolled ? "In Progress" : "Available",
+        progress: c.progress || 0,
+        lessonsRemaining: `${c.lessons || c.lessonsCount || 12} lessons`,
+        instructor: c.instructor || "Curriculum Specialist",
+        instructorRole: c.instructorRole || "Lead Instructor",
+        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
+        cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Lesson") : "Explore Course",
+        action: c.enrolled ? "continue" : "explore",
+        lessonsText: `${c.lessons || c.lessonsCount || 12} Lessons • ${c.hours || 8} hrs`
+      }))
     : SPOTLIGHT_SLIDES;
 
   // Reorder slides so learner's survey track is displayed first
@@ -520,7 +467,7 @@ export function CoursesScreen({
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       
       {/* =========================================================================
-          DYNAMIC MOVING SPOTLIGHT HERO CAROUSEL (SLEEK OLD LOOK)
+          DYNAMIC MOVING SPOTLIGHT HERO CAROUSEL (SLEEK LOOK)
           ========================================================================= */}
       {currentSpotlight && (
         <div
@@ -601,54 +548,6 @@ export function CoursesScreen({
                   </div>
                   <div style={{ height: 6, borderRadius: 99, background: "rgba(255, 255, 255, 0.12)", overflow: "hidden" }}>
                     <div style={{ width: `${currentSpotlight.progress}%`, height: "100%", background: "#10B981", borderRadius: 99 }} />
-                  </div>
-                </div>
-              )}
-
-              {/* Pathway Required Courses Sequence Stepper */}
-              {currentSpotlight.requiredCourses && currentSpotlight.requiredCourses.length > 0 && (
-                <div style={{ marginBottom: 12 }}>
-                  <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, color: "#94A3B8", marginBottom: 6 }}>
-                    <span className="tai-row tai-gap4" style={{ alignItems: "center" }}>
-                      <Map size={11} color="#60A5FA" />
-                      <span>PATHWAY: {currentSpotlight.pathwayName || "LEARNING TRACK"}</span>
-                    </span>
-                    <span style={{ color: "#60A5FA" }}>
-                      {currentSpotlight.requiredCourses.filter(c => (c.progress || 0) >= 100).length} of {currentSpotlight.requiredCourses.length} Courses Complete
-                    </span>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 6 }}>
-                    {currentSpotlight.requiredCourses.map((rc, i) => {
-                      const isDone = (rc.progress || 0) >= 100;
-                      const isInProgress = (rc.progress || 0) > 0 && !isDone;
-                      return (
-                        <div
-                          key={rc.id || i}
-                          onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: rc.id }); }}
-                          style={{
-                            padding: "6px 8px",
-                            borderRadius: 6,
-                            background: isInProgress ? "rgba(37, 99, 235, 0.28)" : isDone ? "rgba(16, 185, 129, 0.15)" : "rgba(255, 255, 255, 0.06)",
-                            border: isInProgress ? "1px solid #60A5FA" : isDone ? "1px solid rgba(16, 185, 129, 0.35)" : "1px solid rgba(255, 255, 255, 0.1)",
-                            cursor: "pointer",
-                            transition: "all 0.15s ease"
-                          }}
-                          title={`Click to open course: ${rc.title}`}
-                        >
-                          <div className="tai-row tai-between" style={{ marginBottom: 2 }}>
-                            <span style={{ fontSize: 9.5, fontWeight: 800, color: isDone ? "#34D399" : isInProgress ? "#93C5FD" : "#94A3B8" }}>
-                              Step 0{i + 1}
-                            </span>
-                            <span style={{ fontSize: 9.5, fontWeight: 700, color: isDone ? "#34D399" : isInProgress ? "#60A5FA" : "#64748B" }}>
-                              {isDone ? "✓ Done" : isInProgress ? `${rc.progress}%` : "Required"}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {rc.title}
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
                 </div>
               )}
