@@ -302,8 +302,8 @@ export const TOKENS = `
   .tai-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap: nowrap; gap: 10px; padding: 6px 0 14px; width: 100%; box-sizing: border-box; }
   .tai-topbar > .tai-row.tai-gap12 { min-width: 0; flex: 1; }
   .tai-topbar-actions { flex-wrap: nowrap; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
-  .tai-h1 { font-size: clamp(17px, 2.5vw, 20px); font-weight: 800; letter-spacing: -0.02em; margin:0; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-  .tai-sub { font-size: 12px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+  .tai-h1 { font-size: clamp(17px, 3.5vw, 20px); font-weight: 800; letter-spacing: -0.02em; margin:0; color: var(--text); word-break: break-word; line-height: 1.25; }
+  .tai-sub { font-size: 12px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; word-break: break-word; line-height: 1.35; }
   .tai-iconbtn {
     width:32px; height:32px; border-radius:8px;
     background: var(--glass-surface); backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm);
@@ -521,30 +521,30 @@ export const TOKENS = `
   @media (max-width: 899px) {
     .tai-header-search { display: none; }
     .tai-desktop-only { display: none !important; }
-    .tai-global-header { padding: 0 16px; height: 56px; width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-global-header { padding: 0 14px; height: 54px; width: 100%; max-width: 100%; box-sizing: border-box; }
     .tai-header-brand img, .tai-header-logo { height: 20px !important; }
-    .tai-body { padding: 16px 16px calc(88px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-streak-pill, .tai-credits-pill { padding: 6px 10px; font-size: 12px; gap: 5px; }
-    .tai-header-right { gap: 8px; }
-    .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 16px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-card { padding: 16px 14px !important; border-radius: 10px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-hero-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
-    .tai-hero-btn { width: 100% !important; justify-content: center !important; padding: 10px 16px !important; font-size: 13px !important; }
+    .tai-body { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-streak-pill, .tai-credits-pill { padding: 5px 8px; font-size: 11.5px; gap: 4px; }
+    .tai-header-right { gap: 6px; }
+    .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-card { padding: 14px 12px !important; border-radius: 10px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow-wrap: break-word !important; }
+    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-hero-row { flex-direction: column !important; align-items: stretch !important; gap: 10px !important; }
+    .tai-hero-btn { width: 100% !important; justify-content: center !important; padding: 9px 14px !important; font-size: 13px !important; }
     .tai-roadmap-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
     .tai-roadmap-item { padding: 7px 4px !important; }
     .tai-roadmap-item-title { font-size: 10px !important; }
     .tai-roadmap-item-status { font-size: 8.5px !important; }
   }
   @media (max-width: 480px) {
-    .tai-global-header { padding: 0 14px; height: 54px; width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-header-brand img, .tai-header-logo { height: 19px !important; }
-    .tai-body { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-card { padding: 14px 14px !important; border-radius: 10px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
-    .tai-iconbtn { width: 34px; height: 34px; border-radius: 10px; }
-    .tai-topbar { padding: 4px 0 12px; }
-    .tai-h1 { font-size: 19px; }
-    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 12px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+    .tai-global-header { padding: 0 12px; height: 52px; width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-header-brand img, .tai-header-logo { height: 18px !important; }
+    .tai-body { padding: 12px 10px calc(86px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-card { padding: 12px 10px !important; border-radius: 10px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow-wrap: break-word !important; }
+    .tai-iconbtn { width: 32px; height: 32px; border-radius: 8px; }
+    .tai-topbar { padding: 2px 0 10px; }
+    .tai-h1 { font-size: 18px; }
+    .tai-grid2, .tai-grid3, .tai-grid4 { grid-template-columns: 1fr !important; gap: 10px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .tai-roadmap-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 4px !important; }
     .tai-roadmap-item { padding: 6px 2px !important; border-radius: 8px !important; }
     .tai-roadmap-item-title { font-size: 9.5px !important; }

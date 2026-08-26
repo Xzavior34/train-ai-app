@@ -829,7 +829,7 @@ export function LearningPathsScreen({
                           {course.status === "completed" ? <Check size={14} /> : idx + 1}
                         </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", wordBreak: "break-word", lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                             {course.title}
                           </div>
                           <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>
