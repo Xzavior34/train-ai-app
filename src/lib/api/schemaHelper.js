@@ -1006,6 +1006,24 @@ export async function fetchCohortPostsFeed(cohortId) {
   }));
 }
 
+// Create a post or message in a cohort (real `cohort_posts` table)
+export async function createCohortPost({ cohortId, authorId, content, isAnnouncement = false, isPinned = false }) {
+  if (!supabase || !cohortId || !authorId || !content?.trim()) return null;
+  const { data, error } = await supabase
+    .from("cohort_posts")
+    .insert({
+      cohort_id: cohortId,
+      author_id: authorId,
+      content: content.trim(),
+      is_announcement: isAnnouncement,
+      is_pinned: isPinned,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 // Reply to a cohort post (real `cohort_post_replies` table). The live RLS
 // policy (cpr_insert_member in 0007_missing_schema.sql) only checks
 // author_id = auth.uid() for inserts - no separate client-side membership

@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Layers, Video, Calendar, FileText, Link2, ExternalLink, Flame, Users,
-  CheckCircle2, Clock, Play, ArrowRight, BookOpen, Star, MessageCircle, Heart, GraduationCap
+  CheckCircle2, Clock, Play, ArrowRight, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
+import { createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
 
 export function CohortScreen({
   cohort, cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
@@ -14,6 +15,10 @@ export function CohortScreen({
 }) {
   const [tab, setTab] = useState("chat"); // "chat" | "courses" | "resources" | "sessions" | "members"
   const [expandedPostId, setExpandedPostId] = useState(null);
+  const [newPostText, setNewPostText] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [replyInputs, setReplyInputs] = useState({});
+  const [submittingReply, setSubmittingReply] = useState(false);
 
   if (cohortMembershipQuery?.loading && !cohort) {
     return (
@@ -191,16 +196,68 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "chat" && (
         <div className="tai-col tai-gap14">
+          {/* Post to Cohort Composer */}
+          <div className="tai-card" style={{ padding: 16, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 8 }}>
+              Share with your Cohort
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <textarea
+                placeholder="Ask a question, share progress, or discuss sprint topics..."
+                value={newPostText}
+                onChange={(e) => setNewPostText(e.target.value)}
+                rows={2}
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  border: "1px solid var(--border)",
+                  background: "var(--surface-2)",
+                  color: "var(--text)",
+                  fontSize: 13,
+                  resize: "vertical",
+                  outline: "none"
+                }}
+              />
+              <button
+                className="tai-btn tai-btn-primary"
+                style={{ height: 42, padding: "0 16px", borderRadius: 8, fontWeight: 800, display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}
+                disabled={posting || !newPostText.trim()}
+                onClick={async () => {
+                  if (!session?.user?.id || !cohort?.id || !newPostText.trim()) return;
+                  setPosting(true);
+                  try {
+                    await createCohortPost({
+                      cohortId: cohort.id,
+                      authorId: session.user.id,
+                      content: newPostText.trim()
+                    });
+                    setNewPostText("");
+                    cohortPostsQuery?.refetch();
+                    showToast?.("Posted to cohort feed!");
+                  } catch (e) {
+                    showToast?.(e?.message || "Failed to post to cohort feed.");
+                  } finally {
+                    setPosting(false);
+                  }
+                }}
+              >
+                <Send size={14} />
+                <span>{posting ? "Posting..." : "Post"}</span>
+              </button>
+            </div>
+          </div>
+
           {cohortPostsQuery?.loading && <div className="tai-empty">Loading cohort chat...</div>}
           {!cohortPostsQuery?.loading && posts.length === 0 && (
-            <div className="tai-empty">No posts in your cohort chat yet.</div>
+            <div className="tai-empty">No posts in your cohort chat yet. Be the first to start the discussion!</div>
           )}
           {posts.map(cp => (
             <div
               key={cp.id}
               className="tai-card"
               style={{
-                padding: 22,
+                padding: 20,
                 borderRadius: 10,
                 border: cp.is_announcement ? "1.5px solid rgba(59, 130, 246, 0.4)" : "1px solid var(--border)",
                 background: "var(--surface)"
@@ -211,10 +268,12 @@ export function CohortScreen({
                   <Avatar initials={initialsOf(cp.user_profiles?.display_name)} size={38} src={cp.user_profiles?.avatar_url} />
                   <div style={{ minWidth: 0 }}>
                     <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
-                      <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{cp.user_profiles?.display_name || "Cohort Facilitator"}</span>
-                      <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
-                        INSTRUCTOR
-                      </span>
+                      <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{cp.user_profiles?.display_name || "Cohort Member"}</span>
+                      {cp.user_profiles?.role === "admin" || cp.user_profiles?.role === "mentor" ? (
+                        <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
+                          INSTRUCTOR
+                        </span>
+                      ) : null}
                     </div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{timeAgo(cp.created_at)}</div>
                   </div>
@@ -222,31 +281,120 @@ export function CohortScreen({
                 {cp.is_announcement && <Tag tone="warning">Announcement</Tag>}
               </div>
 
-              <p style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.6, margin: "0 0 12px" }}>
+              <p style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.6, margin: "0 0 12px", whiteSpace: "pre-wrap" }}>
                 {cp.content}
               </p>
 
-              <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                <span className="tai-row tai-gap4" style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 700 }}>
-                  <Heart size={14} color="#EF4444" fill="#EF4444" /> {cp.reaction_count || 0} Reactions
-                </span>
+              <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", alignItems: "center" }}>
+                <button
+                  type="button"
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12.5,
+                    color: "var(--text-2)",
+                    fontWeight: 700,
+                    padding: "4px 8px",
+                    borderRadius: 6
+                  }}
+                  onClick={async () => {
+                    if (!session?.user?.id) return;
+                    try {
+                      await toggleCohortPostReaction({ postId: cp.id, userId: session.user.id });
+                      cohortPostsQuery?.refetch();
+                    } catch {}
+                  }}
+                >
+                  <Heart size={14} color="#EF4444" fill={cp.reaction_count > 0 ? "#EF4444" : "none"} />
+                  <span>{cp.reaction_count || 0} Likes</span>
+                </button>
 
                 <button
                   className="tai-btn tai-btn-ghost tai-btn-sm"
                   onClick={() => setExpandedPostId(expandedPostId === cp.id ? null : cp.id)}
                 >
-                  <MessageCircle size={13} /> {(cp.cohort_post_replies || []).length} Instructor Notes
+                  <MessageCircle size={13} /> {(cp.cohort_post_replies || []).length} Replies
                 </button>
               </div>
 
               {expandedPostId === cp.id && (
                 <div className="tai-col tai-gap8" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
                   {(cp.cohort_post_replies || []).map(rep => (
-                    <div key={rep.id} style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 10 }}>
-                      <span style={{ fontWeight: 800, fontSize: 12.5, color: "var(--text)" }}>{rep.user_profiles?.display_name || "Instructor"}: </span>
-                      <span style={{ fontSize: 12.5, color: "var(--text-2)" }}>{rep.content}</span>
+                    <div key={rep.id} style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 8 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                        <span style={{ fontWeight: 800, fontSize: 12.5, color: "var(--text)" }}>{rep.user_profiles?.display_name || "Peer"}:</span>
+                        <span style={{ fontSize: 11, color: "var(--text-3)" }}>{timeAgo(rep.created_at)}</span>
+                      </div>
+                      <span style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.45 }}>{rep.content}</span>
                     </div>
                   ))}
+
+                  {/* Reply Input Form */}
+                  <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                    <input
+                      type="text"
+                      placeholder="Write a reply..."
+                      value={replyInputs[cp.id] || ""}
+                      onChange={(e) => setReplyInputs(prev => ({ ...prev, [cp.id]: e.target.value }))}
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter" && !e.shiftKey && (replyInputs[cp.id] || "").trim()) {
+                          e.preventDefault();
+                          if (!session?.user?.id) return;
+                          setSubmittingReply(true);
+                          try {
+                            await addCohortPostReply({
+                              postId: cp.id,
+                              authorId: session.user.id,
+                              content: (replyInputs[cp.id] || "").trim()
+                            });
+                            setReplyInputs(prev => ({ ...prev, [cp.id]: "" }));
+                            cohortPostsQuery?.refetch();
+                          } catch (err) {
+                            showToast?.(err?.message || "Failed to post reply.");
+                          } finally {
+                            setSubmittingReply(false);
+                          }
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: "8px 12px",
+                        borderRadius: 6,
+                        border: "1px solid var(--border)",
+                        background: "var(--surface-2)",
+                        color: "var(--text)",
+                        fontSize: 12.5,
+                        outline: "none"
+                      }}
+                    />
+                    <button
+                      className="tai-btn tai-btn-primary tai-btn-sm"
+                      disabled={submittingReply || !(replyInputs[cp.id] || "").trim()}
+                      onClick={async () => {
+                        if (!session?.user?.id || !(replyInputs[cp.id] || "").trim()) return;
+                        setSubmittingReply(true);
+                        try {
+                          await addCohortPostReply({
+                            postId: cp.id,
+                            authorId: session.user.id,
+                            content: (replyInputs[cp.id] || "").trim()
+                          });
+                          setReplyInputs(prev => ({ ...prev, [cp.id]: "" }));
+                          cohortPostsQuery?.refetch();
+                        } catch (err) {
+                          showToast?.(err?.message || "Failed to post reply.");
+                        } finally {
+                          setSubmittingReply(false);
+                        }
+                      }}
+                    >
+                      Reply
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
