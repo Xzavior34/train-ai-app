@@ -741,6 +741,17 @@ export function BrandLogo({ height = 22, isMinimized = false, style = {} }) {
 
 export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_owner_sidebar_minimized") === "true");
+  const [isDarkTheme, setIsDarkTheme] = useState(() => getStoredThemeDark());
+
+  useEffect(() => {
+    const syncTheme = () => setIsDarkTheme(getStoredThemeDark());
+    window.addEventListener("storage", syncTheme);
+    window.addEventListener("trainai-theme-change", syncTheme);
+    return () => {
+      window.removeEventListener("storage", syncTheme);
+      window.removeEventListener("trainai-theme-change", syncTheme);
+    };
+  }, []);
 
   const toggleMinimized = () => {
     setIsMinimized(prev => {
@@ -769,6 +780,45 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
         </div>
 
+        {/* Quick Search Shortcut in Sidebar */}
+        {!isMinimized ? (
+          <div
+            className="ta-sidebar-search-btn"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "var(--surface-3)",
+              border: "1px solid var(--border)",
+              borderRadius: 9,
+              padding: "7px 10px",
+              fontSize: 12.5,
+              color: "var(--text-3)",
+              cursor: "pointer",
+              margin: "2px 0 10px",
+              transition: "all 0.15s ease"
+            }}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("trainai-open-search"));
+              onClose();
+            }}
+            title="Search platform (⌘K)"
+          >
+            <Search size={14} color="var(--text-3)" />
+            <span style={{ flex: 1, fontSize: 12, color: "var(--text-3)" }}>Search platform...</span>
+            <span style={{ fontSize: 9.5, fontWeight: 700, background: "var(--surface)", color: "var(--text-2)", padding: "1px 5px", borderRadius: 4, border: "1px solid var(--border)" }}>⌘K</span>
+          </div>
+        ) : (
+          <div
+            className="ta-nav-item"
+            onClick={() => window.dispatchEvent(new CustomEvent("trainai-open-search"))}
+            title="Search platform (⌘K)"
+            style={{ justifyContent: "center", margin: "2px 0 8px" }}
+          >
+            <Search size={16} />
+          </div>
+        )}
+
         <div className="ta-sidebar-nav">
           {!isMinimized && <div className="ta-nav-section-title">Platform Owner</div>}
           {SUPERADMIN_NAV.map(s => {
@@ -789,6 +839,21 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
         </div>
 
         <div className="ta-nav-footer">
+          {/* Dark / Light Theme Toggle */}
+          <div
+            className="ta-nav-item"
+            onClick={() => {
+              const next = !isDarkTheme;
+              setIsDarkTheme(next);
+              setGlobalThemeDark(next);
+            }}
+            title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            style={{ cursor: "pointer" }}
+          >
+            {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
+            {!isMinimized && <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>}
+          </div>
+
           <button
             className="ta-toggle-btn"
             onClick={toggleMinimized}
@@ -818,6 +883,17 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
 export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, userRoles = ["admin", "mentor", "super_admin"] }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_sidebar_minimized") === "true");
   const [collapsedSections, setCollapsedSections] = useState({});
+  const [isDarkTheme, setIsDarkTheme] = useState(() => getStoredThemeDark());
+
+  useEffect(() => {
+    const syncTheme = () => setIsDarkTheme(getStoredThemeDark());
+    window.addEventListener("storage", syncTheme);
+    window.addEventListener("trainai-theme-change", syncTheme);
+    return () => {
+      window.removeEventListener("storage", syncTheme);
+      window.removeEventListener("trainai-theme-change", syncTheme);
+    };
+  }, []);
 
   const allowedWorkspaces = WORKSPACES.filter(w => w.roles.some(r => userRoles.includes(r)));
   const rawNav = NAV_BY_WORKSPACE[workspace] || MENTOR_NAV;
@@ -856,6 +932,45 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           </div>
           <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
         </div>
+
+        {/* Quick Search Shortcut in Sidebar */}
+        {!isMinimized ? (
+          <div
+            className="ta-sidebar-search-btn"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              background: "var(--surface-3)",
+              border: "1px solid var(--border)",
+              borderRadius: 9,
+              padding: "7px 10px",
+              fontSize: 12.5,
+              color: "var(--text-3)",
+              cursor: "pointer",
+              margin: "2px 0 10px",
+              transition: "all 0.15s ease"
+            }}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("trainai-open-search"));
+              onClose();
+            }}
+            title="Search platform (⌘K)"
+          >
+            <Search size={14} color="var(--text-3)" />
+            <span style={{ flex: 1, fontSize: 12, color: "var(--text-3)" }}>Search platform...</span>
+            <span style={{ fontSize: 9.5, fontWeight: 700, background: "var(--surface)", color: "var(--text-2)", padding: "1px 5px", borderRadius: 4, border: "1px solid var(--border)" }}>⌘K</span>
+          </div>
+        ) : (
+          <div
+            className="ta-nav-item"
+            onClick={() => window.dispatchEvent(new CustomEvent("trainai-open-search"))}
+            title="Search platform (⌘K)"
+            style={{ justifyContent: "center", margin: "2px 0 8px" }}
+          >
+            <Search size={16} />
+          </div>
+        )}
 
         <div className="ta-sidebar-nav">
           {!isMinimized && <div className="ta-nav-section-title">Workspaces</div>}
@@ -921,6 +1036,21 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
         </div>
 
         <div className="ta-nav-footer">
+          {/* Dark / Light Theme Toggle */}
+          <div
+            className="ta-nav-item"
+            onClick={() => {
+              const next = !isDarkTheme;
+              setIsDarkTheme(next);
+              setGlobalThemeDark(next);
+            }}
+            title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            style={{ cursor: "pointer" }}
+          >
+            {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
+            {!isMinimized && <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>}
+          </div>
+
           <button
             className="ta-toggle-btn"
             onClick={toggleMinimized}
@@ -1158,125 +1288,246 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
   }
 
   useEffect(() => {
-    function handleClickOutside(e) {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setIsSearchOpen(false);
-      }
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
-        setIsMoreMenuOpen(false);
+    function handleKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleOpenSearchCustom() {
+      setIsSearchOpen(true);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("trainai-open-search", handleOpenSearchCustom);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("trainai-open-search", handleOpenSearchCustom);
+    };
   }, []);
 
   return (
-    <div className="ta-topbar">
-      <div className="ta-topbar-left">
-        <button className="ta-menu-btn" onClick={openMenu} aria-label="Open menu"><Menu size={20} /></button>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div className="ta-h1">{title}</div>
-          {sub && <div className="ta-sub">{sub}</div>}
+    <>
+      <div className="ta-topbar">
+        <div className="ta-topbar-left">
+          <button className="ta-menu-btn" onClick={openMenu} aria-label="Open menu"><Menu size={20} /></button>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="ta-h1">{title}</div>
+            {sub && <div className="ta-sub">{sub}</div>}
+          </div>
+        </div>
+
+        <div className="ta-topbar-right">
+          {/* Tenant Organization Context Selector */}
+          {orgSelector && (
+            <div className="ta-row ta-gap8 ta-org-selector" style={{
+              background: "var(--surface)",
+              padding: "4px 10px",
+              borderRadius: 10,
+              border: "1px solid var(--border)",
+              boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
+            }}>
+              <Building2 size={15} color="var(--primary)" />
+              <div className="ta-col" style={{ lineHeight: 1 }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em" }}>Tenant</span>
+                <select
+                  value={orgSelector.selectedOrgId || ""}
+                  onChange={(e) => orgSelector.onSelectOrg(e.target.value)}
+                  style={{
+                    padding: "1px 0 0",
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--text)",
+                    cursor: "pointer",
+                    outline: "none"
+                  }}
+                >
+                  <option value="">All Organizations (Global)</option>
+                  {(orgSelector.orgs || []).map((o) => (
+                    <option key={o.id} value={o.id}>{o.name}</option>
+                  ))}
+                </select>
+              </div>
+              <ChevronRight size={13} color="var(--text-3)" style={{ transform: "rotate(90deg)" }} />
+            </div>
+          )}
+
+          {/* Compact Quick Search Trigger Button */}
+          <button
+            className="ta-iconbtn"
+            onClick={() => setIsSearchOpen(true)}
+            title="Search platform (⌘K)"
+            aria-label="Search platform"
+            style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0 }}
+          >
+            <Search size={15} color="var(--text-2)" />
+          </button>
+
+          {/* Primary Header Quick Action */}
+          <div className="ta-header-full-only">
+            {right}
+          </div>
+
+          {/* User Profile Pill - opens the real Settings Hub */}
+          <div
+            className="ta-row ta-gap8 ta-profile-pill"
+            style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0 }}
+            onClick={() => canOpenOwnSettings && onNavigate("settings")}
+          >
+            <Avatar initials={userInitials} size={32} />
+            <div className="ta-col ta-profile-pill-text" style={{ lineHeight: 1.2, paddingRight: 4 }}>
+              <span className="ta-profile-pill-name" style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
+              <span className="ta-profile-pill-name" style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
+            </div>
+          </div>
+
+          {/* Sign Out Action */}
+          <button
+            className="ta-btn ta-btn-ghost ta-btn-sm ta-header-full-only"
+            onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
+            title="Sign Out"
+            aria-label="Sign out"
+            style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            <LogOut size={15} />
+            <span>Sign Out</span>
+          </button>
+
+          {/* Mobile-only "more" menu */}
+          <div ref={moreMenuRef} className="ta-header-mobile-only" style={{ position: "relative" }}>
+            <button
+              style={{ width: 38, height: 38, padding: 0, borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              onClick={() => setIsMoreMenuOpen(v => !v)}
+              aria-label="More options"
+            >
+              <MoreVertical size={18} color="var(--text-2)" />
+            </button>
+            {isMoreMenuOpen && (
+              <>
+                <div
+                  style={{ position: "fixed", inset: 0, zIndex: 240 }}
+                  onClick={() => setIsMoreMenuOpen(false)}
+                />
+                <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 46, right: 0, width: 230, padding: "8px 6px", zIndex: 250, border: "1px solid var(--border)", background: "var(--surface)", boxShadow: "0 14px 36px -8px rgba(15,23,42,0.3)" }}>
+                  <div
+                    className="ta-dropdown-item ta-row ta-gap8"
+                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      setIsSearchOpen(true);
+                    }}
+                  >
+                    <Search size={16} />
+                    <span>Search Platform</span>
+                  </div>
+                  {right && (
+                    <div style={{ padding: "6px 4px 8px", borderBottom: "1px solid var(--border)", marginBottom: 4 }} onClick={() => setIsMoreMenuOpen(false)}>
+                      {right}
+                    </div>
+                  )}
+                  <div
+                    className="ta-dropdown-item ta-row ta-gap8"
+                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                    onClick={() => {
+                      const next = !isDarkTheme;
+                      setIsDarkTheme(next);
+                      setGlobalThemeDark(next);
+                      setIsMoreMenuOpen(false);
+                    }}
+                  >
+                    {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
+                    <span>{isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
+                  </div>
+                  {canOpenOwnSettings && (
+                    <div
+                      className="ta-dropdown-item ta-row ta-gap8"
+                      style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                      onClick={() => {
+                        setIsMoreMenuOpen(false);
+                        onNavigate("settings");
+                      }}
+                    >
+                      <Settings size={16} />
+                      <span>Settings Hub</span>
+                    </div>
+                  )}
+                  <div
+                    className="ta-dropdown-item ta-row ta-gap8"
+                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--danger)" }}
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      if (onSignOut) onSignOut();
+                      else {
+                        localStorage.removeItem("trainai_active_session_v1");
+                        window.location.reload();
+                      }
+                    }}
+                  >
+                    <LogOut size={16} />
+                    <span>Sign Out</span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="ta-topbar-right">
-        {/* Tenant Organization Context Selector */}
-        {orgSelector && (
-          <div className="ta-row ta-gap8 ta-org-selector" style={{
-            background: "var(--surface)",
-            padding: "4px 10px",
-            borderRadius: 10,
-            border: "1px solid var(--border)",
-            boxShadow: "0 1px 3px rgba(15,23,42,0.04)",
-          }}>
-            <Building2 size={15} color="var(--primary)" />
-            <div className="ta-col" style={{ lineHeight: 1 }}>
-              <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em" }}>Tenant</span>
-              <select
-                value={orgSelector.selectedOrgId || ""}
-                onChange={(e) => orgSelector.onSelectOrg(e.target.value)}
-                style={{
-                  padding: "1px 0 0",
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  border: "none",
-                  background: "transparent",
-                  color: "var(--text)",
-                  cursor: "pointer",
-                  outline: "none"
+      {/* Centered Universal Search Modal Dialog */}
+      {isSearchOpen && (
+        <PortalModal
+          isOpen={true}
+          onClose={() => {
+            setIsSearchOpen(false);
+            setSearchValue("");
+          }}
+          maxWidth={540}
+          zIndex={9999}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface-3)", padding: "10px 14px", borderRadius: 12, border: "1.5px solid var(--primary)" }}>
+              <Search size={18} color="var(--primary)" />
+              <input
+                autoFocus
+                type="text"
+                placeholder="Search students, courses, cohorts, and navigation..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setIsSearchOpen(false);
+                    setSearchValue("");
+                  }
                 }}
-              >
-                <option value="">All Organizations (Global)</option>
-                {(orgSelector.orgs || []).map((o) => (
-                  <option key={o.id} value={o.id}>{o.name}</option>
-                ))}
-              </select>
-            </div>
-            <ChevronRight size={13} color="var(--text-3)" style={{ transform: "rotate(90deg)" }} />
-          </div>
-        )}
-
-        {/* Universal Search Bar with Live Results Popover */}
-        <div className="ta-search" ref={searchRef} style={{ position: "relative", zIndex: 100 }}>
-          <Search size={14} color="var(--text-3)" />
-          <input
-            type="text"
-            placeholder="Search platform..."
-            value={searchValue}
-            onFocus={() => setIsSearchOpen(true)}
-            onChange={(e) => {
-              setSearchValue(e.target.value);
-              setIsSearchOpen(true);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setIsSearchOpen(false);
-            }}
-            style={{ border: "none", background: "transparent", width: "100%", fontSize: 12.5, color: "var(--text)", outline: "none", fontFamily: "var(--font)" }}
-          />
-          {searchValue ? (
-            <X size={13} color="var(--text-3)" style={{ cursor: "pointer" }} onClick={() => { setSearchValue(""); setIsSearchOpen(false); }} />
-          ) : (
-            <span style={{ fontSize: 9.5, fontWeight: 700, color: "var(--text-3)", background: "var(--surface)", padding: "1px 5px", borderRadius: 4, border: "1px solid var(--border)" }}>⌘K</span>
-          )}
-
-          {/* Universal Search Results Popover */}
-          {isSearchOpen && searchValue.trim() !== "" && (
-            <>
-              <div
-                style={{ position: "fixed", inset: 0, zIndex: 190 }}
-                onClick={() => setIsSearchOpen(false)}
+                style={{ border: "none", background: "transparent", width: "100%", fontSize: 14, color: "var(--text)", outline: "none", fontFamily: "var(--font)", fontWeight: 600 }}
               />
-              <div
-                className="ta-card anim-slide-down"
-                style={{
-                  position: "absolute",
-                  top: 42,
-                  left: 0,
-                  width: 320,
-                  maxHeight: "65vh",
-                  overflowY: "auto",
-                  padding: "6px 0",
-                  zIndex: 200,
-                  boxShadow: "0 14px 36px -8px rgba(15,23,42,0.22)",
-                  border: "1px solid var(--border)",
-                  background: "var(--surface)"
-                }}
-              >
+              {searchValue && (
+                <X size={16} color="var(--text-3)" style={{ cursor: "pointer" }} onClick={() => setSearchValue("")} />
+              )}
+            </div>
+
+            <div style={{ maxHeight: "55vh", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+              {searchValue.trim() === "" && (
+                <div style={{ padding: "12px 14px", fontSize: 12.5, color: "var(--text-3)" }}>
+                  Type keywords to search across students, courses, cohorts, and settings.
+                </div>
+              )}
+
               {debouncedSearch.length === 1 && (
                 <div style={{ padding: "10px 14px", fontSize: 12, color: "var(--text-3)" }}>
-                  Keep typing: 2+ characters searches real students, courses & cohorts too.
+                  Keep typing: 2+ characters searches real students, courses &amp; cohorts too.
                 </div>
               )}
 
               {realResultsLoading && (
                 <div style={{ padding: "10px 14px", fontSize: 12, color: "var(--text-3)" }}>
-                  Searching students, courses & cohorts…
+                  Searching students, courses &amp; cohorts…
                 </div>
               )}
 
-              {!realResultsLoading && totalRealResults === 0 && navResults.length === 0 && (
-                <div className="ta-empty" style={{ padding: 18, fontSize: 13 }}>
+              {!realResultsLoading && searchValue.trim() !== "" && totalRealResults === 0 && navResults.length === 0 && (
+                <div className="ta-empty" style={{ padding: 24, fontSize: 13.5 }}>
                   No matches found for "{searchValue}"
                 </div>
               )}
@@ -1345,122 +1596,10 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
                 </>
               )}
             </div>
-          </>
-          )}
-        </div>
-
-        {/* Theme Toggle (Dark / Light) - full button on desktop, folded into
-            the mobile "more" menu below instead of shown here, so it isn't
-            a 6th thing competing for room in an already-tight mobile header. */}
-        <button
-          className="ta-btn ta-btn-outline ta-header-full-only"
-          style={{ width: 42, height: 42, padding: 0, borderRadius: 12, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-          onClick={() => {
-            const next = !isDarkTheme;
-            setIsDarkTheme(next);
-            setGlobalThemeDark(next);
-          }}
-          title={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          aria-label={isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        >
-          {isDarkTheme ? <Sun size={17} color="#FBBF24" /> : <Moon size={17} color="var(--text-2)" />}
-        </button>
-
-        {/* Notifications icon - desktop only; purely decorative (no real
-            feed to back it yet), so it isn't worth a slot in the mobile
-            menu either. */}
-        <div className="ta-header-full-only" style={{ width: 42, height: 42, flexShrink: 0, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}>
-          <Bell size={17} color="var(--text-2)" />
-        </div>
-
-        {/* Primary Header Quick Action - full-size on desktop, replicated
-            (not dropped) inside the mobile "more" menu below. */}
-        <div className="ta-header-full-only">
-          {right}
-        </div>
-
-        {/* User Profile Pill - opens the real Settings Hub. Always visible -
-            this is the one action worth a permanent, dedicated slot. */}
-        <div
-          className="ta-row ta-gap8 ta-profile-pill"
-          style={{ background: "var(--surface)", padding: "4px 10px 4px 4px", borderRadius: 12, border: "1px solid var(--border)", cursor: canOpenOwnSettings ? "pointer" : "default", flexShrink: 0 }}
-          onClick={() => canOpenOwnSettings && onNavigate("settings")}
-        >
-          <Avatar initials={userInitials} size={32} />
-          <div className="ta-col ta-profile-pill-text" style={{ lineHeight: 1.2, paddingRight: 4 }}>
-            <span className="ta-profile-pill-name" style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
-            <span className="ta-profile-pill-name" style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
           </div>
-        </div>
-
-        {/* Sign Out Action - full button on desktop, replicated inside the
-            mobile "more" menu below. */}
-        <button
-          className="ta-btn ta-btn-ghost ta-btn-sm ta-header-full-only"
-          onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
-          title="Sign Out"
-          aria-label="Sign out"
-          style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
-        >
-          <LogOut size={15} />
-          <span>Sign Out</span>
-        </button>
-
-        {/* Mobile-only "more" menu - replaces the theme toggle, quick action
-            and sign out above (hidden on mobile via .ta-header-full-only)
-            with one tap target instead of 3-4 separate icons crowding the
-            header. Every action is still fully reachable, just consolidated. */}
-        <div ref={moreMenuRef} className="ta-header-mobile-only" style={{ position: "relative" }}>
-          <button
-            style={{ width: 38, height: 38, padding: 0, borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-            onClick={() => setIsMoreMenuOpen(v => !v)}
-            aria-label="More options"
-          >
-            <MoreVertical size={18} color="var(--text-2)" />
-          </button>
-          {isMoreMenuOpen && (
-            <>
-              <div
-                style={{ position: "fixed", inset: 0, zIndex: 240 }}
-                onClick={() => setIsMoreMenuOpen(false)}
-              />
-              <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 46, right: 0, width: 230, padding: "8px 6px", zIndex: 250, border: "1px solid var(--border)", background: "var(--surface)", boxShadow: "0 14px 36px -8px rgba(15,23,42,0.3)" }}>
-                <div
-                  className="ta-dropdown-item ta-row ta-gap8"
-                  style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
-                  onClick={() => { const next = !isDarkTheme; setIsDarkTheme(next); setGlobalThemeDark(next); setIsMoreMenuOpen(false); }}
-                >
-                  {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
-                  <span>{isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
-                </div>
-                {canOpenOwnSettings && (
-                  <div
-                    className="ta-dropdown-item ta-row ta-gap8"
-                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
-                    onClick={() => { setIsMoreMenuOpen(false); onNavigate("settings"); }}
-                  >
-                    <Settings size={16} color="var(--text-2)" />
-                    <span>Settings &amp; Preferences</span>
-                  </div>
-                )}
-                <div className="ta-divider" style={{ margin: "6px 0" }} />
-                <div
-                  className="ta-dropdown-item ta-row ta-gap8"
-                  style={{ color: "var(--danger)", padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
-                  onClick={() => {
-                    setIsMoreMenuOpen(false);
-                    (onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); }))();
-                  }}
-                >
-                  <LogOut size={16} />
-                  <span>Sign Out</span>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
+        </PortalModal>
+      )}
+    </>
   );
 }
 
