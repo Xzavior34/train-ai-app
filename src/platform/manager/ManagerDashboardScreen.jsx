@@ -73,7 +73,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div className="ta-hero-banner anim-fluid-entrance">
-          <div className="tai-glow-amber" />
+          <div className="tai-glow-cobalt" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
