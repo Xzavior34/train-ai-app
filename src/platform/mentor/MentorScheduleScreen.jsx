@@ -89,6 +89,8 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
       setCompletingSessionId(null);
       setCompletionFeedback("");
       showToast("Session marked complete - earnings recorded.");
+    } catch (err) {
+      showToast(err?.message || "Could not complete this session.");
     } finally {
       setUpdatingSessionId(null);
     }
@@ -103,6 +105,8 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
       await sessionsQuery.refetch();
       setReschedulingSessionId(null);
       showToast("Session rescheduled.");
+    } catch (err) {
+      showToast(err?.message || "Could not reschedule this session.");
     } finally {
       setUpdatingSessionId(null);
     }

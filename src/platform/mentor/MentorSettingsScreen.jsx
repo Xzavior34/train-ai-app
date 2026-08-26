@@ -48,7 +48,7 @@ function useIsNarrow(breakpoint = 900) {
   return narrow;
 }
 
-export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUserId, userProfileQuery }) {
+export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUserId, userProfileQuery, orgSelector, onNavigate }) {
   const showToast = useContext(ToastContext);
   const isNarrow = useIsNarrow();
   const mentor = mentorProfileQuery?.data || null;
@@ -284,7 +284,12 @@ export function MentorSettingsScreen({ mentorId, mentorProfileQuery, currentUser
 
   return (
     <div className="ta-fade">
-      <TopBar title="Instructor Settings" sub="Profile setup, communications, session preferences, and teaching resources" />
+      <TopBar 
+        title="Instructor Settings" 
+        sub="Profile setup, communications, session preferences, and teaching resources" 
+        orgSelector={orgSelector}
+        onNavigate={onNavigate}
+      />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
         <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">

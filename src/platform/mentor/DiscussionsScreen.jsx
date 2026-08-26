@@ -129,8 +129,11 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
     // For non-demo discussions, attempt to write reply to DB
     if (!id.startsWith("demo-")) {
       try {
-        await resolveDiscussion(id); // mark as having a response
-      } catch {}
+        await resolveDiscussion(id, text.trim());
+      } catch (err) {
+        showToast(err?.message || "Could not save your reply.");
+        return;
+      }
     }
     showToast("Your instructor answer was posted to the course Q&A thread!");
     setReplyTexts(prev => ({ ...prev, [id]: "" }));

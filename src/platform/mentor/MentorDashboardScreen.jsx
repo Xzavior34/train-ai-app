@@ -12,7 +12,7 @@ import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHe
 import { fetchMentorActiveCohorts } from "../../lib/api/platform.js";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
-export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId, onNavigate }) {
+export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId, orgSelector, onNavigate }) {
   const showToast = useContext(ToastContext);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
   const [tasks, setTasks] = useState([
@@ -74,6 +74,8 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
       <TopBar 
         title={`Hello, ${mentorName}`} 
         sub="Track learner engagement, review cohort progress, and launch live sessions." 
+        orgSelector={orgSelector}
+        onNavigate={onNavigate}
       />
 
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>

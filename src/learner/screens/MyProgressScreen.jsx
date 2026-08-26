@@ -432,7 +432,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
 
                     <div className="tai-row tai-between" style={{ marginTop: 14, alignItems: "center", flexWrap: "wrap", gap: 10 }}>
                       <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>
-                        {isCompleted ? `Verified ID: ${course.certificateId}` : `Last studied: ${course.lastActive}`}
+                        {isCompleted ? `Verified ID: ${course.certificateId || `TAI-${(course.id || "").slice(-6).toUpperCase()}-${new Date().getFullYear()}`}` : `Last studied: ${course.lastActive || "Recently"}`}
                       </span>
 
                       <button

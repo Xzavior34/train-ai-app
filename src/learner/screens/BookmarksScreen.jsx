@@ -211,6 +211,11 @@ results = vector_store.similarity_search(query, k=4)`
     showToast?.("Snippet removed from bookmarks.");
   }
 
+  function handleRemoveNote(id) {
+    setSavedNotes(prev => prev.filter(n => n.id !== id));
+    showToast?.("Note removed from bookmarks.");
+  }
+
   function handleAddNoteOrSnippet() {
     if (!newTitle.trim() || !newContent.trim()) {
       showToast?.("Please enter a title and content.");

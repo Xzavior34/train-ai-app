@@ -2477,9 +2477,17 @@ export async function fetchDiscussionsForMentor(mentorId) {
   }));
 }
 
-export async function resolveDiscussion(id) {
+export async function resolveDiscussion(id, replyText) {
   if (!supabase) return;
-  const { error } = await supabase.from("mentor_learner_discussions").update({ is_resolved: true }).eq("id", id);
+  const payload = { is_resolved: true };
+  if (replyText && replyText.trim()) payload.mentor_response = replyText.trim();
+  const { error } = await supabase.from("mentor_learner_discussions").update(payload).eq("id", id);
+  // If mentor_response column doesn't exist yet, retry without it
+  if (error && error.message?.includes("mentor_response")) {
+    const { error: e2 } = await supabase.from("mentor_learner_discussions").update({ is_resolved: true }).eq("id", id);
+    if (e2) throw e2;
+    return;
+  }
   if (error) throw error;
 }
 

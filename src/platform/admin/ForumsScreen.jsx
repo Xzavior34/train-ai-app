@@ -53,28 +53,40 @@ export function ForumsScreen({ orgSelector, setScreen }) {
   }
   async function handleSaveCategory() {
     if (!title.trim()) return;
-    if (editingId) {
-      await updateForumCategory(editingId, { title: title.trim(), description: description.trim() || null });
-      showToast("Category updated");
-    } else {
-      await createForumCategory({ title: title.trim(), description: description.trim() || null, courseId: courseId || null });
-      showToast("Category created");
+    try {
+      if (editingId) {
+        await updateForumCategory(editingId, { title: title.trim(), description: description.trim() || null });
+        showToast("Category updated");
+      } else {
+        await createForumCategory({ title: title.trim(), description: description.trim() || null, courseId: courseId || null });
+        showToast("Category created");
+      }
+      setFormOpen(false);
+      categoriesQuery.refetch();
+    } catch (err) {
+      showToast(err?.message || "Could not save the category.");
     }
-    setFormOpen(false);
-    categoriesQuery.refetch();
   }
   async function handleDeleteCategory(id, catTitle) {
-    await deleteForumCategory(id);
-    if (selectedForumId === id) setSelectedForumId(null);
-    categoriesQuery.refetch();
-    showToast(`"${catTitle}" and its threads removed`);
+    try {
+      await deleteForumCategory(id);
+      if (selectedForumId === id) setSelectedForumId(null);
+      categoriesQuery.refetch();
+      showToast(`"${catTitle}" and its threads removed`);
+    } catch (err) {
+      showToast(err?.message || "Could not delete the category.");
+    }
   }
 
   async function handleDeleteThread(id) {
-    await deleteForumPost(id);
-    threadsQuery.refetch();
-    categoriesQuery.refetch();
-    showToast("Thread removed");
+    try {
+      await deleteForumPost(id);
+      threadsQuery.refetch();
+      categoriesQuery.refetch();
+      showToast("Thread removed");
+    } catch (err) {
+      showToast(err?.message || "Could not delete the thread.");
+    }
   }
 
   return (

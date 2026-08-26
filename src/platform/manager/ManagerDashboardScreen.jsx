@@ -12,7 +12,7 @@ import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail
 // showing org-wide data. If a manager has no reports linked yet (manager_id
 // is set by an admin on the report's own profile - there's no self-serve
 // way for a manager to claim reports from here), the table just says so.
-export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
+export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelector }) {
   const showToast = React.useContext(ToastContext);
   const reportsQuery = useSupabaseQuery(async () => (userId ? fetchDirectReports(userId) : []), [userId]);
   const reports = reportsQuery.data || [];
@@ -69,6 +69,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId }) {
       <TopBar
         title={`My Team${profileQuery?.data?.display_name ? `: ${profileQuery.data.display_name}` : ""}`}
         sub="Progress and compliance for your direct reports"
+        orgSelector={orgSelector}
       />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div className="ta-hero-banner anim-fluid-entrance">

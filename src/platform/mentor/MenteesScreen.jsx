@@ -332,7 +332,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                   )}
                 </div>
 
-                <LearnerNotesSection learnerId={selectedMentee.id} orgId={orgId} authorId={mentorId} />
+                <LearnerNotesSection learnerId={selectedMentee.id} orgId={orgId} authorId={currentUserId} />
               </div>
             )}
 
