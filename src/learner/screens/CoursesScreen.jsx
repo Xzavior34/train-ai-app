@@ -702,7 +702,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
                 <span>•</span>
                 <div className="tai-row tai-gap4">
                   <ShieldCheck size={13} color="#34D399" />
-                  <span style={{ fontWeight: 700, color: "#34D399" }}>Certificate Guaranteed</span>
+                  <span style={{ fontWeight: 700, color: "#34D399" }}>Certificate Available</span>
                 </div>
               </div>
 
