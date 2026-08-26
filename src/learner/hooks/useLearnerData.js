@@ -819,6 +819,22 @@ export function useLearnerData(session, screen, params) {
         cohortMembershipQuery.refetch();
         cohortMembersQuery.refetch();
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "course_applications" }, () => {
+        // applications refetch
+        enrollmentsQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "course_enrollments" }, () => {
+        enrollmentsQuery.refetch();
+        coursesQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "course_lessons" }, () => {
+        courseLessonsQuery.refetch();
+        lessonCountsQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "lesson_progress" }, () => {
+        lessonProgressQuery.refetch();
+        enrollmentsQuery.refetch();
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "feedback_notes" }, () => {
         feedbackNotesQuery.refetch();
       })
