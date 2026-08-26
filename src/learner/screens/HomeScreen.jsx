@@ -4,12 +4,13 @@ import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
 import {
   BookOpen, Users, Zap, ChevronRight, Target,
   BarChart3, Video, Code2, Bookmark, Award, Trophy,
-  GraduationCap, HelpCircle
+  GraduationCap, HelpCircle, Compass, Flame, Sparkles, ShieldCheck
 } from "lucide-react";
 
 export function HomeScreen({
   user = {}, courses = [], coursesLoading, unreadNotifs = 0, weeklyGoal = 5,
   session, push, goTab, goToMyCourses, cohort = null, cohortLoading = false,
+  achievements = [], showToast
 }) {
   const enrolledCourses = (courses || []).filter(c => c.enrolled);
   const continueCourse = enrolledCourses.find(c => c.progress < 100) || enrolledCourses[0] || null;
@@ -262,26 +263,120 @@ export function HomeScreen({
         {/* RIGHT COLUMN: Quick Access Hub, Consolidated Learning Milestones & Saved Library */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           
-          {/* 1. Quick Hub Links: Leaderboard, Instructors, AI Quiz */}
+          {/* 1. Quick Hub Links: Learning Paths, Leaderboard, Instructors, AI Quiz */}
           <div className="tai-card" style={{ padding: 16, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="tai-row tai-between" style={{ marginBottom: 10, alignItems: "center" }}>
               <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>Quick Access</div>
               <span style={{ fontSize: 11, color: "var(--text-3)" }}>Learner shortcuts</span>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "12px 6px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", transition: "all 0.15s ease" }} onClick={() => push("leaderboard")}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "12px 4px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", transition: "all 0.15s ease" }} onClick={() => push("learningPaths")}>
+                <Compass size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
+                <div style={{ fontWeight: 800, fontSize: 11, marginTop: 5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Paths</div>
+              </div>
+              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "12px 4px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", transition: "all 0.15s ease" }} onClick={() => push("leaderboard")}>
                 <Trophy size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
-                <div style={{ fontWeight: 800, fontSize: 11.5, marginTop: 5, color: "var(--text)" }}>Leaderboard</div>
+                <div style={{ fontWeight: 800, fontSize: 11, marginTop: 5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Rankings</div>
               </div>
-              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "12px 6px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", transition: "all 0.15s ease" }} onClick={() => push("mentors")}>
+              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "12px 4px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", transition: "all 0.15s ease" }} onClick={() => push("mentors")}>
                 <GraduationCap size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
-                <div style={{ fontWeight: 800, fontSize: 11.5, marginTop: 5, color: "var(--text)" }}>Instructors</div>
+                <div style={{ fontWeight: 800, fontSize: 11, marginTop: 5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Instructors</div>
               </div>
-              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "12px 6px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", transition: "all 0.15s ease" }} onClick={() => push("aiQuiz")}>
+              <div className="tai-card-hover" style={{ cursor: "pointer", padding: "12px 4px", textAlign: "center", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", transition: "all 0.15s ease" }} onClick={() => push("aiQuiz")}>
                 <HelpCircle size={20} color="var(--primary)" style={{ margin: "0 auto" }} />
-                <div style={{ fontWeight: 800, fontSize: 11.5, marginTop: 5, color: "var(--text)" }}>AI Quiz</div>
+                <div style={{ fontWeight: 800, fontSize: 11, marginTop: 5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>AI Quiz</div>
               </div>
             </div>
+          </div>
+
+          {/* 2. Dedicated Achievements & Milestone Badges Card */}
+          <div className="tai-card" style={{ padding: 18, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Award size={18} color="var(--primary)" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Achievements &amp; Badges</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                    {(achievements?.length || 4)} Unlocked • Level {user?.level || 1}
+                  </div>
+                </div>
+              </div>
+              <span className="tai-link" style={{ fontSize: 12, fontWeight: 700 }} onClick={() => push("achievements")}>View All →</span>
+            </div>
+
+            {/* Streak & XP Highlight Banner */}
+            <div style={{
+              background: "linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(245, 158, 11, 0.08) 100%)",
+              borderRadius: 10,
+              padding: "10px 12px",
+              border: "1px solid rgba(37, 99, 235, 0.15)",
+              marginBottom: 12
+            }}>
+              <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 6 }}>
+                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                  <Flame size={15} color="#EA580C" />
+                  <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
+                    {user?.streak || 8}-Day Streak
+                  </span>
+                </div>
+                <Tag tone="warning">{user?.totalPoints || 1250} Total XP</Tag>
+              </div>
+
+              {/* Level XP Bar */}
+              <div style={{ fontSize: 10.5, color: "var(--text-3)", marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
+                <span>Level {user?.level || 1} Progress</span>
+                <span style={{ fontWeight: 700, color: "var(--primary)" }}>{Math.round(((user?.totalPoints || 1250) % 500) / 5)}%</span>
+              </div>
+              <ProgressBar value={((user?.totalPoints || 1250) % 500) / 5} height={5} />
+            </div>
+
+            {/* Badges Preview Row */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }}>
+              {[
+                { title: "First Step", xp: 50, icon: Sparkles },
+                { title: `${user?.streak || 8}d Streak`, xp: 100, icon: Flame },
+                { title: "Quiz Master", xp: 150, icon: Award }
+              ].map((badge, idx) => {
+                const BadgeIcon = badge.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="tai-card-hover"
+                    style={{
+                      padding: "10px 6px",
+                      borderRadius: 8,
+                      background: "var(--surface-3)",
+                      border: "1px solid var(--border)",
+                      textAlign: "center",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => push("achievements")}
+                  >
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 4px" }}>
+                      <BadgeIcon size={14} color="var(--primary)" />
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {badge.title}
+                    </div>
+                    <div style={{ fontSize: 9.5, color: "#10B981", fontWeight: 700, marginTop: 1 }}>
+                      +{badge.xp} XP
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              className="tai-btn tai-btn-outline"
+              style={{ width: "100%", padding: "7px 12px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+              onClick={() => push("achievements")}
+            >
+              <Award size={14} color="var(--primary)" />
+              <span>Claim Streak Rewards &amp; Badges</span>
+              <ChevronRight size={14} />
+            </button>
           </div>
 
           {/* 2. Unified Progress & Achievements Analytics Card */}
