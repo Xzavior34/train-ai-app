@@ -772,6 +772,18 @@ export function useLearnerData(session, screen, params) {
       .on("postgres_changes", { event: "*", schema: "public", table: "user_achievements" }, () => {
         achievementsQuery.refetch();
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "learning_paths" }, () => {
+        learningPathsQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "learning_path_courses" }, () => {
+        learningPathsQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "learning_path_enrollments" }, () => {
+        pathEnrollmentsQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "courses" }, () => {
+        coursesQuery.refetch();
+      })
       .subscribe();
 
     return () => {

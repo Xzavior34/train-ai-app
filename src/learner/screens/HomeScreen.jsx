@@ -11,11 +11,18 @@ import {
 export function HomeScreen({
   user = {}, courses = [], coursesLoading, unreadNotifs = 0, weeklyGoal = 5,
   session, push, goTab, goToMyCourses, cohort = null, cohortLoading = false,
-  achievements = [], showToast
+  achievements = [], showToast,
+  learningPathsQuery, pathEnrollmentsQuery
 }) {
   const enrolledCourses = (courses || []).filter(c => c.enrolled);
   const continueCourse = enrolledCourses.find(c => c.progress < 100) || enrolledCourses[0] || null;
   const otherEnrolledCourses = enrolledCourses.filter(c => c.id !== continueCourse?.id);
+
+  // Active Enrolled Learning Pathway (Admin Assigned / Enrolled)
+  const enrolledPathIds = new Set(
+    (pathEnrollmentsQuery?.data || []).map(e => e.path_id || e.learning_path_id || e.id)
+  );
+  const activePathway = (learningPathsQuery?.data || []).find(p => enrolledPathIds.has(p.id)) || null;
 
   const completedCourses = enrolledCourses.filter(c => (c.progress || 0) >= 100);
   const avgProgress = enrolledCourses.length
@@ -69,8 +76,12 @@ export function HomeScreen({
                 <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2, color: "#FFFFFF" }}>
                   Welcome back, {userFirstName || "Learner"}
                 </h1>
-                <span style={{ background: "#2563EB", color: "#FFFFFF", padding: "3px 10px", borderRadius: 6, fontWeight: 800, fontSize: 11.5, letterSpacing: "0.02em", border: "1px solid rgba(255, 255, 255, 0.25)", display: "inline-flex", alignItems: "center" }}>
-                  {continueCourse?.category || "UI/UX Design Track"}
+                <span
+                  style={{ background: "#2563EB", color: "#FFFFFF", padding: "3px 10px", borderRadius: 6, fontWeight: 800, fontSize: 11.5, letterSpacing: "0.02em", border: "1px solid rgba(255, 255, 255, 0.25)", display: "inline-flex", alignItems: "center", cursor: "pointer" }}
+                  onClick={() => push("learningPaths")}
+                  title="View Learning Pathways"
+                >
+                  {activePathway?.title ? `Pathway: ${activePathway.title}` : (continueCourse?.category || "UI/UX Design Track")}
                 </span>
               </div>
               <p className="tai-hero-desc" style={{ fontSize: 13.5, margin: 0, color: "#F8FAFC", fontWeight: 500, lineHeight: 1.45 }}>
@@ -342,13 +353,17 @@ export function HomeScreen({
                     <Layers size={17} color="var(--primary)" />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Curriculum Roadmap</div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>
+                      {activePathway?.title ? `Roadmap: ${activePathway.title}` : "Curriculum Roadmap"}
+                    </div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)", fontWeight: 600 }}>
                       {completedCourses.length} of {enrolledCourses.length} Track Modules Complete
                     </div>
                   </div>
                 </div>
-                <span className="tai-link" style={{ fontSize: 12, fontWeight: 800 }} onClick={() => goTab("courses")}>All Courses ({enrolledCourses.length}) →</span>
+                <span className="tai-link" style={{ fontSize: 12, fontWeight: 800 }} onClick={() => activePathway ? push("learningPaths") : goTab("courses")}>
+                  {activePathway ? "View Pathway →" : `All Courses (${enrolledCourses.length}) →`}
+                </span>
               </div>
 
               {/* Overall Track Progress Snapshot */}

@@ -745,6 +745,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   cohort={cohortMembershipQuery.data?.cohort || null}
                   cohortLoading={cohortMembershipQuery.loading}
                   achievements={achievementsQuery.data || []}
+                  learningPathsQuery={learningPathsQuery}
+                  pathEnrollmentsQuery={pathEnrollmentsQuery}
                 />
               )}
               {screen === "courses" && (

@@ -602,21 +602,43 @@ export async function postCourseDiscussionMessage({ discussionId, senderId, cont
    ========================================================================= */
 
 export async function fetchPublishedLearningPaths(organizationId) {
-  if (!supabase) return [];
+  const DEMO_PATHS = [
+    {
+      id: "demo-path-1",
+      title: "New Hire Foundations",
+      description: "The core courses every new hire completes in their first month.",
+      level: "beginner",
+      category: "Onboarding",
+      courses: [
+        { id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "An introduction to core AI concepts for the workplace.", level: "beginner", category: "AI", hours: 4, isRequired: true, unlockRule: "complete_previous", orderIndex: 0 },
+        { id: "demo-course-compliance-101", title: "Workplace Compliance 101", description: "Mandatory compliance training covering core policies.", level: "beginner", category: "Compliance", hours: 2, isRequired: true, unlockRule: "complete_previous", orderIndex: 1 },
+      ],
+    },
+    {
+      id: "demo-path-2",
+      title: "AI Engineer Track",
+      description: "Master LLM orchestration, RAG architectures, and fine-tuning models.",
+      level: "advanced",
+      category: "Engineering",
+      courses: [
+        { id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "An introduction to core AI concepts for the workplace.", level: "beginner", category: "AI", hours: 4, isRequired: true, unlockRule: "manual", orderIndex: 0 },
+        { id: "demo-course-external-leadership", title: "Leadership Essentials", description: "A curated external course on foundational leadership skills.", level: "intermediate", category: "Leadership", hours: 6, isRequired: true, unlockRule: "complete_previous", orderIndex: 1 },
+      ],
+    },
+  ];
+
+  if (!supabase) return DEMO_PATHS;
   let query = supabase
     .from("learning_paths")
     .select("*, learning_path_courses(*, courses(id, title, description, level, category, duration_hours, cover_image_url))")
     .eq("is_published", true)
-    // learning_paths has no created_at column in this schema (id, title,
-    // description, level_label, category, organization_id, created_by,
-    // is_published). Ordering on it made PostgREST reject the entire query,
-    // so every learning-path list came back empty - which is exactly why the
-    // admin Learning Paths screen showed nothing at all. Ordered by title
-    // instead, which is a real column and gives a stable, readable order.
     .order("title", { ascending: true });
-  if (organizationId) query = query.eq("organization_id", organizationId);
+  if (organizationId && organizationId !== "demo-org-id") {
+    query = query.or(`organization_id.eq.${organizationId},organization_id.is.null`);
+  }
   const { data, error } = await query;
-  if (error) { console.warn("Learning paths fetch warning:", error); return []; }
+  if (error) { console.warn("Learning paths fetch warning:", error); return DEMO_PATHS; }
+  if (!data || data.length === 0) return [];
   return (data || []).map((p) => ({
     id: p.id,
     title: p.title,
@@ -635,9 +657,6 @@ export async function fetchPublishedLearningPaths(organizationId) {
         coverImageUrl: pc.courses?.cover_image_url || null,
         hours: pc.courses?.duration_hours || 0,
         isRequired: pc.is_required !== false,
-        // These two real columns were dropped by this mapper, which is why a
-        // "guided" path rendered as a flat list with nothing gated - the
-        // learner side had no rule to evaluate in the first place.
         unlockRule: pc.unlock_rule || "complete_previous",
         prerequisiteCourseIds: pc.prerequisite_course_ids || [],
         orderIndex: pc.order_index ?? 0,

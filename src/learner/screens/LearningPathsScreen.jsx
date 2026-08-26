@@ -4,7 +4,7 @@ import {
   Map as MapIcon, Award, BookOpen, Clock, CheckCircle2, 
   Users, ArrowRight, ChevronRight, Layers, 
   ShieldCheck, Filter, Search, Play, Check, X, Laptop,
-  Compass, Star, CheckSquare, Zap, BookMarked
+  Compass, Star, CheckSquare, Zap, BookMarked, Lock, Unlock
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { enrollInLearningPath, leaveLearningPath } from "../../lib/api/learner.js";
@@ -431,33 +431,66 @@ export function LearningPathsScreen({
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [enrollingPathId, setEnrollingPathId] = useState(null);
 
-  // Map of course progress by course ID for real progress calculation
+  // Extract real user course progress mapping
   const courseProgressMap = new Map();
   (enrollments || []).forEach(e => {
-    courseProgressMap.set(e.course_id, e.progress_percentage || 0);
+    const cid = e.course_id || e.id;
+    if (cid && !courseProgressMap.has(cid)) {
+      courseProgressMap.set(cid, Number(e.progress_percentage || 0));
+    }
   });
   (courses || []).forEach(c => {
     if (c.progress != null && !courseProgressMap.has(c.id)) {
-      courseProgressMap.set(c.id, c.progress);
+      courseProgressMap.set(c.id, Number(c.progress));
     }
   });
 
-  // DB-enrolled path IDs
+  // DB-enrolled path IDs & lookup
+  const pathEnrollmentsList = pathEnrollmentsQuery?.data || [];
   const enrolledPathIds = new Set(
-    (pathEnrollmentsQuery?.data || []).map(e => e.path_id || e.learning_path_id || e.id)
+    pathEnrollmentsList.map(e => e.path_id || e.learning_path_id || e.id)
   );
 
-  // Parse DB paths if available from platform admin
-  const dbPaths = (pathsQuery?.data || []).map((p, idx) => {
+  // Parse DB paths if available from platform admin with full rule evaluation
+  const dbPaths = (pathsQuery?.data || []).map((p) => {
     const isEnrolled = enrolledPathIds.has(p.id);
-    const pathCourses = (p.courses || []).map((c, cIdx) => {
+    const enrollmentRow = pathEnrollmentsList.find(e => (e.path_id || e.learning_path_id || e.id) === p.id);
+    const isAssigned = isEnrolled && enrollmentRow?.status !== "completed";
+
+    const pathCourses = (p.courses || []).map((c, cIdx, allSteps) => {
       const prog = courseProgressMap.get(c.id) || 0;
+      const isCompleted = prog >= 100;
+
+      // Evaluate admin unlock rules
+      let isLocked = false;
+      if (cIdx === 0) {
+        isLocked = false;
+      } else if (c.unlockRule === "complete_previous") {
+        const prevStep = allSteps[cIdx - 1];
+        const prevProg = courseProgressMap.get(prevStep.id) || 0;
+        isLocked = prevProg < 100;
+      } else if (c.prerequisiteCourseIds && c.prerequisiteCourseIds.length > 0) {
+        isLocked = c.prerequisiteCourseIds.some(pid => (courseProgressMap.get(pid) || 0) < 100);
+      }
+
+      let status = "available";
+      if (isCompleted) {
+        status = "completed";
+      } else if (isLocked) {
+        status = "locked";
+      } else if (prog > 0 || (cIdx === 0 && isEnrolled)) {
+        status = "in_progress";
+      }
+
       return {
         id: c.id,
         step: cIdx + 1,
         title: c.title || "Course",
         duration: `${c.hours || 12} Hours`,
-        status: prog >= 100 ? "completed" : prog > 0 ? "in_progress" : "upcoming",
+        status,
+        isLocked,
+        unlockRule: c.unlockRule || "complete_previous",
+        isRequired: c.isRequired !== false,
         progress: prog,
         instructor: c.instructor || "Curriculum Specialist",
         instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
@@ -476,7 +509,7 @@ export function LearningPathsScreen({
       category: p.category || "engineering",
       categoryLabel: p.category ? `${p.category} Specialization` : "Professional Pathway",
       provider: "Train AI Academy",
-      badge: "PROFESSIONAL DIPLOMA",
+      badge: "CERTIFICATE AVAILABLE",
       badgeColor: "#2563EB",
       image: p.cover_image_url || "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80",
       description: p.description || "Master industry competencies and build production deliverables.",
@@ -487,20 +520,41 @@ export function LearningPathsScreen({
       targetRole: "Industry Specialist",
       skills: ["Production Workflow", "Architecture", "Hands-on Capstone"],
       isEnrolled,
+      isAssigned,
+      isDbPath: true,
       progress,
       courses: pathCourses
     };
   });
 
-  // Calculate live progress & status for CORE_PLATFORM_TRACKS
+  // Calculate live progress & status for CORE_PLATFORM_TRACKS with sequential locking
   const coreTracksWithLiveState = CORE_PLATFORM_TRACKS.map(track => {
     const isEnrolled = enrolledPathIds.has(track.id);
-    const liveCourses = track.courses.map((c, idx) => {
+    const liveCourses = track.courses.map((c, idx, allSteps) => {
       const prog = courseProgressMap.get(c.id) || 0;
+      const isCompleted = prog >= 100;
+      
+      let isLocked = false;
+      if (idx > 0) {
+        const prevCourse = allSteps[idx - 1];
+        const prevProg = courseProgressMap.get(prevCourse.id) || 0;
+        isLocked = prevProg < 100;
+      }
+
+      let status = "available";
+      if (isCompleted) {
+        status = "completed";
+      } else if (isLocked && !isCompleted) {
+        status = "locked";
+      } else if (prog > 0 || (idx === 0 && isEnrolled)) {
+        status = "in_progress";
+      }
+
       return {
         ...c,
         progress: prog,
-        status: prog >= 100 ? "completed" : prog > 0 ? "in_progress" : idx === 0 && isEnrolled ? "in_progress" : "upcoming"
+        isLocked,
+        status
       };
     });
 
@@ -510,13 +564,27 @@ export function LearningPathsScreen({
     return {
       ...track,
       isEnrolled,
+      isAssigned: isEnrolled,
+      isDbPath: false,
       progress: calculatedProgress,
       courses: liveCourses
     };
   });
 
-  // Combine DB custom pathways with core platform tracks
-  const allTracks = [...coreTracksWithLiveState, ...dbPaths];
+  // Combine DB custom pathways (Admin Priority First) with non-duplicate core platform tracks
+  const allTracks = [
+    ...dbPaths,
+    ...(dbPaths.length === 0
+      ? coreTracksWithLiveState
+      : coreTracksWithLiveState.filter(ct => !dbPaths.some(dp => dp.title?.toLowerCase() === ct.title?.toLowerCase() || dp.id === ct.id)))
+  ].sort((a, b) => {
+    // Prioritize enrolled/assigned tracks to the top
+    if (a.isEnrolled && !b.isEnrolled) return -1;
+    if (!a.isEnrolled && b.isEnrolled) return 1;
+    if (a.isDbPath && !b.isDbPath) return -1;
+    if (!a.isDbPath && b.isDbPath) return 1;
+    return 0;
+  });
 
   // Filtering
   const filteredTracks = allTracks.filter(track => {
@@ -746,8 +814,13 @@ export function LearningPathsScreen({
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(15,23,42,0.92) 0%, rgba(15,23,42,0.4) 60%, transparent 100%)" }} />
 
                 <div style={{ position: "absolute", top: 14, left: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <span style={{ background: track.badgeColor, color: "#FFFFFF", fontSize: 10.5, fontWeight: 800, padding: "4px 10px", borderRadius: 6, letterSpacing: ".03em" }}>
-                    {track.badge}
+                  {track.isAssigned && (
+                    <span style={{ background: "#2563EB", color: "#FFFFFF", fontSize: 10.5, fontWeight: 900, padding: "4px 10px", borderRadius: 6, letterSpacing: ".03em", boxShadow: "0 2px 8px rgba(37,99,235,0.4)" }}>
+                      ASSIGNED BY ADMIN
+                    </span>
+                  )}
+                  <span style={{ background: track.badgeColor || "var(--primary)", color: "#FFFFFF", fontSize: 10.5, fontWeight: 800, padding: "4px 10px", borderRadius: 6, letterSpacing: ".03em" }}>
+                    {track.badge || "CERTIFICATE AVAILABLE"}
                   </span>
                   <span style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", color: "#FFFFFF", fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 6 }}>
                     {track.courses.length} Course Milestone Series
@@ -806,45 +879,69 @@ export function LearningPathsScreen({
                     Curriculum Sequence ({track.courses.length} Milestone Courses)
                   </div>
 
-                  {track.courses.map((course, idx) => (
-                    <div
-                      key={course.id || idx}
-                      className="tai-row tai-between"
-                      style={{
-                        padding: "10px 14px",
-                        background: course.status === "in_progress" ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)",
-                        borderRadius: 8,
-                        border: course.status === "in_progress" ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                        cursor: "pointer"
-                      }}
-                      onClick={() => push("courseDetail", { id: course.id })}
-                    >
-                      <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{
-                          width: 28, height: 28, borderRadius: "50%",
-                          background: course.status === "completed" ? "#10B981" : course.status === "in_progress" ? "var(--primary)" : "var(--surface-3)",
-                          color: course.status === "upcoming" ? "var(--text-3)" : "#FFFFFF",
-                          display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0
-                        }}>
-                          {course.status === "completed" ? <Check size={14} /> : idx + 1}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", wordBreak: "break-word", lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                            {course.title}
-                          </div>
-                          <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>
-                            {course.instructor} • {course.lessonsCount} lessons • {course.duration}
-                          </div>
-                        </div>
-                      </div>
+                  {track.courses.map((course, idx) => {
+                    const isLocked = course.status === "locked" || course.isLocked;
+                    const isCompleted = course.status === "completed";
+                    const isInProgress = course.status === "in_progress";
 
-                      <div className="tai-row tai-gap10" style={{ flexShrink: 0 }}>
-                        <Tag tone={course.status === "completed" ? "success" : course.status === "in_progress" ? "primary" : "default"}>
-                          {course.status === "completed" ? "COMPLETED" : course.status === "in_progress" ? "IN PROGRESS" : "AVAILABLE"}
-                        </Tag>
+                    return (
+                      <div
+                        key={course.id || idx}
+                        className="tai-row tai-between"
+                        style={{
+                          padding: "10px 14px",
+                          background: isInProgress ? "var(--primary-tint, #EFF6FF)" : isLocked ? "var(--surface-2)" : "var(--surface)",
+                          borderRadius: 8,
+                          border: isInProgress ? "1.5px solid var(--primary)" : isLocked ? "1px dashed var(--border)" : "1px solid var(--border)",
+                          cursor: isLocked ? "not-allowed" : "pointer",
+                          opacity: isLocked ? 0.75 : 1,
+                          transition: "all 0.15s ease"
+                        }}
+                        onClick={() => {
+                          if (isLocked) {
+                            showToast?.("This course is locked by the pathway curriculum. Complete the previous course to unlock it.");
+                          } else {
+                            push("courseDetail", { id: course.id });
+                          }
+                        }}
+                      >
+                        <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: 1, alignItems: "center" }}>
+                          <div style={{
+                            width: 28, height: 28, borderRadius: "50%",
+                            background: isCompleted ? "#10B981" : isInProgress ? "var(--primary)" : isLocked ? "var(--surface-3)" : "var(--surface-3)",
+                            color: isCompleted || isInProgress ? "#FFFFFF" : "var(--text-3)",
+                            display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, flexShrink: 0
+                          }}>
+                            {isCompleted ? <Check size={14} /> : isLocked ? <Lock size={13} /> : idx + 1}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontWeight: 800, fontSize: 13.5, color: isLocked ? "var(--text-2)" : "var(--text)", wordBreak: "break-word", lineHeight: 1.35, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                              {course.title}
+                            </div>
+                            <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>
+                              {course.instructor} • {course.lessonsCount} lessons • {course.duration}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="tai-row tai-gap10" style={{ flexShrink: 0, alignItems: "center" }}>
+                          {isLocked ? (
+                            <Tag tone="default">
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                                <Lock size={11} /> LOCKED
+                              </span>
+                            </Tag>
+                          ) : isCompleted ? (
+                            <Tag tone="success">COMPLETED ✓</Tag>
+                          ) : isInProgress ? (
+                            <Tag tone="primary">IN PROGRESS</Tag>
+                          ) : (
+                            <Tag tone="default">AVAILABLE</Tag>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Card Footer Actions */}
@@ -870,8 +967,10 @@ export function LearningPathsScreen({
                         if (!track.isEnrolled) {
                           handleEnrollPathway(track);
                         } else {
-                          const firstActiveCourse = track.courses.find(c => c.status === "in_progress") || track.courses[0];
-                          push("courseDetail", { id: firstActiveCourse.id });
+                          const targetCourse = track.courses.find(c => !c.isLocked && c.status !== "completed") || track.courses[0];
+                          if (targetCourse) {
+                            push("courseDetail", { id: targetCourse.id });
+                          }
                         }
                       }}
                     >
@@ -909,18 +1008,34 @@ export function LearningPathsScreen({
 
             <div style={{ fontSize: 13, fontWeight: 800, color: "var(--text)", marginBottom: 8 }}>Included Courses:</div>
             <div className="tai-col tai-gap8" style={{ maxHeight: 260, overflowY: "auto" }}>
-              {selectedTrack.courses.map((c, i) => (
-                <div
-                  key={c.id || i}
-                  style={{ padding: "10px 12px", background: "var(--surface-2)", borderRadius: 10, border: "1px solid var(--border)" }}
-                >
-                  <div className="tai-row tai-between">
-                    <span style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>Course {i + 1}: {c.title}</span>
-                    <Tag tone={c.status === "completed" ? "success" : "primary"}>{c.duration}</Tag>
+              {selectedTrack.courses.map((c, i) => {
+                const isStepLocked = c.status === "locked" || c.isLocked;
+                return (
+                  <div
+                    key={c.id || i}
+                    style={{
+                      padding: "10px 12px",
+                      background: "var(--surface-2)",
+                      borderRadius: 10,
+                      border: isStepLocked ? "1px dashed var(--border)" : "1px solid var(--border)",
+                      opacity: isStepLocked ? 0.75 : 1
+                    }}
+                  >
+                    <div className="tai-row tai-between" style={{ alignItems: "center" }}>
+                      <span style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
+                        {isStepLocked && <Lock size={13} color="var(--text-3)" />}
+                        <span>Course {i + 1}: {c.title}</span>
+                      </span>
+                      <Tag tone={c.status === "completed" ? "success" : isStepLocked ? "default" : "primary"}>
+                        {isStepLocked ? "LOCKED" : c.duration}
+                      </Tag>
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
+                      {isStepLocked ? "Complete previous milestones to unlock." : (c.description || "Core milestone curriculum.")}
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>{c.description}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="tai-row tai-between tai-mt20" style={{ paddingTop: 14, borderTop: "1px solid var(--border)" }}>
@@ -928,11 +1043,11 @@ export function LearningPathsScreen({
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
                 onClick={() => {
-                  const targetCourse = selectedTrack.courses.find(c => c.status === "in_progress") || selectedTrack.courses[0];
+                  const targetCourse = selectedTrack.courses.find(c => !c.isLocked && c.status !== "completed") || selectedTrack.courses[0];
                   setSelectedTrack(null);
                   if (!selectedTrack.isEnrolled) {
                     handleEnrollPathway(selectedTrack);
-                  } else {
+                  } else if (targetCourse) {
                     push("courseDetail", { id: targetCourse.id });
                   }
                 }}
