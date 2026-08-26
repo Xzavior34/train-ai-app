@@ -66,14 +66,14 @@ export function HomeScreen({
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
-                <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
+                <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2, color: "#FFFFFF" }}>
                   Welcome back, {userFirstName || "Learner"} 👋
                 </h1>
-                <Tag tone="primary" style={{ background: "rgba(59, 130, 246, 0.25)", color: "#93C5FD", border: "1px solid rgba(147, 197, 253, 0.3)" }}>
+                <span style={{ background: "#2563EB", color: "#FFFFFF", padding: "3px 10px", borderRadius: 6, fontWeight: 800, fontSize: 11.5, letterSpacing: "0.02em", border: "1px solid rgba(255, 255, 255, 0.25)", display: "inline-flex", alignItems: "center" }}>
                   {continueCourse?.category || "Career Pathway"}
-                </Tag>
+                </span>
               </div>
-              <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, color: "rgba(255,255,255,0.85)", lineHeight: 1.45 }}>
+              <p className="tai-hero-desc" style={{ fontSize: 13.5, margin: 0, color: "#F8FAFC", fontWeight: 500, lineHeight: 1.45 }}>
                 {done >= goal ? "🎉 Outstanding! You've completed your weekly sprint target." : `${done} of ${goal} weekly lessons completed. Keep up your active pace!`}
               </p>
             </div>
@@ -82,8 +82,8 @@ export function HomeScreen({
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <div
                 style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  background: "rgba(255, 255, 255, 0.12)",
+                  border: "1px solid rgba(255, 255, 255, 0.22)",
                   padding: "6px 12px",
                   borderRadius: 99,
                   display: "flex",
@@ -97,14 +97,14 @@ export function HomeScreen({
                 onClick={() => push("achievements")}
                 title="Active Study Streak"
               >
-                <Flame size={15} color="#EA580C" />
-                <span>{user?.streak || 1} <span style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>Days</span></span>
+                <Flame size={15} color="#FB923C" />
+                <span>{user?.streak || 1} <span style={{ fontSize: 11, opacity: 0.9, fontWeight: 700 }}>Days</span></span>
               </div>
 
               <div
                 style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  background: "rgba(255, 255, 255, 0.12)",
+                  border: "1px solid rgba(255, 255, 255, 0.22)",
                   padding: "6px 12px",
                   borderRadius: 99,
                   display: "flex",
@@ -118,14 +118,14 @@ export function HomeScreen({
                 onClick={() => push("leaderboard")}
                 title="Total Earned XP"
               >
-                <Zap size={15} color="#F59E0B" />
-                <span>{user?.totalPoints || 1250} <span style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>XP</span></span>
+                <Zap size={15} color="#FBBF24" />
+                <span>{user?.totalPoints || 1250} <span style={{ fontSize: 11, opacity: 0.9, fontWeight: 700 }}>XP</span></span>
               </div>
 
               <div
                 style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  background: "rgba(255, 255, 255, 0.12)",
+                  border: "1px solid rgba(255, 255, 255, 0.22)",
                   padding: "6px 12px",
                   borderRadius: 99,
                   display: "flex",
@@ -140,7 +140,7 @@ export function HomeScreen({
                 title="AI Credits"
               >
                 <Sparkles size={15} color="#60A5FA" />
-                <span>{user?.credits ?? 10} <span style={{ fontSize: 11, opacity: 0.8, fontWeight: 600 }}>Credits</span></span>
+                <span>{user?.credits ?? 10} <span style={{ fontSize: 11, opacity: 0.9, fontWeight: 700 }}>Credits</span></span>
               </div>
             </div>
           </div>
@@ -319,98 +319,107 @@ export function HomeScreen({
             ========================================================================= */}
         <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           
-          {/* 1. Continue Learning Card & Active Enrolled Courses */}
+          {/* 1. Track Curriculum & Enrolled Modules (Non-redundant Roadmap) */}
           {coursesLoading ? (
             <div className="tai-card" style={{ padding: 20, textAlign: "center" }}>
-              <div className="tai-body-text">Loading your courses...</div>
+              <div className="tai-body-text" style={{ color: "var(--text-2)", fontWeight: 600 }}>Loading your courses...</div>
             </div>
-          ) : !continueCourse ? (
-            <div className="tai-card" style={{ padding: 20, textAlign: "center", borderRadius: 12 }}>
-              <div className="tai-body-text">
-                {enrolledCourses.length > 0
-                  ? `You've completed all ${enrolledCourses.length} of your assigned courses.`
-                  : "No active course yet. Browse the catalog to get started."}
+          ) : enrolledCourses.length === 0 ? (
+            <div className="tai-card" style={{ padding: 22, textAlign: "center", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
+              <div className="tai-title-sm" style={{ marginBottom: 6, color: "var(--text)" }}>Explore Your Career Curriculum</div>
+              <div className="tai-body-text" style={{ color: "var(--text-2)", fontSize: 13 }}>
+                Enroll in verified tracks and courses to start building your AI and design credentials.
               </div>
-              <button className="tai-btn tai-btn-primary tai-mt12" style={{ width: "100%" }} onClick={enrolledCourses.length > 0 ? goToMyCourses : () => goTab("courses")}>
-                <BookOpen size={16} /> {enrolledCourses.length > 0 ? "See my courses" : "Browse courses"}
+              <button className="tai-btn tai-btn-primary tai-mt12" style={{ width: "100%", fontWeight: 800 }} onClick={() => goTab("courses")}>
+                <BookOpen size={16} /> Browse Course Catalog
               </button>
             </div>
           ) : (
-            <div className="tai-card tai-card-hover" style={{ padding: 0, overflow: "hidden", borderRadius: 12, border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
-              <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div className="tai-row tai-gap8" style={{ fontWeight: 700, fontSize: 13.5 }}>
-                  <BookOpen size={16} color="var(--primary)" />
-                  <span>Continue Learning</span>
+            <div className="tai-card" style={{ padding: 18, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
+              <div className="tai-row tai-between" style={{ marginBottom: 14, alignItems: "center" }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Layers size={17} color="var(--primary)" />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Curriculum Roadmap</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-2)", fontWeight: 600 }}>
+                      {enrolledCourses.length} Track Courses • {completedCourses.length} Completed
+                    </div>
+                  </div>
                 </div>
-                <span className="tai-link" style={{ fontSize: 12, fontWeight: 700 }} onClick={() => goTab("courses")}>My Courses ({enrolledCourses.length}) →</span>
+                <span className="tai-link" style={{ fontSize: 12, fontWeight: 800 }} onClick={() => goTab("courses")}>All Courses ({enrolledCourses.length}) →</span>
               </div>
 
-              <div style={{ padding: "14px 16px", boxSizing: "border-box", width: "100%" }}>
-                <div className="tai-row tai-gap12" style={{ alignItems: "center", marginBottom: 12 }}>
-                  <img 
-                    src={continueCourse.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
-                    alt={continueCourse.title}
-                    style={{ width: 52, height: 52, borderRadius: 8, objectFit: "cover", flexShrink: 0 }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="tai-row tai-between" style={{ marginBottom: 3 }}>
-                      <Tag tone="primary">{continueCourse.category || "Technology"}</Tag>
-                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>12 hrs est.</span>
-                    </div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", lineHeight: 1.35, wordBreak: "break-word" }}>
-                      {continueCourse.title}
-                    </div>
-                  </div>
+              {/* Overall Track Progress Snapshot */}
+              <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
+                <div className="tai-row tai-between" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 5 }}>
+                  <span style={{ color: "var(--text)" }}>Track Mastery Progress</span>
+                  <span style={{ color: "var(--primary)", fontWeight: 800 }}>{avgProgress}% Completed</span>
                 </div>
+                <ProgressBar value={avgProgress} height={6} />
+              </div>
 
-                <div className="tai-row tai-between tai-gap12" style={{ alignItems: "center" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="tai-row tai-between" style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>
-                      <span>Course Progress</span>
-                      <span style={{ fontWeight: 700, color: "var(--primary)" }}>{continueCourse.progress || 0}%</span>
-                    </div>
-                    <ProgressBar value={continueCourse.progress || 0} height={6} />
-                  </div>
-                  <button 
-                    className="tai-btn tai-btn-primary tai-btn-sm"
-                    style={{ padding: "8px 18px", fontSize: 12, fontWeight: 700, flexShrink: 0 }}
-                    onClick={() => push("courseDetail", { id: continueCourse.id })}
-                  >
-                    Continue →
-                  </button>
-                </div>
-
-                {/* Additional enrolled courses quick switcher strip */}
-                {otherEnrolledCourses.length > 0 && (
-                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", marginBottom: 6 }}>
-                      Also in your curriculum:
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                      {otherEnrolledCourses.slice(0, 2).map(c => (
-                        <div
-                          key={c.id}
-                          className="tai-row tai-between"
-                          style={{
-                            padding: "6px 8px",
-                            borderRadius: 6,
-                            background: "var(--surface-3)",
-                            border: "1px solid var(--border)",
-                            cursor: "pointer"
-                          }}
-                          onClick={() => push("courseDetail", { id: c.id })}
-                        >
-                          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {/* List of Enrolled Courses & Next Modules */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {enrolledCourses.map((c) => {
+                  const isFinished = (c.progress || 0) >= 100;
+                  const isActive = c.id === continueCourse?.id;
+                  return (
+                    <div
+                      key={c.id}
+                      className="tai-row tai-between"
+                      style={{
+                        padding: "10px 12px",
+                        background: isActive ? "rgba(37, 99, 235, 0.06)" : "var(--surface-3)",
+                        borderRadius: 8,
+                        border: isActive ? "1.5px solid rgba(37, 99, 235, 0.4)" : "1px solid var(--border)",
+                        cursor: "pointer",
+                        gap: 10,
+                        alignItems: "center"
+                      }}
+                      onClick={() => push("courseDetail", { id: c.id })}
+                    >
+                      <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1, alignItems: "center" }}>
+                        <img
+                          src={c.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
+                          alt={c.title}
+                          style={{ width: 38, height: 38, borderRadius: 6, objectFit: "cover", flexShrink: 0 }}
+                        />
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div className="tai-row tai-gap6" style={{ alignItems: "center", marginBottom: 2 }}>
+                            {isFinished ? (
+                              <span style={{ fontSize: 10, fontWeight: 800, color: "#059669", background: "rgba(16, 185, 129, 0.15)", padding: "1px 6px", borderRadius: 4 }}>
+                                Completed ✓
+                              </span>
+                            ) : isActive ? (
+                              <span style={{ fontSize: 10, fontWeight: 800, color: "var(--primary)", background: "rgba(37, 99, 235, 0.15)", padding: "1px 6px", borderRadius: 4 }}>
+                                Current Active
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: 10, fontWeight: 800, color: "var(--text-3)", background: "var(--surface)", padding: "1px 6px", borderRadius: 4 }}>
+                                In Track
+                              </span>
+                            )}
+                            <span style={{ fontSize: 11, color: "var(--text-2)", fontWeight: 600 }}>{c.category || "Design"}</span>
+                          </div>
+                          <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {c.title}
                           </div>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)", flexShrink: 0 }}>
-                            {c.progress || 0}%
-                          </span>
                         </div>
-                      ))}
+                      </div>
+
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: isFinished ? "#059669" : "var(--primary)" }}>
+                          {c.progress || 0}%
+                        </div>
+                        <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 600 }}>
+                          {isFinished ? "Verified" : "Resume →"}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -612,13 +621,15 @@ export function HomeScreen({
                     {user?.streak || 8}-Day Streak
                   </span>
                 </div>
-                <Tag tone="warning">{user?.totalPoints || 1250} Total XP</Tag>
+                <span style={{ background: "rgba(245, 158, 11, 0.15)", color: "#B45309", padding: "3px 8px", borderRadius: 6, fontWeight: 800, fontSize: 11, border: "1px solid rgba(245, 158, 11, 0.35)", display: "inline-flex", alignItems: "center" }}>
+                  {user?.totalPoints || 1250} Total XP
+                </span>
               </div>
 
               {/* Level XP Bar */}
-              <div style={{ fontSize: 10.5, color: "var(--text-3)", marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
+              <div style={{ fontSize: 11, color: "var(--text-2)", fontWeight: 600, marginBottom: 4, display: "flex", justifyContent: "space-between" }}>
                 <span>Level {user?.level || 1} Progress</span>
-                <span style={{ fontWeight: 700, color: "var(--primary)" }}>{Math.round(((user?.totalPoints || 1250) % 500) / 5)}%</span>
+                <span style={{ fontWeight: 800, color: "var(--primary)" }}>{Math.round(((user?.totalPoints || 1250) % 500) / 5)}%</span>
               </div>
               <ProgressBar value={((user?.totalPoints || 1250) % 500) / 5} height={5} />
             </div>
