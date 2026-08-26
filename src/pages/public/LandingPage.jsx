@@ -416,6 +416,7 @@ export default function LandingPage({ onNavigate }) {
           {/* Action CTAs */}
           <div className="lp-header-actions" style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button
+              className="lp-signin-btn lp-desktop-nav"
               style={styles.signInBtn}
               onClick={() => handleNav("signin")}
             >
@@ -458,14 +459,14 @@ export default function LandingPage({ onNavigate }) {
           <div
             className="lp-mobile-drawer anim-fluid-entrance"
             style={{
-              background: "rgba(255, 255, 255, 0.95)",
+              background: "rgba(255, 255, 255, 0.98)",
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
               borderTop: "1px solid rgba(226, 232, 240, 0.9)",
               padding: "16px 20px 24px",
               display: "flex",
               flexDirection: "column",
-              gap: 10,
+              gap: 12,
               boxShadow: "0 16px 40px -10px rgba(15, 23, 42, 0.15)"
             }}
           >
@@ -474,13 +475,22 @@ export default function LandingPage({ onNavigate }) {
             <span className="lp-nav-link anim-stagger-3" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("learners")}>Learners</span>
             <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("organisation")}>Organisation</span>
             <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("faq")}>FAQ</span>
-            <button
-              className="action-btn-outline"
-              style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, marginTop: 6, fontSize: 13 }}
-              onClick={() => handleNav("demo")}
-            >
-              Request a demo
-            </button>
+            <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+              <button
+                className="action-btn-outline"
+                style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13 }}
+                onClick={() => handleNav("signin")}
+              >
+                Sign In to Account
+              </button>
+              <button
+                className="action-btn-primary"
+                style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13 }}
+                onClick={() => handleNav("demo")}
+              >
+                Request a demo
+              </button>
+            </div>
           </div>
         )}
       </header>

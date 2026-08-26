@@ -215,7 +215,7 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
             {orgsQuery.loading && <div className="ta-empty">Loading organizations...</div>}
             {!orgsQuery.loading && orgs.length === 0 && <div className="ta-empty">No organizations created yet.</div>}
             
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }} className="anim-stagger">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))", gap: 18 }} className="anim-stagger">
               {orgs.map(o => (
                 <div
                   key={o.id}

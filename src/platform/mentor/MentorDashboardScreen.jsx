@@ -81,7 +81,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         
         <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
-          <div className="tai-glow-purple" />
+          <div className="tai-glow-cobalt" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">

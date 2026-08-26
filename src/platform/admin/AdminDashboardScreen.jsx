@@ -305,9 +305,9 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               background: "var(--surface-2)",
               border: "1px solid var(--border)" }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
-                <div className="ta-row ta-gap8" style={{ color: "#2563EB", fontWeight: 700, fontSize: 13.5, minWidth: 0 }}>
+                <div className="ta-row ta-gap8" style={{ color: "#2563EB", fontWeight: 700, fontSize: 13.5, minWidth: 0, flex: 1 }}>
                   <Brain size={16} style={{ flexShrink: 0 }} />
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Cohort Diagnostic Insights</span>
+                  <span style={{ wordBreak: "break-word", lineHeight: 1.3 }}>Cohort Diagnostic Insights</span>
                 </div>
                 <Tag tone="warning">Early Alert</Tag>
               </div>

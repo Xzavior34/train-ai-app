@@ -323,10 +323,10 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
       {activeProgressTab === "overview" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 20 }}>
             
             {/* Weekly Learning Hours Chart Card */}
-            <div className="tai-card" style={{ padding: 24, borderRadius: 10 }}>
+            <div className="tai-card" style={{ padding: "18px 14px", borderRadius: 10 }}>
               <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
                 <div>
                   <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
@@ -340,12 +340,12 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               </div>
 
               {/* Bar Chart Visualizer */}
-              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 160, padding: "20px 10px 10px", background: "var(--surface-3)", borderRadius: 8 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 160, padding: "20px 8px 10px", background: "var(--surface-3)", borderRadius: 8, gap: 4 }}>
                 {WEEKLY_HOURS.map((item, idx) => (
-                  <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, flex: 1 }}>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>{item.hours}h</span>
-                    <div style={{ width: 28, height: `${item.heightPct}%`, background: idx === 2 ? "var(--primary)" : "rgba(59, 130, 246, 0.4)", borderRadius: 6, transition: "all 0.2s ease" }} />
-                    <span style={{ fontSize: 11.5, fontWeight: idx === 2 ? 800 : 600, color: idx === 2 ? "var(--primary)" : "var(--text-2)" }}>{item.day}</span>
+                  <div key={idx} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: "var(--text-3)" }}>{item.hours}h</span>
+                    <div style={{ width: "clamp(14px, 3.5vw, 24px)", height: `${item.heightPct}%`, background: idx === 2 ? "var(--primary)" : "rgba(59, 130, 246, 0.4)", borderRadius: 6, transition: "all 0.2s ease" }} />
+                    <span style={{ fontSize: 11, fontWeight: idx === 2 ? 800 : 600, color: idx === 2 ? "var(--primary)" : "var(--text-2)" }}>{item.day}</span>
                   </div>
                 ))}
               </div>
@@ -424,7 +424,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             Accredited certificates issued upon completing syllabi, final assessments, and peer reviews.
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 20 }}>
             {CERTIFICATES.map((cert) => (
               <div
                 key={cert.id}
