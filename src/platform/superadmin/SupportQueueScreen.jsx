@@ -61,7 +61,7 @@ export function SupportQueueScreen({ currentUserId }) {
                   style={{ cursor: "pointer", padding: "10px 12px", borderRadius: 8, background: selectedTicketId === t.id ? "var(--primary-tint, #EFF6FF)" : "var(--surface-2)", transition: "background .15s ease" }}
                 >
                   <div className="ta-row ta-between" style={{ gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: "1 1 auto" }}>{t.subject}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, minWidth: 0, wordBreak: "break-word", lineHeight: 1.35, flex: "1 1 auto" }}>{t.subject}</span>
                     <Tag tone={t.status === "resolved" || t.status === "closed" ? "success" : t.status === "in_progress" ? "warning" : "danger"}>{t.status.replace("_", " ")}</Tag>
                   </div>
                   <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{t.organizations?.name || "Unknown org"} - {new Date(t.created_at).toLocaleDateString()}</div>

@@ -65,8 +65,8 @@ export function TracksScreen() {
                     {(t.courseTitles || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No course titles available.</div>}
                     {(t.courseTitles || []).map((title, i) => (
                       <div key={i} className="ta-row ta-gap8" style={{ fontSize: 12.5, color: "var(--text)" }}>
-                        <BookOpen size={12} color="var(--primary)" style={{ flexShrink: 0 }} />
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</span>
+                        <BookOpen size={12} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
+                        <span style={{ wordBreak: "break-word", lineHeight: 1.35 }}>{title}</span>
                       </div>
                     ))}
                   </div>

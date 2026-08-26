@@ -65,7 +65,7 @@ export function BrandingScreen() {
             BRANDING & WHITE-LABEL HERO BANNER
             ========================================================================= */}
         <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
-          <div className="tai-glow-magenta" />
+          <div className="tai-glow-cobalt" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
@@ -78,7 +78,7 @@ export function BrandingScreen() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 24, alignItems: "start" }}>
         
         {/* Controls Card */}
         <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
