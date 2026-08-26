@@ -51,7 +51,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
 
           {/* Main Left Column */}
           <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 16 }}>
               {cohortsQuery.loading && <div className="ta-empty">Loading cohorts...</div>}
               {!cohortsQuery.loading && cohorts.length === 0 && <div className="ta-empty">No cohorts created yet. Click "Create cohort" above to launch your first batch.</div>}
               {cohorts.map((c, idx) => {

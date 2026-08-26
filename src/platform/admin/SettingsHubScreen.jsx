@@ -226,7 +226,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
       <TopBar title="Settings Hub" sub="Organization name & configuration" orgSelector={orgSelector} onNavigate={setScreen} profileQuery={profileQuery} />
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
-          <div className="tai-glow-purple" />
+          <div className="tai-glow-cobalt" />
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Settings Hub &amp; Preferences</h1>
@@ -243,7 +243,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             <div className="ta-hero-actions">
               <button 
                 className="ta-btn ta-btn-primary" 
-                style={{ background: "#4F46E5", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
+                style={{ background: "#2563EB", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
                 onClick={handleSave}
                 disabled={saving || !orgName.trim()}
               >

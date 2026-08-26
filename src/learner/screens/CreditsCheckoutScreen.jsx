@@ -218,7 +218,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
           </div>
 
           {/* 3-Column Pricing Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 14 }}>
             {PACKAGES.map((p) => {
               const isSelected = selectedPackageId === p.id;
               return (
