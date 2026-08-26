@@ -120,9 +120,14 @@ export function CourseDetailScreen({
       {/* Course Hero Banner */}
       <div className="tai-card" style={{ padding: 0, border: "none", overflow: "hidden", color: "#fff" }}>
         <CourseCoverImage course={course}>
-          <div className="tai-row tai-between">
+          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 6 }}>
             <Tag>{course.category || "Course"}</Tag>
-            {course.mandatory && <Tag tone="warning">Mandatory</Tag>}
+            {course.isCompliance && (
+              <span style={{ background: "#DC2626", color: "#FFFFFF", fontSize: 11, fontWeight: 900, padding: "3px 10px", borderRadius: 4, letterSpacing: "0.03em", boxShadow: "0 2px 8px rgba(220,38,38,0.4)" }}>
+                MANDATORY COMPLIANCE
+              </span>
+            )}
+            {course.mandatory && !course.isCompliance && <Tag tone="warning">Mandatory</Tag>}
           </div>
           <div style={{ fontWeight: 800, fontSize: 18, marginTop: 12, letterSpacing: "-0.01em", textShadow: "0 1px 2px rgba(0,0,0,0.15)" }}>
             {course.tagline || course.title}
@@ -133,6 +138,29 @@ export function CourseDetailScreen({
           </div>
         </CourseCoverImage>
       </div>
+
+      {/* Compliance Assignment Notice */}
+      {course.isCompliance && (
+        <div
+          className="tai-card"
+          style={{
+            padding: "12px 16px",
+            background: "linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(249, 115, 22, 0.06) 100%)",
+            border: "1px solid rgba(239, 68, 68, 0.25)",
+            borderRadius: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 8
+          }}
+        >
+          <div style={{ fontSize: 12.5, color: "var(--text)", fontWeight: 700 }}>
+            Mandatory Compliance Requirement {course.complianceDueAt ? `• Complete before ${new Date(course.complianceDueAt).toLocaleDateString()}` : "• Required by your Organization"}
+          </div>
+          <span style={{ fontSize: 11, fontWeight: 800, color: "#DC2626" }}>REQUIRED SPRINT</span>
+        </div>
+      )}
 
       {/* Progress or Enrollment CTA */}
       {isEnrolled ? (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users, Star } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users, Star, Award } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
 import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
@@ -26,7 +26,9 @@ export function ProfileScreen({
   weeklyGoal = 5,
   setWeeklyGoal,
   referralLink = null,
-  referralStats = null
+  referralStats = null,
+  myCertificates = [],
+  feedbackNotes = []
 }) {
   const [activeTab, setActiveTab] = useState("profile");
   const [copiedReferral, setCopiedReferral] = useState(false);
@@ -364,7 +366,9 @@ export function ProfileScreen({
             <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Credential XP</div>
           </div>
           <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
-            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--success)", letterSpacing: "-0.02em" }}>3 Issued</div>
+            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--success)", letterSpacing: "-0.02em" }}>
+              {myCertificates?.length ?? (user.certificates || 0)} Issued
+            </div>
             <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Certificates</div>
           </div>
         </div>
@@ -421,6 +425,94 @@ export function ProfileScreen({
               </div>
             </div>
           </div>
+
+          {/* Earned Certificates & Verified Credentials Section */}
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
+            <div className="tai-row tai-between" style={{ marginBottom: 14, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
+                <Award size={20} color="var(--primary)" />
+                <h2 className="tai-title-sm" style={{ margin: 0 }}>Earned Certificates & Credentials</h2>
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)" }}>
+                {myCertificates.length} {myCertificates.length === 1 ? "Certificate" : "Certificates"} Earned
+              </span>
+            </div>
+
+            {myCertificates.length === 0 ? (
+              <div style={{ padding: "24px 16px", textAlign: "center", background: "var(--surface-2)", borderRadius: 8 }}>
+                <Award size={28} color="var(--text-3)" style={{ margin: "0 auto 8px", opacity: 0.6 }} />
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>No issued certificates yet</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
+                  Complete all modules in an enrolled course or learning track to receive verified certificates.
+                </div>
+              </div>
+            ) : (
+              <div className="tai-col tai-gap10">
+                {myCertificates.map((cert, idx) => (
+                  <div
+                    key={cert.id || idx}
+                    className="tai-row tai-between"
+                    style={{
+                      padding: "12px 16px",
+                      background: "var(--surface-2)",
+                      borderRadius: 8,
+                      border: "1px solid var(--border)",
+                      flexWrap: "wrap",
+                      gap: 12,
+                      alignItems: "center"
+                    }}
+                  >
+                    <div className="tai-row tai-gap12" style={{ minWidth: 200, flex: 1 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Award size={18} color="#10B981" />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>
+                          {cert.courses?.title || cert.title || "Course Completion Certificate"}
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                          Issued {cert.issued_at ? new Date(cert.issued_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Recently"} • ID: {cert.certificate_number || cert.id?.slice(0, 8)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                      <span style={{ background: "#2563EB", color: "#FFFFFF", fontSize: 10.5, fontWeight: 800, padding: "3px 8px", borderRadius: 4 }}>
+                        VERIFIED CREDENTIAL
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Instructor & Mentor Feedback Notes */}
+          {feedbackNotes && feedbackNotes.length > 0 && (
+            <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
+              <div className="tai-row tai-gap10" style={{ marginBottom: 14, alignItems: "center" }}>
+                <MessageSquare size={20} color="var(--primary)" />
+                <h2 className="tai-title-sm" style={{ margin: 0 }}>Instructor & Mentor Feedback</h2>
+              </div>
+              <div className="tai-col tai-gap10">
+                {feedbackNotes.map((note, idx) => (
+                  <div key={note.id || idx} style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                    <div className="tai-row tai-between" style={{ marginBottom: 4 }}>
+                      <span style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>
+                        {note.courses?.title ? `Course: ${note.courses.title}` : "Mentorship Assessment"}
+                      </span>
+                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>
+                        {note.created_at ? new Date(note.created_at).toLocaleDateString() : ""}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 12.5, color: "var(--text-2)", margin: 0, lineHeight: 1.45 }}>
+                      {note.note || note.content}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {push && gamificationEnabled !== false && (
             <div

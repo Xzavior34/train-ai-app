@@ -12,7 +12,8 @@ export function HomeScreen({
   user = {}, courses = [], coursesLoading, unreadNotifs = 0, weeklyGoal = 5,
   session, push, goTab, goToMyCourses, cohort = null, cohortLoading = false,
   achievements = [], showToast,
-  learningPathsQuery, pathEnrollmentsQuery
+  learningPathsQuery, pathEnrollmentsQuery,
+  complianceAssignmentsQuery
 }) {
   const enrolledCourses = (courses || []).filter(c => c.enrolled);
   const continueCourse = enrolledCourses.find(c => c.progress < 100) || enrolledCourses[0] || null;
@@ -23,6 +24,10 @@ export function HomeScreen({
     (pathEnrollmentsQuery?.data || []).map(e => e.path_id || e.learning_path_id || e.id)
   );
   const activePathway = (learningPathsQuery?.data || []).find(p => enrolledPathIds.has(p.id)) || null;
+
+  // Active Mandatory Compliance Assignments
+  const complianceAssignmentsList = complianceAssignmentsQuery?.data || [];
+  const pendingComplianceAssignments = complianceAssignmentsList.filter(a => a.status !== "completed");
 
   const completedCourses = enrolledCourses.filter(c => (c.progress || 0) >= 100);
   const avgProgress = enrolledCourses.length
@@ -319,6 +324,52 @@ export function HomeScreen({
 
         </div>
       </div>
+
+      {/* Mandatory Compliance Alert Card */}
+      {pendingComplianceAssignments.length > 0 && (
+        <div
+          className="tai-card anim-fluid-entrance"
+          style={{
+            borderRadius: 12,
+            padding: "16px 20px",
+            background: "linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(249, 115, 22, 0.06) 100%)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 14
+          }}
+        >
+          <div className="tai-row tai-gap12" style={{ minWidth: 240, flex: 1, alignItems: "center" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(239, 68, 68, 0.14)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <ShieldCheck size={20} color="#DC2626" />
+            </div>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 10.5, fontWeight: 900, background: "#DC2626", color: "#FFFFFF", padding: "2px 8px", borderRadius: 4, letterSpacing: "0.03em" }}>
+                  MANDATORY COMPLIANCE
+                </span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>
+                  {pendingComplianceAssignments[0].courses?.title || "Workplace Compliance Module"}
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 3 }}>
+                Assigned by Administrator • {pendingComplianceAssignments[0].due_at ? `Due by ${new Date(pendingComplianceAssignments[0].due_at).toLocaleDateString()}` : "Action Required"}
+                {pendingComplianceAssignments.length > 1 && ` (+${pendingComplianceAssignments.length - 1} more assigned)`}
+              </div>
+            </div>
+          </div>
+
+          <button
+            className="tai-btn tai-btn-primary tai-btn-sm"
+            style={{ padding: "8px 16px", fontWeight: 800, background: "#DC2626", borderColor: "#DC2626" }}
+            onClick={() => push("courseDetail", { id: pendingComplianceAssignments[0].course_id || pendingComplianceAssignments[0].courses?.id })}
+          >
+            Start Compliance Module →
+          </button>
+        </div>
+      )}
 
       {/* =========================================================================
           BALANCED 2-COLUMN DASHBOARD GRID

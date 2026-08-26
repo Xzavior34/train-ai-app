@@ -212,11 +212,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     gamificationStatsQuery, achievementsQuery, streakActivityQuery, leaderboardQuery, enrollmentsQuery, lessonProgressQuery,
     userProfileQuery, handleToggleBookmark,
     newlyEarnedAchievements, clearNewlyEarnedAchievements,
-    // Both of these were already fetched by useLearnerData and returned
-    // here, then never destructured or passed anywhere - the Learning Paths
-    // screen they exist for was rendering a hardcoded array instead. They
-    // now reach the real screen.
     learningPathsQuery, pathEnrollmentsQuery,
+    complianceAssignmentsQuery, myCertificatesQuery, feedbackNotesQuery,
   } = learnerData;
 
   // Celebrate a newly-unlocked achievement the moment useLearnerData()
@@ -747,12 +744,22 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   achievements={achievementsQuery.data || []}
                   learningPathsQuery={learningPathsQuery}
                   pathEnrollmentsQuery={pathEnrollmentsQuery}
+                  complianceAssignmentsQuery={complianceAssignmentsQuery}
                 />
               )}
               {screen === "courses" && (
                 <CoursesScreen
                   user={user}
-                  courses={courses.map(c => ({ ...c, applicationStatus: myApplicationForCourse(c.id)?.status || null }))}
+                  courses={courses.map(c => {
+                    const ca = (complianceAssignmentsQuery.data || []).find(a => (a.course_id || a.courses?.id) === c.id);
+                    return {
+                      ...c,
+                      applicationStatus: myApplicationForCourse(c.id)?.status || null,
+                      isCompliance: !!ca,
+                      complianceDueAt: ca?.due_at || null,
+                      complianceStatus: ca?.status || null,
+                    };
+                  })}
                   coursesLoading={coursesLoading}
                   courseSearch={courseSearch} setCourseSearch={setCourseSearch}
                   courseLevelFilter={courseLevelFilter} setCourseLevelFilter={setCourseLevelFilter}
@@ -762,12 +769,21 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   onToggleBookmark={handleToggleBookmark}
                 />
               )}
-              {screen === "courseDetail" && (
-                <CourseDetailScreen
-                  course={courseById(params.id)}
-                  lessons={lessonsForCurrentCourse()}
-                  isEnrolled={courseById(params.id)?.enrolled}
-                  courseLessonsQuery={courseLessonsQuery}
+              {screen === "courseDetail" && (() => {
+                const ca = (complianceAssignmentsQuery.data || []).find(a => (a.course_id || a.courses?.id) === params.id);
+                const rawCourse = courseById(params.id);
+                const enrichedCourse = rawCourse ? {
+                  ...rawCourse,
+                  isCompliance: !!ca,
+                  complianceDueAt: ca?.due_at || null,
+                  complianceStatus: ca?.status || null
+                } : null;
+                return (
+                  <CourseDetailScreen
+                    course={enrichedCourse}
+                    lessons={lessonsForCurrentCourse()}
+                    isEnrolled={rawCourse?.enrolled}
+                    courseLessonsQuery={courseLessonsQuery}
                   courseNotesQuery={courseNotesQuery}
                   courseDiscussionQuery={courseDiscussionQuery}
                   courseReviewsQuery={courseReviewsQuery}
@@ -785,7 +801,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   certificateQuery={certificateQuery} myCertificateQuery={myCertificateQuery} handleRequestCertificate={handleRequestCertificate}
                   orgBrandingQuery={orgBrandingQuery}
                 />
-              )}
+                );
+              })()}
               {screen === "lesson" && (
                 <LessonScreen
                   course={courseById(params.id)}
@@ -905,6 +922,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   weeklyGoal={weeklyGoal} setWeeklyGoal={setWeeklyGoal}
                   referralLink={learnerData.referralLinkQuery.data}
                   referralStats={learnerData.referralStatsQuery.data}
+                  myCertificates={myCertificatesQuery.data || []}
+                  feedbackNotes={feedbackNotesQuery.data || []}
                 />
               )}
               {screen === "achievements" && (

@@ -1218,3 +1218,41 @@ export async function checkAndAwardAchievements(userId, stats, alreadyEarnedSlug
   }
   return newlyAwarded;
 }
+
+export async function fetchMyComplianceAssignments(userId) {
+  if (!supabase || !userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from("compliance_assignments")
+      .select("*, courses(id, title, description, level, category, duration_hours, cover_image_url)")
+      .eq("user_id", userId)
+      .order("due_at", { ascending: true });
+    if (error) {
+      console.warn("Compliance assignments fetch warning:", error);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    console.warn("Compliance assignments fetch error:", e);
+    return [];
+  }
+}
+
+export async function fetchMyFeedbackNotes(userId) {
+  if (!supabase || !userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from("feedback_notes")
+      .select("*, courses(title)")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) {
+      console.warn("Feedback notes fetch warning:", error);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    console.warn("Feedback notes fetch error:", e);
+    return [];
+  }
+}

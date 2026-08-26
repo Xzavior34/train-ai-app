@@ -1036,12 +1036,22 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
 
                   {/* Badges */}
                   <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 6, flexWrap: "wrap", zIndex: 1 }}>
-                    {course.isBestseller && (
+                    {course.isCompliance && (
+                      <span style={{ background: "#DC2626", color: "#FFFFFF", fontSize: 10, fontWeight: 900, padding: "3px 8px", borderRadius: 6, letterSpacing: "0.03em", boxShadow: "0 2px 8px rgba(220,38,38,0.4)" }}>
+                        MANDATORY COMPLIANCE
+                      </span>
+                    )}
+                    {course.applicationStatus === "pending" && (
+                      <span style={{ background: "#D97706", color: "#FFFFFF", fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 6 }}>
+                        APPLICATION PENDING
+                      </span>
+                    )}
+                    {course.isBestseller && !course.isCompliance && (
                       <span style={{ background: "#F59E0B", color: "#FFFFFF", fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 6 }}>
                         BESTSELLER
                       </span>
                     )}
-                    {course.isTrending && (
+                    {course.isTrending && !course.isCompliance && (
                       <span style={{ background: "#10B981", color: "#FFFFFF", fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 6 }}>
                         TRENDING
                       </span>

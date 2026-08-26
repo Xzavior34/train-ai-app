@@ -11,7 +11,8 @@ import {
   fetchLessonsForCourse, fetchMyLessonProgress,
   fetchPublishedLearningPaths, fetchMyLearningPathEnrollments,
   fetchMyBookmarks, toggleCourseBookmark, checkAndAwardAchievements,
-  fetchOrCreateMyReferralLink, fetchMyReferralStats
+  fetchOrCreateMyReferralLink, fetchMyReferralStats,
+  fetchMyComplianceAssignments, fetchMyCertificates, fetchMyFeedbackNotes
 } from "../../lib/api/learner.js";
 import { fetchCurrentUserProfile } from "../../lib/api/platform.js";
 import { fetchMyPersonalization } from "../../services/authService.js";
@@ -754,6 +755,21 @@ export function useLearnerData(session, screen, params) {
     return fetchMyLearningPathEnrollments(session.user.id);
   }, [session?.user?.id]);
 
+  const complianceAssignmentsQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return [];
+    return fetchMyComplianceAssignments(session.user.id);
+  }, [session?.user?.id]);
+
+  const myCertificatesQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return [];
+    return fetchMyCertificates(session.user.id);
+  }, [session?.user?.id]);
+
+  const feedbackNotesQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return [];
+    return fetchMyFeedbackNotes(session.user.id);
+  }, [session?.user?.id]);
+
   // Realtime subscription
   useEffect(() => {
     if (!supabase) return;
@@ -783,6 +799,28 @@ export function useLearnerData(session, screen, params) {
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "courses" }, () => {
         coursesQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "compliance_assignments" }, () => {
+        complianceAssignmentsQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "certificates" }, () => {
+        myCertificatesQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "cohort_posts" }, () => {
+        cohortPostsQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "cohort_resources" }, () => {
+        cohortResourcesQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "cohort_sessions" }, () => {
+        cohortSessionsQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "cohort_members" }, () => {
+        cohortMembershipQuery.refetch();
+        cohortMembersQuery.refetch();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "feedback_notes" }, () => {
+        feedbackNotesQuery.refetch();
       })
       .subscribe();
 
@@ -841,5 +879,8 @@ export function useLearnerData(session, screen, params) {
     mentorsQuery,
     learningPathsQuery,
     pathEnrollmentsQuery,
+    complianceAssignmentsQuery,
+    myCertificatesQuery,
+    feedbackNotesQuery,
   };
 }
