@@ -550,12 +550,14 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
   const currentSpotlight = dynamicSpotlightSlides[activeSlide % dynamicSpotlightSlides.length] || dynamicSpotlightSlides[0];
   const switcherScrollRef = useRef(null);
 
-  // Auto-scroll the active course card into view when activeSlide changes
+  // Auto-scroll the active course card into view within its dedicated container only (never shifts parent containers)
   useEffect(() => {
-    if (!switcherScrollRef.current) return;
-    const activeEl = switcherScrollRef.current.querySelector('[data-active="true"]');
+    const container = switcherScrollRef.current;
+    if (!container) return;
+    const activeEl = container.querySelector('[data-active="true"]');
     if (activeEl) {
-      activeEl.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      const scrollPos = activeEl.offsetLeft - (container.clientWidth / 2) + (activeEl.clientWidth / 2);
+      container.scrollTo({ left: Math.max(0, scrollPos), behavior: "smooth" });
     }
   }, [activeSlide]);
 
@@ -643,38 +645,10 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
             
             {/* Left Column: Spotlight details */}
             <div style={{ minWidth: 0, boxSizing: "border-box" }}>
-              <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8" }}>
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8", letterSpacing: "0.02em" }}>
                   {trackDisplayName} • Course {(activeSlide % dynamicSpotlightSlides.length) + 1} of {dynamicSpotlightSlides.length}
-                </div>
-
-                {/* Prev / Next Controls if multiple active uncompleted courses */}
-                {dynamicSpotlightSlides.length > 1 && (
-                  <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                    <button
-                      aria-label="Previous Slide"
-                      onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
-                      style={{
-                        width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
-                        background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                        justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
-                      }}
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button
-                      aria-label="Next Slide"
-                      onClick={() => setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length)}
-                      style={{
-                        width: 28, height: 28, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
-                        background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                        justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
-                      }}
-                    >
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                )}
+                </span>
               </div>
 
               <h1 key={currentSpotlight.id + "-title"} className="tai-fade-in tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.25 }}>
@@ -779,34 +753,26 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
                 </div>
                 <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
                   <button
-                    aria-label="Scroll Switcher Left"
-                    onClick={() => {
-                      if (switcherScrollRef.current) {
-                        switcherScrollRef.current.scrollBy({ left: -220, behavior: "smooth" });
-                      }
-                    }}
+                    aria-label="Previous Course"
+                    onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
                     style={{
-                      width: 24, height: 24, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
+                      width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
                       background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer"
+                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
                     }}
                   >
-                    <ChevronLeft size={13} />
+                    <ChevronLeft size={14} />
                   </button>
                   <button
-                    aria-label="Scroll Switcher Right"
-                    onClick={() => {
-                      if (switcherScrollRef.current) {
-                        switcherScrollRef.current.scrollBy({ left: 220, behavior: "smooth" });
-                      }
-                    }}
+                    aria-label="Next Course"
+                    onClick={() => setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length)}
                     style={{
-                      width: 24, height: 24, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
+                      width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
                       background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer"
+                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
                     }}
                   >
-                    <ChevronRight size={13} />
+                    <ChevronRight size={14} />
                   </button>
                 </div>
               </div>
@@ -884,29 +850,6 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {/* Carousel Dot Indicators if multiple courses */}
-          {dynamicSpotlightSlides.length > 1 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 14 }}>
-              {dynamicSpotlightSlides.map((_, idx) => (
-                <button
-                  key={idx}
-                  aria-label={`Slide ${idx + 1}`}
-                  onClick={() => setActiveSlide(idx)}
-                  style={{
-                    width: idx === (activeSlide % dynamicSpotlightSlides.length) ? 24 : 7,
-                    height: 7,
-                    borderRadius: 99,
-                    background: idx === (activeSlide % dynamicSpotlightSlides.length) ? "#60A5FA" : "rgba(255,255,255,0.22)",
-                    border: "none",
-                    padding: 0,
-                    cursor: "pointer",
-                    transition: "all 0.25s ease"
-                  }}
-                />
-              ))}
             </div>
           )}
         </div>
