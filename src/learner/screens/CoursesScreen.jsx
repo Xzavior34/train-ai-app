@@ -639,10 +639,10 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
             }}
           />
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, alignItems: "center", position: "relative", zIndex: 1 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 24, alignItems: "center", position: "relative", zIndex: 1, width: "100%", boxSizing: "border-box" }}>
             
             {/* Left Column: Spotlight details */}
-            <div>
+            <div style={{ minWidth: 0, boxSizing: "border-box" }}>
               <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8" }}>
                   {trackDisplayName} • Course {(activeSlide % dynamicSpotlightSlides.length) + 1} of {dynamicSpotlightSlides.length}
@@ -737,14 +737,14 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
               </div>
             </div>
 
-            {/* Right Column: Visual Cover & Multi-Track Carousel switcher */}
-            <div className="tai-desktop-only" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Right Column: Visual Cover */}
+            <div className="tai-desktop-only" style={{ minWidth: 0, display: "flex", flexDirection: "column", gap: 12, boxSizing: "border-box" }}>
               <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", boxShadow: "0 12px 30px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.18)" }}>
                 <img
                   key={currentSpotlight.id + "-img"}
                   src={currentSpotlight.coverImage}
                   alt={currentSpotlight.title}
-                  style={{ width: "100%", height: 190, objectFit: "cover", display: "block" }}
+                  style={{ width: "100%", height: 185, objectFit: "cover", display: "block" }}
                 />
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(11,15,25,0.88) 0%, transparent 60%)" }} />
                 
@@ -766,90 +766,126 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
                   </span>
                 </div>
               </div>
-
-              {/* Quick Switcher Tabs for Track Courses (Normal Size & Seamless Horizontal Scrolling) */}
-              {dynamicSpotlightSlides.length > 1 && (
-                <div style={{ position: "relative", width: "100%", marginTop: 4 }}>
-                  <div
-                    ref={switcherScrollRef}
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      width: "100%",
-                      boxSizing: "border-box",
-                      overflowX: "auto",
-                      scrollBehavior: "smooth",
-                      WebkitOverflowScrolling: "touch",
-                      padding: "4px 2px 8px",
-                      scrollbarWidth: "none",
-                      msOverflowStyle: "none"
-                    }}
-                  >
-                    {dynamicSpotlightSlides.map((slide, idx) => {
-                      const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
-                      const cleanTitle = (slide.title || "")
-                        .replace(/^Master\s+/i, "")
-                        .replace(/^Foundations of\s+/i, "")
-                        .replace(/^Introduction to\s+/i, "")
-                        .split(" in ")[0]
-                        .split(" with ")[0]
-                        .split(" & ")[0]
-                        .trim();
-                      return (
-                        <button
-                          key={slide.id}
-                          data-active={isSelected ? "true" : "false"}
-                          onClick={() => setActiveSlide(idx)}
-                          title={slide.title}
-                          style={{
-                            flex: "0 0 auto",
-                            minWidth: 110,
-                            maxWidth: 140,
-                            padding: "7px 10px",
-                            borderRadius: 8,
-                            border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.14)",
-                            background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
-                            color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
-                            cursor: "pointer",
-                            textAlign: "left",
-                            boxShadow: isSelected ? "0 4px 12px rgba(37, 99, 235, 0.3)" : "none",
-                            transition: "all 0.2s ease"
-                          }}
-                        >
-                          <div
-                            style={{
-                              fontSize: 9,
-                              fontWeight: 800,
-                              color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)",
-                              letterSpacing: "0.04em",
-                              textTransform: "uppercase",
-                              marginBottom: 2
-                            }}
-                          >
-                            Course 0{idx + 1}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              lineHeight: 1.25,
-                              color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.85)"
-                            }}
-                          >
-                            {cleanTitle}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
 
           </div>
+
+          {/* Full-Width Seamless Track Course Switcher Strip */}
+          {dynamicSpotlightSlides.length > 1 && (
+            <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(255, 255, 255, 0.12)", position: "relative", zIndex: 1, width: "100%", boxSizing: "border-box" }}>
+              <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                  Track Curriculum • {dynamicSpotlightSlides.length} Courses
+                </div>
+                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                  <button
+                    aria-label="Scroll Switcher Left"
+                    onClick={() => {
+                      if (switcherScrollRef.current) {
+                        switcherScrollRef.current.scrollBy({ left: -220, behavior: "smooth" });
+                      }
+                    }}
+                    style={{
+                      width: 24, height: 24, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
+                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
+                      justifyContent: "center", cursor: "pointer"
+                    }}
+                  >
+                    <ChevronLeft size={13} />
+                  </button>
+                  <button
+                    aria-label="Scroll Switcher Right"
+                    onClick={() => {
+                      if (switcherScrollRef.current) {
+                        switcherScrollRef.current.scrollBy({ left: 220, behavior: "smooth" });
+                      }
+                    }}
+                    style={{
+                      width: 24, height: 24, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
+                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
+                      justifyContent: "center", cursor: "pointer"
+                    }}
+                  >
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+              </div>
+
+              <div
+                ref={switcherScrollRef}
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  width: "100%",
+                  boxSizing: "border-box",
+                  overflowX: "auto",
+                  scrollBehavior: "smooth",
+                  WebkitOverflowScrolling: "touch",
+                  padding: "2px 2px 6px",
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none"
+                }}
+              >
+                {dynamicSpotlightSlides.map((slide, idx) => {
+                  const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
+                  return (
+                    <button
+                      key={slide.id}
+                      data-active={isSelected ? "true" : "false"}
+                      onClick={() => setActiveSlide(idx)}
+                      title={slide.title}
+                      style={{
+                        flex: "0 0 auto",
+                        minWidth: 150,
+                        maxWidth: 200,
+                        padding: "8px 12px",
+                        borderRadius: 10,
+                        border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.14)",
+                        background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
+                        color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        boxShadow: isSelected ? "0 4px 14px rgba(37, 99, 235, 0.35)" : "none",
+                        transition: "all 0.2s ease"
+                      }}
+                    >
+                      <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 3 }}>
+                        <span
+                          style={{
+                            fontSize: 9.5,
+                            fontWeight: 800,
+                            color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)",
+                            letterSpacing: "0.04em",
+                            textTransform: "uppercase"
+                          }}
+                        >
+                          Course 0{idx + 1}
+                        </span>
+                        {slide.progress === 100 ? (
+                          <span style={{ fontSize: 9, fontWeight: 700, color: "#34D399" }}>Done ✓</span>
+                        ) : isSelected ? (
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60A5FA" }} />
+                        ) : null}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: 700,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          lineHeight: 1.3,
+                          color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.9)"
+                        }}
+                      >
+                        {slide.title}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Carousel Dot Indicators if multiple courses */}
           {dynamicSpotlightSlides.length > 1 && (
