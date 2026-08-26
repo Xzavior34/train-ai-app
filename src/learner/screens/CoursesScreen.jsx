@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TopBar, CourseCard, ProgressBar, Tag } from "../components/LearnerUI.jsx";
 import {
   Search, Play, Clock, Video, Eye,
@@ -548,6 +548,16 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
       }));
 
   const currentSpotlight = dynamicSpotlightSlides[activeSlide % dynamicSpotlightSlides.length] || dynamicSpotlightSlides[0];
+  const switcherScrollRef = useRef(null);
+
+  // Auto-scroll the active course card into view when activeSlide changes
+  useEffect(() => {
+    if (!switcherScrollRef.current) return;
+    const activeEl = switcherScrollRef.current.querySelector('[data-active="true"]');
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    }
+  }, [activeSlide]);
 
   // Auto-rotating Spotlight Carousel (only rotates if there are multiple active uncompleted courses in the track)
   useEffect(() => {
@@ -757,73 +767,84 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
                 </div>
               </div>
 
-              {/* Quick Switcher Tabs for Track Courses (Compact & Guaranteed Fit) */}
+              {/* Quick Switcher Tabs for Track Courses (Normal Size & Seamless Horizontal Scrolling) */}
               {dynamicSpotlightSlides.length > 1 && (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 4,
-                    width: "100%",
-                    boxSizing: "border-box",
-                    paddingTop: 2
-                  }}
-                >
-                  {dynamicSpotlightSlides.map((slide, idx) => {
-                    const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
-                    const cleanTitle = (slide.title || "")
-                      .replace(/^Master\s+/i, "")
-                      .replace(/^Foundations of\s+/i, "")
-                      .replace(/^Introduction to\s+/i, "")
-                      .split(" in ")[0]
-                      .split(" with ")[0]
-                      .split(" & ")[0]
-                      .trim();
-                    return (
-                      <button
-                        key={slide.id}
-                        onClick={() => setActiveSlide(idx)}
-                        title={slide.title}
-                        style={{
-                          flex: "1 1 0",
-                          minWidth: 0,
-                          padding: "5px 4px",
-                          borderRadius: 6,
-                          border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.12)",
-                          background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
-                          color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
-                          cursor: "pointer",
-                          textAlign: "center",
-                          transition: "all 0.15s ease"
-                        }}
-                      >
-                        <div
+                <div style={{ position: "relative", width: "100%", marginTop: 4 }}>
+                  <div
+                    ref={switcherScrollRef}
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      width: "100%",
+                      boxSizing: "border-box",
+                      overflowX: "auto",
+                      scrollBehavior: "smooth",
+                      WebkitOverflowScrolling: "touch",
+                      padding: "4px 2px 8px",
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none"
+                    }}
+                  >
+                    {dynamicSpotlightSlides.map((slide, idx) => {
+                      const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
+                      const cleanTitle = (slide.title || "")
+                        .replace(/^Master\s+/i, "")
+                        .replace(/^Foundations of\s+/i, "")
+                        .replace(/^Introduction to\s+/i, "")
+                        .split(" in ")[0]
+                        .split(" with ")[0]
+                        .split(" & ")[0]
+                        .trim();
+                      return (
+                        <button
+                          key={slide.id}
+                          data-active={isSelected ? "true" : "false"}
+                          onClick={() => setActiveSlide(idx)}
+                          title={slide.title}
                           style={{
-                            fontSize: 8.5,
-                            fontWeight: 800,
-                            color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)",
-                            letterSpacing: "0.02em",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis"
+                            flex: "0 0 auto",
+                            minWidth: 110,
+                            maxWidth: 140,
+                            padding: "7px 10px",
+                            borderRadius: 8,
+                            border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.14)",
+                            background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
+                            color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            boxShadow: isSelected ? "0 4px 12px rgba(37, 99, 235, 0.3)" : "none",
+                            transition: "all 0.2s ease"
                           }}
                         >
-                          C0{idx + 1}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 9.5,
-                            fontWeight: 700,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            lineHeight: 1.2
-                          }}
-                        >
-                          {cleanTitle}
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <div
+                            style={{
+                              fontSize: 9,
+                              fontWeight: 800,
+                              color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)",
+                              letterSpacing: "0.04em",
+                              textTransform: "uppercase",
+                              marginBottom: 2
+                            }}
+                          >
+                            Course 0{idx + 1}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              lineHeight: 1.25,
+                              color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.85)"
+                            }}
+                          >
+                            {cleanTitle}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
