@@ -737,14 +737,14 @@ export const chartColors = {
                     <Avatar src={post.author.avatar} initials={initialsOf(post.author.name)} size={44} />
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div className="tai-row tai-gap6" style={{ minWidth: 0, flexWrap: "wrap" }}>
-                        <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{post.author.name}</span>
+                        <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)", wordBreak: "break-word", lineHeight: 1.25 }}>{post.author.name}</span>
                         {post.author.isStaff && (
                           <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
                             {post.author.badge}
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: 12, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{post.author.title}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-3)", wordBreak: "break-word", lineHeight: 1.35 }}>{post.author.title}</div>
                     </div>
                   </div>
 

@@ -109,7 +109,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
         </div>
 
         {/* Top 4 Balanced KPI Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 16 }}>
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Active Learners</span>
@@ -152,7 +152,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Engagement Rate</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(139, 92, 246, 0.12)", color: "#3B82F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <TrendingUp size={18} />
               </div>
             </div>

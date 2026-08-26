@@ -226,7 +226,7 @@ export function MentorsScreen({
         />
       </div>
 
-      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
+      <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 16 }}>
         {filteredMentors.length === 0 && (
           <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px 20px", borderRadius: 10 }}>
             <Users size={32} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />

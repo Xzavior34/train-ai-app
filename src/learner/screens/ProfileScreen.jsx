@@ -348,7 +348,7 @@ export function ProfileScreen({
         )}
 
         {/* 4 Stat Cards with Responsive Grid & Liquid Glass Styling */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 8, marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: 8, marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
           <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
             <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--primary)", letterSpacing: "-0.02em" }}>{user.mastery ?? 88}%</div>
             <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Curriculum Mastery</div>

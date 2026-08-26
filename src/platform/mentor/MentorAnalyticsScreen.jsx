@@ -106,7 +106,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
         </div>
 
         {/* Top 4 Performance KPI Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 16 }}>
           
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
@@ -171,7 +171,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
         </div>
 
         {/* 2-Column Section: Ratings Breakdown & Teaching Benchmarks */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 20 }}>
           
           {/* Rating Distribution Breakdown */}
           <div className="ta-card" style={{ padding: "22px 24px", background: "var(--surface)", border: "1px solid var(--border)" }}>
