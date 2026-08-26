@@ -332,7 +332,7 @@ export function AIQuizScreen({
                 Recent AI Learning Sessions
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
                 {chatThreads.map(thread => {
                   const isSelected = activeThreadId === thread.id;
                   return (

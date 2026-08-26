@@ -408,7 +408,7 @@ results = vector_store.similarity_search(query, k=4)`
             </h3>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 20 }}>
             {filteredCourses.map(course => (
               <div
                 key={course.id}
@@ -497,7 +497,7 @@ results = vector_store.similarity_search(query, k=4)`
             </h3>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 16 }}>
             {filteredLessons.map(lesson => (
               <div
                 key={lesson.id}
@@ -552,7 +552,7 @@ results = vector_store.similarity_search(query, k=4)`
             </h3>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 16 }}>
             {filteredSnippets.map(snippet => (
               <div key={snippet.id} className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
                 <div className="tai-row tai-between" style={{ marginBottom: 10, gap: 10, flexWrap: "wrap" }}>
@@ -560,10 +560,10 @@ results = vector_store.similarity_search(query, k=4)`
                     <span style={{ fontSize: 11, fontWeight: 800, color: "#60A5FA", background: "rgba(59, 130, 246, 0.1)", padding: "2px 8px", borderRadius: 6 }}>
                       {snippet.language}
                     </span>
-                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "6px 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "6px 0 2px", wordBreak: "break-word", lineHeight: 1.3 }}>
                       {snippet.title}
                     </h4>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{snippet.source}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", wordBreak: "break-word" }}>{snippet.source}</div>
                   </div>
 
                   <div className="tai-row tai-gap6" style={{ flexShrink: 0 }}>
@@ -614,10 +614,10 @@ results = vector_store.similarity_search(query, k=4)`
               <div key={note.id} className="tai-card" style={{ padding: 18, borderRadius: 10, background: "var(--surface-3)" }}>
                 <div className="tai-row tai-between" style={{ gap: 10, flexWrap: "wrap" }}>
                   <div style={{ minWidth: 0, flex: "1 1 160px" }}>
-                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "0 0 2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <h4 style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text)", margin: "0 0 2px", wordBreak: "break-word", lineHeight: 1.3 }}>
                       {note.title}
                     </h4>
-                    <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{note.source}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 700, wordBreak: "break-word" }}>{note.source}</div>
                   </div>
                   <div className="tai-row tai-gap8" style={{ alignItems: "center", flexShrink: 0 }}>
                     <span style={{ fontSize: 11, color: "var(--text-3)" }}>{note.date}</span>
@@ -673,7 +673,7 @@ results = vector_store.similarity_search(query, k=4)`
           <div style={{ padding: 24, maxWidth: 520, width: "100%", position: "relative" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(99, 102, 241, 0.12)", color: "#4F46E5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Plus size={20} />
                 </div>
                 <div>
