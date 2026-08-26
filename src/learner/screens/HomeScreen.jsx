@@ -4,8 +4,8 @@ import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
 import {
   BookOpen, Users, Zap, ChevronRight, Target,
   BarChart3, Video, Code2, Bookmark, Award, Trophy,
-  GraduationCap, HelpCircle, Compass, Flame, Sparkles, ShieldCheck,
-  Calendar, Clock, Play, ArrowRight, CheckCircle2, Layers
+  GraduationCap, HelpCircle, Compass, Flame, Star, ShieldCheck,
+  Calendar, Clock, Play, ArrowRight, CheckCircle2, Layers, Plus
 } from "lucide-react";
 
 export function HomeScreen({
@@ -139,7 +139,7 @@ export function HomeScreen({
                 onClick={() => push("creditsCheckout")}
                 title="AI Credits"
               >
-                <Sparkles size={15} color="#60A5FA" />
+                <Plus size={15} color="#60A5FA" />
                 <span>{user?.credits ?? 10} <span style={{ fontSize: 11, opacity: 0.9, fontWeight: 700 }}>Credits</span></span>
               </div>
             </div>
@@ -662,7 +662,7 @@ export function HomeScreen({
             {/* Badges Preview Row */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }}>
               {[
-                { title: "First Step", xp: 50, icon: Sparkles },
+                { title: "First Step", xp: 50, icon: Star },
                 { title: `${user?.streak || 8}d Streak`, xp: 100, icon: Flame },
                 { title: "Quiz Master", xp: 150, icon: Award }
               ].map((badge, idx) => {

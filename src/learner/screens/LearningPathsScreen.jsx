@@ -4,7 +4,7 @@ import {
   Map as MapIcon, Award, BookOpen, Clock, CheckCircle2, 
   Users, ArrowRight, ChevronRight, Layers, 
   ShieldCheck, Filter, Search, Play, Check, X, Laptop,
-  Compass, Star, Sparkles, CheckSquare, Zap, BookMarked
+  Compass, Star, CheckSquare, Zap, BookMarked
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { enrollInLearningPath, leaveLearningPath } from "../../lib/api/learner.js";

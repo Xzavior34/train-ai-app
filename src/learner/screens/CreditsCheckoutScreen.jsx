@@ -1,12 +1,44 @@
 import React, { useState } from "react";
 import { TopBar, Tag } from "../components/LearnerUI.jsx";
-import { Zap, ShieldCheck, Loader2, CreditCard, Plus } from "lucide-react";
+import { Zap, ShieldCheck, Loader2, CreditCard, Plus, CheckCircle2, Lock, Mail, ArrowRight, HelpCircle } from "lucide-react";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "../../lib/api/payments.js";
 
 const PACKAGES = [
-  { id: "starter", credits: 50, label: "Starter", priceUSD: 5, priceNGN: 7500, priceGBP: 4, priceEUR: 4.5 },
-  { id: "pro", credits: 200, label: "Pro", highlight: true, priceUSD: 15, priceNGN: 22000, priceGBP: 12, priceEUR: 14 },
-  { id: "team", credits: 600, label: "Team", priceUSD: 35, priceNGN: 50000, priceGBP: 28, priceEUR: 32 },
+  {
+    id: "starter",
+    credits: 50,
+    label: "Starter",
+    tagline: "Essential AI simulations & code reviews",
+    features: ["50 AI Tutor Queries", "Automated Code Analysis", "Instant credit allocation", "Never expires"],
+    priceUSD: 5,
+    priceNGN: 7500,
+    priceGBP: 4,
+    priceEUR: 4.5
+  },
+  {
+    id: "pro",
+    credits: 200,
+    label: "Pro",
+    highlight: true,
+    tagline: "Most popular for active career learners",
+    features: ["200 AI Tutor Queries", "Full Mock Technical Interviews", "Live Project Feedback", "Priority AI model response", "Never expires"],
+    priceUSD: 15,
+    priceNGN: 22000,
+    priceGBP: 12,
+    priceEUR: 14
+  },
+  {
+    id: "team",
+    credits: 600,
+    label: "Power Learner",
+    badge: "BEST VALUE",
+    tagline: "Comprehensive career track mastery",
+    features: ["600 AI Tutor Queries", "Unlimited Interview Simulations", "Deep Architectural Reviews", "Portfolio & Resume AI Polish", "Never expires"],
+    priceUSD: 35,
+    priceNGN: 50000,
+    priceGBP: 28,
+    priceEUR: 32
+  },
 ];
 
 const SYMBOL = { NGN: "₦", USD: "$", GBP: "£", EUR: "€" };
@@ -24,11 +56,6 @@ function formatAmount(value, currency) {
   return `${SYMBOL[currency] || ""}${Number(value).toFixed(2)}`;
 }
 
-// Single checkout screen for both flows the reference app supports:
-//  - buying an AI credits package (params.mode === "credits" or omitted)
-//  - paying for a paid course enrollment (params.mode === "course_enrollment",
-//    params.courseId / params.courseTitle / params.coursePrice supplied by
-//    whoever pushed this screen)
 export function CreditsCheckoutScreen({ session, params, back, showToast }) {
   const isCourseMode = params?.mode === "course_enrollment";
 
@@ -90,8 +117,6 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
           await startPaystackPayment({ email, amount, currency, context: PAYMENT_CONTEXTS.CREDITS, metadata });
         }
       }
-      // If we reach here without throwing, the browser is already
-      // navigating away to the hosted checkout page.
     } catch (err) {
       setErrorMsg(err?.message || "Could not start checkout");
       if (showToast) showToast(err?.message || "Could not start checkout");
@@ -100,12 +125,10 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
   }
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 680, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20, maxWidth: 960, margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+      
       {/* =========================================================================
           HERO BANNER: Unified Checkout Header
-          ========================================================================= */}
-      {/* =========================================================================
-          HERO BANNER: Unified Checkout Header (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
         className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
@@ -121,72 +144,166 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
             position: "absolute",
             top: -40,
             right: -40,
-            width: 180,
-            height: 180,
+            width: 220,
+            height: 220,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, transparent 70%)",
             pointerEvents: "none"
           }}
         />
 
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
-              {isCourseMode ? "Course Checkout" : "Buy AI Credits"}
-            </h1>
-            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, lineHeight: 1.45 }}>
-              {isCourseMode ? (params?.courseTitle || "Enrollment Fee") : "Select a credit tier for unlimited AI simulations, code reviews, and mock interviews."}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2, color: "#FFFFFF" }}>
+                {isCourseMode ? "Course Checkout" : "Buy AI Neural Credits"}
+              </h1>
+              <span style={{ background: "#2563EB", color: "#FFFFFF", padding: "2px 8px", borderRadius: 6, fontWeight: 800, fontSize: 11 }}>
+                Instant Access
+              </span>
+            </div>
+            <p className="tai-hero-desc" style={{ fontSize: 13.5, margin: 0, color: "#F8FAFC", fontWeight: 500, lineHeight: 1.45 }}>
+              {isCourseMode
+                ? (params?.courseTitle || "Enrollment Fee")
+                : "Select an AI credit tier for real-time code reviews, interview drills, and personalized AI tutor queries."}
             </p>
           </div>
 
-          <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{formatAmount(amount, currency)}</div>
-            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Total Due</div>
+          <div
+            style={{
+              background: "rgba(255, 255, 255, 0.12)",
+              border: "1px solid rgba(255, 255, 255, 0.22)",
+              padding: "10px 18px",
+              borderRadius: 10,
+              textAlign: "right",
+              flexShrink: 0
+            }}
+          >
+            <div style={{ fontSize: 20, fontWeight: 900, color: "#FFFFFF" }}>{formatAmount(amount, currency)}</div>
+            <div style={{ fontSize: 11, color: "rgba(255, 255, 255, 0.8)", fontWeight: 700 }}>Total Due ({currency})</div>
           </div>
         </div>
       </div>
 
-      <div style={{ width: "100%" }}>
-
       {!isCourseMode && (
         <>
-          <div className="tai-scrollx" style={{ paddingBottom: 2 }}>
-            {CREDITS_CURRENCIES.map((c) => (
-              <div
-                key={c}
-                className={`tai-pill ${currency === c ? "tai-pill-active" : "tai-pill-inactive"}`}
-                onClick={() => onCurrencyChange(c)}
-              >
-                {SYMBOL[c]} {c}
-              </div>
-            ))}
+          {/* Currency Switcher Controls */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>Select Currency</div>
+              <div style={{ fontSize: 12, color: "var(--text-2)" }}>Choose your preferred payment denomination</div>
+            </div>
+            <div style={{ display: "flex", gap: 6, background: "var(--surface-3)", padding: 4, borderRadius: 10, border: "1px solid var(--border)" }}>
+              {CREDITS_CURRENCIES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: 7,
+                    fontSize: 12.5,
+                    fontWeight: currency === c ? 800 : 600,
+                    background: currency === c ? "var(--primary)" : "transparent",
+                    color: currency === c ? "#FFFFFF" : "var(--text)",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                  onClick={() => onCurrencyChange(c)}
+                >
+                  {SYMBOL[c]} {c}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="tai-col tai-gap10 tai-mt14">
+          {/* 3-Column Pricing Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 }}>
             {PACKAGES.map((p) => {
               const isSelected = selectedPackageId === p.id;
               return (
                 <div
                   key={p.id}
-                  className="tai-card tai-card-hover"
+                  className="tai-card-hover"
                   style={{
                     cursor: "pointer",
-                    borderRadius: 10,
-                    borderColor: isSelected ? "var(--primary)" : "var(--border)",
+                    borderRadius: 12,
+                    padding: "18px",
                     background: isSelected ? "var(--surface-2)" : "var(--surface)",
+                    border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border)",
+                    boxShadow: isSelected ? "0 4px 20px rgba(37, 99, 235, 0.15)" : "none",
+                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    transition: "all 0.18s ease"
                   }}
                   onClick={() => setSelectedPackageId(p.id)}
                 >
-                  <div className="tai-row tai-between">
-                    <span style={{ fontWeight: 700, fontSize: 14 }}>{p.label}</span>
-                    {p.highlight && <Tag tone="warning">POPULAR</Tag>}
+                  {p.highlight && (
+                    <div style={{ position: "absolute", top: -11, right: 14, background: "#D97706", color: "#FFFFFF", fontSize: 10, fontWeight: 900, padding: "2px 8px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                      MOST POPULAR
+                    </div>
+                  )}
+                  {p.badge && !p.highlight && (
+                    <div style={{ position: "absolute", top: -11, right: 14, background: "#059669", color: "#FFFFFF", fontSize: 10, fontWeight: 900, padding: "2px 8px", borderRadius: 99, letterSpacing: "0.04em" }}>
+                      {p.badge}
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 6 }}>
+                      <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>{p.label}</span>
+                      <div
+                        style={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: "50%",
+                          border: isSelected ? "6px solid var(--primary)" : "2px solid var(--border)",
+                          background: "#FFFFFF",
+                          transition: "all 0.15s ease"
+                        }}
+                      />
+                    </div>
+                    
+                    <p style={{ fontSize: 11.5, color: "var(--text-2)", margin: "0 0 14px", lineHeight: 1.35 }}>
+                      {p.tagline}
+                    </p>
+
+                    {/* Credits display with PLUS icon */}
+                    <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 6, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Plus size={16} color="var(--primary)" />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)", lineHeight: 1.1 }}>
+                          +{p.credits}
+                        </div>
+                        <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>
+                          AI Neural Credits
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Feature bullet list */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+                      {p.features.map((feat, fIdx) => (
+                        <div key={fIdx} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-2)" }}>
+                          <CheckCircle2 size={13} color="#10B981" style={{ flexShrink: 0 }} />
+                          <span>{feat}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="tai-row tai-gap6 tai-mt8">
-                    <Plus size={16} color="var(--primary)" />
-                    <span style={{ fontSize: 20, fontWeight: 800 }}>{p.credits}</span>
-                    <span style={{ fontSize: 12, color: "var(--text-2)" }}>credits</span>
+
+                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: "auto" }}>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>
+                      {formatAmount(priceFor(p, currency), currency)}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600, marginTop: 2 }}>
+                      One-time payment • No recurring charges
+                    </div>
                   </div>
-                  <div className="tai-body-text tai-mt8">{formatAmount(priceFor(p, currency), currency)} one-time</div>
                 </div>
               );
             })}
@@ -194,88 +311,118 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
         </>
       )}
 
-      {isCourseMode && (
-        <div className="tai-card tai-mt16">
-          <div style={{ fontWeight: 700, fontSize: 15 }}>{params?.courseTitle || "Course"}</div>
-          <div className="tai-body-text tai-mt8">One-time enrollment fee</div>
-          <div style={{ fontSize: 22, fontWeight: 800, marginTop: 8 }}>{formatAmount(amount, currency)}</div>
-          <div className="tai-scrollx tai-mt10">
-            {["NGN", "USD"].map((c) => (
-              <div
-                key={c}
-                className={`tai-pill ${currency === c ? "tai-pill-active" : "tai-pill-inactive"}`}
-                onClick={() => onCurrencyChange(c)}
-              >
-                {SYMBOL[c]} {c}
-              </div>
-            ))}
+      {/* =========================================================================
+          CHECKOUT & PAYMENT GATEWAY FORM
+          ========================================================================= */}
+      <div className="tai-card" style={{ padding: 20, borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", marginBottom: 14 }}>
+          Payment &amp; Billing Details
+        </div>
+
+        {/* Order summary row */}
+        <div style={{ background: "var(--surface-3)", padding: "12px 14px", borderRadius: 10, border: "1px solid var(--border)", marginBottom: 16 }}>
+          <div className="tai-row tai-between" style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>
+            <span>{isCourseMode ? (params?.courseTitle || "Course Enrollment") : `${pkg.label} Tier (+${pkg.credits} Credits)`}</span>
+            <span>{formatAmount(amount, currency)}</span>
+          </div>
+          <div className="tai-row tai-between" style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+            <span>Processing &amp; Instant Allocation Fee</span>
+            <span style={{ color: "#10B981", fontWeight: 700 }}>FREE</span>
           </div>
         </div>
-      )}
 
-      <div className="tai-card tai-mt16">
-        <div className="tai-label">Email for receipt</div>
-        <input
-          className="tai-input tai-mt8"
-          type="email"
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-        />
-
-        <div className="tai-label tai-mt16">Payment provider</div>
-        <div className="tai-mt8" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
-          <div
-            className={`tai-card${paystackAllowed ? " tai-card-hover" : ""}`}
-            style={{
-              cursor: paystackAllowed ? "pointer" : "not-allowed",
-              opacity: paystackAllowed ? 1 : 0.4,
-              borderColor: provider === "paystack" ? "var(--primary)" : "var(--border)",
-            }}
-            onClick={() => paystackAllowed && setProviderOverride("paystack")}
-          >
-            <div style={{ fontWeight: 700, fontSize: 13.5 }}>Paystack</div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>NGN & USD · Africa-friendly</div>
+        {/* Email Input */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
+            Email address for transaction receipt
+          </label>
+          <div style={{ position: "relative" }}>
+            <Mail size={16} color="var(--text-3)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+            <input
+              className="tai-input"
+              style={{ paddingLeft: 36, width: "100%", boxSizing: "border-box" }}
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+            />
           </div>
-          <div
-            className={`tai-card${stripeAllowed ? " tai-card-hover" : ""}`}
-            style={{
-              cursor: stripeAllowed ? "pointer" : "not-allowed",
-              opacity: stripeAllowed ? 1 : 0.4,
-              borderColor: provider === "stripe" ? "var(--primary)" : "var(--border)",
-            }}
-            onClick={() => stripeAllowed && setProviderOverride("stripe")}
-          >
-            <div style={{ fontWeight: 700, fontSize: 13.5 }}>Stripe</div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>USD, GBP, EUR</div>
+        </div>
+
+        {/* Payment Provider Selection */}
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>
+            Choose payment gateway
+          </label>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+            <div
+              className={`tai-card-hover`}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 10,
+                cursor: paystackAllowed ? "pointer" : "not-allowed",
+                opacity: paystackAllowed ? 1 : 0.45,
+                border: provider === "paystack" ? "2px solid var(--primary)" : "1px solid var(--border)",
+                background: provider === "paystack" ? "rgba(37, 99, 235, 0.06)" : "var(--surface-3)"
+              }}
+              onClick={() => paystackAllowed && setProviderOverride("paystack")}
+            >
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Paystack</div>
+              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2 }}>Card, Bank Transfer &amp; USSD (NGN, USD)</div>
+            </div>
+
+            <div
+              className={`tai-card-hover`}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 10,
+                cursor: stripeAllowed ? "pointer" : "not-allowed",
+                opacity: stripeAllowed ? 1 : 0.45,
+                border: provider === "stripe" ? "2px solid var(--primary)" : "1px solid var(--border)",
+                background: provider === "stripe" ? "rgba(37, 99, 235, 0.06)" : "var(--surface-3)"
+              }}
+              onClick={() => stripeAllowed && setProviderOverride("stripe")}
+            >
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Stripe</div>
+              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2 }}>International Cards &amp; Apple Pay (USD, GBP, EUR)</div>
+            </div>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="tai-body-text tai-mt10" style={{ color: "var(--danger)" }}>{errorMsg}</div>
+          <div style={{ color: "var(--danger)", fontSize: 12.5, fontWeight: 700, padding: "8px 12px", background: "rgba(239, 68, 68, 0.1)", borderRadius: 8, marginBottom: 14 }}>
+            {errorMsg}
+          </div>
         )}
 
-        <button className="tai-btn tai-btn-primary tai-mt16" style={{ width: "100%" }} disabled={loading} onClick={handlePay}>
+        <button
+          className="tai-btn tai-btn-primary"
+          style={{ width: "100%", padding: "12px", fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          disabled={loading}
+          onClick={handlePay}
+        >
           {loading ? (
             <>
               <Loader2 size={16} className="tai-spin" />
-              Redirecting to {provider === "stripe" ? "Stripe" : "Paystack"}...
+              <span>Redirecting to {provider === "stripe" ? "Stripe" : "Paystack"}...</span>
             </>
           ) : (
             <>
-              <CreditCard size={16} />
-              Pay {formatAmount(amount, currency)} with {provider === "stripe" ? "Stripe" : "Paystack"}
+              <Lock size={15} />
+              <span>Pay {formatAmount(amount, currency)} with {provider === "stripe" ? "Stripe" : "Paystack"}</span>
+              <ArrowRight size={15} />
             </>
           )}
         </button>
 
-        <div className="tai-row tai-gap6" style={{ justifyContent: "center", marginTop: 12, fontSize: 11.5, color: "var(--text-2)" }}>
-          <ShieldCheck size={14} />
-          Secure hosted checkout. We never see your card details.
+        <div className="tai-row tai-gap6" style={{ justifyContent: "center", marginTop: 14, fontSize: 11.5, color: "var(--text-2)", alignItems: "center" }}>
+          <ShieldCheck size={14} color="#10B981" />
+          <span>256-bit SSL encrypted checkout. Credits are added to your balance immediately upon payment.</span>
         </div>
       </div>
-      </div>
+
     </div>
   );
 }
+
