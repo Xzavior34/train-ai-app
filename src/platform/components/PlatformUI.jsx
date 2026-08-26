@@ -1353,16 +1353,38 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
             </div>
           )}
 
-          {/* Compact Quick Search Trigger Button */}
-          <button
-            className="ta-iconbtn"
-            onClick={() => setIsSearchOpen(true)}
-            title="Search platform (⌘K)"
-            aria-label="Search platform"
-            style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0 }}
+          {/* Notification Bell Icon */}
+          <div
+            className="ta-header-bell"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: "var(--surface-3)",
+              border: "1px solid var(--border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              cursor: "pointer",
+              position: "relative"
+            }}
+            title="Notifications"
+            onClick={() => {
+              if (onNavigate) onNavigate("emails");
+            }}
           >
-            <Search size={15} color="var(--text-2)" />
-          </button>
+            <Bell size={16} color="var(--text-2)" />
+            <span style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "var(--primary)"
+            }} />
+          </div>
 
           {/* Primary Header Quick Action */}
           <div className="ta-header-full-only">

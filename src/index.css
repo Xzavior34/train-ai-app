@@ -832,16 +832,57 @@ html.dark .ta-hero-dark .tai-hero-subcard {
 }
 
 /* =========================================================================
-   COMPREHENSIVE MOBILE VIEWPORT, CARD & TEXT INTEGRITY ENHANCEMENTS
-   Prevents text squeezing, unnatural ellipsis clipping, card overflow,
-   and unreadable compressed columns on all mobile screens (< 768px).
+   COMPREHENSIVE MOBILE & DESKTOP SYSTEM-WIDE OPTIMIZATION RULES
+   Delivers fluid responsiveness, robust container widths, safe-area
+   handling, touch accessibility, and pristine typography scaling across
+   Mobile Phones (320px-480px), Tablets (481px-899px), and Desktops (900px+).
    ========================================================================= */
 
+/* Universal viewport & content width control */
+html, body {
+  max-width: 100vw;
+  overflow-x: clip;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+/* Desktop container constraint & layout balance */
+@media (min-width: 1440px) {
+  .ta-content, .tai-content, .tai-body {
+    max-width: 1440px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* Tablet & Intermediate Viewports (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .ta-content, .tai-content, .tai-body {
+    padding: 18px 16px !important;
+  }
+  .ta-grid-4, .tai-grid4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .ta-grid-3, .tai-grid3 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* Mobile & Small Screen Global Overrides (<= 768px) */
 @media (max-width: 768px) {
   /* Prevent horizontal screen blowouts */
-  html, body, #root, .tai-app, .tai-body, .tai-desktop-shell {
+  html, body, #root, .tai-app, .tai-body, .tai-desktop-shell, .ta-shell, .ta-main {
     max-width: 100vw !important;
     overflow-x: clip !important;
+    width: 100% !important;
   }
 
   /* Universal text wrapping - eliminates squeezed and clipped titles */
@@ -873,7 +914,8 @@ html.dark .ta-hero-dark .tai-hero-subcard {
   /* Universal auto-stacking grids on mobile */
   .tai-grid2, .ta-grid2,
   .tai-grid3, .ta-grid3,
-  .tai-grid4, .ta-grid4 {
+  .tai-grid4, .ta-grid4,
+  .ta-grid-4, .ta-grid-3, .ta-grid-2, .ta-grid-5 {
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
@@ -896,13 +938,36 @@ html.dark .ta-hero-dark .tai-hero-subcard {
     text-align: center !important;
   }
 
-  /* Mobile scrollable tabs & pills padding */
-  .tai-scrollx {
+  /* Touch-friendly input fields on mobile (prevents iOS auto-zoom) */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 14.5px !important;
+  }
+
+  /* Mobile scrollable tabs & horizontal containers */
+  .tai-scrollx, .ta-tabs, .ta-pills-row {
     padding-bottom: 6px !important;
     -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .tai-scrollx::-webkit-scrollbar, .ta-tabs::-webkit-scrollbar, .ta-pills-row::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Table containers become smooth horizontally scrollable cards */
+  .ta-table-wrap, .tai-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: 100% !important;
+    border-radius: 10px !important;
   }
 }
 
+/* Small Smartphone Devices (<= 480px) */
 @media (max-width: 480px) {
   .tai-card, .ta-card {
     padding: 12px 10px !important;
@@ -911,6 +976,14 @@ html.dark .ta-hero-dark .tai-hero-subcard {
   .tai-hero-card, .ta-hero-banner {
     padding: 14px 12px !important;
   }
+  .tai-body, .ta-content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  .ta-topbar, .tai-topbar {
+    padding: 0 10px !important;
+  }
 }
+
 
 
