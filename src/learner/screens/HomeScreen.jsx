@@ -67,14 +67,14 @@ export function HomeScreen({
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                 <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2, color: "#FFFFFF" }}>
-                  Welcome back, {userFirstName || "Learner"} 👋
+                  Welcome back, {userFirstName || "Learner"}
                 </h1>
                 <span style={{ background: "#2563EB", color: "#FFFFFF", padding: "3px 10px", borderRadius: 6, fontWeight: 800, fontSize: 11.5, letterSpacing: "0.02em", border: "1px solid rgba(255, 255, 255, 0.25)", display: "inline-flex", alignItems: "center" }}>
-                  {continueCourse?.category || "Career Pathway"}
+                  {continueCourse?.category || "UI/UX Design Track"}
                 </span>
               </div>
               <p className="tai-hero-desc" style={{ fontSize: 13.5, margin: 0, color: "#F8FAFC", fontWeight: 500, lineHeight: 1.45 }}>
-                {done >= goal ? "🎉 Outstanding! You've completed your weekly sprint target." : `${done} of ${goal} weekly lessons completed. Keep up your active pace!`}
+                {done >= goal ? "Outstanding! You've completed your weekly sprint target." : `${done} of ${goal} weekly lessons completed. Keep up your active pace!`}
               </p>
             </div>
 
@@ -319,7 +319,7 @@ export function HomeScreen({
             ========================================================================= */}
         <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0, width: "100%", maxWidth: "100%", boxSizing: "border-box" }}>
           
-          {/* 1. Track Curriculum & Enrolled Modules (Non-redundant Roadmap) */}
+          {/* 1. Track Curriculum & Enrolled Modules (Compact Non-redundant Roadmap) */}
           {coursesLoading ? (
             <div className="tai-card" style={{ padding: 20, textAlign: "center" }}>
               <div className="tai-body-text" style={{ color: "var(--text-2)", fontWeight: 600 }}>Loading your courses...</div>
@@ -336,7 +336,7 @@ export function HomeScreen({
             </div>
           ) : (
             <div className="tai-card" style={{ padding: 18, borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)", width: "100%", boxSizing: "border-box" }}>
-              <div className="tai-row tai-between" style={{ marginBottom: 14, alignItems: "center" }}>
+              <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center" }}>
                 <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
                   <div style={{ width: 34, height: 34, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Layers size={17} color="var(--primary)" />
@@ -344,7 +344,7 @@ export function HomeScreen({
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Curriculum Roadmap</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)", fontWeight: 600 }}>
-                      {enrolledCourses.length} Track Courses • {completedCourses.length} Completed
+                      {completedCourses.length} of {enrolledCourses.length} Track Modules Complete
                     </div>
                   </div>
                 </div>
@@ -360,45 +360,58 @@ export function HomeScreen({
                 <ProgressBar value={avgProgress} height={6} />
               </div>
 
-              {/* List of Enrolled Courses & Next Modules */}
+              {/* Curated 3 Next Modules (Non-redundant, excluding current hero course) */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {enrolledCourses.map((c) => {
+                {(otherEnrolledCourses.length > 0 ? otherEnrolledCourses.slice(0, 3) : enrolledCourses.slice(0, 3)).map((c, idx) => {
                   const isFinished = (c.progress || 0) >= 100;
-                  const isActive = c.id === continueCourse?.id;
+                  const iconColors = ["#2563EB", "#059669", "#D97706", "#7C3AED"];
+                  const modColor = iconColors[idx % iconColors.length];
+                  
                   return (
                     <div
                       key={c.id}
                       className="tai-row tai-between"
                       style={{
                         padding: "10px 12px",
-                        background: isActive ? "rgba(37, 99, 235, 0.06)" : "var(--surface-3)",
+                        background: "var(--surface-3)",
                         borderRadius: 8,
-                        border: isActive ? "1.5px solid rgba(37, 99, 235, 0.4)" : "1px solid var(--border)",
+                        border: "1px solid var(--border)",
                         cursor: "pointer",
                         gap: 10,
-                        alignItems: "center"
+                        alignItems: "center",
+                        transition: "all 0.15s ease"
                       }}
                       onClick={() => push("courseDetail", { id: c.id })}
                     >
                       <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1, alignItems: "center" }}>
-                        <img
-                          src={c.coverImageUrl || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400&auto=format&fit=crop&q=80"}
-                          alt={c.title}
-                          style={{ width: 38, height: 38, borderRadius: 6, objectFit: "cover", flexShrink: 0 }}
-                        />
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 8,
+                            background: `rgba(37, 99, 235, 0.1)`,
+                            border: `1px solid rgba(37, 99, 235, 0.2)`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0
+                          }}
+                        >
+                          <BookOpen size={16} color="var(--primary)" />
+                        </div>
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div className="tai-row tai-gap6" style={{ alignItems: "center", marginBottom: 2 }}>
                             {isFinished ? (
                               <span style={{ fontSize: 10, fontWeight: 800, color: "#059669", background: "rgba(16, 185, 129, 0.15)", padding: "1px 6px", borderRadius: 4 }}>
                                 Completed ✓
                               </span>
-                            ) : isActive ? (
+                            ) : (c.progress || 0) > 0 ? (
                               <span style={{ fontSize: 10, fontWeight: 800, color: "var(--primary)", background: "rgba(37, 99, 235, 0.15)", padding: "1px 6px", borderRadius: 4 }}>
-                                Current Active
+                                In Progress
                               </span>
                             ) : (
                               <span style={{ fontSize: 10, fontWeight: 800, color: "var(--text-3)", background: "var(--surface)", padding: "1px 6px", borderRadius: 4 }}>
-                                In Track
+                                Up Next
                               </span>
                             )}
                             <span style={{ fontSize: 11, color: "var(--text-2)", fontWeight: 600 }}>{c.category || "Design"}</span>
@@ -414,12 +427,24 @@ export function HomeScreen({
                           {c.progress || 0}%
                         </div>
                         <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 600 }}>
-                          {isFinished ? "Verified" : "Resume →"}
+                          {isFinished ? "Verified" : "Start →"}
                         </div>
                       </div>
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Clean Footer Link */}
+              <div style={{ marginTop: 10, textAlign: "center" }}>
+                <button
+                  className="tai-btn tai-btn-outline"
+                  style={{ width: "100%", padding: "7px 12px", fontSize: 11.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                  onClick={() => goTab("courses")}
+                >
+                  <span>Explore Full {enrolledCourses.length}-Course Curriculum</span>
+                  <ChevronRight size={13} />
+                </button>
               </div>
             </div>
           )}
@@ -737,10 +762,10 @@ export function HomeScreen({
               <button
                 className="tai-btn tai-btn-outline"
                 style={{ flex: 1, padding: "8px 10px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
-                onClick={() => push("achievements")}
+                onClick={() => push("myProgress")}
               >
-                <Award size={13} color="var(--primary)" />
-                <span>Badges</span>
+                <GraduationCap size={13} color="var(--primary)" />
+                <span>Certificates</span>
               </button>
             </div>
           </div>

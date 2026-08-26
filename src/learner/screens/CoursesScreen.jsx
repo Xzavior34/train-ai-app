@@ -424,8 +424,13 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
   });
 
   // Track taxonomy helper: Code Track, No Code Track, and Techpreneur Track
-  function resolveUserTrackKey(userTrack) {
-    const t = (userTrack || "").toLowerCase();
+  function resolveUserTrackKey(userTrack, enrolledList = []) {
+    const activeCourse = enrolledList.find(c => (c.progress || 0) < 100) || enrolledList[0];
+    const source = (userTrack && userTrack !== "Data & AI" && userTrack !== "General")
+      ? userTrack
+      : (activeCourse?.category || activeCourse?.title || userTrack || "ui_ux");
+
+    const t = (source || "").toLowerCase();
     if (t.includes("ui") || t.includes("ux") || t.includes("design") || t.includes("figma") || t.includes("spatial")) return "ui_ux";
     if (t.includes("product") || t.includes("pm") || t.includes("strategy")) return "product_management";
     if (t.includes("cyber") || t.includes("security") || t.includes("compliance")) return "cybersecurity";
@@ -483,8 +488,8 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
     }
   }
 
-  // 1. Identify learner's chosen track
-  const userTrackKey = resolveUserTrackKey(user?.track);
+  // 1. Identify learner's chosen track - synced with active enrollments
+  const userTrackKey = resolveUserTrackKey(user?.track, allAvailableCourses.filter(c => c.enrolled));
   const trackDisplayName = getTrackDisplayName(userTrackKey);
 
   // 2. Filter available courses for ONLY those in the learner's specific track
@@ -507,7 +512,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
           badgeGradient: "#059669",
           cohortTag: trackDisplayName,
           pathwayName: trackDisplayName,
-          title: `🎉 All ${trackDisplayName} Courses Completed!`,
+          title: `All ${trackDisplayName} Courses Completed!`,
           description: `Outstanding achievement! You have completed every required course in your ${trackDisplayName}. Review lessons, practice with the AI Coach, or request your official Certificate.`,
           rating: 5.0,
           reviews: "Track Mastered",

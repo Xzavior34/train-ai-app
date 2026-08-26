@@ -608,7 +608,7 @@ function AssessmentTab({ assessment, questionsQuery, myAttemptQuery, onSubmit })
         </div>
         <div className="tai-mt14" style={{ fontSize: 28, fontWeight: 800, color: "var(--primary)" }}>{score}%</div>
         <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>
-          🎉 Congratulations! You have successfully passed this course assessment. You are now eligible to request your course certificate.
+          Congratulations! You have successfully passed this course assessment. You are now eligible to request your course certificate.
         </div>
       </div>
     );

@@ -177,7 +177,7 @@ export function LessonScreen({
     setCompletedLessonIds(prev => new Set([...prev, `${course?.id}-${lesson.id}`]));
     enrollmentsQuery?.refetch?.();
     lessonProgressQuery?.refetch?.();
-    showToast?.("🎉 Lesson completed! +50 XP awarded");
+    showToast?.("Lesson completed! +50 XP awarded");
     setShowFeedbackPrompt(true);
   }
 

@@ -562,7 +562,7 @@ export function LearningPathsScreen({
         } catch {}
       }
 
-      showToast?.(`🎉 Successfully enrolled in ${track.title}!`);
+      showToast?.(`Successfully enrolled in ${track.title}!`);
 
       // 3. Navigate to the first active course
       if (firstCourse) {

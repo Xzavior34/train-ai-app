@@ -227,9 +227,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     if (!newlyEarnedAchievements || newlyEarnedAchievements.length === 0) return;
     if (newlyEarnedAchievements.length === 1) {
       const a = newlyEarnedAchievements[0];
-      showToast(`🎉 Achievement Unlocked: ${a.title} (+${a.points} pts)`);
+      showToast(`Achievement Unlocked: ${a.title} (+${a.points} pts)`);
     } else {
-      showToast(`🎉 ${newlyEarnedAchievements.length} achievements unlocked! (+${newlyEarnedAchievements.reduce((sum, a) => sum + (a.points || 0), 0)} pts)`);
+      showToast(`${newlyEarnedAchievements.length} achievements unlocked! (+${newlyEarnedAchievements.reduce((sum, a) => sum + (a.points || 0), 0)} pts)`);
     }
     clearNewlyEarnedAchievements();
     // eslint-disable-next-line react-hooks/exhaustive-deps

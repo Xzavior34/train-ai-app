@@ -402,7 +402,7 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
 
           {revealedReward && (
             <div className="tai-card anim-pop" style={{ borderColor: "var(--success)", textAlign: "center", padding: 18, borderRadius: 10, background: "rgba(16, 185, 129, 0.06)" }}>
-              <div style={{ fontWeight: 800, fontSize: 17, color: "var(--success)" }}>🎉 +{revealedReward.points} Points Awarded!</div>
+              <div style={{ fontWeight: 800, fontSize: 17, color: "var(--success)" }}>+{revealedReward.points} Points Awarded!</div>
               {revealedReward.streak_freeze > 0 && (
                 <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>+{revealedReward.streak_freeze} Streak Freeze added to inventory</div>
               )}
