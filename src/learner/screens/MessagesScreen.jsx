@@ -48,7 +48,7 @@ export function MessagesScreen({
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
       {/* =========================================================================
-          HERO BANNER: Direct Messages & Mentorship (Adaptive Liquid Glass)
+          HERO BANNER: Direct Messages (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
         className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
@@ -85,7 +85,7 @@ export function MessagesScreen({
                 </button>
               )}
               <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
-                Direct Messages &amp; Mentorship
+                Direct Messages
               </h1>
             </div>
             <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>

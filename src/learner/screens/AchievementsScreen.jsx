@@ -34,7 +34,7 @@ function formatDate(dateStr) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export function AchievementsScreen({ user = {}, achievements = [], streakActivity = [], back, session, showToast, credits, consumeCredit, onBuyCredits }) {
+export function AchievementsScreen({ user = {}, courses = [], achievements = [], streakActivity = [], leaderboardQuery = {}, complianceAssignmentsQuery = {}, back, session, showToast, credits, consumeCredit, onBuyCredits }) {
   const userId = session?.user?.id;
   const [activeProgressTab, setActiveProgressTab] = useState("overview"); // "overview" | "certificates" | "badges" | "activity"
   const [mysteryBoxes, setMysteryBoxes] = useState([]);
@@ -281,6 +281,24 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
             </div>
           </div>
         </div>
+
+        <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
+          <div className="tai-row tai-gap10">
+            <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Trophy size={18} color="var(--primary)" />
+            </div>
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>
+                {(() => {
+                  const rows = leaderboardQuery?.data || [];
+                  const mine = rows.find(r => r.you || r.user_id === userId || r.id === userId);
+                  return mine?.rank ? `#${mine.rank}` : "—";
+                })()}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Current Rank</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* =========================================================================
@@ -408,6 +426,55 @@ export function AchievementsScreen({ user = {}, achievements = [], streakActivit
               )}
             </div>
           )}
+
+          {/* Key Alerts */}
+          {(() => {
+            const pendingCompliance = (complianceAssignmentsQuery?.data || []).filter(a => a.status !== "completed");
+            const alerts = [];
+            if (pendingCompliance.length > 0) {
+              alerts.push({ text: `${pendingCompliance.length} mandatory compliance module${pendingCompliance.length > 1 ? "s" : ""} due`, tone: "danger" });
+            }
+            if (typeof credits === "number" && credits <= 2) {
+              alerts.push({ text: "AI credits running low", tone: "warning" });
+            }
+            if (!user?.streak || user.streak <= 0) {
+              alerts.push({ text: "Your study streak has reset - complete a lesson today to start a new one", tone: "warning" });
+            }
+            if (alerts.length === 0) return null;
+            return (
+              <div className="tai-card" style={{ padding: 16, borderRadius: 10, border: "1px solid var(--border)" }}>
+                <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 10 }}>Key Alerts</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {alerts.map((a, idx) => (
+                    <div key={idx} className="tai-row tai-gap8" style={{ alignItems: "center", padding: "8px 10px", borderRadius: 8, background: a.tone === "danger" ? "rgba(239, 68, 68, 0.08)" : "rgba(245, 158, 11, 0.08)" }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: a.tone === "danger" ? "var(--danger)" : "#B45309" }}>{a.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Completed Courses */}
+          <div className="tai-card" style={{ padding: 16, borderRadius: 10, border: "1px solid var(--border)" }}>
+            <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 10 }}>Completed Courses</div>
+            {(() => {
+              const completed = (courses || []).filter(c => (c.progress || 0) >= 100);
+              if (completed.length === 0) {
+                return <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>No completed courses yet.</div>;
+              }
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {completed.map(c => (
+                    <div key={c.id} className="tai-row tai-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 8, alignItems: "center" }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{c.title}</span>
+                      <CheckCircle2 size={15} color="#10B981" />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
 
           {/* AI Insights Card */}
           <AIInsightsCard session={session} credits={credits} consumeCredit={consumeCredit} onBuyCredits={onBuyCredits} />

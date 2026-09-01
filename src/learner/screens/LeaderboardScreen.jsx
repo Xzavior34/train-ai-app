@@ -373,6 +373,20 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
         </div>
       </div>
 
+      {timeframe === "custom" && (
+        <div className="tai-card" style={{ padding: "12px 16px", borderRadius: 10, border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>From</label>
+            <input type="date" className="tai-input" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} style={{ padding: "6px 10px", fontSize: 12.5 }} />
+          </div>
+          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>To</label>
+            <input type="date" className="tai-input" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} style={{ padding: "6px 10px", fontSize: 12.5 }} />
+          </div>
+          <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Showing standings for the selected learners; per-period history isn't available yet, so results are all-time until then.</span>
+        </div>
+      )}
+
       {/* =========================================================================
           STICKY CURRENT USER RANK BAR
           ========================================================================= */}

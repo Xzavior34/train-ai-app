@@ -9,11 +9,11 @@ import {
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
 
 const COACH_PROMPT_PRESETS = [
-  { label: "Explain Design Tokens simply", icon: Lightbulb, prompt: "Can you explain how design tokens and variables work in Figma and code with a clear analogy?" },
-  { label: "Generate Spatial UI Quiz", icon: HelpCircle, prompt: "Generate a quick 3-question conceptual quiz on Spatial Computing and VisionOS design principles." },
-  { label: "Review UX Deliverable", icon: CheckCircle2, prompt: "What are the most critical components of an enterprise UX audit report before client presentation?" },
-  { label: "Full-Stack AI Study Plan", icon: Target, prompt: "Create a focused 5-day study schedule for mastering LangChain, vector databases, and RAG architectures." },
-  { label: "Senior Designer Interview Prep", icon: Briefcase, prompt: "Ask me a realistic behavioral interview question for a Senior Product Designer role, then critique my answer." }
+  { label: "Explain this concept to me", icon: Lightbulb, prompt: "Can you explain the concept I am currently studying in simple terms, with a clear example?" },
+  { label: "Give me study tips", icon: Briefcase, prompt: "What study techniques would help me learn this material more effectively?" },
+  { label: "Help me understand better", icon: CheckCircle2, prompt: "I am finding this topic difficult - can you break it down step by step?" },
+  { label: "Create a study plan", icon: Target, prompt: "Create a focused study schedule to help me finish my current course on track." },
+  { label: "Summarize my last lesson", icon: Clock, prompt: "Summarize the key takeaways from the last lesson I completed." }
 ];
 
 export function AIQuizScreen({
@@ -27,7 +27,7 @@ export function AIQuizScreen({
   quizAnswers, setQuizAnswers, quizSelected, setQuizSelected, quizShowHint, setQuizShowHint,
   quizResult, setQuizResult, quizSubmitting, setQuizSubmitting, quizzesQuery, selectedQuizQuestionsQuery,
   quizAttemptsQuery, quizHistory, weakAreas, session, showToast, submitQuizAnswers,
-  generateAIQuiz, awardAIQuizCompletionPoints, credits, consumeCredit, onBuyCredits,
+  generateAIQuiz, awardAIQuizCompletionPoints, credits, consumeCredit, onBuyCredits, onRequestCredits,
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
 }) {
   const [copiedMessageId, setCopiedMessageId] = useState(null);
@@ -224,6 +224,17 @@ export function AIQuizScreen({
             )}
 
             <button
+              className="tai-btn tai-btn-outline tai-btn-sm"
+              onClick={onRequestCredits}
+              style={{
+                borderRadius: 8, fontWeight: 700, fontSize: 12,
+                display: "inline-flex", alignItems: "center", gap: 5
+              }}
+            >
+              Request Credits
+            </button>
+
+            <button
               className="tai-btn tai-btn-primary tai-btn-sm"
               onClick={onBuyCredits}
               style={{
@@ -372,7 +383,7 @@ export function AIQuizScreen({
           {/* Quick Prompt Starters Strip */}
           <div>
             <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>
-              Suggested Inquiries &amp; Guided Exercises
+              Suggested Questions
             </div>
             <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
               {COACH_PROMPT_PRESETS.map((cp, idx) => {

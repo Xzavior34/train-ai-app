@@ -11,6 +11,7 @@ import { CourseDetailScreen } from "./screens/CourseDetailScreen.jsx";
 import { LessonScreen } from "./screens/LessonScreen.jsx";
 import { AIQuizScreen } from "./screens/AIQuizScreen.jsx";
 import { CommunityScreen } from "./screens/CommunityScreen.jsx";
+import { StudyGroupScreen } from "./screens/StudyGroupScreen.jsx";
 import { CohortScreen } from "./screens/CohortScreen.jsx";
 import { MentorsScreen } from "./screens/MentorsScreen.jsx";
 import { MessagesScreen } from "./screens/MessagesScreen.jsx";
@@ -19,7 +20,6 @@ import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { AchievementsScreen } from "./screens/AchievementsScreen.jsx";
 import { LeaderboardScreen } from "./screens/LeaderboardScreen.jsx";
 import { BookmarksScreen } from "./screens/BookmarksScreen.jsx";
-import { MyProgressScreen } from "./screens/MyProgressScreen.jsx";
 import { CreditsCheckoutScreen } from "./screens/CreditsCheckoutScreen.jsx";
 import { PaymentCallbackScreen } from "./screens/PaymentCallbackScreen.jsx";
 import { useCredits } from "./hooks/useCredits.js";
@@ -30,7 +30,7 @@ import { enrollInCourse, markLessonComplete, addCourseNote, postCourseDiscussion
 } from "../lib/api/learner.js";
 import {
   createCommunityPost, addPostComment, togglePostReaction, bookMentorshipSession, sendMentorMessage,
-  joinStudyGroup, leaveStudyGroup, fetchStudyGroupMessages, fetchStudyGroupMembers, fetchMentorAvailability,
+  joinStudyGroup, leaveStudyGroup, createStudyGroup, fetchStudyGroupMessages, fetchStudyGroupMembers, fetchMentorAvailability,
   generateAIQuiz,
   fetchMentorMessageThreads, fetchMentorMessageThread, markMentorMessagesRead,
   fetchOrCreateAIConversation, fetchAIChatMessages, sendAIChatMessage, requestAIReply
@@ -167,15 +167,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       setAiTab("quiz");
       goTab("ai");
     } else if (key === "communityFeed") {
-      setCommunityTab("posts");
       goTab("community");
     } else if (key === "cohort") {
       goTab("cohort");
     } else if (key === "leaderboard") {
       push("leaderboard");
-    } else if (key === "communityCircles") {
-      setCommunityTab("circles");
-      goTab("community");
+    } else if (key === "studyGroup") {
+      push("studyGroup");
     } else if (key === "messages") {
       push("messages");
     } else if (key === "schedule") {
@@ -767,6 +765,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   showMyCoursesOnly={showMyCoursesOnly} setShowMyCoursesOnly={setShowMyCoursesOnly}
                   push={push} handleEnroll={handleEnroll} handleRequestJoin={handleRequestJoin}
                   onToggleBookmark={handleToggleBookmark}
+                  learningPathsQuery={learningPathsQuery}
                 />
               )}
               {screen === "courseDetail" && (() => {
@@ -842,6 +841,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   session={session} showToast={showToast} submitQuizAnswers={submitQuizAnswers}
                   generateAIQuiz={generateAIQuiz} awardAIQuizCompletionPoints={awardAIQuizCompletionPoints}
                   credits={credits} consumeCredit={consumeCredit} onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}
+                  onRequestCredits={() => push("creditsCheckout", { mode: "credits", tab: "request" })}
                   coachMessages={coachMessagesQuery.data || []} coachMessagesLoading={coachMessagesQuery.loading}
                   coachInput={coachInput} setCoachInput={setCoachInput} coachSending={coachSending}
                   onSendCoachMessage={handleSendCoachMessage}
@@ -849,25 +849,19 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "community" && (
                 <CommunityScreen
-                  communityTab={communityTab} setCommunityTab={setCommunityTab}
-                  posts={posts} newPostText={newPostText} setNewPostText={setNewPostText}
-                  expandedPost={expandedPost} setExpandedPost={setExpandedPost}
-                  replyInput={replyInput} setReplyInput={setReplyInput}
-                  studyGroupsQuery={studyGroupsQuery} joinedGroupIds={joinedGroupIds} myGroupIdsQuery={myGroupIdsQuery}
-                  communityPeopleQuery={communityPeopleQuery}
-                  memberStatsQuery={memberStatsQuery} activityFeedQuery={activityFeedQuery}
-                  user={user} session={session} showToast={showToast} postsQuery={postsQuery}
-                  createCommunityPost={createCommunityPost} togglePostReaction={togglePostReaction} addPostComment={addPostComment}
-                  joinStudyGroup={joinStudyGroup} leaveStudyGroup={leaveStudyGroup}
-                  fetchStudyGroupMembers={fetchStudyGroupMembers}
-                  cohortMembershipQuery={cohortMembershipQuery} cohortPostsQuery={cohortPostsQuery}
+                  cohortMembershipQuery={cohortMembershipQuery} cohortSessionsQuery={cohortSessionsQuery}
+                  studyGroupsQuery={studyGroupsQuery} myGroupIdsQuery={myGroupIdsQuery}
                   leaderboardQuery={leaderboardQuery}
-                  leaderboardEnabled={leaderboardEnabled}
                   upcomingSessionsQuery={upcomingSessionsQuery}
-                  enrollmentsQuery={enrollmentsQuery}
-                  cohortResourcesQuery={cohortResourcesQuery}
-                  push={push} goTab={goTab}
-                  initialExpandedPostId={params.postId}
+                  user={user} push={push}
+                />
+              )}
+              {screen === "studyGroup" && (
+                <StudyGroupScreen
+                  studyGroupsQuery={studyGroupsQuery} myGroupIdsQuery={myGroupIdsQuery}
+                  joinStudyGroup={joinStudyGroup} leaveStudyGroup={leaveStudyGroup} createStudyGroup={createStudyGroup}
+                  fetchStudyGroupMembers={fetchStudyGroupMembers} fetchStudyGroupMessages={fetchStudyGroupMessages}
+                  orgId={orgId} session={session} showToast={showToast} back={back} push={push} params={params}
                 />
               )}
               {screen === "cohort" && (
@@ -894,6 +888,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   bookingDay={bookingDay} setBookingDay={setBookingDay}
                   bookingTime={bookingTime} setBookingTime={setBookingTime}
                   initialSelectedMentorId={params.mentorId}
+                  back={back}
                 />
               )}
               {screen === "messages" && (
@@ -926,11 +921,14 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   feedbackNotes={feedbackNotesQuery.data || []}
                 />
               )}
-              {screen === "achievements" && (
+              {(screen === "achievements" || screen === "myProgress") && (
                 <AchievementsScreen
                   user={user}
+                  courses={courses}
                   achievements={achievementsQuery.data || []}
                   streakActivity={streakActivityQuery.data || []}
+                  leaderboardQuery={leaderboardQuery}
+                  complianceAssignmentsQuery={complianceAssignmentsQuery}
                   back={back}
                   session={session} showToast={showToast}
                   credits={credits} consumeCredit={consumeCredit} onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}
@@ -948,7 +946,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "creditsCheckout" && (
                 <CreditsCheckoutScreen
-                  session={session} params={params} back={back} showToast={showToast}
+                  session={session} params={params} back={back} showToast={showToast} orgId={orgId}
                 />
               )}
               {screen === "paymentCallback" && (
@@ -958,9 +956,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "bookmarks" && (
                 <BookmarksScreen push={push} back={back} showToast={showToast} session={session} />
-              )}
-              {screen === "myProgress" && (
-                <MyProgressScreen user={user} courses={courses} push={push} back={back} session={session} showToast={showToast} />
               )}
               {screen === "learningPaths" && (
                 <LearningPathsScreen

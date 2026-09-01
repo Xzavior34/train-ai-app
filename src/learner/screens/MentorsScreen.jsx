@@ -24,7 +24,7 @@ export function MentorsScreen({
   sessionTopicInput, setSessionTopicInput, sessionRequestSent, setSessionRequestSent, session,
   showToast, bookMentorshipSession, upcomingSessionsQuery,
   mentorAvailabilityQuery, bookingDay, setBookingDay, bookingTime, setBookingTime,
-  initialSelectedMentorId = null,
+  initialSelectedMentorId = null, back,
 }) {
   const [expandedMentorId, setExpandedMentorId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,48 +82,7 @@ export function MentorsScreen({
       {/* =========================================================================
           HERO BANNER: Expert Mentors & 1-on-1 Office Hours (Adaptive Liquid Glass)
           ========================================================================= */}
-      <div
-        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
-        style={{
-          borderRadius: 14,
-          padding: "clamp(18px, 2.5vw, 24px)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 180,
-            height: 180,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
-            pointerEvents: "none"
-          }}
-        />
-
-        <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 6px", lineHeight: 1.2 }}>
-              Expert Instructors &amp; 1-on-1 Mentorship
-            </h1>
-            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
-              Book dedicated 1-on-1 sessions for portfolio reviews, code architecture deep-dives, design token audits, and career guidance.
-            </p>
-          </div>
-
-          <div className="tai-hero-subcard" style={{
-            borderRadius: 10,
-            padding: "10px 16px",
-            flexShrink: 0
-          }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: "#FFFFFF" }}>{mentorsList.length} Active Instructors</div>
-            <div style={{ fontSize: 12, color: "#FBBF24", marginTop: 2, fontWeight: 700 }}>Average Rating: 4.9 ★</div>
-          </div>
-        </div>
-      </div>
+      <TopBar title="Instructors" sub={`${mentorsList.length} instructors available`} onBack={back} />
 
       {/* =========================================================================
           BOOKING MODAL / CARD
@@ -138,7 +97,7 @@ export function MentorsScreen({
         zIndex={9999}
       >
         <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
-          <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", minWidth: 0, flex: "1 1 200px" }}>Schedule 1-on-1 Mentorship Session</div>
+          <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)", minWidth: 0, flex: "1 1 200px" }}>Schedule Session</div>
           <button className="tai-btn tai-btn-ghost tai-btn-sm" style={{ flexShrink: 0 }} onClick={closeBooking}><X size={16} /></button>
         </div>
 
@@ -147,7 +106,7 @@ export function MentorsScreen({
             <Avatar initials={sessionMentorChoice.name.split(" ").map(n => n[0]).join("")} size={48} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sessionMentorChoice.name}</div>
-              <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>${sessionMentorChoice.rate}/hr • {sessionMentorChoice.title}</div>
+              <div style={{ fontSize: 12.5, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sessionMentorChoice.title}</div>
             </div>
           </div>
         )}
@@ -275,10 +234,6 @@ export function MentorsScreen({
                 </div>
 
                 <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontWeight: 800, fontSize: 16, color: "var(--primary)" }}>${m.rate}</div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)" }}>per hour</div>
-                  </div>
                   {isExpanded ? <ChevronUp size={16} color="var(--text-3)" /> : <ChevronDown size={16} color="var(--text-3)" />}
                 </div>
               </div>
@@ -299,7 +254,7 @@ export function MentorsScreen({
                     setBookingTime("");
                   }}
                 >
-                  <Video size={13} /> Book 1-on-1
+                  <Video size={13} /> Book Session
                 </button>
               </div>
 

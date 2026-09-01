@@ -385,14 +385,21 @@ export function CoursesScreen({
   courses = [], coursesLoading, courseSearch = "", setCourseSearch,
   courseLevelFilter = "all", setCourseLevelFilter, courseSourceTab = "all", setCourseSourceTab,
   showMyCoursesOnly = false, setShowMyCoursesOnly, push, handleEnroll, handleRequestJoin,
-  onToggleBookmark
+  onToggleBookmark, learningPathsQuery
 }) {
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const activeSlide = 0;
   const [activeRecording, setActiveRecording] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedPathId, setSelectedPathId] = useState("all");
+  // Org-defined learning pathways (admin-configured, e.g. No Code / Code / Tech
+  // Entrepreneurship / General Soft Skills for Sara Foundation) - a filter now,
+  // not a standalone section.
+  const pathwayOptions = (learningPathsQuery?.data || []).map(p => ({
+    id: p.id,
+    title: p.title || p.name || "Pathway",
+    courseIds: new Set((p.courses || []).map(c => c.id))
+  }));
+  const statusFilter = courseLevelFilter; // "all" | "in_progress" | "completed"
   const [sortBy, setSortBy] = useState("popular");
-  const [activeSpecialization, setActiveSpecialization] = useState(null);
   const [bookmarkedIds, setBookmarkedIds] = useState({});
   const [mockEnabled, setMockEnabled] = useState(() => isMockDataEnabled());
 
@@ -553,28 +560,6 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
       }));
 
   const currentSpotlight = dynamicSpotlightSlides[activeSlide % dynamicSpotlightSlides.length] || dynamicSpotlightSlides[0];
-  const switcherScrollRef = useRef(null);
-
-  // Auto-scroll the active course card into view within its dedicated container only (never shifts parent containers)
-  useEffect(() => {
-    const container = switcherScrollRef.current;
-    if (!container) return;
-    const activeEl = container.querySelector('[data-active="true"]');
-    if (activeEl) {
-      const scrollPos = activeEl.offsetLeft - (container.clientWidth / 2) + (activeEl.clientWidth / 2);
-      container.scrollTo({ left: Math.max(0, scrollPos), behavior: "smooth" });
-    }
-  }, [activeSlide]);
-
-  // Auto-rotating Spotlight Carousel (only rotates if there are multiple active uncompleted courses in the track)
-  useEffect(() => {
-    if (isCarouselPaused || dynamicSpotlightSlides.length <= 1) return;
-    const interval = setInterval(() => {
-      setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length);
-    }, 4800);
-    return () => clearInterval(interval);
-  }, [isCarouselPaused, dynamicSpotlightSlides.length]);
-
   const enrolledList = allAvailableCourses.filter(c => c.enrolled);
 
   // Filtering logic
@@ -589,7 +574,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
     if (courseSourceTab === "partners") {
       if (!c.partner && c.source !== "partner") return false;
     }
-    if (courseSourceTab === "bookmarks" && !bookmarkedIds[c.id]) return false;
+    if (courseSourceTab === "bookmarks" && !bookmarkedIds[c.id] && !((c.progress || 0) > 0 && (c.progress || 0) < 100)) return false;
     if (courseSearch && courseSearch.trim()) {
       const q = courseSearch.toLowerCase();
       const matchTitle = c.title?.toLowerCase().includes(q);
@@ -598,11 +583,14 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
       const matchInst = c.instructor?.toLowerCase().includes(q);
       if (!matchTitle && !matchDesc && !matchCat && !matchInst) return false;
     }
-    if (selectedCategory !== "all") {
-      const catObj = CATEGORIES.find(cat => cat.id === selectedCategory);
-      if (catObj && !c.category?.toLowerCase().includes(catObj.label.split(" ")[0].toLowerCase()) && !c.title?.toLowerCase().includes(catObj.label.split(" ")[0].toLowerCase())) {
-        return false;
-      }
+    if (selectedPathId !== "all") {
+      const pathObj = pathwayOptions.find(p => p.id === selectedPathId);
+      if (pathObj && !pathObj.courseIds.has(c.id)) return false;
+    }
+    if (statusFilter === "in_progress") {
+      if (!((c.progress || 0) > 0 && (c.progress || 0) < 100)) return false;
+    } else if (statusFilter === "completed") {
+      if ((c.progress || 0) < 100) return false;
     }
     return true;
   }).sort((a, b) => {
@@ -623,8 +611,6 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
       {currentSpotlight && (
         <div
           className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
-          onMouseEnter={() => setIsCarouselPaused(true)}
-          onMouseLeave={() => setIsCarouselPaused(false)}
           style={{
             position: "relative",
             borderRadius: 14,
@@ -652,7 +638,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
             <div style={{ minWidth: 0, boxSizing: "border-box" }}>
               <div style={{ marginBottom: 12 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: "#94A3B8", letterSpacing: "0.02em" }}>
-                  {trackDisplayName} • Course {(activeSlide % dynamicSpotlightSlides.length) + 1} of {dynamicSpotlightSlides.length}
+                  {trackDisplayName} • Continue Learning
                 </span>
               </div>
 
@@ -749,114 +735,6 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
 
           </div>
 
-          {/* Full-Width Seamless Track Course Switcher Strip */}
-          {dynamicSpotlightSlides.length > 1 && (
-            <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(255, 255, 255, 0.12)", position: "relative", zIndex: 1, width: "100%", boxSizing: "border-box" }}>
-              <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                  Track Curriculum • {dynamicSpotlightSlides.length} Courses
-                </div>
-                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                  <button
-                    aria-label="Previous Course"
-                    onClick={() => setActiveSlide(prev => (prev - 1 + dynamicSpotlightSlides.length) % dynamicSpotlightSlides.length)}
-                    style={{
-                      width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
-                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
-                    }}
-                  >
-                    <ChevronLeft size={14} />
-                  </button>
-                  <button
-                    aria-label="Next Course"
-                    onClick={() => setActiveSlide(prev => (prev + 1) % dynamicSpotlightSlides.length)}
-                    style={{
-                      width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(255,255,255,0.18)",
-                      background: "rgba(255,255,255,0.08)", color: "#FFFFFF", display: "flex", alignItems: "center",
-                      justifyContent: "center", cursor: "pointer", transition: "background 0.15s ease"
-                    }}
-                  >
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-
-              <div
-                ref={switcherScrollRef}
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  width: "100%",
-                  boxSizing: "border-box",
-                  overflowX: "auto",
-                  scrollBehavior: "smooth",
-                  WebkitOverflowScrolling: "touch",
-                  padding: "2px 2px 6px",
-                  scrollbarWidth: "none",
-                  msOverflowStyle: "none"
-                }}
-              >
-                {dynamicSpotlightSlides.map((slide, idx) => {
-                  const isSelected = idx === (activeSlide % dynamicSpotlightSlides.length);
-                  return (
-                    <button
-                      key={slide.id}
-                      data-active={isSelected ? "true" : "false"}
-                      onClick={() => setActiveSlide(idx)}
-                      title={slide.title}
-                      style={{
-                        flex: "0 0 auto",
-                        minWidth: 150,
-                        maxWidth: 200,
-                        padding: "8px 12px",
-                        borderRadius: 10,
-                        border: isSelected ? "1.5px solid #60A5FA" : "1px solid rgba(255,255,255,0.14)",
-                        background: isSelected ? "rgba(59, 130, 246, 0.35)" : "rgba(255,255,255,0.06)",
-                        color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.7)",
-                        cursor: "pointer",
-                        textAlign: "left",
-                        boxShadow: isSelected ? "0 4px 14px rgba(37, 99, 235, 0.35)" : "none",
-                        transition: "all 0.2s ease"
-                      }}
-                    >
-                      <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 3 }}>
-                        <span
-                          style={{
-                            fontSize: 9.5,
-                            fontWeight: 800,
-                            color: isSelected ? "#93C5FD" : "rgba(255,255,255,0.5)",
-                            letterSpacing: "0.04em",
-                            textTransform: "uppercase"
-                          }}
-                        >
-                          Course 0{idx + 1}
-                        </span>
-                        {slide.progress === 100 ? (
-                          <span style={{ fontSize: 9, fontWeight: 700, color: "#34D399" }}>Done ✓</span>
-                        ) : isSelected ? (
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#60A5FA" }} />
-                        ) : null}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          lineHeight: 1.3,
-                          color: isSelected ? "#FFFFFF" : "rgba(255,255,255,0.9)"
-                        }}
-                      >
-                        {slide.title}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -873,7 +751,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
               { id: "assigned", label: "Assigned to Me", count: allAvailableCourses.filter(c => c.assigned || c.enrolled || c.source === "assigned").length },
               { id: "internal", label: "Internal Courses", count: allAvailableCourses.filter(c => c.isInternal || c.source === "internal").length },
               { id: "partners", label: "External Partners", count: allAvailableCourses.filter(c => c.partner || c.source === "partner").length },
-              { id: "bookmarks", label: "Bookmarked", count: Object.values(bookmarkedIds).filter(Boolean).length }
+              { id: "bookmarks", label: "Bookmarked", count: allAvailableCourses.filter(c => bookmarkedIds[c.id] || ((c.progress || 0) > 0 && (c.progress || 0) < 100)).length }
             ].map((tab) => {
               const isActive = !showMyCoursesOnly && courseSourceTab === tab.id;
               return (
@@ -942,27 +820,59 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
             </div>
           </div>
 
-          {/* Topics Category Pills */}
-          <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2 }}>
-            {CATEGORIES.map(cat => {
-              const isActive = selectedCategory === cat.id;
+          {/* Learning Pathway filter (org-defined, e.g. No Code / Code / Tech Entrepreneurship / General Soft Skills) */}
+          {pathwayOptions.length > 0 && (
+            <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2 }}>
+              {[{ id: "all", title: "All Pathways" }, ...pathwayOptions].map(p => {
+                const isActive = selectedPathId === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedPathId(p.id)}
+                    style={{
+                      padding: "6px 13px",
+                      borderRadius: 99,
+                      border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                      background: isActive ? "var(--primary-tint)" : "var(--surface)",
+                      color: isActive ? "var(--primary)" : "var(--text-2)",
+                      fontWeight: isActive ? 800 : 600,
+                      fontSize: 12,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    {p.title}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* In Progress / Completed status filter */}
+          <div className="tai-row tai-gap6">
+            {[
+              { id: "all", label: "All" },
+              { id: "in_progress", label: "In Progress" },
+              { id: "completed", label: "Completed" }
+            ].map(s => {
+              const isActive = statusFilter === s.id;
               return (
                 <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  key={s.id}
+                  onClick={() => setCourseLevelFilter?.(s.id)}
                   style={{
                     padding: "6px 13px",
-                    borderRadius: 99,
+                    borderRadius: 8,
                     border: isActive ? "1.5px solid var(--primary)" : "1px solid var(--border)",
-                    background: isActive ? "var(--primary-tint)" : "var(--surface)",
-                    color: isActive ? "var(--primary)" : "var(--text-2)",
+                    background: isActive ? "var(--primary)" : "var(--surface)",
+                    color: isActive ? "#FFFFFF" : "var(--text-2)",
                     fontWeight: isActive ? 800 : 600,
                     fontSize: 12,
                     cursor: "pointer",
                     whiteSpace: "nowrap"
                   }}
                 >
-                  {cat.label}
+                  {s.label}
                 </button>
               );
             })}
@@ -981,7 +891,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
               <BookOpen size={26} color="var(--primary)" />
             </div>
             <h3 style={{ fontSize: 18, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>
-              {courseSourceTab === "bookmarks" ? "No Bookmarked Courses Yet" : "No Courses Found Matching Criteria"}
+              {courseSourceTab === "bookmarks" ? "No Started or Saved Courses Yet" : "No Courses Found Matching Criteria"}
             </h3>
             <p style={{ fontSize: 13, color: "var(--text-3)", maxWidth: 400, margin: "0 auto 16px" }}>
               Try adjusting your search keyword or switching category tabs to browse all courses.
@@ -1160,90 +1070,6 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
         )}
       </div>
 
-      {/* =========================================================================
-          SPECIALIZATIONS & LIVE WORKSHOP STUDIO REPLAYS
-          ========================================================================= */}
-      <div>
-        <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
-          <div>
-            <div className="tai-row tai-gap8">
-              <Award size={20} color="var(--primary)" />
-              <h2 style={{ fontSize: 19, fontWeight: 900, letterSpacing: "-0.02em", margin: 0, color: "var(--text)" }}>
-                Learning Pathways
-              </h2>
-            </div>
-            <p style={{ fontSize: 13, color: "var(--text-3)", margin: "4px 0 0" }}>
-              Instructor-assigned multi-course learning pathways
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-          {SPECIALIZATIONS.map((spec) => (
-            <div
-              key={spec.id}
-              className="tai-card tai-card-hover"
-              onClick={() => setActiveSpecialization(spec)}
-              style={{
-                background: "var(--surface)",
-                borderRadius: 10,
-                border: "1px solid var(--border)",
-                padding: 22,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                boxShadow: "0 4px 16px rgba(15,23,42,0.04)",
-                cursor: "pointer"
-              }}
-            >
-              <div>
-                <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
-                  <span style={{ background: spec.badgeBg, color: "#fff", fontSize: 10.5, fontWeight: 800, padding: "3px 10px", borderRadius: 6 }}>
-                    {spec.badge}
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>
-                    {spec.coursesCount} Course Series
-                  </span>
-                </div>
-
-                <h3 style={{ fontSize: 17, fontWeight: 800, margin: "0 0 8px", color: "var(--text)", lineHeight: 1.3 }}>
-                  {spec.title}
-                </h3>
-
-                <p style={{ fontSize: 13, color: "var(--text-3)", margin: "0 0 16px", lineHeight: 1.5 }}>
-                  {spec.description}
-                </p>
-
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
-                  {spec.skills.map((skill, idx) => (
-                    <span key={idx} style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-2)", fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6 }}>
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="tai-row tai-between" style={{ paddingTop: 14, borderTop: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-                <div className="tai-col">
-                  <span style={{ fontSize: 11, color: "var(--text-3)" }}>Duration: {spec.months}</span>
-                  <span className="tai-row tai-gap4" style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
-                    <Star size={13} fill="#F59E0B" color="#F59E0B" /> {spec.rating} ({spec.reviews})
-                  </span>
-                </div>
-
-                <button
-                  className="tai-btn tai-btn-outline tai-btn-sm"
-                  style={{ fontWeight: 700 }}
-                  onClick={(e) => { e.stopPropagation(); setActiveSpecialization(spec); }}
-                >
-                  View Pathway →
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div>
         <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
           <div>
@@ -1329,40 +1155,6 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
                 onClick={() => { setActiveRecording(null); push("courseDetail", { id: "course-figma-ai" }); }}
               >
                 Enroll in Track →
-              </button>
-            </div>
-          </div>
-        </PortalModal>
-      )}
-
-      {/* Specialization Modal */}
-      {activeSpecialization && (
-        <PortalModal isOpen={true} onClose={() => setActiveSpecialization(null)} title={activeSpecialization.title}>
-          <div style={{ padding: "6px 0" }}>
-            <p style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.55, margin: "0 0 16px" }}>
-              {activeSpecialization.description}
-            </p>
-
-            <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8, marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", marginBottom: 8 }}>
-                Competencies Covered ({activeSpecialization.skills.length})
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {activeSpecialization.skills.map((s, idx) => (
-                  <span key={idx} style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text)", background: "var(--surface)", padding: "4px 8px", borderRadius: 6, border: "1px solid var(--border)" }}>
-                    ✓ {s}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="tai-row tai-between" style={{ alignItems: "center", paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-              <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>Duration: <strong>{activeSpecialization.months}</strong></span>
-              <button
-                className="tai-btn tai-btn-primary tai-btn-sm"
-                onClick={() => { setActiveSpecialization(null); push("courseDetail", { id: "course-figma-ai" }); }}
-              >
-                Enroll in Specialization →
               </button>
             </div>
           </div>

@@ -779,14 +779,20 @@ export function LearnerHeader({
       </div>
 
       <div className="tai-header-right" style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-        {/* Streak Pill */}
+        {/* Streak Pill - single source of truth for streak/XP/credits, shown once here on every breakpoint */}
         <div className="tai-streak-pill" onClick={() => go?.("achievements")} title="Active Streak">
           <Flame size={14} color="#EA580C" />
           <span>{user?.streak || 8} <span className="tai-pill-unit tai-desktop-only">days</span></span>
         </div>
 
-        {/* AI Credits Pill (Desktop only to prevent mobile crowding) */}
-        <div className="tai-credits-pill tai-desktop-only" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
+        {/* XP Pill */}
+        <div className="tai-credits-pill" onClick={() => go?.("leaderboard")} title="Total Earned XP">
+          <Zap size={13} color="#F59E0B" />
+          <span>{user?.totalPoints || 0} <span className="tai-pill-unit">XP</span></span>
+        </div>
+
+        {/* AI Credits Pill */}
+        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
           <Plus size={13} color="#2563EB" />
           <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
         </div>
@@ -887,10 +893,9 @@ export function DesktopSidebar({
       label: "Home",
       icon: Home,
       defaultScreen: "home",
-      screens: ["home", "myProgress"],
+      screens: ["home"],
       subItems: [
-        { key: "home", label: "Overview", icon: Home },
-        { key: "myProgress", label: "My Progress", icon: BarChart3 }
+        { key: "home", label: "Overview", icon: Home }
       ]
     },
     {
@@ -921,15 +926,14 @@ export function DesktopSidebar({
       label: "Community",
       icon: Users,
       defaultScreen: "communityFeed",
-      screens: ["community", "communityFeed", "cohort", "mentors", "messages", "notifications", "leaderboard"],
+      screens: ["community", "communityFeed", "cohort", "mentors", "studyGroup", "messages", "leaderboard"],
       subItems: [
-        { key: "communityFeed", label: "Community Feed", icon: MessageSquare },
+        { key: "communityFeed", label: "Community", icon: MessageSquare },
         { key: "cohort", label: "Cohort", icon: Users },
         { key: "mentors", label: "Instructors", icon: GraduationCap },
-        { key: "communityCircles", label: "Study Circles", icon: Users },
+        { key: "studyGroup", label: "Study Group", icon: Users },
         { key: "leaderboard", label: "Leaderboard", icon: Award },
-        { key: "messages", label: "Messages", icon: Mail },
-        { key: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifs }
+        { key: "messages", label: "Messages", icon: Mail }
       ]
     },
     {
@@ -937,9 +941,10 @@ export function DesktopSidebar({
       label: "Account",
       icon: Settings,
       defaultScreen: "settings",
-      screens: ["achievements", "settings", "profile"],
+      screens: ["achievements", "myProgress", "notifications", "settings", "profile"],
       subItems: [
-        { key: "achievements", label: "Achievements", icon: Award },
+        { key: "achievements", label: "Progress & Achievements", icon: Award },
+        { key: "notifications", label: "Notifications", icon: Bell, badge: unreadNotifs },
         { key: "settings", label: "Settings", icon: Settings }
       ]
     }

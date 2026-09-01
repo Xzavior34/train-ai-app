@@ -50,8 +50,13 @@ export function CohortScreen({
   const instructorMembers = (cohortMembersQuery?.data || []).filter(
     m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin"
   );
+  const peerMembers = (cohortMembersQuery?.data || []).filter(
+    m => m.user_profiles?.role !== "mentor" && m.user_profiles?.role !== "admin"
+  );
 
   const assignedCourses = cohortCoursesQuery?.data || [];
+  const completedAssignedCount = assignedCourses.filter(cc => (cc.courses?.progress || 0) >= 100).length;
+  const assignedCompletionRate = assignedCourses.length ? Math.round((completedAssignedCount / assignedCourses.length) * 100) : 0;
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -154,11 +159,11 @@ export function CohortScreen({
           ========================================================================= */}
       <div className="tai-row tai-gap8" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         {[
-          { k: "chat", label: `Announcements & Feed (${posts.length})`, icon: MessageCircle },
-          { k: "sessions", label: `Live Studios (${sessions.length})`, icon: Video },
+          { k: "chat", label: `Announcements & Discussion (${posts.length})`, icon: MessageCircle },
+          { k: "sessions", label: `Live Sessions (${sessions.length})`, icon: Video },
           { k: "courses", label: `Assigned Courses (${assignedCourses.length})`, icon: BookOpen },
           { k: "resources", label: `Shared Resources (${resources.length})`, icon: FileText },
-          { k: "members", label: `Facilitators (${instructorMembers.length})`, icon: Users },
+          { k: "members", label: `People (${cohortMembersQuery?.data?.length || 0})`, icon: Users },
         ].map(t => {
           const Icon = t.icon;
           const isActive = tab === t.k;
@@ -196,61 +201,10 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "chat" && (
         <div className="tai-col tai-gap14">
-          {/* Post to Cohort Composer */}
-          <div className="tai-card" style={{ padding: 16, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 8 }}>
-              Share with your Cohort
-            </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-              <textarea
-                placeholder="Ask a question, share progress, or discuss sprint topics..."
-                value={newPostText}
-                onChange={(e) => setNewPostText(e.target.value)}
-                rows={2}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 8,
-                  border: "1px solid var(--border)",
-                  background: "var(--surface-2)",
-                  color: "var(--text)",
-                  fontSize: 13,
-                  resize: "vertical",
-                  outline: "none"
-                }}
-              />
-              <button
-                className="tai-btn tai-btn-primary"
-                style={{ height: 42, padding: "0 16px", borderRadius: 8, fontWeight: 800, display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}
-                disabled={posting || !newPostText.trim()}
-                onClick={async () => {
-                  if (!session?.user?.id || !cohort?.id || !newPostText.trim()) return;
-                  setPosting(true);
-                  try {
-                    await createCohortPost({
-                      cohortId: cohort.id,
-                      authorId: session.user.id,
-                      content: newPostText.trim()
-                    });
-                    setNewPostText("");
-                    cohortPostsQuery?.refetch();
-                    showToast?.("Posted to cohort feed!");
-                  } catch (e) {
-                    showToast?.(e?.message || "Failed to post to cohort feed.");
-                  } finally {
-                    setPosting(false);
-                  }
-                }}
-              >
-                <Send size={14} />
-                <span>{posting ? "Posting..." : "Post"}</span>
-              </button>
-            </div>
-          </div>
-
+          {/* Read-only - only instructors/admins can post here (learners can read). */}
           {cohortPostsQuery?.loading && <div className="tai-empty">Loading cohort chat...</div>}
           {!cohortPostsQuery?.loading && posts.length === 0 && (
-            <div className="tai-empty">No posts in your cohort chat yet. Be the first to start the discussion!</div>
+            <div className="tai-empty">No announcements from your instructor yet.</div>
           )}
           {posts.map(cp => (
             <div
@@ -452,6 +406,14 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "courses" && (
         <div className="tai-col tai-gap16">
+          <div className="tai-card" style={{ padding: "14px 16px", borderRadius: 10, border: "1px solid var(--border)" }}>
+            <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>
+              <span style={{ color: "var(--text-2)" }}>Cohort Assigned-Course Completion Rate</span>
+              <span style={{ color: "var(--primary)", fontWeight: 800 }}>{completedAssignedCount} of {assignedCourses.length} ({assignedCompletionRate}%)</span>
+            </div>
+            <ProgressBar value={assignedCompletionRate} height={8} />
+          </div>
+
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {assignedCourses.map(cc => (
               <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 10, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id })}>
@@ -559,6 +521,26 @@ export function CohortScreen({
               </div>
             </div>
           ))}
+
+          {peerMembers.length > 0 && (
+            <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", marginBottom: 10 }}>
+                Peers in this Cohort ({peerMembers.length})
+              </div>
+              <div className="tai-grid2">
+                {peerMembers.map(m => (
+                  <div key={m.id} className="tai-card" style={{ padding: "12px 16px", borderRadius: 10 }}>
+                    <div className="tai-row tai-gap12" style={{ alignItems: "center" }}>
+                      <Avatar src={m.user_profiles?.avatar_url} initials={initialsOf(m.user_profiles?.display_name)} size={36} />
+                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {m.user_profiles?.display_name || "Learner"}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

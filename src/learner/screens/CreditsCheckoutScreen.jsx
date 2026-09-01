@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { TopBar, Tag } from "../components/LearnerUI.jsx";
-import { Zap, ShieldCheck, Loader2, CreditCard, Plus, CheckCircle2, Lock, Mail, ArrowRight, HelpCircle } from "lucide-react";
+import { Zap, ShieldCheck, Loader2, CreditCard, Plus, CheckCircle2, Lock, Mail, ArrowRight, HelpCircle, Send, Clock3 } from "lucide-react";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "../../lib/api/payments.js";
+import { requestCredits, fetchMyCreditRequests } from "../../lib/api/creditRequests.js";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 
 const PACKAGES = [
   {
@@ -56,8 +58,39 @@ function formatAmount(value, currency) {
   return `${SYMBOL[currency] || ""}${Number(value).toFixed(2)}`;
 }
 
-export function CreditsCheckoutScreen({ session, params, back, showToast }) {
+export function CreditsCheckoutScreen({ session, params, back, showToast, orgId }) {
   const isCourseMode = params?.mode === "course_enrollment";
+  const [activeTab, setActiveTab] = useState(params?.tab === "request" ? "request" : "buy");
+  const [requestAmount, setRequestAmount] = useState(50);
+  const [requestReason, setRequestReason] = useState("");
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
+  const myRequestsQuery = useSupabaseQuery(
+    () => fetchMyCreditRequests(session?.user?.id),
+    [session?.user?.id]
+  );
+
+  async function handleSubmitRequest() {
+    if (!requestAmount || requestAmount <= 0) {
+      showToast?.("Enter how many credits you need.");
+      return;
+    }
+    setRequestSubmitting(true);
+    try {
+      await requestCredits({
+        userId: session?.user?.id,
+        organizationId: orgId,
+        amount: Number(requestAmount),
+        reason: requestReason.trim(),
+      });
+      showToast?.("Credit request sent to your organization.");
+      setRequestReason("");
+      myRequestsQuery.refetch();
+    } catch (err) {
+      showToast?.(err?.message || "Could not send your request");
+    } finally {
+      setRequestSubmitting(false);
+    }
+  }
 
   const [selectedPackageId, setSelectedPackageId] = useState(PACKAGES[1].id);
   const [currency, setCurrency] = useState("NGN");
@@ -186,6 +219,103 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
       </div>
 
       {!isCourseMode && (
+        <div style={{ display: "flex", gap: 8, background: "var(--surface-3)", padding: 4, borderRadius: 10, border: "1px solid var(--border)", width: "fit-content" }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab("buy")}
+            style={{
+              padding: "8px 18px", borderRadius: 7, fontSize: 13, fontWeight: activeTab === "buy" ? 800 : 600,
+              background: activeTab === "buy" ? "var(--primary)" : "transparent",
+              color: activeTab === "buy" ? "#FFFFFF" : "var(--text)", border: "none", cursor: "pointer"
+            }}
+          >
+            Buy Credits
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("request")}
+            style={{
+              padding: "8px 18px", borderRadius: 7, fontSize: 13, fontWeight: activeTab === "request" ? 800 : 600,
+              background: activeTab === "request" ? "var(--primary)" : "transparent",
+              color: activeTab === "request" ? "#FFFFFF" : "var(--text)", border: "none", cursor: "pointer"
+            }}
+          >
+            Request from Organization
+          </button>
+        </div>
+      )}
+
+      {!isCourseMode && activeTab === "request" && (
+        <div className="tai-card" style={{ padding: 20, borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", marginBottom: 6 }}>
+            Request AI Credits from Your Organization
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--text-2)", margin: "0 0 16px", lineHeight: 1.5 }}>
+            Send a request to your organization for AI credits instead of paying for them yourself. Your admin will review it.
+          </p>
+
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
+              How many credits do you need?
+            </label>
+            <input
+              className="tai-input"
+              style={{ width: "100%", boxSizing: "border-box", maxWidth: 200 }}
+              type="number"
+              min={1}
+              value={requestAmount}
+              onChange={(e) => setRequestAmount(e.target.value)}
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
+              Reason (optional)
+            </label>
+            <textarea
+              className="tai-input"
+              style={{ width: "100%", boxSizing: "border-box", minHeight: 70, resize: "vertical", fontFamily: "inherit" }}
+              placeholder="e.g. Finishing my current course and need more AI Coach queries this week"
+              value={requestReason}
+              onChange={(e) => setRequestReason(e.target.value)}
+            />
+          </div>
+
+          <button
+            className="tai-btn tai-btn-primary"
+            style={{ padding: "10px 18px", fontSize: 13.5, fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 8 }}
+            disabled={requestSubmitting}
+            onClick={handleSubmitRequest}
+          >
+            {requestSubmitting ? <Loader2 size={15} className="tai-spin" /> : <Send size={15} />}
+            <span>{requestSubmitting ? "Sending..." : "Send Request"}</span>
+          </button>
+
+          {(myRequestsQuery.data || []).length > 0 && (
+            <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", marginBottom: 10 }}>
+                Your Requests
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {myRequestsQuery.data.map((r) => (
+                  <div key={r.id} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", alignItems: "center" }}>
+                    <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                      <Clock3 size={14} color="var(--text-3)" />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{r.amount} credits</span>
+                      <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{new Date(r.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <Tag tone={r.status === "approved" ? "success" : r.status === "denied" ? "danger" : "warning"}>
+                      {r.status === "pending" ? "Pending Review" : r.status === "approved" ? "Approved" : "Denied"}
+                    </Tag>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(isCourseMode || activeTab === "buy") && !isCourseMode && (
         <>
           {/* Currency Switcher Controls */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
@@ -314,6 +444,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
       {/* =========================================================================
           CHECKOUT & PAYMENT GATEWAY FORM
           ========================================================================= */}
+      {(isCourseMode || activeTab === "buy") && (
       <div className="tai-card" style={{ padding: 20, borderRadius: 14, background: "var(--surface)", border: "1px solid var(--border)" }}>
         <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", marginBottom: 14 }}>
           Payment &amp; Billing Details
@@ -421,6 +552,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast }) {
           <span>256-bit SSL encrypted checkout. Credits are added to your balance immediately upon payment.</span>
         </div>
       </div>
+      )}
 
     </div>
   );
