@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
 import { Plus, Layers, Users, Calendar, ArrowRight, X, Send } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCohortsWithStats, createCohort } from "../../lib/api/platform.js";
+import { fetchCohortsWithStats, createCohort, fetchUpcomingOrgSessions } from "../../lib/api/platform.js";
 import { createCohortPost } from "../../lib/api/schemaHelper.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 
@@ -14,6 +14,8 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const cohortsQuery = useSupabaseQuery(async () => orgId ? fetchCohortsWithStats(orgId) : [], [orgId]);
   const cohorts = cohortsQuery.data || [];
+  const sessionsQuery = useSupabaseQuery(async () => orgId ? fetchUpcomingOrgSessions(orgId) : [], [orgId]);
+  const upcomingSessions = sessionsQuery.data || [];
 
   return (
     <div className="ta-fade">
@@ -159,17 +161,23 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
               </div>
 
               <div className="ta-col ta-gap12 ta-mt14">
-                {[
-                  { title: "Module 4 Design Critique", date: "Tomorrow • 6:00 PM", status: "Live Review", tone: "primary" },
-                  { title: "Mid-Term Capstone Submissions", date: "Friday • 11:59 PM", status: "Deadline", tone: "danger" },
-                  { title: "Industry Pitch & Demo Day", date: "Next Week • 4:00 PM", status: "Demo Day", tone: "success" }
-                ].map((m, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{m.title}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{m.date}</div>
+                {sessionsQuery.loading && <div className="ta-empty">Loading milestone sessions...</div>}
+                {!sessionsQuery.loading && upcomingSessions.length === 0 && (
+                  <div className="ta-empty" style={{ padding: "16px 8px" }}>
+                    No upcoming live cohort milestones scheduled yet.
+                  </div>
+                )}
+                {upcomingSessions.map((s, idx) => (
+                  <div key={s.id || idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                        {s.time || "Scheduled"} {s.mentor ? `• ${s.mentor}` : ""}
+                      </div>
                     </div>
-                    <Tag tone={m.tone}>{m.status}</Tag>
+                    <Tag tone={s.status === "live" ? "danger" : "primary"}>
+                      {s.status === "live" ? "Live Now" : "Live Session"}
+                    </Tag>
                   </div>
                 ))}
               </div>

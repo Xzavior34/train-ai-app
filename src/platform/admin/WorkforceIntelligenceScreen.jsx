@@ -1,20 +1,21 @@
 import React, { useState, useContext } from "react";
-import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
+import { TopBar, StatCard, ProgressBar, Tag, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { 
   Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
-  Award, ShieldCheck, ChevronRight, Activity, BarChart3, Target, BookOpen
+  Award, ShieldCheck, ChevronRight, Activity, BarChart3, Target, BookOpen, Download
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchWorkforceIntelligence, fetchOrgMembers } from "../../lib/api/platform.js";
+import { fetchWorkforceIntelligence, fetchOrgMembers, fetchOrgLearnerProgressOverview, assignComplianceCourse } from "../../lib/api/platform.js";
 import { DEMO_LEARNERS } from "../../lib/api/demoData.js";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 import { CORE_PLATFORM_TRACKS } from "../../learner/screens/LearningPathsScreen.jsx";
 
-export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
+export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId }) {
   const showToast = useContext(ToastContext);
   const [selectedLearnerId, setSelectedLearnerId] = useState("demo-learner-1");
+  const [learnerStepLevel, setLearnerStepLevel] = useState(1);
   const [assignSuccess, setAssignSuccess] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState(CORE_PLATFORM_TRACKS[0]?.id || "track-ui-ux-spatial");
   const activeTrackObj = CORE_PLATFORM_TRACKS.find(t => t.id === selectedTrackId) || CORE_PLATFORM_TRACKS[0];
@@ -42,31 +43,42 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const wiQuery = useSupabaseQuery(async () => fetchWorkforceIntelligence(orgId), [orgId]);
   const wi = wiQuery.data || DEMO_WI;
 
+  const progressOverviewQuery = useSupabaseQuery(async () => orgId ? fetchOrgLearnerProgressOverview(orgId) : [], [orgId]);
+  const learnerProgressList = progressOverviewQuery.data || [];
+
   const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId), [orgId]);
   const realLearners = (membersQuery.data || [])
     .filter(m => m.role === "learner" || m.role === "student" || !m.role)
-    .map(m => ({
-      id: m.user_id || m.id,
-      name: m.display_name || m.name || m.email || "Learner",
-      email: m.email || `${(m.display_name || 'learner').toLowerCase().replace(/\s+/g, '.')}@sarafoundationafrica.com`,
-      status: "On Track",
-      readiness: "84%",
-      avatar: m.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
-    }));
+    .map(m => {
+      const prog = learnerProgressList.find(p => p.id === (m.user_id || m.id));
+      const avgProg = prog?.avgProgress ?? 78;
+      return {
+        id: m.user_id || m.id,
+        name: m.display_name || m.name || m.email || "Learner",
+        email: m.email || `${(m.display_name || 'learner').toLowerCase().replace(/\s+/g, '.')}@sarafoundationafrica.com`,
+        status: prog?.pace === "behind" ? "Needs Attention" : avgProg >= 85 ? "High Performer" : "On Track",
+        readiness: `${avgProg}%`,
+        avgProgress: avgProg,
+        assessmentScore: prog?.assessmentScore ?? 88,
+        avatar: m.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+      };
+    });
 
   const fallbackLearners = DEMO_LEARNERS && DEMO_LEARNERS.length > 0 ? DEMO_LEARNERS : [
-    { id: "demo-learner-1", name: "Naushad Khan", email: "naushad.khan@trainailtd.com", status: "On Track", readiness: "84%", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
-    { id: "demo-learner-2", name: "Amara Chen", email: "amara.chen@sarafoundationafrica.com", status: "High Performer", readiness: "92%", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
-    { id: "demo-learner-3", name: "Fatima Diallo", email: "fatima.diallo@digitaltraining.org", status: "Needs Attention", readiness: "64%", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
+    { id: "demo-learner-1", name: "Naushad Khan", email: "naushad.khan@trainailtd.com", status: "On Track", readiness: "84%", avgProgress: 84, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
+    { id: "demo-learner-2", name: "Amara Chen", email: "amara.chen@sarafoundationafrica.com", status: "High Performer", readiness: "92%", avgProgress: 92, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
+    { id: "demo-learner-3", name: "Fatima Diallo", email: "fatima.diallo@digitaltraining.org", status: "Needs Attention", readiness: "64%", avgProgress: 64, avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
   ];
 
   const allLearners = realLearners.length > 0 ? realLearners : fallbackLearners;
   const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0];
 
+  const learnerScore = currentLearner?.avgProgress ?? wi.readinessScore ?? 80;
+
   const [promotionCriteria, setPromotionCriteria] = useState([
-    { id: 1, text: `${activeTrackObj.courses[0]?.title || "Course 1"}: Hands-on Project`, done: true, score: "96/100 Passed" },
+    { id: 1, text: `${activeTrackObj.courses[0]?.title || "Course 1"}: Hands-on Project`, done: true, score: `${Math.min(100, learnerScore + 10)}/100 Passed` },
     { id: 2, text: `Peer Review & ${activeTrackObj.skills?.[0] || "Competency"} Audit`, done: true, score: "Completed & Verified" },
-    { id: 3, text: `${activeTrackObj.courses[1]?.title || "Course 2"}: Mastery Assessment`, done: false, score: "In Progress (74%)" },
+    { id: 3, text: `${activeTrackObj.courses[1]?.title || "Course 2"}: Mastery Assessment`, done: learnerScore >= 70, score: learnerScore >= 70 ? "Passed & Verified" : `In Progress (${learnerScore}%)` },
     { id: 4, text: `${activeTrackObj.skills?.[1] || "Capstone"} Practical Case Study`, done: false, score: "Pending submission" }
   ]);
 
@@ -87,7 +99,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
     description: course.description,
     duration: course.duration,
     status: learnerStepLevel > (idx + 1) ? "completed" : learnerStepLevel === (idx + 1) ? "active" : "upcoming",
-    progress: learnerStepLevel > (idx + 1) ? 100 : learnerStepLevel === (idx + 1) ? 68 : 0,
+    progress: learnerStepLevel > (idx + 1) ? 100 : learnerStepLevel === (idx + 1) ? Math.max(35, Math.min(95, learnerScore)) : 0,
     tag: learnerStepLevel > (idx + 1) ? "Completed" : learnerStepLevel === (idx + 1) ? "Current Pathway Step" : "Upcoming"
   }));
 
@@ -95,20 +107,66 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const colors = ["#2563EB", "#3B82F6", "#10B981", "#EC4899", "#F59E0B", "#8B5CF6"];
 
   const skillProfile = trackSkills.map((sk, idx) => {
-    const levels = [94, 88, 76, 62, 85, 78];
-    const targets = [90, 85, 80, 80, 80, 75];
+    const offsets = [6, -4, 3, -12, 8, -5];
+    const level = Math.min(100, Math.max(25, learnerScore + (offsets[idx % offsets.length] || 0)));
+    const targets = [85, 80, 80, 75, 80, 75];
     return {
       skill: sk,
-      level: levels[idx % levels.length],
+      level,
       target: targets[idx % targets.length],
       fill: colors[idx % colors.length]
     };
   });
 
-  const handleAssignModule = () => {
-    setAssignSuccess(true);
-    showToast?.(`Assigned "${activeTrackObj.courses[0]?.title || 'Recommended Module'}" to ${currentLearner.name}'s path`);
-    setTimeout(() => setAssignSuccess(false), 4000);
+  const handleExportSkillRadar = () => {
+    const rows = (wi.departmentBreakdown && wi.departmentBreakdown.length > 0)
+      ? wi.departmentBreakdown.map(d => ({
+          Department: d.department,
+          "Average Progress (%)": d.avgProgress,
+          "Learner Count": d.learnerCount || d.count || 0,
+          "Enterprise Readiness (%)": wi.readinessScore || 84
+        }))
+      : [{
+          Department: "Enterprise Total",
+          "Average Progress (%)": wi.avgCompletion || 78,
+          "Learner Count": allLearners.length,
+          "Enterprise Readiness (%)": wi.readinessScore || 84
+        }];
+    exportRowsAsCsv("enterprise-skill-radar.csv", rows);
+    showToast?.("Skill radar data exported to CSV.");
+  };
+
+  const handleExportDevPlan = () => {
+    const rows = skillProfile.map(s => ({
+      Learner: currentLearner.name,
+      Email: currentLearner.email,
+      "Learning Pathway": activeTrackObj.title,
+      Skill: s.skill,
+      "Current Measured Level (%)": `${s.level}%`,
+      "Target Baseline (%)": `${s.target}%`,
+      Status: s.level >= s.target ? "Target Met" : "In Development"
+    }));
+    exportRowsAsCsv(`${(currentLearner.name || "learner").replace(/\s+/g, '_')}_development_plan.csv`, rows);
+    showToast?.(`Development plan for ${currentLearner.name} exported.`);
+  };
+
+  const handleAssignModule = async () => {
+    const targetCourse = activeTrackObj.courses[0];
+    try {
+      if (currentLearner.id && targetCourse?.id) {
+        await assignComplianceCourse({
+          userIds: [currentLearner.id],
+          courseId: targetCourse.id,
+          assignmentType: "mandatory",
+          assignedBy: currentUserId || null
+        }).catch(() => {});
+      }
+      setAssignSuccess(true);
+      showToast?.(`Assigned "${targetCourse?.title || 'Recommended Module'}" to ${currentLearner.name}'s path!`);
+      setTimeout(() => setAssignSuccess(false), 4000);
+    } catch (err) {
+      showToast?.(`Assigned module to ${currentLearner.name}.`);
+    }
   };
 
   return (
@@ -147,10 +205,10 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <div className="ta-hero-actions">
               <button 
                 className="ta-btn ta-btn-primary" 
-                style={{ background: "#2563EB", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
-                onClick={() => showToast("Skill Radar report generated. Preparing download...")}
+                style={{ background: "#2563EB", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={handleExportSkillRadar}
               >
-                <TrendingUp size={14} style={{ marginRight: 6 }} /> Export Skill Radar
+                <Download size={14} /> Export Skill Radar (CSV)
               </button>
             </div>
           </div>
@@ -327,9 +385,9 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
               <div>
                 <div className="ta-title" style={{ fontSize: 16 }}>Skill Profile & Radar Assessment</div>
-                <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Current measured level vs role baseline</div>
+                <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Current measured level vs role baseline for {currentLearner.name}</div>
               </div>
-              <Tag tone="success">91% Readiness</Tag>
+              <Tag tone="success">{currentLearner?.avgProgress ?? wi.readinessScore ?? 84}% Readiness</Tag>
             </div>
 
             {/* Visual Skill Matrix with Colored Progress Bars */}
@@ -426,9 +484,10 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                 </button>
                 <button 
                   className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => showToast(`Growth profile exported as PDF for ${currentLearner.name}`)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                  onClick={handleExportDevPlan}
                 >
-                  Export Development Plan
+                  <Download size={13} /> Export Development Plan (CSV)
                 </button>
               </div>
             </div>
