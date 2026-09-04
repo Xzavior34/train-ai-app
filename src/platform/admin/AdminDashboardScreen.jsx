@@ -209,34 +209,28 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               </div>
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {(() => {
-                  const fallbackActs = [
-                    { user: "Sarah Connor", action: "Completed Lesson 4 in Spatial UI", time: "5m ago", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" },
-                    { user: "Marcus Wright", action: "Submitted UX Audit Report", time: "18m ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80" },
-                    { user: "Elena Rostova", action: "Joined Design Systems Batch 04", time: "1h ago", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80" },
-                    { user: "David Vance", action: "Passed AI Vector Embeddings Quiz (100%)", time: "2h ago", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80" }
-                  ];
-                  const liveActs = (activityLogQuery.data || []).map((l, i) => ({
-                    user: l.text?.includes(":") ? l.text.split(":")[1]?.trim() : l.text || "Member",
-                    action: l.text?.includes(":") ? l.text.split(":")[0]?.trim() : "Completed activity",
-                    time: l.time || "Recent",
-                    avatar: fallbackActs[i % fallbackActs.length].avatar
-                  }));
-                  const acts = liveActs.length > 0 ? liveActs : fallbackActs;
-
-                  return acts.map((act, idx) => (
+                {activityLogQuery.loading && <div className="ta-empty">Loading activity stream...</div>}
+                {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && (
+                  <div className="ta-empty" style={{ padding: "16px 8px" }}>No recent student activity recorded yet.</div>
+                )}
+                {(activityLogQuery.data || []).map((l, idx) => {
+                  const user = l.text?.includes(":") ? l.text.split(":")[1]?.trim() : l.text || "Learner";
+                  const action = l.text?.includes(":") ? l.text.split(":")[0]?.trim() : "Activity update";
+                  return (
                     <div key={idx} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10, border: "1px solid var(--border)" }}>
                       <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: 1, marginRight: 10 }}>
-                        <img src={act.avatar} alt={act.user} style={{ width: 30, height: 30, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                        <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--primary-tint)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                          {(user || "U").charAt(0).toUpperCase()}
+                        </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text)" }}>{act.user}</div>
-                          <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{act.action}</div>
+                          <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text)" }}>{user}</div>
+                          <div style={{ fontSize: 11.5, color: "var(--text-3)", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{action}</div>
                         </div>
                       </div>
-                      <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600, flexShrink: 0 }}>{act.time}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600, flexShrink: 0 }}>{l.time || "Recent"}</span>
                     </div>
-                  ));
-                })()}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -253,24 +247,29 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <Brain size={16} style={{ flexShrink: 0 }} />
                   <span style={{ wordBreak: "break-word", lineHeight: 1.3 }}>Cohort Diagnostic Insights</span>
                 </div>
-                <Tag tone="warning">Active Diagnostics</Tag>
+                <Tag tone={(riskQuery.data || []).length > 0 ? "warning" : "success"}>
+                  {(riskQuery.data || []).length > 0 ? "Active Diagnostics" : "Healthy Pacing"}
+                </Tag>
               </div>
 
               <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 10, lineHeight: 1.5 }}>
-                <strong>{(riskQuery.data || []).length || 3} learners</strong> flagged for low completion trajectory:
+                {(riskQuery.data || []).length > 0 ? (
+                  <><strong>{(riskQuery.data || []).length} learners</strong> flagged for low completion trajectory:</>
+                ) : (
+                  <>All active learners are currently meeting or exceeding milestone pacing.</>
+                )}
               </div>
 
-              <div className="ta-col ta-gap6 ta-mt8">
-                {((riskQuery.data || []).length > 0 ? (riskQuery.data || []) : [
-                  { user_name: "Struggling learner flag", risk_reason: "Behind on lesson completion" },
-                  { user_name: "Low quiz average", risk_reason: "Needs assessment retake" }
-                ]).slice(0, 3).map((item, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ fontSize: 12, color: "var(--text)", padding: "6px 10px", background: "var(--surface-3)", borderRadius: 6 }}>
-                    <span style={{ fontWeight: 700 }}>{item.user_name || item.name || "Learner"}</span>
-                    <span style={{ color: "#EF4444", fontSize: 11, fontWeight: 600 }}>{item.risk_reason || item.reason || "Low activity"}</span>
-                  </div>
-                ))}
-              </div>
+              {(riskQuery.data || []).length > 0 && (
+                <div className="ta-col ta-gap6 ta-mt8">
+                  {(riskQuery.data || []).slice(0, 3).map((item, idx) => (
+                    <div key={idx} className="ta-row ta-between" style={{ fontSize: 12, color: "var(--text)", padding: "6px 10px", background: "var(--surface-3)", borderRadius: 6 }}>
+                      <span style={{ fontWeight: 700 }}>{item.user_name || item.name || "Learner"}</span>
+                      <span style={{ color: "#EF4444", fontSize: 11, fontWeight: 600 }}>{item.risk_reason || item.reason || "Low activity"}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <button 
                 className="ta-btn ta-btn-primary ta-btn-sm ta-mt12" 

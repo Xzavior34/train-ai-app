@@ -64,14 +64,16 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
       };
     });
 
-  const fallbackLearners = DEMO_LEARNERS && DEMO_LEARNERS.length > 0 ? DEMO_LEARNERS : [
-    { id: "demo-learner-1", name: "Naushad Khan", email: "naushad.khan@trainailtd.com", status: "On Track", readiness: "84%", avgProgress: 84, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
-    { id: "demo-learner-2", name: "Amara Chen", email: "amara.chen@sarafoundationafrica.com", status: "High Performer", readiness: "92%", avgProgress: 92, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
-    { id: "demo-learner-3", name: "Fatima Diallo", email: "fatima.diallo@digitaltraining.org", status: "Needs Attention", readiness: "64%", avgProgress: 64, avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
-  ];
-
-  const allLearners = realLearners.length > 0 ? realLearners : fallbackLearners;
-  const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0];
+  const allLearners = realLearners;
+  const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0] || {
+    id: "org-member",
+    name: "Organization Member",
+    email: "learner@organization.com",
+    status: "Active",
+    readiness: `${wi.readinessScore || 80}%`,
+    avgProgress: wi.avgCompletion || 75,
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+  };
 
   const learnerScore = currentLearner?.avgProgress ?? wi.readinessScore ?? 80;
 
@@ -221,8 +223,10 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
               <Brain size={18} color="#2563EB" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.readinessScore || 84}%</div>
-            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>&nbsp;</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
+              {wi.readinessScore != null ? `${wi.readinessScore}%` : (allLearners.length ? "80%" : "N/A")}
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Enterprise baseline</div>
           </div>
 
           <div className="ta-card" style={{ padding: 18 }}>
@@ -230,7 +234,9 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Avg Course Completion</span>
               <ClipboardCheck size={18} color="#10B981" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.avgCompletion || 78}%</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
+              {wi.avgCompletion != null ? `${wi.avgCompletion}%` : "0%"}
+            </div>
             <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Across all active tracks</div>
           </div>
 
@@ -239,8 +245,10 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Compliance Rate</span>
               <ShieldCheck size={18} color="#F59E0B" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.complianceRate || 92}%</div>
-            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Audit ready</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
+              {wi.complianceRate != null ? `${wi.complianceRate}%` : "100%"}
+            </div>
+            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Audit standing</div>
           </div>
 
           <div className="ta-card" style={{ padding: 18 }}>
@@ -248,7 +256,9 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>AI Coach Queries (7d)</span>
               <Bot size={18} color="#3B82F6" />
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>{wi.aiUsageCount7d || 148}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
+              {wi.aiUsageCount7d ?? 0}
+            </div>
             <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4 }}>Active learning adoption</div>
           </div>
         </div>

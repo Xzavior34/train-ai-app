@@ -9,17 +9,17 @@ import {
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHelper.js";
-import { fetchMentorActiveCohorts } from "../../lib/api/platform.js";
+import { fetchMentorActiveCohorts, fetchStudentRiskList } from "../../lib/api/platform.js";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId, orgSelector, onNavigate }) {
   const showToast = useContext(ToastContext);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
   const [tasks, setTasks] = useState([
-    { id: 1, text: "Grade Module 3 UI & Wireframe Submissions (8 pending)", done: false, priority: "high" },
-    { id: 2, text: "Prepare Figma Workshop Asset Kit for Batch 4", done: true, priority: "normal" },
-    { id: 3, text: "1:1 Clarification session with Fatima Diallo", done: false, priority: "high" },
-    { id: 4, text: "Upload Spatial UI Design System template to Resources", done: false, priority: "normal" }
+    { id: 1, text: "Grade pending coursework submissions", done: false, priority: "high" },
+    { id: 2, text: "Prepare Workshop Asset Kit for upcoming cohort", done: true, priority: "normal" },
+    { id: 3, text: "1:1 Clarification session with struggling learners", done: false, priority: "high" },
+    { id: 4, text: "Upload latest study materials & syllabus templates to Resources", done: false, priority: "normal" }
   ]);
 
   const [aiActionRunning, setAiActionRunning] = useState(false);
@@ -28,19 +28,20 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
   const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
   const activeCohortsQuery = useSupabaseQuery(async () => currentUserId ? fetchMentorActiveCohorts(currentUserId) : [], [currentUserId]);
   const earningsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorEarnings(mentorId) : [], [mentorId]);
+  const riskQuery = useSupabaseQuery(async () => orgId ? fetchStudentRiskList(orgId) : [], [orgId]);
+  
   const mentorSessions = sessionsQuery.data || [];
   const activeCohorts = activeCohortsQuery.data || [];
   const activeLearnerCount = new Set(mentorSessions.map((s) => s.learner_id).filter(Boolean)).size;
   const cohortsEndingSoonCount = activeCohorts.filter((c) => c.ends_at && new Date(c.ends_at).getTime() - Date.now() < 14 * 86400000).length;
-  // fetchMentorEarnings returns raw mentor_earnings rows, not a pre-aggregated
-  // {total, pending} object - sum them here (restored from the earlier
-  // reference dashboard, which computed real rating/earnings stats).
+  
   const ratedSessions = mentorSessions.filter((s) => typeof s.rating === "number");
   const avgRating = ratedSessions.length
     ? (ratedSessions.reduce((sum, s) => sum + s.rating, 0) / ratedSessions.length).toFixed(1)
     : null;
   const earningsRows = earningsQuery.data || [];
   const totalEarnings = earningsRows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const pendingSessionCount = mentorSessions.filter(s => s.status === "pending" || s.status === "scheduled").length;
 
   const toggleTask = (id) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
@@ -55,14 +56,14 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
     }, 1200);
   };
 
-  const defaultStudentRisks = [
-    { name: "Fatima Diallo", role: "UI Design Fellow", risk: "High Risk", riskTone: "danger", lastActive: "12 days ago", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" },
-    { name: "Liam Torres", role: "AI Engineering Track", risk: "Needs Attention", riskTone: "warning", lastActive: "8 days ago", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
-    { name: "Priya Nair", role: "Product Design", risk: "Needs Attention", riskTone: "warning", lastActive: "4 days ago", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80" },
-    { name: "Amara Chen", role: "Generative AI Scholar", risk: "On Track", riskTone: "success", lastActive: "Just now", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
-    { name: "Marcus Webb", role: "Spatial Systems", risk: "On Track", riskTone: "success", lastActive: "1 hour ago", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" }
-  ];
-  const studentRisks = isMockDataEnabled() ? defaultStudentRisks : [];
+  const studentRisks = (riskQuery.data || []).map(r => ({
+    name: r.name || r.user_name || "Learner",
+    role: r.course_title || "Enrolled Learner",
+    risk: r.risk === "high" ? "High Risk" : "Needs Attention",
+    riskTone: r.risk === "high" ? "danger" : "warning",
+    lastActive: r.days === "N/A" ? "Inactive" : `${r.days}d ago`,
+    avatar: r.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+  }));
 
   const activeLiveSession = mentorSessions.find(s => s.status === "in_progress" || s.status === "live") || null;
   const upcomingMentorSessions = mentorSessions.filter(s => s.status === "scheduled" || s.status === "pending");
@@ -138,27 +139,31 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Pending Reviews</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Pending Sessions</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <CheckCircle2 size={18} />
               </div>
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>05</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>
+              {sessionsQuery.loading ? "…" : String(pendingSessionCount).padStart(2, "0")}
+            </div>
             <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "#F59E0B" }}>
-              <span>3 assignments, 2 reviews</span>
+              <span>{pendingSessionCount} upcoming session{pendingSessionCount === 1 ? "" : "s"}</span>
             </div>
           </div>
 
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Engagement Rate</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Session Completion</span>
               <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <TrendingUp size={18} />
               </div>
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>89%</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>
+              {sessionsQuery.loading ? "…" : mentorSessions.length ? `${Math.round((mentorSessions.filter(s => s.status === "completed").length / mentorSessions.length) * 100)}%` : "100%"}
+            </div>
             <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--success)" }}>
-              <span>+4% vs last batch</span>
+              <span>{mentorSessions.filter(s => s.status === "completed").length} of {mentorSessions.length || 0} completed</span>
             </div>
           </div>
 

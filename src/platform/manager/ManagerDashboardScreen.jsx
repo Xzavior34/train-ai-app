@@ -61,7 +61,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
     { label: "Avg. completed courses", value: reportsQuery.loading ? "..." : avgCompletedCourses, icon: CheckCircle2, sub: `${totalCompletedCourses} total completed` },
     { label: "Avg. course completion", value: reportsQuery.loading ? "..." : `${avgCompletion}%`, icon: Target },
     { label: "Overdue compliance items", value: reportsQuery.loading ? "..." : totalOverdue, icon: AlertTriangle },
-    { label: "Team readiness score", value: readinessScore != null ? `${readinessScore}%` : "82%", icon: Gauge },
+    { label: "Team readiness score", value: readinessScore != null ? `${readinessScore}%` : (reports.length ? `${avgCompletion}%` : "N/A"), icon: Gauge },
   ];
 
   return (
