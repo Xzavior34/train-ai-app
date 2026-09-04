@@ -63,13 +63,11 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const allLearners = realLearners.length > 0 ? realLearners : fallbackLearners;
   const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0];
 
-  const [activeTrack, setActiveTrack] = useState(activeTrackObj.title);
-  const [learnerStepLevel, setLearnerStepLevel] = useState(2);
   const [promotionCriteria, setPromotionCriteria] = useState([
-    { id: 1, text: "Design System Token Audit & Component Contribution", done: true, score: "96/100" },
-    { id: 2, text: "Lead 2 Peer UI Reviews & Mentorship Critiques", done: true, score: "2/2 Completed" },
-    { id: 3, text: "Pass Advanced Spatial & Generative UI Assessment", done: false, score: "74% (Pass: 80%)" },
-    { id: 4, text: "Conduct Qualitative UX Research Case Study", done: false, score: "Pending submission" }
+    { id: 1, text: `${activeTrackObj.courses[0]?.title || "Course 1"}: Hands-on Project`, done: true, score: "96/100 Passed" },
+    { id: 2, text: `Peer Review & ${activeTrackObj.skills?.[0] || "Competency"} Audit`, done: true, score: "Completed & Verified" },
+    { id: 3, text: `${activeTrackObj.courses[1]?.title || "Course 2"}: Mastery Assessment`, done: false, score: "In Progress (74%)" },
+    { id: 4, text: `${activeTrackObj.skills?.[1] || "Capstone"} Practical Case Study`, done: false, score: "Pending submission" }
   ]);
 
   const toggleCriterion = (id) => {
@@ -93,17 +91,23 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
     tag: learnerStepLevel > (idx + 1) ? "Completed" : learnerStepLevel === (idx + 1) ? "Current Pathway Step" : "Upcoming"
   }));
 
-  const skillProfile = [
-    { skill: "UX Design", level: 92, target: 85, fill: "#2563EB" },
-    { skill: "Design Systems", level: 94, target: 90, fill: "#3B82F6" },
-    { skill: "Prototyping", level: 88, target: 80, fill: "#3B82F6" },
-    { skill: "UX Research", level: 62, target: 80, fill: "#EC4899" },
-    { skill: "Leadership", level: 75, target: 70, fill: "#10B981" },
-    { skill: "Communication", level: 85, target: 80, fill: "#F59E0B" }
-  ];
+  const trackSkills = activeTrackObj.skills || ["Core Competency", "System Architecture", "Leadership", "Analytics"];
+  const colors = ["#2563EB", "#3B82F6", "#10B981", "#EC4899", "#F59E0B", "#8B5CF6"];
+
+  const skillProfile = trackSkills.map((sk, idx) => {
+    const levels = [94, 88, 76, 62, 85, 78];
+    const targets = [90, 85, 80, 80, 80, 75];
+    return {
+      skill: sk,
+      level: levels[idx % levels.length],
+      target: targets[idx % targets.length],
+      fill: colors[idx % colors.length]
+    };
+  });
 
   const handleAssignModule = () => {
     setAssignSuccess(true);
+    showToast?.(`Assigned "${activeTrackObj.courses[0]?.title || 'Recommended Module'}" to ${currentLearner.name}'s path`);
     setTimeout(() => setAssignSuccess(false), 4000);
   };
 
@@ -231,25 +235,33 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
             </div>
             
             <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-              {["Product Design & AI", "Full-Stack AI", "Cloud Architecture"].map(t => (
+              {CORE_PLATFORM_TRACKS.map(t => (
                 <button
-                  key={t}
+                  key={t.id}
                   type="button"
                   onClick={() => {
-                    setActiveTrack(t);
-                    showToast?.(`Switched active track to ${t}`);
+                    setSelectedTrackId(t.id);
+                    setPromotionCriteria([
+                      { id: 1, text: `${t.courses[0]?.title || "Course 1"}: Hands-on Project`, done: true, score: "96/100 Passed" },
+                      { id: 2, text: `Peer Review & ${t.skills?.[0] || "Competency"} Audit`, done: true, score: "Completed & Verified" },
+                      { id: 3, text: `${t.courses[1]?.title || "Course 2"}: Mastery Assessment`, done: false, score: "In Progress (74%)" },
+                      { id: 4, text: `${t.skills?.[1] || "Capstone"} Practical Case Study`, done: false, score: "Pending submission" }
+                    ]);
+                    showToast?.(`Switched active track to ${t.title}`);
                   }}
-                  className={`ta-btn ta-btn-sm ${activeTrack === t ? "ta-btn-primary" : "ta-btn-outline"}`}
+                  className={`ta-btn ta-btn-sm ${selectedTrackId === t.id ? "ta-btn-primary" : "ta-btn-outline"}`}
                   style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6 }}
                 >
-                  {t}
+                  {t.title.split(" Specialization")[0].split(" (")[0]}
                 </button>
               ))}
               <button
                 type="button"
                 onClick={() => {
-                  setLearnerStepLevel(prev => (prev % 4) + 1);
-                  showToast?.(`Advanced ${currentLearner.name} to Level ${(learnerStepLevel % 4) + 1}`);
+                  const maxSteps = activeTrackObj.courses.length || 2;
+                  const nextLevel = (learnerStepLevel % maxSteps) + 1;
+                  setLearnerStepLevel(nextLevel);
+                  showToast?.(`Advanced ${currentLearner.name} to Level 0${nextLevel}`);
                 }}
                 className="ta-btn ta-btn-primary ta-btn-sm"
                 style={{ fontSize: 12, padding: "5px 14px", borderRadius: 6, fontWeight: 800, background: "#10B981", border: "none" }}
@@ -292,10 +304,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
                 </div>
 
                 <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-                  {idx === 0 ? "Design token audits & Figma variables" :
-                   idx === 1 ? "Generative UI components & micro-interactions" :
-                   idx === 2 ? "Multi-agent UX & spatial interfaces" :
-                   "Design org leadership & executive strategy"}
+                  {step.description}
                 </div>
 
                 <div className="ta-mt12">
@@ -397,13 +406,13 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
               </div>
 
               <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 10, lineHeight: 1.55 }}>
-                {currentLearner.name} demonstrates exceptional mastery in <strong>Design Systems (94%)</strong> and <strong>Prototyping (88%)</strong>, but is currently below the target in <strong>UX Research (62%)</strong>.
+                {currentLearner.name} demonstrates strong mastery in <strong>{skillProfile[0]?.skill || "Core Skill"} ({skillProfile[0]?.level || 94}%)</strong> and <strong>{skillProfile[1]?.skill || "Applied Competency"} ({skillProfile[1]?.level || 88}%)</strong>, but is currently target-building in <strong>{skillProfile.find(s => s.level < s.target)?.skill || skillProfile[3]?.skill || "Practical Case Study"} ({skillProfile.find(s => s.level < s.target)?.level || 62}%)</strong>.
               </div>
 
               {assignSuccess && (
                 <div className="ta-card ta-mt12 anim-pop" style={{ background: "rgba(16, 185, 129, 0.1)", borderColor: "#10B981", padding: 10 }}>
                   <div className="ta-row ta-gap8" style={{ color: "#10B981", fontSize: 12.5, fontWeight: 600 }}>
-                    <CheckCircle2 size={15} /> Assigned "UX Research Practical Case Study" to {currentLearner.name}'s path!
+                    <CheckCircle2 size={15} /> Assigned "{activeTrackObj.courses[0]?.title || 'Recommended Module'}" to {currentLearner.name}'s path!
                   </div>
                 </div>
               )}
