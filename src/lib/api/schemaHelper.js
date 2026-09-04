@@ -153,7 +153,7 @@ export async function fetchLearnerSessions(learnerId) {
   return rows.map((r) => ({ ...r, mentors: r.mentors ? { ...r.mentors, user_profiles: profiles[r.mentors.user_id] || null } : null }));
 }
 
-export async function bookMentorshipSession({ learnerId, mentorId, title, scheduledAt, description, durationMinutes }) {
+export async function bookMentorshipSession({ learnerId, mentorId, title, scheduledAt, description, durationMinutes, meetingUrl }) {
   if (!supabase) return { id: `session_${Date.now()}`, learner_id: learnerId, mentor_id: mentorId, title, scheduled_at: scheduledAt };
   const { data, error } = await supabase
     .from("mentorship_sessions")
@@ -164,6 +164,11 @@ export async function bookMentorshipSession({ learnerId, mentorId, title, schedu
       scheduled_at: scheduledAt,
       notes: description,
       duration_minutes: durationMinutes,
+      // Real meeting link - the mentor's own persistent room (set in Instructor
+      // Settings > Video Integration) rather than a throwaway ad-hoc link. If
+      // the mentor hasn't set one yet this stays null and the UI shows
+      // "No meeting link set" instead of inventing a fresh room on click.
+      meeting_url: meetingUrl || null,
       status: "requested"
     })
     .select()

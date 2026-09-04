@@ -59,7 +59,7 @@ export function MentorsScreen({
     } else {
       scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     }
-    await bookMentorshipSession({ learnerId: session.user.id, mentorId: sessionMentorChoice.id, title: sessionTopicInput.trim(), scheduledAt });
+    await bookMentorshipSession({ learnerId: session.user.id, mentorId: sessionMentorChoice.id, title: sessionTopicInput.trim(), scheduledAt, meetingUrl: sessionMentorChoice.meetingUrl });
     closeBooking();
     setSessionTopicInput("");
     upcomingSessionsQuery?.refetch?.();

@@ -4,8 +4,9 @@ import { Calendar, Trash2, Plus, Video, CheckCircle2, XCircle, Clock, MessageSqu
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchMentorSessions, fetchMentorAvailability, createAvailabilitySlot, deleteAvailabilitySlot,
+  fetchVideoIntegrationSettings, bookMentorshipSession,
 } from "../../lib/api/schemaHelper.js";
-import { updateSessionStatus, completeMentorshipSession, rescheduleMentorshipSession } from "../../lib/api/platform.js";
+import { updateSessionStatus, completeMentorshipSession, rescheduleMentorshipSession, fetchMenteesForMentor } from "../../lib/api/platform.js";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -24,8 +25,25 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
   const [reschedulingSessionId, setReschedulingSessionId] = useState(null);
   const [rescheduleDateTime, setRescheduleDateTime] = useState("");
 
+  // Real "Schedule 1-on-1 Session" creation - the button that opens this was
+  // previously wired to a `createOpen`/`setCreateOpen` state that was never
+  // declared (a no-op click, or a crash), so instructors had no working way
+  // to actually create a session. This is the fix.
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newSessionLearnerId, setNewSessionLearnerId] = useState("");
+  const [newSessionTitle, setNewSessionTitle] = useState("");
+  const [newSessionDateTime, setNewSessionDateTime] = useState("");
+  const [newSessionDuration, setNewSessionDuration] = useState(30);
+  const [creatingSession, setCreatingSession] = useState(false);
+
   const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
   const availabilityQuery = useSupabaseQuery(async () => mentorId ? fetchMentorAvailability(mentorId) : [], [mentorId]);
+  // The instructor's own persistent meeting room (set in Instructor Settings >
+  // Video Integration) - used as the real link for sessions created here,
+  // instead of inventing a throwaway one when a learner clicks Join.
+  const videoSettingsQuery = useSupabaseQuery(async () => mentorId ? fetchVideoIntegrationSettings(mentorId) : {}, [mentorId]);
+  const menteesQuery = useSupabaseQuery(async () => mentorId ? fetchMenteesForMentor(mentorId) : [], [mentorId]);
+  const mentees = menteesQuery.data || [];
 
   const rawSessions = sessionsQuery.data || [];
 
@@ -109,6 +127,35 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
       showToast(err?.message || "Could not reschedule this session.");
     } finally {
       setUpdatingSessionId(null);
+    }
+  }
+
+  async function handleCreateSession() {
+    if (!mentorId || !newSessionLearnerId || !newSessionTitle.trim() || !newSessionDateTime) {
+      showToast("Pick a learner, a title, and a date/time.");
+      return;
+    }
+    setCreatingSession(true);
+    try {
+      await bookMentorshipSession({
+        learnerId: newSessionLearnerId,
+        mentorId,
+        title: newSessionTitle.trim(),
+        scheduledAt: new Date(newSessionDateTime).toISOString(),
+        durationMinutes: Number(newSessionDuration) || 30,
+        meetingUrl: videoSettingsQuery.data?.personal_meeting_url || "",
+      });
+      await sessionsQuery.refetch();
+      setCreateOpen(false);
+      setNewSessionLearnerId("");
+      setNewSessionTitle("");
+      setNewSessionDateTime("");
+      setNewSessionDuration(30);
+      showToast("Session created - it will appear for the learner right away.");
+    } catch (err) {
+      showToast(err?.message || "Could not create this session.");
+    } finally {
+      setCreatingSession(false);
     }
   }
 
@@ -292,15 +339,21 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
 
                     {s.status === "confirmed" && (
                       <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center" }}>
-                        <a
-                          href={s.meeting_url || "https://meet.google.com/new"}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="ta-btn ta-btn-primary ta-btn-sm"
-                          style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}
-                        >
-                          <Video size={13} /> Join Call
-                        </a>
+                        {s.meeting_url ? (
+                          <a
+                            href={s.meeting_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="ta-btn ta-btn-primary ta-btn-sm"
+                            style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}
+                          >
+                            <Video size={13} /> Join Call
+                          </a>
+                        ) : (
+                          <span style={{ fontSize: 11.5, color: "var(--text-3)", fontStyle: "italic" }}>
+                            No meeting link set - add one in Instructor Settings
+                          </span>
+                        )}
                         <button
                           className="ta-btn ta-btn-outline ta-btn-sm"
                           onClick={() => { setCompletingSessionId(s.id); setCompletionFeedback(""); }}
@@ -319,6 +372,82 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                 </div>
               ))}
             </div>
+
+            {/* Create Session Modal - real instructor-initiated session creation */}
+            {createOpen && (
+              <div className="ta-card ta-mt16 anim-slide-down" style={{ border: "1.5px solid var(--primary)", background: "var(--surface)" }}>
+                <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Schedule 1-on-1 Session</div>
+                <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>
+                  Creates a real session that appears on this learner's Sessions list right away.
+                </div>
+
+                <div style={{ marginTop: 14 }}>
+                  <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Learner</label>
+                  <select
+                    className="ta-input"
+                    style={{ width: "100%" }}
+                    value={newSessionLearnerId}
+                    onChange={(e) => setNewSessionLearnerId(e.target.value)}
+                  >
+                    <option value="">Select a learner...</option>
+                    {mentees.map((m) => (
+                      <option key={m.id} value={m.id}>{m.display_name || m.name || m.email || "Learner"}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ marginTop: 12 }}>
+                  <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Session Title</label>
+                  <input
+                    className="ta-input"
+                    style={{ width: "100%" }}
+                    placeholder="e.g. Portfolio review, assignment unblocker..."
+                    value={newSessionTitle}
+                    onChange={(e) => setNewSessionTitle(e.target.value)}
+                  />
+                </div>
+
+                <div className="ta-row ta-gap12" style={{ marginTop: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Date &amp; Time</label>
+                    <input
+                      type="datetime-local"
+                      className="ta-input"
+                      style={{ width: "100%" }}
+                      value={newSessionDateTime}
+                      onChange={(e) => setNewSessionDateTime(e.target.value)}
+                    />
+                  </div>
+                  <div style={{ width: 130 }}>
+                    <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Duration (min)</label>
+                    <input
+                      type="number"
+                      min={15}
+                      step={15}
+                      className="ta-input"
+                      style={{ width: "100%" }}
+                      value={newSessionDuration}
+                      onChange={(e) => setNewSessionDuration(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {!videoSettingsQuery.data?.personal_meeting_url && (
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 10, fontStyle: "italic" }}>
+                    You haven't set a personal meeting link yet (Instructor Settings &gt; Video Integration) - this session will be created without one and you can add it later.
+                  </div>
+                )}
+
+                <div className="ta-row ta-gap8 ta-mt12">
+                  <button className="ta-btn ta-btn-primary ta-btn-sm" disabled={creatingSession} onClick={handleCreateSession}>
+                    {creatingSession ? "Creating..." : "Create Session"}
+                  </button>
+                  <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setCreateOpen(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Modals for Complete and Reschedule */}
             {completingSessionId && (

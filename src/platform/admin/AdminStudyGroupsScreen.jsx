@@ -1,8 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
-import { Users, BookOpen } from "lucide-react";
+import { Users, BookOpen, ChevronRight, Trash2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchAllStudyGroupsForOrg } from "../../lib/api/schemaHelper.js";
+import { fetchAllStudyGroupsForOrg, fetchStudyGroupMembers, removeStudyGroupMember } from "../../lib/api/schemaHelper.js";
 
 // Admin-wide Study Groups - confirmed directly: "Admins should be able to
 // see and access all study groups." Previously there was no admin-facing
@@ -14,6 +14,19 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
   const showToast = useContext(ToastContext);
   const groupsQuery = useSupabaseQuery(async () => (orgId ? fetchAllStudyGroupsForOrg(orgId) : []), [orgId]);
   const groups = groupsQuery.data || [];
+  const [expandedGroupId, setExpandedGroupId] = useState(null);
+  const membersQuery = useSupabaseQuery(async () => (expandedGroupId ? fetchStudyGroupMembers(expandedGroupId) : []), [expandedGroupId]);
+
+  async function handleRemoveMember(groupId, userId) {
+    try {
+      await removeStudyGroupMember(groupId, userId);
+      membersQuery.refetch();
+      groupsQuery.refetch();
+      showToast("Removed from the group.");
+    } catch (e) {
+      showToast(e?.message || "Could not remove this member.");
+    }
+  }
 
   return (
     <div className="ta-fade">
@@ -36,15 +49,6 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
                   <BookOpen size={13} /> Syllabi Linked
                 </span>
               </div>
-            </div>
-            <div className="ta-hero-actions">
-              <button 
-                className="ta-btn ta-btn-primary" 
-                style={{ background: "#6366F1", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
-                onClick={() => showToast("Study group creation is managed from course curricula & learner circles.")}
-              >
-                + Auto-Pair Pods
-              </button>
             </div>
           </div>
         </div>
@@ -96,14 +100,41 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
                 {!groupsQuery.loading && groups.length === 0 && (
                   <tr><td colSpan={4} className="ta-empty">No study groups in this organization yet - learners create these themselves as they self-organize.</td></tr>
                 )}
-                {groups.map((g) => (
-                  <tr key={g.id}>
-                    <td><div className="ta-row ta-gap8"><Users size={14} color="var(--primary)" /><span style={{ fontWeight: 600 }}>{g.name}</span></div></td>
-                    <td>{g.courses?.title ? <div className="ta-row ta-gap6"><BookOpen size={12} /><span>{g.courses.title}</span></div> : <span style={{ color: "var(--text-3)" }}>No linked course</span>}</td>
-                    <td>{g.study_group_members?.[0]?.count ?? 0} / {g.max_members || "-"}</td>
-                    <td><Tag tone={g.is_private ? "warning" : "success"}>{g.is_private ? "Private" : "Open"}</Tag></td>
-                  </tr>
-                ))}
+                {groups.map((g) => {
+                  const isOpen = expandedGroupId === g.id;
+                  return (
+                    <React.Fragment key={g.id}>
+                      <tr style={{ cursor: "pointer" }} onClick={() => setExpandedGroupId(isOpen ? null : g.id)}>
+                        <td><div className="ta-row ta-gap8"><Users size={14} color="var(--primary)" /><span style={{ fontWeight: 600 }}>{g.name}</span></div></td>
+                        <td>{g.courses?.title ? <div className="ta-row ta-gap6"><BookOpen size={12} /><span>{g.courses.title}</span></div> : <span style={{ color: "var(--text-3)" }}>No linked course</span>}</td>
+                        <td>{g.study_group_members?.[0]?.count ?? 0} / {g.max_members || "-"}</td>
+                        <td className="ta-row ta-between" style={{ alignItems: "center" }}>
+                          <Tag tone={g.is_private ? "warning" : "success"}>{g.is_private ? "Private" : "Open"}</Tag>
+                          <ChevronRight size={14} color="var(--text-3)" style={{ transform: isOpen ? "rotate(90deg)" : "none" }} />
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr>
+                          <td colSpan={4} style={{ background: "var(--surface-3)", padding: 14 }}>
+                            <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>MEMBERS</div>
+                            {membersQuery.loading && <div className="ta-empty">Loading members...</div>}
+                            {!membersQuery.loading && (membersQuery.data || []).length === 0 && <div className="ta-empty">No members yet.</div>}
+                            <div className="ta-col ta-gap6">
+                              {(membersQuery.data || []).map((m) => (
+                                <div key={m.user_id || m.id} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "4px 0" }}>
+                                  <span>{m.user_profiles?.display_name || m.name || "Learner"}</span>
+                                  <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => handleRemoveMember(g.id, m.user_id || m.id)}>
+                                    <Trash2 size={12} /> Remove
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>

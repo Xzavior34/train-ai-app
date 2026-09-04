@@ -20,7 +20,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   return (
     <div className="ta-fade">
       <TopBar
-        title="Cohort Management" sub="Active learning batches & timeline progress"
+        title="Cohorts" sub="Active cohorts & timeline progress"
         orgSelector={orgSelector}
         onNavigate={setScreen}
       />
@@ -33,10 +33,10 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
-                Cohort Governance &amp; Pacing
+                Cohorts
               </h1>
               <p className="ta-hero-desc">
-                Manage batch schedules, enrollment windows, synchronous sessions, and student milestone pacing.
+                Manage schedules, enrollment windows, live sessions, and student milestone pacing.
               </p>
             </div>
 
@@ -81,7 +81,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.75) 100%)" }} />
                       <div style={{ position: "absolute", top: 10, left: 10, right: 10, display: "flex", justifyContent: "space-between" }}>
                         <Tag tone="primary">{c.courses || 0} course{c.courses === 1 ? "" : "s"}</Tag>
-                        <Tag tone={isCompleted ? "warning" : "success"}>{isCompleted ? "Completed" : "Active Batch"}</Tag>
+                        <Tag tone={isCompleted ? "warning" : "success"}>{isCompleted ? "Completed" : "Active"}</Tag>
                       </div>
                       <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 14.5, textShadow: "0 2px 4px rgba(0,0,0,0.6)", lineHeight: 1.25, wordBreak: "break-word" }}>
                         {c.name}
@@ -96,7 +96,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       <div className="ta-mt8"><ProgressBar value={c.progress || 0} /></div>
                       <div className="ta-row ta-between ta-mt12" style={{ paddingTop: 10, borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)" }}>
                         <span>Schedule: Active</span>
-                        <span style={{ fontWeight: 700, color: "var(--primary)", display: "flex", alignItems: "center", gap: 3 }}>Manage Batch <ArrowRight size={12} /></span>
+                        <span style={{ fontWeight: 700, color: "var(--primary)", display: "flex", alignItems: "center", gap: 3 }}>Manage Cohort <ArrowRight size={12} /></span>
                       </div>
                     </div>
                   </div>
@@ -115,7 +115,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                 <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setNewCohortOpen(false)}><X size={16} /></button>
               </div>
               <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 14 }}>
-                Set up a new synchronous learning batch for your organization.
+                Set up a new cohort for your organization.
               </p>
               <div className="ta-label">Cohort Name</div>
               <input

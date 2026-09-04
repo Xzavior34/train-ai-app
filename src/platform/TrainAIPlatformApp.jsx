@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
-import { fetchMentorProfile } from "../lib/api/schemaHelper.js";
+import { fetchMentorProfile, fetchCohortSessions, fetchMyManagedStudyGroups } from "../lib/api/schemaHelper.js";
+import { fetchMentorActiveCohorts } from "../lib/api/platform.js";
+import { fetchLeaderboard } from "../lib/api/learner.js";
 import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext } from "./components/PlatformUI.jsx";
 import { OrgPaymentCallbackScreen } from "./OrgPaymentCallbackScreen.jsx";
 import { AdminDashboardScreen } from "./admin/AdminDashboardScreen.jsx";
@@ -18,10 +20,10 @@ import { AdminAnalyticsScreen } from "./admin/AdminAnalyticsScreen.jsx";
 import { CohortsScreen } from "./admin/CohortsScreen.jsx";
 import { OrgRoleAccessScreen } from "./admin/OrgRoleAccessScreen.jsx";
 import { CohortDetailScreen } from "./admin/CohortDetailScreen.jsx";
+import { AssessmentsScreen } from "./admin/AssessmentsScreen.jsx";
 import { ComplianceScreen } from "./admin/ComplianceScreen.jsx";
 import { IntegrationsScreen } from "./admin/IntegrationsScreen.jsx";
 import { SettingsHubScreen } from "./admin/SettingsHubScreen.jsx";
-import { ForumsScreen } from "./admin/ForumsScreen.jsx";
 import { MentorDashboardScreen } from "./mentor/MentorDashboardScreen.jsx";
 import { MentorStudyGroupsScreen } from "./mentor/MentorStudyGroupsScreen.jsx";
 import { MentorScheduleScreen } from "./mentor/MentorScheduleScreen.jsx";
@@ -62,6 +64,23 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
     return fetchMentorProfile(session.user.id);
   }, [session?.user?.id]);
   const mentorId = mentorProfileQuery.data?.id || null;
+
+  // Real data for the mentor's "Learner Community View" - this used to render
+  // the same learner CommunityScreen but with none of its data queries wired
+  // in, so it silently showed as empty for every mentor. Wire it to the
+  // mentor's own first active cohort, their managed study groups, and the
+  // org leaderboard - the same shape the learner-facing summary expects.
+  const mentorCohortsForCommunityQuery = useSupabaseQuery(async () => (
+    session?.user?.id ? fetchMentorActiveCohorts(session.user.id) : []
+  ), [session?.user?.id]);
+  const mentorFirstCohort = (mentorCohortsForCommunityQuery.data || [])[0] || null;
+  const mentorCohortSessionsQuery = useSupabaseQuery(async () => (
+    mentorFirstCohort?.id ? fetchCohortSessions(mentorFirstCohort.id) : []
+  ), [mentorFirstCohort?.id]);
+  const mentorStudyGroupsQuery = useSupabaseQuery(async () => (
+    mentorId ? fetchMyManagedStudyGroups(mentorId) : []
+  ), [mentorId]);
+  const mentorLeaderboardQuery = useSupabaseQuery(async () => fetchLeaderboard(50), []);
 
   const allOrgsQuery = useSupabaseQuery(async () => {
     if (userRoles.includes("super_admin")) {
@@ -234,10 +253,9 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   )}
                   {screen === "compliance" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "leaderboard" && <LeaderboardScreen back={() => setScreen("dashboard")} push={(s) => setScreen(s)} />}
-                  {screen === "assessments" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
+                  {screen === "assessments" && <AssessmentsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} scope="admin" />}
                   {screen === "roleaccess" && <OrgRoleAccessScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
-                  {screen === "forums" && <ForumsScreen orgSelector={orgSelector} setScreen={setScreen} />}
                   {screen === "settings" && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} session={session} />}
                 </>
               )}
@@ -269,7 +287,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   )}
                   {screen === "studygroups" && <MentorStudyGroupsScreen mentorId={session?.user?.id} orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "leaderboard" && <LeaderboardScreen back={() => setScreen("dashboard")} push={(s) => setScreen(s)} />}
-                  {screen === "assessments" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
+                  {screen === "assessments" && <AssessmentsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} scope="mentor" />}
                   {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "schedule" && <MentorScheduleScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
@@ -285,6 +303,12 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                       push={(s, p) => navigateToScreen(s, p)}
                       back={() => setScreen("dashboard")}
                       showToast={showToast}
+                      cohortMembershipQuery={{ data: { cohort: mentorFirstCohort }, loading: mentorCohortsForCommunityQuery.loading }}
+                      cohortSessionsQuery={mentorCohortSessionsQuery}
+                      studyGroupsQuery={mentorStudyGroupsQuery}
+                      myGroupIdsQuery={{ data: (mentorStudyGroupsQuery.data || []).map((g) => g.id) }}
+                      leaderboardQuery={mentorLeaderboardQuery}
+                      upcomingSessionsQuery={mentorCohortSessionsQuery}
                     />
                   )}
                 </>

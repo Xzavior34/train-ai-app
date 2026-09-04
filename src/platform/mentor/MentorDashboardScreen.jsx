@@ -411,14 +411,17 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                   </div>
 
                   <div className="ta-row ta-between ta-mt14">
-                    <button 
-                      className="ta-btn ta-btn-primary ta-btn-sm" 
-                      style={{ background: "#2563EB", border: "none", color: "#FFFFFF", fontWeight: 700, borderRadius: 6 }}
-                      onClick={() => window.open(activeLiveSession.meeting_url || "https://meet.google.com/new", "_blank")}
-                    >
-                      <Video size={13} /> Join Studio
-                    </button>
-                    <span style={{ fontSize: 11, color: "#64748B" }}>Room #{activeLiveSession.id ? activeLiveSession.id.slice(0, 6) : "082"}</span>
+                    {activeLiveSession.meeting_url ? (
+                      <button
+                        className="ta-btn ta-btn-primary ta-btn-sm"
+                        style={{ background: "#2563EB", border: "none", color: "#FFFFFF", fontWeight: 700, borderRadius: 6 }}
+                        onClick={() => window.open(activeLiveSession.meeting_url, "_blank")}
+                      >
+                        <Video size={13} /> Join Session
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: 11.5, color: "var(--text-3)", fontStyle: "italic" }}>No meeting link set</span>
+                    )}
                   </div>
                 </div>
               )}
@@ -438,13 +441,17 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                         <Clock size={11} /> {sess.scheduled_at ? new Date(sess.scheduled_at).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "Scheduled"}
                       </div>
                     </div>
-                    <button
-                      className="ta-btn ta-btn-primary ta-btn-sm"
-                      style={{ padding: "3px 8px", fontSize: 11 }}
-                      onClick={() => window.open(sess.meeting_url || "https://meet.google.com/new", "_blank")}
-                    >
-                      <Video size={12} /> Launch
-                    </button>
+                    {sess.meeting_url ? (
+                      <button
+                        className="ta-btn ta-btn-primary ta-btn-sm"
+                        style={{ padding: "3px 8px", fontSize: 11 }}
+                        onClick={() => window.open(sess.meeting_url, "_blank")}
+                      >
+                        <Video size={12} /> Launch
+                      </button>
+                    ) : (
+                      <span style={{ fontSize: 11, color: "var(--text-3)", fontStyle: "italic" }}>No link set</span>
+                    )}
                   </div>
                 ))}
               </div>

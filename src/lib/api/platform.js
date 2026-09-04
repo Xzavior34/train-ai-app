@@ -2758,7 +2758,8 @@ export async function fetchDirectReports(managerId) {
 // (same cutoff already used by fetchStudentRiskList, kept consistent
 // on purpose). "not started": assigned courses, zero progress on all of
 // them. "on pace": everything else.
-export async function fetchOrgLearnerProgressOverview(organizationId) {
+export async function fetchOrgLearnerProgressOverview(organizationId, options = {}) {
+  const { startDate, endDate } = options;
   if (!supabase) return demoLearnerProgressOverview();
   if (!organizationId) return [];
 
@@ -2771,7 +2772,32 @@ export async function fetchOrgLearnerProgressOverview(organizationId) {
   if (!learners || learners.length === 0) return [];
 
   const learnerIds = learners.map(l => l.id);
-  const enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", learnerIds);
+  let enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", learnerIds);
+
+  // Historic view: when a date range is set, scope to completions that
+  // happened within it (rather than every enrollment's current, all-time
+  // state) - this is what "see progress at a certain point in time" means
+  // for data that doesn't keep a full progress-snapshot history.
+  if (startDate || endDate) {
+    const startMs = startDate ? new Date(startDate).getTime() : -Infinity;
+    const endMs = endDate ? new Date(endDate).getTime() : Infinity;
+    enrollments = (enrollments || []).filter((e) => {
+      if (!e.completed_at) return false;
+      const t = new Date(e.completed_at).getTime();
+      return t >= startMs && t <= endMs;
+    });
+  }
+
+  // Cohort membership, so the caller can filter learners by cohort.
+  const { data: cohortMemberRows } = await supabase
+    .from("cohort_members")
+    .select("user_id, cohort_id, cohorts(name)")
+    .in("user_id", learnerIds);
+  const cohortsByUser = new Map();
+  for (const row of (cohortMemberRows || [])) {
+    if (!cohortsByUser.has(row.user_id)) cohortsByUser.set(row.user_id, []);
+    cohortsByUser.get(row.user_id).push({ id: row.cohort_id, name: row.cohorts?.name || "Cohort" });
+  }
 
   const byUser = new Map();
   for (const e of (enrollments || [])) {
@@ -2802,6 +2828,7 @@ export async function fetchOrgLearnerProgressOverview(organizationId) {
       name: l.display_name || "Unnamed learner",
       initials: (l.display_name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
       department: l.department || "N/A",
+      cohorts: cohortsByUser.get(l.id) || [],
       assignedCount,
       completedCount,
       avgProgress,
@@ -3172,6 +3199,42 @@ export async function fetchWorkforceIntelligence(organizationId) {
     avgCompletion,
     learnerCount: learnerRows.length,
   };
+}
+
+// Real per-course assessment result for one learner, scoped to a specific
+// set of course ids (a learning pathway's courses) - backs Workforce
+// Intelligence's per-learner "Skill Profile" and "Promotion Criteria",
+// replacing what used to be a fabricated level (learner's overall progress
+// plus a hardcoded per-index offset) with the learner's actual attempt on
+// that course's real assessment, and the assessment's real passing_score_pct
+// instead of an invented target. A course with no assessment, or no attempt
+// yet, is reported honestly (score: null) rather than defaulted to a number.
+export async function fetchLearnerAssessmentScoresForCourses(userId, courseIds) {
+  if (!supabase || !userId || !courseIds?.length) return [];
+  const { data: assessments, error: aErr } = await supabase
+    .from("assessments")
+    .select("id, course_id, passing_score_pct")
+    .in("course_id", courseIds);
+  if (aErr) { console.warn("Assessment lookup warning:", aErr); return []; }
+  const list = assessments || [];
+  if (!list.length) return [];
+  const assessmentIds = list.map((a) => a.id);
+  const { data: attempts, error: attErr } = await supabase
+    .from("assessment_attempts")
+    .select("assessment_id, score, completed_at")
+    .eq("user_id", userId)
+    .in("assessment_id", assessmentIds);
+  if (attErr) { console.warn("Assessment attempts warning:", attErr); }
+  const byAssessment = new Map((attempts || []).map((a) => [a.assessment_id, a]));
+  return list.map((a) => {
+    const attempt = byAssessment.get(a.id);
+    return {
+      courseId: a.course_id,
+      passingScorePct: a.passing_score_pct ?? 70,
+      score: attempt?.score ?? null,
+      completedAt: attempt?.completed_at ?? null,
+    };
+  });
 }
 
 // ============================================================================

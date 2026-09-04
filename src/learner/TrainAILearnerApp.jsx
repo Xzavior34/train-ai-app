@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../lib/useAuth.js";
 import { useLearnerData } from "./hooks/useLearnerData.js";
 import { TOKENS, BottomNav, DesktopSidebar, LearnerHeader, ScheduleView, timeAgo, NotificationBellContext } from "./components/LearnerUI.jsx";
-import { LearningPathsScreen } from "./screens/LearningPathsScreen.jsx";
 import { SearchBar } from "./components/SearchBar.jsx";
 import { fetchOrgAISettings, fetchOrgLeaderboardSettings, fetchOrgGamificationSettings } from "../lib/api/organizations.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
@@ -19,7 +18,6 @@ import { NotificationsScreen } from "./screens/NotificationsScreen.jsx";
 import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { AchievementsScreen } from "./screens/AchievementsScreen.jsx";
 import { LeaderboardScreen } from "./screens/LeaderboardScreen.jsx";
-import { BookmarksScreen } from "./screens/BookmarksScreen.jsx";
 import { CreditsCheckoutScreen } from "./screens/CreditsCheckoutScreen.jsx";
 import { PaymentCallbackScreen } from "./screens/PaymentCallbackScreen.jsx";
 import { useCredits } from "./hooks/useCredits.js";
@@ -154,10 +152,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       setShowMyCoursesOnly(false);
       setCourseSourceTab("all");
       goTab("courses");
-    } else if (key === "learningPaths") {
-      push("learningPaths");
-    } else if (key === "bookmarks") {
-      push("bookmarks");
     } else if (key === "myCourses" || key === "myProgress") {
       push("myProgress");
     } else if (key === "ai") {
@@ -169,7 +163,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     } else if (key === "communityFeed") {
       goTab("community");
     } else if (key === "cohort") {
-      goTab("cohort");
+      push("cohort");
     } else if (key === "leaderboard") {
       push("leaderboard");
     } else if (key === "studyGroup") {
@@ -502,6 +496,10 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   const mentorsList = (mentorsQuery.data || []).map(m => ({
     id: m.id,
     userId: m.user_id,
+    // The mentor's own persistent meeting room (Instructor Settings > Video
+    // Integration), used as the real session link instead of inventing a
+    // throwaway one when a learner or the instructor books a session.
+    meetingUrl: m.personal_meeting_url || "",
     name: m.user_profiles?.display_name || "Instructor",
     title: m.title || "Instructor",
     tagline: m.tagline || "",
@@ -952,24 +950,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               {screen === "paymentCallback" && (
                 <PaymentCallbackScreen
                   addCredits={addCredits} enrollmentsQuery={enrollmentsQuery} goTab={goTab} showToast={showToast}
-                />
-              )}
-              {screen === "bookmarks" && (
-                <BookmarksScreen push={push} back={back} showToast={showToast} session={session} />
-              )}
-              {screen === "learningPaths" && (
-                <LearningPathsScreen
-                  user={user}
-                  courses={courses}
-                  session={session}
-                  push={push}
-                  back={back}
-                  showToast={showToast}
-                  pathsQuery={learningPathsQuery}
-                  pathEnrollmentsQuery={pathEnrollmentsQuery}
-                  enrollments={enrollmentsQuery.data || []}
-                  enrollInCourse={enrollInCourse}
-                  enrollmentsQuery={enrollmentsQuery}
                 />
               )}
               {screen === "schedule" && (

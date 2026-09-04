@@ -793,7 +793,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
               <Search size={16} color="var(--text-3)" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
               <input
                 type="text"
-                placeholder="Search masterclasses, skills, instructors, or certifications..."
+                placeholder="Search courses, skills, instructors, or certifications..."
                 value={courseSearch}
                 onChange={(e) => setCourseSearch(e.target.value)}
                 style={{

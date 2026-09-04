@@ -903,11 +903,9 @@ export function DesktopSidebar({
       label: "Courses",
       icon: BookOpen,
       defaultScreen: "courses",
-      screens: ["courses", "courseDetail", "lesson", "learningPaths", "bookmarks"],
+      screens: ["courses", "courseDetail", "lesson"],
       subItems: [
-        { key: "courses", label: "All Courses", icon: BookOpen },
-        { key: "learningPaths", label: "Learning Pathways", icon: Layers },
-        { key: "bookmarks", label: "Bookmarks", icon: Bookmark }
+        { key: "courses", label: "All Courses", icon: BookOpen }
       ]
     },
     {
@@ -1188,12 +1186,10 @@ export function QuickWinCard({ title, duration, points, onClick }) {
 
 // LearningPathsView used to live here: a hardcoded three-entry TRACKS array
 // with invented progress percentages, invented step lists and a button that
-// sent every learner to the same stock course id. It is replaced by
-// learner/screens/LearningPathsScreen.jsx, which reads the real
-// learning_paths / learning_path_courses / learning_path_enrollments tables
-// the admin path builder writes to, evaluates each step's real unlock rule
-// against the learner's own course completions, and lets a learner add and
-// drop their own tracks (user_personalization.learning_tracks).
+// sent every learner to the same stock course id. The standalone screen was
+// removed entirely; real learning-pathway data (learning_paths /
+// learning_path_courses / learning_path_enrollments, written by the admin
+// path builder) now only surfaces as a filter on the All Courses screen.
 
 export function ScheduleView({ push, back }) {
   const SESSIONS = [
