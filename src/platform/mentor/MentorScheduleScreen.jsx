@@ -130,18 +130,16 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
             </div>
 
             <div className="ta-hero-actions">
-              <a
-                href="https://meet.google.com/new"
-                target="_blank"
-                rel="noreferrer"
+              <button
                 className="ta-btn ta-btn-primary"
                 style={{
                   background: "#2563EB", color: "#fff", border: "none", fontWeight: 800,
-                  boxShadow: "0 4px 16px rgba(37, 99, 235, 0.4)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6
+                  boxShadow: "0 4px 16px rgba(37, 99, 235, 0.4)", display: "inline-flex", alignItems: "center", gap: 6
                 }}
+                onClick={() => setCreateOpen(true)}
               >
-                <Video size={15} /> Instant Live Room
-              </a>
+                <Plus size={15} /> Schedule 1-on-1 Session
+              </button>
             </div>
           </div>
         </div>

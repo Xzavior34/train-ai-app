@@ -34,6 +34,7 @@ import { AdministrativeScreen } from "./mentor/AdministrativeScreen.jsx";
 import { MentorSettingsScreen } from "./mentor/MentorSettingsScreen.jsx";
 import { CheckCircle2 } from "lucide-react";
 import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
+import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 
 // Picks which workspace tab a signed-in platform user lands on by default,
@@ -232,9 +233,10 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                     />
                   )}
                   {screen === "compliance" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
+                  {screen === "leaderboard" && <LeaderboardScreen back={() => setScreen("dashboard")} push={(s) => setScreen(s)} />}
+                  {screen === "assessments" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "roleaccess" && <OrgRoleAccessScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
-                  {screen === "gjp" && <GJPScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
                   {screen === "forums" && <ForumsScreen orgSelector={orgSelector} setScreen={setScreen} />}
                   {screen === "settings" && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} session={session} />}
                 </>
@@ -266,6 +268,8 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                     />
                   )}
                   {screen === "studygroups" && <MentorStudyGroupsScreen mentorId={session?.user?.id} orgId={effectiveOrgId} orgSelector={orgSelector} />}
+                  {screen === "leaderboard" && <LeaderboardScreen back={() => setScreen("dashboard")} push={(s) => setScreen(s)} />}
+                  {screen === "assessments" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "schedule" && <MentorScheduleScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}

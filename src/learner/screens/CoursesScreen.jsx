@@ -574,7 +574,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
     if (courseSourceTab === "partners") {
       if (!c.partner && c.source !== "partner") return false;
     }
-    if (courseSourceTab === "bookmarks" && !bookmarkedIds[c.id] && !((c.progress || 0) > 0 && (c.progress || 0) < 100)) return false;
+    if (courseSourceTab === "bookmarks" && !bookmarkedIds[c.id] && !c.isBookmarked && !c.is_bookmarked) return false;
     if (courseSearch && courseSearch.trim()) {
       const q = courseSearch.toLowerCase();
       const matchTitle = c.title?.toLowerCase().includes(q);

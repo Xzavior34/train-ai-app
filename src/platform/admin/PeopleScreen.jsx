@@ -691,6 +691,12 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     <option value="suspended">Suspended</option>
                     <option value="pending">Pending</option>
                   </select>
+                  <select className="ta-input" style={{ width: "auto", minWidth: 130, flex: "0 1 150px" }} defaultValue="all">
+                    <option value="all">All Dates / Historic</option>
+                    <option value="30d">Last 30 Days</option>
+                    <option value="this_month">This Month</option>
+                    <option value="this_year">This Year</option>
+                  </select>
                 </div>
 
                 <button
@@ -809,10 +815,10 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                               {attendance != null ? `${attendance}%` : "—"}
                             </span>
                           </td>
-                          <td>
+                          <td style={{ cursor: "pointer" }} onClick={() => setDetailMember(m)} title="Click to view detailed course breakdown & scores">
                             <div style={{ width: "100%", maxWidth: 140 }}>
                               <div className="ta-row ta-between" style={{ fontSize: 11, marginBottom: 4 }}>
-                                <span>Overall</span>
+                                <span>Overall Progress</span>
                                 <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${m.overallProgress ? Math.round(m.overallProgress) : 0}%`}</span>
                               </div>
                               <div style={{ width: "100%", height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>

@@ -10,10 +10,15 @@ import { fetchWorkforceIntelligence, fetchOrgMembers } from "../../lib/api/platf
 import { DEMO_LEARNERS } from "../../lib/api/demoData.js";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
+import { CORE_PLATFORM_TRACKS } from "../../learner/screens/LearningPathsScreen.jsx";
+
 export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const showToast = useContext(ToastContext);
   const [selectedLearnerId, setSelectedLearnerId] = useState("demo-learner-1");
   const [assignSuccess, setAssignSuccess] = useState(false);
+  const [selectedTrackId, setSelectedTrackId] = useState(CORE_PLATFORM_TRACKS[0]?.id || "track-ui-ux-spatial");
+  const activeTrackObj = CORE_PLATFORM_TRACKS.find(t => t.id === selectedTrackId) || CORE_PLATFORM_TRACKS[0];
+
   const DEMO_WI = {
     readinessScore: 84,
     avgCompletion: 78,
@@ -58,7 +63,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
   const allLearners = realLearners.length > 0 ? realLearners : fallbackLearners;
   const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0];
 
-  const [activeTrack, setActiveTrack] = useState("Product Design & AI");
+  const [activeTrack, setActiveTrack] = useState(activeTrackObj.title);
   const [learnerStepLevel, setLearnerStepLevel] = useState(2);
   const [promotionCriteria, setPromotionCriteria] = useState([
     { id: 1, text: "Design System Token Audit & Component Contribution", done: true, score: "96/100" },
@@ -78,12 +83,15 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector }) {
     }));
   };
 
-  const careerSteps = [
-    { title: "Junior UI Designer", status: learnerStepLevel > 1 ? "completed" : learnerStepLevel === 1 ? "active" : "upcoming", progress: learnerStepLevel > 1 ? 100 : 85, tag: learnerStepLevel > 1 ? "Completed" : "Current Track" },
-    { title: "Middle UI Designer", status: learnerStepLevel > 2 ? "completed" : learnerStepLevel === 2 ? "active" : "upcoming", progress: learnerStepLevel > 2 ? 100 : 68, tag: learnerStepLevel > 2 ? "Completed" : learnerStepLevel === 2 ? "Current Track" : "Upcoming" },
-    { title: "Senior UI Designer", status: learnerStepLevel > 3 ? "completed" : learnerStepLevel === 3 ? "active" : "upcoming", progress: learnerStepLevel > 3 ? 100 : 35, tag: learnerStepLevel === 3 ? "Current Track" : "Target Goal" },
-    { title: "Head of Design / Architect", status: learnerStepLevel === 4 ? "active" : "locked", progress: learnerStepLevel === 4 ? 40 : 0, tag: "Long-term" },
-  ];
+  // Derive career steps directly from the selected Learning Pathway
+  const careerSteps = activeTrackObj.courses.map((course, idx) => ({
+    title: course.title,
+    description: course.description,
+    duration: course.duration,
+    status: learnerStepLevel > (idx + 1) ? "completed" : learnerStepLevel === (idx + 1) ? "active" : "upcoming",
+    progress: learnerStepLevel > (idx + 1) ? 100 : learnerStepLevel === (idx + 1) ? 68 : 0,
+    tag: learnerStepLevel > (idx + 1) ? "Completed" : learnerStepLevel === (idx + 1) ? "Current Pathway Step" : "Upcoming"
+  }));
 
   const skillProfile = [
     { skill: "UX Design", level: 92, target: 85, fill: "#2563EB" },

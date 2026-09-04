@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TopBar, Tag, Avatar, ProgressBar } from "../components/LearnerUI.jsx";
 import {
-  Trophy, Medal, Crown, Flame, Award, ArrowUp, ArrowDown, Minus,
+  Trophy, Medal, Crown, Flame, Award, ArrowUp, ArrowDown, Minus, ArrowLeft,
   Search, Filter, Users, TrendingUp, ChevronRight, CheckCircle2
 } from "lucide-react";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
@@ -163,10 +163,20 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
   );
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button
+          className="tai-btn tai-btn-outline tai-btn-sm"
+          onClick={() => (back ? back() : push ? push("community") : null)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, fontWeight: 700 }}
+        >
+          <ArrowLeft size={15} /> ← Back to Community
+        </button>
+      </div>
+
       <TopBar
-        title="Learner Leaderboard"
-        sub="Recognizing top active sprint learners, XP mastery, and cohort achievements"
+        title="Weekly Leaderboard & League"
+        sub="Compete with learners across your cohort & track XP standing"
         onBack={back}
       />
 

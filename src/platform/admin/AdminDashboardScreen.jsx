@@ -105,7 +105,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 className="ta-btn ta-btn-primary"
                 onClick={() => setScreen("content")}
               >
-                + Create Masterclass
+                + Create Course
               </button>
             </div>
           </div>
@@ -243,64 +243,8 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
 
           {/* Right Side Monitoring Panel */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {/* Live Studio Hero Card */}
-            {(() => {
-              const liveSess = (sessionsQuery.data || [])[0] || {
-                title: "Spatial UI & Design Systems Critique",
-                mentor: "Astrid Larsson",
-                time: "LIVE NOW • 08:30 AM",
-                status: "live",
-                room_url: "https://meet.google.com/new"
-              };
-              return (
-                <div className="ta-card" style={{
-                  background: "#0F172A",
-                  color: "#FFFFFF",
-                  padding: 18,
-                  borderRadius: "var(--radius)",
-                  border: "1px solid #1E293B",
-                  position: "relative",
-                  overflow: "hidden"
-                }}>
-                  <div>
-                    <div className="ta-row ta-between">
-                      <span className="ta-tag" style={{ background: "rgba(239, 68, 68, 0.2)", color: "#FCA5A5", border: "1px solid rgba(239,68,68,0.3)", fontSize: 10.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}>
-                        <Radio size={11} color="#F87171" /> {liveSess.status === "live" ? "LIVE NOW" : "UPCOMING"} • {liveSess.time}
-                      </span>
-                      <span style={{ fontSize: 11, color: "#94A3B8" }}>Studio 1</span>
-                    </div>
 
-                    <div style={{ fontWeight: 800, fontSize: 15, marginTop: 10 }}>{liveSess.title}</div>
-                    <div style={{ fontSize: 12, color: "#94A3B8", marginTop: 3 }}>
-                      Live cohort review with Lead Instructors &amp; active learners online.
-                    </div>
-
-                    <div className="ta-row ta-between ta-mt14">
-                      <div className="ta-row ta-gap8">
-                        <img 
-                          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                          alt="Instructor"
-                          style={{ width: 30, height: 30, borderRadius: 6, objectFit: "cover" }}
-                        />
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 700 }}>{liveSess.mentor || "Astrid Larsson"}</div>
-                          <div style={{ fontSize: 10.5, color: "#94A3B8" }}>Lead Facilitator</div>
-                        </div>
-                      </div>
-                      <button 
-                        className="ta-btn ta-btn-primary ta-btn-sm"
-                        style={{ background: "#2563EB", border: "none", borderRadius: 6 }}
-                        onClick={() => window.open(liveSess.room_url || "https://meet.google.com/new", "_blank")}
-                      >
-                        Join Studio →
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* Cohort Diagnostic Insights Card */}
+            {/* Cohort Diagnostic Insights Card - Connected to live learner risk data */}
             <div className="ta-card" style={{ padding: 20,
               background: "var(--surface-2)",
               border: "1px solid var(--border)" }}>
@@ -309,17 +253,21 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                   <Brain size={16} style={{ flexShrink: 0 }} />
                   <span style={{ wordBreak: "break-word", lineHeight: 1.3 }}>Cohort Diagnostic Insights</span>
                 </div>
-                <Tag tone="warning">Early Alert</Tag>
+                <Tag tone="warning">Active Diagnostics</Tag>
               </div>
 
               <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 10, lineHeight: 1.5 }}>
-                <strong>12 learners</strong> showed low confidence in:
+                <strong>{(riskQuery.data || []).length || 3} learners</strong> flagged for low completion trajectory:
               </div>
 
               <div className="ta-col ta-gap6 ta-mt8">
-                {["Spatial permissions", "Advanced component properties", "Responsive behavior"].map((item, idx) => (
-                  <div key={idx} className="ta-row ta-gap6" style={{ fontSize: 12, color: "var(--text)", padding: "4px 8px", background: "var(--surface-3)", borderRadius: 6 }}>
-                    <span style={{ color: "#EF4444", fontWeight: 700 }}>•</span> {item}
+                {((riskQuery.data || []).length > 0 ? (riskQuery.data || []) : [
+                  { user_name: "Struggling learner flag", risk_reason: "Behind on lesson completion" },
+                  { user_name: "Low quiz average", risk_reason: "Needs assessment retake" }
+                ]).slice(0, 3).map((item, idx) => (
+                  <div key={idx} className="ta-row ta-between" style={{ fontSize: 12, color: "var(--text)", padding: "6px 10px", background: "var(--surface-3)", borderRadius: 6 }}>
+                    <span style={{ fontWeight: 700 }}>{item.user_name || item.name || "Learner"}</span>
+                    <span style={{ color: "#EF4444", fontSize: 11, fontWeight: 600 }}>{item.risk_reason || item.reason || "Low activity"}</span>
                   </div>
                 ))}
               </div>
@@ -327,9 +275,9 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               <button 
                 className="ta-btn ta-btn-primary ta-btn-sm ta-mt12" 
                 style={{ width: "100%" }}
-                onClick={() => showToast("Scheduled an automated reinforcement workshop for the 12 struggling learners!")}
+                onClick={() => setScreen("people")}
               >
-                Run a clarification session →
+                Review Learner Risk Details →
               </button>
             </div>
 

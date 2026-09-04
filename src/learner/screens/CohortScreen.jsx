@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Layers, Video, Calendar, FileText, Link2, ExternalLink, Flame, Users,
-  CheckCircle2, Clock, Play, ArrowRight, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send
+  CheckCircle2, Clock, Play, ArrowRight, ArrowLeft, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
@@ -59,8 +59,19 @@ export function CohortScreen({
   const assignedCompletionRate = assignedCourses.length ? Math.round((completedAssignedCount / assignedCourses.length) * 100) : 0;
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       
+      {/* Navigation Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button
+          className="tai-btn tai-btn-outline tai-btn-sm"
+          onClick={() => (back ? back() : push ? push("community") : null)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, fontWeight: 700 }}
+        >
+          <ArrowLeft size={15} /> Back to Community
+        </button>
+      </div>
+
       {/* =========================================================================
           HERO BANNER: Dedicated Cohort & Batch Space
           ========================================================================= */}

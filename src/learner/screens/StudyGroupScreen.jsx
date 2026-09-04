@@ -154,7 +154,17 @@ export function StudyGroupScreen({
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <TopBar title="Study Group" sub="Join a group, or start your own" onBack={back} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button
+          className="tai-btn tai-btn-outline tai-btn-sm"
+          onClick={() => (back ? back() : push ? push("community") : null)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, fontWeight: 700 }}
+        >
+          ← Back to Community
+        </button>
+      </div>
+
+      <TopBar title="Study Groups" sub="Find and join a group in your organization" />
 
       <div className="tai-row tai-between" style={{ alignItems: "center" }}>
         <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Your Groups</div>

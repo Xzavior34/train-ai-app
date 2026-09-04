@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
-  Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail,
+  Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail, Trophy, CheckSquare,
   Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, ChevronRight, ChevronDown, Flag, Palette, Rocket, Brain, LifeBuoy,
   Armchair,
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
@@ -647,7 +647,8 @@ const ADMIN_NAV = [
       { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
       { key: "compliance", label: "Learner Progress", icon: ShieldCheck },
       { key: "studygroups", label: "Study Groups", icon: Users },
-      { key: "gjp", label: "Graduate Placement (GJP)", icon: GraduationCap },
+      { key: "leaderboard", label: "Leaderboard & Ranks", icon: Trophy },
+      { key: "assessments", label: "Assessments & Quizzes", icon: CheckSquare },
     ],
   },
   {
@@ -688,6 +689,8 @@ const MENTOR_NAV = [
   { key: "cohorts", label: "My Cohorts", icon: Layers },
   { key: "content", label: "My Courses", icon: BookOpen },
   { key: "studygroups", label: "My Study Groups", icon: Users },
+  { key: "leaderboard", label: "Learner Leaderboard", icon: Trophy },
+  { key: "assessments", label: "Assessments & Grading", icon: CheckSquare },
   { key: "mentees", label: "My Learners", icon: Users },
   { key: "messages", label: "Direct Messages", icon: MessageSquare },
   { key: "discussions", label: "Learner Q&A", icon: MessagesSquare },

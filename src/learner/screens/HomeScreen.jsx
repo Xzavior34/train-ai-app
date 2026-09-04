@@ -72,9 +72,9 @@ export function HomeScreen({
                 <span
                   style={{ background: "#2563EB", color: "#FFFFFF", padding: "3px 10px", borderRadius: 6, fontWeight: 800, fontSize: 11.5, letterSpacing: "0.02em", border: "1px solid rgba(255, 255, 255, 0.25)", display: "inline-flex", alignItems: "center", cursor: "pointer" }}
                   onClick={() => push("learningPaths")}
-                  title="View Learning Pathways"
+                  title="Customize or switch Learning Pathway"
                 >
-                  {activePathway?.title ? `Pathway: ${activePathway.title}` : (continueCourse?.category || "UI/UX Design Track")}
+                  {activePathway?.title ? `Pathway: ${activePathway.title}` : (continueCourse?.category ? `${continueCourse.category} Track` : "Customize Learning Pathway ⚙️")}
                 </span>
               </div>
               <p className="tai-hero-desc" style={{ fontSize: 13.5, margin: 0, color: "#F8FAFC", fontWeight: 500, lineHeight: 1.45 }}>

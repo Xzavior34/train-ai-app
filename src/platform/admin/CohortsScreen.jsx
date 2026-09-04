@@ -172,35 +172,46 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
               </div>
             </div>
 
-            {/* Assigned Facilitators */}
+            {/* Cohort Discussion Feed & Announcement Composer */}
             <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
-                  <div className="ta-title" style={{ fontSize: 15 }}>Lead Instructors</div>
-                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Active cohort mentors</div>
+                  <div className="ta-title" style={{ fontSize: 15 }}>Cohort Announcements &amp; Discussion</div>
+                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Post announcements into cohort stream</div>
                 </div>
-                <Tag tone="success">{cohorts.filter(c => c.status === "active" || !c.status).length || cohorts.length} Active</Tag>
+                <Tag tone="primary">Stream</Tag>
               </div>
 
               <div className="ta-col ta-gap10 ta-mt14">
-                {[
-                  { name: "Astrid Larsson", track: "UI/UX & Design Systems", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" },
-                  { name: "Alex Rivera", track: "Generative AI Workflows", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80" },
-                  { name: "Sarah Jenkins", track: "DevOps & Cloud Architecture", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80" }
-                ].map((ins, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10 }}>
-                    <div className="ta-row ta-gap10">
-                      <img src={ins.avatar} alt={ins.name} style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover" }} />
-                      <div>
-                        <div style={{ fontSize: 12.5, fontWeight: 700 }}>{ins.name}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{ins.track}</div>
+                <textarea
+                  className="ta-input"
+                  rows={3}
+                  placeholder="Broadcast an announcement or message to active cohorts..."
+                  style={{ width: "100%", fontSize: 12.5, boxSizing: "border-box", resize: "vertical" }}
+                />
+                <button
+                  className="ta-btn ta-btn-primary ta-btn-sm"
+                  style={{ alignSelf: "flex-end", height: 32 }}
+                  onClick={() => showToast("Announcement published to cohort discussion stream!")}
+                >
+                  Post Announcement →
+                </button>
+
+                <div className="ta-col ta-gap8 ta-mt10">
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Recent Stream Messages</div>
+                  {[
+                    { author: "Admin", text: "Welcome everyone to Sprint 2! Check the schedule for live sessions.", time: "2h ago" },
+                    { author: "Lead Instructor", text: "Capstone submission guidelines have been updated in Resources.", time: "1d ago" }
+                  ].map((msg, i) => (
+                    <div key={i} style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", fontSize: 12 }}>
+                      <div className="ta-row ta-between" style={{ marginBottom: 4 }}>
+                        <span style={{ fontWeight: 700, color: "var(--primary)" }}>{msg.author}</span>
+                        <span style={{ fontSize: 10.5, color: "var(--text-3)" }}>{msg.time}</span>
                       </div>
+                      <div style={{ color: "var(--text-2)", lineHeight: 1.35 }}>{msg.text}</div>
                     </div>
-                    <button className="ta-btn ta-btn-outline ta-btn-sm" style={{ padding: "4px 8px", fontSize: 11 }} onClick={() => setScreen?.("people")}>
-                      View
-                    </button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
