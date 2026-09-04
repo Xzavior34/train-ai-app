@@ -644,7 +644,7 @@ const ADMIN_NAV = [
     items: [
       { key: "content", label: "Courses", icon: BookOpen },
       { key: "paths", label: "Learning Paths", icon: Map },
-      { key: "cohorts", label: "Cohorts & Batches", icon: Layers },
+      { key: "cohorts", label: "Cohorts", icon: Layers },
       { key: "compliance", label: "Learner Progress", icon: ShieldCheck },
       { key: "studygroups", label: "Study Groups", icon: Users },
       { key: "leaderboard", label: "Leaderboard & Ranks", icon: Trophy },
@@ -666,7 +666,6 @@ const ADMIN_NAV = [
       { key: "payouts", label: "Payouts", icon: Briefcase },
       { key: "integrations", label: "Integrations", icon: Plug },
       { key: "moderation", label: "Content Moderation", icon: Flag },
-      { key: "forums", label: "Forums Management", icon: MessageSquare },
     ],
   },
   {
@@ -689,6 +688,7 @@ const MENTOR_NAV = [
   { key: "cohorts", label: "My Cohorts", icon: Layers },
   { key: "content", label: "My Courses", icon: BookOpen },
   { key: "studygroups", label: "My Study Groups", icon: Users },
+  { key: "community", label: "Learner Community View", icon: MessagesSquare },
   { key: "leaderboard", label: "Learner Leaderboard", icon: Trophy },
   { key: "assessments", label: "Assessments & Grading", icon: CheckSquare },
   { key: "mentees", label: "My Learners", icon: Users },

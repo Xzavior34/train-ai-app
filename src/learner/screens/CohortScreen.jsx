@@ -503,55 +503,47 @@ export function CohortScreen({
           TAB 5: FACILITATORS
           ========================================================================= */}
       {tab === "members" && (
-        <div className="tai-grid2">
-          {cohortMembersQuery?.loading && <div className="tai-empty">Loading facilitators...</div>}
-          {!cohortMembersQuery?.loading && instructorMembers.length === 0 && (
-            <div className="tai-empty">No instructor assigned to this cohort yet.</div>
+        <div className="tai-col tai-gap16">
+          {cohortMembersQuery?.loading && <div className="tai-empty">Loading members...</div>}
+          {!cohortMembersQuery?.loading && (cohortMembersQuery?.data || []).length === 0 && (
+            <div className="tai-empty">No members in this cohort yet.</div>
           )}
-          {instructorMembers.map(m => (
-            <div key={m.id} className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-              <div className="tai-row tai-between" style={{ gap: 12, flexWrap: "wrap" }}>
-                <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: "1 1 160px" }}>
-                  <Avatar src={m.user_profiles?.avatar_url} initials={initialsOf(m.user_profiles?.display_name)} size={48} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.user_profiles?.display_name}</div>
-                    <div style={{ fontSize: 12, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.user_profiles?.role || "Lead Facilitator"}</div>
-                  </div>
-                </div>
-
-                <button
-                  className="tai-btn tai-btn-primary tai-btn-sm"
-                  style={{ flexShrink: 0 }}
-                  onClick={() => {
-                    if (push) push("messages", { recipientName: m.user_profiles?.display_name });
-                    showToast(`Starting chat with ${m.user_profiles?.display_name}...`);
-                  }}
-                >
-                  <MessageCircle size={13} /> Message
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {peerMembers.length > 0 && (
-            <div style={{ gridColumn: "1 / -1", marginTop: 8 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", marginBottom: 10 }}>
-                Peers in this Cohort ({peerMembers.length})
-              </div>
-              <div className="tai-grid2">
-                {peerMembers.map(m => (
-                  <div key={m.id} className="tai-card" style={{ padding: "12px 16px", borderRadius: 10 }}>
-                    <div className="tai-row tai-gap12" style={{ alignItems: "center" }}>
-                      <Avatar src={m.user_profiles?.avatar_url} initials={initialsOf(m.user_profiles?.display_name)} size={36} />
-                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {m.user_profiles?.display_name || "Learner"}
+          <div className="tai-grid2">
+            {(cohortMembersQuery?.data || []).map(m => {
+              const isInstructor = m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin";
+              return (
+                <div key={m.id} className="tai-card" style={{ padding: "14px 16px", borderRadius: 10 }}>
+                  <div className="tai-row tai-gap12" style={{ alignItems: "center", justifyContent: "space-between" }}>
+                    <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
+                      <Avatar src={m.user_profiles?.avatar_url} initials={initialsOf(m.user_profiles?.display_name)} size={40} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {m.user_profiles?.display_name || "Cohort Member"}
+                        </div>
+                        {isInstructor && (
+                          <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4 }}>
+                            INSTRUCTOR
+                          </span>
+                        )}
                       </div>
                     </div>
+                    {isInstructor && (
+                      <button
+                        className="tai-btn tai-btn-primary tai-btn-sm"
+                        style={{ flexShrink: 0 }}
+                        onClick={() => {
+                          if (push) push("messages", { recipientName: m.user_profiles?.display_name });
+                          showToast(`Starting chat with ${m.user_profiles?.display_name}...`);
+                        }}
+                      >
+                        <MessageCircle size={13} /> Message
+                      </button>
+                    )}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

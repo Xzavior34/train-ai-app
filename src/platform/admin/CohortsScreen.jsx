@@ -1,14 +1,17 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
-import { Plus, Layers, Users, Calendar, ArrowRight, X } from "lucide-react";
+import { Plus, Layers, Users, Calendar, ArrowRight, X, Send } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortsWithStats, createCohort } from "../../lib/api/platform.js";
+import { createCohortPost } from "../../lib/api/schemaHelper.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
   const [newCohortOpen, setNewCohortOpen] = useState(false);
   const [name, setName] = useState("");
+  const [announcementText, setAnnouncementText] = useState("");
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const cohortsQuery = useSupabaseQuery(async () => orgId ? fetchCohortsWithStats(orgId) : [], [orgId]);
   const cohorts = cohortsQuery.data || [];
 
@@ -186,31 +189,53 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                 <textarea
                   className="ta-input"
                   rows={3}
-                  placeholder="Broadcast an announcement or message to active cohorts..."
+                  placeholder="Broadcast an announcement to all active cohorts in your org..."
                   style={{ width: "100%", fontSize: 12.5, boxSizing: "border-box", resize: "vertical" }}
+                  value={announcementText}
+                  onChange={e => setAnnouncementText(e.target.value)}
                 />
                 <button
                   className="ta-btn ta-btn-primary ta-btn-sm"
-                  style={{ alignSelf: "flex-end", height: 32 }}
-                  onClick={() => showToast("Announcement published to cohort discussion stream!")}
+                  style={{ alignSelf: "flex-end", height: 32, display: "inline-flex", alignItems: "center", gap: 6 }}
+                  disabled={postingAnnouncement || !announcementText.trim()}
+                  onClick={async () => {
+                    if (!announcementText.trim() || !currentUserId) return;
+                    // Post to all cohorts in this org
+                    const targets = cohorts.slice(0, 10); // cap at 10 to avoid floods
+                    if (targets.length === 0) {
+                      showToast("No active cohorts to broadcast to.");
+                      return;
+                    }
+                    setPostingAnnouncement(true);
+                    try {
+                      await Promise.all(
+                        targets.map(c =>
+                          createCohortPost({
+                            cohortId: c.id,
+                            authorId: currentUserId,
+                            content: announcementText.trim(),
+                            isAnnouncement: true,
+                          }).catch(() => {})
+                        )
+                      );
+                      setAnnouncementText("");
+                      showToast(`Announcement posted to ${targets.length} cohort${targets.length === 1 ? "" : "s"}!`);
+                    } catch {
+                      showToast("Could not post announcement. Try again.");
+                    } finally {
+                      setPostingAnnouncement(false);
+                    }
+                  }}
                 >
-                  Post Announcement →
+                  <Send size={13} /> {postingAnnouncement ? "Posting..." : "Post Announcement →"}
                 </button>
 
                 <div className="ta-col ta-gap8 ta-mt10">
-                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Recent Stream Messages</div>
-                  {[
-                    { author: "Admin", text: "Welcome everyone to Sprint 2! Check the schedule for live sessions.", time: "2h ago" },
-                    { author: "Lead Instructor", text: "Capstone submission guidelines have been updated in Resources.", time: "1d ago" }
-                  ].map((msg, i) => (
-                    <div key={i} style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", fontSize: 12 }}>
-                      <div className="ta-row ta-between" style={{ marginBottom: 4 }}>
-                        <span style={{ fontWeight: 700, color: "var(--primary)" }}>{msg.author}</span>
-                        <span style={{ fontSize: 10.5, color: "var(--text-3)" }}>{msg.time}</span>
-                      </div>
-                      <div style={{ color: "var(--text-2)", lineHeight: 1.35 }}>{msg.text}</div>
-                    </div>
-                  ))}
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Recent Announcements</div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+                    Announcements you post here will appear in the cohort discussion stream for all learners in each cohort.
+                    Open a specific cohort below to view its full discussion history.
+                  </div>
                 </div>
               </div>
             </div>

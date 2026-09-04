@@ -21,7 +21,6 @@ import { CohortDetailScreen } from "./admin/CohortDetailScreen.jsx";
 import { ComplianceScreen } from "./admin/ComplianceScreen.jsx";
 import { IntegrationsScreen } from "./admin/IntegrationsScreen.jsx";
 import { SettingsHubScreen } from "./admin/SettingsHubScreen.jsx";
-import { GJPScreen } from "./admin/GJPScreen.jsx";
 import { ForumsScreen } from "./admin/ForumsScreen.jsx";
 import { MentorDashboardScreen } from "./mentor/MentorDashboardScreen.jsx";
 import { MentorStudyGroupsScreen } from "./mentor/MentorStudyGroupsScreen.jsx";
@@ -35,6 +34,7 @@ import { MentorSettingsScreen } from "./mentor/MentorSettingsScreen.jsx";
 import { CheckCircle2 } from "lucide-react";
 import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
+import { CommunityScreen } from "../learner/screens/CommunityScreen.jsx";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 
 // Picks which workspace tab a signed-in platform user lands on by default,
@@ -278,6 +278,15 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} onNavigate={navigateToScreen} />}
                   {screen === "admin" && <AdministrativeScreen mentorId={mentorId} orgSelector={orgSelector} mentorProfileQuery={mentorProfileQuery} currentUserId={session?.user?.id} />}
                   {screen === "settings" && <MentorSettingsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} currentUserId={session?.user?.id} userProfileQuery={profileQuery} onNavigate={navigateToScreen} />}
+                  {screen === "community" && (
+                    <CommunityScreen
+                      user={profileQuery?.data}
+                      session={session}
+                      push={(s, p) => navigateToScreen(s, p)}
+                      back={() => setScreen("dashboard")}
+                      showToast={showToast}
+                    />
+                  )}
                 </>
               )}
 
