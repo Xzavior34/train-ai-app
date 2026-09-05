@@ -637,30 +637,71 @@ export async function fetchPublishedLearningPaths(organizationId) {
     query = query.or(`organization_id.eq.${organizationId},organization_id.is.null`);
   }
   const { data, error } = await query;
-  if (error) { console.warn("Learning paths fetch warning:", error); return DEMO_PATHS; }
-  if (!data || data.length === 0) return [];
-  return (data || []).map((p) => ({
+  if (error) { console.warn("Learning paths fetch warning:", error); }
+  
+  const formattedPaths = (data || []).map((p) => ({
     id: p.id,
     title: p.title,
     description: p.description || "",
     category: p.category || null,
-    level: p.level_label || "beginner",
+    level: p.level_label || "All Levels",
     courses: (p.learning_path_courses || [])
-      .sort((a, b) => a.order_index - b.order_index)
+      .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
       .map((pc) => ({
-        id: pc.course_id,
+        id: pc.course_id || pc.courses?.id,
         pathCourseId: pc.id,
-        title: pc.courses?.title || "Course",
+        title: pc.courses?.title || "Course Module",
         description: pc.courses?.description || "",
-        level: pc.courses?.level || null,
-        category: pc.courses?.category || null,
+        level: pc.courses?.level || "intermediate",
+        category: pc.courses?.category || p.category || "General",
         coverImageUrl: pc.courses?.cover_image_url || null,
-        hours: pc.courses?.duration_hours || 0,
+        hours: pc.courses?.duration_hours || 4,
         isRequired: pc.is_required !== false,
         unlockRule: pc.unlock_rule || "complete_previous",
         prerequisiteCourseIds: pc.prerequisite_course_ids || [],
         orderIndex: pc.order_index ?? 0,
-      })),
+      })).filter(c => c.id),
+  })).filter(p => p.courses && p.courses.length > 0);
+
+  if (formattedPaths.length > 0) return formattedPaths;
+
+  // If learning_paths table has no mapped courses yet, dynamically group live courses into career pathways
+  let courseQuery = supabase
+    .from("courses")
+    .select("id, title, description, level, category, duration_hours, cover_image_url")
+    .order("created_at", { ascending: true });
+  if (organizationId && organizationId !== "demo-org-id") {
+    courseQuery = courseQuery.or(`organization_id.eq.${organizationId},organization_id.is.null`);
+  }
+  const { data: allCourses } = await courseQuery;
+  const coursesList = allCourses || [];
+  if (!coursesList.length) return DEMO_PATHS;
+
+  const byCategory = {};
+  for (const c of coursesList) {
+    const cat = c.category || "Core Systems";
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push({
+      id: c.id,
+      title: c.title,
+      description: c.description || "",
+      level: c.level || "intermediate",
+      category: c.category || cat,
+      coverImageUrl: c.cover_image_url || null,
+      hours: c.duration_hours || 6,
+      isRequired: true,
+      unlockRule: "complete_previous",
+      orderIndex: byCategory[cat].length,
+    });
+  }
+
+  return Object.entries(byCategory).map(([catName, courseArr], idx) => ({
+    id: `path-track-${idx + 1}`,
+    title: `${catName} Career Track`,
+    description: `Comprehensive industry career progression track for ${catName}.`,
+    category: catName,
+    level: "All Levels",
+    courses: courseArr,
   }));
 }
 

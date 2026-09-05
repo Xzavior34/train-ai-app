@@ -24,7 +24,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
   const threads = threadsQuery.data || [];
 
   // All platform learners, so an instructor can search & message any learner
-  const menteesQuery = useSupabaseQuery(async () => fetchAllPlatformLearners(), []);
+  const menteesQuery = useSupabaseQuery(async () => fetchAllPlatformLearners(orgId), [orgId]);
   const mentees = menteesQuery.data || [];
   // Fellow Instructors - confirmed directly against the real 1.0
   // reference codebase (FellowMentors.tsx). The RLS on mentor_messages

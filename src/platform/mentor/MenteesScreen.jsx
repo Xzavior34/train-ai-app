@@ -79,7 +79,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
   const [certFileUrl, setCertFileUrl] = useState("");
   const [issuingCert, setIssuingCert] = useState(false);
 
-  const menteesQuery = useSupabaseQuery(async () => fetchAllPlatformLearners(), []);
+  const menteesQuery = useSupabaseQuery(async () => fetchAllPlatformLearners(orgId), [orgId]);
   const allMentees = menteesQuery.data || [];
 
   // Filter all platform learners by search query and risk filter

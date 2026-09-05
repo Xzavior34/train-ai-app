@@ -2313,7 +2313,7 @@ export async function upsertOrgBranding(organizationId, { logoUrl, primaryColor 
    tables from 0003_mentors_sessions_messaging.sql.
    ========================================================================= */
 
-export async function fetchAllPlatformLearners() {
+export async function fetchAllPlatformLearners(organizationId) {
   if (!supabase) {
     return DEMO_LEARNERS.map((l) => {
       const rows = DEMO_ENROLLMENTS.filter((e) => e.learnerId === l.id);
@@ -2325,13 +2325,17 @@ export async function fetchAllPlatformLearners() {
       };
     });
   }
-  const { data: profiles, error } = await supabase
+  let query = supabase
     .from("user_profiles")
-    .select("id, display_name, avatar_url, role, school, department, email, created_at")
+    .select("id, display_name, avatar_url, role, school, department, email, created_at, organization_id")
     .order("display_name", { ascending: true });
+  if (organizationId && organizationId !== "demo-org-id") {
+    query = query.eq("organization_id", organizationId);
+  }
+  const { data: profiles, error } = await query;
   if (error) { console.warn("Error fetching learner profiles:", error); return []; }
 
-  const learnerProfiles = (profiles || []).filter(p => p.role === "learner" || !p.role || p.role === "student");
+  const learnerProfiles = (profiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
   const learnerIds = learnerProfiles.map(p => p.id);
 
   let sessionsByLearner = {};
@@ -2349,9 +2353,10 @@ export async function fetchAllPlatformLearners() {
   let progressByLearner = {};
   let courseIdsByLearner = {};
   if (learnerIds.length) {
-    const [{ data: enrollments }, { data: instructorEnrollments }] = await Promise.all([
-      supabase.from("course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", learnerIds),
-      supabase.from("instructor_course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", learnerIds),
+    const [enrollments, instructorEnrollments, attempts] = await Promise.all([
+      safeInQuery("course_enrollments", "user_id, course_id, progress_percentage", "user_id", learnerIds),
+      safeInQuery("instructor_course_enrollments", "user_id, course_id, progress_percentage", "user_id", learnerIds),
+      safeInQuery("quiz_attempts", "user_id, score", "user_id", learnerIds),
     ]);
     for (const e of [...(enrollments || []), ...(instructorEnrollments || [])]) {
       if (!progressByLearner[e.user_id]) progressByLearner[e.user_id] = [];
@@ -2361,12 +2366,19 @@ export async function fetchAllPlatformLearners() {
         courseIdsByLearner[e.user_id].add(e.course_id);
       }
     }
+
+    for (const a of (attempts || [])) {
+      if (a.score != null) {
+        if (!quizScoresByLearner[a.user_id]) quizScoresByLearner[a.user_id] = [];
+        quizScoresByLearner[a.user_id].push(a.score);
+      }
+    }
   }
 
   const allCourseIds = [...new Set(Object.values(courseIdsByLearner).flatMap((s) => [...s]))];
   let courseTitleById = {};
   if (allCourseIds.length) {
-    const { data: courseRows } = await supabase.from("courses").select("id, title").in("id", allCourseIds);
+    const courseRows = await safeInQuery("courses", "id, title", "id", allCourseIds);
     courseTitleById = Object.fromEntries((courseRows || []).map((c) => [c.id, c.title]));
   }
   const coursesByLearner = Object.fromEntries(
@@ -2374,17 +2386,6 @@ export async function fetchAllPlatformLearners() {
   );
 
   let quizScoresByLearner = {};
-  if (learnerIds.length) {
-    const { data: attempts } = await supabase
-      .from("quiz_attempts")
-      .select("user_id, score")
-      .in("user_id", learnerIds)
-      .not("score", "is", null);
-    for (const a of attempts || []) {
-      if (!quizScoresByLearner[a.user_id]) quizScoresByLearner[a.user_id] = [];
-      quizScoresByLearner[a.user_id].push(a.score);
-    }
-  }
 
   return learnerProfiles.map(p => {
     const id = p.id;
@@ -2394,7 +2395,7 @@ export async function fetchAllPlatformLearners() {
     const progress = progressList.length ? Math.round(progressList.reduce((a, b) => a + b, 0) / progressList.length) : null;
     const quizScores = quizScoresByLearner[id] || [];
     const quizAvg = quizScores.length ? Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length) : null;
-    const email = p.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@sarafoundationafrica.com`;
+    const email = p.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@trainailtd.com`;
     return {
       id,
       name,
