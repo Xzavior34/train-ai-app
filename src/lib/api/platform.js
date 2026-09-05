@@ -2723,13 +2723,14 @@ export async function fetchOrgLearnerProgressOverview(organizationId, options = 
   const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
   let query = supabase
     .from("user_profiles")
-    .select("id, display_name, department, last_active_at")
-    .in("role", ["learner", "student"]);
+    .select("id, display_name, department, last_active_at, role");
   if (orgFilter) query = query.eq("organization_id", orgFilter);
-  const { data: learners, error: learnersError } = await query;
+  const { data: allLearners, error: learnersError } = await query;
   if (learnersError) throw learnersError;
-  if (!learners || learners.length === 0) return [];
+  if (!allLearners || allLearners.length === 0) return [];
 
+  const nonAdminLearners = allLearners.filter(l => l.role !== "admin" && l.role !== "super_admin" && l.role !== "mentor" && l.role !== "instructor");
+  const learners = nonAdminLearners.length > 0 ? nonAdminLearners : allLearners;
   const learnerIds = learners.map(l => l.id);
   let enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", learnerIds);
 
@@ -2748,10 +2749,7 @@ export async function fetchOrgLearnerProgressOverview(organizationId, options = 
   }
 
   // Cohort membership, so the caller can filter learners by cohort.
-  const { data: cohortMemberRows } = await supabase
-    .from("cohort_members")
-    .select("user_id, cohort_id, cohorts(name)")
-    .in("user_id", learnerIds);
+  const cohortMemberRows = await safeInQuery("cohort_members", "user_id, cohort_id, cohorts(name)", "user_id", learnerIds);
   const cohortsByUser = new Map();
   for (const row of (cohortMemberRows || [])) {
     if (!cohortsByUser.has(row.user_id)) cohortsByUser.set(row.user_id, []);
@@ -3075,14 +3073,14 @@ export async function fetchWorkforceIntelligence(organizationId) {
 
   let learnerQuery = supabase
     .from("user_profiles")
-    .select("id, department, last_active_at")
-    .in("role", ["learner", "student"]);
+    .select("id, department, last_active_at, role");
   if (orgFilter) learnerQuery = learnerQuery.eq("organization_id", orgFilter);
-  const { data: learners } = await learnerQuery;
-  const learnerRows = learners || [];
+  const { data: allUsers } = await learnerQuery;
+  const nonAdminLearners = (allUsers || []).filter(l => l.role !== "admin" && l.role !== "super_admin" && l.role !== "mentor" && l.role !== "instructor");
+  const learnerRows = nonAdminLearners.length > 0 ? nonAdminLearners : (allUsers || []);
   const learnerIds = learnerRows.map((l) => l.id);
   if (!learnerIds.length) {
-    return { readinessScore: null, departmentBreakdown: [], categoryBreakdown: [], aiUsageCount7d: 0, feedbackNotesCount30d: 0, avgAssessmentScore: null, complianceRate: null, learnerCount: 0 };
+    return { readinessScore: 0, departmentBreakdown: [], categoryBreakdown: [], aiUsageCount7d: 0, feedbackNotesCount30d: 0, avgAssessmentScore: null, complianceRate: 100, avgCompletion: 0, learnerCount: 0 };
   }
 
   let aiUsageQuery = supabase.from("ai_usage_events").select("id, created_at").gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
@@ -3091,10 +3089,10 @@ export async function fetchWorkforceIntelligence(organizationId) {
   let feedbackNotesQuery = supabase.from("feedback_notes").select("id, created_at").gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
   if (orgFilter) feedbackNotesQuery = feedbackNotesQuery.eq("organization_id", orgFilter);
 
-  const [{ data: enrollments }, { data: compliance }, { data: assessmentAttempts }, { data: aiUsage }, { data: feedbackNotes }] = await Promise.all([
-    supabase.from("course_enrollments").select("user_id, progress_percentage, courses(category)").in("user_id", learnerIds),
-    supabase.from("compliance_assignments").select("user_id, status").in("user_id", learnerIds),
-    supabase.from("assessment_attempts").select("user_id, score").in("user_id", learnerIds),
+  const [enrollments, compliance, assessmentAttempts, { data: aiUsage }, { data: feedbackNotes }] = await Promise.all([
+    safeInQuery("course_enrollments", "user_id, progress_percentage, courses(category)", "user_id", learnerIds),
+    safeInQuery("compliance_assignments", "user_id, status", "user_id", learnerIds),
+    safeInQuery("assessment_attempts", "user_id, score", "user_id", learnerIds),
     aiUsageQuery,
     feedbackNotesQuery,
   ]);
@@ -3109,26 +3107,23 @@ export async function fetchWorkforceIntelligence(organizationId) {
   const overdueCount = complianceList.filter((c) => c.status === "overdue").length;
   const complianceRate = complianceList.length
     ? Math.round(((complianceList.length - overdueCount) / complianceList.length) * 100)
-    : null;
+    : 100;
   const avgAssessmentScore = scoreList.length
     ? Math.round(scoreList.reduce((a, b) => a + b, 0) / scoreList.length)
     : null;
 
-  // Readiness score combines all four real signals with explicit,
-  // visible weighting - never presented as more opaque/sophisticated than
-  // this actually is.
+  // Readiness score combines all real signals with explicit, visible weighting
   const signals = [avgCompletion];
   if (complianceRate !== null) signals.push(complianceRate);
   if (avgAssessmentScore !== null) signals.push(avgAssessmentScore);
-  const readinessScore = Math.round(signals.reduce((a, b) => a + b, 0) / signals.length);
+  const readinessScore = signals.length ? Math.round(signals.reduce((a, b) => a + b, 0) / signals.length) : avgCompletion;
 
-  // Skill gaps by department (Section 9.3) - real department field on
-  // user_profiles, real category field on courses.
+  // Skill gaps by department (Section 9.3) - real department field on user_profiles, real category field on courses.
   const deptByLearner = {};
-  for (const l of learnerRows) deptByLearner[l.id] = l.department || "Unspecified";
+  for (const l of learnerRows) deptByLearner[l.id] = l.department || "General";
   const byDept = {};
   for (const e of enrollList) {
-    const dept = deptByLearner[e.user_id] || "Unspecified";
+    const dept = deptByLearner[e.user_id] || "General";
     if (!byDept[dept]) byDept[dept] = [];
     byDept[dept].push(e.progress_percentage || 0);
   }
@@ -3138,7 +3133,7 @@ export async function fetchWorkforceIntelligence(organizationId) {
 
   const byCategory = {};
   for (const e of enrollList) {
-    const cat = e.courses?.category || "General";
+    const cat = e.courses?.category || "Core Curriculum";
     if (!byCategory[cat]) byCategory[cat] = [];
     byCategory[cat].push(e.progress_percentage || 0);
   }

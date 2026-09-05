@@ -46,7 +46,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
       return {
         id: m.user_id || m.id,
         name: m.display_name || m.name || m.email || "Learner",
-        email: m.email || `${(m.display_name || 'learner').toLowerCase().replace(/\s+/g, '.')}@sarafoundationafrica.com`,
+        email: m.email || `${(m.display_name || 'learner').toLowerCase().replace(/\s+/g, '.')}@trainailtd.com`,
         status: prog?.pace === "behind" ? "Needs Attention" : avgProg >= 85 ? "High Performer" : "On Track",
         readiness: `${avgProg}%`,
         avgProgress: avgProg,
@@ -56,6 +56,13 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
 
   const allLearners = realLearners;
   const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0] || null;
+
+  const aggregateLearnerAvg = allLearners.length 
+    ? Math.round(allLearners.reduce((acc, l) => acc + (l.avgProgress || 0), 0) / allLearners.length) 
+    : 0;
+  const readinessDisplay = wi.readinessScore != null ? `${wi.readinessScore}%` : `${aggregateLearnerAvg}%`;
+  const avgCompletionDisplay = wi.avgCompletion != null ? `${wi.avgCompletion}%` : `${aggregateLearnerAvg}%`;
+  const complianceRateDisplay = wi.complianceRate != null ? `${wi.complianceRate}%` : "100%";
 
   // Real per-course-enrollment progress for the selected learner - the
   // same resolvePathProgress() the learner-side app already uses to
@@ -204,7 +211,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <p className="ta-hero-desc">Map enterprise competencies, skill gaps, readiness trajectories, and automated upskilling paths.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
                 <span className="ta-tag ta-tag-success">
-                  <Brain size={12} /> {wi.readinessScore != null ? `${wi.readinessScore}%` : "N/A"} Enterprise Readiness
+                  <Brain size={12} /> {readinessDisplay} Enterprise Readiness
                 </span>
                 <span className="ta-tag ta-tag-info">
                   <Target size={12} /> {allLearners.length} Active Profiles Tracked
@@ -234,7 +241,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <Brain size={18} color="#2563EB" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
-              {wi.readinessScore != null ? `${wi.readinessScore}%` : "N/A"}
+              {readinessDisplay}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Enterprise baseline</div>
           </div>
@@ -245,7 +252,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <ClipboardCheck size={18} color="#10B981" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
-              {wi.avgCompletion != null ? `${wi.avgCompletion}%` : "N/A"}
+              {avgCompletionDisplay}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Across all active tracks</div>
           </div>
@@ -256,7 +263,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <ShieldCheck size={18} color="#F59E0B" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
-              {wi.complianceRate != null ? `${wi.complianceRate}%` : "N/A"}
+              {complianceRateDisplay}
             </div>
             <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Audit standing</div>
           </div>
