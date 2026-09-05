@@ -24,7 +24,7 @@ const DEFAULT_CHAPTERS = [
 
 // Interactive Synchronized Video Transcript Lines
 const DEFAULT_TRANSCRIPT = [
-  { time: "00:00", seconds: 0, speaker: "Instructor", text: "Welcome back! In this masterclass module, we are diving deep into production-grade multi-agent AI architecture." },
+  { time: "00:00", seconds: 0, speaker: "Instructor", text: "Welcome back! In this course module, we are diving deep into production-grade multi-agent AI architecture." },
   { time: "01:15", seconds: 75, speaker: "Instructor", text: "Before we write our first function call, let's examine why traditional single-prompt chains break down in enterprise applications." },
   { time: "03:45", seconds: 225, speaker: "Instructor", text: "Here we have our design tokens and variable schema. Notice how structured JSON definitions allow seamless synchronization." },
   { time: "06:20", seconds: 380, speaker: "Instructor", text: "Let's inspect the payload received from the API and observe how the latency drops under 180 milliseconds." },
@@ -39,7 +39,7 @@ const DEFAULT_TRANSCRIPT = [
 const LESSON_RESOURCES = [
   { id: "res-1", title: "Starter Code Repository (GitHub)", type: "GitHub Repo", size: "ZIP • 4.2 MB", icon: Code2, url: "https://github.com" },
   { id: "res-2", title: "Complete Figma Design Tokens & Variables Kit", type: "Figma File", size: "FIG • 18.5 MB", icon: Layers, url: "https://figma.com" },
-  { id: "res-3", title: "Masterclass Slide Deck & Architecture Diagrams", type: "PDF Document", size: "PDF • 8.1 MB", icon: FileText, url: "#" },
+  { id: "res-3", title: "Course Slide Deck & Architecture Diagrams", type: "PDF Document", size: "PDF • 8.1 MB", icon: FileText, url: "#" },
   { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: BookOpen, url: "#" }
 ];
 
@@ -276,10 +276,10 @@ export function LessonScreen({
           </button>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em" }}>
-              {course?.category || "Masterclass Track"} • Lesson {currentLessonIndex + 1} of {rawLessons.length}
+              {course?.category || "Course Track"} • Lesson {currentLessonIndex + 1} of {rawLessons.length}
             </div>
             <div style={{ fontWeight: 800, fontSize: "clamp(12.5px, 2.5vw, 15px)", color: "var(--text)", lineHeight: 1.3, wordBreak: "break-word" }}>
-              {course?.title || "AI Product Architecture Masterclass"}
+              {course?.title || "AI Product Architecture Course"}
             </div>
           </div>
         </div>
@@ -612,7 +612,7 @@ export function LessonScreen({
                   {lesson?.title}
                 </h2>
                 <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, margin: 0 }}>
-                  In this comprehensive masterclass module, you will learn the foundational architecture for building resilient multi-agent AI systems, configuring design tokens with vector variables, and optimizing sub-second query performance in production environments.
+                  In this comprehensive course module, you will learn the foundational architecture for building resilient multi-agent AI systems, configuring design tokens with vector variables, and optimizing sub-second query performance in production environments.
                 </p>
               </div>
 

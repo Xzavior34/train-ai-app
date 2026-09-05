@@ -162,7 +162,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
             <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
               <div>
                 <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Student Rating Breakdown</div>
-                <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Verified reviews from completed cohorts and masterclasses</div>
+                <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Verified reviews from completed cohorts and courses</div>
               </div>
               <Tag tone="warning"><Star size={12} fill="#F59E0B" /> {ratingVal} Star Avg</Tag>
             </div>

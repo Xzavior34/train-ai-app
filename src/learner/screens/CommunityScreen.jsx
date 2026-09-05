@@ -81,6 +81,22 @@ export function CommunityScreen({
         <ChevronRight size={16} color="var(--text-3)" style={{ flexShrink: 0 }} />
       </div>
 
+      {/* Messages */}
+      <div className="tai-card tai-card-hover" style={{ padding: 16, borderRadius: 12, border: "1px solid var(--border)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }} onClick={() => push("messages")}>
+        <div className="tai-row tai-gap10" style={{ alignItems: "center", minWidth: 0 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 9, background: "rgba(37, 99, 235, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Users size={18} color="var(--primary)" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.03em" }}>Messages &amp; 1-on-1s</div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              Direct messages with your instructors and mentors
+            </div>
+          </div>
+        </div>
+        <ChevronRight size={16} color="var(--text-3)" style={{ flexShrink: 0 }} />
+      </div>
+
       {/* Current leaderboard ranking */}
       <div onClick={() => push("leaderboard")} style={{ cursor: "pointer" }}>
         <WeeklyLeagueCard rows={leaderboardQuery.data || []} loading={leaderboardQuery.loading} />
