@@ -34,7 +34,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
   // when there is no Supabase client at all (true offline/dev mode).
   const wi = wiQuery.data || {};
 
-  const progressOverviewQuery = useSupabaseQuery(async () => orgId ? fetchOrgLearnerProgressOverview(orgId) : [], [orgId]);
+  const progressOverviewQuery = useSupabaseQuery(async () => fetchOrgLearnerProgressOverview(orgId), [orgId]);
   const learnerProgressList = progressOverviewQuery.data || [];
 
   const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId), [orgId]);

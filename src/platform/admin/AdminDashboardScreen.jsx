@@ -8,14 +8,14 @@ import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, f
 export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelector, isPlatformOwner }) {
   const showToast = useContext(ToastContext);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
-  const orgQuery = useSupabaseQuery(async () => orgId ? fetchOrganizationById(orgId) : null, [orgId]);
-  const statsQuery = useSupabaseQuery(async () => orgId ? fetchOrgDashboardStats(orgId) : null, [orgId]);
-  const tasksQuery = useSupabaseQuery(async () => orgId ? fetchTodaysTasks(orgId) : null, [orgId]);
-  const cohortProgressQuery = useSupabaseQuery(async () => orgId ? fetchCohortProgressSummary(orgId) : [], [orgId]);
-  const activityLogQuery = useSupabaseQuery(async () => orgId ? fetchOrgActivityLog(orgId) : [], [orgId]);
-  const riskQuery = useSupabaseQuery(async () => orgId ? fetchStudentRiskList(orgId) : [], [orgId]);
-  const mentorsQuery = useSupabaseQuery(async () => orgId ? fetchTopMentors(orgId) : [], [orgId]);
-  const sessionsQuery = useSupabaseQuery(async () => orgId ? fetchUpcomingOrgSessions(orgId) : [], [orgId]);
+  const orgQuery = useSupabaseQuery(async () => fetchOrganizationById(orgId), [orgId]);
+  const statsQuery = useSupabaseQuery(async () => fetchOrgDashboardStats(orgId), [orgId]);
+  const tasksQuery = useSupabaseQuery(async () => fetchTodaysTasks(orgId), [orgId]);
+  const cohortProgressQuery = useSupabaseQuery(async () => fetchCohortProgressSummary(orgId), [orgId]);
+  const activityLogQuery = useSupabaseQuery(async () => fetchOrgActivityLog(orgId), [orgId]);
+  const riskQuery = useSupabaseQuery(async () => fetchStudentRiskList(orgId), [orgId]);
+  const mentorsQuery = useSupabaseQuery(async () => fetchTopMentors(orgId), [orgId]);
+  const sessionsQuery = useSupabaseQuery(async () => fetchUpcomingOrgSessions(orgId), [orgId]);
 
   // The real fix behind "organizations have to pay to see the admin
   // dashboard" - previously nothing checked this at all; self-serve
