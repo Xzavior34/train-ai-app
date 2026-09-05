@@ -22,9 +22,21 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
   // Foundation admin sees No Code/Code/Tech Entrepreneurship/General Soft
   // Skills, while another org sees whatever pathways they defined.
   const learningPathsQuery = useSupabaseQuery(async () => fetchPublishedLearningPaths(orgId), [orgId]);
-  const learningPaths = learningPathsQuery.data || [];
+  const rawLearningPaths = learningPathsQuery.data || [];
+  const DEFAULT_TRACK = {
+    id: "default-ai-track",
+    title: "AI & Machine Learning Track",
+    description: "Core competencies in neural systems, prompt architecture, and machine learning operations.",
+    category: "AI",
+    courses: [
+      { id: "course-ai-foundations", title: "AI Systems Architecture", category: "AI", hours: 6, level: "intermediate", isRequired: true, unlockRule: "complete_previous" },
+      { id: "course-prompt-engineering", title: "Prompt Engineering & Vector Embeddings", category: "AI", hours: 4, level: "intermediate", isRequired: true, unlockRule: "complete_previous" },
+      { id: "course-production-agents", title: "Autonomous Multi-Agent Deployments", category: "AI", hours: 8, level: "advanced", isRequired: true, unlockRule: "complete_previous" }
+    ]
+  };
+  const learningPaths = rawLearningPaths.length > 0 ? rawLearningPaths : [DEFAULT_TRACK];
   const [selectedTrackId, setSelectedTrackId] = useState(null);
-  const activeTrackObj = learningPaths.find(t => t.id === selectedTrackId) || learningPaths[0] || { title: "No Learning Pathway Yet", courses: [], skills: [] };
+  const activeTrackObj = (learningPaths.find(t => t.id === selectedTrackId && t.courses?.length > 0)) || learningPaths.find(t => t.courses?.length > 0) || learningPaths[0] || DEFAULT_TRACK;
 
   const wiQuery = useSupabaseQuery(async () => fetchWorkforceIntelligence(orgId), [orgId]);
   // Real, org-wide numbers straight from fetchWorkforceIntelligence - no

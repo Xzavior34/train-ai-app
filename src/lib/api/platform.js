@@ -2325,18 +2325,11 @@ export async function fetchAllPlatformLearners(organizationId) {
       };
     });
   }
-  let query = supabase
-    .from("user_profiles")
-    .select("id, display_name, avatar_url, role, school, department, email, created_at, organization_id")
-    .order("display_name", { ascending: true });
-  if (organizationId && organizationId !== "demo-org-id") {
-    query = query.eq("organization_id", organizationId);
-  }
-  const { data: profiles, error } = await query;
-  if (error) { console.warn("Error fetching learner profiles:", error); return []; }
 
+  const profiles = await fetchOrgMembers(organizationId);
   const learnerProfiles = (profiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
-  const learnerIds = learnerProfiles.map(p => p.id);
+  const learners = learnerProfiles.length > 0 ? learnerProfiles : (profiles || []);
+  const learnerIds = learners.map(p => p.id);
 
   let sessionsByLearner = {};
   if (learnerIds.length) {
@@ -2352,6 +2345,8 @@ export async function fetchAllPlatformLearners(organizationId) {
 
   let progressByLearner = {};
   let courseIdsByLearner = {};
+  let quizScoresByLearner = {};
+
   if (learnerIds.length) {
     const [enrollments, instructorEnrollments, attempts] = await Promise.all([
       safeInQuery("course_enrollments", "user_id, course_id, progress_percentage", "user_id", learnerIds),
@@ -2385,23 +2380,23 @@ export async function fetchAllPlatformLearners(organizationId) {
     Object.entries(courseIdsByLearner).map(([uid, ids]) => [uid, [...ids].map((cid) => courseTitleById[cid]).filter(Boolean)])
   );
 
-  let quizScoresByLearner = {};
-
-  return learnerProfiles.map(p => {
+  return learners.map(p => {
     const id = p.id;
-    const name = p.display_name || "Learner";
+    const name = p.display_name || p.name || p.email || "Learner";
     const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "L";
     const progressList = progressByLearner[id] || [];
     const progress = progressList.length ? Math.round(progressList.reduce((a, b) => a + b, 0) / progressList.length) : null;
     const quizScores = quizScoresByLearner[id] || [];
     const quizAvg = quizScores.length ? Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length) : null;
-    const email = p.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@trainailtd.com`;
+    const defaultDomain = p.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
+    const email = p.email || (name ? `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : `learner@${defaultDomain}`);
     return {
       id,
       name,
       email,
       initials,
       avatar_url: p.avatar_url,
+      cohort_name: p.cohort_name || null,
       sessionsCompleted: sessionsByLearner[id] || 0,
       progress,
       quizAvg,
