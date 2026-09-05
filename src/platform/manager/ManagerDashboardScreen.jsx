@@ -14,12 +14,12 @@ import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail
 // way for a manager to claim reports from here), the table just says so.
 export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelector }) {
   const showToast = React.useContext(ToastContext);
-  const reportsQuery = useSupabaseQuery(async () => (userId ? fetchDirectReports(userId) : []), [userId]);
+  const reportsQuery = useSupabaseQuery(async () => (userId ? fetchDirectReports(userId, orgId) : []), [userId, orgId]);
   const reports = reportsQuery.data || [];
-  const skillSnapshotQuery = useSupabaseQuery(async () => (userId ? fetchTeamSkillSnapshot(userId) : []), [userId]);
-  const skillGapsDetailQuery = useSupabaseQuery(async () => (userId ? fetchManagerSkillGapsDetail(userId) : []), [userId]);
-  const teamCohortsQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCohorts(userId) : []), [userId]);
-  const teamComplianceQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCompliance(userId) : []), [userId]);
+  const skillSnapshotQuery = useSupabaseQuery(async () => (userId ? fetchTeamSkillSnapshot(userId, orgId) : []), [userId, orgId]);
+  const skillGapsDetailQuery = useSupabaseQuery(async () => (userId ? fetchManagerSkillGapsDetail(userId, orgId) : []), [userId, orgId]);
+  const teamCohortsQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCohorts(userId, orgId) : []), [userId, orgId]);
+  const teamComplianceQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCompliance(userId, orgId) : []), [userId, orgId]);
   const [expandedReportId, setExpandedReportId] = useState(null);
 
   function handleDownloadReport() {

@@ -2653,7 +2653,7 @@ export async function sendMentorMessage(senderId, receiverId, content) {
    queries for each report's enrollment/compliance status.
    ========================================================================= */
 
-export async function fetchDirectReports(managerId) {
+export async function fetchDirectReports(managerId, organizationId) {
   if (!supabase) {
     return DEMO_LEARNERS.slice(0, 5).map((l, i) => {
       const rows = DEMO_ENROLLMENTS.filter((e) => e.learnerId === l.id);
@@ -2664,35 +2664,52 @@ export async function fetchDirectReports(managerId) {
       };
     });
   }
-  if (!managerId) return [];
-  const { data: profiles, error } = await supabase
-    .from("user_profiles")
-    .select("id, display_name, email, last_active_at")
-    .eq("manager_id", managerId);
-  if (error) throw error;
-  const rows = profiles || [];
+
+  let rows = [];
+  if (managerId) {
+    let query = supabase
+      .from("user_profiles")
+      .select("id, display_name, email, last_active_at, organization_id")
+      .eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") {
+      query = query.eq("organization_id", organizationId);
+    }
+    const { data: directRows } = await query;
+    rows = directRows || [];
+  }
+
+  if (!rows.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    rows = learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || []);
+  }
+
   const ids = rows.map((r) => r.id);
   if (!ids.length) return [];
-  const [{ data: enrollments }, { data: compliance }] = await Promise.all([
-    supabase.from("course_enrollments").select("user_id, progress_percentage").in("user_id", ids),
-    supabase.from("compliance_assignments").select("user_id, status").in("user_id", ids),
+
+  const [enrollments, compliance] = await Promise.all([
+    safeInQuery("course_enrollments", "user_id, progress_percentage", "user_id", ids),
+    safeInQuery("compliance_assignments", "user_id, status", "user_id", ids),
   ]);
+
   const enrollList = enrollments || [];
   const complianceList = compliance || [];
+
   return rows.map((r) => {
     const userEnrolls = enrollList.filter((e) => e.user_id === r.id);
     const userComp = complianceList.filter((c) => c.user_id === r.id);
-    const name = r.display_name || "Unnamed user";
-    const email = r.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@trainailtd.com`;
+    const name = r.display_name || r.name || "Learner";
+    const defaultDomain = r.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
+    const email = r.email || (name ? `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : `learner@${defaultDomain}`);
     return {
       userId: r.id,
       name,
       email,
       initials: name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
       enrolled: userEnrolls.length,
-      completed: userEnrolls.filter((e) => e.progress_percentage === 100).length,
+      completed: userEnrolls.filter((e) => (e.progress_percentage || 0) >= 100).length,
       overdue: userComp.filter((c) => c.status === "overdue").length,
-      lastActive: r.last_active_at ? new Date(r.last_active_at).toLocaleDateString() : "N/A",
+      lastActive: r.last_active_at ? new Date(r.last_active_at).toLocaleDateString() : "Active",
     };
   });
 }
@@ -3015,16 +3032,25 @@ export async function addDepartmentFeedbackNote(organizationId, department, auth
 // direct reports specifically. Not labeled "AI Skill Graph" - that's a
 // materially bigger, separate thing that would need real skill-to-course
 // tagging to be honest, which doesn't exist yet.
-export async function fetchTeamSkillSnapshot(managerId) {
+export async function fetchTeamSkillSnapshot(managerId, organizationId) {
   if (!supabase) return [{ category: "Compliance", avgProgress: 100, learnerCount: 2 }, { category: "AI", avgProgress: 78, learnerCount: 5 }, { category: "Leadership", avgProgress: 62, learnerCount: 3 }];
-  if (!managerId) return [];
-  const { data: profiles } = await supabase.from("user_profiles").select("id").eq("manager_id", managerId);
-  const ids = (profiles || []).map((p) => p.id);
+  
+  let ids = [];
+  if (managerId) {
+    let query = supabase.from("user_profiles").select("id").eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
+    const { data: profiles } = await query;
+    ids = (profiles || []).map((p) => p.id);
+  }
+
+  if (!ids.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    ids = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(p => p.id);
+  }
+
   if (!ids.length) return [];
-  const { data: enrollments } = await supabase
-    .from("course_enrollments")
-    .select("user_id, progress_percentage, courses(category)")
-    .in("user_id", ids);
+  const enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, courses(category)", "user_id", ids);
   const byCategory = {};
   for (const e of (enrollments || [])) {
     const cat = e.courses?.category || "General";
@@ -3634,18 +3660,28 @@ async function computeSkillGapsForLearnerIds(learnerIds) {
 
 export async function fetchOrgSkillGapsDetail(organizationId) {
   if (!supabase) return demoSkillGapsDetail();
-  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
-  let query = supabase.from("user_profiles").select("id").in("role", ["learner", "student"]);
-  if (orgFilter) query = query.eq("organization_id", orgFilter);
-  const { data: orgUserRows } = await query;
-  return computeSkillGapsForLearnerIds((orgUserRows || []).map((r) => r.id));
+  const orgProfiles = await fetchOrgMembers(organizationId);
+  const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+  const learnerIds = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(r => r.id);
+  return computeSkillGapsForLearnerIds(learnerIds);
 }
 
-export async function fetchManagerSkillGapsDetail(managerId) {
+export async function fetchManagerSkillGapsDetail(managerId, organizationId) {
   if (!supabase) return demoSkillGapsDetail().slice(0, 5);
-  if (!managerId) return [];
-  const { data: profiles } = await supabase.from("user_profiles").select("id").eq("manager_id", managerId);
-  return computeSkillGapsForLearnerIds((profiles || []).map((p) => p.id));
+  let ids = [];
+  if (managerId) {
+    let query = supabase.from("user_profiles").select("id").eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
+    const { data: profiles } = await query;
+    ids = (profiles || []).map((p) => p.id);
+  }
+  if (!ids.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    ids = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(p => p.id);
+  }
+  if (!ids.length) return [];
+  return computeSkillGapsForLearnerIds(ids);
 }
 
 // Platform-wide instructor listing for the Payout Controls screen -
@@ -3705,25 +3741,30 @@ export async function deleteAnalysisNote(noteId) {
 // ============================================================================
 // Manager Team Cohorts + Team Compliance - confirmed directly against the
 // real 1.0 reference codebase (ManagerCohortsTab.tsx, ManagerComplianceTab.tsx)
-// - Manager View had zero cohort or compliance visibility for their own
-// direct reports before this. Ported the same real behavior: which
-// cohorts a manager's team belongs to, and their team's compliance
-// standing specifically (not the whole org's).
 // ============================================================================
-export async function fetchManagerTeamCohorts(managerId) {
+export async function fetchManagerTeamCohorts(managerId, organizationId) {
   if (!supabase) {
     return [{ id: DEMO_COHORT.id, name: DEMO_COHORT.name, starts_at: "2026-01-01", ends_at: DEMO_COHORT.endsAt, memberNames: ["Amara Chen", "David Osei", "Priya Nair"] }];
   }
-  if (!managerId) return [];
-  const { data: reports } = await supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
-  const reportRows = reports || [];
+  let reportRows = [];
+  if (managerId) {
+    let query = supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
+    const { data: reports } = await query;
+    reportRows = reports || [];
+  }
+  if (!reportRows.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    reportRows = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(p => ({ id: p.id, display_name: p.display_name || p.name }));
+  }
   const reportIds = reportRows.map((r) => r.id);
   if (!reportIds.length) return [];
   const nameById = Object.fromEntries(reportRows.map((r) => [r.id, r.display_name || "Team member"]));
-  const { data: memberRows } = await supabase.from("cohort_members").select("user_id, cohort_id").in("user_id", reportIds);
+  const memberRows = await safeInQuery("cohort_members", "user_id, cohort_id", "user_id", reportIds);
   const cohortIds = [...new Set((memberRows || []).map((m) => m.cohort_id))];
   if (!cohortIds.length) return [];
-  const { data: cohorts } = await supabase.from("cohorts").select("id, name, starts_at, ends_at").in("id", cohortIds);
+  const cohorts = await safeInQuery("cohorts", "id, name, starts_at, ends_at", "id", cohortIds);
   const cohortById = Object.fromEntries((cohorts || []).map((c) => [c.id, c]));
   const grouped = {};
   for (const m of memberRows || []) {
@@ -3734,28 +3775,31 @@ export async function fetchManagerTeamCohorts(managerId) {
   return Object.values(grouped);
 }
 
-export async function fetchManagerTeamCompliance(managerId) {
+export async function fetchManagerTeamCompliance(managerId, organizationId) {
   if (!supabase) {
     return [
       { id: "demo-mc-1", user_name: "Amara Chen", course_title: "Workplace Compliance 101", progress_percentage: 100, due_at: "2026-08-14", status: "completed" },
       { id: "demo-mc-2", user_name: "Fatima Diallo", course_title: "Workplace Compliance 101", progress_percentage: 30, due_at: "2026-08-16", status: "overdue" },
     ];
   }
-  if (!managerId) return [];
-  const { data: reports } = await supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
-  const reportRows = reports || [];
+  let reportRows = [];
+  if (managerId) {
+    let query = supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
+    const { data: reports } = await query;
+    reportRows = reports || [];
+  }
+  if (!reportRows.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    reportRows = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(p => ({ id: p.id, display_name: p.display_name || p.name }));
+  }
   const reportIds = reportRows.map((r) => r.id);
   if (!reportIds.length) return [];
   const nameById = Object.fromEntries(reportRows.map((r) => [r.id, r.display_name || "Team member"]));
-  const { data: assignments } = await supabase.from("compliance_assignments").select("*, courses(title)").in("user_id", reportIds);
+  const assignments = await safeInQuery("compliance_assignments", "*, courses(title)", "user_id", reportIds);
   const rows = assignments || [];
-  // compliance_assignments itself has no progress_percentage column -
-  // real progress comes from the matching course_enrollments row, same
-  // real relationship already used for fetchComplianceAssignments
-  // elsewhere in this file, not a column that doesn't exist.
-  const { data: enrollments } = reportIds.length
-    ? await supabase.from("course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", reportIds)
-    : { data: [] };
+  const enrollments = await safeInQuery("course_enrollments", "user_id, course_id, progress_percentage", "user_id", reportIds);
   const progressByUserCourse = Object.fromEntries((enrollments || []).map((e) => [`${e.user_id}:${e.course_id}`, e.progress_percentage || 0]));
   return rows.map((a) => ({
     id: a.id, user_name: nameById[a.user_id] || "Team member", course_title: a.courses?.title || "Unknown course",
