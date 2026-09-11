@@ -28,6 +28,11 @@ export function MentorsScreen({
 }) {
   const [expandedMentorId, setExpandedMentorId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  // When an instructor has no published recurring availability, the learner
+  // proposes a specific date/time instead of the request silently landing
+  // on an arbitrary "24 hours from now" slot with no input from them.
+  const [proposedDate, setProposedDate] = useState("");
+  const [proposedTime, setProposedTime] = useState("");
 
   useEffect(() => {
     if (!initialSelectedMentorId) return;
@@ -49,6 +54,8 @@ export function MentorsScreen({
     setRequestingSession(false);
     setBookingDay(null);
     setBookingTime("");
+    setProposedDate("");
+    setProposedTime("");
   }
 
   async function confirmBooking() {
@@ -56,17 +63,27 @@ export function MentorsScreen({
     let scheduledAt;
     if (hasAvailability && selectedSlot) {
       scheduledAt = nextDateForDayTime(selectedSlot.day_of_week, bookingTime).toISOString();
+    } else if (proposedDate && proposedTime) {
+      scheduledAt = new Date(`${proposedDate}T${proposedTime}`).toISOString();
     } else {
       scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     }
-    await bookMentorshipSession({ learnerId: session.user.id, mentorId: sessionMentorChoice.id, title: sessionTopicInput.trim(), scheduledAt, meetingUrl: sessionMentorChoice.meetingUrl });
+    // The instructor hasn't published a schedule, so this is a proposal,
+    // not a confirmed booking - say so in the title/notes rather than
+    // implying the instructor already agreed to this exact time.
+    const title = hasAvailability
+      ? sessionTopicInput.trim()
+      : `${sessionTopicInput.trim()} (proposed time - awaiting instructor confirmation)`;
+    await bookMentorshipSession({ learnerId: session.user.id, mentorId: sessionMentorChoice.id, title, scheduledAt, meetingUrl: sessionMentorChoice.meetingUrl });
     closeBooking();
     setSessionTopicInput("");
     upcomingSessionsQuery?.refetch?.();
-    showToast?.("Instructor session requested successfully!");
+    showToast?.(hasAvailability ? "Instructor session requested successfully!" : "Time proposed - the instructor will confirm or suggest another time.");
   }
 
-  const canConfirm = sessionTopicInput.trim() && (!hasAvailability || (selectedSlot && bookingTime));
+  const canConfirm = sessionTopicInput.trim() && (
+    hasAvailability ? (selectedSlot && bookingTime) : (proposedDate && proposedTime)
+  );
 
   const filteredMentors = mentorsList.filter(m => {
     if (searchQuery && !m.name.toLowerCase().includes(searchQuery.toLowerCase()) && !m.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -124,7 +141,34 @@ export function MentorsScreen({
         <div className="tai-label tai-mt16">Select Available Day</div>
         {mentorAvailabilityQuery?.loading && <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 6 }}>Loading instructor schedule...</div>}
         {!mentorAvailabilityQuery?.loading && !hasAvailability && (
-          <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 6 }}>This instructor hasn't published recurring slots yet. Request will be submitted as tentative.</div>
+          <div className="tai-mt8">
+            <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+              This instructor hasn't published recurring slots yet. Propose a date and time - they'll confirm or suggest another.
+            </div>
+            <div className="tai-row tai-gap10 tai-mt10" style={{ flexWrap: "wrap" }}>
+              <div style={{ flex: "1 1 160px" }}>
+                <div className="tai-label">Proposed Date</div>
+                <input
+                  className="tai-input tai-mt6"
+                  type="date"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  value={proposedDate}
+                  min={new Date().toISOString().slice(0, 10)}
+                  onChange={e => setProposedDate(e.target.value)}
+                />
+              </div>
+              <div style={{ flex: "1 1 140px" }}>
+                <div className="tai-label">Proposed Time</div>
+                <input
+                  className="tai-input tai-mt6"
+                  type="time"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  value={proposedTime}
+                  onChange={e => setProposedTime(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
         )}
         {hasAvailability && (
           <div className="tai-scrollx tai-mt8">

@@ -127,16 +127,28 @@ export async function fetchOrgMembers(organizationId) {
     const cohorts = await safeInQuery("cohorts", "id, name", "id", cohortIds);
     cohortNameById = Object.fromEntries((cohorts || []).map((c) => [c.id, c.name]));
   }
-  const cohortNameByUserId = Object.fromEntries(
-    (memberRows || []).map((m) => [m.user_id, cohortNameById[m.cohort_id] || null])
-  );
+  // A learner can belong to more than one cohort (cohort_members only enforces
+  // unique(cohort_id, user_id), not one-cohort-per-user), so collapsing to a
+  // single cohort name here must aggregate every membership, not just keep
+  // whichever memberRows entry happened to land last for that user_id -
+  // otherwise this list silently disagreed with the member detail modal
+  // (fetchUserDetailForAdmin), which already lists every cohort a person is in.
+  const cohortNamesByUserId = {};
+  (memberRows || []).forEach((m) => {
+    const name = cohortNameById[m.cohort_id];
+    if (!name) return;
+    if (!cohortNamesByUserId[m.user_id]) cohortNamesByUserId[m.user_id] = [];
+    if (!cohortNamesByUserId[m.user_id].includes(name)) cohortNamesByUserId[m.user_id].push(name);
+  });
   return profiles.map((p) => {
     const defaultDomain = p.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
     const email = p.email || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : null);
+    const cohortNames = cohortNamesByUserId[p.id] || [];
     return {
       ...p,
       email,
-      cohort_name: cohortNameByUserId[p.id] || null,
+      cohort_name: cohortNames.length ? cohortNames.join(", ") : null,
+      cohort_names: cohortNames,
     };
   });
 }
@@ -2117,6 +2129,43 @@ export async function sendBroadcastEmail({ recipientGroup, specificEmail, subjec
   return data;
 }
 
+// The broadcast composers (EmailCenterScreen, EmailsScreen) offer an
+// "in-app notification" delivery channel toggle alongside email, but the
+// advanced-broadcast-email edge function only ever sends email - nothing
+// wrote a row into real_notifications, so admins believed a broadcast had
+// "appeared in the bell" when it never had. This inserts the real rows for
+// a known, explicit list of recipient user ids (real_notifications columns:
+// user_id, type, title, message, action_url, is_read, created_at - all
+// confirmed against supabase/migrations/0003_mentors_sessions_messaging.sql).
+// Only call this where the caller already has the concrete recipient id
+// list in hand (e.g. a specific-email send, or an org's member list) -
+// never guess at a broad recipient_group's membership client-side, since
+// that could silently notify the wrong set of people.
+export async function fetchUserIdByEmail(email) {
+  if (!supabase || !email) return null;
+  const { data } = await supabase.from("user_profiles").select("id").eq("email", email.trim()).maybeSingle();
+  return data?.id || null;
+}
+
+export async function createInAppNotificationsForUsers(userIds, { title, message, actionUrl } = {}) {
+  if (!supabase || !Array.isArray(userIds) || !userIds.length || !title) return { inserted: 0 };
+  const rows = userIds.map((userId) => ({
+    user_id: userId,
+    type: "broadcast",
+    title,
+    message: message || null,
+    action_url: actionUrl || null,
+  }));
+  let inserted = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const chunk = rows.slice(i, i + 500);
+    const { error } = await supabase.from("real_notifications").insert(chunk);
+    if (error) { console.warn("In-app notification insert warning:", error); continue; }
+    inserted += chunk.length;
+  }
+  return { inserted };
+}
+
 /* ==========================================================================
    SUPER ADMIN. Learning tracks (derived from courses.category. There is
    no dedicated "tracks" table in the schema), Sara Foundation email
@@ -2669,7 +2718,7 @@ export async function fetchDirectReports(managerId, organizationId) {
   if (managerId) {
     let query = supabase
       .from("user_profiles")
-      .select("id, display_name, email, last_active_at, organization_id")
+      .select("id, display_name, last_active_at, organization_id")
       .eq("manager_id", managerId);
     if (organizationId && organizationId !== "demo-org-id") {
       query = query.eq("organization_id", organizationId);
@@ -3186,9 +3235,14 @@ export async function fetchWorkforceIntelligence(organizationId) {
 // yet, is reported honestly (score: null) rather than defaulted to a number.
 export async function fetchLearnerAssessmentScoresForCourses(userId, courseIds) {
   if (!supabase || !userId || !courseIds?.length) return [];
+  // Note: passing_score_pct lives on certificate_templates, not on
+  // assessments itself - there is no such column here. Every consumer of
+  // `passingScorePct` below already falls back to 70 (`?? 70`), matching the
+  // default used everywhere else this value is set (certificate_templates,
+  // quizzes.passing_score).
   const { data: assessments, error: aErr } = await supabase
     .from("assessments")
-    .select("id, course_id, passing_score_pct")
+    .select("id, course_id")
     .in("course_id", courseIds);
   if (aErr) { console.warn("Assessment lookup warning:", aErr); return []; }
   const list = assessments || [];

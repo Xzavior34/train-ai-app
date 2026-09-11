@@ -464,6 +464,16 @@ export async function sendAIChatMessage({ conversationId, userId, content, role 
 }
 
 // Community & Groups
+//
+// `community_posts` has no `study_group_id` column - it is a single global
+// feed (see 0004_community_gamification_admin.sql); per-study-group
+// discussion lives in the separate `study_group_messages` table instead.
+// This used to filter on `study_group_id` regardless (`.is(..., null)` for
+// the general feed, `.eq(...)` for a specific group), which errored on
+// every call since the column doesn't exist - the only real caller
+// (useLearnerData.js) always calls this with no id, so the community feed
+// never loaded a single post. The `studyGroupId` parameter is kept for a
+// future per-group feed but is a no-op until such a column/table exists.
 export async function fetchCommunityPosts(studyGroupId = null) {
   if (!supabase) return [];
   let query = supabase
@@ -471,22 +481,8 @@ export async function fetchCommunityPosts(studyGroupId = null) {
     .select("*, post_comments(*), post_reactions(*)")
     .order("created_at", { ascending: false });
 
-  if (studyGroupId) {
-    query = query.eq("study_group_id", studyGroupId);
-  } else {
-    query = query.is("study_group_id", null);
-  }
-
-  let { data, error } = await query;
-  if (error && (error.code === "42703" || error.message?.includes("study_group_id"))) {
-    const fallback = await supabase
-      .from("community_posts")
-      .select("*, post_comments(*), post_reactions(*)")
-      .order("created_at", { ascending: false });
-    data = fallback.data;
-    error = fallback.error;
-  }
-  if (error) return [];
+  const { data, error } = await query;
+  if (error) { console.warn("Community posts fetch warning:", error); return []; }
   const rows = data || [];
   // Batch-fetch profiles for both post authors AND comment authors in one
   // round trip, so comment threads can show real names/avatars instead of

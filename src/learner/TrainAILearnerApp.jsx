@@ -197,7 +197,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   const learnerData = useLearnerData(session, screen, params);
   const {
     user, courses, coursesLoading, courseById, lessonsForCurrentCourse, courseLessonsQuery,
-    courseNotesQuery, courseDiscussionQuery, courseReviewsQuery, lessonNotesQuery,
+    courseNotesQuery, courseDiscussionQuery, courseReviewsQuery, lessonNotesQuery, lessonDiscussionQuery,
     quizzesQuery, quizAttemptsQuery, postsQuery, studyGroupsQuery,
     myGroupIdsQuery, communityPeopleQuery, activityFeedQuery, memberStatsQuery, notificationsQuery, upcomingSessionsQuery, mentorsQuery,
     cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery, cohortCoursesQuery, cohortMembersQuery,
@@ -807,6 +807,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   lessonId={params.lessonId}
                   session={session}
                   lessonNotesQuery={lessonNotesQuery}
+                  lessonDiscussionQuery={lessonDiscussionQuery}
+                  postCourseDiscussionMessage={postCourseDiscussionMessage}
                   noteInputText={noteInputText} setNoteInputText={setNoteInputText}
                   back={back} push={push} showToast={showToast}
                   markLessonComplete={markLessonComplete} enrollmentsQuery={enrollmentsQuery}
@@ -843,6 +845,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   coachMessages={coachMessagesQuery.data || []} coachMessagesLoading={coachMessagesQuery.loading}
                   coachInput={coachInput} setCoachInput={setCoachInput} coachSending={coachSending}
                   onSendCoachMessage={handleSendCoachMessage}
+                  gamificationStatsQuery={gamificationStatsQuery}
                 />
               )}
               {screen === "community" && (

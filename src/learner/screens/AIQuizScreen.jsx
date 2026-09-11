@@ -29,7 +29,23 @@ export function AIQuizScreen({
   quizAttemptsQuery, quizHistory, weakAreas, session, showToast, submitQuizAnswers,
   generateAIQuiz, awardAIQuizCompletionPoints, credits, consumeCredit, onBuyCredits, onRequestCredits,
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
+  gamificationStatsQuery,
 }) {
+  const DAILY_QUIZ_GOAL = 3;
+  const todayKey = new Date().toDateString();
+  const quizzesCompletedToday = (quizAttemptsQuery?.data || []).filter(
+    (a) => a.completed_at && new Date(a.completed_at).toDateString() === todayKey
+  ).length;
+  const dailyGoalPct = Math.min(100, Math.round((quizzesCompletedToday / DAILY_QUIZ_GOAL) * 100));
+  // gamificationStatsQuery.total_points is a lifetime, all-source total
+  // (lessons + quizzes + logins combined - see user_gamification_stats),
+  // not a quiz-only figure, so summing the fetched quiz_attempts rows
+  // themselves is what "Quiz Points" actually means here. quizAttemptsQuery
+  // only loads the most recent 10 attempts, so this is a recent total, not
+  // an all-time one - labeled accordingly below.
+  const recentQuizPoints = (quizAttemptsQuery?.data || []).reduce((sum, a) => sum + (a.total_points || 0), 0);
+  const hasQuizAttempts = (quizAttemptsQuery?.data || []).length > 0;
+  const practiceStreakDays = gamificationStatsQuery?.data?.streak_days ?? null;
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [activeThreadId, setActiveThreadId] = useState("thread-1");
@@ -650,21 +666,21 @@ export function AIQuizScreen({
                 <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
                   <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>Assessment Daily Goal</span>
-                    <Tag tone="primary">1 of 3 Done</Tag>
+                    <Tag tone="primary">{quizzesCompletedToday} of {DAILY_QUIZ_GOAL} Done</Tag>
                   </div>
-                  <ProgressBar value={33} height={8} />
+                  <ProgressBar value={dailyGoalPct} height={8} />
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Trophy size={20} color="#F59E0B" />
-                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>340 XP</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Total Quiz Points</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>{hasQuizAttempts ? `${recentQuizPoints} XP` : "—"}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Recent Quiz Points</div>
                   </div>
 
                   <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Flame size={20} color="#EF4444" />
-                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>8 Days</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>{practiceStreakDays != null ? `${practiceStreakDays} Day${practiceStreakDays === 1 ? "" : "s"}` : "—"}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Practice Streak</div>
                   </div>
                 </div>

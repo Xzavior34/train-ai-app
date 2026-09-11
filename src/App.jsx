@@ -196,7 +196,20 @@ export default function App() {
           setUserRoles(rolesList);
           setHasPlatformRole(mode === "platform");
           setViewMode(mode);
-          setNeedsOnboarding(!personalization);
+          // Admin-Managed Grouping: organizations/admins now control learner
+          // groupings, track badges, and course visibility directly (cohort
+          // assignment + per-cohort course assignment in the admin People/
+          // Cohort screens - both already real, schema-backed features).
+          // The old self-selection onboarding wall duplicated and could
+          // conflict with that admin-managed assignment, so it no longer
+          // blocks anyone from entering the app. A learner who has never
+          // personalized still gets a default row seeded quietly in the
+          // background so nothing that reads user_personalization elsewhere
+          // (e.g. SkillMasteryCard) breaks on a missing row.
+          setNeedsOnboarding(false);
+          if (!personalization && session?.user?.id) {
+            saveMyPersonalization(session.user.id, [], "beginner").catch(() => {});
+          }
           setOnboardingChecked(true);
         }
       } catch {
@@ -351,19 +364,18 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <LoadingScreen message="Loading personalized learning tracks..." />
+        <LoadingScreen message="Loading your account..." />
       </>
     );
   }
-  if (needsOnboarding) {
-    return (
-      <>
-        <OfflineIndicator mode={offlineMode} />
-        <OnboardingPage onComplete={handleOnboardingComplete} />
-        <ConsentBanner session={session} />
-      </>
-    );
-  }
+  // needsOnboarding is intentionally always false now - see the effect above
+  // for why (Admin-Managed Grouping: learners no longer self-select a track/
+  // level before entering the app; admins assign cohorts/courses instead).
+  // handleOnboardingComplete and OnboardingPage are kept, unused, in case a
+  // future per-organization setting wants to bring self-service onboarding
+  // back for organizations that prefer it.
+  void needsOnboarding;
+  void handleOnboardingComplete;
 
   return (
     <>

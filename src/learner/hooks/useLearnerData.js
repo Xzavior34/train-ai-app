@@ -655,6 +655,17 @@ export function useLearnerData(session, screen, params) {
     return fetchLessonNotes(session.user.id, params.lessonId);
   }, [session?.user?.id, screen === "lesson" ? params?.lessonId : null]);
 
+  // Lesson Q&A - same real course_discussions/course_discussion_messages
+  // tables as courseDiscussionQuery above, scoped to this specific lesson
+  // instead of the whole course.
+  const lessonDiscussionQuery = useSupabaseQuery(async () => {
+    if (!params?.id || !params?.lessonId || screen !== "lesson") return { discussion: null, messages: [] };
+    const discussion = await fetchOrCreateCourseDiscussion(params.id, params.lessonId);
+    if (!discussion) return { discussion: null, messages: [] };
+    const messages = await fetchCourseDiscussionMessages(discussion.id);
+    return { discussion, messages };
+  }, [screen === "lesson" ? params?.id : null, screen === "lesson" ? params?.lessonId : null]);
+
   const quizzesQuery = useSupabaseQuery(async () => fetchAvailableQuizzes(), []);
   const quizAttemptsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
@@ -884,6 +895,7 @@ export function useLearnerData(session, screen, params) {
     lessonsForCurrentCourse,
     courseNotesQuery,
     courseDiscussionQuery,
+    lessonDiscussionQuery,
     courseReviewsQuery,
     lessonNotesQuery,
     quizzesQuery,

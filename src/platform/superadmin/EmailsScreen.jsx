@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { TopBar, ToastContext } from "../components/PlatformUI.jsx";
 import { Mail, Send, Users, RefreshCw } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchEmailCampaigns, previewBroadcastRecipientCount, sendBroadcastEmail } from "../../lib/api/platform.js";
+import { fetchEmailCampaigns, previewBroadcastRecipientCount, sendBroadcastEmail, fetchUserIdByEmail, createInAppNotificationsForUsers } from "../../lib/api/platform.js";
 
 // Recipient groups match the live "advanced-broadcast-email" edge function's
 // `recipient_group` enum exactly (see supabase/functions/advanced-broadcast-email/index.ts
@@ -76,6 +76,26 @@ export function EmailsScreen() {
         htmlContent,
         channels,
       });
+      // The edge function only ever emails - it never wrote to
+      // real_notifications, so the "in-app notification" checkbox did
+      // nothing. We can only safely resolve this ourselves for the
+      // specific-email case (a known single recipient); broader groups
+      // (all/active_users/organizations/etc.) are checked disabled below
+      // because their membership is resolved server-side inside the edge
+      // function and re-deriving it here risks notifying the wrong people.
+      if (channels.in_app && needsSpecificEmail && specificEmail.trim()) {
+        try {
+          const userId = await fetchUserIdByEmail(specificEmail.trim());
+          if (userId) {
+            await createInAppNotificationsForUsers([userId], {
+              title: subject.trim(),
+              message: "You have a new message from Train AI.",
+            });
+          }
+        } catch (e) {
+          console.warn("In-app notification broadcast warning:", e);
+        }
+      }
       setLastResult(result);
       setSubject("");
       setBody("");
@@ -141,11 +161,19 @@ export function EmailsScreen() {
             <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-2)" }}>
               <input type="checkbox" checked readOnly disabled /> Email
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-2)" }}>
-              <input type="checkbox" checked={channels.in_app} onChange={(e) => setChannels((c) => ({ ...c, in_app: e.target.checked }))} /> In-app notification
+            <label
+              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: needsSpecificEmail ? "var(--text-2)" : "var(--text-3)" }}
+              title={needsSpecificEmail ? "" : "Only available when sending to a specific email - broader groups are resolved server-side and can't be safely mirrored into notifications client-side"}
+            >
+              <input
+                type="checkbox"
+                checked={needsSpecificEmail && channels.in_app}
+                disabled={!needsSpecificEmail}
+                onChange={(e) => setChannels((c) => ({ ...c, in_app: e.target.checked }))}
+              /> In-app notification{!needsSpecificEmail ? " (specific email only)" : ""}
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-2)" }}>
-              <input type="checkbox" checked={channels.push} onChange={(e) => setChannels((c) => ({ ...c, push: e.target.checked }))} /> Push notification
+            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-3)" }} title="Push delivery isn't wired up yet">
+              <input type="checkbox" checked={false} disabled /> Push notification (coming soon)
             </label>
           </div>
 

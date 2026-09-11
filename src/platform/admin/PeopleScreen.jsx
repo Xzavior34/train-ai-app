@@ -764,7 +764,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                       </th>
                       <th style={{ minWidth: 180 }}>Member</th>
                       <th>Role</th>
-                      <th>Cohort / Track</th>
+                      <th>Cohort</th>
                       <th>Attendance</th>
                       <th style={{ minWidth: 150 }}>Course Progress</th>
                       <th>Status</th>

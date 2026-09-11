@@ -25,132 +25,69 @@ function resolveAvatar(l, index = 0) {
 }
 
 export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, push }) {
-  const [timeframe, setTimeframe] = useState("week"); // "all" | "month" | "week" | "cohort"
+  const [timeframe, setTimeframe] = useState("all"); // "all" | "month" | "week" | "cohort" | "custom"
   const [searchQuery, setSearchQuery] = useState("");
+  const [rangeStart, setRangeStart] = useState(() => new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10));
+  const [rangeEnd, setRangeEnd] = useState(() => new Date().toISOString().slice(0, 10));
 
-  const DEFAULT_LEADERBOARD = [
-    {
-      id: "l-1",
-      rank: 1,
-      name: "Anna Marie",
-      role: "Lead UI Architect",
-      cohort: "Spring Cohort 2026",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=140&auto=format&fit=crop&q=80",
-      xp: 6840,
-      streak: 18,
-      completedCourses: 8,
-      badgesCount: 14,
-      change: "up"
-    },
-    {
-      id: "l-2",
-      rank: 2,
-      name: "David Vance",
-      role: "AI Engineer",
-      cohort: "Spring Cohort 2026",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=140&auto=format&fit=crop&q=80",
-      xp: 6120,
-      streak: 14,
-      completedCourses: 7,
-      badgesCount: 12,
-      change: "up"
-    },
-    {
-      id: "l-3",
-      rank: 3,
-      name: "Elena Rostova",
-      role: "Prompt Systems Designer",
-      cohort: "Spring Cohort 2026",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=140&auto=format&fit=crop&q=80",
-      xp: 5790,
-      streak: 12,
-      completedCourses: 6,
-      badgesCount: 11,
-      change: "same"
-    },
-    {
-      id: "l-4",
-      rank: 4,
-      name: user?.name || "Evelyn Hayes",
-      role: "UX & AI Designer",
-      cohort: "Spring Cohort 2026",
-      avatar: user?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=140&auto=format&fit=crop&q=80",
-      xp: user?.totalPoints || 4520,
-      streak: user?.streak || 8,
-      completedCourses: 4,
-      badgesCount: 9,
-      isCurrentUser: true,
-      change: "up"
-    },
-    {
-      id: "l-5",
-      rank: 5,
-      name: "Jordan Reyes",
-      role: "Spatial UX Fellow",
-      cohort: "Spring Cohort 2026",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=140&auto=format&fit=crop&q=80",
-      xp: 4210,
-      streak: 9,
-      completedCourses: 4,
-      badgesCount: 8,
-      change: "down"
-    },
-    {
-      id: "l-6",
-      rank: 6,
-      name: "Chloe Chen",
-      role: "Design Systems Fellow",
-      cohort: "Spring Cohort 2026",
-      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=140&auto=format&fit=crop&q=80",
-      xp: 3980,
-      streak: 7,
-      completedCourses: 3,
-      badgesCount: 7,
-      change: "up"
-    },
-    {
-      id: "l-7",
-      rank: 7,
-      name: "Marcus Thorne",
-      role: "Product Designer",
-      cohort: "Q1 Onboarding Cohort",
-      avatar: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=140&auto=format&fit=crop&q=80",
-      xp: 3640,
-      streak: 6,
-      completedCourses: 3,
-      badgesCount: 6,
-      change: "same"
-    },
-    {
-      id: "l-8",
-      rank: 8,
-      name: "Priya Nair",
-      role: "Data & ML Engineer",
-      cohort: "Q1 Onboarding Cohort",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=140&auto=format&fit=crop&q=80",
-      xp: 3410,
-      streak: 5,
-      completedCourses: 2,
-      badgesCount: 5,
-      change: "down"
+  const userId = session?.user?.id || null;
+
+  // "This Week"/"This Month" resolve to a real [start, end) window computed
+  // client-side; "Custom" uses the two date pickers below. "All Time" and
+  // "My Cohort" don't need a window at all - they hit different queries.
+  const periodWindow = useMemo(() => {
+    const now = new Date();
+    if (timeframe === "week") {
+      const start = new Date(now); start.setDate(start.getDate() - 7);
+      return { start: start.toISOString(), end: now.toISOString() };
     }
-  ];
+    if (timeframe === "month") {
+      const start = new Date(now); start.setMonth(start.getMonth() - 1);
+      return { start: start.toISOString(), end: now.toISOString() };
+    }
+    if (timeframe === "custom" && rangeStart && rangeEnd) {
+      return { start: new Date(rangeStart).toISOString(), end: new Date(new Date(rangeEnd).getTime() + 86400000).toISOString() };
+    }
+    return null;
+  }, [timeframe, rangeStart, rangeEnd]);
 
-  const rawLearners = (leaderboardQuery?.data && leaderboardQuery.data.length > 0)
-    ? leaderboardQuery.data.map((l, i) => ({
-        id: l.user_id || `l-${i}`,
-        rank: i + 1,
-        name: l.display_name || l.name || "Learner",
-        role: l.role || "Specialist",
-        cohort: l.cohort_name || "Active Batch",
-        avatar: resolveAvatar(l, i),
-        xp: l.total_points || l.points || l.xp || 1000,
-        streak: l.streak || l.streak_days || 5,
-        completedCourses: l.completed_courses || l.completedCourses || 2,
-        badgesCount: l.badges_count || l.badgesCount || 4,
-        isCurrentUser: l.user_id === session?.user?.id || l.you || false
-      }))
-    : DEFAULT_LEADERBOARD;
+  const periodQuery = useSupabaseQuery(async () => {
+    if (!periodWindow) return null;
+    return fetchLeaderboardForPeriod(periodWindow.start, periodWindow.end, 50);
+  }, [periodWindow?.start, periodWindow?.end]);
+
+  const cohortQuery = useSupabaseQuery(async () => {
+    if (timeframe !== "cohort" || !userId) return null;
+    return fetchMyCohortLeaderboard(userId, 50);
+  }, [timeframe, userId]);
+
+  // Real source for the current tab. "All Time" reuses the shared
+  // all-time top-50 query every other screen already draws from
+  // (lib/hooks/useLearnerData.js); the other tabs hit their own query above.
+  const activeData = timeframe === "week" || timeframe === "month" || timeframe === "custom"
+    ? periodQuery.data
+    : timeframe === "cohort"
+      ? cohortQuery.data
+      : leaderboardQuery?.data;
+  const activeLoading = timeframe === "week" || timeframe === "month" || timeframe === "custom"
+    ? periodQuery.loading
+    : timeframe === "cohort"
+      ? cohortQuery.loading
+      : leaderboardQuery?.loading;
+
+  const rawLearners = (activeData || []).map((l, i) => ({
+    id: l.user_id || `l-${i}`,
+    rank: i + 1,
+    name: l.display_name || l.name || "Learner",
+    role: l.role || "Specialist",
+    cohort: l.cohort_name || "Active Batch",
+    avatar: resolveAvatar(l, i),
+    xp: l.total_points || l.period_points || l.points || l.xp || 0,
+    streak: l.streak || l.streak_days || 0,
+    completedCourses: l.completed_courses || l.completedCourses || 0,
+    badgesCount: l.badges_count || l.badgesCount || Math.max(0, Math.floor((l.total_points || l.period_points || 0) / 400)),
+    isCurrentUser: l.user_id === userId || l.you || false
+  }));
 
   const learners = rawLearners.map((l, i) => ({
     ...l,
@@ -161,6 +98,8 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
     l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const myEntry = learners.find(l => l.isCurrentUser) || null;
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -179,6 +118,21 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
         sub="Compete with learners across your cohort & track XP standing"
         onBack={back}
       />
+
+      {activeLoading && (
+        <div className="tai-card" style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
+          Loading standings...
+        </div>
+      )}
+      {!activeLoading && learners.length === 0 && (
+        <div className="tai-card" style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
+          {timeframe === "cohort"
+            ? "You're not in a cohort yet, so there's no cohort leaderboard to show."
+            : "No activity recorded in this range yet. Complete a lesson or quiz to appear here."}
+        </div>
+      )}
+      {!activeLoading && learners.length > 0 && (
+      <>
 
       {/* =========================================================================
           TOP 3 PODIUM HERO SECTION (Adaptive Liquid Glass)
@@ -348,10 +302,11 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
         <div className="tai-row tai-gap8" style={{ overflowX: "auto", paddingBottom: 2 }}>
           {[
+            { k: "all", label: "All Time" },
             { k: "week", label: "This Week" },
             { k: "month", label: "This Month" },
             { k: "cohort", label: "My Cohort" },
-            { k: "all", label: "All Time" },
+            { k: "custom", label: "Custom Range" },
           ].map(tf => (
             <button
               key={tf.k}
@@ -393,13 +348,14 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
             <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>To</label>
             <input type="date" className="tai-input" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} style={{ padding: "6px 10px", fontSize: 12.5 }} />
           </div>
-          <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Showing standings for the selected learners; per-period history isn't available yet, so results are all-time until then.</span>
+          <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Ranked by lessons completed, quizzes taken, and daily rewards claimed within this range.</span>
         </div>
       )}
 
       {/* =========================================================================
           STICKY CURRENT USER RANK BAR
           ========================================================================= */}
+      {myEntry && (
       <div className="tai-card" style={{
         background: "rgba(37, 99, 235, 0.05)",
         border: "1px solid rgba(37, 99, 235, 0.2)",
@@ -411,25 +367,28 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
               width: 30, height: 30, borderRadius: 8, background: "#2563EB", color: "#FFFFFF",
               display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 12
             }}>
-              #4
+              #{myEntry.rank}
             </span>
-            <Avatar size={32} src={resolveAvatar(user, 3)} initials={user?.name?.[0] || "E"} />
+            <Avatar size={32} src={myEntry.avatar} initials={myEntry.name?.[0] || "L"} />
             <div>
-              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{user?.name || "Evelyn Hayes"} (You)</div>
-              <div style={{ fontSize: 11, color: "var(--text-3)" }}>Top 5% of all active learners</div>
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{myEntry.name} (You)</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)" }}>
+                {learners.length > 1 ? `Rank ${myEntry.rank} of ${learners.length} in this view` : "Only learner in this view"}
+              </div>
             </div>
           </div>
 
           <div className="tai-row tai-gap12">
             <span className="tai-row tai-gap4" style={{ fontSize: 12, fontWeight: 700, color: "#EA580C" }}>
-              <Flame size={14} /> {user?.streak || 8}d
+              <Flame size={14} /> {myEntry.streak}d
             </span>
             <span style={{ fontSize: 13.5, fontWeight: 900, color: "var(--primary)" }}>
-              {(user?.totalPoints || 4520).toLocaleString()} XP
+              {myEntry.xp.toLocaleString()} XP
             </span>
           </div>
         </div>
       </div>
+      )}
 
       {/* =========================================================================
           FULL RANKINGS TABLE
@@ -502,6 +461,8 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
           </table>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

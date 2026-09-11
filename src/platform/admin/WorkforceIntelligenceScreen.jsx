@@ -23,20 +23,25 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
   // Skills, while another org sees whatever pathways they defined.
   const learningPathsQuery = useSupabaseQuery(async () => fetchPublishedLearningPaths(orgId), [orgId]);
   const rawLearningPaths = learningPathsQuery.data || [];
-  const DEFAULT_TRACK = {
-    id: "default-ai-track",
-    title: "AI & Machine Learning Track",
-    description: "Core competencies in neural systems, prompt architecture, and machine learning operations.",
-    category: "AI",
-    courses: [
-      { id: "course-ai-foundations", title: "AI Systems Architecture", category: "AI", hours: 6, level: "intermediate", isRequired: true, unlockRule: "complete_previous" },
-      { id: "course-prompt-engineering", title: "Prompt Engineering & Vector Embeddings", category: "AI", hours: 4, level: "intermediate", isRequired: true, unlockRule: "complete_previous" },
-      { id: "course-production-agents", title: "Autonomous Multi-Agent Deployments", category: "AI", hours: 8, level: "advanced", isRequired: true, unlockRule: "complete_previous" }
-    ]
+  // This used to fall back to a fabricated "AI & Machine Learning Track"
+  // with three made-up courses whenever an org had zero published learning
+  // paths - every brand-new org silently saw fake pathway content that
+  // didn't exist in their catalog. Falling back to a real, honestly-empty
+  // placeholder instead (0 courses) keeps every downstream .courses/.title
+  // access below working without a null-check rewrite, while making the
+  // "no pathways configured yet" empty state visible instead of hidden
+  // behind fake data (same HAS_DATABASE/liveOr convention used elsewhere -
+  // an empty real result is never papered over with fabricated content).
+  const NO_PATHWAY_PLACEHOLDER = {
+    id: "no-pathway-configured",
+    title: "No Learning Pathways Yet",
+    description: "This organization hasn't published a learning pathway yet. Create one in Learning Paths to see career-progression tracking here.",
+    category: null,
+    courses: [],
   };
-  const learningPaths = rawLearningPaths.length > 0 ? rawLearningPaths : [DEFAULT_TRACK];
+  const learningPaths = rawLearningPaths.length > 0 ? rawLearningPaths : [NO_PATHWAY_PLACEHOLDER];
   const [selectedTrackId, setSelectedTrackId] = useState(null);
-  const activeTrackObj = (learningPaths.find(t => t.id === selectedTrackId && t.courses?.length > 0)) || learningPaths.find(t => t.courses?.length > 0) || learningPaths[0] || DEFAULT_TRACK;
+  const activeTrackObj = (learningPaths.find(t => t.id === selectedTrackId && t.courses?.length > 0)) || learningPaths.find(t => t.courses?.length > 0) || learningPaths[0] || NO_PATHWAY_PLACEHOLDER;
 
   const wiQuery = useSupabaseQuery(async () => fetchWorkforceIntelligence(orgId), [orgId]);
   // Real, org-wide numbers straight from fetchWorkforceIntelligence - no

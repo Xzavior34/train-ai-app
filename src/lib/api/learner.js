@@ -368,6 +368,49 @@ export async function fetchLeaderboard(limit = 50) {
   return [];
 }
 
+// "This Week"/"This Month" leaderboard tabs (see 0148_leaderboard_period_and_cohort.sql
+// for why this can't just be a date filter on user_gamification_stats -
+// that table only has a lifetime running total, no per-period history).
+export async function fetchLeaderboardForPeriod(startDate, endDate, limit = 50) {
+  if (!supabase || !startDate || !endDate) return [];
+  try {
+    const { data, error } = await supabase.rpc("get_leaderboard_for_period", {
+      p_start: startDate, p_end: endDate, p_limit: limit,
+    });
+    if (error) { console.warn("Period leaderboard fetch warning:", error); return []; }
+    return (data || []).map((r) => ({ ...r, total_points: r.period_points }));
+  } catch (e) {
+    console.warn("Period leaderboard fetch error:", e);
+    return [];
+  }
+}
+
+// "My Cohort" leaderboard tab. Looks up the learner's own cohort first
+// (a learner can technically belong to more than one; the most recently
+// joined one is used, matching how CohortScreen picks "my" cohort) then
+// ranks only that cohort's members.
+export async function fetchMyCohortLeaderboard(userId, limit = 50) {
+  if (!supabase || !userId) return [];
+  try {
+    const { data: membership } = await supabase
+      .from("cohort_members")
+      .select("cohort_id")
+      .eq("user_id", userId)
+      .order("added_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!membership?.cohort_id) return [];
+    const { data, error } = await supabase.rpc("get_cohort_leaderboard", {
+      p_cohort_id: membership.cohort_id, p_limit: limit,
+    });
+    if (error) { console.warn("Cohort leaderboard fetch warning:", error); return []; }
+    return data || [];
+  } catch (e) {
+    console.warn("Cohort leaderboard fetch error:", e);
+    return [];
+  }
+}
+
 export async function fetchMyGamificationStats(userId) {
   if (!supabase) {
     return {
@@ -536,52 +579,66 @@ export async function addCourseNote({ userId, courseId, content }) {
   return data;
 }
 
-// Course discussion (general Q&A thread per course).
-//
-// The real schema's `course_discussions` table has no "container" row /
-// `is_general` flag and no separate messages table for it - every row IS a
-// question/comment (content, title, user_id, parent_id for threading). Its
-// `course_discussion_messages` table exists instead for `course_mentor_discussions`
-// (1:1 mentor<->learner support threads), which is a different feature.
-// So there is no DB-level "discussion container" to fetch/create here; we
-// just use the courseId itself as the discussion identifier and treat
-// `course_discussions` rows for that course as the flat message list, while
-// keeping the same `{ discussion, messages }` / `{id, sender_id, content,
-// user_profiles }` shapes the UI already expects.
-export async function fetchOrCreateCourseDiscussion(courseId) {
-  if (!courseId) return null;
-  return { id: courseId };
+// Course discussion (general Q&A thread per course, or per lesson when a
+// lessonId is passed). `course_discussions` is the real thread/container
+// row (course_id, lesson_id, is_general, title) and `course_discussion_messages`
+// is the real flat message list against it (discussion_id, sender_id,
+// content, is_question, parent_id) - two separate tables, not one. An
+// earlier version of this file merged them into a single non-existent
+// shape (selecting content/user_id directly off course_discussions, which
+// has neither column), so every discussion fetch/post here silently
+// errored and the two screens that already called this (CourseDetailScreen's
+// Discussion tab, useLearnerData's courseDiscussionQuery) always showed an
+// empty thread no matter what anyone posted.
+export async function fetchOrCreateCourseDiscussion(courseId, lessonId = null) {
+  if (!supabase || !courseId) return null;
+  try {
+    let existingQuery = supabase.from("course_discussions").select("*").eq("course_id", courseId);
+    existingQuery = lessonId ? existingQuery.eq("lesson_id", lessonId) : existingQuery.eq("is_general", true);
+    const { data: existing } = await existingQuery.maybeSingle();
+    if (existing) return existing;
+
+    const { data: created, error } = await supabase
+      .from("course_discussions")
+      .insert({
+        course_id: courseId,
+        lesson_id: lessonId || null,
+        is_general: !lessonId,
+        title: lessonId ? "Lesson Q&A" : "Course Discussion",
+      })
+      .select()
+      .single();
+    if (error) { console.warn("Course discussion create warning:", error); return null; }
+    return created;
+  } catch (e) {
+    console.warn("Course discussion fetch/create error:", e);
+    return null;
+  }
 }
 
 export async function fetchCourseDiscussionMessages(discussionId) {
   if (!supabase || !discussionId) return [];
   const { data, error } = await supabase
-    .from("course_discussions")
+    .from("course_discussion_messages")
     .select("*")
-    .eq("course_id", discussionId)
+    .eq("discussion_id", discussionId)
     .order("created_at", { ascending: true });
   if (error) { console.warn("Course discussion messages fetch warning:", error); return []; }
   const rows = data || [];
-  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
-  return rows.map((r) => ({
-    id: r.id,
-    sender_id: r.user_id,
-    content: r.content,
-    created_at: r.created_at,
-    user_profiles: profiles[r.user_id] || null,
-  }));
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.sender_id));
+  return rows.map((r) => ({ ...r, user_profiles: profiles[r.sender_id] || null }));
 }
 
 export async function postCourseDiscussionMessage({ discussionId, senderId, content, isQuestion = true }) {
   if (!supabase) return null;
   const { data, error } = await supabase
-    .from("course_discussions")
+    .from("course_discussion_messages")
     .insert({
-      course_id: discussionId,
-      user_id: senderId,
+      discussion_id: discussionId,
+      sender_id: senderId,
       content,
-      title: content.slice(0, 80) || "Question",
       is_question: isQuestion,
+      sender_type: "learner",
     })
     .select()
     .single();
@@ -1284,8 +1341,8 @@ export async function fetchMyFeedbackNotes(userId) {
   try {
     const { data, error } = await supabase
       .from("feedback_notes")
-      .select("*, courses(title)")
-      .eq("user_id", userId)
+      .select("*")
+      .eq("target_learner_id", userId)
       .order("created_at", { ascending: false });
     if (error) {
       console.warn("Feedback notes fetch warning:", error);
