@@ -14,7 +14,7 @@ import { supabase } from "../supabaseClient.js";
 // user_id, learner_id, etc.) stores that same raw auth uid directly, so the
 // lookup query and the returned map must both be keyed on `user_id`, not the
 // internal `id`.
-export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url, email, role") {
+export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url, role") {
   if (!supabase || !userIds || !userIds.length) return {};
   const ids = [...new Set(userIds.filter(Boolean))];
   if (!ids.length) return {};
@@ -22,32 +22,56 @@ export async function fetchProfilesByUserIds(userIds, columns = "id, display_nam
   // This helper is the single path by which almost every admin/mentor screen
   // attaches a real name and avatar to rows from tables that only store a raw
   // auth uid (compliance assignments, course applications, payouts, sessions,
-  // mentors, moderation...). It used to filter and key on `user_profiles.user_id`,
-  // but in the shared schema `user_profiles` has no such column - its `id` IS
-  // the auth uid (which platform.js's own comments state explicitly). Every
-  // call therefore failed and returned {}, which is why so many lists showed
-  // "Learner"/"Mentor" placeholders instead of real people.
+  // mentors, moderation...). `user_profiles` has no `user_id` column at all -
+  // its own `id` column IS the auth uid (supabase/migrations/0001_init_schema.sql:
+  // "id uuid primary key references auth.users(id)"). There is also no `email`
+  // column on this table (email lives only in auth.users, which PostgREST
+  // can't query directly). Both of those were live bugs here before: the
+  // default `columns` asked for a non-existent `email`, and callers like
+  // fetchComplianceAssignments/fetchOrgActivityLog passed "user_id, ..." as
+  // a column to SELECT (not just a value to filter by) - Postgres rejected
+  // every one of those requests outright (42703 undefined column), so the
+  // profile lookup silently returned {} and every list fell back to
+  // "Learner"/"Mentor" placeholders, and any org filter keyed off the
+  // (always-missing) organization_id field dropped every row.
   //
-  // The two files disagreed about this column, so rather than trusting either
-  // one blindly this tries the schema-correct `id` shape first and falls back
-  // to the `user_id` shape if a deployment really does have it. Whichever
-  // works, the returned map is keyed on the auth uid the callers pass in.
-  const normalise = (rows) => Object.fromEntries((rows || []).map((p) => [p.user_id || p.id, p]));
+  // Only real, always-present user_profiles columns are used below; the map
+  // this returns is keyed by `id`, which is what every caller already passes
+  // in as `userIds` (the raw auth uid stored on every other table's
+  // user_id/learner_id/mentor_id column).
+  const safeColumns = columns.replace(/\buser_id\b/g, "id").replace(/\bemail\b/g, "").replace(/,\s*,/g, ",").replace(/^,\s*|,\s*$/g, "");
 
-  const byId = await supabase.from("user_profiles").select(columns).in("id", ids);
-  if (!byId.error && byId.data) return normalise(byId.data);
+  // Callers pass everything from a handful of ids up to a whole org's
+  // learner roster (700+ for Sara Foundation Africa) - a single unchunked
+  // .in("id", ids) built a URL long enough that Postgres/the gateway
+  // rejected it outright with a plain 400, so this returned {} for any
+  // large org and every list using it fell back to "Learner"/"Mentor"
+  // placeholders. Chunking in batches of 30 (same size safeInQuery in
+  // platform.js already uses for the identical reason) keeps every request
+  // well under the URL length that trips this.
+  async function queryChunked(cols, idColumn) {
+    const chunks = [];
+    for (let i = 0; i < ids.length; i += 30) chunks.push(ids.slice(i, i + 30));
+    // Fired in parallel rather than one chunk at a time - this helper backs
+    // ~40 call sites, so on a large org sequential chunking meant every one
+    // of those lists took several extra seconds to populate even once the
+    // query itself was correct.
+    const results = await Promise.all(chunks.map((chunk) => supabase.from("user_profiles").select(cols).in(idColumn, chunk)));
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) return { error: firstError, rows: null };
+    const rows = [];
+    for (const { data } of results) rows.push(...(data || []));
+    return { error: null, rows };
+  }
 
-  // If requested columns include missing fields (e.g. email/role), fall back to basic profile columns
-  const basicById = await supabase.from("user_profiles").select("id, display_name, avatar_url").in("id", ids);
-  if (!basicById.error && basicById.data) return normalise(basicById.data);
+  const { error, rows } = await queryChunked(safeColumns, "id");
+  if (!error && rows) return Object.fromEntries(rows.map((p) => [p.id, p]));
 
-  const legacyColumns = columns.includes("user_id") ? columns : columns.replace(/^id\b/, "user_id");
-  const byUserId = await supabase.from("user_profiles").select(legacyColumns).in("user_id", ids);
-  if (!byUserId.error && byUserId.data) return normalise(byUserId.data);
+  // Last-resort fallback if even the sanitized column list somehow fails.
+  const basic = await queryChunked("id, display_name, avatar_url", "id");
+  if (!basic.error && basic.rows) return Object.fromEntries(basic.rows.map((p) => [p.id, p]));
 
-  const basicByUserId = await supabase.from("user_profiles").select("user_id, display_name, avatar_url").in("user_id", ids);
-  if (!basicByUserId.error && basicByUserId.data) return normalise(basicByUserId.data);
-
+  console.warn("fetchProfilesByUserIds warning:", error);
   return {};
 }
 
@@ -733,6 +757,10 @@ export async function fetchStudyGroupMembers(groupId) {
     display_name: profiles[r.user_id]?.display_name || "Learner",
     avatar_url: profiles[r.user_id]?.avatar_url || null,
     platform_role: profiles[r.user_id]?.role || "learner",
+    // Some consumers (StudyGroupScreen, AdminStudyGroupsScreen) read a
+    // nested user_profiles object instead of the flat fields above -
+    // provide both shapes so every call site renders real names.
+    user_profiles: profiles[r.user_id] || null,
   }));
 }
 

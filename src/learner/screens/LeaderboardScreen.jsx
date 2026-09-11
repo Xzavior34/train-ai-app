@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TopBar, Tag, Avatar, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Trophy, Medal, Crown, Flame, Award, ArrowUp, ArrowDown, Minus, ArrowLeft,
   Search, Filter, Users, TrendingUp, ChevronRight, CheckCircle2
 } from "lucide-react";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
+import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { fetchLeaderboardForPeriod, fetchMyCohortLeaderboard } from "../../lib/api/learner.js";
 
 const FALLBACK_AVATARS = [
   "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=140&auto=format&fit=crop&q=80",
@@ -118,6 +120,62 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
         sub="Compete with learners across your cohort & track XP standing"
         onBack={back}
       />
+
+      {/* =========================================================================
+          CONTROLS: Timeframe Tabs & Search Filter
+          ========================================================================= */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+        <div className="tai-row tai-gap8" style={{ overflowX: "auto", paddingBottom: 2 }}>
+          {[
+            { k: "all", label: "All Time" },
+            { k: "week", label: "This Week" },
+            { k: "month", label: "This Month" },
+            { k: "cohort", label: "My Cohort" },
+            { k: "custom", label: "Custom Range" },
+          ].map(tf => (
+            <button
+              key={tf.k}
+              className="tai-btn"
+              onClick={() => setTimeframe(tf.k)}
+              style={{
+                background: timeframe === tf.k ? "#2563EB" : "var(--surface)",
+                color: timeframe === tf.k ? "#FFFFFF" : "var(--text-2)",
+                border: "1px solid var(--border)",
+                padding: "7px 12px", borderRadius: 10, fontSize: 12, fontWeight: 700,
+                cursor: "pointer"
+              }}
+            >
+              {tf.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ position: "relative", minWidth: 200, flex: 1, maxWidth: 340 }}>
+          <Search size={14} color="var(--text-3)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+          <input
+            type="text"
+            className="tai-input"
+            placeholder="Search learners..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ paddingLeft: 32, padding: "8px 12px 8px 32px", fontSize: 12.5 }}
+          />
+        </div>
+      </div>
+
+      {timeframe === "custom" && (
+        <div className="tai-card" style={{ padding: "12px 16px", borderRadius: 10, border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>From</label>
+            <input type="date" className="tai-input" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} style={{ padding: "6px 10px", fontSize: 12.5 }} />
+          </div>
+          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>To</label>
+            <input type="date" className="tai-input" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} style={{ padding: "6px 10px", fontSize: 12.5 }} />
+          </div>
+          <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Ranked by lessons completed, quizzes taken, and daily rewards claimed within this range.</span>
+        </div>
+      )}
 
       {activeLoading && (
         <div className="tai-card" style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
@@ -296,61 +354,6 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
         </div>
       </div>
 
-      {/* =========================================================================
-          CONTROLS: Timeframe Tabs & Search Filter
-          ========================================================================= */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-        <div className="tai-row tai-gap8" style={{ overflowX: "auto", paddingBottom: 2 }}>
-          {[
-            { k: "all", label: "All Time" },
-            { k: "week", label: "This Week" },
-            { k: "month", label: "This Month" },
-            { k: "cohort", label: "My Cohort" },
-            { k: "custom", label: "Custom Range" },
-          ].map(tf => (
-            <button
-              key={tf.k}
-              className="tai-btn"
-              onClick={() => setTimeframe(tf.k)}
-              style={{
-                background: timeframe === tf.k ? "#2563EB" : "var(--surface)",
-                color: timeframe === tf.k ? "#FFFFFF" : "var(--text-2)",
-                border: "1px solid var(--border)",
-                padding: "7px 12px", borderRadius: 10, fontSize: 12, fontWeight: 700,
-                cursor: "pointer"
-              }}
-            >
-              {tf.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ position: "relative", minWidth: 200, flex: 1, maxWidth: 340 }}>
-          <Search size={14} color="var(--text-3)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
-          <input
-            type="text"
-            className="tai-input"
-            placeholder="Search learners..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ paddingLeft: 32, padding: "8px 12px 8px 32px", fontSize: 12.5 }}
-          />
-        </div>
-      </div>
-
-      {timeframe === "custom" && (
-        <div className="tai-card" style={{ padding: "12px 16px", borderRadius: 10, border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>From</label>
-            <input type="date" className="tai-input" value={rangeStart} onChange={(e) => setRangeStart(e.target.value)} style={{ padding: "6px 10px", fontSize: 12.5 }} />
-          </div>
-          <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>To</label>
-            <input type="date" className="tai-input" value={rangeEnd} onChange={(e) => setRangeEnd(e.target.value)} style={{ padding: "6px 10px", fontSize: 12.5 }} />
-          </div>
-          <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Ranked by lessons completed, quizzes taken, and daily rewards claimed within this range.</span>
-        </div>
-      )}
 
       {/* =========================================================================
           STICKY CURRENT USER RANK BAR

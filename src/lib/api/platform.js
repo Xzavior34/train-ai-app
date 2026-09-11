@@ -90,10 +90,20 @@ export async function safeInQuery(tableName, selectFields, idColumn, ids) {
     const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, ids);
     return data || [];
   }
+  // Chunks used to be awaited one at a time in a for loop - correct, but on
+  // a large org (e.g. 762 members here) that's ~26 sequential round trips
+  // for every single call site using this helper, which is what made large
+  // orgs' Learner Progress/People/Analytics screens take many seconds to
+  // populate even once the queries themselves were correct. Firing every
+  // chunk in parallel and merging the results cuts that to one round trip's
+  // worth of latency regardless of org size.
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 30) chunks.push(ids.slice(i, i + 30));
+  const chunkResults = await Promise.all(
+    chunks.map((chunk) => supabase.from(tableName).select(selectFields).in(idColumn, chunk))
+  );
   const results = [];
-  for (let i = 0; i < ids.length; i += 30) {
-    const chunk = ids.slice(i, i + 30);
-    const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, chunk);
+  for (const { data } of chunkResults) {
     if (data) results.push(...data);
   }
   return results;
@@ -180,8 +190,9 @@ export async function fetchOrgMembersWithStatus() {
   const profiles = await fetchOrgMembers();
   if (!profiles.length) return [];
   const ids = profiles.map(p => p.id);
-  const { data: members, error } = await supabase.from("organization_members").select("user_id, status").in("user_id", ids);
-  if (error) console.warn("Org member status fetch warning:", error);
+  // Unchunked .in() on the full org roster hit the same URL-length 400 as
+  // the other org-scale queries fixed alongside this one - see safeInQuery.
+  const members = await safeInQuery("organization_members", "user_id, status", "user_id", ids);
   const statusById = Object.fromEntries((members || []).map(m => [m.user_id, m.status]));
   return profiles.map(p => ({ ...p, member_status: statusById[p.id] || "active" }));
 }
@@ -714,7 +725,10 @@ export async function fetchCohortProgressSummary(organizationId) {
       const userIds = (memberRows || []).map(m => m.user_id);
       let progress = 0;
       if (userIds.length) {
-        const { data: enrollments } = await supabase.from("course_enrollments").select("progress_percentage").in("user_id", userIds);
+        // A large cohort's membership can exceed the ~30-60 id URL-length
+        // ceiling that broke the other org-scale queries fixed alongside
+        // this one - see safeInQuery.
+        const enrollments = await safeInQuery("course_enrollments", "progress_percentage", "user_id", userIds);
         if (enrollments && enrollments.length) {
           progress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
         }
@@ -735,7 +749,12 @@ export async function fetchStudentRiskList(organizationId) {
     let query = supabase
       .from("user_profiles")
       .select("id, display_name, last_active_at, avatar_url")
-      .in("role", ["learner", "student"])
+      // platform_role only defines learner/mentor/admin/hr/manager/super_admin
+      // (supabase/migrations/0001_init_schema.sql) - "student" isn't a real
+      // value, so .in("role", [...,"student"]) made Postgres reject every
+      // single call with an invalid-enum-value error (400), which the
+      // catch-and-return-[] here silently swallowed every time it fired.
+      .eq("role", "learner")
       .order("last_active_at", { ascending: true, nullsFirst: true })
       .limit(6);
 
@@ -1019,14 +1038,11 @@ export async function fetchOrgSessionsOversight(organizationId, limit = 20) {
   if (!mentorIds.length) return [];
   const mentorProfiles = await fetchProfilesByUserIds((mentorRows || []).map((m) => m.user_id));
   const nameByMentor = Object.fromEntries((mentorRows || []).map(m => [m.id, mentorProfiles[m.user_id]?.display_name || "Mentor"]));
-  const { data, error } = await supabase
-    .from("mentorship_sessions")
-    .select("id, title, status, mentor_id, learner_id")
-    .in("mentor_id", mentorIds)
-    .order("scheduled_at", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  const rows = data || [];
+  // An org with many mentors can exceed the URL-length ceiling that broke
+  // the other org-scale .in() queries fixed alongside this one.
+  const rows = (await safeInQuery("mentorship_sessions", "id, title, status, mentor_id, learner_id, scheduled_at", "mentor_id", mentorIds))
+    .sort((a, b) => new Date(b.scheduled_at || 0) - new Date(a.scheduled_at || 0))
+    .slice(0, limit);
   const learnerProfiles = await fetchProfilesByUserIds(rows.map((s) => s.learner_id));
   return rows.map(s => ({
     id: s.id,
@@ -1361,9 +1377,13 @@ export async function fetchReferralAnalytics(organizationId) {
   const { data: members } = await supabase.from("user_profiles").select("id, display_name").eq("organization_id", organizationId);
   const ids = (members || []).map(m => m.id);
   if (!ids.length) return [];
-  const { data: links, error } = await supabase.from("referral_links").select("id, user_id, clicks").in("user_id", ids);
-  if (error) throw error;
-  const nameById = Object.fromEntries((members || []).map(m => [m.user_id, m.display_name || "Unknown"]));
+  // Two bugs here: an unchunked .in() on the full org roster hits the same
+  // URL-length 400 as the other org-scale queries fixed alongside this one,
+  // and nameById was keyed on `m.user_id` - a column user_profiles doesn't
+  // have (its own `id` IS the auth uid) - so every name lookup always fell
+  // through to "Unknown" even when the links query worked.
+  const links = await safeInQuery("referral_links", "id, user_id, clicks", "user_id", ids);
+  const nameById = Object.fromEntries((members || []).map(m => [m.id, m.display_name || "Unknown"]));
   const rows = await Promise.all((links || []).map(async (l) => {
     const { count } = await supabase.from("referral_signups").select("id", { count: "exact", head: true }).eq("referral_link_id", l.id).eq("signup_completed", true);
     return { name: nameById[l.user_id] || "Unknown", clicks: l.clicks || 0, signups: count || 0 };
@@ -1408,7 +1428,12 @@ export async function fetchFeedbackQueue() {
 }
 
 // Enrollment & completion trend, grouped by calendar month client-side.
-// course_enrollments has real `created_at` and `completed_at` columns but no
+// course_enrollments has real `enrolled_at` and `completed_at` columns (NOT
+// `created_at` - that column doesn't exist on this table at all, confirmed
+// against supabase/migrations/0002_progress_quizzes_cohorts.sql; querying
+// it made every single call here fail with a 42703 undefined-column error,
+// which is why "Enrollment & Completion Trend" and "Top Courses" on the
+// Analytics Hub were permanently stuck on "Loading..."). There's also no
 // FK to user_profiles (same limitation noted on fetchOrgDashboardStats
 // above), so the org's user ids are resolved first and enrollments are
 // filtered by that id list, then bucketed by month in JS - there is no
@@ -1427,7 +1452,7 @@ export async function fetchEnrollmentTrend(organizationId, monthsBack = 6) {
   const { data: orgUserRows } = await userQuery;
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
   if (!orgUserIds.length) return [];
-  const rows = await safeInQuery("course_enrollments", "created_at, completed_at", "user_id", orgUserIds);
+  const rows = await safeInQuery("course_enrollments", "enrolled_at, completed_at", "user_id", orgUserIds);
   const now = new Date();
   const buckets = [];
   for (let i = monthsBack - 1; i >= 0; i--) {
@@ -1441,8 +1466,8 @@ export async function fetchEnrollmentTrend(organizationId, monthsBack = 6) {
   }
   const bucketByKey = Object.fromEntries(buckets.map((b) => [b.key, b]));
   for (const r of rows) {
-    if (!r.created_at) continue;
-    const d = new Date(r.created_at);
+    if (!r.enrolled_at) continue;
+    const d = new Date(r.enrolled_at);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     const bucket = bucketByKey[key];
     if (!bucket) continue; // outside the requested window
@@ -1585,7 +1610,9 @@ export async function fetchCohortsWithStats(organizationId) {
     const userIds = (memberRows || []).map(m => m.user_id);
     let progress = 0;
     if (userIds.length) {
-      const { data: enrollments } = await supabase.from("course_enrollments").select("progress_percentage").in("user_id", userIds);
+      // Same URL-length ceiling as the other org/cohort-scale .in() queries
+      // fixed alongside this one - see safeInQuery.
+      const enrollments = await safeInQuery("course_enrollments", "progress_percentage", "user_id", userIds);
       if (enrollments && enrollments.length) progress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
     }
     return {
@@ -1656,7 +1683,9 @@ export async function fetchCohortDetail(cohortId) {
   let progressByUser = {};
   let progressByUserCourse = {};
   if (memberIds.length) {
-    const { data: enrollments } = await supabase.from("course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", memberIds);
+    // Same URL-length ceiling as the other cohort/org-scale .in() queries
+    // fixed alongside this one - see safeInQuery.
+    const enrollments = await safeInQuery("course_enrollments", "user_id, course_id, progress_percentage", "user_id", memberIds);
     for (const e of enrollments || []) {
       if (!progressByUser[e.user_id]) progressByUser[e.user_id] = [];
       progressByUser[e.user_id].push(e.progress_percentage || 0);
@@ -2011,12 +2040,10 @@ export async function fetchOrgPayoutRequests(organizationId) {
   if (!mentorIds.length) return [];
   const mentorProfiles = await fetchProfilesByUserIds((mentorRows || []).map((m) => m.user_id));
   const nameById = Object.fromEntries((mentorRows || []).map(m => [m.id, mentorProfiles[m.user_id]?.display_name || "Mentor"]));
-  const { data, error } = await supabase
-    .from("mentor_payout_requests")
-    .select("*")
-    .in("mentor_id", mentorIds)
-    .order("requested_at", { ascending: false });
-  if (error) throw error;
+  // Same URL-length ceiling as the other org-scale .in() queries fixed
+  // alongside this one - see safeInQuery.
+  const data = (await safeInQuery("mentor_payout_requests", "*", "mentor_id", mentorIds))
+    .sort((a, b) => new Date(b.requested_at || 0) - new Date(a.requested_at || 0));
   return (data || []).map(p => ({ id: p.id, mentor: nameById[p.mentor_id] || "Mentor", amount: p.amount, method: p.payment_method || "N/A", status: p.status }));
 }
 
@@ -3686,11 +3713,20 @@ export async function setLearnerCourseAccessPaused(learnerId, courseId, paused) 
 // ============================================================================
 async function computeSkillGapsForLearnerIds(learnerIds) {
   if (!learnerIds.length) return [];
-  const { data: profiles } = await supabase.from("user_profiles").select("id, display_name").in("id", learnerIds);
-  const { data: enrollments } = await supabase
-    .from("course_enrollments")
-    .select("user_id, progress_percentage, completed_at, courses(category)")
-    .in("user_id", learnerIds);
+  // Both queries used to run as one unchunked .in(...) call each - fine for
+  // a handful of learners, but an org with hundreds of learners (Sara
+  // Foundation Africa has 762) built a URL long enough that Postgres/the
+  // gateway rejected it outright with a plain 400 Bad Request, so this
+  // silently returned nothing for any org above roughly a few dozen
+  // learners. safeInQuery (already used elsewhere in this file for exactly
+  // this reason) chunks the id list into batches of 30.
+  const profiles = await safeInQuery("user_profiles", "id, display_name", "id", learnerIds);
+  const enrollments = await safeInQuery(
+    "course_enrollments",
+    "user_id, progress_percentage, completed_at, courses(category)",
+    "user_id",
+    learnerIds
+  );
   const byLearner = {};
   for (const e of (enrollments || [])) {
     const cat = e.courses?.category || "General";
@@ -4302,8 +4338,8 @@ export async function fetchOrgPeopleKpis(organizationId) {
   const [members, invites, stats, enrollments] = await Promise.all([
     safe(async () => (await supabase.from("organization_members").select("user_id, status").eq("organization_id", organizationId)).data || [], []),
     safe(async () => (await supabase.from("user_invitations").select("id").eq("organization_id", organizationId).eq("status", "pending")).data || [], []),
-    ids.length ? safe(async () => (await supabase.from("user_gamification_stats").select("user_id, total_points").in("user_id", ids)).data || [], []) : [],
-    ids.length ? safe(async () => (await supabase.from("course_enrollments").select("user_id, progress_percentage, completed_at").in("user_id", ids)).data || [], []) : [],
+    ids.length ? safe(() => safeInQuery("user_gamification_stats", "user_id, total_points", "user_id", ids), []) : [],
+    ids.length ? safe(() => safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", ids), []) : [],
   ]);
 
   const active = (members || []).filter((m) => m.status === "active").length;
