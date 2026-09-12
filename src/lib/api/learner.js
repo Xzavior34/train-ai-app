@@ -496,6 +496,24 @@ export async function fetchPublishedLessonCounts() {
   return counts;
 }
 
+// Real course instructor names (courses.instructor_id -> user_profiles).
+// LessonScreen/CourseDetailScreen used to hardcode "Astrid Larsson" for
+// every single lesson on every course, regardless of what course/lesson
+// was actually open - this gives real per-course instructor names to
+// replace that fake, always-wrong placeholder.
+export async function fetchCourseInstructorNames() {
+  if (!supabase) return {};
+  const { data, error } = await supabase.from("courses").select("id, instructor_id").not("instructor_id", "is", null);
+  if (error) { console.warn("Course instructor fetch warning:", error); return {}; }
+  const rows = data || [];
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.instructor_id));
+  const byCourseId = {};
+  for (const r of rows) {
+    byCourseId[r.id] = profiles[r.instructor_id]?.display_name || null;
+  }
+  return byCourseId;
+}
+
 // Course review averages/counts per course (course_reviews has no
 // aggregate view yet, so this aggregates client-side from the raw rows).
 export async function fetchCourseReviewSummaries() {
@@ -533,7 +551,7 @@ export async function fetchCourseReviews(courseId) {
 
 // Lesson timestamp notes (lesson_notes table)
 export async function fetchLessonNotes(userId, lessonId) {
-  if (!supabase || !userId || !lessonId) return [];
+  if (!supabase || !userId || !lessonId || !isValidUuid(lessonId)) return [];
   const { data, error } = await supabase
     .from("lesson_notes")
     .select("*")
@@ -546,6 +564,7 @@ export async function fetchLessonNotes(userId, lessonId) {
 
 export async function addLessonNote({ userId, lessonId, timestampSeconds, content }) {
   if (!supabase) return null;
+  if (!isValidUuid(lessonId)) throw new Error("Notes aren't available for this lesson yet.");
   const { data, error } = await supabase
     .from("lesson_notes")
     .insert({ user_id: userId, lesson_id: lessonId, timestamp_seconds: timestampSeconds, content })
@@ -590,8 +609,21 @@ export async function addCourseNote({ userId, courseId, content }) {
 // errored and the two screens that already called this (CourseDetailScreen's
 // Discussion tab, useLearnerData's courseDiscussionQuery) always showed an
 // empty thread no matter what anyone posted.
+// Placeholder curriculum (generateCurriculumForCourse in useLearnerData.js)
+// synthesizes lesson ids like "<courseId>-l1" for a course with no real
+// rows in the `lessons` table yet - those ids are not valid UUIDs, so a
+// query scoped to lesson_id would just 400 (22P02) every time and the Q&A
+// composer would silently no-op. Treat a non-UUID lessonId the same as no
+// lessonId at all: fall back to the course's general discussion thread so
+// Q&A still works, just not scoped to one specific placeholder lesson.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isValidUuid(id) {
+  return typeof id === "string" && UUID_RE.test(id);
+}
+
 export async function fetchOrCreateCourseDiscussion(courseId, lessonId = null) {
   if (!supabase || !courseId) return null;
+  if (lessonId && !isValidUuid(lessonId)) lessonId = null;
   try {
     let existingQuery = supabase.from("course_discussions").select("*").eq("course_id", courseId);
     existingQuery = lessonId ? existingQuery.eq("lesson_id", lessonId) : existingQuery.eq("is_general", true);

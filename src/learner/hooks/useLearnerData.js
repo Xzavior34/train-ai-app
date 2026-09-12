@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchLeaderboard, fetchPublishedCourses, fetchMyEnrollments,
-  fetchPublishedLessonCounts,
+  fetchPublishedLessonCounts, fetchCourseInstructorNames,
   fetchMyGamificationStats, fetchMyAchievements, fetchMyStreakActivity,
   fetchMyNotifications, fetchAvailableQuizzes,
   fetchMyQuizAttempts, fetchCourseNotes, fetchCourseReviews,
@@ -147,6 +147,7 @@ export function useLearnerData(session, screen, params) {
     return fetchMyEnrollments(session.user.id);
   }, [session?.user?.id]);
   const lessonCountsQuery = useSupabaseQuery(async () => fetchPublishedLessonCounts(), []);
+  const courseInstructorsQuery = useSupabaseQuery(async () => fetchCourseInstructorNames(), []);
   // Course ratings/reviews summary removed from the learner-facing course
   // list per the product brief ("Course UI... Remove: ... Ratings").
   // fetchCourseReviewSummaries is no longer called here; the per-course
@@ -425,6 +426,7 @@ export function useLearnerData(session, screen, params) {
     const lessonCounts = lessonCountsQuery.data || {};
     const bookmarkedIds = new Set(bookmarksQuery.data || []);
     
+    const instructorNames = courseInstructorsQuery.data || {};
     const dbCourses = (coursesQuery.data || []).map((c, i) => {
       const enrollment = enrollmentByCourseId.get(c.id);
       return {
@@ -445,19 +447,28 @@ export function useLearnerData(session, screen, params) {
         mandatory: !!c.is_mandatory,
         price: Number(c.price) || 0,
         requiresApproval: !!c.requires_approval,
+        instructor: instructorNames[c.id] || null,
       };
     });
 
     const merged = new Map();
-    DEFAULT_FALLBACK_COURSES.forEach(c => {
-      const enrollment = enrollmentByCourseId.get(c.id);
-      merged.set(c.id, {
-        ...c,
-        enrolled: !!enrollment || c.enrolled,
-        progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : c.progress,
-        isBookmarked: bookmarkedIds.has(c.id) || c.isBookmarked
+    // Mock/demo courses (course-figma-ai and friends) were being merged in
+    // unconditionally here, regardless of mockEnabled - so a real org with
+    // real courses in the database still saw fake demo courses (and, worse,
+    // could land on their lesson pages, where every real-data feature fails
+    // with "invalid input syntax for type uuid" since these ids are plain
+    // strings, not UUIDs). Only show them when mock data is actually on.
+    if (mockEnabled) {
+      DEFAULT_FALLBACK_COURSES.forEach(c => {
+        const enrollment = enrollmentByCourseId.get(c.id);
+        merged.set(c.id, {
+          ...c,
+          enrolled: !!enrollment || c.enrolled,
+          progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : c.progress,
+          isBookmarked: bookmarkedIds.has(c.id) || c.isBookmarked
+        });
       });
-    });
+    }
     dbCourses.forEach(c => {
       merged.set(c.id, c);
     });
@@ -466,10 +477,10 @@ export function useLearnerData(session, screen, params) {
   })();
 
   function courseById(id) {
-    if (!id) return courses[0] || DEFAULT_FALLBACK_COURSES[0];
+    if (!id) return courses[0] || (mockEnabled ? DEFAULT_FALLBACK_COURSES[0] : undefined);
     const found = courses.find(c => c.id === id);
     if (found) return found;
-    const fallback = DEFAULT_FALLBACK_COURSES.find(c => c.id === id);
+    const fallback = mockEnabled ? DEFAULT_FALLBACK_COURSES.find(c => c.id === id) : null;
     if (fallback) {
       const enrollment = (enrollmentsQuery.data || []).find(e => e.course_id === id);
       return {

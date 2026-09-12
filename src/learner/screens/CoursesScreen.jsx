@@ -424,8 +424,14 @@ export function CoursesScreen({
       studentsCount: c.studentsCount || `${(4.2 + idx * 1.5).toFixed(1)}k`,
       hours: c.hours || (12 + (idx % 4) * 4),
       lessonsCount: c.lessonsCount || (16 + (idx % 3) * 6),
-      instructor: c.instructor || (idx % 3 === 0 ? "Astrid Larsson" : idx % 3 === 1 ? "Alex Rivera" : "Elena Rostova"),
-instructorRole: c.instructorRole || "Lead Curriculum Specialist",
+      // Real per-course instructor comes from courses.instructor_id via
+      // useLearnerData's fetchCourseInstructorNames(). Courses without one set
+      // in the DB used to get a fake named instructor (Astrid Larsson / Alex
+      // Rivera / Elena Rostova) picked by array index - a made-up person
+      // shown as the real instructor of a real course. Use a generic label
+      // instead of inventing an identity.
+      instructor: c.instructor || null,
+      instructorRole: c.instructorRole || "Course Instructor",
       instructorAvatar: c.instructorAvatar || (idx % 2 === 0 ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80")
     };
   });
@@ -1016,7 +1022,7 @@ instructorRole: c.instructorRole || "Lead Curriculum Specialist",
                         style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }}
                       />
                       <div style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600 }}>
-                        {course.instructor || "Astrid Larsson"}
+                        {course.instructor || "Course Instructor"}
                       </div>
                     </div>
 

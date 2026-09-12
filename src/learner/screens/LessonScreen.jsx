@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { TopBar, ProgressBar, Tag, Avatar } from "../components/LearnerUI.jsx";
+import { TopBar, ProgressBar, Tag, Avatar, initialsOf } from "../components/LearnerUI.jsx";
 import {
   Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize2, Minimize2,
   CheckCircle2, ChevronRight, ChevronLeft, PlusCircle, ThumbsUp, ThumbsDown,
@@ -595,41 +595,18 @@ export function LessonScreen({
                   {lesson?.title}
                 </h2>
                 <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, margin: 0 }}>
-                  In this comprehensive course module, you will learn the foundational architecture for building resilient multi-agent AI systems, configuring design tokens with vector variables, and optimizing sub-second query performance in production environments.
+                  {lesson?.description || course?.tagline || "Follow along with the video for this lesson's key concepts."}
                 </p>
               </div>
 
-              {/* Learning Objectives Checklist */}
-              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8 }}>
-                <div style={{ fontSize: 11.5, fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
-                  What You'll Master in this Lesson
-                </div>
-                <div className="tai-col tai-gap8">
-                  {[
-                    "Architecting asynchronous function calling with schema validation.",
-                    "Configuring Figma variables & vector tokens for design system automation.",
-                    "Setting up Supabase pgvector with HNSW similarity index scoring.",
-                    "Implementing exponential backoff and jittered retry hooks for multi-agent reliability."
-                  ].map((obj, idx) => (
-                    <div key={idx} className="tai-row tai-gap8" style={{ alignItems: "flex-start", fontSize: 12.5, color: "var(--text)", fontWeight: 600 }}>
-                      <CheckCircle2 size={15} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
-                      <span>{obj}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Instructor Bio Card */}
+              {/* Instructor Bio Card - real per-course instructor (courses.instructor_id),
+                  not a hardcoded name shown for every lesson on every course. */}
               <div className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: "1 1 200px" }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                    alt="Instructor"
-                    style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-                  />
+                  <Avatar size={40} initials={initialsOf(course?.instructor || "Course Instructor")} />
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Astrid Larsson</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Lead AI Systems Architect • Former Staff Designer</div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{course?.instructor || "Course Instructor"}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{course?.category || "Course"} Instructor</div>
                   </div>
                 </div>
 
@@ -638,7 +615,7 @@ export function LessonScreen({
                   onClick={() => { setActiveTab("qa"); setShowQuestionComposer(true); }}
                   style={{ borderRadius: 10, padding: "7px 12px", fontSize: 12 }}
                 >
-                  <MessageSquare size={14} /> Ask Astrid a Question
+                  <MessageSquare size={14} /> Ask a Question
                 </button>
               </div>
             </div>

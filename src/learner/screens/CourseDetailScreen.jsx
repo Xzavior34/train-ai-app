@@ -241,10 +241,10 @@ export function CourseDetailScreen({
                 <div style={{ fontSize: 13, color: "var(--text-3)", fontWeight: 600 }}>Module Progress</div>
                 <div className="tai-row tai-between" style={{ alignItems: "baseline", marginTop: 8, marginBottom: 12 }}>
                   <span style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", letterSpacing: "-0.02em" }}>
-                    {String(lessons.filter(l => l.completed || completedLessonIds.has(`${course.id}-${l.id}`)).length || 5).padStart(2, "0")}
+                    {String(lessons.filter(l => l.completed || completedLessonIds.has(`${course.id}-${l.id}`)).length).padStart(2, "0")}
                   </span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-3)" }}>
-                    /{String(lessons.length || 13).padStart(2, "0")} Lessons
+                    /{String(lessons.length).padStart(2, "0")} Lessons
                   </span>
                 </div>
                 
