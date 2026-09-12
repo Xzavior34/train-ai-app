@@ -1432,12 +1432,16 @@ export async function fetchCohortMembers(cohortId) {
 // cross-tenant leak was found and fixed here too, sg_select_all previously
 // used "using (true)" ignoring organization_id entirely).
 export async function fetchAllStudyGroupsForOrg(organizationId) {
-  if (!supabase || !organizationId) return [];
-  const { data, error } = await supabase
+  if (!supabase) return [];
+  let query = supabase
     .from("study_groups")
-    .select("*, courses(title), study_group_members(count)")
-    .eq("organization_id", organizationId)
-    .order("name", { ascending: true });
+    .select("*, courses(title), study_group_members(count)");
+
+  if (organizationId && organizationId !== "demo-org-id") {
+    query = query.eq("organization_id", organizationId);
+  }
+
+  const { data, error } = await query.order("name", { ascending: true });
   if (error) { console.warn("Org study groups fetch warning:", error); return []; }
   return data || [];
 }

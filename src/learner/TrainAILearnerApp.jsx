@@ -170,11 +170,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       goTab("ai");
     } else if (key === "communityFeed") {
       setCommunityTab("posts");
-      if (screen === "community") {
-        setParams(p => ({ ...p, tab: "posts" }));
-      } else {
-        push("community", { tab: "posts" });
-      }
+      push("community", { tab: "posts" });
     } else if (key === "cohort") {
       push("cohort");
     } else if (key === "leaderboard") {
@@ -912,7 +908,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   cohortSessionsQuery={cohortSessionsQuery}
                   cohortCoursesQuery={cohortCoursesQuery}
                   cohortMembersQuery={cohortMembersQuery}
-                  session={session} showToast={showToast} back={back}
+                  session={session} showToast={showToast} back={back} push={push} goTab={goTab} params={params}
                 />
               )}
               {screen === "mentors" && (

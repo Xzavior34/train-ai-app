@@ -1006,10 +1006,10 @@ export function DesktopSidebar({
                       (item.key === "settings" && activeScreen === "profile") ||
                       (activeScreen === "community" && (
                         (item.key === "communityFeed" && (currentTab === "posts" || !currentTab || currentTab === "people")) ||
-                        (item.key === "studyGroup" && currentTab === "groups") ||
-                        (item.key === "mentors" && currentTab === "mentors") ||
-                        (item.key === "cohort" && currentTab === "cohorts") ||
-                        (item.key === "leaderboard" && currentTab === "rank")
+                        (item.key === "studyGroup" && (currentTab === "groups" || currentTab === "studyGroup")) ||
+                        (item.key === "mentors" && (currentTab === "tutors" || currentTab === "mentors")) ||
+                        (item.key === "cohort" && (currentTab === "cohorts" || currentTab === "cohort")) ||
+                        (item.key === "leaderboard" && (currentTab === "rank" || currentTab === "leaderboard"))
                       ));
 
                     return (

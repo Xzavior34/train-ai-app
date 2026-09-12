@@ -12,7 +12,7 @@ import { fetchAllStudyGroupsForOrg, fetchStudyGroupMembers, removeStudyGroupMemb
 // 0127_suspend_instructor_payouts.sql).
 export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
   const showToast = useContext(ToastContext);
-  const groupsQuery = useSupabaseQuery(async () => (orgId ? fetchAllStudyGroupsForOrg(orgId) : []), [orgId]);
+  const groupsQuery = useSupabaseQuery(async () => fetchAllStudyGroupsForOrg(orgId), [orgId]);
   const groups = groupsQuery.data || [];
   const [expandedGroupId, setExpandedGroupId] = useState(null);
   const membersQuery = useSupabaseQuery(async () => (expandedGroupId ? fetchStudyGroupMembers(expandedGroupId) : []), [expandedGroupId]);

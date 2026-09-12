@@ -7,11 +7,12 @@ import {
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
 import { createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
+import { fetchCohortDetail } from "../../lib/api/platform.js";
 
 export function CohortScreen({
-  cohort, cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
+  cohort: propCohort, cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
   cohortCoursesQuery, cohortMembersQuery,
-  session, showToast = () => {}, back, push, goTab
+  session, showToast = () => {}, back, push, goTab, params
 }) {
   const [tab, setTab] = useState("chat"); // "chat" | "courses" | "resources" | "sessions" | "members"
   const [expandedPostId, setExpandedPostId] = useState(null);
@@ -20,7 +21,16 @@ export function CohortScreen({
   const [replyInputs, setReplyInputs] = useState({});
   const [submittingReply, setSubmittingReply] = useState(false);
 
-  if (cohortMembershipQuery?.loading && !cohort) {
+  const targetCohortId = params?.id || params?.cohortId || propCohort?.id || cohortMembershipQuery?.data?.cohort?.id;
+
+  const fallbackCohortQuery = useSupabaseQuery(async () => {
+    if (!targetCohortId) return null;
+    return fetchCohortDetail(targetCohortId);
+  }, [targetCohortId]);
+
+  const resolvedCohort = propCohort || fallbackCohortQuery.data?.cohort || cohortMembershipQuery?.data?.cohort || null;
+
+  if (cohortMembershipQuery?.loading && fallbackCohortQuery?.loading && !resolvedCohort) {
     return (
       <div>
         <TopBar title="Cohort" onBack={back} />
@@ -29,7 +39,7 @@ export function CohortScreen({
     );
   }
 
-  if (!cohort) {
+  if (!resolvedCohort) {
     return (
       <div>
         <TopBar title="Cohort" onBack={back} />
@@ -38,23 +48,27 @@ export function CohortScreen({
     );
   }
 
-  const posts = cohortPostsQuery?.data || [];
-  const resources = cohortResourcesQuery?.data || [];
-  const sessions = cohortSessionsQuery?.data || [];
+  const cohort = resolvedCohort;
+
+  const posts = (cohortPostsQuery?.data?.length ? cohortPostsQuery.data : fallbackCohortQuery.data?.posts) || [];
+  const resources = (cohortResourcesQuery?.data?.length ? cohortResourcesQuery.data : fallbackCohortQuery.data?.resources) || [];
+  const sessions = (cohortSessionsQuery?.data?.length ? cohortSessionsQuery.data : fallbackCohortQuery.data?.sessions) || [];
+  const assignedCourses = (cohortCoursesQuery?.data?.length ? cohortCoursesQuery.data : fallbackCohortQuery.data?.learnerCourses) || [];
+  const members = (cohortMembersQuery?.data?.length ? cohortMembersQuery.data : fallbackCohortQuery.data?.members) || [];
+
   const now = Date.now();
   const upcomingSessions = sessions.filter(s => new Date(s.starts_at).getTime() >= now);
   const pastSessions = sessions.filter(s => new Date(s.starts_at).getTime() < now);
   const activityTodayQuery = useSupabaseQuery(async () => (cohort?.id ? fetchCohortActivityToday(cohort.id) : 0), [cohort?.id]);
   const activityToday = activityTodayQuery.data || 0;
 
-  const instructorMembers = (cohortMembersQuery?.data || []).filter(
+  const instructorMembers = members.filter(
     m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin"
   );
-  const peerMembers = (cohortMembersQuery?.data || []).filter(
+  const peerMembers = members.filter(
     m => m.user_profiles?.role !== "mentor" && m.user_profiles?.role !== "admin"
   );
 
-  const assignedCourses = cohortCoursesQuery?.data || [];
   const completedAssignedCount = assignedCourses.filter(cc => (cc.courses?.progress || 0) >= 100).length;
   const assignedCompletionRate = assignedCourses.length ? Math.round((completedAssignedCount / assignedCourses.length) * 100) : 0;
 

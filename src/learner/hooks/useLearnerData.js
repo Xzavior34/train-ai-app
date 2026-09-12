@@ -721,7 +721,7 @@ export function useLearnerData(session, screen, params) {
     if (!session?.user?.id) return null;
     return fetchMyCohortMembership(session.user.id);
   }, [session?.user?.id]);
-  const cohortId = cohortMembershipQuery.data?.cohort?.id || null;
+  const cohortId = params?.id || params?.cohortId || cohortMembershipQuery.data?.cohort?.id || null;
   const cohortPostsQuery = useSupabaseQuery(async () => {
     if (!cohortId) return [];
     return fetchCohortPostsFeed(cohortId);
