@@ -681,7 +681,15 @@ export async function fetchAllMentors() {
   if (error) { console.warn("Mentors directory fetch warning:", error); return []; }
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
-  return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
+  return rows.map((r) => {
+    const prof = profiles[r.user_id] || {};
+    return {
+      ...r,
+      name: prof.display_name || r.name || "Instructor",
+      avatar: prof.avatar_url || r.avatar_url || r.avatar || null,
+      user_profiles: prof,
+    };
+  });
 }
 
 // Upcoming mentorship sessions for the Schedule screen

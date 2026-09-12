@@ -119,7 +119,14 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   const [screen, setScreen] = useState(initialScreenFromLocation);
   const [params, setParams] = useState({});
   const [stack, setStack] = useState([]);
+  const [communityTab, setCommunityTab] = useState("posts");
   const { credits, addCredits, consume: consumeCredit } = useCredits(session?.user?.id);
+
+  useEffect(() => {
+    if (screen === "community" && params?.tab && params.tab !== communityTab) {
+      setCommunityTab(params.tab);
+    }
+  }, [screen, params?.tab, communityTab]);
 
   function push(nextScreen, nextParams = {}) {
     if (nextScreen === "aiQuiz") {
@@ -162,19 +169,39 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       setAiTab("quiz");
       goTab("ai");
     } else if (key === "communityFeed") {
-      goTab("community");
+      setCommunityTab("posts");
+      if (screen === "community") {
+        setParams(p => ({ ...p, tab: "posts" }));
+      } else {
+        push("community", { tab: "posts" });
+      }
     } else if (key === "cohort") {
       push("cohort");
     } else if (key === "leaderboard") {
-      push("leaderboard");
+      setCommunityTab("rank");
+      if (screen === "community") {
+        setParams(p => ({ ...p, tab: "rank" }));
+      } else {
+        push("community", { tab: "rank" });
+      }
     } else if (key === "studyGroup") {
-      push("studyGroup");
+      setCommunityTab("groups");
+      if (screen === "community") {
+        setParams(p => ({ ...p, tab: "groups" }));
+      } else {
+        push("community", { tab: "groups" });
+      }
+    } else if (key === "mentors") {
+      setCommunityTab("mentors");
+      if (screen === "community") {
+        setParams(p => ({ ...p, tab: "mentors" }));
+      } else {
+        push("community", { tab: "mentors" });
+      }
     } else if (key === "messages") {
       push("messages");
     } else if (key === "schedule") {
       push("schedule");
-    } else if (key === "mentors") {
-      push("mentors");
     } else if (key === "notifications") {
       push("notifications");
     } else if (key === "settings" || key === "notificationSettings" || key === "feedbackSupport") {
@@ -448,9 +475,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       .map(w => ({ ...w, note: `Average quiz score is ${w.mastery}%: worth another pass.` }));
   })();
 
-  const [communityTab, setCommunityTab] = useState("posts");
-  const [newPostText, setNewPostText] = useState("");
-  const [expandedPost, setExpandedPost] = useState(null);
+    const [newPostText, setNewPostText] = useState("");
+    const [expandedPost, setExpandedPost] = useState(null);
 
   const posts = (postsQuery.data || []).map(p => ({
     id: p.id,
@@ -850,6 +876,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               {screen === "community" && (
                 <CommunityScreen
                   session={session} user={user} push={push} back={back} showToast={showToast} params={params}
+                  activeTab={communityTab}
+                  onTabChange={(t) => {
+                    setCommunityTab(t);
+                    setParams(p => ({ ...p, tab: t }));
+                  }}
                   postsQuery={postsQuery}
                   createCommunityPost={createCommunityPost} addPostComment={addPostComment}
                   togglePostReaction={togglePostReaction} deleteCommunityPost={deleteCommunityPost}

@@ -381,17 +381,17 @@ export function CohortScreen({
                   <Clock size={13} />
                   <span>{new Date(s.starts_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
                   <span>•</span>
-                  <span>Facilitator: <strong>{s.instructor || "TBD"}</strong></span>
+                  <span>Facilitator: <strong>{s.host_name || s.instructor || "Sara Foundation"}</strong></span>
                 </div>
 
                 <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
-                  <Avatar src={s.instructorAvatar} initials="AL" size={32} />
+                  <Avatar src={s.instructorAvatar} initials={initialsOf(s.host_name || s.instructor || "SF")} size={32} />
                   {s.join_url ? (
                     <a href={s.join_url} target="_blank" rel="noreferrer" className="tai-btn tai-btn-primary tai-btn-sm" style={{ textDecoration: "none" }}>
                       <Video size={13} /> Join Virtual Studio →
                     </a>
                   ) : (
-                    <a href={s.recording_url || "#"} target="_blank" rel="noreferrer" className="tai-btn tai-btn-outline tai-btn-sm" style={{ textDecoration: "none" }}>
+                    <a href={s.recording_url || s.external_url || "#"} target="_blank" rel="noreferrer" className="tai-btn tai-btn-outline tai-btn-sm" style={{ textDecoration: "none" }}>
                       <Play size={13} /> Watch Replay
                     </a>
                   )}
@@ -417,12 +417,12 @@ export function CohortScreen({
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {assignedCourses.map(cc => (
-              <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 10, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id })}>
+              <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 10, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id || cc.course_id })}>
                 <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
-                  {cc.courses?.title || "Untitled course"}
+                  {cc.courses?.title || "Assigned Cohort Course"}
                 </h3>
                 <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 14px" }}>
-                  {cc.courses?.description}
+                  {cc.courses?.description || "Curriculum requirement for this cohort track."}
                 </p>
 
                 <div style={{ marginBottom: 16, background: "var(--surface-3)", padding: "12px 14px", borderRadius: 8, border: "1px solid var(--border)" }}>
@@ -436,12 +436,12 @@ export function CohortScreen({
                 </div>
 
                 <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11.5, color: "var(--danger)", fontWeight: 700 }}>
-                    Due: {new Date(cc.due_at).toLocaleDateString()}
+                  <span style={{ fontSize: 11.5, color: cc.due_at ? "var(--danger)" : "var(--text-3)", fontWeight: 700 }}>
+                    {cc.due_at ? `Due: ${new Date(cc.due_at).toLocaleDateString()}` : "Active Track"}
                   </span>
                   <button
                     className="tai-btn tai-btn-primary tai-btn-sm"
-                    onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: cc.courses?.id || "course-figma-ai" }); }}
+                    onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: cc.courses?.id || cc.course_id }); }}
                   >
                     Open Syllabus →
                   </button>
@@ -475,7 +475,7 @@ export function CohortScreen({
                 </div>
 
                 <a
-                  href={r.file_url || r.external_url || "https://figma.com"}
+                  href={r.external_url || r.file_url || r.url || "#"}
                   target="_blank"
                   rel="noreferrer"
                   className="tai-btn tai-btn-outline tai-btn-sm"

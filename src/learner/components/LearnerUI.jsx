@@ -1000,10 +1000,17 @@ export function DesktopSidebar({
                 <div className="tai-sub-items anim-fluid-entrance">
                   {category.subItems.map(item => {
                     const SubIcon = item.icon;
-                    const isSubActive = activeScreen === item.key ||
+                    const isSubActive =
+                      (activeScreen === item.key) ||
                       (item.key === "courses" && (activeScreen === "courseDetail" || activeScreen === "lesson")) ||
                       (item.key === "settings" && activeScreen === "profile") ||
-                      (item.key === "communityFeed" && activeScreen === "community");
+                      (activeScreen === "community" && (
+                        (item.key === "communityFeed" && (currentTab === "posts" || !currentTab || currentTab === "people")) ||
+                        (item.key === "studyGroup" && currentTab === "groups") ||
+                        (item.key === "mentors" && currentTab === "mentors") ||
+                        (item.key === "cohort" && currentTab === "cohorts") ||
+                        (item.key === "leaderboard" && currentTab === "rank")
+                      ));
 
                     return (
                       <div
