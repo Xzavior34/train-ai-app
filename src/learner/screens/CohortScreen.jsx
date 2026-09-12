@@ -60,17 +60,7 @@ export function CohortScreen({
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      
-      {/* Navigation Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <button
-          className="tai-btn tai-btn-outline tai-btn-sm"
-          onClick={() => (back ? back() : push ? push("community") : null)}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 8, fontWeight: 700 }}
-        >
-          <ArrowLeft size={15} /> Back to Community
-        </button>
-      </div>
+      <TopBar title={cohort.name || "Cohort"} sub={cohort.description || "Cohort Workspace"} onBack={back} />
 
       {/* =========================================================================
           HERO BANNER: Dedicated Cohort & Batch Space

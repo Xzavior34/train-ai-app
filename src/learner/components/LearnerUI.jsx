@@ -1003,7 +1003,13 @@ export function DesktopSidebar({
                     const isSubActive = activeScreen === item.key ||
                       (item.key === "courses" && (activeScreen === "courseDetail" || activeScreen === "lesson")) ||
                       (item.key === "settings" && activeScreen === "profile") ||
-                      (item.key === "communityFeed" && activeScreen === "community");
+                      (activeScreen === "community" && (
+                        (item.key === "communityFeed" && (currentTab === "posts" || !currentTab)) ||
+                        (item.key === "cohort" && currentTab === "cohorts") ||
+                        (item.key === "mentors" && currentTab === "tutors") ||
+                        (item.key === "studyGroup" && currentTab === "groups") ||
+                        (item.key === "leaderboard" && currentTab === "rank")
+                      ));
 
                     return (
                       <div
