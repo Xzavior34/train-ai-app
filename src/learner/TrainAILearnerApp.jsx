@@ -849,7 +849,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "community" && (
                 <CommunityScreen
-                  session={session} user={user} push={push} showToast={showToast}
+                  session={session} user={user} push={push} back={back} showToast={showToast} params={params}
                   postsQuery={postsQuery}
                   createCommunityPost={createCommunityPost} addPostComment={addPostComment}
                   togglePostReaction={togglePostReaction} deleteCommunityPost={deleteCommunityPost}

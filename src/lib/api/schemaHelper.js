@@ -825,6 +825,12 @@ export async function leaveStudyGroup({ studyGroupId, userId }) {
   if (error) throw error;
 }
 
+export async function deleteStudyGroup(groupId) {
+  if (!supabase || !groupId) return;
+  const { error } = await supabase.from("study_groups").delete().eq("id", groupId);
+  if (error) throw error;
+}
+
 // Study group chat - backed by the real `study_group_messages` table
 // (study_group_id, sender_id, message, media_type/url, created_at).
 export async function fetchStudyGroupMessages(groupId) {
