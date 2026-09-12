@@ -586,19 +586,8 @@ html.tai-high-contrast .ta-card {
 .ta-hero-dark .ta-hero-subcard,
 .tai-card-dark .tai-subcard,
 .ta-card-dark .ta-subcard {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  color: #FFFFFF !important;
-}
-.tai-hero-card .tai-hero-subcard *,
-.ta-hero-banner .tai-hero-subcard *,
-.tai-hero-dark .tai-hero-subcard *,
-.ta-hero-dark .tai-hero-subcard *,
-.tai-hero-dark .ta-hero-subcard *,
-.ta-hero-dark .ta-hero-subcard *,
-.tai-card-dark .tai-subcard *,
-.ta-card-dark .ta-subcard * {
-  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 .tai-hero-dark .tai-hero-subcard div:first-child,
 .ta-hero-dark .tai-hero-subcard div:first-child,

@@ -38,9 +38,21 @@ async function main() {
   console.table(courses || []);
 
   // 5. Fetch cohort_members for cohortId
-  const { data: members, error: memErr } = await supabase.from("cohort_members").select("*, user_profiles(*)").eq("cohort_id", cohortId);
+  const { data: members, error: memErr } = await supabase.from("cohort_members").select("*").eq("cohort_id", cohortId);
   console.log(`\nCohort Members (${members?.length || 0}) for cohort ${cohortId}:`, memErr);
-  console.table((members || []).map(m => ({ id: m.id, user_id: m.user_id, display_name: m.user_profiles?.display_name, role: m.user_profiles?.role })));
+  console.table(members || []);
+
+  const { data: userProfiles } = await supabase.from("user_profiles").select("id, email, display_name, role");
+  console.log("\nUser Profiles in DB:");
+  console.table(userProfiles || []);
+
+  const saraProfile = (userProfiles || []).find(p => p.email === "info@sarafoundationafrica.com");
+  console.log("\nSara Profile:", saraProfile);
+
+  if (saraProfile) {
+    const { data: saraMems } = await supabase.from("cohort_members").select("*").eq("user_id", saraProfile.id);
+    console.log(`\nSara cohort_memberships (${saraMems?.length || 0}):`, saraMems);
+  }
 
   // Also check if there are sessions/resources/courses with ANY cohort_id or null cohort_id in DB!
   const { data: allSessions } = await supabase.from("cohort_sessions").select("*");
