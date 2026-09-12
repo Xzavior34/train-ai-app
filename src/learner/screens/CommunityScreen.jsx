@@ -698,9 +698,6 @@ export function CommunityScreen({
   user = {},
   push,
   showToast,
-  params = {},
-  activeTab,
-  onTabChange,
   postsQuery = {},
   createCommunityPost,
   addPostComment,
@@ -723,20 +720,7 @@ export function CommunityScreen({
   upcomingSessionsQuery = {},
 }) {
   const myId = session?.user?.id;
-  const [tab, setTab] = useState(params?.tab || activeTab || "posts");
-
-  React.useEffect(() => {
-    if (params?.tab) {
-      setTab(params.tab);
-    } else if (activeTab) {
-      setTab(activeTab);
-    }
-  }, [params?.tab, activeTab]);
-
-  const handleTabSelect = (tabId) => {
-    setTab(tabId);
-    onTabChange?.(tabId);
-  };
+  const [tab, setTab] = useState("posts");
 
   // Posts State
   const [composerOpen, setComposerOpen] = useState(false);
@@ -1005,7 +989,7 @@ export function CommunityScreen({
           return (
             <button
               key={t.id}
-              onClick={() => handleTabSelect(t.id)}
+              onClick={() => setTab(t.id)}
               style={{
                 display: "inline-flex",
                 alignItems: "center",

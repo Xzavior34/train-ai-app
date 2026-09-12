@@ -162,20 +162,19 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       setAiTab("quiz");
       goTab("ai");
     } else if (key === "communityFeed") {
-      setCommunityTab("posts");
-      push("community", { tab: "posts" });
+      goTab("community");
     } else if (key === "cohort") {
-      setCommunityTab("cohorts");
-      push("community", { tab: "cohorts" });
+      push("cohort");
     } else if (key === "leaderboard") {
-      setCommunityTab("rank");
-      push("community", { tab: "rank" });
+      push("leaderboard");
     } else if (key === "studyGroup") {
-      setCommunityTab("groups");
-      push("community", { tab: "groups" });
+      push("studyGroup");
+    } else if (key === "messages") {
+      push("messages");
+    } else if (key === "schedule") {
+      push("schedule");
     } else if (key === "mentors") {
-      setCommunityTab("tutors");
-      push("community", { tab: "tutors" });
+      push("mentors");
     } else if (key === "notifications") {
       push("notifications");
     } else if (key === "settings" || key === "notificationSettings" || key === "feedbackSupport") {
@@ -851,9 +850,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               {screen === "community" && (
                 <CommunityScreen
                   session={session} user={user} push={push} showToast={showToast}
-                  params={params}
-                  activeTab={communityTab}
-                  onTabChange={setCommunityTab}
                   postsQuery={postsQuery}
                   createCommunityPost={createCommunityPost} addPostComment={addPostComment}
                   togglePostReaction={togglePostReaction} deleteCommunityPost={deleteCommunityPost}
