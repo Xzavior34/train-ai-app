@@ -4,6 +4,7 @@ import {
   MessageSquare, Send, Pin, Trash2, ArrowLeft, Layers, Mail, Sparkles, Crown, Star,
   Flame, Zap, Clock, Share2, X, BookOpen, UserCheck, Shield, TrendingUp,
   RefreshCw, CheckCircle2, MoreVertical, ExternalLink, Activity, Info, Award,
+  Quote,
 } from "lucide-react";
 import { Avatar, initialsOf, timeAgo, Tag } from "../components/LearnerUI.jsx";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
@@ -35,7 +36,7 @@ const TIER_CONFIG = {
   engager: {
     label: "Active Engager",
     nextLabel: "Community Leader",
-    Icon: Star,
+    Icon: Flame,
     color: "#2563EB",
     bg: "rgba(37, 99, 235, 0.12)",
     border: "rgba(37, 99, 235, 0.25)",
@@ -49,12 +50,12 @@ const TIER_CONFIG = {
     border: "rgba(124, 58, 237, 0.25)",
   },
   champion: {
-    label: "Champion",
+    label: "Community Champion",
     nextLabel: null,
-    Icon: Trophy,
-    color: "#2563EB",
-    bg: "rgba(37, 99, 235, 0.12)",
-    border: "rgba(37, 99, 235, 0.25)",
+    Icon: Crown,
+    color: "#059669",
+    bg: "rgba(5, 150, 105, 0.12)",
+    border: "rgba(5, 150, 105, 0.25)",
   },
 };
 
@@ -160,6 +161,7 @@ function LiveActivityBanner({ items = [] }) {
 function StatusCard({ stats }) {
   const tierKey = stats?.tier || "newcomer";
   const tier = TIER_CONFIG[tierKey] || TIER_CONFIG.newcomer;
+  const TierIcon = tier.Icon;
   const score = stats?.score || 0;
   const postsCount = stats?.totalPosts || 0;
   const repliesCount = stats?.totalComments || 0;
@@ -176,7 +178,7 @@ function StatusCard({ stats }) {
       }}
     >
       <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 14 }}>
-        <Trophy size={16} color="var(--primary)" />
+        <Star size={16} color="var(--primary)" />
         <span style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Your Community Status</span>
       </div>
 
@@ -197,25 +199,28 @@ function StatusCard({ stats }) {
           <Trophy size={24} color="var(--primary)" />
         </div>
         <span
+          className="tai-row tai-gap4"
           style={{
             fontSize: 11.5,
             fontWeight: 800,
             padding: "3px 12px",
             borderRadius: 999,
-            background: "var(--primary-tint)",
-            color: "var(--primary)",
-            border: "1px solid rgba(37, 99, 235, 0.25)",
+            background: tier.bg,
+            color: tier.color,
+            border: `1px solid ${tier.border}`,
+            display: "inline-flex",
+            alignItems: "center",
           }}
         >
-          {tier.label}
+          <TierIcon size={12} /> {tier.label}
         </span>
       </div>
 
       <div className="tai-row tai-gap8" style={{ marginTop: 4 }}>
         {[
           { label: "Posts", value: postsCount, icon: MessageSquare },
-          { label: "Replies", value: repliesCount, icon: Heart },
-          { label: "Score", value: score, icon: TrendingUp },
+          { label: "Replies", value: repliesCount, icon: MessageCircle },
+          { label: "Score", value: score, icon: Zap },
         ].map((s) => {
           const SIcon = s.icon;
           return (
@@ -242,10 +247,105 @@ function StatusCard({ stats }) {
 }
 
 // ---------------------------------------------------------------------------
+// Daily Motivation Quote Widget (Tab 6: Rank)
+// ---------------------------------------------------------------------------
+const MOTIVATION_QUOTES = [
+  {
+    quote: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.",
+    author: "Dr. Seuss",
+  },
+  {
+    quote: "Live as if you were to die tomorrow. Learn as if you were to live forever.",
+    author: "Mahatma Gandhi",
+  },
+  {
+    quote: "Learning is not attained by chance, it must be sought for with ardor and attended to with diligence.",
+    author: "Abigail Adams",
+  },
+  {
+    quote: "Success is the sum of small efforts, repeated day in and day out.",
+    author: "Robert Collier",
+  },
+];
+
+function DailyMotivationWidget() {
+  const [index] = useState(() => Math.floor(Math.random() * MOTIVATION_QUOTES.length));
+  const item = MOTIVATION_QUOTES[index] || MOTIVATION_QUOTES[0];
+
+  return (
+    <div
+      className="tai-card"
+      style={{
+        padding: "20px 22px",
+        background: "var(--glass-surface)",
+        border: "1px solid var(--glass-border)",
+        borderRadius: 16,
+        boxShadow: "var(--glass-shadow)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
+      <div className="tai-row tai-gap10" style={{ alignItems: "flex-start" }}>
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            background: "rgba(37, 99, 235, 0.12)",
+            border: "1px solid rgba(37, 99, 235, 0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Quote size={18} color="var(--primary)" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 13.5,
+              fontStyle: "italic",
+              color: "var(--text)",
+              lineHeight: 1.6,
+            }}
+          >
+            "{item.quote}"
+          </p>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", marginTop: 6 }}>
+            — {item.author}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <span
+          style={{
+            fontSize: 10.5,
+            fontWeight: 800,
+            padding: "2px 8px",
+            borderRadius: 999,
+            background: "var(--primary-tint)",
+            color: "var(--primary)",
+            border: "1px solid rgba(37, 99, 235, 0.25)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          ✨ Daily Motivation
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Post Card Component (Matching Exact 1.0 Production Layout)
 // ---------------------------------------------------------------------------
 function PostCard({
   post,
+  authorStats,
   onToggleLike,
   onDelete,
   likeBusy,
@@ -260,8 +360,9 @@ function PostCard({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Author tier badge
-  const authorTier = computeTier(post.likes * 10 + (post.comments?.length || 0) * 5);
+  // Author tier badge computed live from real post/comment counts
+  const postScore = (authorStats?.posts || 1) * 10 + (authorStats?.comments || 0) * 5;
+  const authorTier = computeTier(postScore);
   const tier = TIER_CONFIG[authorTier] || TIER_CONFIG.newcomer;
   const TierIcon = tier.Icon;
 
@@ -677,6 +778,24 @@ export function CommunityScreen({
     })).sort((a, b) => (b.isPinned - a.isPinned) || (new Date(b.createdAt) - new Date(a.createdAt)));
   }, [rawPosts, myId]);
 
+  // Derive author engagement scores from loaded posts and comments
+  const authorStatsMap = useMemo(() => {
+    const map = {};
+    for (const p of posts) {
+      if (!p.userId) continue;
+      if (!map[p.userId]) map[p.userId] = { posts: 0, comments: 0 };
+      map[p.userId].posts += 1;
+      for (const c of p.comments || []) {
+        const cUserId = c.user_profiles?.id || c.userId || c.user_id;
+        if (cUserId) {
+          if (!map[cUserId]) map[cUserId] = { posts: 0, comments: 0 };
+          map[cUserId].comments += 1;
+        }
+      }
+    }
+    return map;
+  }, [posts]);
+
   const filteredPosts = useMemo(() => {
     return posts.filter((p) => {
       const matchesSearch = !feedSearch.trim() ||
@@ -1053,6 +1172,7 @@ export function CommunityScreen({
               <PostCard
                 key={post.id}
                 post={post}
+                authorStats={authorStatsMap[post.userId]}
                 onToggleLike={handleToggleLike}
                 likeBusy={likeBusyId === post.id}
                 onDelete={post.isMine ? handleDeletePost : null}
@@ -1712,6 +1832,9 @@ export function CommunityScreen({
               )}
             </div>
           </div>
+
+          {/* Daily Motivation Quote Widget */}
+          <DailyMotivationWidget />
 
           {/* Weekly League Retention Card */}
           <WeeklyLeagueCard rows={leaderboardRows} loading={leaderboardQuery.loading} />

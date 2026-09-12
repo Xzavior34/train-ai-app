@@ -524,17 +524,17 @@ export async function fetchCommunityPosts(studyGroupId = null) {
   }));
 }
 
-export async function createCommunityPost({ userId, content, postType = "text", studyGroupId = null }) {
+export async function createCommunityPost({ userId, content, postType = "general" }) {
   if (!supabase) return { id: `post_${Date.now()}`, user_id: userId, content, post_type: postType, moderation_status: "approved" };
+  const insertPayload = {
+    user_id: userId,
+    content,
+    post_type: postType || "general",
+    created_at: new Date().toISOString()
+  };
   const { data, error } = await supabase
     .from("community_posts")
-    .insert({
-      user_id: userId,
-      content,
-      post_type: postType,
-      study_group_id: studyGroupId,
-      created_at: new Date().toISOString()
-    })
+    .insert(insertPayload)
     .select()
     .single();
   if (error) throw error;
@@ -549,7 +549,7 @@ export async function createCommunityPost({ userId, content, postType = "text", 
     await supabase.from("community_activity_feed").insert({
       user_id: userId,
       activity_type: "post_created",
-      activity_text: `${name} shared a new post`,
+      activity_text: `${name} just shared a new post`,
       is_public: true,
       metadata: { post_id: data.id },
     });
