@@ -539,6 +539,24 @@ export async function createCommunityPost({ userId, content, postType = "text", 
     .single();
   if (error) throw error;
 
+  // Real activity ticker feed (fetchCommunityActivityFeed) - the table
+  // already existed but nothing ever wrote to it, so the ticker was always
+  // empty. Best-effort/non-blocking: a failure here should never stop the
+  // post itself from publishing.
+  try {
+    const { data: profile } = await supabase.from("user_profiles").select("display_name").eq("id", userId).maybeSingle();
+    const name = profile?.display_name || "A learner";
+    await supabase.from("community_activity_feed").insert({
+      user_id: userId,
+      activity_type: "post_created",
+      activity_text: `${name} shared a new post`,
+      is_public: true,
+      metadata: { post_id: data.id },
+    });
+  } catch (e) {
+    console.warn("Activity feed insert failed:", e);
+  }
+
   // Real post-insert AI moderation pass. The live `ai-content-moderation`
   // edge function is designed to run AFTER the row exists - it takes a
   // `contentId`, runs the content through an AI moderation model, then does
@@ -617,6 +635,37 @@ export async function togglePostReaction({ postId, userId, reactionType = "like"
     });
     return { reacted: true };
   }
+}
+
+// Delete a community post - RLS (`cp_delete_own`) already restricts this to
+// the post's own author, `userId` here is just for the optimistic local
+// removal callers do alongside this, not an extra permission check.
+export async function deleteCommunityPost(postId) {
+  if (!supabase || !postId) return;
+  const { error } = await supabase.from("community_posts").delete().eq("id", postId);
+  if (error) throw error;
+}
+
+// Real engagement stats for the "Your Community Status" card - computed
+// live from actual community_posts/post_comments rows rather than the
+// `community_engagement_stats` table, which nothing in this app has ever
+// written to (no trigger maintains it, so every row there would just read
+// zero forever). Tier thresholds mirror the reference 1.0 design.
+export async function fetchMyCommunityStats(userId) {
+  if (!supabase || !userId) return { totalPosts: 0, totalComments: 0, score: 0, tier: "newcomer" };
+  const [{ count: totalPosts }, { count: totalComments }] = await Promise.all([
+    supabase.from("community_posts").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("user_id", userId),
+  ]);
+  const posts = totalPosts || 0;
+  const comments = totalComments || 0;
+  const score = posts * 10 + comments * 5;
+  let tier = "newcomer";
+  if (score >= 500) tier = "champion";
+  else if (score >= 200) tier = "leader";
+  else if (score >= 100) tier = "engager";
+  else if (score >= 50) tier = "contributor";
+  return { totalPosts: posts, totalComments: comments, score, tier };
 }
 
 // Mentor directory (browse all active mentors). NOTE: the real schema has no

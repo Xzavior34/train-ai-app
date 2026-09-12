@@ -9,7 +9,7 @@ import { CoursesScreen } from "./screens/CoursesScreen.jsx";
 import { CourseDetailScreen } from "./screens/CourseDetailScreen.jsx";
 import { LessonScreen } from "./screens/LessonScreen.jsx";
 import { AIQuizScreen } from "./screens/AIQuizScreen.jsx";
-import { CommunityScreen } from "./screens/CommunityScreen.jsx";
+import CommunityScreen from "./screens/CommunityScreen.jsx";
 import { StudyGroupScreen } from "./screens/StudyGroupScreen.jsx";
 import { CohortScreen } from "./screens/CohortScreen.jsx";
 import { MentorsScreen } from "./screens/MentorsScreen.jsx";
@@ -27,8 +27,9 @@ import { enrollInCourse, markLessonComplete, addCourseNote, postCourseDiscussion
   fetchCertificateForCourse, fetchMyCertificateForCourse, requestCertificate,
 } from "../lib/api/learner.js";
 import {
-  createCommunityPost, addPostComment, togglePostReaction, bookMentorshipSession, sendMentorMessage,
+  createCommunityPost, addPostComment, togglePostReaction, deleteCommunityPost, bookMentorshipSession, sendMentorMessage,
   joinStudyGroup, leaveStudyGroup, createStudyGroup, fetchStudyGroupMessages, fetchStudyGroupMembers, fetchMentorAvailability,
+  fetchForumThreads, fetchForumThread, createForumThread, createForumReply, voteForumPost,
   generateAIQuiz,
   fetchMentorMessageThreads, fetchMentorMessageThread, markMentorMessagesRead,
   fetchOrCreateAIConversation, fetchAIChatMessages, sendAIChatMessage, requestAIReply
@@ -200,6 +201,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     courseNotesQuery, courseDiscussionQuery, courseReviewsQuery, lessonNotesQuery, lessonDiscussionQuery,
     quizzesQuery, quizAttemptsQuery, postsQuery, studyGroupsQuery,
     myGroupIdsQuery, communityPeopleQuery, activityFeedQuery, memberStatsQuery, notificationsQuery, upcomingSessionsQuery, mentorsQuery,
+    forumCategoriesQuery, myCommunityStatsQuery,
     cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery, cohortCoursesQuery, cohortMembersQuery,
     gamificationStatsQuery, achievementsQuery, streakActivityQuery, leaderboardQuery, enrollmentsQuery, lessonProgressQuery,
     userProfileQuery, handleToggleBookmark,
@@ -850,11 +852,19 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "community" && (
                 <CommunityScreen
-                  cohortMembershipQuery={cohortMembershipQuery} cohortSessionsQuery={cohortSessionsQuery}
+                  session={session} user={user} push={push} showToast={showToast}
+                  postsQuery={postsQuery}
+                  createCommunityPost={createCommunityPost} addPostComment={addPostComment}
+                  togglePostReaction={togglePostReaction} deleteCommunityPost={deleteCommunityPost}
+                  activityFeedQuery={activityFeedQuery}
+                  myCommunityStatsQuery={myCommunityStatsQuery}
                   studyGroupsQuery={studyGroupsQuery} myGroupIdsQuery={myGroupIdsQuery}
-                  leaderboardQuery={leaderboardQuery}
+                  createStudyGroup={createStudyGroup} joinStudyGroup={joinStudyGroup} leaveStudyGroup={leaveStudyGroup}
+                  mentorsList={mentorsList} mentorsQuery={mentorsQuery}
+                  cohortMembershipQuery={cohortMembershipQuery} cohortSessionsQuery={cohortSessionsQuery}
+                  communityPeopleQuery={communityPeopleQuery} memberStatsQuery={memberStatsQuery}
+                  leaderboardQuery={leaderboardQuery} gamificationStatsQuery={gamificationStatsQuery}
                   upcomingSessionsQuery={upcomingSessionsQuery}
-                  user={user} push={push}
                 />
               )}
               {screen === "studyGroup" && (

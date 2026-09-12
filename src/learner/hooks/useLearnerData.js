@@ -20,7 +20,7 @@ import {
   fetchCommunityPosts,
   fetchStudyGroups, fetchMyStudyGroupIds, fetchCommunityPeople,
   fetchAllMentors, fetchUpcomingLearnerSessions,
-  fetchCommunityActivityFeed, fetchGamificationStatsByUserIds,
+  fetchCommunityActivityFeed, fetchGamificationStatsByUserIds, fetchMyCommunityStats,
   fetchForumCategories, fetchMyCohortMembership, fetchCohortPostsFeed,
   fetchCohortResources, fetchCohortSessions, fetchCohortAssignedCourses, fetchCohortMembers
 } from "../../lib/api/schemaHelper.js";
@@ -690,6 +690,12 @@ export function useLearnerData(session, screen, params) {
     return fetchMyStudyGroupIds(session.user.id);
   }, [session?.user?.id]);
   const communityPeopleQuery = useSupabaseQuery(async () => fetchCommunityPeople(session?.user?.id), [session?.user?.id]);
+  // Backs the "Your Community Status" card on the Community screen - real
+  // engagement counts for the signed-in learner (see fetchMyCommunityStats).
+  const myCommunityStatsQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return { totalPosts: 0, totalComments: 0, score: 0, tier: "newcomer" };
+    return fetchMyCommunityStats(session.user.id);
+  }, [session?.user?.id]);
 
   // Forum categories - distinct from study groups. Only fetched once the
   // learner is signed in, same gating as everything else in this hook; the
@@ -915,6 +921,8 @@ export function useLearnerData(session, screen, params) {
     studyGroupsQuery,
     myGroupIdsQuery,
     communityPeopleQuery,
+    memberStatsQuery,
+    myCommunityStatsQuery,
     forumCategoriesQuery,
     activityFeedQuery,
     cohortMembershipQuery,
@@ -923,7 +931,6 @@ export function useLearnerData(session, screen, params) {
     cohortCoursesQuery,
     cohortMembersQuery,
     cohortSessionsQuery,
-    memberStatsQuery,
     notificationsQuery,
     upcomingSessionsQuery,
     mentorsQuery,
