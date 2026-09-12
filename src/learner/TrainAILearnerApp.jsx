@@ -502,7 +502,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     // Integration), used as the real session link instead of inventing a
     // throwaway one when a learner or the instructor books a session.
     meetingUrl: m.personal_meeting_url || "",
-    name: m.user_profiles?.display_name || "Instructor",
+    name: m.user_profiles?.display_name || m.title || "Instructor",
+    avatar: m.user_profiles?.avatar_url || m.avatar_url || null,
     title: m.title || "Instructor",
     tagline: m.tagline || "",
     rate: m.hourly_rate || 0,
@@ -511,10 +512,6 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     years: m.years_of_experience || 0,
     languages: m.languages || [],
     specializations: m.specializations || [],
-    // NOTE: the real `mentors` table has no `is_approved` column (only
-    // `is_active`, which fetchAllMentors already filters on) - `is_approved`
-    // was always undefined here, so every mentor silently rendered as
-    // unverified regardless of status.
     verified: m.is_active,
     autoAccept: m.auto_accept_bookings,
     waitlist: false,

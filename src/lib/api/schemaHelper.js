@@ -1031,18 +1031,7 @@ export async function voteForumPost(postId, direction = "up") {
 // columns elsewhere in this schema that need the manual
 // fetchProfilesByUserIds workaround), so the embed below works.
 export async function fetchMyCohortMembership(userId) {
-  if (!supabase) {
-    // A real, confirmed gap: the demo learner was never actually shown
-    // as belonging to any cohort at all, which meant the cohort card on
-    // Home, the dedicated Cohort screen, and the new "cohort activity
-    // today" widget could never be verified with real demo data - not a
-    // bug in any of those three, but a missing link connecting them.
-    return {
-      membership: { user_id: userId, cohort_id: "demo-cohort-1", added_at: new Date().toISOString() },
-      cohort: { id: "demo-cohort-1", name: "Q1 Onboarding Cohort", description: "New hire onboarding cohort for the demo organization.", starts_at: "2026-01-01", ends_at: "2026-04-01", organization_id: "demo-org-id" },
-    };
-  }
-  if (!userId) return null;
+  if (!supabase || !userId) return null;
   const { data, error } = await supabase
     .from("cohort_members")
     .select("*, cohorts(*)")
@@ -1174,15 +1163,7 @@ export async function fetchCohortSessions(cohortId) {
 
 // Community - suggested people to follow/connect with
 export async function fetchCommunityPeople(excludeUserId, limit = 20) {
-  if (!supabase) {
-    const now = new Date().toISOString();
-    return [
-      { id: "demo-instructor-1", display_name: "Jordan Reyes", avatar_url: null, role: "mentor", bio: "AI & Data Instructor.", department: null, school: null, last_active_at: now },
-      { id: "demo-instructor-2", display_name: "Wale Adebayo", avatar_url: null, role: "mentor", bio: "Leadership Instructor.", department: null, school: null, last_active_at: now },
-      { id: "demo-learner-2", display_name: "David Osei", avatar_url: null, role: "learner", bio: null, department: null, school: null, last_active_at: now },
-      { id: "demo-learner-3", display_name: "Priya Nair", avatar_url: null, role: "learner", bio: null, department: null, school: null, last_active_at: now },
-    ].filter((p) => p.id !== excludeUserId);
-  }
+  if (!supabase) return [];
   // A real, confirmed bug: user_profiles.id IS the real auth uid directly
   // (no separate user_id column exists on this specific table - the
   // comment previously here repeated a claim already disproven elsewhere
@@ -1437,10 +1418,7 @@ export async function fetchCohortMembers(cohortId) {
 // cross-tenant leak was found and fixed here too, sg_select_all previously
 // used "using (true)" ignoring organization_id entirely).
 export async function fetchAllStudyGroupsForOrg(organizationId) {
-  if (!supabase) {
-    return [{ id: "demo-group-1", name: "AI Fundamentals Study Circle", organization_id: "demo-org-id", max_members: 12, is_private: false, courses: { title: "AI Fundamentals" }, study_group_members: [{ count: 3 }] }];
-  }
-  if (!organizationId) return [];
+  if (!supabase || !organizationId) return [];
   const { data, error } = await supabase
     .from("study_groups")
     .select("*, courses(title), study_group_members(count)")

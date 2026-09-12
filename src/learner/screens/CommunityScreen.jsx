@@ -142,7 +142,7 @@ function LiveActivityBanner({ items = [] }) {
         </div>
 
         <div style={{ fontSize: 13, color: "var(--text)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {latestActivity?.activity_text || "Learners and instructors are actively engaging across community forums and study groups."}
+          {latestActivity?.activity_text || "No recent activity yet."}
         </div>
       </div>
 
@@ -1503,7 +1503,7 @@ export function CommunityScreen({
                 }}
               >
                 <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <Avatar size={56} initials={initialsOf(m.name)} />
+                  <Avatar size={56} src={m.avatar || m.avatarUrl || m.user_profiles?.avatar_url} initials={initialsOf(m.name)} />
                   
                   <div style={{ fontWeight: 900, fontSize: 15, color: "var(--text)", marginTop: 10 }}>
                     {m.name}
