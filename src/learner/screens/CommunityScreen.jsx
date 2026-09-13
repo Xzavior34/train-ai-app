@@ -9,6 +9,7 @@ import {
 import { Avatar, initialsOf, timeAgo, Tag } from "../components/LearnerUI.jsx";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
 import CommunityHero from "../components/CommunityHero.jsx";
+import { LeaderboardPanel } from "../components/LeaderboardPanel.jsx";
 
 // ---------------------------------------------------------------------------
 // Train AI 2.0 Community Screen
@@ -1772,97 +1773,13 @@ export function CommunityScreen({
       {/* TAB 6: RANK (LEADERBOARD) */}
       {/* =================================================================== */}
       {tab === "rank" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Header Card */}
-          <div
-            className="tai-card"
-            style={{
-              padding: "18px 20px",
-              background: "var(--glass-surface)",
-              border: "1px solid var(--glass-border)",
-              borderRadius: 16,
-              boxShadow: "var(--glass-shadow)",
-            }}
-          >
-            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14 }}>
-              <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
-                <div
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 10,
-                    background: "rgba(245, 158, 11, 0.12)",
-                    border: "1px solid rgba(245, 158, 11, 0.25)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Trophy size={20} color="#D97706" />
-                </div>
-                <div>
-                  <div style={{ fontWeight: 900, fontSize: 16, color: "var(--text)" }}>Leaderboard</div>
-                  <div style={{ fontSize: 12, color: "var(--text-3)" }}>
-                    {leaderboardRows.length} learners competing • Live updates
-                  </div>
-                </div>
-              </div>
-
-              <button
-                className="tai-btn tai-btn-ghost tai-btn-sm"
-                onClick={() => leaderboardQuery.refetch?.()}
-                style={{ padding: "6px 12px", fontSize: 11.5 }}
-              >
-                <RefreshCw size={13} /> Refresh
-              </button>
-            </div>
-
-            {/* Your Rank Highlight Row */}
-            <div
-              className="tai-row tai-between"
-              style={{
-                padding: "12px 16px",
-                borderRadius: 12,
-                background: "var(--primary-tint)",
-                border: "1px solid rgba(37, 99, 235, 0.2)",
-                alignItems: "center",
-              }}
-            >
-              <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
-                <span
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 900,
-                    padding: "4px 9px",
-                    borderRadius: 8,
-                    background: "var(--primary)",
-                    color: "#fff",
-                  }}
-                >
-                  #{myRankNumber}
-                </span>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Your rank</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>
-                    {myPoints.toLocaleString()} pts • Level {myLevel}
-                  </div>
-                </div>
-              </div>
-
-              {nextRankPoints > 0 && (
-                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--primary)" }}>
-                  {nextRankPoints} pts to rank #{myRankNumber - 1}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Daily Motivation Quote Widget */}
-          <DailyMotivationWidget />
-
-          {/* Weekly League Retention Card */}
-          <WeeklyLeagueCard rows={leaderboardRows} loading={leaderboardQuery.loading} />
-        </div>
+        <LeaderboardPanel
+          rows={leaderboardRows}
+          loading={leaderboardQuery.loading}
+          onRefresh={() => leaderboardQuery.refetch?.()}
+          currentUserId={myId}
+          userStats={gamificationStatsQuery.data || {}}
+        />
       )}
     </div>
   );
