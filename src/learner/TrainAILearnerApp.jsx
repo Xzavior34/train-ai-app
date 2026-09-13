@@ -27,7 +27,7 @@ import { enrollInCourse, markLessonComplete, addCourseNote, postCourseDiscussion
   fetchCertificateForCourse, fetchMyCertificateForCourse, requestCertificate,
 } from "../lib/api/learner.js";
 import {
-  createCommunityPost, addPostComment, togglePostReaction, deleteCommunityPost, bookMentorshipSession, sendMentorMessage,
+  fetchCommunityPosts, createCommunityPost, addPostComment, togglePostReaction, deleteCommunityPost, bookMentorshipSession, sendMentorMessage,
   joinStudyGroup, leaveStudyGroup, createStudyGroup, fetchStudyGroupMessages, fetchStudyGroupMembers, fetchMentorAvailability,
   fetchForumThreads, fetchForumThread, createForumThread, createForumReply, voteForumPost,
   generateAIQuiz,
@@ -896,6 +896,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   studyGroupsQuery={studyGroupsQuery} myGroupIdsQuery={myGroupIdsQuery}
                   joinStudyGroup={joinStudyGroup} leaveStudyGroup={leaveStudyGroup} createStudyGroup={createStudyGroup}
                   fetchStudyGroupMembers={fetchStudyGroupMembers} fetchStudyGroupMessages={fetchStudyGroupMessages}
+                  fetchCommunityPosts={fetchCommunityPosts} createCommunityPost={createCommunityPost}
+                  addPostComment={addPostComment} togglePostReaction={togglePostReaction} deleteCommunityPost={deleteCommunityPost}
                   orgId={orgId} session={session} showToast={showToast} back={back} push={push} params={params}
                 />
               )}

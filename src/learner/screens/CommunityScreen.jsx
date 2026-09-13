@@ -4,7 +4,7 @@ import {
   MessageSquare, Send, Pin, Trash2, ArrowLeft, Layers, Mail, Sparkles, Crown, Star,
   Flame, Zap, Clock, Share2, X, BookOpen, UserCheck, Shield, TrendingUp,
   RefreshCw, CheckCircle2, MoreVertical, ExternalLink, Activity, Info, Award,
-  Quote,
+  Quote, Lock,
 } from "lucide-react";
 import { Avatar, initialsOf, timeAgo, Tag } from "../components/LearnerUI.jsx";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
@@ -1391,7 +1391,9 @@ export function CommunityScreen({
           <div className="tai-col tai-gap12">
             {filteredGroups.map((g) => {
               const isMember = myGroupIds.has(g.id);
-              const memberCount = g.member_count || g.study_group_members?.[0]?.count || 1;
+              const memberCount = g.member_count || g.study_group_members?.[0]?.count || (isMember ? 1 : 0);
+              const maxMembers = g.max_members || 50;
+              const isFull = !isMember && memberCount >= maxMembers;
 
               return (
                 <div
@@ -1407,45 +1409,71 @@ export function CommunityScreen({
                 >
                   <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
                     <div style={{ minWidth: 0, flex: "1 1 280px" }}>
-                      <div
-                        style={{
-                          fontWeight: 800,
-                          fontSize: 16,
-                          color: "var(--text)",
-                          cursor: "pointer",
-                          marginBottom: 6,
-                        }}
-                        onClick={() => push("studyGroup", { groupId: g.id })}
-                      >
-                        {g.name}
-                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            fontSize: 16,
+                            color: "var(--text)",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                          onClick={() => push("studyGroup", { groupId: g.id })}
+                        >
+                          {g.name}
+                          {g.is_private && (
+                            <span title="Private group" style={{ display: "inline-flex", alignItems: "center" }}>
+                              <Lock size={13} color="var(--warning)" />
+                            </span>
+                          )}
+                        </div>
 
-                      <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, marginBottom: 10 }}>
-                        {g.description || "Open study and peer discussion group."}
-                      </div>
+                        {g.courses?.title && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: "2px 8px",
+                              borderRadius: 999,
+                              background: "rgba(37, 99, 235, 0.1)",
+                              color: "var(--primary)",
+                              border: "1px solid rgba(37, 99, 235, 0.2)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <BookOpen size={11} /> {g.courses.title}
+                          </span>
+                        )}
 
-                      <div className="tai-row tai-gap12" style={{ fontSize: 12, color: "var(--text-3)", alignItems: "center", marginBottom: isMember ? 8 : 0 }}>
-                        <span>👥 {memberCount} members</span>
-                        {g.created_at && <span>🕒 {timeAgo(g.created_at)}</span>}
-                      </div>
-
-                      {isMember && (
-                        <div style={{ marginTop: 6 }}>
+                        {isMember && (
                           <span
                             style={{
                               fontSize: 10.5,
                               fontWeight: 800,
                               padding: "2px 8px",
                               borderRadius: 999,
-                              background: "rgba(37, 99, 235, 0.12)",
-                              color: "var(--primary)",
-                              border: "1px solid rgba(37, 99, 235, 0.25)",
+                              background: "rgba(16, 185, 129, 0.12)",
+                              color: "var(--success)",
+                              border: "1px solid rgba(16, 185, 129, 0.25)",
                             }}
                           >
-                            Member
+                            Joined
                           </span>
-                        </div>
-                      )}
+                        )}
+                      </div>
+
+                      <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, marginBottom: 10 }}>
+                        {g.description || "Open study and peer discussion group."}
+                      </div>
+
+                      <div className="tai-row tai-gap12" style={{ fontSize: 12, color: "var(--text-3)", alignItems: "center" }}>
+                        <span>👥 {memberCount}/{maxMembers} members</span>
+                        {g.created_at && <span>🕒 Created {timeAgo(g.created_at)}</span>}
+                      </div>
                     </div>
 
                     <div className="tai-row tai-gap8" style={{ alignItems: "center", alignSelf: "center" }}>
@@ -1469,9 +1497,10 @@ export function CommunityScreen({
                         <button
                           className="tai-btn tai-btn-primary tai-btn-sm"
                           style={{ borderRadius: 999, padding: "7px 16px" }}
+                          disabled={isFull}
                           onClick={() => handleJoinGroup(g.id)}
                         >
-                          Join Group
+                          {isFull ? "Full" : "Join Group"}
                         </button>
                       )}
                     </div>

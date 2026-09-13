@@ -505,6 +505,10 @@ export async function fetchCommunityPosts(studyGroupId = null) {
     .select("*, post_comments(*), post_reactions(*)")
     .order("created_at", { ascending: false });
 
+  if (studyGroupId) {
+    query = query.eq("study_group_id", studyGroupId);
+  }
+
   const { data, error } = await query;
   if (error) { console.warn("Community posts fetch warning:", error); return []; }
   const rows = data || [];
@@ -524,14 +528,21 @@ export async function fetchCommunityPosts(studyGroupId = null) {
   }));
 }
 
-export async function createCommunityPost({ userId, content, postType = "general" }) {
-  if (!supabase) return { id: `post_${Date.now()}`, user_id: userId, content, post_type: postType, moderation_status: "approved" };
+export async function fetchStudyGroupPosts(groupId) {
+  return fetchCommunityPosts(groupId);
+}
+
+export async function createCommunityPost({ userId, content, postType = "general", studyGroupId = null }) {
+  if (!supabase) return { id: `post_${Date.now()}`, user_id: userId, content, post_type: postType, study_group_id: studyGroupId, moderation_status: "approved" };
   const insertPayload = {
     user_id: userId,
     content,
     post_type: postType || "general",
     created_at: new Date().toISOString()
   };
+  if (studyGroupId) {
+    insertPayload.study_group_id = studyGroupId;
+  }
   const { data, error } = await supabase
     .from("community_posts")
     .insert(insertPayload)
