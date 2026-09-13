@@ -115,7 +115,7 @@ export function CohortScreen({
           </div>
 
           <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{(cohortMembersQuery?.data || []).length} Peers Enrolled</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{members.length} Peers Enrolled</div>
             <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Active Cohort Track</div>
           </div>
         </div>
@@ -178,7 +178,7 @@ export function CohortScreen({
           { k: "sessions", label: `Live Sessions (${sessions.length})`, icon: Video },
           { k: "courses", label: `Assigned Courses (${assignedCourses.length})`, icon: BookOpen },
           { k: "resources", label: `Shared Resources (${resources.length})`, icon: FileText },
-          { k: "members", label: `People (${cohortMembersQuery?.data?.length || 0})`, icon: Users },
+          { k: "members", label: `People (${members.length})`, icon: Users },
         ].map(t => {
           const Icon = t.icon;
           const isActive = tab === t.k;
@@ -508,12 +508,12 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "members" && (
         <div className="tai-col tai-gap16">
-          {cohortMembersQuery?.loading && <div className="tai-empty">Loading members...</div>}
-          {!cohortMembersQuery?.loading && (cohortMembersQuery?.data || []).length === 0 && (
+          {cohortMembersQuery?.loading && !members.length && <div className="tai-empty">Loading members...</div>}
+          {!cohortMembersQuery?.loading && members.length === 0 && (
             <div className="tai-empty">No members in this cohort yet.</div>
           )}
           <div className="tai-grid2">
-            {(cohortMembersQuery?.data || []).map(m => {
+            {members.map(m => {
               const isInstructor = m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin";
               return (
                 <div key={m.id} className="tai-card" style={{ padding: "14px 16px", borderRadius: 10 }}>

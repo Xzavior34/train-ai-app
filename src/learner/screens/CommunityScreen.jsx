@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Avatar, initialsOf, timeAgo, Tag } from "../components/LearnerUI.jsx";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
+import CommunityHero from "../components/CommunityHero.jsx";
 
 // ---------------------------------------------------------------------------
 // Train AI 2.0 Community Screen
@@ -989,6 +990,8 @@ export function CommunityScreen({
       <div>
         <h1 className="tai-h1" style={{ margin: 0 }}>Community</h1>
       </div>
+      {/* Hero Banner */}
+      <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
 
       {/* Live Activity Banner */}
       <LiveActivityBanner items={activityFeedQuery.data || []} />
