@@ -50,6 +50,13 @@ export function StudyGroupScreen({
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Sync selectedGroupId with params.groupId on navigation changes
+  React.useEffect(() => {
+    if (params?.groupId !== undefined) {
+      setSelectedGroupId(params.groupId || null);
+    }
+  }, [params?.groupId]);
+
   // Post composer state in Group Detail
   const [newPostContent, setNewPostContent] = useState("");
   const [posting, setPosting] = useState(false);
@@ -60,6 +67,16 @@ export function StudyGroupScreen({
   const groups = studyGroupsQuery.data || [];
   const myGroupIds = new Set(myGroupIdsQuery.data || []);
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
+
+  function handleBack() {
+    if (selectedGroupId && !params?.groupId) {
+      setSelectedGroupId(null);
+    } else if (back) {
+      back();
+    } else {
+      setSelectedGroupId(null);
+    }
+  }
 
   // -------------------------------------------------------------------
   // Detail Queries
@@ -206,6 +223,17 @@ export function StudyGroupScreen({
   // -------------------------------------------------------------------
   // Render: GROUP DETAIL VIEW
   // -------------------------------------------------------------------
+  if (params?.groupId && studyGroupsQuery.loading && !selectedGroup) {
+    return (
+      <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <TopBar title="Study Group" sub="Loading group details..." onBack={handleBack} />
+        <div className="tai-card" style={{ padding: 40, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
+          Loading study group...
+        </div>
+      </div>
+    );
+  }
+
   if (selectedGroup) {
     const members = membersQuery.data || [];
     const isMember = myGroupIds.has(selectedGroup.id);
@@ -216,6 +244,8 @@ export function StudyGroupScreen({
 
     return (
       <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <TopBar title={selectedGroup.name} sub={selectedGroup.description || "Study Group"} onBack={handleBack} />
+
         {/* Top Header Card */}
         <div
           className="tai-card"
@@ -232,9 +262,9 @@ export function StudyGroupScreen({
               <button
                 className="tai-btn tai-btn-ghost tai-btn-sm"
                 style={{ padding: "4px 8px", marginBottom: 8, display: "inline-flex", alignItems: "center", gap: 5, color: "var(--text-3)" }}
-                onClick={() => setSelectedGroupId(null)}
+                onClick={handleBack}
               >
-                <ArrowLeft size={14} /> Back to all groups
+                <ArrowLeft size={14} /> Back
               </button>
 
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 6 }}>
