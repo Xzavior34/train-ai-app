@@ -1,0 +1,1876 @@
+import React, { useState, useMemo } from "react";
+import {
+  Users, GraduationCap, Trophy, ChevronRight, Plus, Search, Heart, MessageCircle,
+  MessageSquare, Send, Pin, Trash2, ArrowLeft, Layers, Mail, Sparkles, Crown, Star,
+  Flame, Zap, Clock, Share2, X, BookOpen, UserCheck, Shield, TrendingUp,
+  RefreshCw, CheckCircle2, MoreVertical, ExternalLink, Activity, Info, Award,
+  Quote, Lock,
+} from "lucide-react";
+import { Avatar, initialsOf, timeAgo, Tag } from "../components/LearnerUI.jsx";
+import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
+import CommunityHero from "../components/CommunityHero.jsx";
+import { LeaderboardPanel } from "../components/LeaderboardPanel.jsx";
+
+// ---------------------------------------------------------------------------
+// Train AI 2.0 Community Screen
+// Exact 1.0 Production Community Hub (trainailtd.com) Replication
+// 6 Flat Tabs: Summary | Posts | Groups | Instructors | Cohorts | Rank
+// 100% Real Live Supabase Database Connectivity
+// ---------------------------------------------------------------------------
+
+const TIER_CONFIG = {
+  newcomer: {
+    label: "Newcomer",
+    nextLabel: "Contributor",
+    Icon: Zap,
+    color: "#EA580C",
+    bg: "rgba(234, 88, 12, 0.12)",
+    border: "rgba(234, 88, 12, 0.25)",
+  },
+  contributor: {
+    label: "Contributor",
+    nextLabel: "Active Engager",
+    Icon: Star,
+    color: "var(--primary)",
+    bg: "var(--primary-tint)",
+    border: "rgba(37, 99, 235, 0.25)",
+  },
+  engager: {
+    label: "Active Engager",
+    nextLabel: "Community Leader",
+    Icon: Flame,
+    color: "#2563EB",
+    bg: "rgba(37, 99, 235, 0.12)",
+    border: "rgba(37, 99, 235, 0.25)",
+  },
+  leader: {
+    label: "Community Leader",
+    nextLabel: "Community Champion",
+    Icon: Trophy,
+    color: "#7C3AED",
+    bg: "rgba(124, 58, 237, 0.12)",
+    border: "rgba(124, 58, 237, 0.25)",
+  },
+  champion: {
+    label: "Community Champion",
+    nextLabel: null,
+    Icon: Crown,
+    color: "#059669",
+    bg: "rgba(5, 150, 105, 0.12)",
+    border: "rgba(5, 150, 105, 0.25)",
+  },
+};
+
+const TIER_NEXT = {
+  newcomer: 50,
+  contributor: 100,
+  engager: 200,
+  leader: 500,
+  champion: null,
+};
+
+function computeTier(score) {
+  if (score >= 500) return "champion";
+  if (score >= 200) return "leader";
+  if (score >= 100) return "engager";
+  if (score >= 50) return "contributor";
+  return "newcomer";
+}
+
+function extractHashtags(posts) {
+  const counts = {};
+  for (const p of posts) {
+    const matches = (p.content || "").match(/#[#a-zA-Z0-9_@]+/g) || [];
+    for (const m of matches) {
+      const tag = m.replace(/^#+/, "").toLowerCase();
+      if (tag.length > 1) {
+        counts[tag] = (counts[tag] || 0) + 1;
+      }
+    }
+  }
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([tag, count]) => ({ tag, count }));
+}
+
+// ---------------------------------------------------------------------------
+// Live Activity Banner (Under Header on Every Tab)
+// ---------------------------------------------------------------------------
+function LiveActivityBanner({ items = [] }) {
+  const latestActivity = items[0] || null;
+
+  return (
+    <div
+      className="tai-card"
+      style={{
+        padding: "10px 16px",
+        background: "var(--glass-surface)",
+        border: "1px solid var(--glass-border)",
+        borderRadius: 12,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 12,
+        boxShadow: "var(--glass-shadow)",
+      }}
+    >
+      <div className="tai-row tai-gap10" style={{ alignItems: "center", minWidth: 0 }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "3px 8px",
+            borderRadius: 999,
+            background: "rgba(16, 185, 129, 0.12)",
+            border: "1px solid rgba(16, 185, 129, 0.25)",
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "#10B981",
+              boxShadow: "0 0 0 3px rgba(16, 185, 129, 0.25)",
+              animation: "pulse 2s infinite",
+            }}
+          />
+          <span style={{ fontSize: 10, fontWeight: 900, color: "#10B981", letterSpacing: "0.04em" }}>
+            LIVE ACTIVITY
+          </span>
+        </div>
+
+        <div style={{ fontSize: 13, color: "var(--text)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {latestActivity?.activity_text || "No recent activity yet."}
+        </div>
+      </div>
+
+      {latestActivity?.created_at && (
+        <span style={{ fontSize: 11.5, color: "var(--text-3)", flexShrink: 0 }}>
+          {timeAgo(latestActivity.created_at)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar: Your Community Status Card
+// ---------------------------------------------------------------------------
+function StatusCard({ stats }) {
+  const tierKey = stats?.tier || "newcomer";
+  const tier = TIER_CONFIG[tierKey] || TIER_CONFIG.newcomer;
+  const TierIcon = tier.Icon;
+  const score = stats?.score || 0;
+  const postsCount = stats?.totalPosts || 0;
+  const repliesCount = stats?.totalComments || 0;
+
+  return (
+    <div
+      className="tai-card"
+      style={{
+        padding: "20px 18px",
+        background: "var(--glass-surface)",
+        border: "1px solid var(--glass-border)",
+        borderRadius: 16,
+        boxShadow: "var(--glass-shadow)",
+      }}
+    >
+      <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 14 }}>
+        <Star size={16} color="var(--primary)" />
+        <span style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Your Community Status</span>
+      </div>
+
+      <div style={{ textAlign: "center", padding: "6px 0 16px" }}>
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            background: "var(--primary-tint)",
+            border: "1.5px solid rgba(37, 99, 235, 0.2)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 8px",
+          }}
+        >
+          <Trophy size={24} color="var(--primary)" />
+        </div>
+        <span
+          className="tai-row tai-gap4"
+          style={{
+            fontSize: 11.5,
+            fontWeight: 800,
+            padding: "3px 12px",
+            borderRadius: 999,
+            background: tier.bg,
+            color: tier.color,
+            border: `1px solid ${tier.border}`,
+            display: "inline-flex",
+            alignItems: "center",
+          }}
+        >
+          <TierIcon size={12} /> {tier.label}
+        </span>
+      </div>
+
+      <div className="tai-row tai-gap8" style={{ marginTop: 4 }}>
+        {[
+          { label: "Posts", value: postsCount, icon: MessageSquare },
+          { label: "Replies", value: repliesCount, icon: MessageCircle },
+          { label: "Score", value: score, icon: Zap },
+        ].map((s) => {
+          const SIcon = s.icon;
+          return (
+            <div
+              key={s.label}
+              style={{
+                flex: 1,
+                textAlign: "center",
+                background: "var(--surface-2)",
+                borderRadius: 12,
+                padding: "10px 4px",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <SIcon size={13} color="var(--primary)" style={{ margin: "0 auto 4px" }} />
+              <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>{s.value}</div>
+              <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, marginTop: 1 }}>{s.label}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Daily Motivation Quote Widget (Tab 6: Rank)
+// ---------------------------------------------------------------------------
+const MOTIVATION_QUOTES = [
+  {
+    quote: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.",
+    author: "Dr. Seuss",
+  },
+  {
+    quote: "Live as if you were to die tomorrow. Learn as if you were to live forever.",
+    author: "Mahatma Gandhi",
+  },
+  {
+    quote: "Learning is not attained by chance, it must be sought for with ardor and attended to with diligence.",
+    author: "Abigail Adams",
+  },
+  {
+    quote: "Success is the sum of small efforts, repeated day in and day out.",
+    author: "Robert Collier",
+  },
+];
+
+function DailyMotivationWidget() {
+  const [index] = useState(() => Math.floor(Math.random() * MOTIVATION_QUOTES.length));
+  const item = MOTIVATION_QUOTES[index] || MOTIVATION_QUOTES[0];
+
+  return (
+    <div
+      className="tai-card"
+      style={{
+        padding: "20px 22px",
+        background: "var(--glass-surface)",
+        border: "1px solid var(--glass-border)",
+        borderRadius: 16,
+        boxShadow: "var(--glass-shadow)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
+      <div className="tai-row tai-gap10" style={{ alignItems: "flex-start" }}>
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            background: "rgba(37, 99, 235, 0.12)",
+            border: "1px solid rgba(37, 99, 235, 0.25)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Quote size={18} color="var(--primary)" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 13.5,
+              fontStyle: "italic",
+              color: "var(--text)",
+              lineHeight: 1.6,
+            }}
+          >
+            "{item.quote}"
+          </p>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", marginTop: 6 }}>
+            — {item.author}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <span
+          style={{
+            fontSize: 10.5,
+            fontWeight: 800,
+            padding: "2px 8px",
+            borderRadius: 999,
+            background: "var(--primary-tint)",
+            color: "var(--primary)",
+            border: "1px solid rgba(37, 99, 235, 0.25)",
+            letterSpacing: "0.02em",
+          }}
+        >
+          ✨ Daily Motivation
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Post Card Component (Matching Exact 1.0 Production Layout)
+// ---------------------------------------------------------------------------
+function PostCard({
+  post,
+  authorStats,
+  onToggleLike,
+  onDelete,
+  likeBusy,
+  deleteBusy,
+  expanded,
+  onToggleExpand,
+  commentDraft,
+  onCommentDraftChange,
+  onSubmitComment,
+  commentBusy,
+  onTagClick,
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Author tier badge computed live from real post/comment counts
+  const postScore = (authorStats?.posts || 1) * 10 + (authorStats?.comments || 0) * 5;
+  const authorTier = computeTier(postScore);
+  const tier = TIER_CONFIG[authorTier] || TIER_CONFIG.newcomer;
+  const TierIcon = tier.Icon;
+
+  // Split title and content if formatted with a bold title
+  const { title, bodyText, tags } = useMemo(() => {
+    let raw = post.content || "";
+    let extractedTitle = null;
+    let mainBody = raw;
+
+    // Check if post starts with a title line or CBT-like bold topic
+    const lines = raw.split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1 && lines[0].length < 60 && !lines[0].startsWith("http") && !lines[0].startsWith("#")) {
+      extractedTitle = lines[0];
+      mainBody = lines.slice(1).join("\n");
+    }
+
+    // Extract tags
+    const tagMatches = raw.match(/#[#a-zA-Z0-9_@]+/g) || [];
+    const uniqueTags = [...new Set(tagMatches)];
+
+    return { title: extractedTitle, bodyText: mainBody, tags: uniqueTags };
+  }, [post.content]);
+
+  // Render clickable links and hashtags in body
+  const renderedBody = useMemo(() => {
+    if (!bodyText) return null;
+    const parts = bodyText.split(/(\bhttps?:\/\/[^\s]+|#[#a-zA-Z0-9_@]+)/g);
+    return parts.map((part, idx) => {
+      if (part.startsWith("http://") || part.startsWith("https://")) {
+        return (
+          <a
+            key={idx}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--primary)", textDecoration: "underline", wordBreak: "break-all" }}
+          >
+            {part}
+          </a>
+        );
+      }
+      if (part.startsWith("#")) {
+        const cleanTag = part.replace(/^#+/, "");
+        return (
+          <span
+            key={idx}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTagClick?.(cleanTag);
+            }}
+            style={{ color: "var(--primary)", fontWeight: 700, cursor: "pointer" }}
+          >
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  }, [bodyText, onTagClick]);
+
+  return (
+    <div
+      className="tai-card tai-card-hover"
+      style={{
+        padding: "20px",
+        background: "var(--glass-surface)",
+        border: "1px solid var(--glass-border)",
+        borderRadius: 16,
+        boxShadow: "var(--glass-shadow)",
+      }}
+    >
+      {/* Top Author Row */}
+      <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10 }}>
+        <div className="tai-row tai-gap10" style={{ minWidth: 0, alignItems: "center" }}>
+          <Avatar size={42} src={post.authorAvatar} initials={initialsOf(post.authorName)} />
+          <div style={{ minWidth: 0 }}>
+            <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{post.authorName}</span>
+              
+              {/* Tier Pill */}
+              <span
+                className="tai-row tai-gap4"
+                style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  padding: "2px 8px",
+                  borderRadius: 999,
+                  background: tier.bg,
+                  color: tier.color,
+                  border: `1px solid ${tier.border}`,
+                }}
+              >
+                <TierIcon size={10} /> {tier.label}
+              </span>
+            </div>
+
+            <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+              {timeAgo(post.createdAt)}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Tag & Menu */}
+        <div className="tai-row tai-gap6" style={{ alignItems: "center", position: "relative" }}>
+          {post.postType && (
+            <span
+              style={{
+                fontSize: 10.5,
+                fontWeight: 700,
+                padding: "2px 8px",
+                borderRadius: 6,
+                background: "var(--surface-2)",
+                color: "var(--text-3)",
+                border: "1px solid var(--border)",
+                textTransform: "lowercase",
+              }}
+            >
+              {post.postType}
+            </span>
+          )}
+
+          <div style={{ position: "relative" }}>
+            <button
+              className="tai-iconbtn"
+              style={{ width: 28, height: 28, color: "var(--text-3)" }}
+              onClick={() => setMenuOpen((prev) => !prev)}
+            >
+              <MoreVertical size={14} />
+            </button>
+
+            {menuOpen && (
+              <div
+                className="anim-slide-down"
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: "100%",
+                  zIndex: 20,
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 10,
+                  boxShadow: "var(--glass-shadow-elevated)",
+                  padding: "4px",
+                  minWidth: 120,
+                }}
+              >
+                {post.isMine && (
+                  <button
+                    className="tai-btn tai-btn-ghost tai-btn-sm"
+                    style={{ width: "100%", justifyContent: "flex-start", color: "var(--danger)", fontSize: 12 }}
+                    disabled={deleteBusy}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (window.confirm("Delete this post?")) onDelete?.(post.id);
+                    }}
+                  >
+                    <Trash2 size={13} /> Delete Post
+                  </button>
+                )}
+                <button
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  style={{ width: "100%", justifyContent: "flex-start", fontSize: 12 }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(post.content);
+                    }
+                  }}
+                >
+                  <Share2 size={13} /> Copy Text
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Post Title (If present) */}
+      {title && (
+        <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", marginTop: 12 }}>
+          {title}
+        </div>
+      )}
+
+      {/* Post Body Content */}
+      <p
+        style={{
+          fontSize: 13.5,
+          color: "var(--text-2)",
+          lineHeight: 1.6,
+          margin: title ? "6px 0 0" : "12px 0 0",
+          whiteSpace: "pre-wrap",
+          overflowWrap: "break-word",
+        }}
+      >
+        {renderedBody}
+      </p>
+
+      {/* Media if present */}
+      {post.mediaUrl && (
+        <div style={{ marginTop: 12, borderRadius: 10, overflow: "hidden", border: "1px solid var(--border)", background: "#000" }}>
+          {post.mediaType === "video" ? (
+            <video src={post.mediaUrl} controls playsInline style={{ width: "100%", maxHeight: 380, display: "block" }} />
+          ) : (
+            <img src={post.mediaUrl} alt="" loading="lazy" style={{ width: "100%", maxHeight: 380, objectFit: "cover", display: "block" }} />
+          )}
+        </div>
+      )}
+
+      {/* Hashtag Chips at Bottom */}
+      {tags.length > 0 && (
+        <div className="tai-row tai-gap6" style={{ marginTop: 12, flexWrap: "wrap" }}>
+          {tags.map((t) => (
+            <span
+              key={t}
+              onClick={() => onTagClick?.(t.replace(/^#+/, ""))}
+              style={{
+                fontSize: 11.5,
+                fontWeight: 700,
+                padding: "2px 8px",
+                borderRadius: 6,
+                background: "var(--surface-2)",
+                color: "var(--text-2)",
+                cursor: "pointer",
+              }}
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Footer Reactions Row */}
+      <div className="tai-row tai-gap12" style={{ marginTop: 14, paddingTop: 10, borderTop: "1px solid var(--border)", alignItems: "center" }}>
+        <button
+          onClick={() => onToggleLike(post.id)}
+          disabled={likeBusy}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "none",
+            border: "none",
+            color: post.liked ? "#EF4444" : "var(--text-2)",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            padding: "4px 6px",
+          }}
+        >
+          <Heart size={15} fill={post.liked ? "#EF4444" : "none"} color={post.liked ? "#EF4444" : "currentColor"} />
+          <span>{post.likes}</span>
+        </button>
+
+        <button
+          onClick={() => onToggleExpand(post.id)}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            background: "none",
+            border: "none",
+            color: expanded ? "var(--primary)" : "var(--text-2)",
+            fontSize: 13,
+            fontWeight: 700,
+            cursor: "pointer",
+            padding: "4px 6px",
+          }}
+        >
+          <MessageCircle size={15} />
+          <span>{post.comments.length}</span>
+        </button>
+      </div>
+
+      {/* Expandable Comments Section */}
+      {expanded && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px dashed var(--border)", display: "flex", flexDirection: "column", gap: 10 }}>
+          {post.comments.map((c) => (
+            <div key={c.id} className="tai-row tai-gap8" style={{ alignItems: "flex-start" }}>
+              <Avatar size={28} src={c.authorAvatar || c.user_profiles?.avatar_url} initials={initialsOf(c.authorName || c.user_profiles?.display_name)} />
+              <div style={{ minWidth: 0, background: "var(--surface-2)", borderRadius: 10, padding: "8px 12px", flex: 1, border: "1px solid var(--border)" }}>
+                <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 2 }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>
+                    {c.authorName || c.user_profiles?.display_name || "Learner"}
+                  </span>
+                  <span style={{ fontSize: 10.5, color: "var(--text-3)" }}>{timeAgo(c.createdAt || c.created_at)}</span>
+                </div>
+                <div style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.5 }}>
+                  {c.content}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {post.comments.length === 0 && (
+            <div style={{ fontSize: 11.5, color: "var(--text-3)", textAlign: "center", padding: "4px 0" }}>
+              No comments yet — be the first to reply!
+            </div>
+          )}
+
+          {/* Comment Input */}
+          <div className="tai-row tai-gap8" style={{ marginTop: 4 }}>
+            <input
+              className="tai-input"
+              placeholder="Write a comment..."
+              value={commentDraft || ""}
+              onChange={(e) => onCommentDraftChange(post.id, e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && commentDraft?.trim()) onSubmitComment(post.id);
+              }}
+              style={{ flex: 1, padding: "7px 12px", fontSize: 12.5 }}
+            />
+            <button
+              className="tai-btn tai-btn-primary tai-btn-sm"
+              disabled={commentBusy || !commentDraft?.trim()}
+              onClick={() => onSubmitComment(post.id)}
+              style={{ width: 34, height: 34, padding: 0, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <Send size={13} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===========================================================================
+// MAIN COMMUNITY SCREEN
+// ===========================================================================
+export function CommunityScreen({
+  session,
+  user = {},
+  push,
+  back,
+  showToast,
+  params,
+  initialTab,
+  activeTab,
+  onTabChange,
+  postsQuery = {},
+  createCommunityPost,
+  addPostComment,
+  togglePostReaction,
+  deleteCommunityPost,
+  activityFeedQuery = {},
+  myCommunityStatsQuery = {},
+  studyGroupsQuery = {},
+  myGroupIdsQuery = {},
+  createStudyGroup,
+  joinStudyGroup,
+  leaveStudyGroup,
+  mentorsList = [],
+  cohortMembershipQuery = {},
+  cohortSessionsQuery = {},
+  communityPeopleQuery = {},
+  memberStatsQuery = {},
+  leaderboardQuery = {},
+  gamificationStatsQuery = {},
+  upcomingSessionsQuery = {},
+}) {
+  const myId = session?.user?.id;
+  const initialSelectedTab = params?.tab || initialTab || activeTab || "summary";
+  const [tab, setTab] = useState(initialSelectedTab);
+  const prevExternalTabRef = React.useRef(params?.tab || activeTab || initialTab);
+
+  React.useEffect(() => {
+    const nextExternalTab = params?.tab || activeTab || initialTab;
+    if (nextExternalTab && nextExternalTab !== prevExternalTabRef.current) {
+      prevExternalTabRef.current = nextExternalTab;
+      setTab(nextExternalTab);
+    }
+  }, [params?.tab, activeTab, initialTab]);
+
+  const handleTabClick = (tabId) => {
+    setTab(tabId);
+    prevExternalTabRef.current = tabId;
+    if (onTabChange) onTabChange(tabId);
+  };
+
+  // Posts State
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [postText, setPostText] = useState("");
+  const [postType, setPostType] = useState("general");
+  const [posting, setPosting] = useState(false);
+  const [feedSearch, setFeedSearch] = useState("");
+  const [activeTagFilter, setActiveTagFilter] = useState(null);
+  const [expandedPostId, setExpandedPostId] = useState(null);
+  const [commentDrafts, setCommentDrafts] = useState({});
+  const [commentBusyId, setCommentBusyId] = useState(null);
+  const [likeBusyId, setLikeBusyId] = useState(null);
+  const [deleteBusyId, setDeleteBusyId] = useState(null);
+
+  // Groups State
+  const [groupSearch, setGroupSearch] = useState("");
+  const [createGroupModalOpen, setCreateGroupModalOpen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupDesc, setNewGroupDesc] = useState("");
+  const [groupBusy, setGroupBusy] = useState(false);
+
+  // Tutors State
+  const [tutorSearch, setTutorSearch] = useState("");
+
+  // People State
+  const [peopleSearch, setPeopleSearch] = useState("");
+
+  // Process Posts
+  const rawPosts = postsQuery.data || [];
+  const posts = useMemo(() => {
+    return rawPosts.map((p) => ({
+      id: p.id,
+      userId: p.user_id,
+      authorName: p.user_profiles?.display_name || "Learner",
+      authorAvatar: p.user_profiles?.avatar_url || null,
+      authorRole: p.user_profiles?.role || "learner",
+      content: p.content,
+      createdAt: p.created_at,
+      postType: p.post_type || "general",
+      mediaUrl: p.media_url || null,
+      mediaType: p.media_type || null,
+      isPinned: !!p.is_pinned,
+      moderationStatus: p.moderation_status || "approved",
+      isMine: p.user_id === myId,
+      likes: (p.post_reactions || []).length,
+      liked: (p.post_reactions || []).some((r) => r.user_id === myId),
+      comments: (p.post_comments || []).map((c) => ({
+        id: c.id,
+        authorName: c.user_profiles?.display_name || "Learner",
+        authorAvatar: c.user_profiles?.avatar_url || null,
+        content: c.content,
+        createdAt: c.created_at,
+        user_profiles: c.user_profiles,
+      })),
+    })).sort((a, b) => (b.isPinned - a.isPinned) || (new Date(b.createdAt) - new Date(a.createdAt)));
+  }, [rawPosts, myId]);
+
+  // Derive author engagement scores from loaded posts and comments
+  const authorStatsMap = useMemo(() => {
+    const map = {};
+    for (const p of posts) {
+      if (!p.userId) continue;
+      if (!map[p.userId]) map[p.userId] = { posts: 0, comments: 0 };
+      map[p.userId].posts += 1;
+      for (const c of p.comments || []) {
+        const cUserId = c.user_profiles?.id || c.userId || c.user_id;
+        if (cUserId) {
+          if (!map[cUserId]) map[cUserId] = { posts: 0, comments: 0 };
+          map[cUserId].comments += 1;
+        }
+      }
+    }
+    return map;
+  }, [posts]);
+
+  const filteredPosts = useMemo(() => {
+    return posts.filter((p) => {
+      const matchesSearch = !feedSearch.trim() ||
+        p.content.toLowerCase().includes(feedSearch.trim().toLowerCase().replace(/^#+/, ""));
+      const matchesTag = !activeTagFilter ||
+        p.content.toLowerCase().includes(`#${activeTagFilter.toLowerCase()}`);
+      return matchesSearch && matchesTag;
+    });
+  }, [posts, feedSearch, activeTagFilter]);
+
+  const trendingTags = useMemo(() => extractHashtags(posts), [posts]);
+
+  // Handlers for Posts
+  async function handlePost() {
+    if (!postText.trim() || !myId || !createCommunityPost) return;
+    setPosting(true);
+    try {
+      await createCommunityPost({ userId: myId, content: postText.trim(), postType });
+      setPostText("");
+      setComposerOpen(false);
+      postsQuery.refetch?.();
+      activityFeedQuery.refetch?.();
+      myCommunityStatsQuery.refetch?.();
+      showToast?.("Post published!");
+    } catch (e) {
+      showToast?.(e?.message || "Could not publish post.");
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  async function handleToggleLike(postId) {
+    if (!myId || !togglePostReaction) return;
+    setLikeBusyId(postId);
+    try {
+      await togglePostReaction({ postId, userId: myId });
+      postsQuery.refetch?.();
+    } catch (e) {
+      showToast?.("Could not update like.");
+    } finally {
+      setLikeBusyId(null);
+    }
+  }
+
+  async function handleDeletePost(postId) {
+    if (!deleteCommunityPost) return;
+    setDeleteBusyId(postId);
+    try {
+      await deleteCommunityPost(postId);
+      postsQuery.refetch?.();
+      myCommunityStatsQuery.refetch?.();
+      showToast?.("Post deleted.");
+    } catch (e) {
+      showToast?.("Could not delete post.");
+    } finally {
+      setDeleteBusyId(null);
+    }
+  }
+
+  async function handleSubmitComment(postId) {
+    const content = (commentDrafts[postId] || "").trim();
+    if (!content || !myId || !addPostComment) return;
+    setCommentBusyId(postId);
+    try {
+      await addPostComment({ postId, userId: myId, content });
+      setCommentDrafts((prev) => ({ ...prev, [postId]: "" }));
+      postsQuery.refetch?.();
+      myCommunityStatsQuery.refetch?.();
+      activityFeedQuery.refetch?.();
+      showToast?.("Comment added!");
+    } catch (e) {
+      showToast?.("Could not add comment.");
+    } finally {
+      setCommentBusyId(null);
+    }
+  }
+
+  // Handlers for Groups
+  const myGroupIds = new Set(myGroupIdsQuery.data || []);
+  const allGroups = studyGroupsQuery.data || [];
+  const filteredGroups = allGroups.filter((g) =>
+    !groupSearch.trim() ||
+    (g.name || "").toLowerCase().includes(groupSearch.trim().toLowerCase()) ||
+    (g.description || "").toLowerCase().includes(groupSearch.trim().toLowerCase())
+  );
+
+  async function handleCreateGroup() {
+    if (!newGroupName.trim() || !createStudyGroup) return;
+    setGroupBusy(true);
+    try {
+      await createStudyGroup({
+        name: newGroupName.trim(),
+        description: newGroupDesc.trim(),
+        createdBy: myId,
+      });
+      setNewGroupName("");
+      setNewGroupDesc("");
+      setCreateGroupModalOpen(false);
+      studyGroupsQuery.refetch?.();
+      myGroupIdsQuery.refetch?.();
+      showToast?.("Study group created!");
+    } catch (e) {
+      showToast?.("Could not create study group.");
+    } finally {
+      setGroupBusy(false);
+    }
+  }
+
+  async function handleJoinGroup(groupId) {
+    if (!myId || !joinStudyGroup) return;
+    try {
+      await joinStudyGroup({ studyGroupId: groupId, userId: myId });
+      myGroupIdsQuery.refetch?.();
+      showToast?.("Joined study group!");
+    } catch (e) {
+      showToast?.("Could not join group.");
+    }
+  }
+
+  async function handleLeaveGroup(groupId) {
+    if (!myId || !leaveStudyGroup) return;
+    try {
+      await leaveStudyGroup({ studyGroupId: groupId, userId: myId });
+      myGroupIdsQuery.refetch?.();
+      showToast?.("Left study group.");
+    } catch (e) {
+      showToast?.("Could not leave group.");
+    }
+  }
+
+  // Tutors
+  const filteredTutors = mentorsList.filter((m) =>
+    !tutorSearch.trim() ||
+    (m.name || "").toLowerCase().includes(tutorSearch.trim().toLowerCase()) ||
+    (m.title || "").toLowerCase().includes(tutorSearch.trim().toLowerCase()) ||
+    (m.specializations || []).some((s) => s.toLowerCase().includes(tutorSearch.trim().toLowerCase()))
+  );
+
+  // People
+  const filteredPeople = (communityPeopleQuery.data || []).filter((p) =>
+    !peopleSearch.trim() ||
+    (p.display_name || "").toLowerCase().includes(peopleSearch.trim().toLowerCase())
+  );
+
+  // Cohort
+  const cohort = cohortMembershipQuery.data?.cohort || null;
+  const cohortSessions = cohortSessionsQuery.data || [];
+
+  // Leaderboard data
+  const leaderboardRows = leaderboardQuery.data || [];
+  const myRankIndex = leaderboardRows.findIndex((r) => r.user_id === myId);
+  const myRankNumber = myRankIndex >= 0 ? myRankIndex + 1 : "—";
+  const myPoints = gamificationStatsQuery.data?.total_points || 0;
+  const myLevel = gamificationStatsQuery.data?.current_level || 1;
+  const nextRankPoints = myRankIndex > 0 ? (leaderboardRows[myRankIndex - 1]?.total_points || myPoints) - myPoints : 0;
+
+  // Tabs list with icons
+  const TABS = [
+    { id: "summary", label: "Summary", icon: Sparkles },
+    { id: "posts", label: "Posts", icon: MessageSquare },
+    { id: "groups", label: "Groups", icon: Users },
+    { id: "tutors", label: "Instructors", icon: GraduationCap },
+    { id: "cohorts", label: "Cohorts", icon: BookOpen },
+    { id: "rank", label: "Rank", icon: Trophy },
+  ];
+
+  return (
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* Top Page Header */}
+      <div>
+        <h1 className="tai-h1" style={{ margin: 0 }}>Community</h1>
+      </div>
+      {/* Hero Banner */}
+      <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
+
+      {/* Live Activity Banner */}
+      <LiveActivityBanner items={activityFeedQuery.data || []} />
+
+      {/* Six Flat Tabs Row */}
+      <div
+        style={{
+          display: "flex",
+          gap: 6,
+          paddingBottom: 4,
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+        }}
+      >
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const isActive = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => handleTabClick(t.id)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 7,
+                padding: "8px 18px",
+                borderRadius: 999,
+                border: "none",
+                background: isActive ? "var(--primary)" : "transparent",
+                color: isActive ? "#FFFFFF" : "var(--text-2)",
+                fontWeight: isActive ? 800 : 600,
+                fontSize: 13,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.15s ease",
+                boxShadow: isActive ? "0 4px 14px rgba(37, 99, 235, 0.28)" : "none",
+              }}
+            >
+              <Icon size={14} />
+              <span>{t.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* =================================================================== */}
+      {/* TAB 0: SUMMARY - the Community landing experience. Every card below
+          reads from a query this component already receives and already
+          uses elsewhere (posts, study groups, mentors/instructors,
+          upcomingSessionsQuery - previously destructured here but never
+          actually rendered anywhere in this file - and the leaderboard/
+          gamification stats already computed above for the Rank tab).
+          Nothing here is invented data; each "View" action just switches
+          to the tab that already renders the full real feature. */}
+      {/* =================================================================== */}
+      {tab === "summary" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 14,
+            }}
+          >
+            {/* Recent Posts */}
+            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <MessageSquare size={16} color="var(--primary)" />
+                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Recent Posts</span>
+                </div>
+                <button className="tai-btn ta-btn-sm" onClick={() => handleTabClick("posts")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                  View all <ChevronRight size={13} />
+                </button>
+              </div>
+              {postsQuery.loading ? (
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading…</div>
+              ) : posts.length === 0 ? (
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>No posts yet — be the first to share something with the community.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {posts.slice(0, 2).map((p) => (
+                    <div key={p.id} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <Avatar size={26} src={p.authorAvatar} initials={initialsOf(p.authorName)} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.authorName}</div>
+                        <div style={{ fontSize: 12.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.content}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Study Groups */}
+            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <Users size={16} color="var(--primary)" />
+                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Study Groups</span>
+                </div>
+                <button onClick={() => handleTabClick("groups")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                  Browse <ChevronRight size={13} />
+                </button>
+              </div>
+              {studyGroupsQuery.loading ? (
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading…</div>
+              ) : allGroups.length === 0 ? (
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>No study groups yet.</div>
+              ) : (
+                <div style={{ fontSize: 13, color: "var(--text-2)" }}>
+                  <strong style={{ color: "var(--text)" }}>{allGroups.length}</strong> group{allGroups.length === 1 ? "" : "s"} available
+                  {myGroupIds.size > 0 && <> · you're in <strong style={{ color: "var(--text)" }}>{myGroupIds.size}</strong></>}
+                </div>
+              )}
+            </div>
+
+            {/* Instructors */}
+            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <GraduationCap size={16} color="var(--primary)" />
+                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Instructors</span>
+                </div>
+                <button onClick={() => handleTabClick("tutors")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                  View <ChevronRight size={13} />
+                </button>
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-2)" }}>
+                {mentorsList.length === 0 ? "No instructors listed yet." : (
+                  <><strong style={{ color: "var(--text)" }}>{mentorsList.length}</strong> instructor{mentorsList.length === 1 ? "" : "s"} available to reach out to</>
+                )}
+              </div>
+            </div>
+
+            {/* Upcoming Sessions */}
+            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 10 }}>
+                <Clock size={16} color="var(--primary)" />
+                <span style={{ fontWeight: 800, fontSize: 14.5 }}>Upcoming Sessions</span>
+              </div>
+              {upcomingSessionsQuery.loading ? (
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading…</div>
+              ) : (upcomingSessionsQuery.data || []).length === 0 ? (
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>No upcoming sessions scheduled.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {(upcomingSessionsQuery.data || []).slice(0, 2).map((s) => (
+                    <div key={s.id} style={{ fontSize: 12.5 }}>
+                      <div style={{ fontWeight: 700 }}>{s.title || "Session"}</div>
+                      <div style={{ color: "var(--text-3)" }}>
+                        {s.mentors?.user_profiles?.display_name ? `with ${s.mentors.user_profiles.display_name} · ` : ""}
+                        {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* My Rank */}
+            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <Trophy size={16} color="var(--primary)" />
+                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Your Standing</span>
+                </div>
+                <button onClick={() => handleTabClick("rank")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                  Leaderboard <ChevronRight size={13} />
+                </button>
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-2)" }}>
+                Rank <strong style={{ color: "var(--text)" }}>#{myRankNumber}</strong> · <strong style={{ color: "var(--text)" }}>{myPoints}</strong> points · Level {myLevel}
+              </div>
+            </div>
+
+            {/* Achievements entry point */}
+            <div className="tai-card tai-card-hover" onClick={() => push("achievements")} style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)", cursor: "pointer" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between" }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <Award size={16} color="var(--primary)" />
+                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Achievements</span>
+                </div>
+                <ChevronRight size={15} color="var(--text-3)" />
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6 }}>See what you've earned and what's next.</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* TAB 1: POSTS */}
+      {/* =================================================================== */}
+      {tab === "posts" && (
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
+          {/* Main Feed Column */}
+          <div style={{ flex: "2 1 500px", minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Search Posts Bar */}
+            <div style={{ position: "relative" }}>
+              <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
+              <input
+                className="tai-input"
+                style={{ paddingLeft: 38, background: "var(--glass-surface)", borderRadius: 12 }}
+                placeholder="Search posts..."
+                value={feedSearch}
+                onChange={(e) => setFeedSearch(e.target.value)}
+              />
+              {feedSearch && (
+                <button
+                  onClick={() => setFeedSearch("")}
+                  className="tai-iconbtn"
+                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", width: 22, height: 22 }}
+                >
+                  <X size={13} />
+                </button>
+              )}
+            </div>
+
+            {/* Composer */}
+            {!composerOpen ? (
+              <div
+                className="tai-card tai-row tai-gap10"
+                style={{
+                  padding: "12px 16px",
+                  alignItems: "center",
+                  background: "var(--glass-surface)",
+                  border: "1px solid var(--glass-border)",
+                  borderRadius: 14,
+                  boxShadow: "var(--glass-shadow)",
+                }}
+              >
+                <Avatar size={38} src={user.avatarUrl} initials={initialsOf(user.name || "You")} />
+                <button
+                  onClick={() => setComposerOpen(true)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    textAlign: "left",
+                    border: "1px solid var(--border)",
+                    background: "var(--surface-2)",
+                    borderRadius: 999,
+                    padding: "9px 16px",
+                    color: "var(--text-3)",
+                    fontSize: 13,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Share something with the community...
+                </button>
+                <button
+                  className="tai-btn tai-btn-primary"
+                  style={{ width: 36, height: 36, borderRadius: "50%", padding: 0, flexShrink: 0 }}
+                  onClick={() => setComposerOpen(true)}
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            ) : (
+              <div
+                className="tai-card anim-slide-down"
+                style={{
+                  padding: "16px",
+                  background: "var(--glass-surface)",
+                  border: "1px solid var(--glass-border)",
+                  borderRadius: 14,
+                  boxShadow: "var(--glass-shadow)",
+                }}
+              >
+                <div className="tai-row tai-between" style={{ marginBottom: 10, alignItems: "center" }}>
+                  <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                    <Avatar size={32} src={user.avatarUrl} initials={initialsOf(user.name || "You")} />
+                    <span style={{ fontWeight: 800, fontSize: 13 }}>Create a Post</span>
+                  </div>
+                  <div className="tai-row tai-gap6">
+                    {["general", "question", "tip", "showcase"].map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setPostType(type)}
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: "2px 8px",
+                          borderRadius: 6,
+                          border: `1px solid ${postType === type ? "var(--primary)" : "var(--border)"}`,
+                          background: postType === type ? "var(--primary-tint)" : "var(--surface-2)",
+                          color: postType === type ? "var(--primary)" : "var(--text-3)",
+                          cursor: "pointer",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <textarea
+                  className="tai-input"
+                  rows={3}
+                  autoFocus
+                  placeholder="What's on your mind? Use #hashtags to categorize..."
+                  value={postText}
+                  onChange={(e) => setPostText(e.target.value)}
+                  style={{ marginBottom: 12, padding: "10px 12px", fontSize: 13, background: "var(--surface-2)" }}
+                />
+
+                <div className="tai-row tai-gap8" style={{ justifyContent: "flex-end" }}>
+                  <button
+                    className="tai-btn tai-btn-ghost tai-btn-sm"
+                    onClick={() => {
+                      setComposerOpen(false);
+                      setPostText("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="tai-btn tai-btn-primary tai-btn-sm"
+                    disabled={posting || !postText.trim()}
+                    onClick={handlePost}
+                  >
+                    {posting ? "Posting..." : "Post"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Posts Feed */}
+            {postsQuery.loading && (
+              <div className="tai-card" style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
+                Loading posts...
+              </div>
+            )}
+
+            {!postsQuery.loading && filteredPosts.length === 0 && (
+              <div className="tai-card" style={{ padding: 36, textAlign: "center" }}>
+                <MessageSquare size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
+                <div style={{ fontWeight: 800, fontSize: 14 }}>{feedSearch || activeTagFilter ? "No matching posts" : "No posts yet"}</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Be the first to share something!</div>
+              </div>
+            )}
+
+            {filteredPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                authorStats={authorStatsMap[post.userId]}
+                onToggleLike={handleToggleLike}
+                likeBusy={likeBusyId === post.id}
+                onDelete={post.isMine ? handleDeletePost : null}
+                deleteBusy={deleteBusyId === post.id}
+                expanded={expandedPostId === post.id}
+                onToggleExpand={(id) => setExpandedPostId((prev) => (prev === id ? null : id))}
+                commentDraft={commentDrafts[post.id]}
+                onCommentDraftChange={(id, val) => setCommentDrafts((prev) => ({ ...prev, [id]: val }))}
+                onSubmitComment={handleSubmitComment}
+                commentBusy={commentBusyId === post.id}
+                onTagClick={(tag) => setActiveTagFilter(tag)}
+              />
+            ))}
+          </div>
+
+          {/* Sidebar Column */}
+          <div style={{ flex: "1 1 280px", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
+            {/* Status Card */}
+            <StatusCard stats={myCommunityStatsQuery.data} />
+
+            {/* Trending Tags Card */}
+            {trendingTags.length > 0 && (
+              <div
+                className="tai-card"
+                style={{
+                  padding: "18px 16px",
+                  background: "var(--glass-surface)",
+                  border: "1px solid var(--glass-border)",
+                  borderRadius: 16,
+                  boxShadow: "var(--glass-shadow)",
+                }}
+              >
+                <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center" }}>
+                  <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                    <TrendingUp size={15} color="var(--primary)" />
+                    <span style={{ fontWeight: 800, fontSize: 13.5 }}>Trending Tags</span>
+                  </div>
+                  {activeTagFilter && (
+                    <button
+                      onClick={() => setActiveTagFilter(null)}
+                      style={{ fontSize: 11, color: "var(--primary)", border: "none", background: "none", cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
+                  {trendingTags.map((t) => {
+                    const isSelected = activeTagFilter === t.tag;
+                    return (
+                      <button
+                        key={t.tag}
+                        onClick={() => setActiveTagFilter(isSelected ? null : t.tag)}
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: 700,
+                          padding: "3px 10px",
+                          borderRadius: 999,
+                          border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
+                          background: isSelected ? "var(--primary)" : "var(--surface-2)",
+                          color: isSelected ? "#fff" : "var(--primary)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        #{t.tag}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Community Stats Card */}
+            <div
+              className="tai-card"
+              style={{
+                padding: "18px 16px",
+                background: "var(--glass-surface)",
+                border: "1px solid var(--glass-border)",
+                borderRadius: 16,
+                boxShadow: "var(--glass-shadow)",
+              }}
+            >
+              <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12, color: "var(--text)" }}>
+                Community Stats
+              </div>
+              <div className="tai-col tai-gap10">
+                {[
+                  { label: "Total Posts", value: posts.length },
+                  { label: "Study Groups", value: allGroups.length },
+                  { label: "Total Likes", value: posts.reduce((sum, p) => sum + p.likes, 0) },
+                ].map((s) => (
+                  <div key={s.label} className="tai-row tai-between" style={{ alignItems: "center" }}>
+                    <span style={{ fontSize: 13, color: "var(--text-2)" }}>{s.label}</span>
+                    <span style={{ fontSize: 14, fontWeight: 900, color: "var(--text)" }}>{s.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* TAB 2: GROUPS */}
+      {/* =================================================================== */}
+      {tab === "groups" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Header Bar */}
+          <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+              <Users size={20} color="var(--primary)" />
+              <span style={{ fontWeight: 900, fontSize: 17, color: "var(--text)" }}>Study Groups</span>
+            </div>
+            <button
+              className="tai-btn tai-btn-primary"
+              style={{ borderRadius: 999, padding: "8px 18px", fontSize: 12.5 }}
+              onClick={() => setCreateGroupModalOpen((prev) => !prev)}
+            >
+              <Plus size={15} /> Create Group
+            </button>
+          </div>
+
+          {/* Create Group Form */}
+          {createGroupModalOpen && (
+            <div
+              className="tai-card anim-slide-down"
+              style={{
+                padding: "16px",
+                background: "var(--glass-surface)",
+                border: "1px solid var(--glass-border)",
+                borderRadius: 14,
+              }}
+            >
+              <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Create a New Study Group</div>
+              <input
+                className="tai-input"
+                placeholder="Group Name (e.g. AI Prompt Engineering Guild)"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                style={{ marginBottom: 10, background: "var(--surface-2)" }}
+              />
+              <textarea
+                className="tai-input"
+                rows={2}
+                placeholder="Group Description & Purpose"
+                value={newGroupDesc}
+                onChange={(e) => setNewGroupDesc(e.target.value)}
+                style={{ marginBottom: 12, background: "var(--surface-2)" }}
+              />
+              <div className="tai-row tai-gap8" style={{ justifyContent: "flex-end" }}>
+                <button
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  onClick={() => setCreateGroupModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="tai-btn tai-btn-primary tai-btn-sm"
+                  disabled={groupBusy || !newGroupName.trim()}
+                  onClick={handleCreateGroup}
+                >
+                  {groupBusy ? "Creating..." : "Create Group"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Search Bar */}
+          <div style={{ position: "relative" }}>
+            <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
+            <input
+              className="tai-input"
+              style={{ paddingLeft: 38, background: "var(--glass-surface)", borderRadius: 12 }}
+              placeholder="Search study groups..."
+              value={groupSearch}
+              onChange={(e) => setGroupSearch(e.target.value)}
+            />
+          </div>
+
+          {/* Groups List */}
+          {filteredGroups.length === 0 && (
+            <div className="tai-card" style={{ padding: 36, textAlign: "center" }}>
+              <Users size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
+              <div style={{ fontWeight: 800, fontSize: 14 }}>No study groups found</div>
+              <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Create the first study group!</div>
+            </div>
+          )}
+
+          <div className="tai-col tai-gap12">
+            {filteredGroups.map((g) => {
+              const isMember = myGroupIds.has(g.id);
+              const memberCount = g.member_count || g.study_group_members?.[0]?.count || (isMember ? 1 : 0);
+              const maxMembers = g.max_members || 50;
+              const isFull = !isMember && memberCount >= maxMembers;
+
+              return (
+                <div
+                  key={g.id}
+                  className="tai-card tai-card-hover"
+                  style={{
+                    padding: "18px 20px",
+                    background: "var(--glass-surface)",
+                    border: "1px solid var(--glass-border)",
+                    borderRadius: 16,
+                    boxShadow: "var(--glass-shadow)",
+                  }}
+                >
+                  <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 0, flex: "1 1 280px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            fontSize: 16,
+                            color: "var(--text)",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                          onClick={() => push("studyGroup", { groupId: g.id })}
+                        >
+                          {g.name}
+                          {g.is_private && (
+                            <span title="Private group" style={{ display: "inline-flex", alignItems: "center" }}>
+                              <Lock size={13} color="var(--warning)" />
+                            </span>
+                          )}
+                        </div>
+
+                        {g.courses?.title && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: "2px 8px",
+                              borderRadius: 999,
+                              background: "rgba(37, 99, 235, 0.1)",
+                              color: "var(--primary)",
+                              border: "1px solid rgba(37, 99, 235, 0.2)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <BookOpen size={11} /> {g.courses.title}
+                          </span>
+                        )}
+
+                        {isMember && (
+                          <span
+                            style={{
+                              fontSize: 10.5,
+                              fontWeight: 800,
+                              padding: "2px 8px",
+                              borderRadius: 999,
+                              background: "rgba(16, 185, 129, 0.12)",
+                              color: "var(--success)",
+                              border: "1px solid rgba(16, 185, 129, 0.25)",
+                            }}
+                          >
+                            Joined
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, marginBottom: 10 }}>
+                        {g.description || "Open study and peer discussion group."}
+                      </div>
+
+                      <div className="tai-row tai-gap12" style={{ fontSize: 12, color: "var(--text-3)", alignItems: "center" }}>
+                        <span>👥 {memberCount}/{maxMembers} members</span>
+                        {g.created_at && <span>🕒 Created {timeAgo(g.created_at)}</span>}
+                      </div>
+                    </div>
+
+                    <div className="tai-row tai-gap8" style={{ alignItems: "center", alignSelf: "center" }}>
+                      <button
+                        className="tai-btn tai-btn-outline tai-btn-sm"
+                        style={{ borderRadius: 999, padding: "7px 16px", display: "inline-flex", alignItems: "center", gap: 6 }}
+                        onClick={() => push("studyGroup", { groupId: g.id })}
+                      >
+                        <Users size={13} /> View Group
+                      </button>
+
+                      {isMember ? (
+                        <button
+                          className="tai-btn tai-btn-outline tai-btn-sm"
+                          style={{ borderRadius: 999, padding: "7px 16px", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.4)" }}
+                          onClick={() => handleLeaveGroup(g.id)}
+                        >
+                          Leave
+                        </button>
+                      ) : (
+                        <button
+                          className="tai-btn tai-btn-primary tai-btn-sm"
+                          style={{ borderRadius: 999, padding: "7px 16px" }}
+                          disabled={isFull}
+                          onClick={() => handleJoinGroup(g.id)}
+                        >
+                          {isFull ? "Full" : "Join Group"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* TAB 3: TUTORS (INSTRUCTORS) */}
+      {/* =================================================================== */}
+      {tab === "tutors" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Search Bar */}
+          <div style={{ position: "relative" }}>
+            <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
+            <input
+              className="tai-input"
+              style={{ paddingLeft: 38, background: "var(--glass-surface)", borderRadius: 12 }}
+              placeholder="Search instructors by name or specialization..."
+              value={tutorSearch}
+              onChange={(e) => setTutorSearch(e.target.value)}
+            />
+          </div>
+
+          {filteredTutors.length === 0 && (
+            <div className="tai-card" style={{ padding: 36, textAlign: "center" }}>
+              <GraduationCap size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
+              <div style={{ fontWeight: 800, fontSize: 14 }}>No instructors found</div>
+              <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Try searching for a different skill or name.</div>
+            </div>
+          )}
+
+          <div className="tai-grid3">
+            {filteredTutors.map((m) => (
+              <div
+                key={m.id}
+                className="tai-card tai-card-hover"
+                style={{
+                  padding: "22px 18px",
+                  background: "var(--glass-surface)",
+                  border: "1px solid var(--glass-border)",
+                  borderRadius: 16,
+                  boxShadow: "var(--glass-shadow)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  justifyContent: "space-between",
+                  gap: 14,
+                }}
+              >
+                <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <Avatar size={56} src={m.avatar || m.avatarUrl || m.user_profiles?.avatar_url} initials={initialsOf(m.name)} />
+                  
+                  <div style={{ fontWeight: 900, fontSize: 15, color: "var(--text)", marginTop: 10 }}>
+                    {m.name}
+                  </div>
+
+                  {m.rating > 0 && (
+                    <div className="tai-row tai-gap4" style={{ alignItems: "center", justifyContent: "center", marginTop: 3 }}>
+                      <Star size={13} fill="#F59E0B" color="#F59E0B" />
+                      <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text)" }}>{m.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+
+                  {m.specializations && m.specializations.length > 0 && (
+                    <div className="tai-row tai-gap4" style={{ justifyContent: "center", flexWrap: "wrap", marginTop: 8 }}>
+                      {m.specializations.slice(0, 2).map((s) => (
+                        <span
+                          key={s}
+                          style={{
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                            padding: "2px 8px",
+                            borderRadius: 6,
+                            background: "var(--surface-2)",
+                            color: "var(--text-2)",
+                            border: "1px solid var(--border)",
+                          }}
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {m.bio && (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: "var(--text-3)",
+                        lineHeight: 1.5,
+                        marginTop: 8,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {m.bio}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className="tai-btn tai-btn-primary"
+                  style={{ width: "100%", borderRadius: 10, justifyContent: "center", padding: "8px 0" }}
+                  onClick={() => push("mentors")}
+                >
+                  <MessageSquare size={14} /> Chat
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* TAB 4: COHORTS */}
+      {/* =================================================================== */}
+      {tab === "cohorts" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* Info Banner */}
+          <div
+            className="tai-card"
+            style={{
+              padding: "18px 20px",
+              background: "var(--glass-surface)",
+              border: "1px solid var(--glass-border)",
+              borderRadius: 16,
+              boxShadow: "var(--glass-shadow)",
+            }}
+          >
+            <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 6 }}>
+              <BookOpen size={16} color="var(--primary)" />
+              <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>Cohort Communication</span>
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55 }}>
+              Open a cohort to access its discussion feed, group announcements, live sessions, shared resources, and member directory — all in one space.
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 12 }}>My Cohort Spaces</div>
+
+            {cohort ? (
+              <div
+                className="tai-card tai-card-hover"
+                style={{
+                  padding: "20px",
+                  background: "var(--glass-surface)",
+                  border: "1px solid var(--glass-border)",
+                  borderRadius: 16,
+                  boxShadow: "var(--glass-shadow)",
+                  cursor: "pointer",
+                }}
+                onClick={() => push("cohort")}
+              >
+                <div className="tai-row tai-between" style={{ alignItems: "flex-start", marginBottom: 10 }}>
+                  <div>
+                    <span
+                      style={{
+                        fontSize: 10.5,
+                        fontWeight: 800,
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        background: "rgba(16, 185, 129, 0.12)",
+                        color: "#10B981",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Active Cohort
+                    </span>
+                    <div style={{ fontWeight: 900, fontSize: 17, color: "var(--text)", marginTop: 6 }}>
+                      {cohort.name}
+                    </div>
+                  </div>
+                  <ChevronRight size={18} color="var(--text-3)" />
+                </div>
+
+                <div style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.55, marginBottom: 12 }}>
+                  {cohort.description || "Your dedicated organizational cohort workspace."}
+                </div>
+
+                <div className="tai-row tai-gap12" style={{ fontSize: 12, color: "var(--text-3)" }}>
+                  {cohortSessions.length > 0 && (
+                    <span>📅 {cohortSessions.length} live sessions</span>
+                  )}
+                  {cohort.start_date && (
+                    <span>· Started {new Date(cohort.start_date).toLocaleDateString()}</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="tai-card" style={{ padding: 36, textAlign: "center" }}>
+                <Users size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
+                <div style={{ fontWeight: 800, fontSize: 14 }}>Not currently enrolled in a cohort</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
+                  Contact your workspace administrator to be assigned to a cohort.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* TAB 6: RANK (LEADERBOARD) */}
+      {/* =================================================================== */}
+      {tab === "rank" && (
+        <LeaderboardPanel
+          rows={leaderboardRows}
+          loading={leaderboardQuery.loading}
+          onRefresh={() => leaderboardQuery.refetch?.()}
+          currentUserId={myId}
+          userStats={gamificationStatsQuery.data || {}}
+        />
+      )}
+    </div>
+  );
+}
+
+export default CommunityScreen;
