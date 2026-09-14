@@ -5,10 +5,3 @@ dist
 .env
 *.timestamp-*.mjs
 _tmp_export/
-.env
-.env.local
-
-# Local/private files
-W-8BEN.pdf
-supabase/.temp/
-_tmp_export/

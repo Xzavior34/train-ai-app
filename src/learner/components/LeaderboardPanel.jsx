@@ -48,7 +48,9 @@ export function LeaderboardPanel({
   loading = false,
   onRefresh,
   currentUserId,
-  userStats = {}
+  userStats = {},
+  period = "all",
+  onPeriodChange,
 }) {
   const [quoteIndex] = useState(() => Math.floor(Math.random() * MOTIVATION_QUOTES.length));
   const dailyQuote = MOTIVATION_QUOTES[quoteIndex] || MOTIVATION_QUOTES[0];
@@ -115,10 +117,48 @@ export function LeaderboardPanel({
                 Leaderboard
               </h2>
               <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>
-                {learners.length} learners competing • Live updates
+                {learners.length} learners competing • {period === "week" ? "This week" : period === "month" ? "This month" : "All time"}
               </div>
             </div>
           </div>
+
+          <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+            {onPeriodChange && (
+              <div
+                className="tai-row"
+                style={{
+                  display: "inline-flex",
+                  background: "var(--surface-3)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 8,
+                  padding: 2,
+                }}
+              >
+                {[
+                  { key: "all", label: "All Time" },
+                  { key: "week", label: "This Week" },
+                  { key: "month", label: "This Month" },
+                ].map((opt) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => onPeriodChange(opt.key)}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: 6,
+                      border: "none",
+                      background: period === opt.key ? "var(--primary)" : "transparent",
+                      color: period === opt.key ? "#FFFFFF" : "var(--text-2)",
+                      fontWeight: 700,
+                      fontSize: 11.5,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
           <button
             onClick={onRefresh}
@@ -136,6 +176,7 @@ export function LeaderboardPanel({
             <RefreshCw size={13} className={loading ? "anim-spin" : ""} />
             <span>Refresh</span>
           </button>
+          </div>
         </div>
 
         {/* Your Rank Highlight Row */}

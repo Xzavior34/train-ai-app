@@ -25,7 +25,7 @@ import {
   fetchCohortResources, fetchCohortSessions, fetchCohortAssignedCourses, fetchCohortMembers
 } from "../../lib/api/schemaHelper.js";
 import { initialsOf, gradForIndex, timeAgo } from "../components/LearnerUI.jsx";
-import { isMockDataEnabled, subscribeToMockDataChanges, getYouTubeEmbedId } from "../../lib/mockDataManager.js";
+import { isMockDataEnabled, subscribeToMockDataChanges, getYouTubeEmbedId, isRealDatabaseId } from "../../lib/mockDataManager.js";
 
 export function useLearnerData(session, screen, params) {
   const userProfileQuery = useSupabaseQuery(async () => {
@@ -652,7 +652,7 @@ export function useLearnerData(session, screen, params) {
   // input syntax for type uuid" against a real Supabase project the
   // moment a learner opens a mock course's detail page - the actual root
   // cause of that page rendering blank, not merely an unhandled edge case.
-  const isRealCourseId = (id) => !!id && !DEFAULT_FALLBACK_COURSES.some((c) => c.id === id);
+  const isRealCourseId = (id) => isRealDatabaseId(id);
 
   const courseNotesQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id || !params?.id || screen !== "courseDetail" || !isRealCourseId(params.id)) return [];
@@ -673,15 +673,17 @@ export function useLearnerData(session, screen, params) {
   }, [screen === "courseDetail" ? params?.id : null]);
 
   const lessonNotesQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id || !params?.lessonId || screen !== "lesson") return [];
+    if (!session?.user?.id || !params?.lessonId || screen !== "lesson" || !isRealDatabaseId(params.lessonId)) return [];
     return fetchLessonNotes(session.user.id, params.lessonId);
   }, [session?.user?.id, screen === "lesson" ? params?.lessonId : null]);
 
   // Lesson Q&A - same real course_discussions/course_discussion_messages
   // tables as courseDiscussionQuery above, scoped to this specific lesson
-  // instead of the whole course.
+  // instead of the whole course. Same mock-id guard as everywhere else on
+  // this page - a mock course can have real-looking mock lessons (l-figma-2
+  // and friends), and either id being a mock slug breaks this query.
   const lessonDiscussionQuery = useSupabaseQuery(async () => {
-    if (!params?.id || !params?.lessonId || screen !== "lesson") return { discussion: null, messages: [] };
+    if (!params?.id || !params?.lessonId || screen !== "lesson" || !isRealDatabaseId(params.id) || !isRealDatabaseId(params.lessonId)) return { discussion: null, messages: [] };
     const discussion = await fetchOrCreateCourseDiscussion(params.id, params.lessonId);
     if (!discussion) return { discussion: null, messages: [] };
     const messages = await fetchCourseDiscussionMessages(discussion.id);

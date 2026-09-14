@@ -10,6 +10,7 @@ import { Avatar, initialsOf, timeAgo, Tag } from "../components/LearnerUI.jsx";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
 import CommunityHero from "../components/CommunityHero.jsx";
 import { LeaderboardPanel } from "../components/LeaderboardPanel.jsx";
+import { fetchLeaderboardForPeriod } from "../../lib/api/learner.js";
 
 // ---------------------------------------------------------------------------
 // Train AI 2.0 Community Screen
@@ -441,24 +442,10 @@ function PostCard({
         <div className="tai-row tai-gap10" style={{ minWidth: 0, alignItems: "center" }}>
           <Avatar size={42} src={post.authorAvatar} initials={initialsOf(post.authorName)} />
           <div style={{ minWidth: 0 }}>
-            <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+            <div className="tai-row tai-gap6" style={{ alignItems: "baseline", flexWrap: "wrap" }}>
               <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{post.authorName}</span>
-              
-              {/* Tier Pill */}
-              <span
-                className="tai-row tai-gap4"
-                style={{
-                  fontSize: 10,
-                  fontWeight: 800,
-                  padding: "2px 8px",
-                  borderRadius: 999,
-                  background: tier.bg,
-                  color: tier.color,
-                  border: `1px solid ${tier.border}`,
-                }}
-              >
-                <TierIcon size={10} /> {tier.label}
-              </span>
+              <span style={{ fontSize: 12.5, color: "var(--text-3)" }}>·</span>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: tier.color }}>{tier.label}</span>
             </div>
 
             <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
@@ -725,6 +712,8 @@ export function CommunityScreen({
   leaderboardQuery = {},
   gamificationStatsQuery = {},
   upcomingSessionsQuery = {},
+  setRequestingSession,
+  setSessionMentorChoice,
 }) {
   const myId = session?.user?.id;
   const initialSelectedTab = params?.tab || initialTab || activeTab || "summary";
@@ -967,7 +956,34 @@ export function CommunityScreen({
   const cohort = cohortMembershipQuery.data?.cohort || null;
   const cohortSessions = cohortSessionsQuery.data || [];
 
-  // Leaderboard data
+  // Leaderboard period - "All Time" already comes from leaderboardQuery
+  // (passed in as a prop, fetched once at the app level). "This Week" /
+  // "This Month" use fetchLeaderboardForPeriod(), a real RPC
+  // (get_leaderboard_for_period, 0148_leaderboard_period_and_cohort.sql)
+  // that already existed but had no UI calling it anywhere in the app.
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState("all");
+  const [periodRows, setPeriodRows] = useState([]);
+  const [periodLoading, setPeriodLoading] = useState(false);
+
+  const loadPeriodLeaderboard = React.useCallback((periodKey) => {
+    if (periodKey === "all") return;
+    setPeriodLoading(true);
+    const now = new Date();
+    const start = new Date(now);
+    if (periodKey === "week") start.setDate(now.getDate() - 7);
+    else start.setDate(now.getDate() - 30);
+    return fetchLeaderboardForPeriod(start.toISOString(), now.toISOString())
+      .then((rows) => setPeriodRows(rows))
+      .finally(() => setPeriodLoading(false));
+  }, []);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    if (leaderboardPeriod === "all") return;
+    Promise.resolve(loadPeriodLeaderboard(leaderboardPeriod)).then(() => {});
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leaderboardPeriod]);
   const leaderboardRows = leaderboardQuery.data || [];
   const myRankIndex = leaderboardRows.findIndex((r) => r.user_id === myId);
   const myRankNumber = myRankIndex >= 0 ? myRankIndex + 1 : "—";
@@ -1755,13 +1771,28 @@ export function CommunityScreen({
                   )}
                 </div>
 
-                <button
-                  className="tai-btn tai-btn-primary"
-                  style={{ width: "100%", borderRadius: 10, justifyContent: "center", padding: "8px 0" }}
-                  onClick={() => push("mentors")}
-                >
-                  <MessageSquare size={14} /> Chat
-                </button>
+                <div className="tai-row tai-gap8" style={{ width: "100%" }}>
+                  <button
+                    className="tai-btn tai-btn-outline"
+                    style={{ flex: 1, borderRadius: 10, justifyContent: "center", padding: "8px 0" }}
+                    onClick={() => push("mentors")}
+                  >
+                    <MessageSquare size={14} /> Chat
+                  </button>
+                  <button
+                    className="tai-btn tai-btn-primary"
+                    style={{ flex: 1, borderRadius: 10, justifyContent: "center", padding: "8px 0" }}
+                    onClick={() => {
+                      if (setSessionMentorChoice && setRequestingSession) {
+                        setSessionMentorChoice(m);
+                        setRequestingSession(true);
+                      }
+                      push("mentors");
+                    }}
+                  >
+                    <Clock size={14} /> Session
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -1862,11 +1893,13 @@ export function CommunityScreen({
       {/* =================================================================== */}
       {tab === "rank" && (
         <LeaderboardPanel
-          rows={leaderboardRows}
-          loading={leaderboardQuery.loading}
-          onRefresh={() => leaderboardQuery.refetch?.()}
+          rows={leaderboardPeriod === "all" ? leaderboardRows : periodRows}
+          loading={leaderboardPeriod === "all" ? leaderboardQuery.loading : periodLoading}
+          onRefresh={() => leaderboardPeriod === "all" ? leaderboardQuery.refetch?.() : loadPeriodLeaderboard(leaderboardPeriod)}
           currentUserId={myId}
           userStats={gamificationStatsQuery.data || {}}
+          period={leaderboardPeriod}
+          onPeriodChange={setLeaderboardPeriod}
         />
       )}
     </div>

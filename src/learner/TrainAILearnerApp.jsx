@@ -4,6 +4,7 @@ import { useLearnerData } from "./hooks/useLearnerData.js";
 import { TOKENS, BottomNav, DesktopSidebar, LearnerHeader, ScheduleView, timeAgo, NotificationBellContext } from "./components/LearnerUI.jsx";
 import { SearchBar } from "./components/SearchBar.jsx";
 import { fetchOrgAISettings, fetchOrgLeaderboardSettings, fetchOrgGamificationSettings } from "../lib/api/organizations.js";
+import { isRealDatabaseId } from "../lib/mockDataManager.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { CoursesScreen } from "./screens/CoursesScreen.jsx";
 import { CourseDetailScreen } from "./screens/CourseDetailScreen.jsx";
@@ -324,7 +325,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   // currently open in CourseDetailScreen. Gated on screen === "courseDetail"
   // the same way aiConversationQuery above is gated on screen === "ai".
   const assessmentQuery = useSupabaseQuery(async () => {
-    if (screen !== "courseDetail" || !params?.id) return null;
+    if (screen !== "courseDetail" || !params?.id || !isRealDatabaseId(params.id)) return null;
     return fetchAssessmentForCourse(params.id);
   }, [screen === "courseDetail", params?.id]);
   const assessmentId = assessmentQuery.data?.id || null;
@@ -349,13 +350,16 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   }
 
   // Certificates - explicitly in-scope for v1, gated the same way as
-  // assessmentQuery above (screen === "courseDetail" only).
+  // assessmentQuery above (screen === "courseDetail" only), plus the same
+  // isRealDatabaseId guard - fetchCertificateForCourse/fetchMyCertificateForCourse
+  // query real UUID columns and previously ran unconditionally for any
+  // params.id, including mock course slugs.
   const certificateQuery = useSupabaseQuery(async () => {
-    if (screen !== "courseDetail" || !params?.id) return null;
+    if (screen !== "courseDetail" || !params?.id || !isRealDatabaseId(params.id)) return null;
     return fetchCertificateForCourse(params.id);
   }, [screen === "courseDetail", params?.id]);
   const myCertificateQuery = useSupabaseQuery(async () => {
-    if (!params?.id || !session?.user?.id) return null;
+    if (!params?.id || !session?.user?.id || !isRealDatabaseId(params.id)) return null;
     return fetchMyCertificateForCourse(params.id, session.user.id);
   }, [params?.id, session?.user?.id]);
 
@@ -890,6 +894,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   communityPeopleQuery={communityPeopleQuery} memberStatsQuery={memberStatsQuery}
                   leaderboardQuery={leaderboardQuery} gamificationStatsQuery={gamificationStatsQuery}
                   upcomingSessionsQuery={upcomingSessionsQuery}
+                  setRequestingSession={setRequestingSession} setSessionMentorChoice={setSessionMentorChoice}
                 />
               )}
               {screen === "studyGroup" && (
