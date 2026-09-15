@@ -1010,9 +1010,6 @@ export function CommunityScreen({
       {/* Hero Banner */}
       <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
 
-      {/* Live Activity Banner */}
-      <LiveActivityBanner items={activityFeedQuery.data || []} />
-
       {/* Six Flat Tabs Row */}
       <div
         style={{
@@ -1885,6 +1882,54 @@ export function CommunityScreen({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* =================================================================== */}
+      {/* MEMBERS - reached via the sidebar "Members" link, not a top tab.
+          Uses the same communityPeopleQuery this file has always fetched. */}
+      {/* =================================================================== */}
+      {tab === "people" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ position: "relative" }}>
+            <Search size={15} color="var(--text-3)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
+            <input
+              value={peopleSearch}
+              onChange={(e) => setPeopleSearch(e.target.value)}
+              placeholder="Search by name, username, or learning track..."
+              className="tai-input"
+              style={{ width: "100%", paddingLeft: 36 }}
+            />
+          </div>
+
+          {communityPeopleQuery.loading ? (
+            <div style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", padding: 24 }}>Loading…</div>
+          ) : filteredPeople.length === 0 ? (
+            <div className="tai-card tai-empty" style={{ textAlign: "center", padding: 32 }}>
+              <UserCheck size={28} color="var(--text-3)" style={{ marginBottom: 8 }} />
+              <div style={{ fontWeight: 700, fontSize: 14 }}>No members found</div>
+              <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 2 }}>Try searching for a different name.</div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {filteredPeople.map((p) => {
+                const pTier = TIER_CONFIG[p.tier] || TIER_CONFIG.newcomer;
+                return (
+                  <div
+                    key={p.id}
+                    className="tai-card"
+                    style={{ padding: 12, display: "flex", alignItems: "center", gap: 12, borderRadius: 12 }}
+                  >
+                    <Avatar size={38} src={p.avatar_url} initials={initialsOf(p.display_name)} />
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{p.display_name || "Learner"}</div>
+                      <div style={{ fontSize: 11.5, color: pTier.color }}>{pTier.label}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

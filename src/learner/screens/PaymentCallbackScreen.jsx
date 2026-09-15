@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Loader2, ArrowRight } from "lucide-react";
 import { verifyPaystackPayment, verifyStripePayment, readPendingPayment, PAYMENT_CONTEXTS } from "../../lib/api/payments.js";
+import { supabase } from "../../lib/supabaseClient.js";
 
 // Rendered when the app boots (or is already open) with a Paystack/Stripe
 // redirect-back query string on the URL - see the `?reference=/?trxref=/
@@ -35,8 +36,29 @@ export function PaymentCallbackScreen({ addCredits, enrollmentsQuery, goTab, sho
         if (result?.success && result?.status === "completed") {
           const context = result?.context || pending?.context;
           if (context === PAYMENT_CONTEXTS.CREDITS) {
-            const creditsToAdd = Number(result?.metadata?.credits_to_add ?? pending?.metadata?.credits_to_add ?? 0);
-            if (creditsToAdd > 0 && addCredits) addCredits(creditsToAdd);
+            // purchase_personal_ai_credits() (the RPC previously called
+            // directly from here) is gone - it's been replaced by a
+            // service-role-only path that this function alone can't
+            // satisfy (0157_ai_credit_payment_verification.sql). The new
+            // grant-ai-credits-from-payment Edge Function does its own
+            // independent re-verification against Paystack/Stripe before
+            // granting anything - the client-side verify call above is
+            // only used for UI branching (which context is this?), not
+            // trusted as the basis for crediting an account.
+            const paymentRef = reference || sessionId || undefined;
+            let creditsToAdd = 0;
+            try {
+              const { data: grantData, error: grantErr } = await supabase.functions.invoke("grant-ai-credits-from-payment", {
+                body: { provider: isStripe ? "stripe" : "paystack", reference: paymentRef, session_id: sessionId || undefined },
+              });
+              if (grantErr) throw grantErr;
+              if (grantData?.granted) {
+                creditsToAdd = Number(grantData?.credits_added || result?.metadata?.credits_to_add || pending?.metadata?.credits_to_add || 0);
+              }
+            } catch (grantErr) {
+              console.error("PaymentCallbackScreen: credit grant failed after verified payment:", grantErr);
+            }
+            if (addCredits) await addCredits(creditsToAdd);
             setMessage(creditsToAdd > 0 ? `Added ${creditsToAdd} AI credits to your account.` : "Payment confirmed.");
           } else if (context === PAYMENT_CONTEXTS.COURSE_ENROLLMENT) {
             // The paystack-initialize/stripe-initialize edge functions already

@@ -5,7 +5,7 @@ import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockDat
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_PRICING, fetchOrgSeatsSummary, startSeatPurchasePayment, SEAT_PRICE_USD } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice } from "../../lib/api/organizations.js";
 import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 
 // organization's name with that fake placeholder if an admin didn't notice
@@ -21,7 +21,14 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const seatsSummary = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
   const [seatsToBuy, setSeatsToBuy] = useState("");
   const [purchasingSeats, setPurchasingSeats] = useState(false);
-  const SEAT_PRICE_DISPLAY = SEAT_PRICE_USD;
+  const seatPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("USD"), []);
+  const SEAT_PRICE_DISPLAY = (seatPriceQuery.data?.unit_amount_minor || 0) / 100;
+  const starterPriceQuery = useSupabaseQuery(async () => fetchTierPrice("starter", "NGN"), []);
+  const growthPriceQuery = useSupabaseQuery(async () => fetchTierPrice("growth", "NGN"), []);
+  const TIER_PRICES_NGN = {
+    starter: (starterPriceQuery.data?.unit_amount_minor || 0) / 100,
+    growth: (growthPriceQuery.data?.unit_amount_minor || 0) / 100,
+  };
   const ticketsQuery = useSupabaseQuery(async () => (orgId ? fetchMyOrgSupportTickets(orgId) : []), [orgId]);
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketDescription, setTicketDescription] = useState("");
@@ -304,10 +311,10 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       onClick={() => handleUpgrade(tier)}
                     >
                       {org?.subscription_tier === tier && org?.status === "active"
-                        ? `Current plan: ${TIER_PRICING[tier].label}`
+                        ? `Current plan: ${TIER_LABELS[tier]}`
                         : payingTier === tier
                           ? "Redirecting to checkout..."
-                          : `${org?.status === "active" ? "Switch to" : "Activate"} ${TIER_PRICING[tier].label}: ₦${TIER_PRICING[tier].amountNGN.toLocaleString()}/mo`}
+                          : `${org?.status === "active" ? "Switch to" : "Activate"} ${TIER_LABELS[tier]}: ₦${TIER_PRICES_NGN[tier].toLocaleString()}/mo`}
                     </button>
                   ))}
                   <a className="ta-btn ta-btn-ghost" href="mailto:info@trainailtd.com?subject=Enterprise%20plan%20inquiry">

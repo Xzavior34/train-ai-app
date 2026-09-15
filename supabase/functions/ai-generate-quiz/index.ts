@@ -18,6 +18,11 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Hoisted outside the try block so the outer catch (genuinely
+  // unexpected exceptions, not just handled non-2xx responses) can still
+  // attempt a refund - see ai-chat's identical fix for the full reasoning.
+  let creditTransactionId: string | null = null;
+
   try {
     const authHeader = req.headers.get("Authorization") || "";
     const jwt = authHeader.replace(/^Bearer\s+/i, "");
@@ -27,8 +32,9 @@ Deno.serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
       return jsonResponse({ error: "Edge function is missing required Supabase environment bindings." }, 500);
     }
 
@@ -39,6 +45,11 @@ Deno.serve(async (req) => {
     if (userErr || !userData?.user) {
       return jsonResponse({ error: "Invalid or expired session" }, 401);
     }
+
+    // Service-role client, used only for the refund call below (which is
+    // itself service-role-restricted by design - see 0156's own comment
+    // on why a user must never be able to trigger their own refund).
+    const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     let body;
     try {
@@ -55,6 +66,38 @@ Deno.serve(async (req) => {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       return jsonResponse({ error: "AI provider not configured - OPENAI_API_KEY missing" }, 402);
+    }
+
+    // Real, server-side AI credit metering (0156_ai_credit_ledger.sql /
+    // 0157_ai_credit_payment_verification.sql) - same pattern already
+    // proven in ai-chat: called with the caller's OWN authenticated
+    // client so auth.uid() inside the RPC resolves correctly, cost comes
+    // from the database's ai_operation_costs table (quiz_generation = 2
+    // by default, not hard-coded here), and this happens BEFORE the
+    // OpenAI call so an unauthorized request never reaches the provider.
+    const { data: creditResult, error: creditErr } = await authClient.rpc("consume_ai_credits", {
+      p_operation_key: "quiz_generation",
+      p_reference_id: topic.trim().slice(0, 200),
+    });
+    if (creditErr) {
+      console.error("ai-generate-quiz: credit metering call failed:", creditErr);
+      return jsonResponse({ error: "AI usage could not be verified. Please try again." }, 503);
+    }
+    if (!creditResult?.authorized) {
+      return jsonResponse({
+        error: "AI credits exhausted",
+        message: "Your available AI credits have been used. Ask your organization administrator to add more credits, or purchase personal AI credits.",
+        code: "insufficient_credits",
+      }, 402);
+    }
+    creditTransactionId = creditResult.transaction_id || null;
+    async function refundOnFailure() {
+      if (!creditTransactionId) return;
+      try {
+        await db.rpc("refund_ai_credits", { p_transaction_id: creditTransactionId, p_reason: "provider_failure" });
+      } catch (refundErr) {
+        console.error("ai-generate-quiz: credit refund failed:", refundErr);
+      }
     }
 
     const systemPrompt =
@@ -101,6 +144,7 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const errText = await resp.text();
       console.error("OpenAI error in ai-generate-quiz:", resp.status, errText);
+      await refundOnFailure();
       if (resp.status === 429) {
         return jsonResponse({ error: "OpenAI rate limit / credit balance exhausted. Please check billing." }, 429);
       }
@@ -114,11 +158,13 @@ Deno.serve(async (req) => {
     try {
       parsed = JSON.parse(rawText);
     } catch {
+      await refundOnFailure();
       return jsonResponse({ error: "Model output failed to parse into valid JSON" }, 500);
     }
 
     const assessment = parsed?.assessment;
     if (!assessment || !Array.isArray(assessment.questions) || assessment.questions.length === 0) {
+      await refundOnFailure();
       return jsonResponse({ error: "Model returned invalid assessment structure" }, 500);
     }
 
@@ -137,6 +183,18 @@ Deno.serve(async (req) => {
     return jsonResponse({ assessment });
   } catch (error) {
     console.error("ai-generate-quiz unhandled error:", error);
+    if (creditTransactionId) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+          const fallbackDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          await fallbackDb.rpc("refund_ai_credits", { p_transaction_id: creditTransactionId, p_reason: "unexpected_error" });
+        }
+      } catch (refundErr) {
+        console.error("ai-generate-quiz: fallback credit refund failed:", refundErr);
+      }
+    }
     return jsonResponse({ error: "Internal server error" }, 500);
   }
 });

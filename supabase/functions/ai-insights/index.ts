@@ -18,6 +18,8 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let creditTransactionId: string | null = null;
+
   try {
     const authHeader = req.headers.get("Authorization") || "";
     const jwt = authHeader.replace(/^Bearer\s+/i, "");
@@ -74,6 +76,36 @@ Deno.serve(async (req) => {
     const systemPrompt = "You are a personal learning analytics coach for Train AI. Provide a concise, encouraging markdown summary (3-4 bullet points) highlighting the learner's progress, strengths, and recommended next steps based on their stats. Keep it engaging, direct, and under 200 words.";
     const userPrompt = `Learner stats: Enrolled courses: ${enrolledCourses}, Completed lessons: ${completedLessons}, Total learning hours: ${totalHours}, Average quiz score: ${averageScore}%. Generate personalized learning insights in GitHub Markdown.`;
 
+    // Real, server-side AI credit metering - same pattern as ai-chat/
+    // ai-generate-quiz. Placed after the no-API-key fallback above on
+    // purpose: that canned response is built from the learner's own real
+    // stats with no actual model call, so it correctly consumes nothing -
+    // only a genuine provider call below is billable.
+    const { data: creditResult, error: creditErr } = await authClient.rpc("consume_ai_credits", {
+      p_operation_key: "ai_insight",
+      p_reference_id: userId,
+    });
+    if (creditErr) {
+      console.error("ai-insights: credit metering call failed:", creditErr);
+      return jsonResponse({ error: "AI usage could not be verified. Please try again." }, 503);
+    }
+    if (!creditResult?.authorized) {
+      return jsonResponse({
+        error: "AI credits exhausted",
+        message: "Your available AI credits have been used. Ask your organization administrator to add more credits, or purchase personal AI credits.",
+        code: "insufficient_credits",
+      }, 402);
+    }
+    creditTransactionId = creditResult.transaction_id || null;
+    async function refundOnFailure() {
+      if (!creditTransactionId) return;
+      try {
+        await db.rpc("refund_ai_credits", { p_transaction_id: creditTransactionId, p_reason: "provider_failure" });
+      } catch (refundErr) {
+        console.error("ai-insights: credit refund failed:", refundErr);
+      }
+    }
+
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -92,15 +124,33 @@ Deno.serve(async (req) => {
 
     if (!resp.ok) {
       const errText = await resp.text();
+      await refundOnFailure();
       return jsonResponse({ error: `OpenAI API error: ${resp.status} ${errText.slice(0, 300)}` }, resp.status === 429 ? 429 : 502);
     }
 
     const json = await resp.json();
     const insights = json?.choices?.[0]?.message?.content?.trim() || "";
 
+    if (!insights) {
+      await refundOnFailure();
+      return jsonResponse({ error: "The AI provider returned an empty response. Please try again." }, 502);
+    }
+
     return jsonResponse({ insights, stats });
   } catch (error) {
     console.error("ai-insights error:", error);
+    if (creditTransactionId) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+          const fallbackDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          await fallbackDb.rpc("refund_ai_credits", { p_transaction_id: creditTransactionId, p_reason: "unexpected_error" });
+        }
+      } catch (refundErr) {
+        console.error("ai-insights: fallback credit refund failed:", refundErr);
+      }
+    }
     return jsonResponse({ error: "Internal server error" }, 500);
   }
 });

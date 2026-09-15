@@ -195,6 +195,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       } else {
         push("community", { tab: "mentors" });
       }
+    } else if (key === "members") {
+      setCommunityTab("people");
+      if (screen === "community") {
+        setParams(p => ({ ...p, tab: "people" }));
+      } else {
+        push("community", { tab: "people" });
+      }
     } else if (key === "messages") {
       push("messages");
     } else if (key === "schedule") {

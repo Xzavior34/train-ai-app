@@ -6,8 +6,7 @@ import {
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
-  fetchOrgSeatsSummary, fetchSeatPurchaseHistory, startSeatPurchasePayment,
-  SEAT_PRICE_USD, SEAT_PRICE_NGN,
+  fetchOrgSeatsSummary, fetchSeatPurchaseHistory, startSeatPurchasePayment, fetchSeatPrice,
 } from "../../lib/api/organizations.js";
 import { fetchOrganizationById, fetchOrgMembers, fetchPendingInvitations } from "../../lib/api/platform.js";
 import { DEMO_MODE } from "../../lib/demoMode.js";
@@ -31,9 +30,9 @@ import { DEMO_MODE } from "../../lib/demoMode.js";
  * soft cap. This screen exists so that message has somewhere to point.
  */
 
-const PROVIDERS = [
-  { key: "paystack", label: "Paystack", currency: "NGN", symbol: "₦", unit: SEAT_PRICE_NGN, hint: "Cards & bank transfer (Nigeria)" },
-  { key: "stripe", label: "Stripe", currency: "USD", symbol: "$", unit: SEAT_PRICE_USD, hint: "International cards" },
+const PROVIDER_META = [
+  { key: "paystack", label: "Paystack", currency: "NGN", symbol: "₦", hint: "Cards & bank transfer (Nigeria)" },
+  { key: "stripe", label: "Stripe", currency: "USD", symbol: "$", hint: "International cards" },
 ];
 
 const QUICK_PICKS = [5, 10, 25, 50];
@@ -51,12 +50,22 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail }) {
   const historyQuery = useSupabaseQuery(async () => (orgId ? fetchSeatPurchaseHistory(orgId) : []), [orgId]);
   const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
   const invitesQuery = useSupabaseQuery(async () => (orgId ? fetchPendingInvitations(orgId) : []), [orgId]);
+  const ngnPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("NGN"), []);
+  const usdPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("USD"), []);
 
   const org = orgQuery.data;
   const seats = seatsQuery.data || { purchased: 0, used: 0, available: 0 };
   const history = historyQuery.data || [];
   const members = membersQuery.data || [];
   const invites = invitesQuery.data || [];
+
+  // Real, platform-owner-configured prices (billing_prices table) - a unit
+  // of 0 while still loading is intentional (never shows a stale/invented
+  // number before the real one arrives).
+  const PROVIDERS = [
+    { ...PROVIDER_META[0], unit: (ngnPriceQuery.data?.unit_amount_minor || 0) / 100 },
+    { ...PROVIDER_META[1], unit: (usdPriceQuery.data?.unit_amount_minor || 0) / 100 },
+  ];
 
   const [provider, setProvider] = useState("paystack");
   const [quantity, setQuantity] = useState(5);

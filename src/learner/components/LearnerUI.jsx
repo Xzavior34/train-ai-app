@@ -924,9 +924,10 @@ export function DesktopSidebar({
       label: "Community",
       icon: Users,
       defaultScreen: "communityFeed",
-      screens: ["community", "communityFeed", "cohort", "mentors", "studyGroup", "messages", "leaderboard"],
+      screens: ["community", "communityFeed", "cohort", "mentors", "studyGroup", "messages", "leaderboard", "members"],
       subItems: [
         { key: "communityFeed", label: "Community", icon: MessageSquare },
+        { key: "members", label: "Members", icon: UserCheck },
         { key: "cohort", label: "Cohort", icon: Users },
         { key: "mentors", label: "Instructors", icon: GraduationCap },
         { key: "studyGroup", label: "Study Group", icon: Users },
@@ -1006,6 +1007,7 @@ export function DesktopSidebar({
                       (item.key === "settings" && activeScreen === "profile") ||
                       (activeScreen === "community" && (
                         (item.key === "communityFeed" && (currentTab === "summary" || currentTab === "posts" || !currentTab)) ||
+                        (item.key === "members" && currentTab === "people") ||
                         (item.key === "studyGroup" && (currentTab === "groups" || currentTab === "studyGroup")) ||
                         (item.key === "mentors" && (currentTab === "tutors" || currentTab === "mentors")) ||
                         (item.key === "cohort" && (currentTab === "cohorts" || currentTab === "cohort")) ||

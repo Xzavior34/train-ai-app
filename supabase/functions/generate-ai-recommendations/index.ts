@@ -18,6 +18,8 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let creditTransactionId: string | null = null;
+
   try {
     const authHeader = req.headers.get("Authorization") || "";
     const jwt = authHeader.replace(/^Bearer\s+/i, "");
@@ -27,6 +29,7 @@ Deno.serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       return jsonResponse({ error: "Missing Supabase env bindings", fallback: true }, 200);
@@ -39,6 +42,7 @@ Deno.serve(async (req) => {
     if (userErr || !userData?.user) {
       return jsonResponse({ error: "Invalid session", fallback: true }, 401);
     }
+    const db = SUPABASE_SERVICE_ROLE_KEY ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) : null;
 
     let body;
     try {
@@ -68,6 +72,36 @@ Deno.serve(async (req) => {
 
     const userPrompt = `Learner Context: ${JSON.stringify(userContext || {})}. Progress: ${JSON.stringify(userProgress || {})}. Generate 3 targeted recommendations and 2 learning reminders.`;
 
+    // Real, server-side AI credit metering - same pattern as ai-chat/
+    // ai-generate-quiz/ai-insights, placed after the no-API-key fallback
+    // so that genuinely-unconfigured-provider responses (already handled
+    // above) never consume anything.
+    const { data: creditResult, error: creditErr } = await authClient.rpc("consume_ai_credits", {
+      p_operation_key: "ai_recommendation",
+      p_reference_id: userData.user.id,
+    });
+    if (creditErr) {
+      console.error("generate-ai-recommendations: credit metering call failed:", creditErr);
+      return jsonResponse({ error: "AI usage could not be verified. Please try again.", fallback: true }, 503);
+    }
+    if (!creditResult?.authorized) {
+      return jsonResponse({
+        error: "AI credits exhausted",
+        message: "Your available AI credits have been used. Ask your organization administrator to add more credits, or purchase personal AI credits.",
+        code: "insufficient_credits",
+        fallback: true,
+      }, 402);
+    }
+    creditTransactionId = creditResult.transaction_id || null;
+    async function refundOnFailure() {
+      if (!creditTransactionId || !db) return;
+      try {
+        await db.rpc("refund_ai_credits", { p_transaction_id: creditTransactionId, p_reason: "provider_failure" });
+      } catch (refundErr) {
+        console.error("generate-ai-recommendations: credit refund failed:", refundErr);
+      }
+    }
+
     const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -88,6 +122,7 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       const errText = await resp.text();
       console.error("OpenAI error in generate-ai-recommendations:", resp.status, errText);
+      await refundOnFailure();
       return jsonResponse({ error: `OpenAI error: ${resp.status}`, fallback: true }, 200);
     }
 
@@ -97,6 +132,7 @@ Deno.serve(async (req) => {
     try {
       parsed = JSON.parse(rawText);
     } catch {
+      await refundOnFailure();
       return jsonResponse({ error: "Failed to parse AI output", fallback: true }, 200);
     }
 
@@ -106,6 +142,18 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("generate-ai-recommendations unhandled error:", error);
+    if (creditTransactionId) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+          const fallbackDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          await fallbackDb.rpc("refund_ai_credits", { p_transaction_id: creditTransactionId, p_reason: "unexpected_error" });
+        }
+      } catch (refundErr) {
+        console.error("generate-ai-recommendations: fallback credit refund failed:", refundErr);
+      }
+    }
     return jsonResponse({ error: "Internal server error", fallback: true }, 200);
   }
 });
