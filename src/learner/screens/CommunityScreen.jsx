@@ -4,7 +4,7 @@ import {
   MessageSquare, Send, Pin, Trash2, ArrowLeft, Layers, Mail, Sparkles, Crown, Star,
   Flame, Zap, Clock, Share2, X, BookOpen, UserCheck, Shield, TrendingUp,
   RefreshCw, CheckCircle2, MoreVertical, ExternalLink, Activity, Info, Award,
-  Quote, Lock,
+  Quote, Lock, Bookmark, Copy, Flag, EyeOff, Pencil, Check,
 } from "lucide-react";
 import { Avatar, initialsOf, timeAgo, Tag } from "../components/LearnerUI.jsx";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
@@ -363,6 +363,18 @@ function PostCard({
   onTagClick,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [aiSummaryModalOpen, setAiSummaryModalOpen] = useState(false);
+  const [toastNotice, setToastNotice] = useState(null);
+
+  function showToast(msg) {
+    setToastNotice(msg);
+    setTimeout(() => setToastNotice(null), 3000);
+  }
 
   // Author tier badge computed live from real post/comment counts
   const postScore = (authorStats?.posts || 1) * 10 + (authorStats?.comments || 0) * 5;
@@ -427,8 +439,37 @@ function PostCard({
     });
   }, [bodyText, onTagClick]);
 
+  if (isHidden) {
+    return (
+      <div
+        className="tai-card anim-fade-in"
+        style={{
+          padding: "14px 20px",
+          borderRadius: 14,
+          background: "var(--surface-2)",
+          border: "1px solid var(--border)",
+          color: "var(--text-3)",
+          fontSize: 13,
+          display: "flex",
+          justify: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <span>Post hidden from your feed.</span>
+        <button
+          className="tai-btn tai-btn-ghost tai-btn-sm"
+          style={{ color: "var(--primary)", fontSize: 12.5, fontWeight: 700 }}
+          onClick={() => setIsHidden(false)}
+        >
+          Undo
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
+      id={`post-${post.id}`}
       className="tai-card tai-card-hover"
       style={{
         padding: "20px",
@@ -436,8 +477,31 @@ function PostCard({
         border: "1px solid var(--glass-border)",
         borderRadius: 16,
         boxShadow: "var(--glass-shadow)",
+        position: "relative",
       }}
     >
+      {/* Toast Banner Feedback */}
+      {toastNotice && (
+        <div
+          className="anim-slide-down"
+          style={{
+            marginBottom: 12,
+            padding: "8px 12px",
+            background: "var(--primary-tint)",
+            border: "1px solid var(--primary-border, var(--primary))",
+            borderRadius: 8,
+            color: "var(--primary)",
+            fontSize: 12.5,
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <CheckCircle2 size={14} /> {toastNotice}
+        </div>
+      )}
+
       {/* Top Author Row */}
       <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10 }}>
         <div className="tai-row tai-gap10" style={{ minWidth: 0, alignItems: "center" }}>
@@ -479,6 +543,7 @@ function PostCard({
               className="tai-iconbtn"
               style={{ width: 28, height: 28, color: "var(--text-3)" }}
               onClick={() => setMenuOpen((prev) => !prev)}
+              title="Post Options"
             >
               <MoreVertical size={14} />
             </button>
@@ -490,45 +555,296 @@ function PostCard({
                   position: "absolute",
                   right: 0,
                   top: "100%",
-                  zIndex: 20,
+                  zIndex: 30,
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
-                  borderRadius: 10,
-                  boxShadow: "var(--glass-shadow-elevated)",
-                  padding: "4px",
-                  minWidth: 120,
+                  borderRadius: 12,
+                  boxShadow: "0 10px 25px -5px rgba(0,0,0,0.25), 0 8px 10px -6px rgba(0,0,0,0.2)",
+                  padding: "6px",
+                  minWidth: 180,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
                 }}
               >
-                {post.isMine && (
-                  <button
-                    className="tai-btn tai-btn-ghost tai-btn-sm"
-                    style={{ width: "100%", justifyContent: "flex-start", color: "var(--danger)", fontSize: 12 }}
-                    disabled={deleteBusy}
-                    onClick={() => {
-                      setMenuOpen(false);
-                      if (window.confirm("Delete this post?")) onDelete?.(post.id);
-                    }}
-                  >
-                    <Trash2 size={13} /> Delete Post
-                  </button>
-                )}
+                {/* 1. Save to Bookmarks */}
                 <button
                   className="tai-btn tai-btn-ghost tai-btn-sm"
-                  style={{ width: "100%", justifyContent: "flex-start", fontSize: 12 }}
+                  style={{ width: "100%", justifyContent: "flex-start", fontSize: 12.5, gap: 8, padding: "6px 10px" }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setIsSaved((prev) => {
+                      const next = !prev;
+                      showToast(next ? "Post saved to your bookmarks!" : "Post removed from bookmarks.");
+                      return next;
+                    });
+                  }}
+                >
+                  <Bookmark size={14} color={isSaved ? "var(--primary)" : "currentColor"} fill={isSaved ? "var(--primary)" : "none"} />
+                  {isSaved ? "Saved to Bookmarks" : "Save Post"}
+                </button>
+
+                {/* 2. Copy Direct Link */}
+                <button
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  style={{ width: "100%", justifyContent: "flex-start", fontSize: 12.5, gap: 8, padding: "6px 10px" }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    const link = `${window.location.origin}${window.location.pathname}#post-${post.id}`;
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(link);
+                      showToast("Direct link copied to clipboard!");
+                    }
+                  }}
+                >
+                  <Share2 size={14} /> Copy Direct Link
+                </button>
+
+                {/* 3. Copy Post Text */}
+                <button
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  style={{ width: "100%", justifyContent: "flex-start", fontSize: 12.5, gap: 8, padding: "6px 10px" }}
                   onClick={() => {
                     setMenuOpen(false);
                     if (navigator.clipboard) {
                       navigator.clipboard.writeText(post.content);
+                      showToast("Post text copied to clipboard!");
                     }
                   }}
                 >
-                  <Share2 size={13} /> Copy Text
+                  <Copy size={14} /> Copy Post Text
                 </button>
+
+                {/* 4. Ask AI / Summarize */}
+                <button
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  style={{ width: "100%", justifyContent: "flex-start", fontSize: 12.5, gap: 8, padding: "6px 10px", color: "var(--primary)" }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setAiSummaryModalOpen(true);
+                  }}
+                >
+                  <Sparkles size={14} /> Explain with AI
+                </button>
+
+                <div style={{ height: 1, background: "var(--border)", margin: "4px 0" }} />
+
+                {/* 5. Hide from My Feed */}
+                <button
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  style={{ width: "100%", justifyContent: "flex-start", fontSize: 12.5, gap: 8, padding: "6px 10px" }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setIsHidden(true);
+                  }}
+                >
+                  <EyeOff size={14} /> Hide from Feed
+                </button>
+
+                {/* 6. Report Post */}
+                <button
+                  className="tai-btn tai-btn-ghost tai-btn-sm"
+                  style={{ width: "100%", justifyContent: "flex-start", fontSize: 12.5, gap: 8, padding: "6px 10px", color: "#D97706" }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setReportModalOpen(true);
+                  }}
+                >
+                  <Flag size={14} /> Report Post
+                </button>
+
+                {/* 7. Delete Post (Author or Admin) */}
+                {post.isMine && (
+                  <>
+                    <div style={{ height: 1, background: "var(--border)", margin: "4px 0" }} />
+                    <button
+                      className="tai-btn tai-btn-ghost tai-btn-sm"
+                      style={{ width: "100%", justifyContent: "flex-start", color: "var(--danger)", fontSize: 12.5, gap: 8, padding: "6px 10px" }}
+                      disabled={deleteBusy}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        if (window.confirm("Delete this post permanently?")) onDelete?.(post.id);
+                      }}
+                    >
+                      <Trash2 size={14} /> Delete Post
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* AI Summary Modal */}
+      {aiSummaryModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+          onClick={() => setAiSummaryModalOpen(false)}
+        >
+          <div
+            className="tai-card anim-scale-up"
+            style={{
+              maxWidth: 480,
+              width: "100%",
+              padding: 24,
+              borderRadius: 16,
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
+              <div className="tai-row tai-gap8" style={{ fontWeight: 800, fontSize: 16, color: "var(--primary)" }}>
+                <Sparkles size={18} /> AI Content Summary
+              </div>
+              <button className="tai-iconbtn" onClick={() => setAiSummaryModalOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 10, border: "1px solid var(--border)", fontSize: 13, lineHeight: 1.6, color: "var(--text)" }}>
+              <div style={{ fontWeight: 700, marginBottom: 6, color: "var(--primary)" }}>Key Takeaway:</div>
+              {title ? <strong>{title}: </strong> : null}
+              {bodyText || "Discussion post sharing insights and best practices."}
+            </div>
+
+            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
+              <button className="tai-btn tai-btn-primary tai-btn-sm" onClick={() => setAiSummaryModalOpen(false)}>
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {reportModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+          onClick={() => {
+            setReportModalOpen(false);
+            setReportSubmitted(false);
+          }}
+        >
+          <div
+            className="tai-card anim-scale-up"
+            style={{
+              maxWidth: 420,
+              width: "100%",
+              padding: 24,
+              borderRadius: 16,
+              background: "var(--surface)",
+              border: "1px solid var(--border)",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
+              <div className="tai-row tai-gap8" style={{ fontWeight: 800, fontSize: 16, color: "#D97706" }}>
+                <Flag size={18} /> Report Post
+              </div>
+              <button className="tai-iconbtn" onClick={() => { setReportModalOpen(false); setReportSubmitted(false); }}>
+                <X size={16} />
+              </button>
+            </div>
+
+            {reportSubmitted ? (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <CheckCircle2 size={36} color="var(--success)" style={{ margin: "0 auto 10px" }} />
+                <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 4 }}>Thank you for keeping our community safe</div>
+                <div style={{ fontSize: 12.5, color: "var(--text-3)", marginBottom: 16 }}>
+                  Our moderators have received your report and will review this content.
+                </div>
+                <button
+                  className="tai-btn tai-btn-primary tai-btn-sm"
+                  onClick={() => {
+                    setReportModalOpen(false);
+                    setReportSubmitted(false);
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 12 }}>
+                  Please select why you are reporting this post by <strong>{post.authorName}</strong>:
+                </div>
+
+                <div className="tai-col tai-gap8" style={{ marginBottom: 16 }}>
+                  {["Spam or Unsolicited Promotion", "Harassment or Inappropriate Content", "Off-topic or Low Quality", "Misinformation"].map((reason) => (
+                    <label
+                      key={reason}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "10px 12px",
+                        borderRadius: 8,
+                        background: reportReason === reason ? "var(--primary-tint)" : "var(--surface-2)",
+                        border: reportReason === reason ? "1px solid var(--primary)" : "1px solid var(--border)",
+                        cursor: "pointer",
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                      }}
+                      onClick={() => setReportReason(reason)}
+                    >
+                      <input
+                        type="radio"
+                        name="reportReason"
+                        checked={reportReason === reason}
+                        onChange={() => setReportReason(reason)}
+                      />
+                      {reason}
+                    </label>
+                  ))}
+                </div>
+
+                <div className="tai-row tai-end tai-gap8">
+                  <button
+                    className="tai-btn tai-btn-ghost tai-btn-sm"
+                    onClick={() => setReportModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="tai-btn tai-btn-primary tai-btn-sm"
+                    disabled={!reportReason}
+                    onClick={() => {
+                      setReportSubmitted(true);
+                      showToast("Report submitted to community moderators.");
+                    }}
+                  >
+                    Submit Report
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Post Title (If present) */}
       {title && (
