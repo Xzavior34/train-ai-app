@@ -11,6 +11,7 @@ import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
 import CommunityHero from "../components/CommunityHero.jsx";
 import { LeaderboardPanel } from "../components/LeaderboardPanel.jsx";
 import { fetchLeaderboardForPeriod } from "../../lib/api/learner.js";
+import { MessagesScreen } from "./MessagesScreen.jsx";
 
 // ---------------------------------------------------------------------------
 // Train AI 2.0 Community Screen
@@ -714,6 +715,15 @@ export function CommunityScreen({
   upcomingSessionsQuery = {},
   setRequestingSession,
   setSessionMentorChoice,
+  activeMentorThread,
+  setActiveMentorThread,
+  messageInput,
+  setMessageInput,
+  messageThreads = [],
+  threadsLoading,
+  conversationMessages = [],
+  conversationLoading,
+  handleSendMessage,
 }) {
   const myId = session?.user?.id;
   const initialSelectedTab = params?.tab || initialTab || activeTab || "summary";
@@ -998,6 +1008,7 @@ export function CommunityScreen({
     { id: "groups", label: "Groups", icon: Users },
     { id: "tutors", label: "Instructors", icon: GraduationCap },
     { id: "cohorts", label: "Cohorts", icon: BookOpen },
+    { id: "messages", label: "Messages", icon: Mail },
     { id: "rank", label: "Rank", icon: Trophy },
   ];
 
@@ -1138,6 +1149,24 @@ export function CommunityScreen({
               <div style={{ fontSize: 13, color: "var(--text-2)" }}>
                 {mentorsList.length === 0 ? "No instructors listed yet." : (
                   <><strong style={{ color: "var(--text)" }}>{mentorsList.length}</strong> instructor{mentorsList.length === 1 ? "" : "s"} available to reach out to</>
+                )}
+              </div>
+            </div>
+
+            {/* Direct Messages */}
+            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <Mail size={16} color="var(--primary)" />
+                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Direct Messages</span>
+                </div>
+                <button onClick={() => handleTabClick("messages")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                  Open <ChevronRight size={13} />
+                </button>
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text-2)" }}>
+                {messageThreads.length === 0 ? "No active chat threads yet." : (
+                  <><strong style={{ color: "var(--text)" }}>{messageThreads.length}</strong> active conversation{messageThreads.length === 1 ? "" : "s"} with instructors</>
                 )}
               </div>
             </div>
@@ -1886,51 +1915,22 @@ export function CommunityScreen({
       )}
 
       {/* =================================================================== */}
-      {/* MEMBERS - reached via the sidebar "Members" link, not a top tab.
-          Uses the same communityPeopleQuery this file has always fetched. */}
+      {/* TAB: DIRECT MESSAGES */}
       {/* =================================================================== */}
-      {tab === "people" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ position: "relative" }}>
-            <Search size={15} color="var(--text-3)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
-            <input
-              value={peopleSearch}
-              onChange={(e) => setPeopleSearch(e.target.value)}
-              placeholder="Search by name, username, or learning track..."
-              className="tai-input"
-              style={{ width: "100%", paddingLeft: 36 }}
-            />
-          </div>
-
-          {communityPeopleQuery.loading ? (
-            <div style={{ fontSize: 13, color: "var(--text-3)", textAlign: "center", padding: 24 }}>Loading…</div>
-          ) : filteredPeople.length === 0 ? (
-            <div className="tai-card tai-empty" style={{ textAlign: "center", padding: 32 }}>
-              <UserCheck size={28} color="var(--text-3)" style={{ marginBottom: 8 }} />
-              <div style={{ fontWeight: 700, fontSize: 14 }}>No members found</div>
-              <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 2 }}>Try searching for a different name.</div>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {filteredPeople.map((p) => {
-                const pTier = TIER_CONFIG[p.tier] || TIER_CONFIG.newcomer;
-                return (
-                  <div
-                    key={p.id}
-                    className="tai-card"
-                    style={{ padding: 12, display: "flex", alignItems: "center", gap: 12, borderRadius: 12 }}
-                  >
-                    <Avatar size={38} src={p.avatar_url} initials={initialsOf(p.display_name)} />
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>{p.display_name || "Learner"}</div>
-                      <div style={{ fontSize: 11.5, color: pTier.color }}>{pTier.label}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+      {tab === "messages" && (
+        <MessagesScreen
+          activeMentorThread={activeMentorThread}
+          setActiveMentorThread={setActiveMentorThread}
+          messageInput={messageInput}
+          setMessageInput={setMessageInput}
+          messageThreads={messageThreads}
+          threadsLoading={threadsLoading}
+          conversationMessages={conversationMessages}
+          conversationLoading={conversationLoading}
+          session={session}
+          handleSendMessage={handleSendMessage}
+          hideHero={true}
+        />
       )}
 
       {/* =================================================================== */}

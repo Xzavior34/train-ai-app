@@ -195,15 +195,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       } else {
         push("community", { tab: "mentors" });
       }
-    } else if (key === "members") {
-      setCommunityTab("people");
-      if (screen === "community") {
-        setParams(p => ({ ...p, tab: "people" }));
-      } else {
-        push("community", { tab: "people" });
-      }
     } else if (key === "messages") {
-      push("messages");
+      setCommunityTab("messages");
+      if (screen === "community") {
+        setParams(p => ({ ...p, tab: "messages" }));
+      } else {
+        push("community", { tab: "messages" });
+      }
     } else if (key === "schedule") {
       push("schedule");
     } else if (key === "notifications") {
@@ -902,6 +900,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   leaderboardQuery={leaderboardQuery} gamificationStatsQuery={gamificationStatsQuery}
                   upcomingSessionsQuery={upcomingSessionsQuery}
                   setRequestingSession={setRequestingSession} setSessionMentorChoice={setSessionMentorChoice}
+                  activeMentorThread={activeMentorThread} setActiveMentorThread={setActiveMentorThread}
+                  messageInput={messageInput} setMessageInput={setMessageInput}
+                  messageThreads={messageThreads} threadsLoading={messageThreadsQuery.loading}
+                  conversationMessages={conversationQuery.data || []} conversationLoading={conversationQuery.loading}
+                  handleSendMessage={handleSendMentorMessage}
                 />
               )}
               {screen === "studyGroup" && (

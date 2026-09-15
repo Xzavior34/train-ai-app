@@ -924,15 +924,14 @@ export function DesktopSidebar({
       label: "Community",
       icon: Users,
       defaultScreen: "communityFeed",
-      screens: ["community", "communityFeed", "cohort", "mentors", "studyGroup", "messages", "leaderboard", "members"],
+      screens: ["community", "communityFeed", "cohort", "mentors", "studyGroup", "messages", "leaderboard"],
       subItems: [
         { key: "communityFeed", label: "Community", icon: MessageSquare },
-        { key: "members", label: "Members", icon: UserCheck },
         { key: "cohort", label: "Cohort", icon: Users },
         { key: "mentors", label: "Instructors", icon: GraduationCap },
         { key: "studyGroup", label: "Study Group", icon: Users },
-        { key: "leaderboard", label: "Leaderboard", icon: Award },
-        { key: "messages", label: "Messages", icon: Mail }
+        { key: "messages", label: "Messages", icon: Mail },
+        { key: "leaderboard", label: "Leaderboard", icon: Award }
       ]
     },
     {
@@ -958,34 +957,35 @@ export function DesktopSidebar({
         title={isMinimized ? "Expand sidebar" : "Minimize sidebar"}
         aria-label={isMinimized ? "Expand sidebar" : "Minimize sidebar"}
       >
-        {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+        <Sidebar size={16} />
       </button>
 
-      <div className="tai-sidebar-nav">
-        {CATEGORIES.map(category => {
+      {/* Main Nav Items List */}
+      <div className="tai-sidebar-nav-list" role="navigation" aria-label="Main Navigation">
+        {NAV_CATEGORIES.map(category => {
           const isCategoryActive = category.screens.includes(activeScreen);
-          const isCollapsed = !!collapsedCategories[category.key];
-          const Icon = category.icon;
+          const isCollapsed = collapsedCategories[category.key];
 
           return (
             <div key={category.key} className="tai-category-group">
               {/* Category Header */}
               <div
-                className={`tai-group-header ${isCategoryActive ? "active" : ""}`}
+                className={`tai-category-header ${isCategoryActive ? "category-active" : ""}`}
                 onClick={() => {
                   if (isMinimized) {
-                    go(category.defaultScreen);
+                    toggleMinimized();
                   } else {
                     toggleCategory(category.key);
                   }
                 }}
                 title={category.label}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                  <Icon size={17} style={{ flexShrink: 0 }} />
-                  {!isMinimized && <span>{category.label}</span>}
+                <div className="tai-row tai-gap10" style={{ alignItems: "center", minWidth: 0 }}>
+                  <category.icon size={16} className="tai-category-icon" style={{ flexShrink: 0 }} />
+                  {!isMinimized && (
+                    <span className="tai-category-label">{category.label}</span>
+                  )}
                 </div>
-
                 {!isMinimized && (
                   <ChevronDown
                     size={15}
@@ -1007,12 +1007,13 @@ export function DesktopSidebar({
                       (item.key === "settings" && activeScreen === "profile") ||
                       (activeScreen === "community" && (
                         (item.key === "communityFeed" && (currentTab === "summary" || currentTab === "posts" || !currentTab)) ||
-                        (item.key === "members" && currentTab === "people") ||
                         (item.key === "studyGroup" && (currentTab === "groups" || currentTab === "studyGroup")) ||
                         (item.key === "mentors" && (currentTab === "tutors" || currentTab === "mentors")) ||
                         (item.key === "cohort" && (currentTab === "cohorts" || currentTab === "cohort")) ||
+                        (item.key === "messages" && currentTab === "messages") ||
                         (item.key === "leaderboard" && (currentTab === "rank" || currentTab === "leaderboard"))
-                      ));
+                      )) ||
+                      (item.key === "messages" && activeScreen === "messages");
 
                     return (
                       <div

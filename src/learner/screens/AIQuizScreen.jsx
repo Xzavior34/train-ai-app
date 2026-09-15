@@ -7,6 +7,7 @@ import {
   History, MessageSquarePlus, Clock, ChevronDown, ChevronUp, Plus, Brain, TrendingUp
 } from "lucide-react";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
+import { FormattedAIResponse } from "../components/FormattedAIResponse.jsx";
 
 const COACH_PROMPT_PRESETS = [
   { label: "Explain this concept to me", icon: Lightbulb, prompt: "Can you explain the concept I am currently studying in simple terms, with a clear example?" },
@@ -506,10 +507,11 @@ export function AIQuizScreen({
                         fontSize: 13,
                         lineHeight: 1.55,
                         border: isUser ? "none" : "1px solid var(--border)",
-                        whiteSpace: "pre-wrap"
+                        width: "100%",
+                        boxSizing: "border-box"
                       }}
                     >
-                      {m.content}
+                      <FormattedAIResponse content={m.content} isUser={isUser} />
                     </div>
 
                     {!isUser && (
@@ -812,7 +814,9 @@ export function AIQuizScreen({
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", marginBottom: 4 }}>
                 {m.role === "user" ? "You" : "AI Coach"} • {m.created_at ? new Date(m.created_at).toLocaleString() : "Recent"}
               </div>
-              <div style={{ fontSize: 13.5, color: "var(--text)", lineHeight: 1.5 }}>{m.content}</div>
+              <div style={{ fontSize: 13.5, color: "var(--text)", lineHeight: 1.5 }}>
+                <FormattedAIResponse content={m.content} isUser={m.role === "user"} />
+              </div>
             </div>
           ))}
         </div>

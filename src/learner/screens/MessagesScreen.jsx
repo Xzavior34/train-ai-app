@@ -15,7 +15,7 @@ function useIsNarrow(breakpoint = 680) {
 export function MessagesScreen({
   activeMentorThread, setActiveMentorThread, messageInput, setMessageInput,
   messageThreads = [], threadsLoading, conversationMessages = [], conversationLoading,
-  session, back, handleSendMessage
+  session, back, handleSendMessage, hideHero = false
 }) {
   const isNarrow = useIsNarrow();
   const [localInput, setLocalInput] = useState("");
@@ -50,15 +50,16 @@ export function MessagesScreen({
       {/* =========================================================================
           HERO BANNER: Direct Messages (Adaptive Liquid Glass)
           ========================================================================= */}
-      <div
-        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
-        style={{
-          borderRadius: 14,
-          padding: "clamp(18px, 2.5vw, 24px)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
+      {!hideHero && (
+        <div
+          className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
+          style={{
+            borderRadius: 14,
+            padding: "clamp(18px, 2.5vw, 24px)",
+            position: "relative",
+            overflow: "hidden"
+          }}
+        >
         <div
           style={{
             position: "absolute",
@@ -107,6 +108,7 @@ export function MessagesScreen({
           </div>
         </div>
       </div>
+      )}
 
       {/* =========================================================================
           MESSAGING INTERFACE
