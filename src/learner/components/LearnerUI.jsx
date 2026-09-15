@@ -957,7 +957,7 @@ export function DesktopSidebar({
         title={isMinimized ? "Expand sidebar" : "Minimize sidebar"}
         aria-label={isMinimized ? "Expand sidebar" : "Minimize sidebar"}
       >
-        <Sidebar size={16} />
+        {isMinimized ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
       </button>
 
       {/* Main Nav Items List */}
