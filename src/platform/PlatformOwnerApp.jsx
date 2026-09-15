@@ -116,7 +116,7 @@ export default function PlatformOwnerApp({
     setTimeout(() => setToast(null), 2500);
   }
 
-  const availableDashboards = getAvailableDashboards(userRoles);
+  const availableDashboards = getAvailableDashboards(userRoles, session?.user?.email || profileQuery?.data?.email);
   const [isDark, setIsDark] = useState(() => {
     try {
       return localStorage.getItem("trainai_theme_dark") === "true";

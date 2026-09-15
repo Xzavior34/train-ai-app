@@ -20,7 +20,7 @@
 // Register this function's URL in the Paystack dashboard's webhook settings.
 // Deploy with: supabase functions deploy paystack-webhook
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,9 +46,7 @@ async function hmacSha512Hex(secret, message) {
   return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Exported for this repo's own test fixture - see the report for how this
-// was actually run against a known test secret.
-export async function verifyPaystackSignature(payload, sigHeader, secret) {
+async function verifyPaystackSignature(payload, sigHeader, secret) {
   if (!sigHeader || !secret) return { valid: false, reason: "missing_signature_or_secret" };
   const expected = await hmacSha512Hex(secret, payload);
   if (expected.length !== sigHeader.length) return { valid: false, reason: "signature_mismatch" };

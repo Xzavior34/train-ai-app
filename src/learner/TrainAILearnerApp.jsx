@@ -56,11 +56,12 @@ function initialScreenFromLocation() {
 }
 
 import { DashboardSwitcher } from "../platform/components/PlatformUI.jsx";
-import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
+import { getAvailableDashboards, DASHBOARDS, hasStaffOrAdminRole, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform, onSwitchDashboard, userRoles = [], onSignOut } = {}) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const { session, signOut } = useAuth();
+  const hasStaffAccess = hasStaffOrAdminRole(userRoles);
   const [dark, setDark] = useState(() => {
     try {
       return localStorage.getItem("trainai_theme_dark") === "true";
@@ -710,11 +711,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
           onOpenNotifications={() => push("notifications")}
           unreadNotifs={unreadNotifs}
           onOpenDashboardSwitcher={
-            (onSwitchToPlatform || (userRoles && userRoles.length > 0))
+            hasStaffAccess
               ? () => setSwitcherOpen(true)
               : undefined
           }
-          hasPlatformRole={!!onSwitchToPlatform}
+          hasPlatformRole={hasStaffAccess}
           onProfile={() => push("settings")}
           onSignOut={handleSignOut}
           brandLogoUrl={brandLogoUrl}
@@ -746,7 +747,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
             go={handleSidebarNav}
             onProfile={() => push("settings")}
             onOpenDashboardSwitcher={
-              (onSwitchToPlatform || (userRoles && userRoles.length > 0))
+              hasStaffAccess
                 ? () => setSwitcherOpen(true)
                 : undefined
             }
@@ -1021,8 +1022,16 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       {switcherOpen && (
         <DashboardSwitcher
           currentDashboard={DASHBOARDS.LEARNER}
-          availableDashboards={getAvailableDashboards(userRoles)}
-          roleLabel={userRoles.includes("super_admin") ? "Super Admin" : userRoles.length > 1 ? "Admin" : "Learner"}
+          availableDashboards={getAvailableDashboards(userRoles, session?.user?.email || user?.email)}
+          roleLabel={
+            isPlatformOwnerEmail(session?.user?.email || user?.email) && userRoles.includes("super_admin")
+              ? "Super Admin"
+              : userRoles.includes("admin") || userRoles.includes("manager")
+                ? "Admin"
+                : userRoles.includes("mentor") || userRoles.includes("instructor")
+                  ? "Instructor"
+                  : "Learner"
+          }
           onSwitch={(key) => {
             setSwitcherOpen(false);
             if (key === DASHBOARDS.LEARNER) return;

@@ -37,7 +37,7 @@ import { CheckCircle2 } from "lucide-react";
 import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
 import { CommunityScreen } from "../learner/screens/CommunityScreen.jsx";
-import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
+import { getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 // Picks which workspace tab a signed-in platform user lands on by default,
 // in descending order of privilege - admin/super_admin keep the previous
@@ -338,8 +338,14 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
           {switcherOpen && (
             <DashboardSwitcher
               currentDashboard={DASHBOARDS.ORGANISATION}
-              availableDashboards={getAvailableDashboards(userRoles)}
-              roleLabel={userRoles.includes("super_admin") ? "Super Admin" : "Admin"}
+              availableDashboards={getAvailableDashboards(userRoles, session?.user?.email || profileQuery?.data?.email)}
+              roleLabel={
+                isPlatformOwnerEmail(session?.user?.email || profileQuery?.data?.email) && userRoles.includes("super_admin")
+                  ? "Super Admin"
+                  : userRoles.includes("admin") || userRoles.includes("manager")
+                    ? "Admin"
+                    : "Instructor"
+              }
               onSwitch={(key) => {
                 setSwitcherOpen(false);
                 if (key === DASHBOARDS.LEARNER) onSwitchToLearner && onSwitchToLearner();

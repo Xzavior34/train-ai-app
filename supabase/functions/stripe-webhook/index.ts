@@ -20,7 +20,7 @@
 // Register in the Stripe dashboard pointing at this function's URL.
 // Deploy with: supabase functions deploy stripe-webhook
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,10 +51,7 @@ async function hmacSha256Hex(secret, message) {
   return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Exported for this repo's own test fixture to import and exercise
-// directly against a known test secret + payload, without needing a live
-// Stripe account - see the report for how this was actually run.
-export async function verifyStripeSignature(payload, sigHeader, secret) {
+async function verifyStripeSignature(payload, sigHeader, secret) {
   if (!sigHeader || !secret) return { valid: false, reason: "missing_signature_or_secret" };
   const parts = Object.fromEntries(
     sigHeader.split(",").map((p) => {

@@ -18,7 +18,7 @@
 // Configure with:  supabase secrets set OPENAI_API_KEY=sk-...
 //              or:  supabase secrets set GEMINI_API_KEY=...
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
