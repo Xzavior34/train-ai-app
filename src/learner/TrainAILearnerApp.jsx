@@ -905,7 +905,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   messageInput={messageInput} setMessageInput={setMessageInput}
                   messageThreads={messageThreads} threadsLoading={messageThreadsQuery.loading}
                   conversationMessages={conversationQuery.data || []} conversationLoading={conversationQuery.loading}
-                  handleSendMessage={handleSendMentorMessage}
+                  handleSendMessage={handleSendMessage}
                 />
               )}
               {screen === "studyGroup" && (
