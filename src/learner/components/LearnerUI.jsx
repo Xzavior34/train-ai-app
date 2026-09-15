@@ -887,7 +887,7 @@ export function DesktopSidebar({
     }));
   };
 
-  const CATEGORIES = [
+  const NAV_CATEGORIES = [
     {
       key: "home",
       label: "Home",
