@@ -177,17 +177,19 @@ export async function fetchLearnerSessions(learnerId) {
   return rows.map((r) => ({ ...r, mentors: r.mentors ? { ...r.mentors, user_profiles: profiles[r.mentors.user_id] || null } : null }));
 }
 
-export async function bookMentorshipSession({ learnerId, mentorId, title, scheduledAt, description, durationMinutes, meetingUrl }) {
-  if (!supabase) return { id: `session_${Date.now()}`, learner_id: learnerId, mentor_id: mentorId, title, scheduled_at: scheduledAt };
+export async function bookMentorshipSession({ learnerId, mentorId, title, scheduledAt, description, durationMinutes = 45, meetingUrl }) {
+  if (!supabase) return { id: `session_${Date.now()}`, learner_id: learnerId, mentor_id: mentorId, title, scheduled_at: scheduledAt, status: "requested" };
   const { data, error } = await supabase
     .from("mentorship_sessions")
     .insert({
       learner_id: learnerId,
       mentor_id: mentorId,
-      title,
+      title: title || "1-on-1 Mentorship Session",
       scheduled_at: scheduledAt,
-      notes: description,
-      duration_minutes: durationMinutes,
+      description: description || null,
+      learner_notes: description || null,
+      duration_minutes: durationMinutes || 45,
+      session_type: "one_on_one",
       // Real meeting link - the mentor's own persistent room (set in Instructor
       // Settings > Video Integration) rather than a throwaway ad-hoc link. If
       // the mentor hasn't set one yet this stays null and the UI shows
@@ -197,7 +199,10 @@ export async function bookMentorshipSession({ learnerId, mentorId, title, schedu
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) {
+    console.warn("bookMentorshipSession Supabase insert error:", error);
+    throw error;
+  }
   return data;
 }
 

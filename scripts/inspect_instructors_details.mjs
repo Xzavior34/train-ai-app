@@ -10,47 +10,34 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 async function main() {
-  console.log("=== MENTORS TABLE DETAILED INSPECTION ===");
+  console.log("=== TEST INSERTION INTO MENTORSHIP_SESSIONS ===");
 
-  const { data: mentors } = await supabase.from("mentors").select("*");
-  console.log(`Total mentors rows: ${mentors?.length || 0}`);
-  
-  const userIds = (mentors || []).map(m => m.user_id);
-  const { data: profiles } = await supabase.from("user_profiles").select("id, display_name, role, email").in("id", userIds);
-  const profileMap = Object.fromEntries((profiles || []).map(p => [p.id, p]));
+  const sampleSession = {
+    learner_id: "c836deb6-ec9b-4817-b8de-9191757e83ab",
+    mentor_id: "fd45fffe-311e-4ac0-84ac-0546658b03df",
+    title: "Initial Strategy & Growth Mentorship Session",
+    scheduled_at: new Date(Date.now() + 86400000).toISOString(),
+    status: "requested"
+  };
 
-  console.log("\nMentors with profile display names:");
-  console.table((mentors || []).map(m => ({
-    id: m.id,
-    user_id: m.user_id,
-    display_name: profileMap[m.user_id]?.display_name || "NO PROFILE",
-    title: m.title,
-    is_active: m.is_active,
-    is_approved: m.is_approved
-  })));
+  const { data: inserted, error: insErr } = await supabase
+    .from("mentorship_sessions")
+    .insert(sampleSession)
+    .select()
+    .single();
 
-  // Also check all courses to see who instructor_id is
-  const { data: courses } = await supabase.from("courses").select("id, title, instructor_id");
-  const courseInstIds = [...new Set((courses || []).map(c => c.instructor_id).filter(Boolean))];
-  const { data: courseInstProfiles } = await supabase.from("user_profiles").select("id, display_name, role, email").in("id", courseInstIds);
-  
-  console.log("\nCourse Instructors:");
-  console.table((courseInstProfiles || []).map(p => ({
-    id: p.id,
-    display_name: p.display_name,
-    role: p.role,
-    email: p.email
-  })));
-
-  // Check all user_profiles for role = mentor/instructor/admin
-  const { data: allProfiles } = await supabase.from("user_profiles").select("id, display_name, role, email");
-  const instructorRoles = (allProfiles || []).filter(p => {
-    const r = (p.role || "").toLowerCase();
-    return r === "mentor" || r === "instructor" || r === "admin" || r === "teacher";
-  });
-  
-  console.log("\nProfiles with instructor roles:");
-  console.table(instructorRoles);
+  if (insErr) {
+    console.error("Insertion error:", insErr);
+  } else {
+    console.log("Successfully inserted session columns:", Object.keys(inserted));
+    console.log("Inserted session:", inserted);
+  }
 }
 
 main().catch(console.error);
+
+
+
+
+
+

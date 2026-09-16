@@ -27,6 +27,7 @@ export function MentorsScreen({
   initialSelectedMentorId = null, back, push,
 }) {
   const [expandedMentorId, setExpandedMentorId] = useState(null);
+  const [selectedProfileMentor, setSelectedProfileMentor] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   // When an instructor has no published recurring availability, the learner
   // proposes a specific date/time instead of the request silently landing
@@ -36,10 +37,11 @@ export function MentorsScreen({
 
   useEffect(() => {
     if (!initialSelectedMentorId) return;
-    setExpandedMentorId(initialSelectedMentorId);
-    const el = document.getElementById(`mentor-card-${initialSelectedMentorId}`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [initialSelectedMentorId]);
+    const found = mentorsList.find(m => m.id === initialSelectedMentorId);
+    if (found) {
+      setSelectedProfileMentor(found);
+    }
+  }, [initialSelectedMentorId, mentorsList]);
 
   const availableSlots = (mentorAvailabilityQuery?.data || []).filter(a => a.is_available !== false);
   const hasAvailability = availableSlots.length > 0;
@@ -68,17 +70,26 @@ export function MentorsScreen({
     } else {
       scheduledAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     }
-    // The instructor hasn't published a schedule, so this is a proposal,
-    // not a confirmed booking - say so in the title/notes rather than
-    // implying the instructor already agreed to this exact time.
     const title = hasAvailability
       ? sessionTopicInput.trim()
       : `${sessionTopicInput.trim()} (proposed time - awaiting instructor confirmation)`;
-    await bookMentorshipSession({ learnerId: session.user.id, mentorId: sessionMentorChoice.id, title, scheduledAt, meetingUrl: sessionMentorChoice.meetingUrl });
-    closeBooking();
-    setSessionTopicInput("");
-    upcomingSessionsQuery?.refetch?.();
-    showToast?.(hasAvailability ? "Instructor session requested successfully!" : "Time proposed - the instructor will confirm or suggest another time.");
+    try {
+      await bookMentorshipSession({
+        learnerId: session.user.id,
+        mentorId: sessionMentorChoice.id,
+        title,
+        scheduledAt,
+        description: sessionTopicInput.trim(),
+        meetingUrl: sessionMentorChoice.meetingUrl || null,
+      });
+      closeBooking();
+      setSessionTopicInput("");
+      upcomingSessionsQuery?.refetch?.();
+      showToast?.(hasAvailability ? "Instructor session requested successfully!" : "Session requested! The instructor will confirm your proposed time.");
+    } catch (err) {
+      console.error("Booking error:", err);
+      showToast?.(err.message || "Failed to schedule session. Please try again.");
+    }
   }
 
   const canConfirm = sessionTopicInput.trim() && (
@@ -86,13 +97,14 @@ export function MentorsScreen({
   );
 
   const filteredMentors = mentorsList.filter(m => {
+    if (m.verified === false) return false;
     if (searchQuery && !m.name.toLowerCase().includes(searchQuery.toLowerCase()) && !m.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <TopBar title="Instructors &amp; Mentors" sub={`${mentorsList.length} instructors available`} onBack={back} />
+      <TopBar title="Instructors &amp; Mentors" sub={`${filteredMentors.length} instructors available`} onBack={back} />
 
       {/* HERO BANNER: Expert Mentors & 1-on-1 Office Hours */}
       <div
@@ -128,11 +140,160 @@ export function MentorsScreen({
           </div>
 
           <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{mentorsList.length} Active</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{filteredMentors.length} Active</div>
             <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Verified Instructors</div>
           </div>
         </div>
       </div>
+
+      {/* INSTRUCTOR DETAILED PROFILE MODAL */}
+      <PortalModal
+        isOpen={Boolean(selectedProfileMentor)}
+        onClose={() => setSelectedProfileMentor(null)}
+        maxWidth={580}
+        zIndex={9998}
+      >
+        {selectedProfileMentor && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)" }}>Instructor Profile</div>
+              <button
+                className="tai-btn tai-btn-ghost tai-btn-sm"
+                onClick={() => setSelectedProfileMentor(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Profile Header Card */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(124, 58, 237, 0.04) 100%)",
+                border: "1px solid var(--border)",
+                borderRadius: 12,
+                padding: "18px 20px",
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              <Avatar
+                initials={selectedProfileMentor.name ? selectedProfileMentor.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() : "IN"}
+                size={72}
+                src={selectedProfileMentor.avatar || selectedProfileMentor.avatarUrl || null}
+              />
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                  <h2 style={{ fontSize: 19, fontWeight: 800, color: "var(--text)", margin: 0 }}>
+                    {selectedProfileMentor.name}
+                  </h2>
+                  <CheckCircle2 size={18} color="var(--primary)" />
+                </div>
+                <div style={{ fontSize: 13.5, color: "var(--primary)", fontWeight: 700, marginTop: 3 }}>
+                  {selectedProfileMentor.title || "Instructor & Mentor"}
+                </div>
+                {selectedProfileMentor.rating > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-2)", fontWeight: 700, marginTop: 6 }}>
+                    <Star size={13} color="#F59E0B" fill="#F59E0B" />
+                    <span>{selectedProfileMentor.rating} Rating</span>
+                    {selectedProfileMentor.sessions > 0 && <span>• {selectedProfileMentor.sessions} sessions completed</span>}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10 }}>
+              <div style={{ background: "var(--surface-2)", borderRadius: 10, padding: "10px 14px", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>EXPERIENCE</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)", marginTop: 2 }}>
+                  {selectedProfileMentor.years || 3}+ Years
+                </div>
+              </div>
+              <div style={{ background: "var(--surface-2)", borderRadius: 10, padding: "10px 14px", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>SESSION FORMAT</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)", marginTop: 2 }}>
+                  1-on-1 Video Call
+                </div>
+              </div>
+              <div style={{ background: "var(--surface-2)", borderRadius: 10, padding: "10px 14px", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>STATUS</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "#10B981", marginTop: 2 }}>
+                  Available
+                </div>
+              </div>
+            </div>
+
+            {/* Biography */}
+            {(selectedProfileMentor.bio || selectedProfileMentor.tagline) && (
+              <div>
+                <div className="tai-label" style={{ marginBottom: 6 }}>About the Instructor</div>
+                <div style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.6, background: "var(--surface-2)", padding: "12px 16px", borderRadius: 10, border: "1px solid var(--border)" }}>
+                  {selectedProfileMentor.bio || selectedProfileMentor.tagline}
+                </div>
+              </div>
+            )}
+
+            {/* Specializations & Skills */}
+            {selectedProfileMentor.specializations && selectedProfileMentor.specializations.length > 0 && (
+              <div>
+                <div className="tai-label" style={{ marginBottom: 8 }}>Areas of Expertise</div>
+                <div className="tai-row tai-gap8" style={{ flexWrap: "wrap" }}>
+                  {selectedProfileMentor.specializations.map(s => (
+                    <span
+                      key={s}
+                      className="tai-tag"
+                      style={{
+                        fontSize: 12,
+                        padding: "4px 12px",
+                        background: "rgba(37, 99, 235, 0.08)",
+                        color: "var(--primary)",
+                        border: "1px solid rgba(37, 99, 235, 0.2)",
+                        fontWeight: 700,
+                        borderRadius: 8,
+                      }}
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Actions: Book Call & Chat */}
+            <div className="tai-row tai-gap10" style={{ marginTop: 8, borderTop: "1px solid var(--border)", paddingTop: 16 }}>
+              <button
+                className="tai-btn tai-btn-outline"
+                style={{ flex: "1 1 140px", padding: "10px 16px", fontSize: 13.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: 10 }}
+                onClick={() => {
+                  const target = selectedProfileMentor;
+                  setSelectedProfileMentor(null);
+                  if (push) {
+                    push("messages", { recipientId: target.userId || target.id, recipientName: target.name });
+                  }
+                }}
+              >
+                <MessageSquare size={16} /> Send Message
+              </button>
+              <button
+                className="tai-btn tai-btn-primary"
+                style={{ flex: "1 1 180px", padding: "10px 16px", fontSize: 13.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: 10 }}
+                onClick={() => {
+                  const target = selectedProfileMentor;
+                  setSelectedProfileMentor(null);
+                  setSessionMentorChoice(target);
+                  setRequestingSession(true);
+                  setBookingDay(null);
+                  setBookingTime("");
+                }}
+              >
+                <Video size={16} /> Book a Call Now
+              </button>
+            </div>
+          </div>
+        )}
+      </PortalModal>
 
       {/* BOOKING MODAL / CARD (PORTAL-MOUNTED DIRECTLY ON DOCUMENT.BODY) */}
       <PortalModal
@@ -279,23 +440,49 @@ export function MentorsScreen({
               className="tai-card tai-card-hover"
               style={{
                 borderRadius: 14,
-                borderColor: isExpanded ? "var(--primary)" : "var(--border)",
+                borderColor: selectedProfileMentor?.id === m.id ? "var(--primary)" : "var(--border)",
                 cursor: "pointer",
                 padding: "20px 22px",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
                 gap: 14,
+                transition: "all 0.2s ease",
               }}
-              onClick={() => setExpandedMentorId(isExpanded ? null : m.id)}
+              onClick={() => setSelectedProfileMentor(m)}
             >
               <div>
                 <div className="tai-row tai-between" style={{ alignItems: "flex-start" }}>
                   <div className="tai-row tai-gap14" style={{ minWidth: 0 }}>
-                    <Avatar initials={initials} size={52} src={m.avatar || m.avatarUrl || null} />
+                    <div
+                      style={{ cursor: "pointer", position: "relative" }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProfileMentor(m);
+                      }}
+                      title="Click to view full instructor profile"
+                    >
+                      <Avatar initials={initials} size={52} src={m.avatar || m.avatarUrl || null} />
+                    </div>
                     <div style={{ minWidth: 0 }}>
                       <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                        <span style={{ fontWeight: 800, fontSize: 15.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</span>
+                        <span
+                          style={{
+                            fontWeight: 800,
+                            fontSize: 15.5,
+                            color: "var(--text)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            cursor: "pointer",
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProfileMentor(m);
+                          }}
+                        >
+                          {m.name}
+                        </span>
                         {m.verified && <CheckCircle2 size={15} color="var(--primary)" style={{ flexShrink: 0 }} />}
                       </div>
                       <div style={{ fontSize: 12.5, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{m.title || "Instructor"}</div>
@@ -310,13 +497,22 @@ export function MentorsScreen({
                   </div>
 
                   <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                    {isExpanded ? <ChevronUp size={16} color="var(--text-3)" /> : <ChevronDown size={16} color="var(--text-3)" />}
+                    <button
+                      className="tai-btn tai-btn-ghost tai-btn-sm"
+                      style={{ padding: 4, borderRadius: 8, fontSize: 11, color: "var(--primary)", fontWeight: 700 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProfileMentor(m);
+                      }}
+                    >
+                      View Profile
+                    </button>
                   </div>
                 </div>
 
                 {/* Bio / Description snippet */}
                 {(m.bio || m.tagline) && (
-                  <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 12, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: isExpanded ? 99 : 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                  <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 12, lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                     {m.bio || m.tagline}
                   </div>
                 )}
@@ -336,7 +532,7 @@ export function MentorsScreen({
               {/* Action Buttons: Chat + Book Session */}
               <div className="tai-row tai-gap8" style={{ marginTop: 10 }}>
                 <button
-                  className="tai-btn tai-btn-primary"
+                  className="tai-btn tai-btn-outline"
                   style={{ flex: 1, padding: "8px 14px", fontSize: 12.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 10 }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -348,8 +544,8 @@ export function MentorsScreen({
                   <MessageSquare size={14} /> Chat
                 </button>
                 <button
-                  className="tai-btn tai-btn-outline"
-                  style={{ padding: "8px 12px", fontSize: 12, display: "inline-flex", alignItems: "center", gap: 5, borderRadius: 10 }}
+                  className="tai-btn tai-btn-primary"
+                  style={{ flex: 1, padding: "8px 14px", fontSize: 12.5, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 10 }}
                   onClick={(e) => {
                     e.stopPropagation();
                     setSessionMentorChoice(m);
@@ -358,20 +554,9 @@ export function MentorsScreen({
                     setBookingTime("");
                   }}
                 >
-                  <Video size={13} /> Book
+                  <Video size={13} /> Book a Call
                 </button>
               </div>
-
-              {isExpanded && (
-                <div className="tai-mt14 tai-fade-in" style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }} onClick={(e) => e.stopPropagation()}>
-                  <div className="tai-row tai-gap16" style={{ flexWrap: "wrap", fontSize: 12, color: "var(--text-2)" }}>
-                    <span className="tai-row tai-gap4"><Award size={13} /> {m.years || 3} yr{(m.years || 3) === 1 ? "" : "s"} experience</span>
-                    {m.languages && m.languages.length > 0 && (
-                      <span className="tai-row tai-gap4"><Globe size={13} /> {m.languages.join(", ")}</span>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
