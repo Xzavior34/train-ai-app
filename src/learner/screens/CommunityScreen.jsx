@@ -1079,6 +1079,7 @@ export function CommunityScreen({
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
   const [groupBusy, setGroupBusy] = useState(false);
+  const [joiningGroupId, setJoiningGroupId] = useState(null);
 
   // Tutors State
   const [tutorSearch, setTutorSearch] = useState("");
@@ -1242,6 +1243,26 @@ export function CommunityScreen({
     }
   }
 
+  async function handleToggleGroupJoin(groupId, isMember) {
+    if (!myId) return;
+    setJoiningGroupId(groupId);
+    try {
+      if (isMember) {
+        if (leaveStudyGroup) await leaveStudyGroup({ studyGroupId: groupId, userId: myId });
+        showToast?.("Left study group.");
+      } else {
+        if (joinStudyGroup) await joinStudyGroup({ studyGroupId: groupId, userId: myId });
+        showToast?.("Joined study group!");
+      }
+      myGroupIdsQuery.refetch?.();
+      studyGroupsQuery.refetch?.();
+    } catch (e) {
+      showToast?.("Could not update group membership.");
+    } finally {
+      setJoiningGroupId(null);
+    }
+  }
+
   async function handleJoinGroup(groupId) {
     if (!myId || !joinStudyGroup) return;
     try {
@@ -1262,6 +1283,12 @@ export function CommunityScreen({
     } catch (e) {
       showToast?.("Could not leave group.");
     }
+  }
+
+  function openMentorBooking(m) {
+    if (setSessionMentorChoice) setSessionMentorChoice(m.id || m.name);
+    if (setRequestingSession) setRequestingSession(true);
+    showToast?.(`Booking request started for ${m.name || "Instructor"}`);
   }
 
   // Tutors
