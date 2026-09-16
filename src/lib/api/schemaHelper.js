@@ -1061,12 +1061,27 @@ export async function fetchMyCohortMembership(userId) {
     .from("cohort_members")
     .select("*, cohorts(*)")
     .eq("user_id", userId)
-    .order("added_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("added_at", { ascending: false });
   if (error) { console.warn("Cohort membership fetch warning:", error); return null; }
-  if (!data || !data.cohorts) return null;
-  return { membership: data, cohort: data.cohorts };
+  const valid = (data || []).filter((d) => !!d.cohorts);
+  if (!valid.length) return null;
+  return {
+    membership: valid[0],
+    cohort: valid[0].cohorts,
+    allCohorts: valid.map((d) => d.cohorts),
+    allMemberships: valid,
+  };
+}
+
+export async function fetchMyCohortMemberships(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from("cohort_members")
+    .select("*, cohorts(*)")
+    .eq("user_id", userId)
+    .order("added_at", { ascending: false });
+  if (error) { console.warn("Cohort memberships fetch warning:", error); return []; }
+  return (data || []).filter((d) => !!d.cohorts).map((d) => ({ membership: d, cohort: d.cohorts }));
 }
 
 // Cohort posts/announcements feed for one cohort - pinned posts first, then

@@ -11,6 +11,7 @@ import { CourseDetailScreen } from "./screens/CourseDetailScreen.jsx";
 import { LessonScreen } from "./screens/LessonScreen.jsx";
 import { AIQuizScreen } from "./screens/AIQuizScreen.jsx";
 import CommunityScreen from "./screens/CommunityScreen.jsx";
+import { CommunityFeedScreen } from "./screens/CommunityFeedScreen.jsx";
 import { StudyGroupScreen } from "./screens/StudyGroupScreen.jsx";
 import { CohortScreen } from "./screens/CohortScreen.jsx";
 import { MentorsScreen } from "./screens/MentorsScreen.jsx";
@@ -170,7 +171,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     } else if (key === "aiQuiz") {
       setAiTab("quiz");
       goTab("ai");
-    } else if (key === "communityFeed" || key === "community") {
+    } else if (key === "communityFeed" || key === "feed") {
+      push("communityFeed");
+    } else if (key === "community") {
       push("community");
     } else if (key === "cohort") {
       push("cohort");
@@ -909,6 +912,16 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   session={session} showToast={showToast} back={back} push={push} goTab={goTab} params={params}
                 />
               )}
+              {(screen === "communityFeed" || screen === "feed") && (
+                <CommunityFeedScreen
+                  session={session}
+                  userProfile={user}
+                  showToast={showToast}
+                  back={back}
+                  push={push}
+                  goTab={goTab}
+                />
+              )}
               {screen === "mentors" && (
                 <MentorsScreen
                   mentorsList={mentorsList} requestingSession={requestingSession} setRequestingSession={setRequestingSession}
@@ -922,6 +935,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   bookingTime={bookingTime} setBookingTime={setBookingTime}
                   initialSelectedMentorId={params.mentorId}
                   back={back}
+                  push={push}
                 />
               )}
               {screen === "messages" && (

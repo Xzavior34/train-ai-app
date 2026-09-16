@@ -696,13 +696,24 @@ export async function fetchTodaysTasks(organizationId) {
       moderationQueue = 0;
     }
 
+    let creditRequests = 0;
+    try {
+      let crQuery = supabase.from("credit_requests").select("id", { count: "exact", head: true }).eq("status", "pending");
+      if (orgFilter) crQuery = crQuery.eq("organization_id", orgFilter);
+      const { count: crCount } = await crQuery;
+      creditRequests = crCount || 0;
+    } catch (e) {
+      creditRequests = 0;
+    }
+
     return {
       mentorApplications: mentorApplications ?? 0,
       pendingInvitations: pendingInvitations ?? 0,
       moderationQueue: moderationQueue ?? 0,
+      creditRequests: creditRequests ?? 0,
     };
   } catch (err) {
-    return { mentorApplications: 0, pendingInvitations: 0, moderationQueue: 0 };
+    return { mentorApplications: 0, pendingInvitations: 0, moderationQueue: 0, creditRequests: 0 };
   }
 }
 

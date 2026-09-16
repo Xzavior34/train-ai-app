@@ -298,11 +298,18 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {myRequestsQuery.data.map((r) => (
-                  <div key={r.id} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", alignItems: "center" }}>
-                    <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                      <Clock3 size={14} color="var(--text-3)" />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{r.amount} credits</span>
-                      <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{new Date(r.created_at).toLocaleDateString()}</span>
+                  <div key={r.id} className="tai-row tai-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }}>
+                      <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                        <Clock3 size={14} color="var(--text-3)" />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{r.amount} credits</span>
+                        <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>{new Date(r.created_at).toLocaleDateString()}</span>
+                      </div>
+                      {r.reason && (
+                        <div style={{ fontSize: 12, color: "var(--text-2)", fontStyle: "italic", marginLeft: 22 }}>
+                          &ldquo;{r.reason}&rdquo;
+                        </div>
+                      )}
                     </div>
                     <Tag tone={r.status === "approved" ? "success" : r.status === "denied" ? "danger" : "warning"}>
                       {r.status === "pending" ? "Pending Review" : r.status === "approved" ? "Approved" : "Denied"}

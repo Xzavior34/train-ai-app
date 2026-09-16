@@ -106,12 +106,51 @@ export function CohortScreen({
 
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
-              {cohort?.name || "AI & Product Design Batch"}
-            </h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
+                {cohort?.name || "AI & Product Design Batch"}
+              </h1>
+              {cohortMembershipQuery?.data?.allCohorts?.length > 1 && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 8, background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", fontSize: 11, fontWeight: 700, color: "#34D399" }}>
+                  <Layers size={12} />
+                  <span>Multiple Cohorts ({cohortMembershipQuery.data.allCohorts.length})</span>
+                </div>
+              )}
+            </div>
             <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               {cohort?.description || "Collaborative sprint track with live instructor sessions and peer critique."}
             </p>
+
+            {cohortMembershipQuery?.data?.allCohorts?.length > 1 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>Switch Cohort:</span>
+                <select
+                  value={cohort?.id}
+                  onChange={(e) => {
+                    const nextId = e.target.value;
+                    if (push) {
+                      push("cohort", { cohortId: nextId, id: nextId });
+                    }
+                  }}
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: "var(--surface-2, rgba(0,0,0,0.3))",
+                    color: "var(--text, #fff)",
+                    border: "1px solid var(--border, rgba(255,255,255,0.15))",
+                    cursor: "pointer"
+                  }}
+                >
+                  {cohortMembershipQuery.data.allCohorts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} {c.code ? `(${c.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>

@@ -1323,9 +1323,12 @@ export function CommunityScreen({
                 <button
                   className="tai-btn tai-btn-outline tai-btn-sm"
                   style={{ borderRadius: 999, padding: "5px 12px", fontSize: 12 }}
-                  onClick={() => setViewAllPosts((prev) => !prev)}
+                  onClick={() => {
+                    if (push) push("communityFeed");
+                    else setViewAllPosts((prev) => !prev);
+                  }}
                 >
-                  {viewAllPosts ? "Show Recent (5)" : `View All Posts (${posts.length})`}
+                  {`View All Posts (${posts.length})`}
                 </button>
                 <button
                   className="tai-btn tai-btn-primary tai-btn-sm"
@@ -1531,7 +1534,10 @@ export function CommunityScreen({
                 <button
                   className="tai-btn tai-btn-outline tai-btn-sm"
                   style={{ borderRadius: 999, padding: "6px 20px", fontSize: 12.5, fontWeight: 700 }}
-                  onClick={() => setViewAllPosts(true)}
+                  onClick={() => {
+                    if (push) push("communityFeed");
+                    else setViewAllPosts(true);
+                  }}
                 >
                   View All {filteredPosts.length} Posts in Community Feed →
                 </button>

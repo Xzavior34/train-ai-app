@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
-import { Plus, Users, Layers, BookOpen, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Brain, CheckCircle2 } from "lucide-react";
+import { Plus, Users, Layers, BookOpen, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Brain, CheckCircle2, Zap } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
@@ -68,6 +68,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
   const todaysTasks = tasksQuery.data ? [
     { label: "Instructor applications to review", count: tasksQuery.data.mentorApplications, icon: UserCheck, tone: "primary", go: "people" },
     { label: "Pending invitations", count: tasksQuery.data.pendingInvitations, icon: Mail, tone: "warning", go: "people" },
+    { label: "Pending AI credit requests", count: tasksQuery.data.creditRequests, icon: Zap, tone: "primary", go: "seats" },
     { label: "Content awaiting moderation", count: tasksQuery.data.moderationQueue, icon: Flag, tone: "danger", go: "moderation" },
   ] : [];
 
