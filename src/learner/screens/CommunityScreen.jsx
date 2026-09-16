@@ -1552,13 +1552,23 @@ export function CommunityScreen({
                 <Users size={18} color="var(--primary)" />
                 <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Study Groups</span>
               </div>
-              <button
-                className="tai-btn tai-btn-primary tai-btn-sm"
-                style={{ borderRadius: 999, padding: "6px 14px", fontSize: 12 }}
-                onClick={() => setCreateGroupModalOpen((prev) => !prev)}
-              >
-                <Plus size={14} /> Create Group
-              </button>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                {push && (
+                  <button
+                    onClick={() => push("studyGroup")}
+                    style={{ background: "none", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}
+                  >
+                    View All <ChevronRight size={14} />
+                  </button>
+                )}
+                <button
+                  className="tai-btn tai-btn-primary tai-btn-sm"
+                  style={{ borderRadius: 999, padding: "6px 14px", fontSize: 12 }}
+                  onClick={() => setCreateGroupModalOpen((prev) => !prev)}
+                >
+                  <Plus size={14} /> Create Group
+                </button>
+              </div>
             </div>
 
             {/* Create Group Form Modal */}
@@ -1637,6 +1647,31 @@ export function CommunityScreen({
                 );
               })}
             </div>
+
+            {/* View All Footer Link */}
+            {push && filteredGroups.length > 0 && (
+              <div style={{ marginTop: 14, textAlign: "center" }}>
+                <button
+                  className="tai-btn tai-btn-outline"
+                  style={{
+                    width: "100%",
+                    padding: "9px 16px",
+                    borderRadius: 10,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--primary)",
+                    borderColor: "rgba(37, 99, 235, 0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6
+                  }}
+                  onClick={() => push("studyGroup")}
+                >
+                  View All Study Groups →
+                </button>
+              </div>
+            )}
           </div>
 
           {/* CARD 3: FEATURED INSTRUCTORS & MENTORS */}

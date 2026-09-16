@@ -145,14 +145,32 @@ export async function fetchMentorAvailability(mentorId) {
 export async function fetchMentorSessions(mentorId) {
   if (!supabase) return [];
   try {
+    let resolvedMentorIds = [];
+    if (mentorId && mentorId !== "all" && mentorId !== "demo-mentor-id") {
+      resolvedMentorIds.push(mentorId);
+      // Check if mentorId is a user_id or mentors table id
+      const { data: mentorRows } = await supabase
+        .from("mentors")
+        .select("id, user_id")
+        .or(`id.eq.${mentorId},user_id.eq.${mentorId}`);
+      for (const m of mentorRows || []) {
+        if (m.id) resolvedMentorIds.push(m.id);
+        if (m.user_id) resolvedMentorIds.push(m.user_id);
+      }
+      resolvedMentorIds = [...new Set(resolvedMentorIds)];
+    }
+
     let query = supabase
       .from("mentorship_sessions")
       .select("*")
       .order("scheduled_at", { ascending: false });
 
-    if (mentorId && mentorId !== "all" && mentorId !== "demo-mentor-id") {
-      query = query.eq("mentor_id", mentorId);
+    if (resolvedMentorIds.length === 1) {
+      query = query.eq("mentor_id", resolvedMentorIds[0]);
+    } else if (resolvedMentorIds.length > 1) {
+      query = query.in("mentor_id", resolvedMentorIds);
     }
+
     const { data, error } = await query;
     if (error) throw error;
     if (!data || data.length === 0) return [];

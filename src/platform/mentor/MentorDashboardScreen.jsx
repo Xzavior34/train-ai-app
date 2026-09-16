@@ -41,7 +41,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
     : null;
   const earningsRows = earningsQuery.data || [];
   const totalEarnings = earningsRows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-  const pendingSessionCount = mentorSessions.filter(s => s.status === "pending" || s.status === "scheduled").length;
+  const pendingSessionCount = mentorSessions.filter(s => s.status === "pending" || s.status === "scheduled" || s.status === "requested").length;
 
   const toggleTask = (id) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
@@ -66,7 +66,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
   }));
 
   const activeLiveSession = mentorSessions.find(s => s.status === "in_progress" || s.status === "live") || null;
-  const upcomingMentorSessions = mentorSessions.filter(s => s.status === "scheduled" || s.status === "pending");
+  const upcomingMentorSessions = mentorSessions.filter(s => s.status === "scheduled" || s.status === "pending" || s.status === "requested" || s.status === "confirmed");
 
   const mentorName = profileQuery?.data?.display_name || "Hazel";
 

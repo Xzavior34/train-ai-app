@@ -50,7 +50,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
   const sessions = rawSessions.map(s => ({ ...s, status: s.status || "confirmed" }));
 
   const filteredSessions = sessions.filter(s => {
-    if (sessionFilter === "upcoming") return s.status === "confirmed" || s.status === "requested";
+    if (sessionFilter === "upcoming") return s.status === "confirmed" || s.status === "requested" || s.status === "pending" || s.status === "scheduled";
     if (sessionFilter === "completed") return s.status === "completed";
     if (sessionFilter === "cancelled") return s.status === "cancelled";
     return true;
