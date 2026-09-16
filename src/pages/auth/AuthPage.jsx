@@ -6,7 +6,7 @@ import { registerOrganization, joinDefaultOrganization, attributeReferralSignupI
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "",
   onForgotPassword, recoveryMode = false, onCompletePasswordReset,
-  onGoHome
+  onGoHome, orgParam = ""
 }) {
   const [mode, setMode] = useState("signin");
 
@@ -156,6 +156,15 @@ export default function AuthPage({
             ← Back to website
           </span>
         </div>
+
+        {orgParam && (
+          <div style={{ padding: "10px 12px", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+            <Building2 size={16} color="#2563EB" />
+            <div style={{ fontSize: 12.5, color: "#1E40AF", fontWeight: 600 }}>
+              Organization Workspace Portal ({orgParam})
+            </div>
+          </div>
+        )}
 
         {mode === "forgot" && (
           <>

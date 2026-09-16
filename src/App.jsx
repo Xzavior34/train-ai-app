@@ -142,13 +142,22 @@ export default function App() {
       return null;
     }
   });
+
+  const [orgSlugParam] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get("org") || new URLSearchParams(window.location.search).get("workspace") || null;
+    } catch {
+      return null;
+    }
+  });
+
   // Prefills AuthPage's email field after an invitation is accepted for an
   // account this browser doesn't currently hold a session for (brand-new
   // signup, or an existing-but-signed-out account) - set right before
   // switching publicView to "auth" below.
   const [inviteAuthEmail, setInviteAuthEmail] = useState("");
 
-  const [publicView, setPublicView] = useState("landing"); // "landing" | "auth"
+  const [publicView, setPublicView] = useState(() => (orgSlugParam ? "auth" : "landing")); // "landing" | "auth"
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [viewMode, setViewMode] = useState("learner");
@@ -321,6 +330,7 @@ export default function App() {
             initialEmail={inviteAuthEmail}
             onForgotPassword={sendPasswordReset}
             onGoHome={() => setPublicView("landing")}
+            orgParam={orgSlugParam}
           />
           <ConsentBanner session={session} />
         </>
