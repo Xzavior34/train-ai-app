@@ -88,6 +88,23 @@ export function useAuth() {
     if (supabase) {
       let { client, supaRes, networkErr } = await attemptSignIn(targetProject);
 
+      // If initial target project sign in fails and an alternate configured project exists,
+      // try the alternate project (e.g. Sara Foundation users signing in from non-sara domain)
+      if (!supaRes?.data?.session && !networkErr) {
+        const alternateProject =
+          targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION
+            ? SUPABASE_PROJECTS.ORGANIZATION_DB
+            : SUPABASE_PROJECTS.SARA_FOUNDATION;
+        const altAttempt = await attemptSignIn(alternateProject);
+        if (altAttempt.supaRes?.data?.session) {
+          targetProject = alternateProject;
+          setActiveSupabaseProject(alternateProject);
+          client = altAttempt.client;
+          supaRes = altAttempt.supaRes;
+          networkErr = altAttempt.networkErr;
+        }
+      }
+
       if (networkErr) {
         const message = "Could not reach the configured backend (network error). If you want to test in demo mode instead, remove the relevant project's URL/anon key from your .env.local (or delete the file) and restart the dev server.";
         setAuthError(message);
