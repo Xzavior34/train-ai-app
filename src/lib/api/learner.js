@@ -2,7 +2,7 @@ import { supabase } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { ACHIEVEMENT_CATALOG } from "../../learner/achievementCatalog.js";
 
-export async function fetchPublishedCourses() {
+export async function fetchPublishedCourses(organizationId) {
   if (!supabase) {
     const now = new Date().toISOString();
     return [
@@ -24,17 +24,20 @@ export async function fetchPublishedCourses() {
     ];
   }
   try {
-    let { data, error } = await supabase
+    let query = supabase
       .from("courses")
       .select("*")
-      .eq("is_published", true)
-      .order("created_at", { ascending: false });
-    if (!error && data && data.length > 0) {
+      .eq("is_published", true);
+
+    if (organizationId && organizationId !== "demo-org-id") {
+      query = query.or(`organization_id.eq.${organizationId},organization_id.is.null`);
+    }
+
+    let { data, error } = await query.order("created_at", { ascending: false });
+    if (!error && data) {
       return data;
     }
-    // Fallback if is_published filter or order had issue
-    const { data: allCourses } = await supabase.from("courses").select("*");
-    return allCourses || [];
+    return [];
   } catch (e) {
     console.warn("Could not fetch published courses:", e);
     return [];

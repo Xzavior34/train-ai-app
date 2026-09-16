@@ -141,7 +141,8 @@ export function useLearnerData(session, screen, params) {
     }));
   }, [session?.user?.id]);
 
-  const coursesQuery = useSupabaseQuery(async () => fetchPublishedCourses(), []);
+  const orgId = userProfileQuery.data?.organization_id || null;
+  const coursesQuery = useSupabaseQuery(async () => fetchPublishedCourses(orgId), [orgId]);
   const enrollmentsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
     return fetchMyEnrollments(session.user.id);
