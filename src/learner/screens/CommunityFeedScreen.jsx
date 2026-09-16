@@ -135,7 +135,7 @@ export function CommunityFeedScreen({
       <TopBar title="Community Feed" sub="Real-time discussions, questions, and insights" onBack={back} />
 
       {/* =========================================================================
-          HERO BANNER: Fluid entrance hero matching platform design language
+          HERO BANNER: Matching platform fluid entrance design language
           ========================================================================= */}
       <div
         className="tai-card tai-hero-card anim-fluid-entrance"
@@ -153,7 +153,7 @@ export function CommunityFeedScreen({
             right: -40,
             width: 180,
             height: 180,
-            background: "radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%)",
             borderRadius: "50%",
             pointerEvents: "none"
           }}
@@ -161,14 +161,14 @@ export function CommunityFeedScreen({
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, position: "relative", zIndex: 1 }}>
           <div style={{ maxWidth: 560 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", fontSize: 11, fontWeight: 700, color: "var(--tai-accent-purple, #a855f7)", marginBottom: 10 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, background: "var(--primary-tint)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 700, color: "var(--primary)", marginBottom: 10 }}>
               <Flame size={13} />
               <span>LIVE COMMUNITY FEED</span>
             </div>
-            <h1 style={{ margin: 0, fontSize: "clamp(20px, 2.4vw, 26px)", fontWeight: 800, color: "var(--tai-text-primary, #fff)", lineHeight: 1.25 }}>
+            <h1 className="tai-hero-title" style={{ margin: 0, fontSize: "clamp(20px, 2.4vw, 26px)", fontWeight: 800, color: "var(--text)", lineHeight: 1.25 }}>
               Connect, Learn & Share with Peers
             </h1>
-            <p style={{ margin: "8px 0 0 0", fontSize: 13, color: "var(--tai-text-secondary, #94a3b8)", lineHeight: 1.5 }}>
+            <p className="tai-hero-desc" style={{ margin: "8px 0 0 0", fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
               Ask questions, showcase your projects, discuss AI developments, and engage with verified instructors and peers.
             </p>
           </div>
@@ -185,8 +185,7 @@ export function CommunityFeedScreen({
                 padding: "10px 18px",
                 borderRadius: 10,
                 fontWeight: 700,
-                fontSize: 13,
-                boxShadow: "0 4px 14px rgba(139, 92, 246, 0.35)"
+                fontSize: 13
               }}
             >
               <Plus size={16} />
@@ -194,7 +193,7 @@ export function CommunityFeedScreen({
             </button>
             <button
               type="button"
-              className="tai-btn tai-btn-secondary"
+              className="tai-btn tai-btn-outline"
               onClick={() => push ? push("mentors") : goTab?.("community")}
               style={{
                 display: "inline-flex",
@@ -213,18 +212,18 @@ export function CommunityFeedScreen({
         </div>
 
         {/* Community Stat Pills */}
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--tai-border, rgba(255,255,255,0.08))" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--tai-text-secondary, #94a3b8)" }}>
-            <MessageCircle size={14} color="var(--tai-accent-purple, #a855f7)" />
-            <strong style={{ color: "var(--tai-text-primary, #fff)" }}>{posts.length}</strong> Total Posts
+        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text-2)" }}>
+            <MessageCircle size={14} color="var(--primary)" />
+            <strong style={{ color: "var(--text)" }}>{posts.length}</strong> Total Posts
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--tai-text-secondary, #94a3b8)" }}>
-            <Sparkles size={14} color="#3b82f6" />
-            <strong style={{ color: "var(--tai-text-primary, #fff)" }}>Verified</strong> Instructors Active
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text-2)" }}>
+            <Sparkles size={14} color="var(--primary)" />
+            <strong style={{ color: "var(--text)" }}>Verified</strong> Instructors Active
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--tai-text-secondary, #94a3b8)" }}>
-            <CheckCircle2 size={14} color="#10b981" />
-            <strong style={{ color: "var(--tai-text-primary, #fff)" }}>Real-time</strong> Synced
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text-2)" }}>
+            <CheckCircle2 size={14} color="var(--success, #10b981)" />
+            <strong style={{ color: "var(--text)" }}>Real-time</strong> Synced
           </div>
         </div>
       </div>
@@ -233,7 +232,7 @@ export function CommunityFeedScreen({
           COMPOSER DRAWER / CARD
           ========================================================================= */}
       {composerOpen && (
-        <div className="tai-card" style={{ padding: 20, borderRadius: 14, border: "1px solid var(--tai-accent-purple, #8b5cf6)" }}>
+        <div className="tai-card" style={{ padding: 20, borderRadius: 14, border: "1px solid var(--primary)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Avatar
@@ -242,10 +241,10 @@ export function CommunityFeedScreen({
                 size={36}
               />
               <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--tai-text-primary, #fff)" }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>
                   {userProfile?.full_name || session?.user?.email || "Share an Update"}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--tai-text-secondary, #94a3b8)" }}>
+                <div style={{ fontSize: 11, color: "var(--text-3)" }}>
                   Posting publicly to Community Feed
                 </div>
               </div>
@@ -265,32 +264,32 @@ export function CommunityFeedScreen({
             onChange={(e) => setNewPostText(e.target.value)}
             placeholder="What would you like to discuss or share with the community today?"
             rows={4}
+            className="tai-input"
             style={{
               width: "100%",
               boxSizing: "border-box",
               padding: 12,
               borderRadius: 10,
-              background: "var(--tai-bg-input, rgba(0,0,0,0.25))",
-              border: "1px solid var(--tai-border, rgba(255,255,255,0.12))",
-              color: "var(--tai-text-primary, #fff)",
               fontSize: 14,
               fontFamily: "inherit",
-              resize: "vertical"
+              resize: "vertical",
+              color: "var(--text)",
+              background: "var(--surface-2)"
             }}
           />
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 12, color: "var(--tai-text-secondary, #94a3b8)" }}>Tag:</span>
+              <span style={{ fontSize: 12, color: "var(--text-2)" }}>Category:</span>
               <select
                 value={newPostTag}
                 onChange={(e) => setNewPostTag(e.target.value)}
                 style={{
                   padding: "6px 12px",
                   borderRadius: 8,
-                  background: "var(--tai-bg-input, rgba(0,0,0,0.3))",
-                  border: "1px solid var(--tai-border, rgba(255,255,255,0.15))",
-                  color: "var(--tai-text-primary, #fff)",
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
                   fontSize: 12
                 }}
               >
@@ -328,9 +327,10 @@ export function CommunityFeedScreen({
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           <div style={{ flex: 1, minWidth: 240, position: "relative" }}>
-            <Search size={16} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--tai-text-secondary, #94a3b8)" }} />
+            <Search size={16} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
             <input
               type="text"
+              className="tai-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search posts, topics, or authors..."
@@ -339,9 +339,9 @@ export function CommunityFeedScreen({
                 boxSizing: "border-box",
                 padding: "9px 12px 9px 36px",
                 borderRadius: 10,
-                background: "var(--tai-bg-input, rgba(0,0,0,0.2))",
-                border: "1px solid var(--tai-border, rgba(255,255,255,0.1))",
-                color: "var(--tai-text-primary, #fff)",
+                background: "var(--surface)",
+                border: "1.5px solid var(--border)",
+                color: "var(--text)",
                 fontSize: 13
               }}
             />
@@ -382,9 +382,9 @@ export function CommunityFeedScreen({
                   borderRadius: 999,
                   fontSize: 12,
                   fontWeight: active ? 700 : 500,
-                  background: active ? "var(--tai-accent-purple, #8b5cf6)" : "var(--tai-card-bg, rgba(255,255,255,0.05))",
-                  color: active ? "#fff" : "var(--tai-text-secondary, #94a3b8)",
-                  border: active ? "1px solid var(--tai-accent-purple, #8b5cf6)" : "1px solid var(--tai-border, rgba(255,255,255,0.08))",
+                  background: active ? "var(--primary)" : "var(--surface)",
+                  color: active ? "#ffffff" : "var(--text-2)",
+                  border: active ? "1px solid var(--primary)" : "1px solid var(--border)",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   transition: "all 0.15s ease"
@@ -401,18 +401,18 @@ export function CommunityFeedScreen({
           POSTS FEED
           ========================================================================= */}
       {postsQuery.loading && (
-        <div className="tai-empty" style={{ padding: 40 }}>
+        <div className="tai-empty" style={{ padding: 40, color: "var(--text-3)" }}>
           Loading community discussions...
         </div>
       )}
 
       {!postsQuery.loading && filteredPosts.length === 0 && (
         <div className="tai-card" style={{ padding: 40, textAlign: "center", borderRadius: 14 }}>
-          <MessageSquare size={40} color="var(--tai-text-secondary, #94a3b8)" style={{ margin: "0 auto 12px auto", opacity: 0.6 }} />
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--tai-text-primary, #fff)" }}>
+          <MessageSquare size={40} color="var(--text-3)" style={{ margin: "0 auto 12px auto", opacity: 0.6 }} />
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--text)" }}>
             No posts found
           </h3>
-          <p style={{ margin: "6px 0 16px 0", fontSize: 13, color: "var(--tai-text-secondary, #94a3b8)" }}>
+          <p style={{ margin: "6px 0 16px 0", fontSize: 13, color: "var(--text-2)" }}>
             {searchQuery || selectedTag !== "All"
               ? "Try adjusting your search or category filter"
               : "Be the first one to start a conversation in the community!"}
@@ -431,7 +431,7 @@ export function CommunityFeedScreen({
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {filteredPosts.map(post => {
-          const authorName = post.user_profiles?.full_name || post.author?.full_name || "Community Member";
+          const authorName = post.user_profiles?.full_name || post.user_profiles?.display_name || post.author?.full_name || post.author?.display_name || "Community Member";
           const authorAvatar = post.user_profiles?.avatar_url || post.author?.avatar_url;
           const authorRole = post.user_profiles?.role || post.author?.role || "Learner";
           const isInstructor = authorRole === "mentor" || authorRole === "instructor" || authorRole === "admin";
@@ -446,12 +446,14 @@ export function CommunityFeedScreen({
               key={post.id}
               className="tai-card anim-fluid-entrance"
               style={{
-                padding: 18,
+                padding: 20,
                 borderRadius: 14,
                 display: "flex",
                 flexDirection: "column",
                 gap: 14,
-                border: isInstructor ? "1px solid rgba(139, 92, 246, 0.3)" : undefined
+                background: "var(--surface)",
+                border: isInstructor ? "1.5px solid var(--primary-light, rgba(37, 99, 235, 0.4))" : "1px solid var(--border)",
+                boxShadow: "var(--shadow-card)"
               }}
             >
               {/* Post Header */}
@@ -460,27 +462,27 @@ export function CommunityFeedScreen({
                   style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
                   onClick={() => handleAuthorClick(authorId)}
                 >
-                  <Avatar src={authorAvatar} name={authorName} size={40} />
+                  <Avatar src={authorAvatar} name={authorName} size={42} />
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontWeight: 700, fontSize: 14, color: "var(--tai-text-primary, #fff)" }}>
+                      <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>
                         {authorName}
                       </span>
                       {isInstructor && (
                         <span style={{
                           fontSize: 10,
-                          fontWeight: 700,
-                          padding: "2px 6px",
+                          fontWeight: 800,
+                          padding: "2px 7px",
                           borderRadius: 4,
-                          background: "rgba(139, 92, 246, 0.2)",
-                          color: "var(--tai-accent-purple, #a855f7)",
-                          border: "1px solid rgba(139, 92, 246, 0.3)"
+                          background: "var(--primary-tint)",
+                          color: "var(--primary)",
+                          border: "1px solid var(--border)"
                         }}>
                           INSTRUCTOR
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--tai-text-secondary, #94a3b8)" }}>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
                       {timeAgo(post.created_at)} &bull; {post.category || post.tags?.[0] || "General"}
                     </div>
                   </div>
@@ -488,23 +490,25 @@ export function CommunityFeedScreen({
 
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   {post.category && (
-                    <Tag tone={isInstructor ? "purple" : "gray"}>
+                    <Tag tone={isInstructor ? "blue" : "gray"}>
                       {post.category}
                     </Tag>
                   )}
                 </div>
               </div>
 
-              {/* Post Content */}
+              {/* Post Title */}
               {post.title && (
-                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--tai-text-primary, #fff)" }}>
+                <div style={{ fontSize: 15.5, fontWeight: 800, color: "var(--text)", lineHeight: 1.3 }}>
                   {post.title}
                 </div>
               )}
+
+              {/* Post Content */}
               <div style={{
                 fontSize: 14,
                 lineHeight: 1.6,
-                color: "var(--tai-text-primary, #e2e8f0)",
+                color: "var(--text)",
                 whiteSpace: "pre-wrap"
               }}>
                 {post.content || post.body}
@@ -515,8 +519,8 @@ export function CommunityFeedScreen({
                 display: "flex",
                 alignItems: "center",
                 gap: 16,
-                paddingTop: 10,
-                borderTop: "1px solid var(--tai-border, rgba(255,255,255,0.06))"
+                paddingTop: 12,
+                borderTop: "1px solid var(--border)"
               }}>
                 <button
                   type="button"
@@ -527,7 +531,7 @@ export function CommunityFeedScreen({
                     gap: 6,
                     background: "none",
                     border: "none",
-                    color: isLiked ? "#ef4444" : "var(--tai-text-secondary, #94a3b8)",
+                    color: isLiked ? "var(--danger, #ef4444)" : "var(--text-2)",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -536,7 +540,7 @@ export function CommunityFeedScreen({
                     transition: "all 0.15s ease"
                   }}
                 >
-                  <Heart size={16} fill={isLiked ? "#ef4444" : "none"} />
+                  <Heart size={16} fill={isLiked ? "#ef4444" : "none"} color={isLiked ? "#ef4444" : "currentColor"} />
                   <span>{likeCount}</span>
                 </button>
 
@@ -549,7 +553,7 @@ export function CommunityFeedScreen({
                     gap: 6,
                     background: "none",
                     border: "none",
-                    color: isExpanded ? "var(--tai-accent-purple, #a855f7)" : "var(--tai-text-secondary, #94a3b8)",
+                    color: isExpanded ? "var(--primary)" : "var(--text-2)",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -569,9 +573,10 @@ export function CommunityFeedScreen({
                   flexDirection: "column",
                   gap: 12,
                   marginTop: 6,
-                  padding: 12,
+                  padding: 14,
                   borderRadius: 10,
-                  background: "var(--tai-bg-subtle, rgba(0,0,0,0.15))"
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border)"
                 }}>
                   {/* Comments list */}
                   {comments.length > 0 ? (
@@ -579,31 +584,32 @@ export function CommunityFeedScreen({
                       <div key={c.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                         <Avatar
                           src={c.user_profiles?.avatar_url}
-                          name={c.user_profiles?.full_name || "Member"}
-                          size={28}
+                          name={c.user_profiles?.full_name || c.user_profiles?.display_name || "Member"}
+                          size={30}
                         />
                         <div style={{
                           flex: 1,
-                          background: "var(--tai-card-bg, rgba(255,255,255,0.03))",
-                          padding: "8px 12px",
-                          borderRadius: 8
+                          background: "var(--surface)",
+                          padding: "10px 14px",
+                          borderRadius: 10,
+                          border: "1px solid var(--border)"
                         }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                            <span style={{ fontWeight: 700, fontSize: 12, color: "var(--tai-text-primary, #fff)" }}>
-                              {c.user_profiles?.full_name || "Member"}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                            <span style={{ fontWeight: 800, fontSize: 12.5, color: "var(--text)" }}>
+                              {c.user_profiles?.full_name || c.user_profiles?.display_name || "Member"}
                             </span>
-                            <span style={{ fontSize: 10, color: "var(--tai-text-secondary, #94a3b8)" }}>
+                            <span style={{ fontSize: 11, color: "var(--text-3)" }}>
                               {timeAgo(c.created_at)}
                             </span>
                           </div>
-                          <div style={{ fontSize: 13, color: "var(--tai-text-primary, #e2e8f0)", lineHeight: 1.4 }}>
+                          <div style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.45 }}>
                             {c.content || c.body}
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div style={{ fontSize: 12, color: "var(--tai-text-secondary, #94a3b8)", textAlign: "center", padding: 8 }}>
+                    <div style={{ fontSize: 12.5, color: "var(--text-3)", textAlign: "center", padding: 8 }}>
                       No comments yet. Be the first to share your thoughts!
                     </div>
                   )}
@@ -612,6 +618,7 @@ export function CommunityFeedScreen({
                   <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                     <input
                       type="text"
+                      className="tai-input"
                       placeholder="Write a comment..."
                       value={commentInputs[post.id] || ""}
                       onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
@@ -620,9 +627,9 @@ export function CommunityFeedScreen({
                         flex: 1,
                         padding: "8px 12px",
                         borderRadius: 8,
-                        background: "var(--tai-bg-input, rgba(0,0,0,0.25))",
-                        border: "1px solid var(--tai-border, rgba(255,255,255,0.1))",
-                        color: "var(--tai-text-primary, #fff)",
+                        background: "var(--surface)",
+                        border: "1px solid var(--border)",
+                        color: "var(--text)",
                         fontSize: 13
                       }}
                     />
@@ -631,7 +638,7 @@ export function CommunityFeedScreen({
                       className="tai-btn tai-btn-primary"
                       onClick={() => handleAddComment(post.id)}
                       disabled={submittingComment || !commentInputs[post.id]?.trim()}
-                      style={{ padding: "8px 12px", borderRadius: 8 }}
+                      style={{ padding: "8px 14px", borderRadius: 8 }}
                     >
                       <Send size={14} />
                     </button>
