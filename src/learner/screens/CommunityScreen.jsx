@@ -1282,77 +1282,11 @@ export function CommunityScreen({
   const myLevel = gamificationStatsQuery.data?.current_level || 1;
   const nextRankPoints = myRankIndex > 0 ? (leaderboardRows[myRankIndex - 1]?.total_points || myPoints) - myPoints : 0;
 
-  // Tabs list with icons
-  const TABS = [
-    { id: "summary", label: "Summary", icon: Sparkles },
-    { id: "posts", label: "Posts", icon: MessageSquare },
-    { id: "groups", label: "Groups", icon: Users },
-    { id: "tutors", label: "Instructors", icon: GraduationCap },
-    { id: "cohorts", label: "Cohorts", icon: BookOpen },
-    { id: "messages", label: "Messages", icon: Mail },
-    { id: "rank", label: "Rank", icon: Trophy },
-  ];  return (
+  return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
 
       {/* Hero Banner */}
       <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
-
-      {/* Quick Navigation Tabs Bar */}
-      <div
-        className="tai-scrollx tai-no-scrollbar"
-        style={{
-          display: "flex",
-          gap: 8,
-          overflowX: "auto",
-          paddingBottom: 2,
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
-        {TABS.map((t) => {
-          const Icon = t.icon;
-          const isSelected = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => {
-                if (t.id === "cohorts") {
-                  push?.("cohort");
-                } else if (t.id === "groups") {
-                  push?.("studyGroup");
-                } else if (t.id === "tutors") {
-                  push?.("mentors");
-                } else if (t.id === "messages") {
-                  push?.("messages");
-                } else if (t.id === "rank") {
-                  push?.("leaderboard");
-                } else if (t.id === "posts") {
-                  setViewAllPosts(true);
-                  handleTabClick(t.id);
-                } else {
-                  setViewAllPosts(false);
-                  handleTabClick(t.id);
-                }
-              }}
-              className={`tai-btn ${isSelected ? "tai-btn-primary" : "tai-btn-outline"}`}
-              style={{
-                borderRadius: 999,
-                padding: "6px 14px",
-                fontSize: 12.5,
-                fontWeight: 700,
-                whiteSpace: "nowrap",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                flexShrink: 0,
-              }}
-            >
-              <Icon size={14} />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
 
       {/* Unified Dashboard Grid Layout */}
       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
