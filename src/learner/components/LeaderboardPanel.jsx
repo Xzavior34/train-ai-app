@@ -84,45 +84,61 @@ export function LeaderboardPanel({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* 1. Header Card with Live Standings & Your Rank */}
+      {/* 1. HERO BANNER: Leaderboard & Top 3 Champions (Adaptive Liquid Glass) */}
       <div
-        className="tai-card"
+        className="tai-card tai-hero-card anim-fluid-entrance"
         style={{
-          padding: "20px 22px",
-          background: "var(--glass-surface)",
-          border: "1px solid var(--glass-border)",
-          borderRadius: 16,
-          boxShadow: "var(--glass-shadow)",
+          borderRadius: 14,
+          padding: "clamp(18px, 2.5vw, 24px)",
+          position: "relative",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          gap: 18,
         }}
       >
-        <div className="tai-row tai-between" style={{ alignItems: "flex-start", marginBottom: 16 }}>
-          <div className="tai-row tai-gap12" style={{ alignItems: "center" }}>
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: "50%",
-                background: "#2563EB",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                boxShadow: "0 2px 8px rgba(37, 99, 235, 0.35)",
-              }}
-            >
-              <Trophy size={22} color="#FFFFFF" />
-            </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "var(--text)" }}>
-                Leaderboard
-              </h2>
-              <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>
-                {learners.length} learners competing • {period === "week" ? "This week" : period === "month" ? "This month" : "All time"}
+        {/* Decorative ambient radial glow */}
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 220,
+            height: 220,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Top Hero Row: Title + Period Filter + Refresh */}
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 14 }}>
+          <div style={{ minWidth: 0, flex: "1 1 260px" }}>
+            <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 4 }}>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  background: "var(--primary-tint)",
+                  border: "1px solid rgba(37, 99, 235, 0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Trophy size={18} color="var(--primary)" />
               </div>
+              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
+                Leaderboard &amp; Top Achievers
+              </h1>
             </div>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, lineHeight: 1.45 }}>
+              {learners.length} learners competing • {period === "week" ? "This week" : period === "month" ? "This month" : "All time"} ranking
+            </p>
           </div>
 
-          <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
             {onPeriodChange && (
               <div
                 className="tai-row"
@@ -152,6 +168,7 @@ export function LeaderboardPanel({
                       fontSize: 11.5,
                       cursor: "pointer",
                       whiteSpace: "nowrap",
+                      transition: "all 0.15s ease",
                     }}
                   >
                     {opt.label}
@@ -160,71 +177,257 @@ export function LeaderboardPanel({
               </div>
             )}
 
-          <button
-            onClick={onRefresh}
-            className="tai-btn tai-btn-outline tai-btn-sm"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "7px 14px",
-              borderRadius: 8,
-              fontSize: 12.5,
-              fontWeight: 700,
-            }}
-          >
-            <RefreshCw size={13} className={loading ? "anim-spin" : ""} />
-            <span>Refresh</span>
-          </button>
+            <button
+              onClick={onRefresh}
+              className="tai-btn tai-btn-outline tai-btn-sm"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "6px 12px",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              <RefreshCw size={13} className={loading ? "anim-spin" : ""} />
+              <span>Refresh</span>
+            </button>
           </div>
         </div>
 
-        {/* Your Rank Highlight Row */}
+        {/* Top 3 Champions Podium directly inside the Hero Banner */}
+        {learners.length > 0 && (
+          <div
+            style={{
+              position: "relative",
+              zIndex: 1,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))",
+              gap: 12,
+              alignItems: "stretch",
+              marginTop: 4,
+            }}
+          >
+            {/* 2nd Place (Silver) */}
+            <div
+              className="tai-hero-subcard"
+              style={{
+                borderRadius: 12,
+                padding: "14px 12px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                position: "relative",
+                justifyContent: "space-between",
+                gap: 8,
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                <Avatar
+                  size={54}
+                  src={second?.avatar}
+                  initials={second?.initials}
+                  style={{ border: "2.5px solid #94A3B8" }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -4,
+                    right: -4,
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    background: "#94A3B8",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#FFFFFF",
+                    fontSize: 11,
+                    fontWeight: 900,
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  #2
+                </div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
+                  {second?.name || "—"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>2nd Place Contender</div>
+              </div>
+              <div style={{ fontWeight: 900, fontSize: 14, color: "var(--primary)", background: "var(--primary-tint)", padding: "3px 10px", borderRadius: 999 }}>
+                {second?.points?.toLocaleString() || 0} pts
+              </div>
+            </div>
+
+            {/* 1st Place (Gold Champion) */}
+            <div
+              className="tai-hero-subcard"
+              style={{
+                borderRadius: 12,
+                padding: "16px 14px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                position: "relative",
+                justifyContent: "space-between",
+                gap: 8,
+                border: "1.5px solid rgba(245, 158, 11, 0.4)",
+                background: "rgba(245, 158, 11, 0.08)",
+                boxShadow: "0 8px 24px -6px rgba(245, 158, 11, 0.2)",
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                <Avatar
+                  size={62}
+                  src={first?.avatar}
+                  initials={first?.initials}
+                  style={{ border: "3px solid #F59E0B", boxShadow: "0 0 14px rgba(245, 158, 11, 0.45)" }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -6,
+                    right: -6,
+                    width: 24,
+                    height: 24,
+                    borderRadius: "50%",
+                    background: "#F59E0B",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#FFFFFF",
+                    fontSize: 11.5,
+                    fontWeight: 900,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <Crown size={14} />
+                </div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 900, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 170 }}>
+                  {first?.name || "—"}
+                </div>
+                <div style={{ fontSize: 11, color: "#D97706", fontWeight: 800 }}>🏆 Champion</div>
+              </div>
+              <div style={{ fontWeight: 900, fontSize: 15, color: "#D97706", background: "rgba(245, 158, 11, 0.16)", border: "1px solid rgba(245, 158, 11, 0.3)", padding: "4px 12px", borderRadius: 999 }}>
+                {first?.points?.toLocaleString() || 0} pts
+              </div>
+            </div>
+
+            {/* 3rd Place (Bronze) */}
+            <div
+              className="tai-hero-subcard"
+              style={{
+                borderRadius: 12,
+                padding: "14px 12px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                position: "relative",
+                justifyContent: "space-between",
+                gap: 8,
+              }}
+            >
+              <div style={{ position: "relative" }}>
+                <Avatar
+                  size={54}
+                  src={third?.avatar}
+                  initials={third?.initials}
+                  style={{ border: "2.5px solid #EA580C" }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: -4,
+                    right: -4,
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    background: "#EA580C",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#FFFFFF",
+                    fontSize: 11,
+                    fontWeight: 900,
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  #3
+                </div>
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
+                  {third?.name || "—"}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>3rd Place Achiever</div>
+              </div>
+              <div style={{ fontWeight: 900, fontSize: 14, color: "var(--primary)", background: "var(--primary-tint)", padding: "3px 10px", borderRadius: 999 }}>
+                {third?.points?.toLocaleString() || 0} pts
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Your Rank Live Highlight Row inside Hero */}
         <div
-          className="tai-row tai-between"
+          className="tai-hero-subcard"
           style={{
-            background: "var(--primary-tint)",
-            border: "1px solid rgba(37, 99, 235, 0.25)",
-            borderRadius: 12,
-            padding: "12px 18px",
+            position: "relative",
+            zIndex: 1,
+            borderRadius: 10,
+            padding: "10px 16px",
+            display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: 12,
+            gap: 10,
           }}
         >
-          <div className="tai-row tai-gap12" style={{ alignItems: "center" }}>
+          <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
             <span
               style={{
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 borderRadius: 8,
-                background: "#2563EB",
+                background: "var(--primary)",
                 color: "#FFFFFF",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontWeight: 900,
-                fontSize: 14,
+                fontSize: 13,
                 flexShrink: 0,
               }}
             >
               #{myRank}
             </span>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Your rank</div>
-              <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 1 }}>
+              <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>Your Standing</div>
+              <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>
                 {myPoints.toLocaleString()} pts • Level {myLevel}
               </div>
             </div>
           </div>
 
-          {pointsToNext > 0 && (
+          {pointsToNext > 0 ? (
             <div
               className="tai-row tai-gap6"
-              style={{ color: "var(--primary)", fontSize: 13, fontWeight: 800, alignItems: "center" }}
+              style={{ color: "var(--primary)", fontSize: 12, fontWeight: 800, alignItems: "center" }}
             >
-              <Zap size={14} fill="var(--primary)" />
-              <span>{pointsToNext.toLocaleString()} pts to rank #{myRank - 1}</span>
+              <Zap size={13} fill="var(--primary)" />
+              <span>{pointsToNext.toLocaleString()} pts to reach rank #{myRank - 1}</span>
+            </div>
+          ) : (
+            <div style={{ fontSize: 11.5, fontWeight: 800, color: "#059669" }}>
+              ✨ Leading the board!
             </div>
           )}
         </div>
@@ -244,230 +447,16 @@ export function LeaderboardPanel({
           gap: 14,
         }}
       >
-        <Quote size={26} color="#9333EA" style={{ transform: "rotate(180deg)", flexShrink: 0 }} />
+        <Quote size={24} color="var(--primary)" style={{ transform: "rotate(180deg)", flexShrink: 0 }} />
         <div>
-          <div style={{ fontStyle: "italic", fontSize: 13.5, color: "#7C3AED", fontWeight: 700, lineHeight: 1.5 }}>
-            "{dailyQuote.quote} - {dailyQuote.author}"
+          <div style={{ fontStyle: "italic", fontSize: 13, color: "var(--text)", fontWeight: 600, lineHeight: 1.5 }}>
+            "{dailyQuote.quote}"
           </div>
-          <div style={{ fontSize: 12, color: "#A855F7", fontWeight: 700, marginTop: 4 }}>
-            Daily Motivation
+          <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, marginTop: 3 }}>
+            — {dailyQuote.author}
           </div>
         </div>
       </div>
-
-      {/* 3. Top 3 Podium (Left: 2nd, Center: 1st, Right: 3rd) */}
-      {learners.length > 0 && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: 16,
-            alignItems: "flex-end",
-            marginTop: 6,
-          }}
-        >
-          {/* 2nd Place (Left) */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 0 }}>
-            <div style={{ position: "relative", marginBottom: 8 }}>
-              <Avatar
-                size={66}
-                src={second?.avatar}
-                initials={second?.initials}
-                style={{ border: "2.5px solid #94A3B8" }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: -2,
-                  right: -4,
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  background: "#94A3B8",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#FFFFFF",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                }}
-              >
-                <Medal size={13} />
-              </div>
-            </div>
-
-            <div
-              style={{
-                fontWeight: 800,
-                fontSize: 13,
-                color: "var(--text)",
-                textAlign: "center",
-                marginBottom: 8,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                width: "100%",
-                padding: "0 4px",
-              }}
-            >
-              {second?.name || "—"}
-            </div>
-
-            <div
-              style={{
-                width: "100%",
-                height: 120,
-                background: "#8F9CAE",
-                borderTopLeftRadius: 14,
-                borderTopRightRadius: 14,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#FFFFFF",
-                boxShadow: "0 4px 10px rgba(143, 156, 174, 0.25)",
-              }}
-            >
-              <div style={{ fontSize: 20, fontWeight: 900 }}>{second?.points?.toLocaleString() || 0}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.9, marginTop: 1 }}>pts</div>
-            </div>
-          </div>
-
-          {/* 1st Place (Center - Elevated & Golden Yellow) */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 0 }}>
-            <div style={{ position: "relative", marginBottom: 8 }}>
-              <Avatar
-                size={76}
-                src={first?.avatar}
-                initials={first?.initials}
-                style={{
-                  border: "3.5px solid #F59E0B",
-                  boxShadow: "0 0 16px rgba(245, 158, 11, 0.4)",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: -4,
-                  right: -4,
-                  width: 26,
-                  height: 26,
-                  borderRadius: "50%",
-                  background: "#F59E0B",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#FFFFFF",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-                }}
-              >
-                <Crown size={15} />
-              </div>
-            </div>
-
-            <div
-              style={{
-                fontWeight: 900,
-                fontSize: 13.5,
-                color: "var(--text)",
-                textAlign: "center",
-                marginBottom: 8,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                width: "100%",
-                padding: "0 4px",
-              }}
-            >
-              {first?.name || "—"}
-            </div>
-
-            <div
-              style={{
-                width: "100%",
-                height: 155,
-                background: "#F59E0B",
-                borderTopLeftRadius: 14,
-                borderTopRightRadius: 14,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#FFFFFF",
-                boxShadow: "0 6px 16px rgba(245, 158, 11, 0.35)",
-              }}
-            >
-              <div style={{ fontSize: 24, fontWeight: 900 }}>{first?.points?.toLocaleString() || 0}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.9, marginTop: 1 }}>pts</div>
-            </div>
-          </div>
-
-          {/* 3rd Place (Right - Orange) */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 0 }}>
-            <div style={{ position: "relative", marginBottom: 8 }}>
-              <Avatar
-                size={66}
-                src={third?.avatar}
-                initials={third?.initials}
-                style={{ border: "2.5px solid #EA580C" }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: -2,
-                  right: -4,
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  background: "#EA580C",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#FFFFFF",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                }}
-              >
-                <Award size={13} />
-              </div>
-            </div>
-
-            <div
-              style={{
-                fontWeight: 800,
-                fontSize: 13,
-                color: "var(--text)",
-                textAlign: "center",
-                marginBottom: 8,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                width: "100%",
-                padding: "0 4px",
-              }}
-            >
-              {third?.name || "—"}
-            </div>
-
-            <div
-              style={{
-                width: "100%",
-                height: 110,
-                background: "#F97316",
-                borderTopLeftRadius: 14,
-                borderTopRightRadius: 14,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#FFFFFF",
-                boxShadow: "0 4px 10px rgba(249, 115, 22, 0.25)",
-              }}
-            >
-              <div style={{ fontSize: 20, fontWeight: 900 }}>{third?.points?.toLocaleString() || 0}</div>
-              <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.9, marginTop: 1 }}>pts</div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 4. Ranked List (From #4 downwards) */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

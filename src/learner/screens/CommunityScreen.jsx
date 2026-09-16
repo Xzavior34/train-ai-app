@@ -998,6 +998,7 @@ export function CommunityScreen({
   };
 
   // Posts State
+  const [viewAllPosts, setViewAllPosts] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [postText, setPostText] = useState("");
   const [postType, setPostType] = useState("general");
@@ -1310,13 +1311,22 @@ export function CommunityScreen({
             <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
               <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
                 <MessageSquare size={18} color="var(--primary)" />
-                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Recent Discussions</span>
+                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
+                  {viewAllPosts ? "All Community Discussions" : "Recent Discussions"}
+                </span>
                 <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)", fontSize: 11 }}>
                   {posts.length} Posts
                 </span>
               </div>
 
-              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                <button
+                  className="tai-btn tai-btn-outline tai-btn-sm"
+                  style={{ borderRadius: 999, padding: "5px 12px", fontSize: 12 }}
+                  onClick={() => setViewAllPosts((prev) => !prev)}
+                >
+                  {viewAllPosts ? "Show Recent (5)" : `View All Posts (${posts.length})`}
+                </button>
                 <button
                   className="tai-btn tai-btn-primary tai-btn-sm"
                   style={{ borderRadius: 999, padding: "5px 14px", fontSize: 12 }}
@@ -1326,6 +1336,33 @@ export function CommunityScreen({
                 </button>
               </div>
             </div>
+
+            {/* All Posts Search Bar & Tag Filter when viewAllPosts is active */}
+            {viewAllPosts && (
+              <div className="anim-slide-down" style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ position: "relative" }}>
+                  <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
+                  <input
+                    className="tai-input"
+                    style={{ paddingLeft: 34, width: "100%", boxSizing: "border-box", borderRadius: 10, fontSize: 12.5 }}
+                    placeholder="Search all posts, questions, topics..."
+                    value={feedSearch}
+                    onChange={(e) => setFeedSearch(e.target.value)}
+                  />
+                </div>
+                {activeTagFilter && (
+                  <div className="tai-row tai-between" style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                    <span>Filtered by tag: <strong>#{activeTagFilter}</strong></span>
+                    <button
+                      onClick={() => setActiveTagFilter(null)}
+                      style={{ border: "none", background: "none", color: "var(--primary)", fontWeight: 700, cursor: "pointer", fontSize: 11 }}
+                    >
+                      Clear tag filter
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Post Composer Drawer */}
             {composerOpen && (
@@ -1415,7 +1452,7 @@ export function CommunityScreen({
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {filteredPosts.slice(0, 5).map((post) => {
+              {(viewAllPosts ? filteredPosts : filteredPosts.slice(0, 5)).map((post) => {
                 const isExpanded = expandedPostId === post.id;
                 const snippet = (post.content || "").replace(/#[#a-zA-Z0-9_@]+/g, "").trim();
 
@@ -1487,6 +1524,19 @@ export function CommunityScreen({
                 );
               })}
             </div>
+
+            {/* Bottom button leading to all posts */}
+            {!viewAllPosts && filteredPosts.length > 5 && (
+              <div style={{ textAlign: "center", marginTop: 14, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+                <button
+                  className="tai-btn tai-btn-outline tai-btn-sm"
+                  style={{ borderRadius: 999, padding: "6px 20px", fontSize: 12.5, fontWeight: 700 }}
+                  onClick={() => setViewAllPosts(true)}
+                >
+                  View All {filteredPosts.length} Posts in Community Feed →
+                </button>
+              </div>
+            )}
           </div>
 
           {/* CARD 2: ACTIVE STUDY GROUPS */}
