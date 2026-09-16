@@ -11,10 +11,12 @@ import { createClient } from "@supabase/supabase-js";
 
 export const SUPABASE_PROJECTS = {
   SARA_FOUNDATION: "sara_foundation",
-  TRAIN_AI_SHARED: "train_ai_shared",
+  ORGANIZATION_DB: "organization_db",
+  TRAIN_AI_SHARED: "organization_db",
   // Backward compatibility aliases
   SIERRA_FOUNDATION: "sara_foundation",
-  B2B: "train_ai_shared",
+  B2B: "organization_db",
+  DIGITAL_TRAINING: "organization_db",
 };
 
 function isValidHttpUrl(string) {
@@ -26,9 +28,22 @@ function isValidHttpUrl(string) {
   }
 }
 
-function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnv = "VITE_SUPABASE_URL", fallbackKeyEnv = "VITE_SUPABASE_ANON_KEY") {
-  let url = (import.meta.env[primaryUrlEnv] || import.meta.env[fallbackUrlEnv] || "").trim();
-  let anonKey = (import.meta.env[primaryKeyEnv] || import.meta.env[fallbackKeyEnv] || "").trim();
+function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = ["VITE_SUPABASE_URL"], fallbackKeyEnvs = ["VITE_SUPABASE_ANON_KEY"]) {
+  let url = (import.meta.env[primaryUrlEnv] || "").trim();
+  let anonKey = (import.meta.env[primaryKeyEnv] || "").trim();
+
+  if (!url) {
+    for (const fb of (Array.isArray(fallbackUrlEnvs) ? fallbackUrlEnvs : [fallbackUrlEnvs])) {
+      const val = (import.meta.env[fb] || "").trim();
+      if (val) { url = val; break; }
+    }
+  }
+  if (!anonKey) {
+    for (const fb of (Array.isArray(fallbackKeyEnvs) ? fallbackKeyEnvs : [fallbackKeyEnvs])) {
+      const val = (import.meta.env[fb] || "").trim();
+      if (val) { anonKey = val; break; }
+    }
+  }
 
   const isValidUrl = isValidHttpUrl(url);
   const isPlaceholderKey =
@@ -49,27 +64,27 @@ function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnv = "VITE_SUPABA
   return { configured: !!client, client };
 }
 
-// 1. Sara Foundation - dedicated project
-const sara = buildClient("VITE_SUPABASE_SARA_URL", "VITE_SUPABASE_SARA_ANON_KEY", "VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY");
+// 1. Train AI 2.0 / Sara Foundation - dedicated project (jeobggrtxeybxvlwpxvn)
+const sara = buildClient("VITE_SUPABASE_SARA_URL", "VITE_SUPABASE_SARA_ANON_KEY", ["VITE_SUPABASE_URL"], ["VITE_SUPABASE_ANON_KEY"]);
 
-// 2. Train AI Shared - shared multi-tenant database (Train AI LTD, Digital Users, B2B orgs)
-const shared = buildClient("VITE_SUPABASE_SHARED_URL", "VITE_SUPABASE_SHARED_ANON_KEY", "VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_B2B_ANON_KEY");
+// 2. Train AI 2.0 / Organization Database - central platform & tenant project (djikuoucsuhdiyrhsduz)
+const orgDb = buildClient("VITE_SUPABASE_ORGANIZATION_URL", "VITE_SUPABASE_ORGANIZATION_ANON_KEY", ["VITE_SUPABASE_SHARED_URL", "VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_DIGITAL_TRAINING_URL"], ["VITE_SUPABASE_SHARED_ANON_KEY", "VITE_SUPABASE_B2B_ANON_KEY", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY"]);
 
 const CLIENTS_BY_PROJECT = {
   [SUPABASE_PROJECTS.SARA_FOUNDATION]: sara.client,
-  [SUPABASE_PROJECTS.TRAIN_AI_SHARED]: shared.client,
+  [SUPABASE_PROJECTS.ORGANIZATION_DB]: orgDb.client,
 };
 
 export const PROJECT_CONFIGURED = {
   [SUPABASE_PROJECTS.SARA_FOUNDATION]: sara.configured,
-  [SUPABASE_PROJECTS.TRAIN_AI_SHARED]: shared.configured,
+  [SUPABASE_PROJECTS.ORGANIZATION_DB]: orgDb.configured,
 };
 
 /** Returns the client for a specific project regardless of which one is
  * currently "active" */
 export function getSupabaseClientForProject(projectKey) {
-  if (projectKey === "b2b" || projectKey === "digital_training" || projectKey === SUPABASE_PROJECTS.TRAIN_AI_SHARED) {
-    return CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.TRAIN_AI_SHARED] || null;
+  if (projectKey === "b2b" || projectKey === "digital_training" || projectKey === "train_ai_shared" || projectKey === SUPABASE_PROJECTS.ORGANIZATION_DB) {
+    return CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.ORGANIZATION_DB] || null;
   }
   return CLIENTS_BY_PROJECT[projectKey] || null;
 }
@@ -79,8 +94,8 @@ const ACTIVE_PROJECT_STORAGE_KEY = "trainai_active_project_v1";
 function readStoredActiveProject() {
   try {
     const stored = localStorage.getItem(ACTIVE_PROJECT_STORAGE_KEY);
-    if (stored === "b2b" || stored === "digital_training" || stored === SUPABASE_PROJECTS.TRAIN_AI_SHARED) {
-      return SUPABASE_PROJECTS.TRAIN_AI_SHARED;
+    if (stored === "b2b" || stored === "digital_training" || stored === "train_ai_shared" || stored === SUPABASE_PROJECTS.ORGANIZATION_DB) {
+      return SUPABASE_PROJECTS.ORGANIZATION_DB;
     }
     if (stored === SUPABASE_PROJECTS.SARA_FOUNDATION) {
       return SUPABASE_PROJECTS.SARA_FOUNDATION;
@@ -94,9 +109,9 @@ function readStoredActiveProject() {
 function getInitialActiveProject() {
   const stored = readStoredActiveProject();
   if (stored && CLIENTS_BY_PROJECT[stored]) return stored;
-  if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.TRAIN_AI_SHARED]) return SUPABASE_PROJECTS.TRAIN_AI_SHARED;
+  if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.ORGANIZATION_DB]) return SUPABASE_PROJECTS.ORGANIZATION_DB;
   if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.SARA_FOUNDATION]) return SUPABASE_PROJECTS.SARA_FOUNDATION;
-  return SUPABASE_PROJECTS.TRAIN_AI_SHARED;
+  return SUPABASE_PROJECTS.ORGANIZATION_DB;
 }
 
 export let activeProject = getInitialActiveProject();
@@ -105,8 +120,8 @@ export let isSupabaseConfigured = !!supabase;
 
 export function setActiveSupabaseProject(projectKey) {
   const normalizedKey =
-    projectKey === "b2b" || projectKey === "digital_training" || projectKey === SUPABASE_PROJECTS.TRAIN_AI_SHARED
-      ? SUPABASE_PROJECTS.TRAIN_AI_SHARED
+    projectKey === "b2b" || projectKey === "digital_training" || projectKey === "train_ai_shared" || projectKey === SUPABASE_PROJECTS.ORGANIZATION_DB
+      ? SUPABASE_PROJECTS.ORGANIZATION_DB
       : SUPABASE_PROJECTS.SARA_FOUNDATION;
 
   activeProject = normalizedKey;
@@ -121,29 +136,29 @@ export function setActiveSupabaseProject(projectKey) {
 
 /**
  * Sign-up routing:
- * - @sarafoundationafrica.com -> Sara Foundation dedicated project
+ * - @sarafoundationafrica.com -> Train AI 2.0 / Sara Foundation Dedicated Database (jeobggrtxeybxvlwpxvn)
  * - All other signups (individual learners, organization self-serve, Train AI staff)
- *   -> Train AI Shared Multi-Tenant Database
+ *   -> Train AI 2.0 / Organization Database (djikuoucsuhdiyrhsduz)
  */
 export function resolveProjectForSignUp(email = "", accountType = "learner") {
   const normalized = email.trim().toLowerCase();
   if (normalized.endsWith("@sarafoundationafrica.com")) {
     return SUPABASE_PROJECTS.SARA_FOUNDATION;
   }
-  return SUPABASE_PROJECTS.TRAIN_AI_SHARED;
+  return SUPABASE_PROJECTS.ORGANIZATION_DB;
 }
 
 /**
  * Sign-in routing:
- * - @sarafoundationafrica.com -> Sara Foundation dedicated project
- * - All other accounts (individuals, organizations, platform owners) -> Train AI Shared Database
+ * - @sarafoundationafrica.com -> Train AI 2.0 / Sara Foundation Dedicated Database (jeobggrtxeybxvlwpxvn)
+ * - All other accounts (individuals, organizations, platform owners) -> Train AI 2.0 / Organization Database (djikuoucsuhdiyrhsduz)
  */
 export function resolveProjectForSignIn(email = "") {
   const normalized = email.trim().toLowerCase();
   if (normalized.endsWith("@sarafoundationafrica.com")) {
     return SUPABASE_PROJECTS.SARA_FOUNDATION;
   }
-  return SUPABASE_PROJECTS.TRAIN_AI_SHARED;
+  return SUPABASE_PROJECTS.ORGANIZATION_DB;
 }
 
 export function fallbackProjectForSignIn(triedProjectKey) {

@@ -38,17 +38,17 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   // and explicitly rejects any account that isn't confirmed super_admin
   // after signing in, rather than silently falling through to a Learner
   // or Organisation dashboard.
-  const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.TRAIN_AI_SHARED);
+  const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
 
   async function handleSignIn(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      setActiveSupabaseProject(SUPABASE_PROJECTS.TRAIN_AI_SHARED);
-      const client = getSupabaseClientForProject(SUPABASE_PROJECTS.TRAIN_AI_SHARED);
+      setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+      const client = getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
       if (!client) {
-        setError("Demo mode - no real Train AI Shared project connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
+        setError("Demo mode - no real Train AI 2.0 Organization Database connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
         return;
       }
       const { data, error: signInError } = await client.auth.signInWithPassword({ email: email.trim(), password });

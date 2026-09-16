@@ -22,15 +22,13 @@ export async function fetchCurrentUserProfile(userId) {
   if (error) throw error;
 
   let orgId = data?.organization_id;
-  if (!orgId) {
-    const { data: firstOrg } = await supabase.from("organizations").select("id").limit(1).maybeSingle();
-    orgId = firstOrg?.id || null;
-    if (orgId && data?.id) {
-      try {
-        await supabase.from("user_profiles").update({ organization_id: orgId }).eq("id", data.id);
-      } catch (e) {
-        /* ignore */
-      }
+  if (!orgId && data?.id) {
+    try {
+      const { data: defaultOrgId } = await supabase.rpc("join_default_organization");
+      orgId = defaultOrgId;
+    } catch {
+      const { data: defaultOrg } = await supabase.from("organizations").select("id").eq("slug", "tech-learning").maybeSingle();
+      orgId = defaultOrg?.id || null;
     }
   }
 
@@ -38,8 +36,8 @@ export async function fetchCurrentUserProfile(userId) {
     return {
       id: userId,
       organization_id: orgId,
-      role: "admin",
-      display_name: "Admin User",
+      role: "learner",
+      display_name: "Learner",
     };
   }
   return { ...data, organization_id: orgId || data.organization_id };

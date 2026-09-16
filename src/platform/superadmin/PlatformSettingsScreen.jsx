@@ -9,13 +9,13 @@ import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockDat
 import { SUPABASE_PROJECTS } from "../../services/supabaseClient.js";
 
 const PROJECT_LABELS = {
-  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Sara Foundation",
-  [SUPABASE_PROJECTS.TRAIN_AI_SHARED]: "Train AI Shared (Train AI LTD, Digital Users & B2B Orgs)",
+  [SUPABASE_PROJECTS.ORGANIZATION_DB]: "Train AI 2.0 Organization Database (Platform Owner, Digital Users & B2B Orgs)",
+  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Train AI 2.0 Sara Foundation (Dedicated)",
 };
 
 const PROJECT_KEYS = [
+  SUPABASE_PROJECTS.ORGANIZATION_DB,
   SUPABASE_PROJECTS.SARA_FOUNDATION,
-  SUPABASE_PROJECTS.TRAIN_AI_SHARED,
 ];
 
 // Real `platform_settings` table (setting_key unique, setting_value text,
