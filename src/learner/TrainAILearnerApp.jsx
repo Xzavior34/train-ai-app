@@ -170,39 +170,18 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     } else if (key === "aiQuiz") {
       setAiTab("quiz");
       goTab("ai");
-    } else if (key === "communityFeed") {
-      setCommunityTab("posts");
-      push("community", { tab: "posts" });
+    } else if (key === "communityFeed" || key === "community") {
+      push("community");
     } else if (key === "cohort") {
       push("cohort");
-    } else if (key === "leaderboard") {
-      setCommunityTab("rank");
-      if (screen === "community") {
-        setParams(p => ({ ...p, tab: "rank" }));
-      } else {
-        push("community", { tab: "rank" });
-      }
-    } else if (key === "studyGroup") {
-      setCommunityTab("groups");
-      if (screen === "community") {
-        setParams(p => ({ ...p, tab: "groups" }));
-      } else {
-        push("community", { tab: "groups" });
-      }
-    } else if (key === "mentors") {
-      setCommunityTab("mentors");
-      if (screen === "community") {
-        setParams(p => ({ ...p, tab: "mentors" }));
-      } else {
-        push("community", { tab: "mentors" });
-      }
+    } else if (key === "leaderboard" || key === "rank") {
+      push("leaderboard");
+    } else if (key === "studyGroup" || key === "groups") {
+      push("studyGroup");
+    } else if (key === "mentors" || key === "tutors" || key === "instructors") {
+      push("mentors");
     } else if (key === "messages") {
-      setCommunityTab("messages");
-      if (screen === "community") {
-        setParams(p => ({ ...p, tab: "messages" }));
-      } else {
-        push("community", { tab: "messages" });
-      }
+      push("messages");
     } else if (key === "schedule") {
       push("schedule");
     } else if (key === "notifications") {

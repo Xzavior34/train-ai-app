@@ -1589,9 +1589,19 @@ export function CommunityScreen({
                 <GraduationCap size={18} color="var(--primary)" />
                 <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Instructors & Mentors</span>
               </div>
-              <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)" }}>
-                {mentorsList.length} Available
-              </span>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)" }}>
+                  {mentorsList.length} Available
+                </span>
+                {push && (
+                  <button
+                    onClick={() => push("mentors")}
+                    style={{ background: "none", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}
+                  >
+                    View All <ChevronRight size={14} />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
@@ -1644,7 +1654,17 @@ export function CommunityScreen({
                 <Trophy size={18} color="#F59E0B" />
                 <span style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Top Contributors</span>
               </div>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--primary)" }}>Rank #{myRankNumber}</span>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--primary)" }}>Rank #{myRankNumber}</span>
+                {push && (
+                  <button
+                    onClick={() => push("leaderboard")}
+                    style={{ background: "none", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}
+                  >
+                    Full <ChevronRight size={14} />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
