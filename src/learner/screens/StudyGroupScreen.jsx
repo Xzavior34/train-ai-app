@@ -862,6 +862,46 @@ export function StudyGroupScreen({
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <TopBar title="Study Groups" sub="Find, join, and collaborate with peers in your organization" onBack={back} />
 
+      {/* Hero Banner: Study Groups Space */}
+      <div
+        className="tai-card tai-hero-card anim-fluid-entrance"
+        style={{
+          borderRadius: 14,
+          padding: "clamp(18px, 2.5vw, 24px)",
+          position: "relative",
+          overflow: "hidden"
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: -40,
+            right: -40,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }}
+        />
+
+        <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 24px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
+              Collaborative Study Groups
+            </h1>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
+              Join peer discussion spaces, share study notes, ask course questions, and learn together.
+            </p>
+          </div>
+
+          <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{groups.length} Active Groups</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>{myGroups.length} Joined</div>
+          </div>
+        </div>
+      </div>
+
       {/* Header with Search and Create Action */}
       <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 10 }}>
         <div style={{ position: "relative", flex: "1 1 240px", maxWidth: 360 }}>

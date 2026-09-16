@@ -1,48 +1,61 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Users, MessageSquare, Sparkles } from 'lucide-react';
 import { Avatar, initialsOf } from '../components/LearnerUI.jsx';
 
 /**
- * Hero banner displayed at the top of each Community page.
- * Shows a friendly message and a primary call‑to‑action button.
- * The button opens the post composer (handler passed via props).
+ * Hero banner displayed at the top of the Community Hub page.
+ * Matches the tai-hero-card anim-fluid-entrance design pattern used by
+ * CohortScreen, StudyGroupScreen, and other app pages.
  */
 export default function CommunityHero({ user, onCreatePost }) {
   return (
     <div
-      className="tai-card"
+      className="tai-card tai-hero-card anim-fluid-entrance"
       style={{
-        padding: '24px 28px',
-        background: 'var(--glass-surface)',
-        border: '1px solid var(--glass-border)',
-        borderRadius: 16,
-        boxShadow: 'var(--glass-shadow)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 18,
+        borderRadius: 14,
+        padding: 'clamp(18px, 2.5vw, 24px)',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <Avatar
-        size={48}
-        src={user.avatarUrl}
-        initials={initialsOf(user.name || 'You')}
+      {/* Decorative radial glow — matches CohortScreen */}
+      <div
+        style={{
+          position: 'absolute',
+          top: -40,
+          right: -40,
+          width: 180,
+          height: 180,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
       />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
-          Welcome to the Train AI Community!
-        </h2>
-        <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--text-2)' }}>
-          Share ideas, ask questions, and connect with peers.
-        </p>
+
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
+          <Avatar size={52} src={user?.avatarUrl} initials={initialsOf(user?.name || 'You')} />
+          <div style={{ minWidth: 0 }}>
+            <h1
+              className="tai-hero-title"
+              style={{ fontSize: 'clamp(18px, 2.2vw, 22px)', fontWeight: 900, letterSpacing: '-0.025em', margin: '0 0 3px', lineHeight: 1.2 }}
+            >
+              Community Hub
+            </h1>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, lineHeight: 1.45 }}>
+              Connect, collaborate, share ideas, and grow together with your peers.
+            </p>
+          </div>
+        </div>
+
+        <div className="tai-hero-subcard" style={{ textAlign: 'right', flexShrink: 0, padding: '10px 16px', borderRadius: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Sparkles size={14} color="var(--primary)" />
+            <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)' }}>Train AI Community</span>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 600, marginTop: 2 }}>Share · Discuss · Learn</div>
+        </div>
       </div>
-      <button
-        className="tai-btn tai-btn-primary"
-        style={{ height: 40, padding: '0 16px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 6 }}
-        onClick={onCreatePost}
-      >
-        <Plus size={16} />
-        New Post
-      </button>
     </div>
   );
 }

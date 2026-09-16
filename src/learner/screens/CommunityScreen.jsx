@@ -1292,13 +1292,7 @@ export function CommunityScreen({
     { id: "rank", label: "Rank", icon: Trophy },
   ];  return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* Top Page Header */}
-      <div className="tai-row tai-between" style={{ alignItems: "center" }}>
-        <div>
-          <h1 className="tai-h1" style={{ margin: 0 }}>Community Hub</h1>
-          <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>Connect, collaborate, discuss topics, and learn together with your peers.</div>
-        </div>
-      </div>
+
 
       {/* Hero Banner */}
       <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
@@ -1500,7 +1494,7 @@ export function CommunityScreen({
             <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
               <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
                 <Users size={18} color="var(--primary)" />
-                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Active Study Lounges</span>
+                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Study Groups</span>
               </div>
               <button
                 className="tai-btn tai-btn-primary tai-btn-sm"
@@ -1548,6 +1542,7 @@ export function CommunityScreen({
                 return (
                   <div
                     key={g.id}
+                    className="tai-card-hover"
                     style={{
                       padding: "14px",
                       background: "var(--surface-2)",
@@ -1557,7 +1552,10 @@ export function CommunityScreen({
                       flexDirection: "column",
                       justifyContent: "space-between",
                       gap: 10,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
                     }}
+                    onClick={() => push?.("studyGroup", { groupId: g.id })}
                   >
                     <div>
                       <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", marginBottom: 4 }}>{g.name}</div>
@@ -1571,7 +1569,10 @@ export function CommunityScreen({
                         className={`tai-btn tai-btn-sm ${isMember ? "tai-btn-ghost" : "tai-btn-primary"}`}
                         style={{ padding: "4px 10px", fontSize: 11.5 }}
                         disabled={joiningGroupId === g.id}
-                        onClick={() => handleToggleGroupJoin(g.id, isMember)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleGroupJoin(g.id, isMember);
+                        }}
                       >
                         {isMember ? "Joined" : "Join"}
                       </button>
@@ -1608,6 +1609,7 @@ export function CommunityScreen({
               {mentorsList.slice(0, 3).map((m) => (
                 <div
                   key={m.id}
+                  className="tai-card-hover"
                   style={{
                     padding: "14px",
                     background: "var(--surface-2)",
@@ -1618,9 +1620,14 @@ export function CommunityScreen({
                     flexDirection: "column",
                     alignItems: "center",
                     gap: 8,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
                   }}
+                  onClick={() => push?.("mentors", { mentorId: m.id })}
                 >
-                  <Avatar size={46} src={m.avatarUrl} initials={initialsOf(m.name)} />
+                  <div title={`View ${m.name}'s Profile`}>
+                    <Avatar size={48} src={m.avatarUrl} initials={initialsOf(m.name)} />
+                  </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{m.name}</div>
                     <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 700 }}>{m.title || "Senior AI Instructor"}</div>
@@ -1628,7 +1635,10 @@ export function CommunityScreen({
                   <button
                     className="tai-btn tai-btn-primary tai-btn-sm"
                     style={{ width: "100%", padding: "5px 10px", fontSize: 11.5 }}
-                    onClick={() => openMentorBooking(m)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openMentorBooking(m);
+                    }}
                   >
                     Book 1:1 Session
                   </button>
@@ -1757,15 +1767,30 @@ export function CommunityScreen({
           )}
 
           {/* 4. DIRECT MESSAGES / CONVERSATIONS */}
-          <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+          <div
+            className="tai-card tai-card-hover"
+            style={{
+              padding: 18,
+              background: "var(--glass-surface)",
+              border: "1px solid var(--glass-border)",
+              borderRadius: 16,
+              boxShadow: "var(--glass-shadow)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+            onClick={() => push?.("messages")}
+          >
             <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 10 }}>
               <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
                 <Mail size={16} color="var(--primary)" />
                 <span style={{ fontWeight: 800, fontSize: 14.5 }}>Direct Messages</span>
               </div>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--primary)", display: "flex", alignItems: "center", gap: 2 }}>
+                Open <ChevronRight size={13} />
+              </span>
             </div>
             <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
-              {messageThreads.length === 0 ? "No active chat threads yet." : (
+              {messageThreads.length === 0 ? "No active chat threads yet. Click to view messages." : (
                 <><strong style={{ color: "var(--text)" }}>{messageThreads.length}</strong> active conversation{messageThreads.length === 1 ? "" : "s"} with instructors</>
               )}
             </div>

@@ -162,5 +162,12 @@ export function resolveProjectForSignIn(email = "") {
 }
 
 export function fallbackProjectForSignIn(triedProjectKey) {
-  return null; // Fixed project separation, no third database fallback
+  if (triedProjectKey === SUPABASE_PROJECTS.SARA_FOUNDATION) {
+    return PROJECT_CONFIGURED[SUPABASE_PROJECTS.ORGANIZATION_DB] ? SUPABASE_PROJECTS.ORGANIZATION_DB : null;
+  }
+  if (triedProjectKey === SUPABASE_PROJECTS.ORGANIZATION_DB) {
+    return PROJECT_CONFIGURED[SUPABASE_PROJECTS.SARA_FOUNDATION] ? SUPABASE_PROJECTS.SARA_FOUNDATION : null;
+  }
+  return null;
 }
+
