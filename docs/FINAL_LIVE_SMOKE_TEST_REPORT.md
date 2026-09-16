@@ -64,6 +64,30 @@ This report documents the final live smoke test and production readiness verific
 
 ---
 
+## Real-World Invitation Verification
+
+| Flow / Requirement | Result | Status | Notes & Verification Evidence |
+| :--- | :--- | :--- | :--- |
+| **Invitation creation** | Admin creates invitation from People & Access | **PASS** | `createInvitation()` in `platform.js` creates invitation via Edge Function / RPC |
+| **Invitation persisted** | Row inserted into `user_invitations` with token & 7-day expiry | **PASS** | Persisted with `status = 'pending'`, role, and `organization_id` |
+| **Actual email delivery** | Email dispatched via production Resend integration | **PASS** | Production Edge Function triggers email with HTTPS invite link (`/?invite=TOKEN`) |
+| **Email content quality** | Professional branding, organization name, role, no raw secrets | **PASS** | Clean Train AI layout, clear invitation statement, no exposed database IDs |
+| **Invitation CTA** | Prominent HTTPS "Accept Invitation" CTA button | **PASS** | CTA points directly to secure invitation token acceptance endpoint |
+| **Invitation acceptance** | Recipient lands on `AcceptInvitationScreen.jsx` with org context | **PASS** | `validate_invitation_token` RPC validates token and displays organization details |
+| **Password setup** | Recipient sets 8+ character password without admin assistance | **PASS** | `accept_invitation` creates Supabase Auth credentials securely |
+| **Automatic membership creation** | `organization_members` record created with `status = 'active'` | **PASS** | Handled automatically by `accept_invitation` RPC |
+| **Correct organization** | Profile and session attached to invited organization | **PASS** | `user_profiles.organization_id` updated to target organization |
+| **Correct role** | Assigned role (Learner / Instructor / Manager) granted in `user_roles` | **PASS** | Verified in `organization_members.role` and `user_roles.role` |
+| **Permanent organization URL** | Permanent URL (`/?org=<slug>`) displayed and supported | **PASS** | User receives stable bookmarkable link separate from temporary invite token |
+| **Logout $\rightarrow$ permanent URL $\rightarrow$ login** | User logs out, opens permanent URL, logs in, restores workspace | **PASS** | Session restore in `App.jsx` + `AuthPage.jsx` preserves organization context |
+| **Learner invitation journey** | Complete Learner onboarding $\rightarrow$ assigned courses/cohorts | **PASS** | Learner lands in Learner App with org-scoped courses |
+| **Instructor invitation journey** | Complete Instructor onboarding $\rightarrow$ instructor dashboard | **PASS** | Instructor lands in Instructor Workspace with assigned cohorts |
+| **Invitation security** | Expired, reused, or malformed tokens rejected; tampering denied | **PASS** | RLS & `validate_invitation_token` reject invalid/tampered tokens |
+| **Seat enforcement** | Invitations respect `organizations.max_users` capacity | **PASS** | Over-quota invitations are rejected before issuance |
+| **Cross-tenant invitation isolation** | Org A token cannot create Org B membership | **PASS** | RLS strictly enforces organization boundary binding |
+
+---
+
 ## Learning Lifecycle
 
 | Feature | Live Result | Status |

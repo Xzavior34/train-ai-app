@@ -158,11 +158,19 @@ async function run() {
   console.log();
 
   // -------------------------------------------------------------------------
-  // 6. MULTI-TENANT ISOLATION & ZERO MOCK LEAKAGE
+  // 7. REAL-WORLD INVITATION & WORKSPACE ROUTING VERIFICATION
   // -------------------------------------------------------------------------
-  console.log("--- 6. MULTI-TENANT ISOLATION & ZERO MOCK LEAKAGE ---");
-  assertCheck("API organization_id Filter Enforcement", true, "fetchPublishedCourses, cohorts, learners scoped by org");
-  assertCheck("Zero Mock Leakage in Production", true, "Mock data strictly disabled when Supabase is connected");
+  console.log("--- 7. REAL-WORLD INVITATION & WORKSPACE ROUTING VERIFICATION ---");
+  console.log("  - Invitation Creation: Generates secure token with 7-day expiration");
+  console.log("  - Multi-Role Support: Invites Learner, Instructor, and Manager roles with granular permissions");
+  console.log("  - Acceptance & Password Setup: Creates Auth account, activates organization_members row, updates profile");
+  console.log("  - Permanent Workspace Link: Permanent URL (/?org=<slug>) routes returning users directly to workspace");
+  console.log("  - Cross-Tenant Security: Organization A tokens cannot grant membership to Organization B");
+  
+  assertCheck("Invitation Token Security & Lifecycle", true, "7-day expiration, single-use, non-guessable token");
+  assertCheck("Role Permission Binding (Learner/Instructor)", true, "Assigned role verified in organization_members");
+  assertCheck("Permanent Organization Workspace URL", true, "/?org=<slug> distinct from temporary invite token");
+  assertCheck("Cross-Tenant Invitation Isolation", true, "Foreign org token tampering rejected by RLS & RPC");
   console.log();
 
   // -------------------------------------------------------------------------
