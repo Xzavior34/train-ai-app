@@ -16,22 +16,66 @@ export function useAuth() {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
-    if (!supabase) {
-      if (session === undefined) setSession(null);
-      return;
-    }
+    let cancelled = false;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data?.session) {
-        setSession(data.session);
+    const syncProject = (userEmail) => {
+      if (userEmail) {
+        const canonical = resolveProjectForSignIn(userEmail);
+        setActiveSupabaseProject(canonical);
+      }
+    };
+
+    (async () => {
+      let resolvedSession = null;
+
+      // 1. First probe primary project client
+      const primaryClient = supabase || getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+      if (primaryClient) {
+        try {
+          const { data } = await primaryClient.auth.getSession();
+          if (data?.session) {
+            resolvedSession = data.session;
+          }
+        } catch {}
+      }
+
+      // 2. If not found on primary, probe alternate project client
+      if (!resolvedSession) {
+        for (const projKey of [SUPABASE_PROJECTS.ORGANIZATION_DB, SUPABASE_PROJECTS.SARA_FOUNDATION]) {
+          const client = getSupabaseClientForProject(projKey);
+          if (client && client !== primaryClient) {
+            try {
+              const { data } = await client.auth.getSession();
+              if (data?.session) {
+                resolvedSession = data.session;
+                break;
+              }
+            } catch {}
+          }
+        }
+      }
+
+      if (cancelled) return;
+
+      if (resolvedSession) {
+        syncProject(resolvedSession.user?.email);
+        setSession(resolvedSession);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(resolvedSession));
       } else {
         const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-        setSession(saved ? JSON.parse(saved) : null);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            syncProject(parsed?.user?.email);
+            setSession(parsed);
+          } catch {
+            setSession(null);
+          }
+        } else {
+          setSession(null);
+        }
       }
-    }).catch(() => {
-      const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-      setSession(saved ? JSON.parse(saved) : null);
-    });
+    })();
 
     // Check if landing directly on recovery URL from email link
     const hash = window.location.hash || "";
@@ -40,22 +84,30 @@ export function useAuth() {
       setIsPasswordRecovery(true);
     }
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
-      // Clicking the "reset your password" email link lands back here with
-      // a real (temporary) session already established by Supabase and this
-      // event fired - previously nothing distinguished that from a normal
-      // sign-in, so the app would just drop the visitor straight into their
-      // dashboard with no prompt to actually set a new password.
-      if (event === "PASSWORD_RECOVERY") {
-        setIsPasswordRecovery(true);
+    const listeners = [];
+    for (const projKey of [SUPABASE_PROJECTS.ORGANIZATION_DB, SUPABASE_PROJECTS.SARA_FOUNDATION]) {
+      const client = getSupabaseClientForProject(projKey);
+      if (client?.auth?.onAuthStateChange) {
+        const { data: listener } = client.auth.onAuthStateChange((event, newSession) => {
+          if (event === "PASSWORD_RECOVERY") {
+            setIsPasswordRecovery(true);
+          }
+          if (newSession) {
+            syncProject(newSession.user?.email);
+            setSession(newSession);
+            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
+          }
+        });
+        if (listener?.subscription) {
+          listeners.push(listener.subscription);
+        }
       }
-      if (newSession) {
-        setSession(newSession);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
-      }
-    });
+    }
 
-    return () => listener?.subscription?.unsubscribe();
+    return () => {
+      cancelled = true;
+      listeners.forEach((l) => l.unsubscribe());
+    };
   }, []);
 
   // IMPORTANT: the local/demo session below is ONLY a fallback for when no

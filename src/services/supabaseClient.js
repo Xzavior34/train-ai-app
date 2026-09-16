@@ -28,7 +28,13 @@ function isValidHttpUrl(string) {
   }
 }
 
-function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = ["VITE_SUPABASE_URL"], fallbackKeyEnvs = ["VITE_SUPABASE_ANON_KEY"]) {
+const DEFAULT_ORG_DB_URL = "https://djikuoucsuhdiyrhsduz.supabase.co";
+const DEFAULT_ORG_DB_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+
+const DEFAULT_SARA_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
+const DEFAULT_SARA_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+
+function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = [], fallbackKeyEnvs = [], defaultUrl = "", defaultKey = "") {
   let url = (import.meta.env[primaryUrlEnv] || "").trim();
   let anonKey = (import.meta.env[primaryKeyEnv] || "").trim();
 
@@ -44,6 +50,9 @@ function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = ["VITE_SUPA
       if (val) { anonKey = val; break; }
     }
   }
+
+  if (!url && defaultUrl) url = defaultUrl;
+  if (!anonKey && defaultKey) anonKey = defaultKey;
 
   const isValidUrl = isValidHttpUrl(url);
   const isPlaceholderKey =
@@ -65,10 +74,24 @@ function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = ["VITE_SUPA
 }
 
 // 1. Train AI 2.0 / Sara Foundation - dedicated project (jeobggrtxeybxvlwpxvn)
-const sara = buildClient("VITE_SUPABASE_SARA_URL", "VITE_SUPABASE_SARA_ANON_KEY", ["VITE_SUPABASE_URL"], ["VITE_SUPABASE_ANON_KEY"]);
+const sara = buildClient(
+  "VITE_SUPABASE_SARA_URL",
+  "VITE_SUPABASE_SARA_ANON_KEY",
+  [],
+  [],
+  DEFAULT_SARA_URL,
+  DEFAULT_SARA_ANON_KEY
+);
 
 // 2. Train AI 2.0 / Organization Database - central platform & tenant project (djikuoucsuhdiyrhsduz)
-const orgDb = buildClient("VITE_SUPABASE_ORGANIZATION_URL", "VITE_SUPABASE_ORGANIZATION_ANON_KEY", ["VITE_SUPABASE_SHARED_URL", "VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_DIGITAL_TRAINING_URL"], ["VITE_SUPABASE_SHARED_ANON_KEY", "VITE_SUPABASE_B2B_ANON_KEY", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY"]);
+const orgDb = buildClient(
+  "VITE_SUPABASE_ORGANIZATION_URL",
+  "VITE_SUPABASE_ORGANIZATION_ANON_KEY",
+  ["VITE_SUPABASE_SHARED_URL", "VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_DIGITAL_TRAINING_URL"],
+  ["VITE_SUPABASE_SHARED_ANON_KEY", "VITE_SUPABASE_B2B_ANON_KEY", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY"],
+  DEFAULT_ORG_DB_URL,
+  DEFAULT_ORG_DB_ANON_KEY
+);
 
 const CLIENTS_BY_PROJECT = {
   [SUPABASE_PROJECTS.SARA_FOUNDATION]: sara.client,
@@ -107,6 +130,17 @@ function readStoredActiveProject() {
 }
 
 function getInitialActiveProject() {
+  try {
+    const sessionStr = localStorage.getItem("trainai_active_session_v1");
+    if (sessionStr) {
+      const parsed = JSON.parse(sessionStr);
+      const email = parsed?.user?.email;
+      if (email) {
+        return resolveProjectForSignIn(email);
+      }
+    }
+  } catch {}
+
   const stored = readStoredActiveProject();
   if (stored && CLIENTS_BY_PROJECT[stored]) return stored;
   if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.ORGANIZATION_DB]) return SUPABASE_PROJECTS.ORGANIZATION_DB;
@@ -129,6 +163,7 @@ export function setActiveSupabaseProject(projectKey) {
   isSupabaseConfigured = !!supabase;
   try {
     localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, normalizedKey);
+    window.dispatchEvent(new CustomEvent("trainai-project-change", { detail: { project: normalizedKey } }));
   } catch {
     // best-effort
   }

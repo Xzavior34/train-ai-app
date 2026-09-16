@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SUPABASE_PROJECTS, setActiveSupabaseProject, getSupabaseClientForProject } from "../services/supabaseClient.js";
 
 // Platform Owner's separate login entry point - PRD Section 10: "The
@@ -24,6 +24,10 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+  }, []);
 
   // "Let access super admin temporary by typing url/admin for now before
   // database" - before a real database is connected, there's nothing real

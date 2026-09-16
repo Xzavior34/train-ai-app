@@ -80,6 +80,10 @@ export default function PlatformOwnerApp({
   const { session, profileQuery, userRoles: hookRoles } = usePlatformData();
   const userRoles = userRolesProp || hookRoles;
 
+  useEffect(() => {
+    setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+  }, []);
+
   const allOrgsQuery = useSupabaseQuery(async () => fetchAllOrganizationsWithUserCounts(), [activeProject]);
   const allOrgs = allOrgsQuery.data || [];
   const [internalOrgId, setInternalOrgId] = useState("");
