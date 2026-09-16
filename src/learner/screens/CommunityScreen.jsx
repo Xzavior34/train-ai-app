@@ -1326,237 +1326,49 @@ export function CommunityScreen({
     { id: "cohorts", label: "Cohorts", icon: BookOpen },
     { id: "messages", label: "Messages", icon: Mail },
     { id: "rank", label: "Rank", icon: Trophy },
-  ];
-
-  return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+  ];  return (
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Top Page Header */}
-      <div>
-        <h1 className="tai-h1" style={{ margin: 0 }}>Community</h1>
+      <div className="tai-row tai-between" style={{ alignItems: "center" }}>
+        <div>
+          <h1 className="tai-h1" style={{ margin: 0 }}>Community Hub</h1>
+          <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 2 }}>Connect, collaborate, discuss topics, and learn together with your peers.</div>
+        </div>
       </div>
+
       {/* Hero Banner */}
       <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
 
-      {/* Six Flat Tabs Row */}
-      <div
-        style={{
-          display: "flex",
-          gap: 6,
-          paddingBottom: 4,
-          overflowX: "auto",
-          WebkitOverflowScrolling: "touch",
-          scrollbarWidth: "none",
-        }}
-      >
-        {TABS.map((t) => {
-          const Icon = t.icon;
-          const isActive = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => handleTabClick(t.id)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 7,
-                padding: "8px 18px",
-                borderRadius: 999,
-                border: "none",
-                background: isActive ? "var(--primary)" : "transparent",
-                color: isActive ? "#FFFFFF" : "var(--text-2)",
-                fontWeight: isActive ? 800 : 600,
-                fontSize: 13,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "all 0.15s ease",
-                boxShadow: isActive ? "0 4px 14px rgba(37, 99, 235, 0.28)" : "none",
-              }}
-            >
-              <Icon size={14} />
-              <span>{t.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Live Activity Ticker Banner */}
+      <LiveActivityBanner items={activityFeedQuery.data} />
 
-      {/* =================================================================== */}
-      {/* TAB 0: SUMMARY - the Community landing experience. Every card below
-          reads from a query this component already receives and already
-          uses elsewhere (posts, study groups, mentors/instructors,
-          upcomingSessionsQuery - previously destructured here but never
-          actually rendered anywhere in this file - and the leaderboard/
-          gamification stats already computed above for the Rank tab).
-          Nothing here is invented data; each "View" action just switches
-          to the tab that already renders the full real feature. */}
-      {/* =================================================================== */}
-      {tab === "summary" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: 14,
-            }}
-          >
-            {/* Recent Posts */}
-            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                  <MessageSquare size={16} color="var(--primary)" />
-                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Recent Posts</span>
-                </div>
-                <button className="tai-btn ta-btn-sm" onClick={() => handleTabClick("posts")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  View all <ChevronRight size={13} />
-                </button>
+      {/* Unified Dashboard Grid Layout */}
+      <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
+        
+        {/* =================================================================== */}
+        {/* MAIN COLUMN (2/3 Width): Feed, Study Lounges, Cohort Channels, Instructors */}
+        {/* =================================================================== */}
+        <div style={{ flex: "2 1 540px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
+          
+          {/* CARD 1: COMMUNITY FEED & COMPOSER */}
+          <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14 }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <MessageSquare size={18} color="var(--primary)" />
+                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Community Feed</span>
               </div>
-              {postsQuery.loading ? (
-                <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading…</div>
-              ) : posts.length === 0 ? (
-                <div style={{ fontSize: 13, color: "var(--text-3)" }}>No posts yet — be the first to share something with the community.</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {posts.slice(0, 2).map((p) => (
-                    <div key={p.id} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                      <Avatar size={26} src={p.authorAvatar} initials={initialsOf(p.authorName)} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 12.5, fontWeight: 700 }}>{p.authorName}</div>
-                        <div style={{ fontSize: 12.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{p.content}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)" }}>
+                {posts.length} Discussions
+              </span>
             </div>
 
-            {/* Study Groups */}
-            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                  <Users size={16} color="var(--primary)" />
-                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Study Groups</span>
-                </div>
-                <button onClick={() => handleTabClick("groups")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  Browse <ChevronRight size={13} />
-                </button>
-              </div>
-              {studyGroupsQuery.loading ? (
-                <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading…</div>
-              ) : allGroups.length === 0 ? (
-                <div style={{ fontSize: 13, color: "var(--text-3)" }}>No study groups yet.</div>
-              ) : (
-                <div style={{ fontSize: 13, color: "var(--text-2)" }}>
-                  <strong style={{ color: "var(--text)" }}>{allGroups.length}</strong> group{allGroups.length === 1 ? "" : "s"} available
-                  {myGroupIds.size > 0 && <> · you're in <strong style={{ color: "var(--text)" }}>{myGroupIds.size}</strong></>}
-                </div>
-              )}
-            </div>
-
-            {/* Instructors */}
-            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                  <GraduationCap size={16} color="var(--primary)" />
-                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Instructors</span>
-                </div>
-                <button onClick={() => handleTabClick("tutors")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  View <ChevronRight size={13} />
-                </button>
-              </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)" }}>
-                {mentorsList.length === 0 ? "No instructors listed yet." : (
-                  <><strong style={{ color: "var(--text)" }}>{mentorsList.length}</strong> instructor{mentorsList.length === 1 ? "" : "s"} available to reach out to</>
-                )}
-              </div>
-            </div>
-
-            {/* Direct Messages */}
-            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                  <Mail size={16} color="var(--primary)" />
-                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Direct Messages</span>
-                </div>
-                <button onClick={() => handleTabClick("messages")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  Open <ChevronRight size={13} />
-                </button>
-              </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)" }}>
-                {messageThreads.length === 0 ? "No active chat threads yet." : (
-                  <><strong style={{ color: "var(--text)" }}>{messageThreads.length}</strong> active conversation{messageThreads.length === 1 ? "" : "s"} with instructors</>
-                )}
-              </div>
-            </div>
-
-            {/* Upcoming Sessions */}
-            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 10 }}>
-                <Clock size={16} color="var(--primary)" />
-                <span style={{ fontWeight: 800, fontSize: 14.5 }}>Upcoming Sessions</span>
-              </div>
-              {upcomingSessionsQuery.loading ? (
-                <div style={{ fontSize: 13, color: "var(--text-3)" }}>Loading…</div>
-              ) : (upcomingSessionsQuery.data || []).length === 0 ? (
-                <div style={{ fontSize: 13, color: "var(--text-3)" }}>No upcoming sessions scheduled.</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {(upcomingSessionsQuery.data || []).slice(0, 2).map((s) => (
-                    <div key={s.id} style={{ fontSize: 12.5 }}>
-                      <div style={{ fontWeight: 700 }}>{s.title || "Session"}</div>
-                      <div style={{ color: "var(--text-3)" }}>
-                        {s.mentors?.user_profiles?.display_name ? `with ${s.mentors.user_profiles.display_name} · ` : ""}
-                        {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : ""}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* My Rank */}
-            <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                  <Trophy size={16} color="var(--primary)" />
-                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Your Standing</span>
-                </div>
-                <button onClick={() => handleTabClick("rank")} style={{ background: "transparent", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12.5, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
-                  Leaderboard <ChevronRight size={13} />
-                </button>
-              </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)" }}>
-                Rank <strong style={{ color: "var(--text)" }}>#{myRankNumber}</strong> · <strong style={{ color: "var(--text)" }}>{myPoints}</strong> points · Level {myLevel}
-              </div>
-            </div>
-
-            {/* Achievements entry point */}
-            <div className="tai-card tai-card-hover" onClick={() => push("achievements")} style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)", cursor: "pointer" }}>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center", justifyContent: "space-between" }}>
-                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                  <Award size={16} color="var(--primary)" />
-                  <span style={{ fontWeight: 800, fontSize: 14.5 }}>Achievements</span>
-                </div>
-                <ChevronRight size={15} color="var(--text-3)" />
-              </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6 }}>See what you've earned and what's next.</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =================================================================== */}
-      {/* TAB 1: POSTS */}
-      {/* =================================================================== */}
-      {tab === "posts" && (
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
-          {/* Main Feed Column */}
-          <div style={{ flex: "2 1 500px", minWidth: 0, display: "flex", flexDirection: "column", gap: 14 }}>
             {/* Search Posts Bar */}
-            <div style={{ position: "relative" }}>
+            <div style={{ position: "relative", marginBottom: 14 }}>
               <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
               <input
                 className="tai-input"
-                style={{ paddingLeft: 38, background: "var(--glass-surface)", borderRadius: 12 }}
-                placeholder="Search posts..."
+                style={{ paddingLeft: 38, background: "var(--surface-2)", borderRadius: 12 }}
+                placeholder="Search community posts..."
                 value={feedSearch}
                 onChange={(e) => setFeedSearch(e.target.value)}
               />
@@ -1571,17 +1383,17 @@ export function CommunityScreen({
               )}
             </div>
 
-            {/* Composer */}
+            {/* Post Composer */}
             {!composerOpen ? (
               <div
-                className="tai-card tai-row tai-gap10"
+                className="tai-row tai-gap10"
                 style={{
                   padding: "12px 16px",
                   alignItems: "center",
-                  background: "var(--glass-surface)",
-                  border: "1px solid var(--glass-border)",
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border)",
                   borderRadius: 14,
-                  boxShadow: "var(--glass-shadow)",
+                  marginBottom: 16,
                 }}
               >
                 <Avatar size={38} src={user.avatarUrl} initials={initialsOf(user.name || "You")} />
@@ -1592,7 +1404,7 @@ export function CommunityScreen({
                     minWidth: 0,
                     textAlign: "left",
                     border: "1px solid var(--border)",
-                    background: "var(--surface-2)",
+                    background: "var(--surface)",
                     borderRadius: 999,
                     padding: "9px 16px",
                     color: "var(--text-3)",
@@ -1613,13 +1425,13 @@ export function CommunityScreen({
               </div>
             ) : (
               <div
-                className="tai-card anim-slide-down"
+                className="anim-slide-down"
                 style={{
                   padding: "16px",
-                  background: "var(--glass-surface)",
-                  border: "1px solid var(--glass-border)",
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border)",
                   borderRadius: 14,
-                  boxShadow: "var(--glass-shadow)",
+                  marginBottom: 16,
                 }}
               >
                 <div className="tai-row tai-between" style={{ marginBottom: 10, alignItems: "center" }}>
@@ -1639,7 +1451,7 @@ export function CommunityScreen({
                           padding: "2px 8px",
                           borderRadius: 6,
                           border: `1px solid ${postType === type ? "var(--primary)" : "var(--border)"}`,
-                          background: postType === type ? "var(--primary-tint)" : "var(--surface-2)",
+                          background: postType === type ? "var(--primary-tint)" : "var(--surface)",
                           color: postType === type ? "var(--primary)" : "var(--text-3)",
                           cursor: "pointer",
                           textTransform: "capitalize",
@@ -1658,7 +1470,7 @@ export function CommunityScreen({
                   placeholder="What's on your mind? Use #hashtags to categorize..."
                   value={postText}
                   onChange={(e) => setPostText(e.target.value)}
-                  style={{ marginBottom: 12, padding: "10px 12px", fontSize: 13, background: "var(--surface-2)" }}
+                  style={{ marginBottom: 12, padding: "10px 12px", fontSize: 13, background: "var(--surface)" }}
                 />
 
                 <div className="tai-row tai-gap8" style={{ justifyContent: "flex-end" }}>
@@ -1682,100 +1494,233 @@ export function CommunityScreen({
               </div>
             )}
 
-            {/* Posts Feed */}
+            {/* Posts Stream */}
             {postsQuery.loading && (
-              <div className="tai-card" style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
+              <div style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
                 Loading posts...
               </div>
             )}
 
             {!postsQuery.loading && filteredPosts.length === 0 && (
-              <div className="tai-card" style={{ padding: 36, textAlign: "center" }}>
+              <div style={{ padding: 36, textAlign: "center" }}>
                 <MessageSquare size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
                 <div style={{ fontWeight: 800, fontSize: 14 }}>{feedSearch || activeTagFilter ? "No matching posts" : "No posts yet"}</div>
                 <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Be the first to share something!</div>
               </div>
             )}
 
-            {filteredPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                authorStats={authorStatsMap[post.userId]}
-                onToggleLike={handleToggleLike}
-                likeBusy={likeBusyId === post.id}
-                onDelete={post.isMine ? handleDeletePost : null}
-                deleteBusy={deleteBusyId === post.id}
-                expanded={expandedPostId === post.id}
-                onToggleExpand={(id) => setExpandedPostId((prev) => (prev === id ? null : id))}
-                commentDraft={commentDrafts[post.id]}
-                onCommentDraftChange={(id, val) => setCommentDrafts((prev) => ({ ...prev, [id]: val }))}
-                onSubmitComment={handleSubmitComment}
-                commentBusy={commentBusyId === post.id}
-                onTagClick={(tag) => setActiveTagFilter(tag)}
-              />
-            ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {filteredPosts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  authorStats={authorStatsMap[post.userId]}
+                  onToggleLike={handleToggleLike}
+                  likeBusy={likeBusyId === post.id}
+                  onDelete={post.isMine ? handleDeletePost : null}
+                  deleteBusy={deleteBusyId === post.id}
+                  expanded={expandedPostId === post.id}
+                  onToggleExpand={(id) => setExpandedPostId((prev) => (prev === id ? null : id))}
+                  commentDraft={commentDrafts[post.id]}
+                  onCommentDraftChange={(id, val) => setCommentDrafts((prev) => ({ ...prev, [id]: val }))}
+                  onSubmitComment={handleSubmitComment}
+                  commentBusy={commentBusyId === post.id}
+                  onTagClick={(tag) => setActiveTagFilter(tag)}
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Sidebar Column */}
-          <div style={{ flex: "1 1 280px", minWidth: 0, display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Status Card */}
-            <StatusCard stats={myCommunityStatsQuery.data} />
-
-            {/* Trending Tags Card */}
-            {trendingTags.length > 0 && (
-              <div
-                className="tai-card"
-                style={{
-                  padding: "18px 16px",
-                  background: "var(--glass-surface)",
-                  border: "1px solid var(--glass-border)",
-                  borderRadius: 16,
-                  boxShadow: "var(--glass-shadow)",
-                }}
+          {/* CARD 2: ACTIVE STUDY GROUPS */}
+          <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <Users size={18} color="var(--primary)" />
+                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Active Study Lounges</span>
+              </div>
+              <button
+                className="tai-btn tai-btn-primary tai-btn-sm"
+                style={{ borderRadius: 999, padding: "6px 14px", fontSize: 12 }}
+                onClick={() => setCreateGroupModalOpen((prev) => !prev)}
               >
-                <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center" }}>
-                  <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
-                    <TrendingUp size={15} color="var(--primary)" />
-                    <span style={{ fontWeight: 800, fontSize: 13.5 }}>Trending Tags</span>
-                  </div>
-                  {activeTagFilter && (
-                    <button
-                      onClick={() => setActiveTagFilter(null)}
-                      style={{ fontSize: 11, color: "var(--primary)", border: "none", background: "none", cursor: "pointer", fontWeight: 700 }}
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
+                <Plus size={14} /> Create Group
+              </button>
+            </div>
 
-                <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
-                  {trendingTags.map((t) => {
-                    const isSelected = activeTagFilter === t.tag;
-                    return (
-                      <button
-                        key={t.tag}
-                        onClick={() => setActiveTagFilter(isSelected ? null : t.tag)}
-                        style={{
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                          padding: "3px 10px",
-                          borderRadius: 999,
-                          border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
-                          background: isSelected ? "var(--primary)" : "var(--surface-2)",
-                          color: isSelected ? "#fff" : "var(--primary)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        #{t.tag}
-                      </button>
-                    );
-                  })}
+            {/* Create Group Form Modal */}
+            {createGroupModalOpen && (
+              <div className="anim-slide-down" style={{ padding: 14, background: "var(--surface-2)", borderRadius: 12, marginBottom: 14, border: "1px solid var(--border)" }}>
+                <div style={{ fontWeight: 800, fontSize: 13.5, marginBottom: 8 }}>Create a New Study Group</div>
+                <input
+                  className="tai-input"
+                  placeholder="Group Name (e.g. AI Prompt Engineering Guild)"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  style={{ marginBottom: 8, background: "var(--surface)", fontSize: 12.5 }}
+                />
+                <textarea
+                  className="tai-input"
+                  rows={2}
+                  placeholder="Group Description & Purpose"
+                  value={newGroupDesc}
+                  onChange={(e) => setNewGroupDesc(e.target.value)}
+                  style={{ marginBottom: 10, background: "var(--surface)", fontSize: 12.5 }}
+                />
+                <div className="tai-row tai-gap8" style={{ justifyContent: "flex-end" }}>
+                  <button className="tai-btn tai-btn-ghost tai-btn-sm" onClick={() => setCreateGroupModalOpen(false)}>Cancel</button>
+                  <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={groupBusy || !newGroupName.trim()} onClick={handleCreateGroup}>
+                    {groupBusy ? "Creating..." : "Create Group"}
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* Community Stats Card */}
+            {/* Groups Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+              {filteredGroups.slice(0, 4).map((g) => {
+                const isMember = myGroupIds.has(g.id);
+                const memberCount = g.member_count || g.study_group_members?.[0]?.count || (isMember ? 1 : 0);
+
+                return (
+                  <div
+                    key={g.id}
+                    style={{
+                      padding: "14px",
+                      background: "var(--surface-2)",
+                      borderRadius: 12,
+                      border: "1px solid var(--border)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", marginBottom: 4 }}>{g.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                        {g.description || "Peer study group for collaboration."}
+                      </div>
+                    </div>
+                    <div className="tai-row tai-between" style={{ alignItems: "center" }}>
+                      <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>👥 {memberCount} members</span>
+                      <button
+                        className={`tai-btn tai-btn-sm ${isMember ? "tai-btn-ghost" : "tai-btn-primary"}`}
+                        style={{ padding: "4px 10px", fontSize: 11.5 }}
+                        disabled={joiningGroupId === g.id}
+                        onClick={() => handleToggleGroupJoin(g.id, isMember)}
+                      >
+                        {isMember ? "Joined" : "Join"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* CARD 3: FEATURED INSTRUCTORS & MENTORS */}
+          <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14 }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <GraduationCap size={18} color="var(--primary)" />
+                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Instructors & Mentors</span>
+              </div>
+              <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)" }}>
+                {mentorsList.length} Available
+              </span>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+              {mentorsList.slice(0, 3).map((m) => (
+                <div
+                  key={m.id}
+                  style={{
+                    padding: "14px",
+                    background: "var(--surface-2)",
+                    borderRadius: 12,
+                    border: "1px solid var(--border)",
+                    textAlign: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Avatar size={46} src={m.avatarUrl} initials={initialsOf(m.name)} />
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>{m.name}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--primary)", fontWeight: 700 }}>{m.title || "Senior AI Instructor"}</div>
+                  </div>
+                  <button
+                    className="tai-btn tai-btn-primary tai-btn-sm"
+                    style={{ width: "100%", padding: "5px 10px", fontSize: 11.5 }}
+                    onClick={() => openMentorBooking(m)}
+                  >
+                    Book 1:1 Session
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* =================================================================== */}
+        {/* SIDEBAR COLUMN (1/3 Width): Status, Leaderboard, Direct Messages */}
+        {/* =================================================================== */}
+        <div style={{ flex: "1 1 300px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
+          
+          {/* 1. YOUR COMMUNITY STATUS */}
+          <StatusCard stats={myCommunityStatsQuery.data} />
+
+          {/* 2. TOP CONTRIBUTORS LEADERBOARD */}
+          <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14 }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <Trophy size={18} color="#F59E0B" />
+                <span style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Top Contributors</span>
+              </div>
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--primary)" }}>Rank #{myRankNumber}</span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {leaderboardRows.slice(0, 5).map((row, idx) => {
+                const isYou = row.user_id === myId;
+                return (
+                  <div
+                    key={row.user_id || idx}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "8px 10px",
+                      borderRadius: 10,
+                      background: isYou ? "var(--primary-tint)" : "var(--surface-2)",
+                      border: isYou ? "1px solid var(--primary)" : "1px solid var(--border)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                      <span style={{ fontWeight: 900, fontSize: 12, color: idx === 0 ? "#F59E0B" : idx === 1 ? "#94A3B8" : idx === 2 ? "#D97706" : "var(--text-3)", width: 16 }}>
+                        #{idx + 1}
+                      </span>
+                      <Avatar size={28} src={row.avatar_url} initials={row.initials || "L"} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 12.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {row.name} {isYou ? "(You)" : ""}
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontWeight: 800, fontSize: 12, color: "var(--primary)", flexShrink: 0 }}>
+                      {row.points ?? 0} pts
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. TRENDING TAGS */}
+          {trendingTags.length > 0 && (
             <div
               className="tai-card"
               style={{
@@ -1786,483 +1731,65 @@ export function CommunityScreen({
                 boxShadow: "var(--glass-shadow)",
               }}
             >
-              <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12, color: "var(--text)" }}>
-                Community Stats
-              </div>
-              <div className="tai-col tai-gap10">
-                {[
-                  { label: "Total Posts", value: posts.length },
-                  { label: "Study Groups", value: allGroups.length },
-                  { label: "Total Likes", value: posts.reduce((sum, p) => sum + p.likes, 0) },
-                ].map((s) => (
-                  <div key={s.label} className="tai-row tai-between" style={{ alignItems: "center" }}>
-                    <span style={{ fontSize: 13, color: "var(--text-2)" }}>{s.label}</span>
-                    <span style={{ fontSize: 14, fontWeight: 900, color: "var(--text)" }}>{s.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* =================================================================== */}
-      {/* TAB 2: GROUPS */}
-      {/* =================================================================== */}
-      {tab === "groups" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {/* Header Bar */}
-          <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-              <Users size={20} color="var(--primary)" />
-              <span style={{ fontWeight: 900, fontSize: 17, color: "var(--text)" }}>Study Groups</span>
-            </div>
-            <button
-              className="tai-btn tai-btn-primary"
-              style={{ borderRadius: 999, padding: "8px 18px", fontSize: 12.5 }}
-              onClick={() => setCreateGroupModalOpen((prev) => !prev)}
-            >
-              <Plus size={15} /> Create Group
-            </button>
-          </div>
-
-          {/* Create Group Form */}
-          {createGroupModalOpen && (
-            <div
-              className="tai-card anim-slide-down"
-              style={{
-                padding: "16px",
-                background: "var(--glass-surface)",
-                border: "1px solid var(--glass-border)",
-                borderRadius: 14,
-              }}
-            >
-              <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Create a New Study Group</div>
-              <input
-                className="tai-input"
-                placeholder="Group Name (e.g. AI Prompt Engineering Guild)"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                style={{ marginBottom: 10, background: "var(--surface-2)" }}
-              />
-              <textarea
-                className="tai-input"
-                rows={2}
-                placeholder="Group Description & Purpose"
-                value={newGroupDesc}
-                onChange={(e) => setNewGroupDesc(e.target.value)}
-                style={{ marginBottom: 12, background: "var(--surface-2)" }}
-              />
-              <div className="tai-row tai-gap8" style={{ justifyContent: "flex-end" }}>
-                <button
-                  className="tai-btn tai-btn-ghost tai-btn-sm"
-                  onClick={() => setCreateGroupModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="tai-btn tai-btn-primary tai-btn-sm"
-                  disabled={groupBusy || !newGroupName.trim()}
-                  onClick={handleCreateGroup}
-                >
-                  {groupBusy ? "Creating..." : "Create Group"}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Search Bar */}
-          <div style={{ position: "relative" }}>
-            <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
-            <input
-              className="tai-input"
-              style={{ paddingLeft: 38, background: "var(--glass-surface)", borderRadius: 12 }}
-              placeholder="Search study groups..."
-              value={groupSearch}
-              onChange={(e) => setGroupSearch(e.target.value)}
-            />
-          </div>
-
-          {/* Groups List */}
-          {filteredGroups.length === 0 && (
-            <div className="tai-card" style={{ padding: 36, textAlign: "center" }}>
-              <Users size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
-              <div style={{ fontWeight: 800, fontSize: 14 }}>No study groups found</div>
-              <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Create the first study group!</div>
-            </div>
-          )}
-
-          <div className="tai-col tai-gap12">
-            {filteredGroups.map((g) => {
-              const isMember = myGroupIds.has(g.id);
-              const memberCount = g.member_count || g.study_group_members?.[0]?.count || (isMember ? 1 : 0);
-              const maxMembers = g.max_members || 50;
-              const isFull = !isMember && memberCount >= maxMembers;
-
-              return (
-                <div
-                  key={g.id}
-                  className="tai-card tai-card-hover"
-                  style={{
-                    padding: "18px 20px",
-                    background: "var(--glass-surface)",
-                    border: "1px solid var(--glass-border)",
-                    borderRadius: 16,
-                    boxShadow: "var(--glass-shadow)",
-                  }}
-                >
-                  <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
-                    <div style={{ minWidth: 0, flex: "1 1 280px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: 16,
-                            color: "var(--text)",
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                          onClick={() => push("studyGroup", { groupId: g.id })}
-                        >
-                          {g.name}
-                          {g.is_private && (
-                            <span title="Private group" style={{ display: "inline-flex", alignItems: "center" }}>
-                              <Lock size={13} color="var(--warning)" />
-                            </span>
-                          )}
-                        </div>
-
-                        {g.courses?.title && (
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 700,
-                              padding: "2px 8px",
-                              borderRadius: 999,
-                              background: "rgba(37, 99, 235, 0.1)",
-                              color: "var(--primary)",
-                              border: "1px solid rgba(37, 99, 235, 0.2)",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <BookOpen size={11} /> {g.courses.title}
-                          </span>
-                        )}
-
-                        {isMember && (
-                          <span
-                            style={{
-                              fontSize: 10.5,
-                              fontWeight: 800,
-                              padding: "2px 8px",
-                              borderRadius: 999,
-                              background: "rgba(16, 185, 129, 0.12)",
-                              color: "var(--success)",
-                              border: "1px solid rgba(16, 185, 129, 0.25)",
-                            }}
-                          >
-                            Joined
-                          </span>
-                        )}
-                      </div>
-
-                      <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, marginBottom: 10 }}>
-                        {g.description || "Open study and peer discussion group."}
-                      </div>
-
-                      <div className="tai-row tai-gap12" style={{ fontSize: 12, color: "var(--text-3)", alignItems: "center" }}>
-                        <span>👥 {memberCount}/{maxMembers} members</span>
-                        {g.created_at && <span>🕒 Created {timeAgo(g.created_at)}</span>}
-                      </div>
-                    </div>
-
-                    <div className="tai-row tai-gap8" style={{ alignItems: "center", alignSelf: "center" }}>
-                      <button
-                        className="tai-btn tai-btn-outline tai-btn-sm"
-                        style={{ borderRadius: 999, padding: "7px 16px", display: "inline-flex", alignItems: "center", gap: 6 }}
-                        onClick={() => push("studyGroup", { groupId: g.id })}
-                      >
-                        <Users size={13} /> View Group
-                      </button>
-
-                      {isMember ? (
-                        <button
-                          className="tai-btn tai-btn-outline tai-btn-sm"
-                          style={{ borderRadius: 999, padding: "7px 16px", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.4)" }}
-                          onClick={() => handleLeaveGroup(g.id)}
-                        >
-                          Leave
-                        </button>
-                      ) : (
-                        <button
-                          className="tai-btn tai-btn-primary tai-btn-sm"
-                          style={{ borderRadius: 999, padding: "7px 16px" }}
-                          disabled={isFull}
-                          onClick={() => handleJoinGroup(g.id)}
-                        >
-                          {isFull ? "Full" : "Join Group"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
+              <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "center" }}>
+                <div className="tai-row tai-gap6" style={{ alignItems: "center" }}>
+                  <TrendingUp size={15} color="var(--primary)" />
+                  <span style={{ fontWeight: 800, fontSize: 13.5 }}>Trending Tags</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* =================================================================== */}
-      {/* TAB 3: TUTORS (INSTRUCTORS) */}
-      {/* =================================================================== */}
-      {tab === "tutors" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {/* Search Bar */}
-          <div style={{ position: "relative" }}>
-            <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
-            <input
-              className="tai-input"
-              style={{ paddingLeft: 38, background: "var(--glass-surface)", borderRadius: 12 }}
-              placeholder="Search instructors by name or specialization..."
-              value={tutorSearch}
-              onChange={(e) => setTutorSearch(e.target.value)}
-            />
-          </div>
-
-          {filteredTutors.length === 0 && (
-            <div className="tai-card" style={{ padding: 36, textAlign: "center" }}>
-              <GraduationCap size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
-              <div style={{ fontWeight: 800, fontSize: 14 }}>No instructors found</div>
-              <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Try searching for a different skill or name.</div>
-            </div>
-          )}
-
-          <div className="tai-grid3">
-            {filteredTutors.map((m) => (
-              <div
-                key={m.id}
-                className="tai-card tai-card-hover"
-                style={{
-                  padding: "22px 18px",
-                  background: "var(--glass-surface)",
-                  border: "1px solid var(--glass-border)",
-                  borderRadius: 16,
-                  boxShadow: "var(--glass-shadow)",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  justifyContent: "space-between",
-                  gap: 14,
-                }}
-              >
-                <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <Avatar size={56} src={m.avatar || m.avatarUrl || m.user_profiles?.avatar_url} initials={initialsOf(m.name)} />
-                  
-                  <div style={{ fontWeight: 900, fontSize: 15, color: "var(--text)", marginTop: 10 }}>
-                    {m.name}
-                  </div>
-
-                  {m.rating > 0 && (
-                    <div className="tai-row tai-gap4" style={{ alignItems: "center", justifyContent: "center", marginTop: 3 }}>
-                      <Star size={13} fill="#F59E0B" color="#F59E0B" />
-                      <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--text)" }}>{m.rating.toFixed(1)}</span>
-                    </div>
-                  )}
-
-                  {m.specializations && m.specializations.length > 0 && (
-                    <div className="tai-row tai-gap4" style={{ justifyContent: "center", flexWrap: "wrap", marginTop: 8 }}>
-                      {m.specializations.slice(0, 2).map((s) => (
-                        <span
-                          key={s}
-                          style={{
-                            fontSize: 10.5,
-                            fontWeight: 700,
-                            padding: "2px 8px",
-                            borderRadius: 6,
-                            background: "var(--surface-2)",
-                            color: "var(--text-2)",
-                            border: "1px solid var(--border)",
-                          }}
-                        >
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {m.bio && (
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: "var(--text-3)",
-                        lineHeight: 1.5,
-                        marginTop: 8,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {m.bio}
-                    </div>
-                  )}
-                </div>
-
-                <div className="tai-row tai-gap8" style={{ width: "100%" }}>
+                {activeTagFilter && (
                   <button
-                    className="tai-btn tai-btn-outline"
-                    style={{ flex: 1, borderRadius: 10, justifyContent: "center", padding: "8px 0" }}
-                    onClick={() => push("mentors")}
+                    onClick={() => setActiveTagFilter(null)}
+                    style={{ fontSize: 11, color: "var(--primary)", border: "none", background: "none", cursor: "pointer", fontWeight: 700 }}
                   >
-                    <MessageSquare size={14} /> Chat
+                    Clear
                   </button>
-                  <button
-                    className="tai-btn tai-btn-primary"
-                    style={{ flex: 1, borderRadius: 10, justifyContent: "center", padding: "8px 0" }}
-                    onClick={() => {
-                      if (setSessionMentorChoice && setRequestingSession) {
-                        setSessionMentorChoice(m);
-                        setRequestingSession(true);
-                      }
-                      push("mentors");
-                    }}
-                  >
-                    <Clock size={14} /> Session
-                  </button>
-                </div>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* =================================================================== */}
-      {/* TAB 4: COHORTS */}
-      {/* =================================================================== */}
-      {tab === "cohorts" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Info Banner */}
-          <div
-            className="tai-card"
-            style={{
-              padding: "18px 20px",
-              background: "var(--glass-surface)",
-              border: "1px solid var(--glass-border)",
-              borderRadius: 16,
-              boxShadow: "var(--glass-shadow)",
-            }}
-          >
-            <div className="tai-row tai-gap8" style={{ alignItems: "center", marginBottom: 6 }}>
-              <BookOpen size={16} color="var(--primary)" />
-              <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>Cohort Communication</span>
-            </div>
-            <div style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55 }}>
-              Open a cohort to access its discussion feed, group announcements, live sessions, shared resources, and member directory — all in one space.
-            </div>
-          </div>
-
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 12 }}>My Cohort Spaces</div>
-
-            {cohort ? (
-              <div
-                className="tai-card tai-card-hover"
-                style={{
-                  padding: "20px",
-                  background: "var(--glass-surface)",
-                  border: "1px solid var(--glass-border)",
-                  borderRadius: 16,
-                  boxShadow: "var(--glass-shadow)",
-                  cursor: "pointer",
-                }}
-                onClick={() => push("cohort")}
-              >
-                <div className="tai-row tai-between" style={{ alignItems: "flex-start", marginBottom: 10 }}>
-                  <div>
-                    <span
+              <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
+                {trendingTags.map((t) => {
+                  const isSelected = activeTagFilter === t.tag;
+                  return (
+                    <button
+                      key={t.tag}
+                      onClick={() => setActiveTagFilter(isSelected ? null : t.tag)}
                       style={{
-                        fontSize: 10.5,
-                        fontWeight: 800,
-                        padding: "2px 8px",
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        padding: "3px 10px",
                         borderRadius: 999,
-                        background: "rgba(16, 185, 129, 0.12)",
-                        color: "#10B981",
-                        textTransform: "uppercase",
+                        border: `1px solid ${isSelected ? "var(--primary)" : "var(--border)"}`,
+                        background: isSelected ? "var(--primary)" : "var(--surface-2)",
+                        color: isSelected ? "#fff" : "var(--primary)",
+                        cursor: "pointer",
                       }}
                     >
-                      Active Cohort
-                    </span>
-                    <div style={{ fontWeight: 900, fontSize: 17, color: "var(--text)", marginTop: 6 }}>
-                      {cohort.name}
-                    </div>
-                  </div>
-                  <ChevronRight size={18} color="var(--text-3)" />
-                </div>
-
-                <div style={{ fontSize: 13.5, color: "var(--text-2)", lineHeight: 1.55, marginBottom: 12 }}>
-                  {cohort.description || "Your dedicated organizational cohort workspace."}
-                </div>
-
-                <div className="tai-row tai-gap12" style={{ fontSize: 12, color: "var(--text-3)" }}>
-                  {cohortSessions.length > 0 && (
-                    <span>📅 {cohortSessions.length} live sessions</span>
-                  )}
-                  {cohort.start_date && (
-                    <span>· Started {new Date(cohort.start_date).toLocaleDateString()}</span>
-                  )}
-                </div>
+                      #{t.tag}
+                    </button>
+                  );
+                })}
               </div>
-            ) : (
-              <div className="tai-card" style={{ padding: 36, textAlign: "center" }}>
-                <Users size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
-                <div style={{ fontWeight: 800, fontSize: 14 }}>Not currently enrolled in a cohort</div>
-                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
-                  Contact your workspace administrator to be assigned to a cohort.
-                </div>
+            </div>
+          )}
+
+          {/* 4. DIRECT MESSAGES / CONVERSATIONS */}
+          <div className="tai-card" style={{ padding: 18, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 10 }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <Mail size={16} color="var(--primary)" />
+                <span style={{ fontWeight: 800, fontSize: 14.5 }}>Direct Messages</span>
               </div>
-            )}
+            </div>
+            <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+              {messageThreads.length === 0 ? "No active chat threads yet." : (
+                <><strong style={{ color: "var(--text)" }}>{messageThreads.length}</strong> active conversation{messageThreads.length === 1 ? "" : "s"} with instructors</>
+              )}
+            </div>
           </div>
+
         </div>
-      )}
 
-      {/* =================================================================== */}
-      {/* TAB: DIRECT MESSAGES */}
-      {/* =================================================================== */}
-      {tab === "messages" && (
-        <MessagesScreen
-          activeMentorThread={activeMentorThread}
-          setActiveMentorThread={setActiveMentorThread}
-          messageInput={messageInput}
-          setMessageInput={setMessageInput}
-          messageThreads={messageThreads}
-          threadsLoading={threadsLoading}
-          conversationMessages={conversationMessages}
-          conversationLoading={conversationLoading}
-          session={session}
-          handleSendMessage={handleSendMessage}
-          hideHero={true}
-        />
-      )}
-
-      {/* =================================================================== */}
-      {/* TAB 6: RANK (LEADERBOARD) */}
-      {/* =================================================================== */}
-      {tab === "rank" && (
-        <LeaderboardPanel
-          rows={leaderboardPeriod === "all" ? leaderboardRows : periodRows}
-          loading={leaderboardPeriod === "all" ? leaderboardQuery.loading : periodLoading}
-          onRefresh={() => leaderboardPeriod === "all" ? leaderboardQuery.refetch?.() : loadPeriodLeaderboard(leaderboardPeriod)}
-          currentUserId={myId}
-          userStats={gamificationStatsQuery.data || {}}
-          period={leaderboardPeriod}
-          onPeriodChange={setLeaderboardPeriod}
-        />
-      )}
+      </div>
     </div>
   );
 }
