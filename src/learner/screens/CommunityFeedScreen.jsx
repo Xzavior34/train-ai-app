@@ -161,14 +161,14 @@ export function CommunityFeedScreen({
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, position: "relative", zIndex: 1 }}>
           <div style={{ maxWidth: 560 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 999, background: "var(--primary-tint)", border: "1px solid var(--border)", fontSize: 11, fontWeight: 700, color: "var(--primary)", marginBottom: 10 }}>
-              <Flame size={13} />
-              <span>LIVE COMMUNITY FEED</span>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 999, background: "rgba(37, 99, 235, 0.25)", border: "1px solid rgba(59, 130, 246, 0.45)", fontSize: 11, fontWeight: 800, color: "#60A5FA", marginBottom: 10 }}>
+              <Flame size={13} color="#60A5FA" />
+              <span style={{ letterSpacing: "0.04em" }}>LIVE COMMUNITY FEED</span>
             </div>
-            <h1 className="tai-hero-title" style={{ margin: 0, fontSize: "clamp(20px, 2.4vw, 26px)", fontWeight: 800, color: "var(--text)", lineHeight: 1.25 }}>
+            <h1 className="tai-hero-title" style={{ margin: 0, fontSize: "clamp(20px, 2.4vw, 26px)", fontWeight: 800, color: "#FFFFFF", lineHeight: 1.25 }}>
               Connect, Learn & Share with Peers
             </h1>
-            <p className="tai-hero-desc" style={{ margin: "8px 0 0 0", fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
+            <p className="tai-hero-desc" style={{ margin: "8px 0 0 0", fontSize: 13, color: "rgba(255, 255, 255, 0.85)", lineHeight: 1.5 }}>
               Ask questions, showcase your projects, discuss AI developments, and engage with verified instructors and peers.
             </p>
           </div>
@@ -185,7 +185,11 @@ export function CommunityFeedScreen({
                 padding: "10px 18px",
                 borderRadius: 10,
                 fontWeight: 700,
-                fontSize: 13
+                fontSize: 13,
+                background: "#2563EB",
+                color: "#FFFFFF",
+                border: "none",
+                boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)"
               }}
             >
               <Plus size={16} />
@@ -193,7 +197,7 @@ export function CommunityFeedScreen({
             </button>
             <button
               type="button"
-              className="tai-btn tai-btn-outline"
+              className="tai-btn"
               onClick={() => push ? push("mentors") : goTab?.("community")}
               style={{
                 display: "inline-flex",
@@ -201,29 +205,34 @@ export function CommunityFeedScreen({
                 gap: 8,
                 padding: "10px 16px",
                 borderRadius: 10,
-                fontWeight: 600,
-                fontSize: 13
+                fontWeight: 700,
+                fontSize: 13,
+                background: "rgba(37, 99, 235, 0.28)",
+                border: "1.5px solid #3B82F6",
+                color: "#60A5FA",
+                cursor: "pointer",
+                transition: "all 0.15s ease"
               }}
             >
-              <Users size={16} />
+              <Users size={16} color="#60A5FA" />
               <span>Instructors</span>
             </button>
           </div>
         </div>
 
         {/* Community Stat Pills */}
-        <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text-2)" }}>
-            <MessageCircle size={14} color="var(--primary)" />
-            <strong style={{ color: "var(--text)" }}>{posts.length}</strong> Total Posts
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(255, 255, 255, 0.12)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
+            <MessageCircle size={14} color="#60A5FA" />
+            <strong style={{ color: "#FFFFFF" }}>{posts.length}</strong> Total Posts
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text-2)" }}>
-            <Sparkles size={14} color="var(--primary)" />
-            <strong style={{ color: "var(--text)" }}>Verified</strong> Instructors Active
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
+            <Sparkles size={14} color="#60A5FA" />
+            <strong style={{ color: "#FFFFFF" }}>Verified</strong> Instructors Active
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--text-2)" }}>
-            <CheckCircle2 size={14} color="var(--success, #10b981)" />
-            <strong style={{ color: "var(--text)" }}>Real-time</strong> Synced
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
+            <CheckCircle2 size={14} color="#34D399" />
+            <strong style={{ color: "#FFFFFF" }}>Real-time</strong> Synced
           </div>
         </div>
       </div>
