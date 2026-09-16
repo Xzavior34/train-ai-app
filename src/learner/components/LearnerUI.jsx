@@ -923,11 +923,12 @@ export function DesktopSidebar({
       key: "community",
       label: "Community",
       icon: Users,
-      defaultScreen: "communityFeed",
+      defaultScreen: "community",
       screens: ["community", "communityFeed", "cohort", "mentors", "studyGroup", "messages", "leaderboard"],
       subItems: [
-        { key: "communityFeed", label: "Community", icon: MessageSquare },
-        { key: "cohort", label: "Cohort", icon: Users },
+        { key: "community", label: "Community", icon: Users },
+        { key: "communityFeed", label: "Feed", icon: MessageSquare },
+        { key: "cohort", label: "Cohort", icon: Layers },
         { key: "mentors", label: "Instructors", icon: GraduationCap },
         { key: "studyGroup", label: "Study Group", icon: Users },
         { key: "messages", label: "Messages", icon: Mail },
@@ -1005,14 +1006,6 @@ export function DesktopSidebar({
                       (activeScreen === item.key) ||
                       (item.key === "courses" && (activeScreen === "courseDetail" || activeScreen === "lesson")) ||
                       (item.key === "settings" && activeScreen === "profile") ||
-                      (activeScreen === "community" && (
-                        (item.key === "communityFeed" && (currentTab === "summary" || currentTab === "posts" || !currentTab)) ||
-                        (item.key === "studyGroup" && (currentTab === "groups" || currentTab === "studyGroup")) ||
-                        (item.key === "mentors" && (currentTab === "tutors" || currentTab === "mentors")) ||
-                        (item.key === "cohort" && (currentTab === "cohorts" || currentTab === "cohort")) ||
-                        (item.key === "messages" && currentTab === "messages") ||
-                        (item.key === "leaderboard" && (currentTab === "rank" || currentTab === "leaderboard"))
-                      )) ||
                       (item.key === "messages" && activeScreen === "messages");
 
                     return (

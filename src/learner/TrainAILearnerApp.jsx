@@ -171,10 +171,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     } else if (key === "aiQuiz") {
       setAiTab("quiz");
       goTab("ai");
+    } else if (key === "community") {
+      setCommunityTab("summary");
+      push("community", { tab: "summary" });
     } else if (key === "communityFeed" || key === "feed") {
       push("communityFeed");
-    } else if (key === "community") {
-      push("community");
     } else if (key === "cohort") {
       push("cohort");
     } else if (key === "leaderboard" || key === "rank") {
