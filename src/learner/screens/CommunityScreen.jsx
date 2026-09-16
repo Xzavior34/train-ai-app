@@ -97,69 +97,6 @@ function extractHashtags(posts) {
 }
 
 // ---------------------------------------------------------------------------
-// Live Activity Banner (Under Header on Every Tab)
-// ---------------------------------------------------------------------------
-function LiveActivityBanner({ items = [] }) {
-  const latestActivity = items[0] || null;
-
-  return (
-    <div
-      className="tai-card"
-      style={{
-        padding: "10px 16px",
-        background: "var(--glass-surface)",
-        border: "1px solid var(--glass-border)",
-        borderRadius: 12,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 12,
-        boxShadow: "var(--glass-shadow)",
-      }}
-    >
-      <div className="tai-row tai-gap10" style={{ alignItems: "center", minWidth: 0 }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "3px 8px",
-            borderRadius: 999,
-            background: "rgba(16, 185, 129, 0.12)",
-            border: "1px solid rgba(16, 185, 129, 0.25)",
-            flexShrink: 0,
-          }}
-        >
-          <span
-            style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#10B981",
-              boxShadow: "0 0 0 3px rgba(16, 185, 129, 0.25)",
-              animation: "pulse 2s infinite",
-            }}
-          />
-          <span style={{ fontSize: 10, fontWeight: 900, color: "#10B981", letterSpacing: "0.04em" }}>
-            LIVE ACTIVITY
-          </span>
-        </div>
-
-        <div style={{ fontSize: 13, color: "var(--text)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {latestActivity?.activity_text || "No recent activity yet."}
-        </div>
-      </div>
-
-      {latestActivity?.created_at && (
-        <span style={{ fontSize: 11.5, color: "var(--text-3)", flexShrink: 0 }}>
-          {timeAgo(latestActivity.created_at)}
-        </span>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Sidebar: Your Community Status Card
 // ---------------------------------------------------------------------------
 function StatusCard({ stats }) {
@@ -1366,9 +1303,6 @@ export function CommunityScreen({
       {/* Hero Banner */}
       <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
 
-      {/* Live Activity Ticker Banner */}
-      <LiveActivityBanner items={activityFeedQuery.data} />
-
       {/* Unified Dashboard Grid Layout */}
       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
         
@@ -1377,80 +1311,30 @@ export function CommunityScreen({
         {/* =================================================================== */}
         <div style={{ flex: "2 1 540px", minWidth: 0, display: "flex", flexDirection: "column", gap: 20 }}>
           
-          {/* CARD 1: COMMUNITY FEED & COMPOSER */}
+          {/* CARD 1: COMMUNITY FEED & RECENT DISCUSSIONS */}
           <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
-            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14 }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
               <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
                 <MessageSquare size={18} color="var(--primary)" />
-                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Community Feed</span>
+                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Recent Discussions</span>
+                <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)", fontSize: 11 }}>
+                  {posts.length} Posts
+                </span>
               </div>
-              <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)" }}>
-                {posts.length} Discussions
-              </span>
-            </div>
 
-            {/* Search Posts Bar */}
-            <div style={{ position: "relative", marginBottom: 14 }}>
-              <Search size={15} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--text-3)" }} />
-              <input
-                className="tai-input"
-                style={{ paddingLeft: 38, background: "var(--surface-2)", borderRadius: 12 }}
-                placeholder="Search community posts..."
-                value={feedSearch}
-                onChange={(e) => setFeedSearch(e.target.value)}
-              />
-              {feedSearch && (
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
                 <button
-                  onClick={() => setFeedSearch("")}
-                  className="tai-iconbtn"
-                  style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", width: 22, height: 22 }}
+                  className="tai-btn tai-btn-primary tai-btn-sm"
+                  style={{ borderRadius: 999, padding: "5px 14px", fontSize: 12 }}
+                  onClick={() => setComposerOpen((prev) => !prev)}
                 >
-                  <X size={13} />
-                </button>
-              )}
-            </div>
-
-            {/* Post Composer */}
-            {!composerOpen ? (
-              <div
-                className="tai-row tai-gap10"
-                style={{
-                  padding: "12px 16px",
-                  alignItems: "center",
-                  background: "var(--surface-2)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 14,
-                  marginBottom: 16,
-                }}
-              >
-                <Avatar size={38} src={user.avatarUrl} initials={initialsOf(user.name || "You")} />
-                <button
-                  onClick={() => setComposerOpen(true)}
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    textAlign: "left",
-                    border: "1px solid var(--border)",
-                    background: "var(--surface)",
-                    borderRadius: 999,
-                    padding: "9px 16px",
-                    color: "var(--text-3)",
-                    fontSize: 13,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                  }}
-                >
-                  Share something with the community...
-                </button>
-                <button
-                  className="tai-btn tai-btn-primary"
-                  style={{ width: 36, height: 36, borderRadius: "50%", padding: 0, flexShrink: 0 }}
-                  onClick={() => setComposerOpen(true)}
-                >
-                  <Plus size={16} />
+                  <Plus size={14} /> New Post
                 </button>
               </div>
-            ) : (
+            </div>
+
+            {/* Post Composer Drawer */}
+            {composerOpen && (
               <div
                 className="anim-slide-down"
                 style={{
@@ -1521,40 +1405,93 @@ export function CommunityScreen({
               </div>
             )}
 
-            {/* Posts Stream */}
+            {/* High-Density Compact Discussions List */}
             {postsQuery.loading && (
               <div style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
-                Loading posts...
+                Loading discussions...
               </div>
             )}
 
             {!postsQuery.loading && filteredPosts.length === 0 && (
-              <div style={{ padding: 36, textAlign: "center" }}>
-                <MessageSquare size={24} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
-                <div style={{ fontWeight: 800, fontSize: 14 }}>{feedSearch || activeTagFilter ? "No matching posts" : "No posts yet"}</div>
-                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Be the first to share something!</div>
+              <div style={{ padding: 28, textAlign: "center" }}>
+                <MessageSquare size={22} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
+                <div style={{ fontWeight: 800, fontSize: 13.5 }}>{feedSearch || activeTagFilter ? "No matching discussions" : "No discussions yet"}</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>Click "New Post" above to start a conversation!</div>
               </div>
             )}
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {filteredPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  authorStats={authorStatsMap[post.userId]}
-                  onToggleLike={handleToggleLike}
-                  likeBusy={likeBusyId === post.id}
-                  onDelete={post.isMine ? handleDeletePost : null}
-                  deleteBusy={deleteBusyId === post.id}
-                  expanded={expandedPostId === post.id}
-                  onToggleExpand={(id) => setExpandedPostId((prev) => (prev === id ? null : id))}
-                  commentDraft={commentDrafts[post.id]}
-                  onCommentDraftChange={(id, val) => setCommentDrafts((prev) => ({ ...prev, [id]: val }))}
-                  onSubmitComment={handleSubmitComment}
-                  commentBusy={commentBusyId === post.id}
-                  onTagClick={(tag) => setActiveTagFilter(tag)}
-                />
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {filteredPosts.slice(0, 5).map((post) => {
+                const isExpanded = expandedPostId === post.id;
+                const snippet = (post.content || "").replace(/#[#a-zA-Z0-9_@]+/g, "").trim();
+
+                if (isExpanded) {
+                  return (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      authorStats={authorStatsMap[post.userId]}
+                      onToggleLike={handleToggleLike}
+                      likeBusy={likeBusyId === post.id}
+                      onDelete={post.isMine ? handleDeletePost : null}
+                      deleteBusy={deleteBusyId === post.id}
+                      expanded={true}
+                      onToggleExpand={(id) => setExpandedPostId((prev) => (prev === id ? null : id))}
+                      commentDraft={commentDrafts[post.id]}
+                      onCommentDraftChange={(id, val) => setCommentDrafts((prev) => ({ ...prev, [id]: val }))}
+                      onSubmitComment={handleSubmitComment}
+                      commentBusy={commentBusyId === post.id}
+                      onTagClick={(tag) => setActiveTagFilter(tag)}
+                    />
+                  );
+                }
+
+                return (
+                  <div
+                    key={post.id}
+                    className="tai-card-hover"
+                    style={{
+                      padding: "10px 14px",
+                      background: "var(--surface-2)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
+                    onClick={() => setExpandedPostId(post.id)}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+                      <Avatar size={32} src={post.authorAvatar} initials={initialsOf(post.authorName)} />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>{post.authorName}</span>
+                          <span style={{ fontSize: 11, color: "var(--text-3)" }}>· {timeAgo(post.createdAt)}</span>
+                          {post.postType && (
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: "var(--primary-tint)", color: "var(--primary)", textTransform: "lowercase" }}>
+                              {post.postType}
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 12.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
+                          {snippet || post.content}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, color: "var(--text-3)", fontWeight: 700 }}>
+                        <span>❤️ {post.likes}</span>
+                        <span>💬 {post.comments?.length || 0}</span>
+                      </div>
+                      <ChevronRight size={15} color="var(--text-3)" />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
