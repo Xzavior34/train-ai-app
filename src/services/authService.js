@@ -2,16 +2,23 @@ import { supabase } from "./supabaseClient.js";
 import { isDemoAdminMarker, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 export async function fetchMyRoles() {
+  let email = "";
+  if (supabase) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      email = sessionData?.session?.user?.email || "";
+    } catch {}
+  }
+
   const saved = localStorage.getItem("trainai_active_session_v1");
-  let savedEmail = "";
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      savedEmail = parsed.user?.email || "";
+      if (!email) email = parsed.user?.email || "";
       if (parsed._demo) {
         const demoRole = parsed.user?.user_metadata?.role || parsed.role;
         if (demoRole === "admin") {
-          return isPlatformOwnerEmail(savedEmail) || isDemoAdminMarker(savedEmail)
+          return isPlatformOwnerEmail(email) || isDemoAdminMarker(email)
             ? ["admin", "super_admin", "learner"]
             : ["admin", "learner"];
         }
@@ -25,8 +32,7 @@ export async function fetchMyRoles() {
       const { data, error } = await supabase.from("user_roles").select("role");
       if (!error && data && data.length > 0) {
         const roles = data.map((r) => r.role);
-        // Only trainailtd@gmail.com can have super_admin (Platform Owner)
-        if (!isPlatformOwnerEmail(savedEmail)) {
+        if (!isPlatformOwnerEmail(email)) {
           return roles.map(r => r === "super_admin" ? "admin" : r);
         }
         return roles;

@@ -86,6 +86,7 @@ export function setDemoRoleForEmail(email, role) {
  * @returns {"platform"|"learner"}
  */
 export function resolveViewMode(roles = []) {
+  if (roles.includes("super_admin")) return "owner";
   return roles.some((r) => PLATFORM_ROLES.includes(r)) ? "platform" : "learner";
 }
 
