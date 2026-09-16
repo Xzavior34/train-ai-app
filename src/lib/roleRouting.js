@@ -117,6 +117,7 @@ export const DASHBOARDS = {
 
 export const PLATFORM_OWNER_EMAILS = [
   "trainailtd@gmail.com",
+  "trainai@gmail.com",
 ];
 
 export function isPlatformOwnerEmail(email = "") {
