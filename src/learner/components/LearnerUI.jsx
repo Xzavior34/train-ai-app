@@ -550,6 +550,13 @@ export const TOKENS = `
     .tai-roadmap-item-title { font-size: 9.5px !important; }
     .tai-roadmap-item-status { font-size: 8px !important; }
   }
+  @media (max-width: 420px) {
+    .tai-navbar { padding: 6px 6px max(8px, env(safe-area-inset-bottom)) !important; }
+    .tai-navitem { padding: 6px 8px !important; }
+    .tai-navitem.active { padding: 6px 12px !important; }
+    .tai-navitem.active .tai-navitem-label { font-size: 11px !important; max-width: 75px !important; margin-left: 5px !important; }
+    .tai-hero-row { gap: 8px !important; }
+  }
 
   /* Universal Cinema Video & Lesson Responsive Rules */
   .tai-lesson-cinema-layout {

@@ -1298,6 +1298,62 @@ export function CommunityScreen({
       {/* Hero Banner */}
       <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
 
+      {/* Quick Navigation Tabs Bar */}
+      <div
+        className="tai-scrollx tai-no-scrollbar"
+        style={{
+          display: "flex",
+          gap: 8,
+          overflowX: "auto",
+          paddingBottom: 2,
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const isSelected = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => {
+                if (t.id === "cohorts") {
+                  push?.("cohort");
+                } else if (t.id === "groups") {
+                  push?.("studyGroup");
+                } else if (t.id === "tutors") {
+                  push?.("mentors");
+                } else if (t.id === "messages") {
+                  push?.("messages");
+                } else if (t.id === "rank") {
+                  push?.("leaderboard");
+                } else if (t.id === "posts") {
+                  setViewAllPosts(true);
+                  handleTabClick(t.id);
+                } else {
+                  setViewAllPosts(false);
+                  handleTabClick(t.id);
+                }
+              }}
+              className={`tai-btn ${isSelected ? "tai-btn-primary" : "tai-btn-outline"}`}
+              style={{
+                borderRadius: 999,
+                padding: "6px 14px",
+                fontSize: 12.5,
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                flexShrink: 0,
+              }}
+            >
+              <Icon size={14} />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Unified Dashboard Grid Layout */}
       <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "flex-start" }}>
         
@@ -1674,7 +1730,141 @@ export function CommunityScreen({
             )}
           </div>
 
-          {/* CARD 3: FEATURED INSTRUCTORS & MENTORS */}
+          {/* CARD 3: COHORT LEARNING SPACE */}
+          <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 }}>
+              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                <BookOpen size={18} color="var(--primary)" />
+                <span style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Cohort Learning Space</span>
+                {cohort && (
+                  <span className="tai-tag" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
+                    Active Member
+                  </span>
+                )}
+              </div>
+              {push && (
+                <button
+                  onClick={() => push("cohort", cohort ? { cohortId: cohort.id, id: cohort.id } : undefined)}
+                  style={{ background: "none", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}
+                >
+                  {cohort ? "Enter Space" : "View Cohorts"} <ChevronRight size={14} />
+                </button>
+              )}
+            </div>
+
+            {cohort ? (
+              <div
+                style={{
+                  padding: "16px 18px",
+                  borderRadius: 14,
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                }}
+              >
+                <div className="tai-row tai-between" style={{ alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span>{cohort.name || "Active Cohort"}</span>
+                      {cohort.code && (
+                        <span className="tai-tag" style={{ background: "var(--primary-tint)", color: "var(--primary)", fontSize: 11 }}>
+                          {cohort.code}
+                        </span>
+                      )}
+                    </div>
+                    {cohort.description && (
+                      <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, lineHeight: 1.4, maxWidth: 520 }}>
+                        {cohort.description}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Cohort Stats Ribbon */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 8, marginTop: 4 }}>
+                  <div style={{ padding: "8px 12px", borderRadius: 10, background: "var(--surface-3)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Live Sessions</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>{cohortSessions.length} Scheduled</span>
+                  </div>
+                  <div style={{ padding: "8px 12px", borderRadius: 10, background: "var(--surface-3)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Status</span>
+                    <span style={{ fontSize: 14, fontWeight: 800, color: "#10B981" }}>Active Sprint</span>
+                  </div>
+                  {cohort.start_date && (
+                    <div style={{ padding: "8px 12px", borderRadius: 10, background: "var(--surface-3)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 2 }}>
+                      <span style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Start Date</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
+                        {new Date(cohort.start_date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ marginTop: 4 }}>
+                  <button
+                    className="tai-btn tai-btn-primary"
+                    style={{
+                      width: "100%",
+                      padding: "9px 16px",
+                      borderRadius: 10,
+                      fontSize: 12.5,
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                    }}
+                    onClick={() => push?.("cohort", { cohortId: cohort.id, id: cohort.id })}
+                  >
+                    Enter Cohort Learning Space →
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: "16px 18px",
+                  borderRadius: 14,
+                  background: "var(--surface-2)",
+                  border: "1px solid var(--border)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                  textAlign: "center",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <BookOpen size={22} color="var(--primary)" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>Cohort-Based Learning</div>
+                  <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, maxWidth: 440, lineHeight: 1.4 }}>
+                    Join intensive instructor-led sprint cohorts, collaborate on team deliverables, and attend live sprint sessions.
+                  </div>
+                </div>
+                <button
+                  className="tai-btn tai-btn-outline"
+                  style={{
+                    marginTop: 4,
+                    padding: "8px 18px",
+                    borderRadius: 10,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    color: "var(--primary)",
+                    borderColor: "rgba(37, 99, 235, 0.25)",
+                  }}
+                  onClick={() => push?.("cohort")}
+                >
+                  Explore Cohort Hub →
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* CARD 4: FEATURED INSTRUCTORS & MENTORS */}
           <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
             <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14 }}>
               <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
