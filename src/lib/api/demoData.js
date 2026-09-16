@@ -26,6 +26,30 @@ export const DEMO_PROJECT_DATA = {
       { id: "sara-t3", name: "Digital Entrepreneurship", courses: 6, learners: 480, courseTitles: ["Product Strategy", "Growth Marketing", "Startup Operations"] }
     ]
   },
+  train_ai_shared: {
+    orgs: [
+      { id: "trainai-hq", name: "Train AI LTD / Ajimi.com (Platform Owner)", slug: "trainai-ltd", status: "active", subscription_tier: "enterprise", created_at: "2024-11-01T00:00:00.000Z", user_count: 3850 },
+      { id: "digital-users-org", name: "Digital Users (Individual Signups)", slug: "digital-users", status: "active", subscription_tier: "starter", created_at: "2024-11-01T00:00:00.000Z", user_count: 5120 },
+      { id: "b2b-org-1", name: "Apex Global Learning Academy", slug: "apex-learning", status: "active", subscription_tier: "enterprise", created_at: "2025-01-10T00:00:00.000Z", user_count: 1450 },
+      { id: "b2b-org-2", name: "Nexus AI Corporate Institute", slug: "nexus-corporate", status: "active", subscription_tier: "growth", created_at: "2025-02-18T00:00:00.000Z", user_count: 820 },
+      { id: "b2b-org-3", name: "Horizon Enterprise Workforce", slug: "horizon-workforce", status: "active", subscription_tier: "growth", created_at: "2025-04-05T00:00:00.000Z", user_count: 450 }
+    ],
+    stats: { organizations: 5, totalUsers: 11690, activeInWeek: 8420, totalCourses: 48, totalEnrollments: 22800, pendingInvitations: 34 },
+    aiUsage: { total: 32450, last30d: 9920, last7d: 3840 },
+    websiteStats: { demoRequestsTotal: 240, demoRequestsNew: 48, demoRequestsLast30d: 96, inquiriesTotal: 380, inquiriesNew: 64, inquiriesLast30d: 140 },
+    activity: [
+      { text: "Platform Owner active: Train AI LTD / Ajimi.com with platform-wide privileges", time: "1 hour ago" },
+      { text: "Individual signup auto-affiliated to Digital Users organization", time: "2 hours ago" },
+      { text: "Platform tenant status updated: Enterprise SLA verified", time: "3 hours ago" },
+      { text: "AI Assessment edge pipeline processed 450 requests", time: "6 hours ago" },
+      { text: "Global course sync completed: 48 active courses verified", time: "Yesterday" }
+    ],
+    tracks: [
+      { id: "dt-t1", name: "Generative AI & Agentic Systems", courses: 16, learners: 2400, courseTitles: ["Autonomous Agents in LangChain", "Enterprise RAG Architecture", "Multi-Modal AI Engineering"] },
+      { id: "dt-t2", name: "Enterprise Systems & Platform Engineering", courses: 18, learners: 1950, courseTitles: ["Multi-Tenant SaaS Infrastructure", "Secure Cloud Architecture", "High-Throughput Node Pipelines"] },
+      { id: "dt-t3", name: "Executive AI Strategy & Governance", courses: 14, learners: 1550, courseTitles: ["AI Product Leadership", "Compliance & Ethical AI", "Data Monetization Frameworks"] }
+    ]
+  },
   digital_training: {
     orgs: [
       { id: "dt-org-1", name: "Global Digital Training Institute (+ Super Admin)", slug: "digital-training-hq", status: "active", subscription_tier: "enterprise", created_at: "2024-11-01T00:00:00.000Z", user_count: 3850 },

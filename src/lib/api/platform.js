@@ -2362,14 +2362,19 @@ export async function fetchOrgBranding(organizationId) {
   return data;
 }
 
-export async function upsertOrgBranding(organizationId, { logoUrl, primaryColor } = {}) {
+export async function upsertOrgBranding(organizationId, { logoUrl, faviconUrl, primaryColor, secondaryColor, emailHeader, emailFooter, customCss } = {}) {
   if (!supabase || !organizationId) return null;
   const existing = await fetchOrgBranding(organizationId);
   // No updated_at column on this table either - writing one made every save
   // fail. organization_id is the key, so the update targets that.
   const patch = {};
   if (logoUrl !== undefined) patch.logo_url = logoUrl || null;
+  if (faviconUrl !== undefined) patch.favicon_url = faviconUrl || null;
   if (primaryColor !== undefined) patch.primary_color = primaryColor || null;
+  if (secondaryColor !== undefined) patch.secondary_color = secondaryColor || null;
+  if (emailHeader !== undefined) patch.email_header = emailHeader || null;
+  if (emailFooter !== undefined) patch.email_footer = emailFooter || null;
+  if (customCss !== undefined) patch.custom_css = customCss || null;
   if (!Object.keys(patch).length) return existing;
 
   if (existing) {

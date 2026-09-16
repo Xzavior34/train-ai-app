@@ -61,17 +61,9 @@ export function useAuth() {
   const signIn = useCallback(async (email, password) => {
     setAuthError(null);
 
-    // Three separate Supabase projects, not one shared database.
-    // @sarafoundationafrica.com and @trainailtd.com resolve with certainty
-    // (fixed domains). Everything else is genuinely ambiguous at sign-in
-    // time now that Digital Training Organization and B2B are separate
-    // databases - a plain email address doesn't say which one it belongs
-    // to. Tries Digital Training Organization first, and falls back to B2B
-    // once (and only once) if that attempt fails with a real auth error
-    // (not a network error - a network failure means the project is
-    // unreachable, not that the account doesn't exist there, so it should
-    // surface as the actual problem rather than silently trying somewhere
-    // else and masking it).
+    // Two Supabase projects:
+    // @sarafoundationafrica.com -> Sierra Foundation dedicated project
+    // Everything else -> Train AI Shared Multi-Tenant Database
     let targetProject = resolveProjectForSignIn(email);
     setActiveSupabaseProject(targetProject);
 
@@ -88,26 +80,6 @@ export function useAuth() {
 
     if (supabase) {
       let { client, supaRes, networkErr } = await attemptSignIn(targetProject);
-
-      // Only retry against the other tenant-hosting project on a real auth
-      // rejection, and only when the first attempt was Digital Training or
-      // B2B (never for Sara Foundation, which has no fallback - see
-      // fallbackProjectForSignIn).
-      const canFallback = !networkErr && supaRes?.error && fallbackProjectForSignIn(targetProject);
-      if (canFallback) {
-        const fallbackKey = fallbackProjectForSignIn(targetProject);
-        const fallbackClient = getSupabaseClientForProject(fallbackKey);
-        if (fallbackClient) {
-          const fallbackAttempt = await attemptSignIn(fallbackKey);
-          if (fallbackAttempt.supaRes?.data?.session) {
-            targetProject = fallbackKey;
-            setActiveSupabaseProject(fallbackKey);
-            client = fallbackAttempt.client;
-            supaRes = fallbackAttempt.supaRes;
-            networkErr = fallbackAttempt.networkErr;
-          }
-        }
-      }
 
       if (networkErr) {
         const message = "Could not reach the configured backend (network error). If you want to test in demo mode instead, remove the relevant project's URL/anon key from your .env.local (or delete the file) and restart the dev server.";

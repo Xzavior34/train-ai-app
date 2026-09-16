@@ -10,9 +10,13 @@ import { SUPABASE_PROJECTS } from "../../services/supabaseClient.js";
 
 const PROJECT_LABELS = {
   [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Sara Foundation",
-  [SUPABASE_PROJECTS.DIGITAL_TRAINING]: "Digital Training Org (+ Super Admin)",
-  [SUPABASE_PROJECTS.B2B]: "B2B Organizations",
+  [SUPABASE_PROJECTS.TRAIN_AI_SHARED]: "Train AI Shared (Train AI LTD, Digital Users & B2B Orgs)",
 };
+
+const PROJECT_KEYS = [
+  SUPABASE_PROJECTS.SARA_FOUNDATION,
+  SUPABASE_PROJECTS.TRAIN_AI_SHARED,
+];
 
 // Real `platform_settings` table (setting_key unique, setting_value text,
 // setting_type, description, is_public) - see 0004_community_gamification_admin.sql:638
@@ -179,7 +183,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
                     </div>
                   </div>
                   <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-                    {Object.values(SUPABASE_PROJECTS).map((key) => {
+                    {PROJECT_KEYS.map((key) => {
                       const status = projectSessionStatus?.[key];
                       const isActive = key === activeProject;
                       return (

@@ -18,9 +18,13 @@ import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 
 const PROJECT_LABELS = {
   [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Sara Foundation",
-  [SUPABASE_PROJECTS.DIGITAL_TRAINING]: "Digital Training Org (+ Super Admin)",
-  [SUPABASE_PROJECTS.B2B]: "B2B Organizations",
+  [SUPABASE_PROJECTS.TRAIN_AI_SHARED]: "Train AI Shared (Train AI LTD, Digital Users & B2B Orgs)",
 };
+
+const PROJECT_KEYS = [
+  SUPABASE_PROJECTS.SARA_FOUNDATION,
+  SUPABASE_PROJECTS.TRAIN_AI_SHARED,
+];
 
 function ProjectSwitcherBanner({ activeProject: current, projectSessionStatus, onSwitch }) {
   return (
@@ -28,7 +32,7 @@ function ProjectSwitcherBanner({ activeProject: current, projectSessionStatus, o
       <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-2)" }}>DATABASE / PROJECT</div>
         <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-          {Object.values(SUPABASE_PROJECTS).map((key) => {
+          {PROJECT_KEYS.map((key) => {
             const status = projectSessionStatus?.[key];
             const isActive = key === current;
             return (
@@ -92,7 +96,7 @@ export default function PlatformOwnerApp({
     let cancelled = false;
     (async () => {
       const statuses = {};
-      for (const projectKey of Object.values(SUPABASE_PROJECTS)) {
+      for (const projectKey of PROJECT_KEYS) {
         const client = getSupabaseClientForProject(projectKey);
         if (!client) { statuses[projectKey] = "not_configured"; continue; }
         try {

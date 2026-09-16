@@ -69,19 +69,21 @@ function FileUploadZone({
       });
       if (uploadError) throw uploadError;
 
-      // Prefer a signed URL (works for both public and private buckets, as
-      // long as RLS allows the caller to read the path); fall back to a
-      // plain public URL if signing isn't available.
+      // For public asset buckets (uploads, branding, course covers, avatars),
+      // retrieve a permanent public URL first so saved URLs in database never expire.
+      // Fall back to signed URL for private storage buckets.
       let url = null;
-      try {
-        const { data: signed, error: signErr } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60);
-        if (!signErr && signed?.signedUrl) url = signed.signedUrl;
-      } catch {
-        // ignore - fall through to public URL
+      const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+      if (pub?.publicUrl && !pub.publicUrl.includes("undefined")) {
+        url = pub.publicUrl;
       }
       if (!url) {
-        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-        url = pub?.publicUrl || null;
+        try {
+          const { data: signed, error: signErr } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60 * 24 * 365);
+          if (!signErr && signed?.signedUrl) url = signed.signedUrl;
+        } catch {
+          // ignore - private bucket fallback
+        }
       }
 
       setUploadedName(file.name);

@@ -33,17 +33,22 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   // the real email/password + super_admin check below becomes the only
   // way in - this is the deliberately temporary bridge Philip's task list
   // describes, not a permanent alternate door.
-  const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.DIGITAL_TRAINING);
+  // Authenticates directly against the Train AI Shared project (where
+  // Platform Owner and Super Admin accounts live in the shared database)
+  // and explicitly rejects any account that isn't confirmed super_admin
+  // after signing in, rather than silently falling through to a Learner
+  // or Organisation dashboard.
+  const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.TRAIN_AI_SHARED);
 
   async function handleSignIn(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      setActiveSupabaseProject(SUPABASE_PROJECTS.DIGITAL_TRAINING);
-      const client = getSupabaseClientForProject(SUPABASE_PROJECTS.DIGITAL_TRAINING);
+      setActiveSupabaseProject(SUPABASE_PROJECTS.TRAIN_AI_SHARED);
+      const client = getSupabaseClientForProject(SUPABASE_PROJECTS.TRAIN_AI_SHARED);
       if (!client) {
-        setError("Demo mode - no real Digital Training project connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
+        setError("Demo mode - no real Train AI Shared project connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
         return;
       }
       const { data, error: signInError } = await client.auth.signInWithPassword({ email: email.trim(), password });
