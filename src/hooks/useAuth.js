@@ -33,6 +33,13 @@ export function useAuth() {
       setSession(saved ? JSON.parse(saved) : null);
     });
 
+    // Check if landing directly on recovery URL from email link
+    const hash = window.location.hash || "";
+    const search = window.location.search || "";
+    if (hash.includes("type=recovery") || hash.includes("type%3Drecovery") || search.includes("type=recovery")) {
+      setIsPasswordRecovery(true);
+    }
+
     const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
       // Clicking the "reset your password" email link lands back here with
       // a real (temporary) session already established by Supabase and this
