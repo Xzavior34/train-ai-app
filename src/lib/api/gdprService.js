@@ -112,7 +112,7 @@ export async function exportUserData(userId) {
   for (const table of tables) {
     let query = supabase.from(table).select('*');
     if (table === 'user_profiles') {
-      query = query.eq('user_id', userId);
+      query = query.eq('id', userId);
     } else if (table === 'mentorship_sessions') {
       query = mentorRow?.id
         ? query.or(`learner_id.eq.${userId},mentor_id.eq.${mentorRow.id}`)
@@ -156,14 +156,15 @@ export async function deleteUserCascade(userId) {
   }
 
   // Delete the profile row itself last - it's `user_profiles`, not
-  // `profiles` (there is no `profiles` table in this schema), and it's
-  // matched by its `user_id` column (the real auth uid) - user_profiles.id
-  // is a separate internal PK. Every table above also cascades back to
-  // user_profiles in the migrations, so this single delete would actually
-  // clear most of the rows above on its own; the explicit per-table loop is
-  // kept so the caller gets a full audit trail of what was removed for this
-  // erasure request.
-  const { error: profileErr } = await supabase.from('user_profiles').delete().eq('user_id', userId);
+  // `profiles` (there is no `profiles` table in this schema). Unlike every
+  // other table in this cascade, `user_profiles.id` IS the auth uid - there
+  // is no separate `user_id` column (see the note in lib/api/schemaHelper.js
+  // and lib/api/live/learnerMiscLive.js, which document the same schema
+  // fact). Every table above also cascades back to user_profiles in the
+  // migrations, so this single delete would actually clear most of the rows
+  // above on its own; the explicit per-table loop is kept so the caller
+  // gets a full audit trail of what was removed for this erasure request.
+  const { error: profileErr } = await supabase.from('user_profiles').delete().eq('id', userId);
   results['user_profiles'] = profileErr ? profileErr.message : 'deleted';
 
   const allSucceeded = Object.values(results).every((v) => v === 'deleted');

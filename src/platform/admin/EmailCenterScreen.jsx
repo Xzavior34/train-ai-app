@@ -8,7 +8,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import {
   fetchEmailCampaigns, sendBroadcastEmail, fetchOrgMembers, fetchCohorts,
-  fetchOrgLearnerProgressOverview,
+  fetchOrgLearnerProgressOverview, createInAppNotificationsForUsers,
 } from "../../lib/api/platform.js";
 
 /**
@@ -148,6 +148,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
     const htmlContent = toHtml(body);
     let sent = 0;
     const failed = [];
+    const notifiedUserIds = [];
     for (let i = 0; i < sendable.length; i++) {
       const member = sendable[i];
       setProgressNote(`Sending ${i + 1} of ${sendable.length}...`);
@@ -160,8 +161,22 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
           channels,
         });
         sent++;
+        if (member.id) notifiedUserIds.push(member.id);
       } catch (e) {
         failed.push({ email: member.email, reason: e?.message || "Send failed" });
+      }
+    }
+    // Actually write the "in-app notification" the channel toggle promises -
+    // previously this checkbox did nothing because the edge function only
+    // ever sends email (see createInAppNotificationsForUsers).
+    if (channels.in_app && notifiedUserIds.length) {
+      try {
+        await createInAppNotificationsForUsers(notifiedUserIds, {
+          title: subject.trim(),
+          message: "You have a new message from your organization.",
+        });
+      } catch (e) {
+        console.warn("In-app notification broadcast warning:", e);
       }
     }
     setSending(false);
@@ -347,14 +362,17 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
                 {[
                   { key: "email", label: "Email", hint: "Sent through the broadcast function" },
                   { key: "in_app", label: "In-app notification", hint: "Appears in their notification bell" },
-                  { key: "push", label: "Push notification", hint: "Only reaches members who enabled push" },
+                  { key: "push", label: "Push notification", hint: "Not wired up yet - no push delivery exists in this app" },
                 ].map((c) => (
-                  <div key={c.key} className="ta-row ta-between" style={{ gap: 10, padding: "8px 10px", background: "var(--surface-2)", borderRadius: 8 }}>
+                  <div key={c.key} className="ta-row ta-between" style={{ gap: 10, padding: "8px 10px", background: "var(--surface-2)", borderRadius: 8, opacity: c.key === "push" ? 0.6 : 1 }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 12.5, fontWeight: 700 }}>{c.label}</div>
                       <div style={{ fontSize: 11, color: "var(--text-3)" }}>{c.hint}</div>
                     </div>
-                    <Switch on={!!channels[c.key]} onChange={() => setChannels((p) => ({ ...p, [c.key]: !p[c.key] }))} />
+                    <Switch
+                      on={c.key === "push" ? false : !!channels[c.key]}
+                      onChange={c.key === "push" ? undefined : () => setChannels((p) => ({ ...p, [c.key]: !p[c.key] }))}
+                    />
                   </div>
                 ))}
               </div>

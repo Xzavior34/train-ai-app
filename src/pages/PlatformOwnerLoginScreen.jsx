@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SUPABASE_PROJECTS, setActiveSupabaseProject, getSupabaseClientForProject } from "../services/supabaseClient.js";
 
 // Platform Owner's separate login entry point - PRD Section 10: "The
@@ -25,6 +25,10 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+  }, []);
+
   // "Let access super admin temporary by typing url/admin for now before
   // database" - before a real database is connected, there's nothing real
   // to authenticate against or protect, so a direct preview here is safe,
@@ -33,17 +37,22 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   // the real email/password + super_admin check below becomes the only
   // way in - this is the deliberately temporary bridge Philip's task list
   // describes, not a permanent alternate door.
-  const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.DIGITAL_TRAINING);
+  // Authenticates directly against the Train AI Shared project (where
+  // Platform Owner and Super Admin accounts live in the shared database)
+  // and explicitly rejects any account that isn't confirmed super_admin
+  // after signing in, rather than silently falling through to a Learner
+  // or Organisation dashboard.
+  const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
 
   async function handleSignIn(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      setActiveSupabaseProject(SUPABASE_PROJECTS.DIGITAL_TRAINING);
-      const client = getSupabaseClientForProject(SUPABASE_PROJECTS.DIGITAL_TRAINING);
+      setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+      const client = getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
       if (!client) {
-        setError("Demo mode - no real Digital Training project connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
+        setError("Demo mode - no real Train AI 2.0 Organization Database connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
         return;
       }
       const { data, error: signInError } = await client.auth.signInWithPassword({ email: email.trim(), password });

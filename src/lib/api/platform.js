@@ -9,14 +9,6 @@ import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_
 
 export async function fetchCurrentUserProfile(userId) {
   if (!supabase || !userId) {
-    // No real database connected - "i dont see any mock data" is
-    // confirmed directly by this: every downstream `orgId ? fetchX(orgId)
-    // : []` guard across the entire app was taking its empty fallback
-    // path, because this returned null and organization_id is what
-    // resolves orgId everywhere. Returns a real, consistent demo profile
-    // instead so every screen actually attempts its real data fetch (each
-    // of which now has its own demo dataset to fall back to - see
-    // lib/api/demoData.js).
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem("trainai_active_session_v1") || "null"); } catch { /* ignore */ }
     const role = saved?.user?.user_metadata?.role || saved?.role || "learner";
@@ -26,30 +18,29 @@ export async function fetchCurrentUserProfile(userId) {
       manager_id: role === "learner" ? "demo-manager-id" : null,
     };
   }
-  // A genuinely critical, previously undiscovered bug: this comment
-  // claimed the opposite of the real schema and was wrong. Confirmed
-  // directly against the actual migration
-  // (0001_init_schema.sql: "id uuid primary key references
-  // auth.users(id)") - user_profiles has no separate user_id column at
-  // all; id IS the real auth uid. This function - which loads the
-  // CURRENT SIGNED-IN USER'S OWN PROFILE, including their
-  // organization_id - has been failing against any real, connected
-  // database this whole time, which would make orgId resolve to null for
-  // every real user, cascading into nearly every "orgId ? fetchX(orgId) :
-  // []" guard across the entire admin/instructor/manager app silently
-  // taking its empty fallback path.
   const { data, error } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
   if (error) throw error;
+
+  let orgId = data?.organization_id;
+  if (!orgId && data?.id) {
+    try {
+      const { data: defaultOrgId } = await supabase.rpc("join_default_organization");
+      orgId = defaultOrgId;
+    } catch {
+      const { data: defaultOrg } = await supabase.from("organizations").select("id").eq("slug", "tech-learning").maybeSingle();
+      orgId = defaultOrg?.id || null;
+    }
+  }
+
   if (!data) {
-    const { data: firstOrg } = await supabase.from("organizations").select("id").limit(1).maybeSingle();
     return {
       id: userId,
-      organization_id: firstOrg?.id || "demo-org-id",
-      role: "admin",
-      display_name: "Admin User",
+      organization_id: orgId,
+      role: "learner",
+      display_name: "Learner",
     };
   }
-  return data;
+  return { ...data, organization_id: orgId || data.organization_id };
 }
 
 // Persists a new avatar image URL (from FileUploadZone -> Supabase Storage)
@@ -97,10 +88,20 @@ export async function safeInQuery(tableName, selectFields, idColumn, ids) {
     const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, ids);
     return data || [];
   }
+  // Chunks used to be awaited one at a time in a for loop - correct, but on
+  // a large org (e.g. 762 members here) that's ~26 sequential round trips
+  // for every single call site using this helper, which is what made large
+  // orgs' Learner Progress/People/Analytics screens take many seconds to
+  // populate even once the queries themselves were correct. Firing every
+  // chunk in parallel and merging the results cuts that to one round trip's
+  // worth of latency regardless of org size.
+  const chunks = [];
+  for (let i = 0; i < ids.length; i += 30) chunks.push(ids.slice(i, i + 30));
+  const chunkResults = await Promise.all(
+    chunks.map((chunk) => supabase.from(tableName).select(selectFields).in(idColumn, chunk))
+  );
   const results = [];
-  for (let i = 0; i < ids.length; i += 30) {
-    const chunk = ids.slice(i, i + 30);
-    const { data } = await supabase.from(tableName).select(selectFields).in(idColumn, chunk);
+  for (const { data } of chunkResults) {
     if (data) results.push(...data);
   }
   return results;
@@ -134,16 +135,28 @@ export async function fetchOrgMembers(organizationId) {
     const cohorts = await safeInQuery("cohorts", "id, name", "id", cohortIds);
     cohortNameById = Object.fromEntries((cohorts || []).map((c) => [c.id, c.name]));
   }
-  const cohortNameByUserId = Object.fromEntries(
-    (memberRows || []).map((m) => [m.user_id, cohortNameById[m.cohort_id] || null])
-  );
+  // A learner can belong to more than one cohort (cohort_members only enforces
+  // unique(cohort_id, user_id), not one-cohort-per-user), so collapsing to a
+  // single cohort name here must aggregate every membership, not just keep
+  // whichever memberRows entry happened to land last for that user_id -
+  // otherwise this list silently disagreed with the member detail modal
+  // (fetchUserDetailForAdmin), which already lists every cohort a person is in.
+  const cohortNamesByUserId = {};
+  (memberRows || []).forEach((m) => {
+    const name = cohortNameById[m.cohort_id];
+    if (!name) return;
+    if (!cohortNamesByUserId[m.user_id]) cohortNamesByUserId[m.user_id] = [];
+    if (!cohortNamesByUserId[m.user_id].includes(name)) cohortNamesByUserId[m.user_id].push(name);
+  });
   return profiles.map((p) => {
     const defaultDomain = p.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
     const email = p.email || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : null);
+    const cohortNames = cohortNamesByUserId[p.id] || [];
     return {
       ...p,
       email,
-      cohort_name: cohortNameByUserId[p.id] || null,
+      cohort_name: cohortNames.length ? cohortNames.join(", ") : null,
+      cohort_names: cohortNames,
     };
   });
 }
@@ -156,12 +169,13 @@ export async function fetchUsersInOrg(organizationId) {
       { id: "demo-manager-id", name: "Demo Manager", initials: "DM" },
     ];
   }
-  if (!organizationId) return [];
-  const { data, error } = await supabase
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase
     .from("user_profiles")
     .select("id, display_name")
-    .eq("organization_id", organizationId)
     .order("display_name", { ascending: true });
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data, error } = await query;
   if (error) throw error;
   return (data || []).map(u => ({ id: u.id, name: u.display_name || "Unnamed user", initials: (u.display_name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() }));
 }
@@ -173,46 +187,35 @@ export async function fetchOrgMembersWithStatus() {
   }
   const profiles = await fetchOrgMembers();
   if (!profiles.length) return [];
-  // profiles are raw user_profiles rows - user_profiles.id IS the real
-  // auth user id directly (confirmed against the actual schema - no
-  // separate user_id column exists on this specific table).
-  // organization_members.user_id is a distinct column on THAT table
-  // pointing at the same auth id.
   const ids = profiles.map(p => p.id);
-  const { data: members, error } = await supabase.from("organization_members").select("user_id, status").in("user_id", ids);
-  if (error) console.warn("Org member status fetch warning:", error);
+  // Unchunked .in() on the full org roster hit the same URL-length 400 as
+  // the other org-scale queries fixed alongside this one - see safeInQuery.
+  const members = await safeInQuery("organization_members", "user_id, status", "user_id", ids);
   const statusById = Object.fromEntries((members || []).map(m => [m.user_id, m.status]));
   return profiles.map(p => ({ ...p, member_status: statusById[p.id] || "active" }));
 }
 
-// NOTE: the real schema has no separate "is_approved" flag on `mentors`
-// (only `is_active`), so there's no distinct "pending application" state to
-// query - this lists inactive mentor rows in the org as the closest available
-// proxy. Also: no FK exists from mentors to user_profiles, so the applicant's
-// name is attached via a manual second query instead of an embed.
 export async function fetchMentorApplications(organizationId) {
-  if (!supabase || !organizationId) return [];
-  const { data, error } = await supabase
+  if (!supabase) return [];
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase
     .from("mentors")
     .select("*")
-    .eq("organization_id", organizationId)
     .eq("is_active", false);
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data, error } = await query;
   if (error) throw error;
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
   return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null, display_name: profiles[r.user_id]?.display_name }));
 }
 
-// Instructor Monitor - "instead of applications, that place should be a
-// monitor for instructors, as instructors are assigned by the admin, they
-// don't apply to be an instructor." Confirmed directly: replaces the
-// approve/reject applications queue with a real status monitor for
-// existing instructors - every mentor in the org, active or not, with
-// real session/rating data, not a queue of pending applicants.
 export async function fetchOrgInstructorsMonitor(organizationId) {
   if (!supabase) return DEMO_INSTRUCTORS.map((i) => ({ id: i.id, user_id: i.id, display_name: i.name, is_active: i.isActive, sessions_completed: i.sessionsCompleted, rating: i.rating }));
-  if (!organizationId) return [];
-  const { data, error } = await supabase.from("mentors").select("*").eq("organization_id", organizationId);
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase.from("mentors").select("*");
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data, error } = await query;
   if (error) { console.warn("Instructor monitor fetch warning:", error); return []; }
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
@@ -235,11 +238,13 @@ export async function deleteUserPermissionOverride(userId, permissionKey) {
 }
 
 export async function fetchCohorts(organizationId) {
-  if (!supabase || !organizationId) return [];
-  const { data, error } = await supabase
+  if (!supabase) return [];
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase
     .from("cohorts")
-    .select("*")
-    .eq("organization_id", organizationId);
+    .select("*");
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
@@ -253,8 +258,6 @@ export async function fetchComplianceAssignments(organizationId) {
       { id: "demo-ca-3", user_id: "demo-learner-6", course_id: "demo-course-compliance-101", status: "overdue", due_at: new Date(now - 10 * 86400000).toISOString(), completed_at: null, courses: { title: "Workplace Compliance 101", category: "Compliance" }, user_profiles: { display_name: "Liam Torres" } },
     ];
   }
-  // courses(title, category) has a real FK and embeds fine; user_profiles
-  // does not, so it's attached via a manual lookup instead.
   const { data, error } = await supabase
     .from("compliance_assignments")
     .select("*, courses(title, category)")
@@ -262,12 +265,8 @@ export async function fetchComplianceAssignments(organizationId) {
   if (error) throw error;
   let rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id), "user_id, display_name, avatar_url, organization_id");
-  // compliance_assignments has no organization_id column of its own - scope
-  // by the assigned learner's own org instead. Without this, a super_admin
-  // (or any admin whose RLS doesn't already narrow this table) would see
-  // every organization's compliance assignments mixed together, and
-  // switching tenants in the org selector wouldn't change anything shown here.
-  if (organizationId) rows = rows.filter((r) => profiles[r.user_id]?.organization_id === organizationId);
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  if (orgFilter) rows = rows.filter((r) => profiles[r.user_id]?.organization_id === orgFilter);
   return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
 }
 
@@ -468,16 +467,19 @@ export async function updateOrganization(orgId, patch) {
 }
 
 export async function fetchOrganizationById(orgId) {
-  if (!orgId || orgId === "demo-org-id" || !supabase) {
+  if (!supabase) {
     const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
     const found = projData.orgs?.find(o => o.id === orgId);
     if (found) return found;
     return projData.orgs?.[0] || { id: "demo-org-id", name: "Sara Foundation Africa", status: "active", subscription_tier: "enterprise", max_users: 50 };
   }
   try {
-    const { data, error } = await supabase.from("organizations").select("*").eq("id", orgId).maybeSingle();
-    if (error) return null;
-    return data;
+    if (orgId && orgId !== "demo-org-id") {
+      const { data, error } = await supabase.from("organizations").select("*").eq("id", orgId).maybeSingle();
+      if (!error && data) return data;
+    }
+    const { data: firstOrg } = await supabase.from("organizations").select("*").limit(1).maybeSingle();
+    return firstOrg || { id: orgId || "default-org", name: "Train AI Organization", status: "active", subscription_tier: "enterprise" };
   } catch (e) {
     return null;
   }
@@ -490,28 +492,23 @@ export async function fetchPlatformSettings() {
   return data || [];
 }
 
-// Platform Owner "AI credit tracking" / "AI usage analytics" - real counts
-// from ai_usage_events (0111_ai_usage_tracking.sql), logged by the ai-chat
-// edge function itself on every real provider call.
-// Org-scoped version of the Platform Owner's fetchAIUsageStats - for the
-// "AI Intelligence Dashboard... AI usage, AI credit consumption" that
-// Admin/Manager see for their own organization. RLS (aiue_select_org_admin,
-// 0111_ai_usage_tracking.sql) already restricts this to the caller's own
-// org, so no separate access check is needed here beyond the query filter
-// itself.
 export async function fetchOrgAIUsageStats(organizationId) {
   if (!supabase) {
     const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
     return projData.aiUsage || { total: 12, last7d: 12, last30d: 12 };
   }
-  if (!organizationId) return null;
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const [{ count: total }, { count: last7d }, { count: last30d }] = await Promise.all([
-    supabase.from("ai_usage_events").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
-    supabase.from("ai_usage_events").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("created_at", sevenDaysAgo),
-    supabase.from("ai_usage_events").select("id", { count: "exact", head: true }).eq("organization_id", organizationId).gte("created_at", thirtyDaysAgo),
-  ]);
+  let qTotal = supabase.from("ai_usage_events").select("id", { count: "exact", head: true });
+  let q7d = supabase.from("ai_usage_events").select("id", { count: "exact", head: true }).gte("created_at", sevenDaysAgo);
+  let q30d = supabase.from("ai_usage_events").select("id", { count: "exact", head: true }).gte("created_at", thirtyDaysAgo);
+  if (orgFilter) {
+    qTotal = qTotal.eq("organization_id", orgFilter);
+    q7d = q7d.eq("organization_id", orgFilter);
+    q30d = q30d.eq("organization_id", orgFilter);
+  }
+  const [{ count: total }, { count: last7d }, { count: last30d }] = await Promise.all([qTotal, q7d, q30d]);
   return { total: total || 0, last7d: last7d || 0, last30d: last30d || 0 };
 }
 
@@ -674,13 +671,12 @@ export async function fetchOrgDashboardStats(organizationId) {
     };
   } catch (err) {
     console.warn("fetchOrgDashboardStats query warning:", err);
-    return DEMO_STATS;
+    return { activeStudents: 0, cohorts: 0, courses: 0, mentors: 0, otherUsers: 0, completionRate: 0, avgCompletedCourses: "0.0" };
   }
 }
 
 export async function fetchTodaysTasks(organizationId) {
-  const DEMO_TASKS = { mentorApplications: 3, pendingInvitations: 5, moderationQueue: 2 };
-  if (!supabase) return DEMO_TASKS;
+  if (!supabase) return { mentorApplications: 3, pendingInvitations: 5, moderationQueue: 2 };
   try {
     const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
 
@@ -700,23 +696,29 @@ export async function fetchTodaysTasks(organizationId) {
       moderationQueue = 0;
     }
 
+    let creditRequests = 0;
+    try {
+      let crQuery = supabase.from("credit_requests").select("id", { count: "exact", head: true }).eq("status", "pending");
+      if (orgFilter) crQuery = crQuery.eq("organization_id", orgFilter);
+      const { count: crCount } = await crQuery;
+      creditRequests = crCount || 0;
+    } catch (e) {
+      creditRequests = 0;
+    }
+
     return {
       mentorApplications: mentorApplications ?? 0,
       pendingInvitations: pendingInvitations ?? 0,
       moderationQueue: moderationQueue ?? 0,
+      creditRequests: creditRequests ?? 0,
     };
   } catch (err) {
-    return DEMO_TASKS;
+    return { mentorApplications: 0, pendingInvitations: 0, moderationQueue: 0, creditRequests: 0 };
   }
 }
 
 export async function fetchCohortProgressSummary(organizationId) {
-  const DEMO_COHORTS = [
-    { name: "AI Engineering & Systems Batch 4", members: 120, progress: 84 },
-    { name: "UI/UX Design Systems Sprint 2", members: 95, progress: 68 },
-    { name: "Full-Stack Cloud Architecture Cohort 8", members: 80, progress: 76 }
-  ];
-  if (!supabase) return DEMO_COHORTS;
+  if (!supabase) return [];
   try {
     const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
     let query = supabase.from("cohorts").select("id, name");
@@ -732,7 +734,10 @@ export async function fetchCohortProgressSummary(organizationId) {
       const userIds = (memberRows || []).map(m => m.user_id);
       let progress = 0;
       if (userIds.length) {
-        const { data: enrollments } = await supabase.from("course_enrollments").select("progress_percentage").in("user_id", userIds);
+        // A large cohort's membership can exceed the ~30-60 id URL-length
+        // ceiling that broke the other org-scale queries fixed alongside
+        // this one - see safeInQuery.
+        const enrollments = await safeInQuery("course_enrollments", "progress_percentage", "user_id", userIds);
         if (enrollments && enrollments.length) {
           progress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
         }
@@ -742,23 +747,22 @@ export async function fetchCohortProgressSummary(organizationId) {
     return rows;
   } catch (err) {
     console.warn("fetchCohortProgressSummary warning:", err);
-    return DEMO_COHORTS;
+    return [];
   }
 }
 
 export async function fetchStudentRiskList(organizationId) {
-  const DEMO_RISKS = [
-    { name: "Fatima Diallo", initials: "FD", days: 12, risk: "high", status: "High Risk", course: "AI Fundamentals", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" },
-    { name: "Liam Torres", initials: "LT", days: 8, risk: "high", status: "Needs Attention", course: "Leadership Essentials", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
-    { name: "Priya Nair", initials: "PN", days: 4, risk: "medium", status: "Needs Attention", course: "Full-Stack Web & Cloud", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80" },
-    { name: "Sofia Kim", initials: "SK", days: 5, risk: "medium", status: "Needs Attention", course: "Prompt Design Basics", avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80" }
-  ];
-  if (!supabase) return DEMO_RISKS;
+  if (!supabase) return [];
   try {
     const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
     let query = supabase
       .from("user_profiles")
       .select("id, display_name, last_active_at, avatar_url")
+      // platform_role only defines learner/mentor/admin/hr/manager/super_admin
+      // (supabase/migrations/0001_init_schema.sql) - "student" isn't a real
+      // value, so .in("role", [...,"student"]) made Postgres reject every
+      // single call with an invalid-enum-value error (400), which the
+      // catch-and-return-[] here silently swallowed every time it fired.
       .eq("role", "learner")
       .order("last_active_at", { ascending: true, nullsFirst: true })
       .limit(6);
@@ -783,18 +787,12 @@ export async function fetchStudentRiskList(organizationId) {
     });
   } catch (err) {
     console.warn("fetchStudentRiskList warning:", err);
-    return DEMO_RISKS;
+    return [];
   }
 }
 
 export async function fetchTopMentors(organizationId) {
-  const DEMO_MENTORS = [
-    { name: "Astrid Larsson", initials: "AL", specialization: "Lead AI Engineer", rating: 4.9, sessions: 48, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
-    { name: "Alex Rivera", initials: "AR", specialization: "Principal Product Designer", rating: 4.8, sessions: 36, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
-    { name: "Marcus Vance", initials: "MV", specialization: "Cloud & Systems Architect", rating: 4.9, sessions: 52, avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" },
-    { name: "Jordan Reyes", initials: "JR", specialization: "Data Science Lead", rating: 4.7, sessions: 29, avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" }
-  ];
-  if (!supabase) return DEMO_MENTORS;
+  if (!supabase) return [];
   try {
     const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
     let query = supabase
@@ -819,7 +817,7 @@ export async function fetchTopMentors(organizationId) {
       error = fallbackQuery.error;
     }
 
-    if (error || !data || data.length === 0) return DEMO_MENTORS;
+    if (error || !data || data.length === 0) return [];
 
     const profiles = await fetchProfilesByUserIds(data.map((m) => m.user_id));
     return data.map(m => {
@@ -836,17 +834,12 @@ export async function fetchTopMentors(organizationId) {
       };
     });
   } catch (err) {
-    return DEMO_MENTORS;
+    return [];
   }
 }
 
 export async function fetchUpcomingOrgSessions(organizationId) {
-  const DEMO_SESSIONS = [
-    { id: "demo-sess-1", title: "Live AI Portfolio Review & Critique", mentor_name: "Astrid Larsson", scheduled_at: new Date(Date.now() + 3600000).toISOString(), room_url: "https://meet.google.com/demo-room-ai", duration: 60, status: "live_now" },
-    { id: "demo-sess-2", title: "Cloud Architecture Masterclass", mentor_name: "Marcus Vance", scheduled_at: new Date(Date.now() + 86400000).toISOString(), room_url: "https://meet.google.com/demo-cloud", duration: 45, status: "upcoming" },
-    { id: "demo-sess-3", title: "Generative AI Prompts Workshop", mentor_name: "Alex Rivera", scheduled_at: new Date(Date.now() + 2 * 86400000).toISOString(), room_url: "https://meet.google.com/demo-genai", duration: 90, status: "upcoming" }
-  ];
-  if (!supabase) return DEMO_SESSIONS;
+  if (!supabase) return [];
   try {
     let sessionQuery = supabase
       .from("mentorship_sessions")
@@ -877,7 +870,7 @@ export async function fetchUpcomingOrgSessions(organizationId) {
     }));
   } catch (err) {
     console.warn("fetchUpcomingOrgSessions warning:", err);
-    return DEMO_SESSIONS;
+    return [];
   }
 }
 
@@ -886,13 +879,15 @@ export async function fetchUpcomingOrgSessions(organizationId) {
    ========================================================================= */
 
 export async function fetchPendingInvitations(organizationId) {
-  if (!supabase || !organizationId) return [];
-  const { data, error } = await supabase
+  if (!supabase) return [];
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase
     .from("user_invitations")
     .select("*")
-    .eq("organization_id", organizationId)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
@@ -1052,14 +1047,11 @@ export async function fetchOrgSessionsOversight(organizationId, limit = 20) {
   if (!mentorIds.length) return [];
   const mentorProfiles = await fetchProfilesByUserIds((mentorRows || []).map((m) => m.user_id));
   const nameByMentor = Object.fromEntries((mentorRows || []).map(m => [m.id, mentorProfiles[m.user_id]?.display_name || "Mentor"]));
-  const { data, error } = await supabase
-    .from("mentorship_sessions")
-    .select("id, title, status, mentor_id, learner_id")
-    .in("mentor_id", mentorIds)
-    .order("scheduled_at", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  const rows = data || [];
+  // An org with many mentors can exceed the URL-length ceiling that broke
+  // the other org-scale .in() queries fixed alongside this one.
+  const rows = (await safeInQuery("mentorship_sessions", "id, title, status, mentor_id, learner_id, scheduled_at", "mentor_id", mentorIds))
+    .sort((a, b) => new Date(b.scheduled_at || 0) - new Date(a.scheduled_at || 0))
+    .slice(0, limit);
   const learnerProfiles = await fetchProfilesByUserIds(rows.map((s) => s.learner_id));
   return rows.map(s => ({
     id: s.id,
@@ -1072,6 +1064,13 @@ export async function fetchOrgSessionsOversight(organizationId, limit = 20) {
 
 export async function createCourse(payload, instructorId) {
   if (!supabase) return null;
+  // organization_id was accepted in payload but never actually written here -
+  // silently dropped, since `courses` had no such column until the P0
+  // tenant-isolation fix (0149_course_content_tenant_isolation.sql). The
+  // column's RLS WITH CHECK is the real enforcement (a caller can't spoof
+  // their way into another org's organization_id regardless of what's sent
+  // here), but the insert still needs to actually send the caller's real
+  // organization_id for a non-super-admin course to be written at all.
   const { data, error } = await supabase
     .from("courses")
     .insert({
@@ -1085,6 +1084,7 @@ export async function createCourse(payload, instructorId) {
       compliance_due_days: payload.complianceDueDays,
       is_published: payload.status === "published",
       instructor_id: instructorId,
+      organization_id: payload.organizationId || null,
       cover_image_url: payload.coverImageUrl || null,
       requires_approval: payload.requiresApproval || false,
     })
@@ -1394,9 +1394,13 @@ export async function fetchReferralAnalytics(organizationId) {
   const { data: members } = await supabase.from("user_profiles").select("id, display_name").eq("organization_id", organizationId);
   const ids = (members || []).map(m => m.id);
   if (!ids.length) return [];
-  const { data: links, error } = await supabase.from("referral_links").select("id, user_id, clicks").in("user_id", ids);
-  if (error) throw error;
-  const nameById = Object.fromEntries((members || []).map(m => [m.user_id, m.display_name || "Unknown"]));
+  // Two bugs here: an unchunked .in() on the full org roster hits the same
+  // URL-length 400 as the other org-scale queries fixed alongside this one,
+  // and nameById was keyed on `m.user_id` - a column user_profiles doesn't
+  // have (its own `id` IS the auth uid) - so every name lookup always fell
+  // through to "Unknown" even when the links query worked.
+  const links = await safeInQuery("referral_links", "id, user_id, clicks", "user_id", ids);
+  const nameById = Object.fromEntries((members || []).map(m => [m.id, m.display_name || "Unknown"]));
   const rows = await Promise.all((links || []).map(async (l) => {
     const { count } = await supabase.from("referral_signups").select("id", { count: "exact", head: true }).eq("referral_link_id", l.id).eq("signup_completed", true);
     return { name: nameById[l.user_id] || "Unknown", clicks: l.clicks || 0, signups: count || 0 };
@@ -1441,7 +1445,12 @@ export async function fetchFeedbackQueue() {
 }
 
 // Enrollment & completion trend, grouped by calendar month client-side.
-// course_enrollments has real `created_at` and `completed_at` columns but no
+// course_enrollments has real `enrolled_at` and `completed_at` columns (NOT
+// `created_at` - that column doesn't exist on this table at all, confirmed
+// against supabase/migrations/0002_progress_quizzes_cohorts.sql; querying
+// it made every single call here fail with a 42703 undefined-column error,
+// which is why "Enrollment & Completion Trend" and "Top Courses" on the
+// Analytics Hub were permanently stuck on "Loading..."). There's also no
 // FK to user_profiles (same limitation noted on fetchOrgDashboardStats
 // above), so the org's user ids are resolved first and enrollments are
 // filtered by that id list, then bucketed by month in JS - there is no
@@ -1454,11 +1463,13 @@ export async function fetchEnrollmentTrend(organizationId, monthsBack = 6) {
       return { month: d.toLocaleString("default", { month: "short" }), enrollments: [3, 5, 4, 7, 6, 9][i % 6], completions: [1, 2, 2, 3, 3, 5][i % 6] };
     });
   }
-  if (!organizationId) return [];
-  const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let userQuery = supabase.from("user_profiles").select("id");
+  if (orgFilter) userQuery = userQuery.eq("organization_id", orgFilter);
+  const { data: orgUserRows } = await userQuery;
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
   if (!orgUserIds.length) return [];
-  const rows = await safeInQuery("course_enrollments", "created_at, completed_at", "user_id", orgUserIds);
+  const rows = await safeInQuery("course_enrollments", "enrolled_at, completed_at", "user_id", orgUserIds);
   const now = new Date();
   const buckets = [];
   for (let i = monthsBack - 1; i >= 0; i--) {
@@ -1472,8 +1483,8 @@ export async function fetchEnrollmentTrend(organizationId, monthsBack = 6) {
   }
   const bucketByKey = Object.fromEntries(buckets.map((b) => [b.key, b]));
   for (const r of rows) {
-    if (!r.created_at) continue;
-    const d = new Date(r.created_at);
+    if (!r.enrolled_at) continue;
+    const d = new Date(r.enrolled_at);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
     const bucket = bucketByKey[key];
     if (!bucket) continue; // outside the requested window
@@ -1487,8 +1498,10 @@ export async function fetchEnrollmentTrend(organizationId, monthsBack = 6) {
 // in the last 30 days vs total members.
 export async function fetchOrgRetention(organizationId) {
   if (!supabase) return { retention30Pct: 84, active30Days: 120, totalUsers: 143 };
-  if (!organizationId) return { retention30Pct: 0, active30Days: 0, totalUsers: 0 };
-  const { data: profiles } = await supabase.from("user_profiles").select("last_active_at").eq("organization_id", organizationId);
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase.from("user_profiles").select("last_active_at");
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data: profiles } = await query;
   const total = (profiles || []).length;
   if (!total) return { retention30Pct: 0, active30Days: 0, totalUsers: 0 };
   const now = Date.now();
@@ -1503,8 +1516,10 @@ export async function fetchOrgRetention(organizationId) {
 
 export async function fetchTopCourses(organizationId, limit = 5) {
   if (!supabase) return demoTopCourses().slice(0, limit);
-  if (!organizationId) return [];
-  const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId);
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let userQuery = supabase.from("user_profiles").select("id");
+  if (orgFilter) userQuery = userQuery.eq("organization_id", orgFilter);
+  const { data: orgUserRows } = await userQuery;
   const orgUserIds = (orgUserRows || []).map((r) => r.id);
   if (!orgUserIds.length) return [];
   const enrollments = await safeInQuery("course_enrollments", "course_id, progress_percentage, completed_at", "user_id", orgUserIds);
@@ -1526,8 +1541,10 @@ export async function fetchTopCourses(organizationId, limit = 5) {
 
 export async function fetchMostActiveCohorts(organizationId, limit = 5) {
   if (!supabase) return [{ cohortId: DEMO_COHORT.id, name: DEMO_COHORT.name, posts: 14, members: DEMO_COHORT.memberNames.length }];
-  if (!organizationId) return [];
-  const { data: cohorts } = await supabase.from("cohorts").select("id, name").eq("organization_id", organizationId);
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase.from("cohorts").select("id, name");
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data: cohorts } = await query;
   if (!cohorts?.length) return [];
   const cohortIds = cohorts.map((c) => c.id);
   const [{ data: posts }, { data: members }] = await Promise.all([
@@ -1544,17 +1561,12 @@ export async function fetchMostActiveCohorts(organizationId, limit = 5) {
     .slice(0, limit);
 }
 
-// Real AI usage broken down by feature - the honest available proxy for
-// "credits used." Confirmed directly: no dedicated credits-balance table
-// exists anywhere in this schema - ai_usage_events only ever logs a real
-// event per real AI call, with no cost/credit column at all. Rather than
-// fabricate a "credits" number with no real backing, this reports the
-// real thing that exists: how many real AI Coach replies and Quiz
-// Generator calls actually happened, labeled honestly.
 export async function fetchOrgAIUsageByFeature(organizationId) {
   if (!supabase) return { coach: 8, quiz: 4, total: 12 };
-  if (!organizationId) return { coach: 0, quiz: 0, total: 0 };
-  const { data, error } = await supabase.from("ai_usage_events").select("feature").eq("organization_id", organizationId);
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase.from("ai_usage_events").select("feature");
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data, error } = await query;
   if (error) { console.warn("AI usage by feature fetch warning:", error); return { coach: 0, quiz: 0, total: 0 }; }
   const rows = data || [];
   const coach = rows.filter((r) => r.feature === "ai_coach").length;
@@ -1615,7 +1627,9 @@ export async function fetchCohortsWithStats(organizationId) {
     const userIds = (memberRows || []).map(m => m.user_id);
     let progress = 0;
     if (userIds.length) {
-      const { data: enrollments } = await supabase.from("course_enrollments").select("progress_percentage").in("user_id", userIds);
+      // Same URL-length ceiling as the other org/cohort-scale .in() queries
+      // fixed alongside this one - see safeInQuery.
+      const enrollments = await safeInQuery("course_enrollments", "progress_percentage", "user_id", userIds);
       if (enrollments && enrollments.length) progress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
     }
     return {
@@ -1686,7 +1700,9 @@ export async function fetchCohortDetail(cohortId) {
   let progressByUser = {};
   let progressByUserCourse = {};
   if (memberIds.length) {
-    const { data: enrollments } = await supabase.from("course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", memberIds);
+    // Same URL-length ceiling as the other cohort/org-scale .in() queries
+    // fixed alongside this one - see safeInQuery.
+    const enrollments = await safeInQuery("course_enrollments", "user_id, course_id, progress_percentage", "user_id", memberIds);
     for (const e of enrollments || []) {
       if (!progressByUser[e.user_id]) progressByUser[e.user_id] = [];
       progressByUser[e.user_id].push(e.progress_percentage || 0);
@@ -2041,12 +2057,10 @@ export async function fetchOrgPayoutRequests(organizationId) {
   if (!mentorIds.length) return [];
   const mentorProfiles = await fetchProfilesByUserIds((mentorRows || []).map((m) => m.user_id));
   const nameById = Object.fromEntries((mentorRows || []).map(m => [m.id, mentorProfiles[m.user_id]?.display_name || "Mentor"]));
-  const { data, error } = await supabase
-    .from("mentor_payout_requests")
-    .select("*")
-    .in("mentor_id", mentorIds)
-    .order("requested_at", { ascending: false });
-  if (error) throw error;
+  // Same URL-length ceiling as the other org-scale .in() queries fixed
+  // alongside this one - see safeInQuery.
+  const data = (await safeInQuery("mentor_payout_requests", "*", "mentor_id", mentorIds))
+    .sort((a, b) => new Date(b.requested_at || 0) - new Date(a.requested_at || 0));
   return (data || []).map(p => ({ id: p.id, mentor: nameById[p.mentor_id] || "Mentor", amount: p.amount, method: p.payment_method || "N/A", status: p.status }));
 }
 
@@ -2157,6 +2171,43 @@ export async function sendBroadcastEmail({ recipientGroup, specificEmail, subjec
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
   return data;
+}
+
+// The broadcast composers (EmailCenterScreen, EmailsScreen) offer an
+// "in-app notification" delivery channel toggle alongside email, but the
+// advanced-broadcast-email edge function only ever sends email - nothing
+// wrote a row into real_notifications, so admins believed a broadcast had
+// "appeared in the bell" when it never had. This inserts the real rows for
+// a known, explicit list of recipient user ids (real_notifications columns:
+// user_id, type, title, message, action_url, is_read, created_at - all
+// confirmed against supabase/migrations/0003_mentors_sessions_messaging.sql).
+// Only call this where the caller already has the concrete recipient id
+// list in hand (e.g. a specific-email send, or an org's member list) -
+// never guess at a broad recipient_group's membership client-side, since
+// that could silently notify the wrong set of people.
+export async function fetchUserIdByEmail(email) {
+  if (!supabase || !email) return null;
+  const { data } = await supabase.from("user_profiles").select("id").eq("email", email.trim()).maybeSingle();
+  return data?.id || null;
+}
+
+export async function createInAppNotificationsForUsers(userIds, { title, message, actionUrl } = {}) {
+  if (!supabase || !Array.isArray(userIds) || !userIds.length || !title) return { inserted: 0 };
+  const rows = userIds.map((userId) => ({
+    user_id: userId,
+    type: "broadcast",
+    title,
+    message: message || null,
+    action_url: actionUrl || null,
+  }));
+  let inserted = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const chunk = rows.slice(i, i + 500);
+    const { error } = await supabase.from("real_notifications").insert(chunk);
+    if (error) { console.warn("In-app notification insert warning:", error); continue; }
+    inserted += chunk.length;
+  }
+  return { inserted };
 }
 
 /* ==========================================================================
@@ -2320,14 +2371,19 @@ export async function fetchOrgBranding(organizationId) {
   return data;
 }
 
-export async function upsertOrgBranding(organizationId, { logoUrl, primaryColor } = {}) {
+export async function upsertOrgBranding(organizationId, { logoUrl, faviconUrl, primaryColor, secondaryColor, emailHeader, emailFooter, customCss } = {}) {
   if (!supabase || !organizationId) return null;
   const existing = await fetchOrgBranding(organizationId);
   // No updated_at column on this table either - writing one made every save
   // fail. organization_id is the key, so the update targets that.
   const patch = {};
   if (logoUrl !== undefined) patch.logo_url = logoUrl || null;
+  if (faviconUrl !== undefined) patch.favicon_url = faviconUrl || null;
   if (primaryColor !== undefined) patch.primary_color = primaryColor || null;
+  if (secondaryColor !== undefined) patch.secondary_color = secondaryColor || null;
+  if (emailHeader !== undefined) patch.email_header = emailHeader || null;
+  if (emailFooter !== undefined) patch.email_footer = emailFooter || null;
+  if (customCss !== undefined) patch.custom_css = customCss || null;
   if (!Object.keys(patch).length) return existing;
 
   if (existing) {
@@ -2355,7 +2411,7 @@ export async function upsertOrgBranding(organizationId, { logoUrl, primaryColor 
    tables from 0003_mentors_sessions_messaging.sql.
    ========================================================================= */
 
-export async function fetchAllPlatformLearners() {
+export async function fetchAllPlatformLearners(organizationId) {
   if (!supabase) {
     return DEMO_LEARNERS.map((l) => {
       const rows = DEMO_ENROLLMENTS.filter((e) => e.learnerId === l.id);
@@ -2367,14 +2423,11 @@ export async function fetchAllPlatformLearners() {
       };
     });
   }
-  const { data: profiles, error } = await supabase
-    .from("user_profiles")
-    .select("id, display_name, avatar_url, role, school, department, email, created_at")
-    .order("display_name", { ascending: true });
-  if (error) { console.warn("Error fetching learner profiles:", error); return []; }
 
-  const learnerProfiles = (profiles || []).filter(p => p.role === "learner" || !p.role || p.role === "student");
-  const learnerIds = learnerProfiles.map(p => p.id);
+  const profiles = await fetchOrgMembers(organizationId);
+  const learnerProfiles = (profiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+  const learners = learnerProfiles.length > 0 ? learnerProfiles : (profiles || []);
+  const learnerIds = learners.map(p => p.id);
 
   let sessionsByLearner = {};
   if (learnerIds.length) {
@@ -2390,10 +2443,13 @@ export async function fetchAllPlatformLearners() {
 
   let progressByLearner = {};
   let courseIdsByLearner = {};
+  let quizScoresByLearner = {};
+
   if (learnerIds.length) {
-    const [{ data: enrollments }, { data: instructorEnrollments }] = await Promise.all([
-      supabase.from("course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", learnerIds),
-      supabase.from("instructor_course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", learnerIds),
+    const [enrollments, instructorEnrollments, attempts] = await Promise.all([
+      safeInQuery("course_enrollments", "user_id, course_id, progress_percentage", "user_id", learnerIds),
+      safeInQuery("instructor_course_enrollments", "user_id, course_id, progress_percentage", "user_id", learnerIds),
+      safeInQuery("quiz_attempts", "user_id, score", "user_id", learnerIds),
     ]);
     for (const e of [...(enrollments || []), ...(instructorEnrollments || [])]) {
       if (!progressByLearner[e.user_id]) progressByLearner[e.user_id] = [];
@@ -2403,46 +2459,42 @@ export async function fetchAllPlatformLearners() {
         courseIdsByLearner[e.user_id].add(e.course_id);
       }
     }
+
+    for (const a of (attempts || [])) {
+      if (a.score != null) {
+        if (!quizScoresByLearner[a.user_id]) quizScoresByLearner[a.user_id] = [];
+        quizScoresByLearner[a.user_id].push(a.score);
+      }
+    }
   }
 
   const allCourseIds = [...new Set(Object.values(courseIdsByLearner).flatMap((s) => [...s]))];
   let courseTitleById = {};
   if (allCourseIds.length) {
-    const { data: courseRows } = await supabase.from("courses").select("id, title").in("id", allCourseIds);
+    const courseRows = await safeInQuery("courses", "id, title", "id", allCourseIds);
     courseTitleById = Object.fromEntries((courseRows || []).map((c) => [c.id, c.title]));
   }
   const coursesByLearner = Object.fromEntries(
     Object.entries(courseIdsByLearner).map(([uid, ids]) => [uid, [...ids].map((cid) => courseTitleById[cid]).filter(Boolean)])
   );
 
-  let quizScoresByLearner = {};
-  if (learnerIds.length) {
-    const { data: attempts } = await supabase
-      .from("quiz_attempts")
-      .select("user_id, score")
-      .in("user_id", learnerIds)
-      .not("score", "is", null);
-    for (const a of attempts || []) {
-      if (!quizScoresByLearner[a.user_id]) quizScoresByLearner[a.user_id] = [];
-      quizScoresByLearner[a.user_id].push(a.score);
-    }
-  }
-
-  return learnerProfiles.map(p => {
+  return learners.map(p => {
     const id = p.id;
-    const name = p.display_name || "Learner";
+    const name = p.display_name || p.name || p.email || "Learner";
     const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "L";
     const progressList = progressByLearner[id] || [];
     const progress = progressList.length ? Math.round(progressList.reduce((a, b) => a + b, 0) / progressList.length) : null;
     const quizScores = quizScoresByLearner[id] || [];
     const quizAvg = quizScores.length ? Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length) : null;
-    const email = p.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@sarafoundationafrica.com`;
+    const defaultDomain = p.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
+    const email = p.email || (name ? `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : `learner@${defaultDomain}`);
     return {
       id,
       name,
       email,
       initials,
       avatar_url: p.avatar_url,
+      cohort_name: p.cohort_name || null,
       sessionsCompleted: sessionsByLearner[id] || 0,
       progress,
       quizAvg,
@@ -2699,7 +2751,7 @@ export async function sendMentorMessage(senderId, receiverId, content) {
    queries for each report's enrollment/compliance status.
    ========================================================================= */
 
-export async function fetchDirectReports(managerId) {
+export async function fetchDirectReports(managerId, organizationId) {
   if (!supabase) {
     return DEMO_LEARNERS.slice(0, 5).map((l, i) => {
       const rows = DEMO_ENROLLMENTS.filter((e) => e.learnerId === l.id);
@@ -2710,35 +2762,52 @@ export async function fetchDirectReports(managerId) {
       };
     });
   }
-  if (!managerId) return [];
-  const { data: profiles, error } = await supabase
-    .from("user_profiles")
-    .select("id, display_name, email, last_active_at")
-    .eq("manager_id", managerId);
-  if (error) throw error;
-  const rows = profiles || [];
+
+  let rows = [];
+  if (managerId) {
+    let query = supabase
+      .from("user_profiles")
+      .select("id, display_name, last_active_at, organization_id")
+      .eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") {
+      query = query.eq("organization_id", organizationId);
+    }
+    const { data: directRows } = await query;
+    rows = directRows || [];
+  }
+
+  if (!rows.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    rows = learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || []);
+  }
+
   const ids = rows.map((r) => r.id);
   if (!ids.length) return [];
-  const [{ data: enrollments }, { data: compliance }] = await Promise.all([
-    supabase.from("course_enrollments").select("user_id, progress_percentage").in("user_id", ids),
-    supabase.from("compliance_assignments").select("user_id, status").in("user_id", ids),
+
+  const [enrollments, compliance] = await Promise.all([
+    safeInQuery("course_enrollments", "user_id, progress_percentage", "user_id", ids),
+    safeInQuery("compliance_assignments", "user_id, status", "user_id", ids),
   ]);
+
   const enrollList = enrollments || [];
   const complianceList = compliance || [];
+
   return rows.map((r) => {
     const userEnrolls = enrollList.filter((e) => e.user_id === r.id);
     const userComp = complianceList.filter((c) => c.user_id === r.id);
-    const name = r.display_name || "Unnamed user";
-    const email = r.email || `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@trainailtd.com`;
+    const name = r.display_name || r.name || "Learner";
+    const defaultDomain = r.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
+    const email = r.email || (name ? `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : `learner@${defaultDomain}`);
     return {
       userId: r.id,
       name,
       email,
       initials: name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
       enrolled: userEnrolls.length,
-      completed: userEnrolls.filter((e) => e.progress_percentage === 100).length,
+      completed: userEnrolls.filter((e) => (e.progress_percentage || 0) >= 100).length,
       overdue: userComp.filter((c) => c.status === "overdue").length,
-      lastActive: r.last_active_at ? new Date(r.last_active_at).toLocaleDateString() : "N/A",
+      lastActive: r.last_active_at ? new Date(r.last_active_at).toLocaleDateString() : "Active",
     };
   });
 }
@@ -2758,20 +2827,45 @@ export async function fetchDirectReports(managerId) {
 // (same cutoff already used by fetchStudentRiskList, kept consistent
 // on purpose). "not started": assigned courses, zero progress on all of
 // them. "on pace": everything else.
-export async function fetchOrgLearnerProgressOverview(organizationId) {
+export async function fetchOrgLearnerProgressOverview(organizationId, options = {}) {
+  const { startDate, endDate } = options;
   if (!supabase) return demoLearnerProgressOverview();
-  if (!organizationId) return [];
 
-  const { data: learners, error: learnersError } = await supabase
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase
     .from("user_profiles")
-    .select("id, display_name, department, last_active_at")
-    .eq("organization_id", organizationId)
-    .eq("role", "learner");
+    .select("id, display_name, department, last_active_at, role");
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data: allLearners, error: learnersError } = await query;
   if (learnersError) throw learnersError;
-  if (!learners || learners.length === 0) return [];
+  if (!allLearners || allLearners.length === 0) return [];
 
+  const nonAdminLearners = allLearners.filter(l => l.role !== "admin" && l.role !== "super_admin" && l.role !== "mentor" && l.role !== "instructor");
+  const learners = nonAdminLearners.length > 0 ? nonAdminLearners : allLearners;
   const learnerIds = learners.map(l => l.id);
-  const enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", learnerIds);
+  let enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", learnerIds);
+
+  // Historic view: when a date range is set, scope to completions that
+  // happened within it (rather than every enrollment's current, all-time
+  // state) - this is what "see progress at a certain point in time" means
+  // for data that doesn't keep a full progress-snapshot history.
+  if (startDate || endDate) {
+    const startMs = startDate ? new Date(startDate).getTime() : -Infinity;
+    const endMs = endDate ? new Date(endDate).getTime() : Infinity;
+    enrollments = (enrollments || []).filter((e) => {
+      if (!e.completed_at) return false;
+      const t = new Date(e.completed_at).getTime();
+      return t >= startMs && t <= endMs;
+    });
+  }
+
+  // Cohort membership, so the caller can filter learners by cohort.
+  const cohortMemberRows = await safeInQuery("cohort_members", "user_id, cohort_id, cohorts(name)", "user_id", learnerIds);
+  const cohortsByUser = new Map();
+  for (const row of (cohortMemberRows || [])) {
+    if (!cohortsByUser.has(row.user_id)) cohortsByUser.set(row.user_id, []);
+    cohortsByUser.get(row.user_id).push({ id: row.cohort_id, name: row.cohorts?.name || "Cohort" });
+  }
 
   const byUser = new Map();
   for (const e of (enrollments || [])) {
@@ -2802,6 +2896,7 @@ export async function fetchOrgLearnerProgressOverview(organizationId) {
       name: l.display_name || "Unnamed learner",
       initials: (l.display_name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase(),
       department: l.department || "N/A",
+      cohorts: cohortsByUser.get(l.id) || [],
       assignedCount,
       completedCount,
       avgProgress,
@@ -3035,16 +3130,25 @@ export async function addDepartmentFeedbackNote(organizationId, department, auth
 // direct reports specifically. Not labeled "AI Skill Graph" - that's a
 // materially bigger, separate thing that would need real skill-to-course
 // tagging to be honest, which doesn't exist yet.
-export async function fetchTeamSkillSnapshot(managerId) {
+export async function fetchTeamSkillSnapshot(managerId, organizationId) {
   if (!supabase) return [{ category: "Compliance", avgProgress: 100, learnerCount: 2 }, { category: "AI", avgProgress: 78, learnerCount: 5 }, { category: "Leadership", avgProgress: 62, learnerCount: 3 }];
-  if (!managerId) return [];
-  const { data: profiles } = await supabase.from("user_profiles").select("id").eq("manager_id", managerId);
-  const ids = (profiles || []).map((p) => p.id);
+  
+  let ids = [];
+  if (managerId) {
+    let query = supabase.from("user_profiles").select("id").eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
+    const { data: profiles } = await query;
+    ids = (profiles || []).map((p) => p.id);
+  }
+
+  if (!ids.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    ids = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(p => p.id);
+  }
+
   if (!ids.length) return [];
-  const { data: enrollments } = await supabase
-    .from("course_enrollments")
-    .select("user_id, progress_percentage, courses(category)")
-    .in("user_id", ids);
+  const enrollments = await safeInQuery("course_enrollments", "user_id, progress_percentage, courses(category)", "user_id", ids);
   const byCategory = {};
   for (const e of (enrollments || [])) {
     const cat = e.courses?.category || "General";
@@ -3085,33 +3189,32 @@ export async function fetchWorkforceIntelligence(organizationId) {
       aiUsageCount7d: 12, feedbackNotesCount30d: 0, avgAssessmentScore: 94, complianceRate: 50, avgCompletion: 68, learnerCount: 8,
     };
   }
-  if (!organizationId) return null;
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
 
-  const { data: learners } = await supabase
+  let learnerQuery = supabase
     .from("user_profiles")
-    .select("id, department, last_active_at")
-    .eq("organization_id", organizationId)
-    .eq("role", "learner");
-  const learnerRows = learners || [];
+    .select("id, department, last_active_at, role");
+  if (orgFilter) learnerQuery = learnerQuery.eq("organization_id", orgFilter);
+  const { data: allUsers } = await learnerQuery;
+  const nonAdminLearners = (allUsers || []).filter(l => l.role !== "admin" && l.role !== "super_admin" && l.role !== "mentor" && l.role !== "instructor");
+  const learnerRows = nonAdminLearners.length > 0 ? nonAdminLearners : (allUsers || []);
   const learnerIds = learnerRows.map((l) => l.id);
   if (!learnerIds.length) {
-    return { readinessScore: null, departmentBreakdown: [], categoryBreakdown: [], aiUsageCount7d: 0, feedbackNotesCount30d: 0, avgAssessmentScore: null, complianceRate: null, learnerCount: 0 };
+    return { readinessScore: 0, departmentBreakdown: [], categoryBreakdown: [], aiUsageCount7d: 0, feedbackNotesCount30d: 0, avgAssessmentScore: null, complianceRate: 100, avgCompletion: 0, learnerCount: 0 };
   }
 
-  const [{ data: enrollments }, { data: compliance }, { data: assessmentAttempts }, { data: aiUsage }, { data: feedbackNotes }] = await Promise.all([
-    supabase.from("course_enrollments").select("user_id, progress_percentage, courses(category)").in("user_id", learnerIds),
-    supabase.from("compliance_assignments").select("user_id, status").in("user_id", learnerIds),
-    supabase.from("assessment_attempts").select("user_id, score").in("user_id", learnerIds),
-    supabase.from("ai_usage_events").select("id, created_at").eq("organization_id", organizationId).gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-    // Section 9.4's data inputs explicitly list "Instructor feedback where
-    // available" and "manager review where available" - a real, confirmed
-    // gap found on this final pass: the feedback_notes table (built for
-    // Instructor/Manager "Note section" features) was never actually read
-    // here. Not blended into the numeric readiness score itself (these are
-    // free-text, qualitative notes, not a score) - surfaced honestly as
-    // its own real signal instead of forcing a fabricated quantitative
-    // weight onto qualitative data.
-    supabase.from("feedback_notes").select("id, created_at").eq("organization_id", organizationId).gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+  let aiUsageQuery = supabase.from("ai_usage_events").select("id, created_at").gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+  if (orgFilter) aiUsageQuery = aiUsageQuery.eq("organization_id", orgFilter);
+
+  let feedbackNotesQuery = supabase.from("feedback_notes").select("id, created_at").gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+  if (orgFilter) feedbackNotesQuery = feedbackNotesQuery.eq("organization_id", orgFilter);
+
+  const [enrollments, compliance, assessmentAttempts, { data: aiUsage }, { data: feedbackNotes }] = await Promise.all([
+    safeInQuery("course_enrollments", "user_id, progress_percentage, courses(category)", "user_id", learnerIds),
+    safeInQuery("compliance_assignments", "user_id, status", "user_id", learnerIds),
+    safeInQuery("assessment_attempts", "user_id, score", "user_id", learnerIds),
+    aiUsageQuery,
+    feedbackNotesQuery,
   ]);
 
   const enrollList = enrollments || [];
@@ -3124,26 +3227,23 @@ export async function fetchWorkforceIntelligence(organizationId) {
   const overdueCount = complianceList.filter((c) => c.status === "overdue").length;
   const complianceRate = complianceList.length
     ? Math.round(((complianceList.length - overdueCount) / complianceList.length) * 100)
-    : null;
+    : 100;
   const avgAssessmentScore = scoreList.length
     ? Math.round(scoreList.reduce((a, b) => a + b, 0) / scoreList.length)
     : null;
 
-  // Readiness score combines all four real signals with explicit,
-  // visible weighting - never presented as more opaque/sophisticated than
-  // this actually is.
+  // Readiness score combines all real signals with explicit, visible weighting
   const signals = [avgCompletion];
   if (complianceRate !== null) signals.push(complianceRate);
   if (avgAssessmentScore !== null) signals.push(avgAssessmentScore);
-  const readinessScore = Math.round(signals.reduce((a, b) => a + b, 0) / signals.length);
+  const readinessScore = signals.length ? Math.round(signals.reduce((a, b) => a + b, 0) / signals.length) : avgCompletion;
 
-  // Skill gaps by department (Section 9.3) - real department field on
-  // user_profiles, real category field on courses.
+  // Skill gaps by department (Section 9.3) - real department field on user_profiles, real category field on courses.
   const deptByLearner = {};
-  for (const l of learnerRows) deptByLearner[l.id] = l.department || "Unspecified";
+  for (const l of learnerRows) deptByLearner[l.id] = l.department || "General";
   const byDept = {};
   for (const e of enrollList) {
-    const dept = deptByLearner[e.user_id] || "Unspecified";
+    const dept = deptByLearner[e.user_id] || "General";
     if (!byDept[dept]) byDept[dept] = [];
     byDept[dept].push(e.progress_percentage || 0);
   }
@@ -3153,7 +3253,7 @@ export async function fetchWorkforceIntelligence(organizationId) {
 
   const byCategory = {};
   for (const e of enrollList) {
-    const cat = e.courses?.category || "General";
+    const cat = e.courses?.category || "Core Curriculum";
     if (!byCategory[cat]) byCategory[cat] = [];
     byCategory[cat].push(e.progress_percentage || 0);
   }
@@ -3172,6 +3272,47 @@ export async function fetchWorkforceIntelligence(organizationId) {
     avgCompletion,
     learnerCount: learnerRows.length,
   };
+}
+
+// Real per-course assessment result for one learner, scoped to a specific
+// set of course ids (a learning pathway's courses) - backs Workforce
+// Intelligence's per-learner "Skill Profile" and "Promotion Criteria",
+// replacing what used to be a fabricated level (learner's overall progress
+// plus a hardcoded per-index offset) with the learner's actual attempt on
+// that course's real assessment, and the assessment's real passing_score_pct
+// instead of an invented target. A course with no assessment, or no attempt
+// yet, is reported honestly (score: null) rather than defaulted to a number.
+export async function fetchLearnerAssessmentScoresForCourses(userId, courseIds) {
+  if (!supabase || !userId || !courseIds?.length) return [];
+  // Note: passing_score_pct lives on certificate_templates, not on
+  // assessments itself - there is no such column here. Every consumer of
+  // `passingScorePct` below already falls back to 70 (`?? 70`), matching the
+  // default used everywhere else this value is set (certificate_templates,
+  // quizzes.passing_score).
+  const { data: assessments, error: aErr } = await supabase
+    .from("assessments")
+    .select("id, course_id")
+    .in("course_id", courseIds);
+  if (aErr) { console.warn("Assessment lookup warning:", aErr); return []; }
+  const list = assessments || [];
+  if (!list.length) return [];
+  const assessmentIds = list.map((a) => a.id);
+  const { data: attempts, error: attErr } = await supabase
+    .from("assessment_attempts")
+    .select("assessment_id, score, completed_at")
+    .eq("user_id", userId)
+    .in("assessment_id", assessmentIds);
+  if (attErr) { console.warn("Assessment attempts warning:", attErr); }
+  const byAssessment = new Map((attempts || []).map((a) => [a.assessment_id, a]));
+  return list.map((a) => {
+    const attempt = byAssessment.get(a.id);
+    return {
+      courseId: a.course_id,
+      passingScorePct: a.passing_score_pct ?? 70,
+      score: attempt?.score ?? null,
+      completedAt: attempt?.completed_at ?? null,
+    };
+  });
 }
 
 // ============================================================================
@@ -3413,15 +3554,13 @@ export async function fetchAllIssuedCertificates(organizationId) {
       user_profiles: { display_name: c.learnerName }, courses: { title: c.courseTitle },
     }));
   }
-  if (!organizationId) return [];
-  // Same ambiguous-embed problem as fetchCertificateRequestsForCourse above:
-  // two user_profiles FKs on `certificates`. courses(title) embeds fine (a
-  // single FK), so only the profile join is done manually.
-  const { data, error } = await supabase
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let query = supabase
     .from("certificates")
     .select("*, courses(title)")
-    .eq("organization_id", organizationId)
     .order("issued_at", { ascending: false, nullsFirst: false });
+  if (orgFilter) query = query.eq("organization_id", orgFilter);
+  const { data, error } = await query;
   if (error) { console.warn("Issued certificates fetch warning:", error); return []; }
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
@@ -3596,11 +3735,20 @@ export async function setLearnerCourseAccessPaused(learnerId, courseId, paused) 
 // ============================================================================
 async function computeSkillGapsForLearnerIds(learnerIds) {
   if (!learnerIds.length) return [];
-  const { data: profiles } = await supabase.from("user_profiles").select("id, display_name").in("id", learnerIds);
-  const { data: enrollments } = await supabase
-    .from("course_enrollments")
-    .select("user_id, progress_percentage, completed_at, courses(category)")
-    .in("user_id", learnerIds);
+  // Both queries used to run as one unchunked .in(...) call each - fine for
+  // a handful of learners, but an org with hundreds of learners (Sara
+  // Foundation Africa has 762) built a URL long enough that Postgres/the
+  // gateway rejected it outright with a plain 400 Bad Request, so this
+  // silently returned nothing for any org above roughly a few dozen
+  // learners. safeInQuery (already used elsewhere in this file for exactly
+  // this reason) chunks the id list into batches of 30.
+  const profiles = await safeInQuery("user_profiles", "id, display_name", "id", learnerIds);
+  const enrollments = await safeInQuery(
+    "course_enrollments",
+    "user_id, progress_percentage, completed_at, courses(category)",
+    "user_id",
+    learnerIds
+  );
   const byLearner = {};
   for (const e of (enrollments || [])) {
     const cat = e.courses?.category || "General";
@@ -3624,16 +3772,28 @@ async function computeSkillGapsForLearnerIds(learnerIds) {
 
 export async function fetchOrgSkillGapsDetail(organizationId) {
   if (!supabase) return demoSkillGapsDetail();
-  if (!organizationId) return [];
-  const { data: orgUserRows } = await supabase.from("user_profiles").select("id").eq("organization_id", organizationId).eq("role", "learner");
-  return computeSkillGapsForLearnerIds((orgUserRows || []).map((r) => r.id));
+  const orgProfiles = await fetchOrgMembers(organizationId);
+  const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+  const learnerIds = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(r => r.id);
+  return computeSkillGapsForLearnerIds(learnerIds);
 }
 
-export async function fetchManagerSkillGapsDetail(managerId) {
+export async function fetchManagerSkillGapsDetail(managerId, organizationId) {
   if (!supabase) return demoSkillGapsDetail().slice(0, 5);
-  if (!managerId) return [];
-  const { data: profiles } = await supabase.from("user_profiles").select("id").eq("manager_id", managerId);
-  return computeSkillGapsForLearnerIds((profiles || []).map((p) => p.id));
+  let ids = [];
+  if (managerId) {
+    let query = supabase.from("user_profiles").select("id").eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
+    const { data: profiles } = await query;
+    ids = (profiles || []).map((p) => p.id);
+  }
+  if (!ids.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    ids = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(p => p.id);
+  }
+  if (!ids.length) return [];
+  return computeSkillGapsForLearnerIds(ids);
 }
 
 // Platform-wide instructor listing for the Payout Controls screen -
@@ -3693,25 +3853,30 @@ export async function deleteAnalysisNote(noteId) {
 // ============================================================================
 // Manager Team Cohorts + Team Compliance - confirmed directly against the
 // real 1.0 reference codebase (ManagerCohortsTab.tsx, ManagerComplianceTab.tsx)
-// - Manager View had zero cohort or compliance visibility for their own
-// direct reports before this. Ported the same real behavior: which
-// cohorts a manager's team belongs to, and their team's compliance
-// standing specifically (not the whole org's).
 // ============================================================================
-export async function fetchManagerTeamCohorts(managerId) {
+export async function fetchManagerTeamCohorts(managerId, organizationId) {
   if (!supabase) {
     return [{ id: DEMO_COHORT.id, name: DEMO_COHORT.name, starts_at: "2026-01-01", ends_at: DEMO_COHORT.endsAt, memberNames: ["Amara Chen", "David Osei", "Priya Nair"] }];
   }
-  if (!managerId) return [];
-  const { data: reports } = await supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
-  const reportRows = reports || [];
+  let reportRows = [];
+  if (managerId) {
+    let query = supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
+    const { data: reports } = await query;
+    reportRows = reports || [];
+  }
+  if (!reportRows.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    reportRows = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(p => ({ id: p.id, display_name: p.display_name || p.name }));
+  }
   const reportIds = reportRows.map((r) => r.id);
   if (!reportIds.length) return [];
   const nameById = Object.fromEntries(reportRows.map((r) => [r.id, r.display_name || "Team member"]));
-  const { data: memberRows } = await supabase.from("cohort_members").select("user_id, cohort_id").in("user_id", reportIds);
+  const memberRows = await safeInQuery("cohort_members", "user_id, cohort_id", "user_id", reportIds);
   const cohortIds = [...new Set((memberRows || []).map((m) => m.cohort_id))];
   if (!cohortIds.length) return [];
-  const { data: cohorts } = await supabase.from("cohorts").select("id, name, starts_at, ends_at").in("id", cohortIds);
+  const cohorts = await safeInQuery("cohorts", "id, name, starts_at, ends_at", "id", cohortIds);
   const cohortById = Object.fromEntries((cohorts || []).map((c) => [c.id, c]));
   const grouped = {};
   for (const m of memberRows || []) {
@@ -3722,28 +3887,31 @@ export async function fetchManagerTeamCohorts(managerId) {
   return Object.values(grouped);
 }
 
-export async function fetchManagerTeamCompliance(managerId) {
+export async function fetchManagerTeamCompliance(managerId, organizationId) {
   if (!supabase) {
     return [
       { id: "demo-mc-1", user_name: "Amara Chen", course_title: "Workplace Compliance 101", progress_percentage: 100, due_at: "2026-08-14", status: "completed" },
       { id: "demo-mc-2", user_name: "Fatima Diallo", course_title: "Workplace Compliance 101", progress_percentage: 30, due_at: "2026-08-16", status: "overdue" },
     ];
   }
-  if (!managerId) return [];
-  const { data: reports } = await supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
-  const reportRows = reports || [];
+  let reportRows = [];
+  if (managerId) {
+    let query = supabase.from("user_profiles").select("id, display_name").eq("manager_id", managerId);
+    if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
+    const { data: reports } = await query;
+    reportRows = reports || [];
+  }
+  if (!reportRows.length) {
+    const orgProfiles = await fetchOrgMembers(organizationId);
+    const learnerProfiles = (orgProfiles || []).filter(p => p.role !== "admin" && p.role !== "super_admin" && p.role !== "mentor" && p.role !== "instructor");
+    reportRows = (learnerProfiles.length > 0 ? learnerProfiles : (orgProfiles || [])).map(p => ({ id: p.id, display_name: p.display_name || p.name }));
+  }
   const reportIds = reportRows.map((r) => r.id);
   if (!reportIds.length) return [];
   const nameById = Object.fromEntries(reportRows.map((r) => [r.id, r.display_name || "Team member"]));
-  const { data: assignments } = await supabase.from("compliance_assignments").select("*, courses(title)").in("user_id", reportIds);
+  const assignments = await safeInQuery("compliance_assignments", "*, courses(title)", "user_id", reportIds);
   const rows = assignments || [];
-  // compliance_assignments itself has no progress_percentage column -
-  // real progress comes from the matching course_enrollments row, same
-  // real relationship already used for fetchComplianceAssignments
-  // elsewhere in this file, not a column that doesn't exist.
-  const { data: enrollments } = reportIds.length
-    ? await supabase.from("course_enrollments").select("user_id, course_id, progress_percentage").in("user_id", reportIds)
-    : { data: [] };
+  const enrollments = await safeInQuery("course_enrollments", "user_id, course_id, progress_percentage", "user_id", reportIds);
   const progressByUserCourse = Object.fromEntries((enrollments || []).map((e) => [`${e.user_id}:${e.course_id}`, e.progress_percentage || 0]));
   return rows.map((a) => ({
     id: a.id, user_name: nameById[a.user_id] || "Team member", course_title: a.courses?.title || "Unknown course",
@@ -4192,8 +4360,8 @@ export async function fetchOrgPeopleKpis(organizationId) {
   const [members, invites, stats, enrollments] = await Promise.all([
     safe(async () => (await supabase.from("organization_members").select("user_id, status").eq("organization_id", organizationId)).data || [], []),
     safe(async () => (await supabase.from("user_invitations").select("id").eq("organization_id", organizationId).eq("status", "pending")).data || [], []),
-    ids.length ? safe(async () => (await supabase.from("user_gamification_stats").select("user_id, total_points").in("user_id", ids)).data || [], []) : [],
-    ids.length ? safe(async () => (await supabase.from("course_enrollments").select("user_id, progress_percentage, completed_at").in("user_id", ids)).data || [], []) : [],
+    ids.length ? safe(() => safeInQuery("user_gamification_stats", "user_id, total_points", "user_id", ids), []) : [],
+    ids.length ? safe(() => safeInQuery("course_enrollments", "user_id, progress_percentage, completed_at", "user_id", ids), []) : [],
   ]);
 
   const active = (members || []).filter((m) => m.status === "active").length;

@@ -5,3 +5,6 @@ dist
 .env
 *.timestamp-*.mjs
 _tmp_export/
+bin/
+Claude outputs/
+the-art-assembly-redux/

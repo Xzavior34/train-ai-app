@@ -29,8 +29,10 @@ behalf. Here's how to stand it up yourself, in either order of preference.
 ## Option B - SQL editor (no CLI)
 
 Open your project's SQL editor (Dashboard → SQL Editor) and run each file in
-`supabase/migrations/` **in filename order** (0001, 0002, 0003, 0004, 0005,
-0006), each as its own query. Then optionally run `supabase/seed.sql`.
+`supabase/migrations/` **in filename order** (there are 65+ as of this
+writing, numbered `0001` through `0155` - check the directory for the
+current count, don't assume a specific number), each as its own query.
+Then optionally run `supabase/seed.sql`.
 
 ## Connecting the frontend
 
@@ -46,10 +48,13 @@ Open your project's SQL editor (Dashboard → SQL Editor) and run each file in
      import.meta.env.VITE_SUPABASE_ANON_KEY
    );
    ```
-5. The four `*App.jsx` files currently use in-memory mock data (arrays at the
-   top of each file). Wiring them to Supabase means replacing those constants
-   with `supabase.from('table').select()` / `supabase.rpc('function_name')`
-   calls inside `useEffect`. This is a real, non-trivial integration step - not something that happens automatically by adding the schema.
+5. The application already reads and writes Supabase directly throughout
+   `src/lib/api/` and the learner/platform hooks - it is not in-memory mock
+   data waiting to be wired up (an earlier version of this document said
+   otherwise; that stopped being true long before this note was corrected).
+   What actually varies by screen is whether a given feature's UI has been
+   connected to backend functions that already exist - see this repo's own
+   audit history for the current, verified state of that, not this file.
 
 ## What's actually in the schema
 

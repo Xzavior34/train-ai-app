@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabaseClient.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchLeaderboard, fetchPublishedCourses, fetchMyEnrollments,
-  fetchPublishedLessonCounts,
+  fetchPublishedLessonCounts, fetchCourseInstructorNames,
   fetchMyGamificationStats, fetchMyAchievements, fetchMyStreakActivity,
   fetchMyNotifications, fetchAvailableQuizzes,
   fetchMyQuizAttempts, fetchCourseNotes, fetchCourseReviews,
@@ -20,12 +20,12 @@ import {
   fetchCommunityPosts,
   fetchStudyGroups, fetchMyStudyGroupIds, fetchCommunityPeople,
   fetchAllMentors, fetchUpcomingLearnerSessions,
-  fetchCommunityActivityFeed, fetchGamificationStatsByUserIds,
+  fetchCommunityActivityFeed, fetchGamificationStatsByUserIds, fetchMyCommunityStats,
   fetchForumCategories, fetchMyCohortMembership, fetchCohortPostsFeed,
   fetchCohortResources, fetchCohortSessions, fetchCohortAssignedCourses, fetchCohortMembers
 } from "../../lib/api/schemaHelper.js";
 import { initialsOf, gradForIndex, timeAgo } from "../components/LearnerUI.jsx";
-import { isMockDataEnabled, subscribeToMockDataChanges, getYouTubeEmbedId } from "../../lib/mockDataManager.js";
+import { isMockDataEnabled, subscribeToMockDataChanges, getYouTubeEmbedId, isRealDatabaseId } from "../../lib/mockDataManager.js";
 
 export function useLearnerData(session, screen, params) {
   const userProfileQuery = useSupabaseQuery(async () => {
@@ -93,7 +93,7 @@ export function useLearnerData(session, screen, params) {
   }, [session?.user?.id, screen === "achievements"]);
 
   const user = {
-    email: userProfileQuery.data?.email || session?.user?.email || "learner@sarafoundationafrica.com",
+    email: userProfileQuery.data?.email || session?.user?.email || "",
     name: userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner",
     initials: initialsOf(userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email),
     avatarUrl: userProfileQuery.data?.avatar_url || null,
@@ -141,12 +141,14 @@ export function useLearnerData(session, screen, params) {
     }));
   }, [session?.user?.id]);
 
-  const coursesQuery = useSupabaseQuery(async () => fetchPublishedCourses(), []);
+  const orgId = userProfileQuery.data?.organization_id || null;
+  const coursesQuery = useSupabaseQuery(async () => fetchPublishedCourses(orgId), [orgId]);
   const enrollmentsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
     return fetchMyEnrollments(session.user.id);
   }, [session?.user?.id]);
   const lessonCountsQuery = useSupabaseQuery(async () => fetchPublishedLessonCounts(), []);
+  const courseInstructorsQuery = useSupabaseQuery(async () => fetchCourseInstructorNames(), []);
   // Course ratings/reviews summary removed from the learner-facing course
   // list per the product brief ("Course UI... Remove: ... Ratings").
   // fetchCourseReviewSummaries is no longer called here; the per-course
@@ -425,6 +427,7 @@ export function useLearnerData(session, screen, params) {
     const lessonCounts = lessonCountsQuery.data || {};
     const bookmarkedIds = new Set(bookmarksQuery.data || []);
     
+    const instructorNames = courseInstructorsQuery.data || {};
     const dbCourses = (coursesQuery.data || []).map((c, i) => {
       const enrollment = enrollmentByCourseId.get(c.id);
       return {
@@ -445,19 +448,28 @@ export function useLearnerData(session, screen, params) {
         mandatory: !!c.is_mandatory,
         price: Number(c.price) || 0,
         requiresApproval: !!c.requires_approval,
+        instructor: instructorNames[c.id] || null,
       };
     });
 
     const merged = new Map();
-    DEFAULT_FALLBACK_COURSES.forEach(c => {
-      const enrollment = enrollmentByCourseId.get(c.id);
-      merged.set(c.id, {
-        ...c,
-        enrolled: !!enrollment || c.enrolled,
-        progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : c.progress,
-        isBookmarked: bookmarkedIds.has(c.id) || c.isBookmarked
+    // Mock/demo courses (course-figma-ai and friends) were being merged in
+    // unconditionally here, regardless of mockEnabled - so a real org with
+    // real courses in the database still saw fake demo courses (and, worse,
+    // could land on their lesson pages, where every real-data feature fails
+    // with "invalid input syntax for type uuid" since these ids are plain
+    // strings, not UUIDs). Only show them when mock data is actually on.
+    if (mockEnabled) {
+      DEFAULT_FALLBACK_COURSES.forEach(c => {
+        const enrollment = enrollmentByCourseId.get(c.id);
+        merged.set(c.id, {
+          ...c,
+          enrolled: !!enrollment || c.enrolled,
+          progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : c.progress,
+          isBookmarked: bookmarkedIds.has(c.id) || c.isBookmarked
+        });
       });
-    });
+    }
     dbCourses.forEach(c => {
       merged.set(c.id, c);
     });
@@ -466,10 +478,10 @@ export function useLearnerData(session, screen, params) {
   })();
 
   function courseById(id) {
-    if (!id) return courses[0] || DEFAULT_FALLBACK_COURSES[0];
+    if (!id) return courses[0] || (mockEnabled ? DEFAULT_FALLBACK_COURSES[0] : undefined);
     const found = courses.find(c => c.id === id);
     if (found) return found;
-    const fallback = DEFAULT_FALLBACK_COURSES.find(c => c.id === id);
+    const fallback = mockEnabled ? DEFAULT_FALLBACK_COURSES.find(c => c.id === id) : null;
     if (fallback) {
       const enrollment = (enrollmentsQuery.data || []).find(e => e.course_id === id);
       return {
@@ -632,13 +644,24 @@ export function useLearnerData(session, screen, params) {
     return mapped;
   }
 
+  // Mock/demo course ids (course-figma-ai and friends, see
+  // DEFAULT_FALLBACK_COURSES above) are plain strings, not UUIDs. The
+  // course-list merge above already learned this lesson once ("only show
+  // them when mock data is actually on" - see that comment) but these
+  // three course-detail sub-queries still queried real UUID columns
+  // unconditionally with whatever params.id was, which throws "invalid
+  // input syntax for type uuid" against a real Supabase project the
+  // moment a learner opens a mock course's detail page - the actual root
+  // cause of that page rendering blank, not merely an unhandled edge case.
+  const isRealCourseId = (id) => isRealDatabaseId(id);
+
   const courseNotesQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id || !params?.id || screen !== "courseDetail") return [];
+    if (!session?.user?.id || !params?.id || screen !== "courseDetail" || !isRealCourseId(params.id)) return [];
     return fetchCourseNotes(session.user.id, params.id);
   }, [session?.user?.id, screen === "courseDetail" ? params?.id : null]);
 
   const courseDiscussionQuery = useSupabaseQuery(async () => {
-    if (!params?.id || screen !== "courseDetail") return null;
+    if (!params?.id || screen !== "courseDetail" || !isRealCourseId(params.id)) return { discussion: null, messages: [] };
     const discussion = await fetchOrCreateCourseDiscussion(params.id);
     if (!discussion) return { discussion: null, messages: [] };
     const messages = await fetchCourseDiscussionMessages(discussion.id);
@@ -646,14 +669,27 @@ export function useLearnerData(session, screen, params) {
   }, [screen === "courseDetail" ? params?.id : null]);
 
   const courseReviewsQuery = useSupabaseQuery(async () => {
-    if (!params?.id || screen !== "courseDetail") return [];
+    if (!params?.id || screen !== "courseDetail" || !isRealCourseId(params.id)) return [];
     return fetchCourseReviews(params.id);
   }, [screen === "courseDetail" ? params?.id : null]);
 
   const lessonNotesQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id || !params?.lessonId || screen !== "lesson") return [];
+    if (!session?.user?.id || !params?.lessonId || screen !== "lesson" || !isRealDatabaseId(params.lessonId)) return [];
     return fetchLessonNotes(session.user.id, params.lessonId);
   }, [session?.user?.id, screen === "lesson" ? params?.lessonId : null]);
+
+  // Lesson Q&A - same real course_discussions/course_discussion_messages
+  // tables as courseDiscussionQuery above, scoped to this specific lesson
+  // instead of the whole course. Same mock-id guard as everywhere else on
+  // this page - a mock course can have real-looking mock lessons (l-figma-2
+  // and friends), and either id being a mock slug breaks this query.
+  const lessonDiscussionQuery = useSupabaseQuery(async () => {
+    if (!params?.id || !params?.lessonId || screen !== "lesson" || !isRealDatabaseId(params.id) || !isRealDatabaseId(params.lessonId)) return { discussion: null, messages: [] };
+    const discussion = await fetchOrCreateCourseDiscussion(params.id, params.lessonId);
+    if (!discussion) return { discussion: null, messages: [] };
+    const messages = await fetchCourseDiscussionMessages(discussion.id);
+    return { discussion, messages };
+  }, [screen === "lesson" ? params?.id : null, screen === "lesson" ? params?.lessonId : null]);
 
   const quizzesQuery = useSupabaseQuery(async () => fetchAvailableQuizzes(), []);
   const quizAttemptsQuery = useSupabaseQuery(async () => {
@@ -668,6 +704,12 @@ export function useLearnerData(session, screen, params) {
     return fetchMyStudyGroupIds(session.user.id);
   }, [session?.user?.id]);
   const communityPeopleQuery = useSupabaseQuery(async () => fetchCommunityPeople(session?.user?.id), [session?.user?.id]);
+  // Backs the "Your Community Status" card on the Community screen - real
+  // engagement counts for the signed-in learner (see fetchMyCommunityStats).
+  const myCommunityStatsQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return { totalPosts: 0, totalComments: 0, score: 0, tier: "newcomer" };
+    return fetchMyCommunityStats(session.user.id);
+  }, [session?.user?.id]);
 
   // Forum categories - distinct from study groups. Only fetched once the
   // learner is signed in, same gating as everything else in this hook; the
@@ -693,7 +735,7 @@ export function useLearnerData(session, screen, params) {
     if (!session?.user?.id) return null;
     return fetchMyCohortMembership(session.user.id);
   }, [session?.user?.id]);
-  const cohortId = cohortMembershipQuery.data?.cohort?.id || null;
+  const cohortId = params?.id || params?.cohortId || cohortMembershipQuery.data?.cohort?.id || null;
   const cohortPostsQuery = useSupabaseQuery(async () => {
     if (!cohortId) return [];
     return fetchCohortPostsFeed(cohortId);
@@ -884,6 +926,7 @@ export function useLearnerData(session, screen, params) {
     lessonsForCurrentCourse,
     courseNotesQuery,
     courseDiscussionQuery,
+    lessonDiscussionQuery,
     courseReviewsQuery,
     lessonNotesQuery,
     quizzesQuery,
@@ -892,6 +935,8 @@ export function useLearnerData(session, screen, params) {
     studyGroupsQuery,
     myGroupIdsQuery,
     communityPeopleQuery,
+    memberStatsQuery,
+    myCommunityStatsQuery,
     forumCategoriesQuery,
     activityFeedQuery,
     cohortMembershipQuery,
@@ -900,7 +945,6 @@ export function useLearnerData(session, screen, params) {
     cohortCoursesQuery,
     cohortMembersQuery,
     cohortSessionsQuery,
-    memberStatsQuery,
     notificationsQuery,
     upcomingSessionsQuery,
     mentorsQuery,

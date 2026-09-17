@@ -1074,7 +1074,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
               <div className="ta-hero-inner">
                 <div className="ta-hero-text">
                   <h1 className="ta-hero-title">
-                    Curriculum &amp; Masterclasses
+                    Course Catalog &amp; Curriculum
                   </h1>
                   <p className="ta-hero-desc">
                     Author interactive courses, manage lesson syllabi, configure assessment criteria, and publish learning modules.

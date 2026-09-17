@@ -358,7 +358,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
                 {filterStatus === "completed" ? "No completed courses yet" : filterStatus === "in_progress" ? "No courses in progress" : "No enrolled courses yet"}
               </div>
               <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 4, maxWidth: 440, margin: "4px auto 16px" }}>
-                {filterStatus === "all" ? "Explore the course catalog to enroll in masterclasses and track your skill growth." : "Browse available courses to continue learning."}
+                {filterStatus === "all" ? "Explore the course catalog to enroll in courses and track your skill growth." : "Browse available courses to continue learning."}
               </div>
               <button
                 className="tai-btn tai-btn-primary"

@@ -1,39 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
 
 // ============================================================================
-// Three separate Supabase projects, confirmed - not one shared database,
-// and not the earlier "Digital Training Org + B2B combined" proposal either
-// ============================================================================
-// Confirmed directly, correcting an earlier version of this file that
-// combined Digital Training Organization and B2B into one shared project:
-//
-//   1. Sara Foundation - its own dedicated project.
-//   2. Digital Training Organization - its own dedicated project. Owned and
-//      operated by Train AI itself as its own B2C product line - this is
-//      also where Super Admin / Platform Owner accounts live
-//      (info@trainailtd.com is provisioned here with BOTH the 'admin' role
-//      for Digital Training Organization itself AND the platform-wide
-//      'super_admin' role - one account, two roles, same multi-role support
-//      this app already had everywhere else).
-//   3. B2B - one shared project for every business-organization tenant (the
-//      three seeded demo orgs, and every real business customer going
-//      forward), isolated tenant-by-tenant inside it via organization_id +
-//      RLS, the same model this app has always used at that level.
-//
-// There is no separate fourth "Platform" project - that was this file's
-// own earlier proposal, explicitly not confirmed, and superseded by
-// provisioning Super Admin inside the Digital Training Organization project
-// instead.
-//
-// Each project is configured independently and degrades to demo mode
-// (null client) exactly like the single-project version always did if its
-// own two env vars aren't set.
+// Two separate Supabase projects:
+//   1. Sara Foundation (Dedicated single-tenant project)
+//   2. Train AI Shared Organization Database (Multi-tenant shared project)
+//      - Houses Train AI LTD / Ajimi.com (Platform Owner / Super Admin)
+//      - Houses Digital Users organization (Default org for individual signups)
+//      - Houses all customer B2B organizations, academies, and business tenants
 // ============================================================================
 
 export const SUPABASE_PROJECTS = {
   SARA_FOUNDATION: "sara_foundation",
-  DIGITAL_TRAINING: "digital_training", // Digital Training Organization + Super Admin accounts
-  B2B: "b2b", // every business-organization tenant, isolated internally by organization_id + RLS
+  ORGANIZATION_DB: "organization_db",
+  TRAIN_AI_SHARED: "organization_db",
+  // Backward compatibility aliases
+  SIERRA_FOUNDATION: "sara_foundation",
+  B2B: "organization_db",
+  DIGITAL_TRAINING: "organization_db",
 };
 
 function normalizeSupabaseUrl(string) {
@@ -55,16 +38,32 @@ function isValidHttpUrl(string) {
   }
 }
 
-function buildClient(urlEnvKey, anonKeyEnvKey, fallbackUrlKey = "VITE_SUPABASE_URL", fallbackKeyKey = "VITE_SUPABASE_ANON_KEY") {
-  let url = normalizeSupabaseUrl(import.meta.env[urlEnvKey]);
-  let anonKey = (import.meta.env[anonKeyEnvKey] || "").trim();
+const DEFAULT_ORG_DB_URL = "https://djikuoucsuhdiyrhsduz.supabase.co";
+const DEFAULT_ORG_DB_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+
+const DEFAULT_SARA_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
+const DEFAULT_SARA_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+
+function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = [], fallbackKeyEnvs = [], defaultUrl = "", defaultKey = "") {
+  let url = (import.meta.env[primaryUrlEnv] || "").trim();
+  let anonKey = (import.meta.env[primaryKeyEnv] || "").trim();
 
   if (!url) {
-    url = normalizeSupabaseUrl(import.meta.env[fallbackUrlKey]);
+    for (const fb of (Array.isArray(fallbackUrlEnvs) ? fallbackUrlEnvs : [fallbackUrlEnvs])) {
+      const val = (import.meta.env[fb] || "").trim();
+      if (val) { url = val; break; }
+    }
   }
-  if (!anonKey || anonKey.toLowerCase().includes("your-") || anonKey.toLowerCase().includes("anon-public-key")) {
-    anonKey = (import.meta.env[fallbackKeyKey] || "").trim();
+  if (!anonKey) {
+    for (const fb of (Array.isArray(fallbackKeyEnvs) ? fallbackKeyEnvs : [fallbackKeyEnvs])) {
+      const val = (import.meta.env[fb] || "").trim();
+      if (val) { anonKey = val; break; }
+    }
   }
+
+  url = normalizeSupabaseUrl(url);
+  if (!url && defaultUrl) url = normalizeSupabaseUrl(defaultUrl);
+  if (!anonKey && defaultKey) anonKey = defaultKey;
 
   const isValidUrl = isValidHttpUrl(url);
   const isPlaceholderKey =
@@ -78,38 +77,49 @@ function buildClient(urlEnvKey, anonKeyEnvKey, fallbackUrlKey = "VITE_SUPABASE_U
     try {
       client = createClient(url, anonKey);
     } catch (e) {
-      console.warn(`Failed to initialize Supabase client for ${urlEnvKey}:`, e);
+      console.warn(`Failed to initialize Supabase client for ${primaryUrlEnv}:`, e);
       client = null;
     }
   }
   return { configured: !!client, client };
 }
 
-// Sara Foundation - dedicated project (jeobggrtxeybxvlwpxvn)
-const sara = buildClient("VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY");
+// 1. Train AI 2.0 / Sara Foundation - dedicated project (jeobggrtxeybxvlwpxvn)
+const sara = buildClient(
+  "VITE_SUPABASE_SARA_URL",
+  "VITE_SUPABASE_SARA_ANON_KEY",
+  ["VITE_SUPABASE_URL"],
+  ["VITE_SUPABASE_ANON_KEY"],
+  DEFAULT_SARA_URL,
+  DEFAULT_SARA_ANON_KEY
+);
 
-// Digital Training Organization - Train AI B2C + Super Admin (djikuoucsuhdiyrhsduz)
-const digitalTraining = buildClient("VITE_SUPABASE_DIGITAL_TRAINING_URL", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY");
-
-// B2B - every business-organization tenant. Falls back to Digital Training if running on a 2-database setup
-const b2b = buildClient("VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_B2B_ANON_KEY", "VITE_SUPABASE_DIGITAL_TRAINING_URL", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY");
+// 2. Train AI 2.0 / Organization Database - central platform & tenant project (djikuoucsuhdiyrhsduz)
+const orgDb = buildClient(
+  "VITE_SUPABASE_ORGANIZATION_URL",
+  "VITE_SUPABASE_ORGANIZATION_ANON_KEY",
+  ["VITE_SUPABASE_SHARED_URL", "VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_DIGITAL_TRAINING_URL"],
+  ["VITE_SUPABASE_SHARED_ANON_KEY", "VITE_SUPABASE_B2B_ANON_KEY", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY"],
+  DEFAULT_ORG_DB_URL,
+  DEFAULT_ORG_DB_ANON_KEY
+);
 
 const CLIENTS_BY_PROJECT = {
   [SUPABASE_PROJECTS.SARA_FOUNDATION]: sara.client,
-  [SUPABASE_PROJECTS.DIGITAL_TRAINING]: digitalTraining.client,
-  [SUPABASE_PROJECTS.B2B]: b2b.client,
+  [SUPABASE_PROJECTS.ORGANIZATION_DB]: orgDb.client,
 };
 
 export const PROJECT_CONFIGURED = {
   [SUPABASE_PROJECTS.SARA_FOUNDATION]: sara.configured,
-  [SUPABASE_PROJECTS.DIGITAL_TRAINING]: digitalTraining.configured,
-  [SUPABASE_PROJECTS.B2B]: b2b.configured,
+  [SUPABASE_PROJECTS.ORGANIZATION_DB]: orgDb.configured,
 };
 
 /** Returns the client for a specific project regardless of which one is
- * currently "active" - Super Admin needs this to reach a project other
- * than the one their own session is authenticated against. */
+ * currently "active" */
 export function getSupabaseClientForProject(projectKey) {
+  if (projectKey === "b2b" || projectKey === "digital_training" || projectKey === "train_ai_shared" || projectKey === SUPABASE_PROJECTS.ORGANIZATION_DB) {
+    return CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.ORGANIZATION_DB] || null;
+  }
   return CLIENTS_BY_PROJECT[projectKey] || null;
 }
 
@@ -117,19 +127,36 @@ const ACTIVE_PROJECT_STORAGE_KEY = "trainai_active_project_v1";
 
 function readStoredActiveProject() {
   try {
-    return localStorage.getItem(ACTIVE_PROJECT_STORAGE_KEY) || null;
+    const stored = localStorage.getItem(ACTIVE_PROJECT_STORAGE_KEY);
+    if (stored === "b2b" || stored === "digital_training" || stored === "train_ai_shared" || stored === SUPABASE_PROJECTS.ORGANIZATION_DB) {
+      return SUPABASE_PROJECTS.ORGANIZATION_DB;
+    }
+    if (stored === SUPABASE_PROJECTS.SARA_FOUNDATION) {
+      return SUPABASE_PROJECTS.SARA_FOUNDATION;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
 function getInitialActiveProject() {
+  try {
+    const sessionStr = localStorage.getItem("trainai_active_session_v1");
+    if (sessionStr) {
+      const parsed = JSON.parse(sessionStr);
+      const email = parsed?.user?.email;
+      if (email) {
+        return resolveProjectForSignIn(email);
+      }
+    }
+  } catch {}
+
   const stored = readStoredActiveProject();
   if (stored && CLIENTS_BY_PROJECT[stored]) return stored;
+  if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.ORGANIZATION_DB]) return SUPABASE_PROJECTS.ORGANIZATION_DB;
   if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.SARA_FOUNDATION]) return SUPABASE_PROJECTS.SARA_FOUNDATION;
-  if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.DIGITAL_TRAINING]) return SUPABASE_PROJECTS.DIGITAL_TRAINING;
-  if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.B2B]) return SUPABASE_PROJECTS.B2B;
-  return SUPABASE_PROJECTS.SARA_FOUNDATION;
+  return SUPABASE_PROJECTS.ORGANIZATION_DB;
 }
 
 export let activeProject = getInitialActiveProject();
@@ -137,60 +164,56 @@ export let supabase = CLIENTS_BY_PROJECT[activeProject] || null;
 export let isSupabaseConfigured = !!supabase;
 
 export function setActiveSupabaseProject(projectKey) {
-  activeProject = projectKey;
-  supabase = CLIENTS_BY_PROJECT[projectKey] || null;
+  const normalizedKey =
+    projectKey === "b2b" || projectKey === "digital_training" || projectKey === "train_ai_shared" || projectKey === SUPABASE_PROJECTS.ORGANIZATION_DB
+      ? SUPABASE_PROJECTS.ORGANIZATION_DB
+      : SUPABASE_PROJECTS.SARA_FOUNDATION;
+
+  activeProject = normalizedKey;
+  supabase = CLIENTS_BY_PROJECT[normalizedKey] || null;
   isSupabaseConfigured = !!supabase;
   try {
-    localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, projectKey);
+    localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, normalizedKey);
+    window.dispatchEvent(new CustomEvent("trainai-project-change", { detail: { project: normalizedKey } }));
   } catch {
     // best-effort
   }
 }
 
 /**
- * Sign-up routing: which project a brand-new account should be created in.
- * Known up front because the sign-up form already captures the one piece
- * of information that decides it - account type - before this is ever
- * called. @sarafoundationafrica.com and @trainailtd.com are fixed
- * exceptions regardless of account type (a Sara Foundation or Train AI
- * staff email always goes to their own project); everyone else goes by
- * what they actually chose to sign up as.
+ * Sign-up routing:
+ * - @sarafoundationafrica.com -> Train AI 2.0 / Sara Foundation Dedicated Database (jeobggrtxeybxvlwpxvn)
+ * - All other signups (individual learners, organization self-serve, Train AI staff)
+ *   -> Train AI 2.0 / Organization Database (djikuoucsuhdiyrhsduz)
  */
 export function resolveProjectForSignUp(email = "", accountType = "learner") {
   const normalized = email.trim().toLowerCase();
   if (normalized.endsWith("@sarafoundationafrica.com")) {
     return SUPABASE_PROJECTS.SARA_FOUNDATION;
   }
-  if (normalized.endsWith("@trainailtd.com")) {
-    return SUPABASE_PROJECTS.DIGITAL_TRAINING;
-  }
-  return accountType === "organization" ? SUPABASE_PROJECTS.B2B : SUPABASE_PROJECTS.DIGITAL_TRAINING;
+  return SUPABASE_PROJECTS.ORGANIZATION_DB;
 }
 
 /**
- * Sign-in routing is genuinely harder than sign-up: an existing account's
- * project can't be inferred from email domain alone once Digital Training
- * Organization and B2B are separate databases - a plain gmail.com address
- * could belong to either one, and there's no cross-project lookup service
- * to ask first. @sarafoundationafrica.com and @trainailtd.com still resolve
- * with certainty (fixed domains, always their own project). For everything
- * else, this returns Digital Training Organization as the first project to
- * try - the caller (useAuth.js) is expected to fall back to B2B if that
- * attempt fails with an auth error, rather than this function guessing.
+ * Sign-in routing:
+ * - @sarafoundationafrica.com -> Train AI 2.0 / Sara Foundation Dedicated Database (jeobggrtxeybxvlwpxvn)
+ * - All other accounts (individuals, organizations, platform owners) -> Train AI 2.0 / Organization Database (djikuoucsuhdiyrhsduz)
  */
 export function resolveProjectForSignIn(email = "") {
   const normalized = email.trim().toLowerCase();
   if (normalized.endsWith("@sarafoundationafrica.com")) {
     return SUPABASE_PROJECTS.SARA_FOUNDATION;
   }
-  if (normalized.endsWith("@trainailtd.com")) {
-    return SUPABASE_PROJECTS.DIGITAL_TRAINING;
-  }
-  return SUPABASE_PROJECTS.DIGITAL_TRAINING;
+  return SUPABASE_PROJECTS.ORGANIZATION_DB;
 }
 
 export function fallbackProjectForSignIn(triedProjectKey) {
-  if (triedProjectKey === SUPABASE_PROJECTS.DIGITAL_TRAINING) return SUPABASE_PROJECTS.B2B;
-  if (triedProjectKey === SUPABASE_PROJECTS.B2B) return SUPABASE_PROJECTS.DIGITAL_TRAINING;
-  return null; // Sara Foundation has no fallback - it's a fixed domain match, not a guess
+  if (triedProjectKey === SUPABASE_PROJECTS.SARA_FOUNDATION) {
+    return PROJECT_CONFIGURED[SUPABASE_PROJECTS.ORGANIZATION_DB] ? SUPABASE_PROJECTS.ORGANIZATION_DB : null;
+  }
+  if (triedProjectKey === SUPABASE_PROJECTS.ORGANIZATION_DB) {
+    return PROJECT_CONFIGURED[SUPABASE_PROJECTS.SARA_FOUNDATION] ? SUPABASE_PROJECTS.SARA_FOUNDATION : null;
+  }
+  return null;
 }
+

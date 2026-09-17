@@ -15,7 +15,7 @@ function useIsNarrow(breakpoint = 680) {
 export function MessagesScreen({
   activeMentorThread, setActiveMentorThread, messageInput, setMessageInput,
   messageThreads = [], threadsLoading, conversationMessages = [], conversationLoading,
-  session, back, handleSendMessage
+  session, back, handleSendMessage, hideHero = false
 }) {
   const isNarrow = useIsNarrow();
   const [localInput, setLocalInput] = useState("");
@@ -48,17 +48,18 @@ export function MessagesScreen({
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18, width: "100%" }}>
       {/* =========================================================================
-          HERO BANNER: Direct Messages & Mentorship (Adaptive Liquid Glass)
+          HERO BANNER: Direct Messages (Adaptive Liquid Glass)
           ========================================================================= */}
-      <div
-        className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
-        style={{
-          borderRadius: 14,
-          padding: "clamp(18px, 2.5vw, 24px)",
-          position: "relative",
-          overflow: "hidden"
-        }}
-      >
+      {!hideHero && (
+        <div
+          className="tai-card tai-hero-card tai-hero-dark anim-fluid-entrance"
+          style={{
+            borderRadius: 14,
+            padding: "clamp(18px, 2.5vw, 24px)",
+            position: "relative",
+            overflow: "hidden"
+          }}
+        >
         <div
           style={{
             position: "absolute",
@@ -85,7 +86,7 @@ export function MessagesScreen({
                 </button>
               )}
               <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2 }}>
-                Direct Messages &amp; Mentorship
+                Direct Messages
               </h1>
             </div>
             <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 640, lineHeight: 1.45 }}>
@@ -107,6 +108,7 @@ export function MessagesScreen({
           </div>
         </div>
       </div>
+      )}
 
       {/* =========================================================================
           MESSAGING INTERFACE

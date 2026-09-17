@@ -1,8 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
-import { ArrowLeft, Plus, Trash2, Pencil, MessageSquare, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Pencil, MessageSquare } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { PortalModal } from "../../components/common/PortalModal.jsx";
 import {
   fetchAllForumCategories, createForumCategory, updateForumCategory, deleteForumCategory,
   fetchForumThreadsForModeration, deleteForumPost, fetchCourses,
@@ -53,46 +52,34 @@ export function ForumsScreen({ orgSelector, setScreen }) {
   }
   async function handleSaveCategory() {
     if (!title.trim()) return;
-    try {
-      if (editingId) {
-        await updateForumCategory(editingId, { title: title.trim(), description: description.trim() || null });
-        showToast("Category updated");
-      } else {
-        await createForumCategory({ title: title.trim(), description: description.trim() || null, courseId: courseId || null });
-        showToast("Category created");
-      }
-      setFormOpen(false);
-      categoriesQuery.refetch();
-    } catch (err) {
-      showToast(err?.message || "Could not save the category.");
+    if (editingId) {
+      await updateForumCategory(editingId, { title: title.trim(), description: description.trim() || null });
+      showToast("Category updated");
+    } else {
+      await createForumCategory({ title: title.trim(), description: description.trim() || null, courseId: courseId || null });
+      showToast("Category created");
     }
+    setFormOpen(false);
+    categoriesQuery.refetch();
   }
   async function handleDeleteCategory(id, catTitle) {
-    try {
-      await deleteForumCategory(id);
-      if (selectedForumId === id) setSelectedForumId(null);
-      categoriesQuery.refetch();
-      showToast(`"${catTitle}" and its threads removed`);
-    } catch (err) {
-      showToast(err?.message || "Could not delete the category.");
-    }
+    await deleteForumCategory(id);
+    if (selectedForumId === id) setSelectedForumId(null);
+    categoriesQuery.refetch();
+    showToast(`"${catTitle}" and its threads removed`);
   }
 
   async function handleDeleteThread(id) {
-    try {
-      await deleteForumPost(id);
-      threadsQuery.refetch();
-      categoriesQuery.refetch();
-      showToast("Thread removed");
-    } catch (err) {
-      showToast(err?.message || "Could not delete the thread.");
-    }
+    await deleteForumPost(id);
+    threadsQuery.refetch();
+    categoriesQuery.refetch();
+    showToast("Thread removed");
   }
 
   return (
     <div className="ta-fade">
       {selectedForum && (
-        <div style={{ padding: "16px clamp(16px, 4vw, 32px) 0" }}>
+        <div style={{ padding: "16px 28px 0" }}>
           <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setSelectedForumId(null)}>
             <ArrowLeft size={14} /> Back to categories
           </button>
@@ -103,87 +90,53 @@ export function ForumsScreen({ orgSelector, setScreen }) {
         sub={selectedForum ? "Moderate threads in this category" : "Manage discussion categories and moderate threads"}
         orgSelector={orgSelector}
         onNavigate={setScreen}
+        right={!selectedForum && <button className="ta-btn ta-btn-primary" onClick={openCreate}><Plus size={15} /> New category</button>}
       />
-      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* =========================================================================
-            COMMUNITY FORUMS & KNOWLEDGE BASE HERO BANNER
-            ========================================================================= */}
-        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
-          <div className="tai-glow-violet" />
-          <div className="ta-hero-inner">
-            <div className="ta-hero-text">
-              <h1 className="ta-hero-title">
-                {selectedForum ? selectedForum.title : "Community Forums & Q&A"}
-              </h1>
-              <p className="ta-hero-desc">
-                {selectedForum ? "Review, moderate and manage active community threads for this category." : "Manage discussion categories, review community questions, and moderate forum topics."}
-              </p>
-            </div>
-
-            {!selectedForum && (
-              <div className="ta-hero-actions">
-                <button
-                  className="ta-btn ta-btn-primary"
-                  style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
-                  onClick={openCreate}
-                >
-                  <Plus size={14} /> New Category
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
+      <div className="ta-content">
         {!selectedForum && (
           <>
-            <PortalModal
-              isOpen={formOpen}
-              onClose={() => setFormOpen(false)}
-              maxWidth={520}
-              zIndex={9999}
-            >
-              <div className="ta-row ta-between">
-                <div className="ta-title" style={{ fontSize: 18 }}>{editingId ? "Edit Category" : "New Forum Category"}</div>
-                <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setFormOpen(false)}><X size={16} /></button>
-              </div>
-              <div className="ta-grid ta-grid-2 ta-mt16">
-                <div>
-                  <div className="ta-label">Category Title</div>
-                  <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. LLM Fine-Tuning" autoFocus />
+            {formOpen && (
+              <div className="ta-card" style={{ borderColor: "var(--primary)" }}>
+                <div className="ta-title">{editingId ? "Edit category" : "New category"}</div>
+                <div className="ta-grid ta-grid-2 ta-mt12">
+                  <div>
+                    <div className="ta-label">Title</div>
+                    <input className="ta-input ta-mt8" style={{ width: "100%" }} value={title} onChange={(e) => setTitle(e.target.value)} />
+                  </div>
+                  <div>
+                    <div className="ta-label">Course (optional. Leave blank for a general category)</div>
+                    <select className="ta-input ta-mt8" style={{ width: "100%" }} value={courseId} onChange={(e) => setCourseId(e.target.value)} disabled={!!editingId}>
+                      <option value="">General (no course)</option>
+                      {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <div className="ta-label">Description</div>
+                    <input className="ta-input ta-mt8" style={{ width: "100%" }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional" />
+                  </div>
                 </div>
-                <div>
-                  <div className="ta-label">Associated Course</div>
-                  <select className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={courseId} onChange={(e) => setCourseId(e.target.value)} disabled={!!editingId}>
-                    <option value="">General (All Topics)</option>
-                    {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-                  </select>
-                </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <div className="ta-label">Description (Optional)</div>
-                  <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short overview of discussion themes..." />
+                <div className="ta-row ta-gap8 ta-mt12">
+                  <button className="ta-btn ta-btn-primary" onClick={handleSaveCategory} disabled={!title.trim()}>Save category</button>
+                  <button className="ta-btn ta-btn-outline" onClick={() => setFormOpen(false)}>Cancel</button>
                 </div>
               </div>
-              <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
-                <button className="ta-btn ta-btn-outline" onClick={() => setFormOpen(false)}>Cancel</button>
-                <button className="ta-btn ta-btn-primary" onClick={handleSaveCategory} disabled={!title.trim()}>Save Category</button>
-              </div>
-            </PortalModal>
+            )}
 
-            <div className="ta-grid ta-grid-3 ta-mt16 anim-stagger">
+            <div className="ta-grid ta-grid-3 ta-mt16">
               {categoriesQuery.loading && <div className="ta-empty">Loading forum categories...</div>}
               {!categoriesQuery.loading && categories.length === 0 && <div className="ta-empty">No forum categories yet. Create one to get started.</div>}
               {categories.map((cat) => (
-                <div key={cat.id} className="ta-card ta-card-hover" style={{ cursor: "pointer" }} onClick={() => setSelectedForumId(cat.id)}>
+                <div key={cat.id} className="ta-card">
                   <div className="ta-row ta-between">
                     <Tag tone={cat.is_general ? undefined : "success"}>{cat.is_general ? "General" : (cat.courses?.title || "Course")}</Tag>
                     <span style={{ fontSize: 12, color: "var(--text-2)" }}>{cat.thread_count} thread{cat.thread_count === 1 ? "" : "s"}</span>
                   </div>
-                  <div style={{ fontWeight: 800, fontSize: 16, marginTop: 10, wordBreak: "break-word" }}>{cat.title}</div>
-                  {cat.description && <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{cat.description}</div>}
+                  <div style={{ fontWeight: 800, fontSize: 16, marginTop: 10, cursor: "pointer" }} onClick={() => setSelectedForumId(cat.id)}>{cat.title}</div>
+                  {cat.description && <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6 }}>{cat.description}</div>}
                   <div className="ta-row ta-gap8 ta-mt12">
-                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={(e) => { e.stopPropagation(); setSelectedForumId(cat.id); }}><MessageSquare size={13} /> View threads</button>
-                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={(e) => { e.stopPropagation(); openEdit(cat); }}><Pencil size={13} /></button>
-                    <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id, cat.title); }}><Trash2 size={13} /></button>
+                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setSelectedForumId(cat.id)}><MessageSquare size={13} /> View threads</button>
+                    <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => openEdit(cat)}><Pencil size={13} /></button>
+                    <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleDeleteCategory(cat.id, cat.title)}><Trash2 size={13} /></button>
                   </div>
                 </div>
               ))}

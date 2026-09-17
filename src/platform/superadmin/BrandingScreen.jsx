@@ -14,14 +14,27 @@ const PRESET_PALETTES = [
   { name: "Royal Amber", color: "#D97706" }
 ];
 
-export function BrandingScreen() {
+export function BrandingScreen({ orgSelector } = {}) {
   const showToast = useContext(ToastContext);
   const orgsQuery = useSupabaseQuery(async () => fetchAllOrganizations(), []);
   const orgs = orgsQuery.data || [];
 
-  const [selectedOrgId, setSelectedOrgId] = useState("");
+  const [selectedOrgId, setSelectedOrgId] = useState(orgSelector?.selectedOrgId || "");
+
   useEffect(() => {
-    if (!selectedOrgId && orgs.length) setSelectedOrgId(orgs[0].id);
+    if (orgSelector?.selectedOrgId && orgSelector.selectedOrgId !== selectedOrgId) {
+      setSelectedOrgId(orgSelector.selectedOrgId);
+    }
+  }, [orgSelector?.selectedOrgId]);
+
+  useEffect(() => {
+    if (!selectedOrgId && orgs.length) {
+      const initialId = orgSelector?.selectedOrgId || orgs[0].id;
+      setSelectedOrgId(initialId);
+      if (orgSelector?.onSelectOrg && !orgSelector.selectedOrgId) {
+        orgSelector.onSelectOrg(initialId);
+      }
+    }
   }, [orgs, selectedOrgId]);
 
   const brandingQuery = useSupabaseQuery(async () => {
@@ -31,6 +44,8 @@ export function BrandingScreen() {
 
   const [logoUrl, setLogoUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#1D4ED8");
+  const [secondaryColor, setSecondaryColor] = useState("#0EA5E9");
+  const [customCss, setCustomCss] = useState("");
   const [themeMode, setThemeMode] = useState("light");
   const [borderRadius, setBorderRadius] = useState("10px");
   const [saving, setSaving] = useState(false);
@@ -38,13 +53,20 @@ export function BrandingScreen() {
   useEffect(() => {
     setLogoUrl(brandingQuery.data?.logo_url || "");
     setPrimaryColor(brandingQuery.data?.primary_color || "#1D4ED8");
+    setSecondaryColor(brandingQuery.data?.secondary_color || "#0EA5E9");
+    setCustomCss(brandingQuery.data?.custom_css || "");
   }, [brandingQuery.data, selectedOrgId]);
 
   async function handleSave() {
     if (!selectedOrgId) return;
     setSaving(true);
     try {
-      await upsertOrgBranding(selectedOrgId, { logoUrl: logoUrl || null, primaryColor: primaryColor || null });
+      await upsertOrgBranding(selectedOrgId, {
+        logoUrl: logoUrl || null,
+        primaryColor: primaryColor || null,
+        secondaryColor: secondaryColor || null,
+        customCss: customCss || null,
+      });
       brandingQuery.refetch();
       showToast("Branding settings updated!");
     } catch (e) {
@@ -95,7 +117,11 @@ export function BrandingScreen() {
                   className="ta-input"
                   style={{ flex: 1 }}
                   value={selectedOrgId}
-                  onChange={(e) => setSelectedOrgId(e.target.value)}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    setSelectedOrgId(newId);
+                    orgSelector?.onSelectOrg?.(newId);
+                  }}
                 >
                   {orgs.map((o) => (
                     <option key={o.id} value={o.id}>{o.name}</option>
@@ -152,6 +178,25 @@ export function BrandingScreen() {
           </div>
 
           <div className="ta-mt20">
+            <label className="ta-label" style={{ marginBottom: 8, display: "block" }}>Secondary Accent Color</label>
+            <div className="ta-row ta-gap10">
+              <input
+                type="color"
+                value={/^#[0-9a-fA-F]{6}$/.test(secondaryColor) ? secondaryColor : "#0EA5E9"}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+                style={{ width: 44, height: 38, padding: 0, border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer" }}
+              />
+              <input
+                className="ta-input"
+                style={{ flex: 1 }}
+                placeholder="#0EA5E9"
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="ta-mt20">
             <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Interface Theme</label>
             <div className="ta-row ta-gap10">
               <button
@@ -176,11 +221,20 @@ export function BrandingScreen() {
           <div className="ta-mt20">
             <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Organization Logo</label>
             {logoUrl && (
-              <img
-                src={logoUrl}
-                alt="Logo"
-                style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", marginBottom: 10, border: "1px solid var(--border)" }}
-              />
+              <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
+                <img
+                  src={logoUrl}
+                  alt="Logo"
+                  style={{ width: 56, height: 56, borderRadius: 8, objectFit: "contain", background: "var(--surface-2)", border: "1px solid var(--border)" }}
+                />
+                <button
+                  type="button"
+                  className="ta-btn ta-btn-outline ta-btn-sm"
+                  onClick={() => setLogoUrl("")}
+                >
+                  Remove Logo
+                </button>
+              </div>
             )}
             <FileUploadZone
               bucket="uploads"
@@ -189,6 +243,18 @@ export function BrandingScreen() {
               maxSizeMB={5}
               label="Drop custom logo or click to upload"
               onUploaded={(url) => setLogoUrl(url)}
+            />
+          </div>
+
+          <div className="ta-mt20">
+            <label className="ta-label" style={{ marginBottom: 6, display: "block" }}>Custom CSS (Optional)</label>
+            <textarea
+              className="ta-input"
+              rows={3}
+              style={{ width: "100%", fontFamily: "monospace", fontSize: 12 }}
+              placeholder=":root { --brand-radius: 8px; }"
+              value={customCss}
+              onChange={(e) => setCustomCss(e.target.value)}
             />
           </div>
 
@@ -210,8 +276,12 @@ export function BrandingScreen() {
           <div style={{ marginTop: 20, padding: 18, borderRadius: borderRadius, background: themeMode === "dark" ? "#1E293B" : "var(--surface-2)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
               <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 auto" }}>
-                <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 8, background: primaryColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800 }}>
-                  {selectedOrg.name?.charAt(0) || "T"}
+                <div style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 8, background: primaryColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, overflow: "hidden" }}>
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                  ) : (
+                    selectedOrg.name?.charAt(0) || "T"
+                  )}
                 </div>
                 <div style={{ minWidth: 0, overflow: "hidden" }}>
                   <div style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedOrg.name}</div>
@@ -224,7 +294,10 @@ export function BrandingScreen() {
             </div>
 
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Track Progress</div>
+              <div className="ta-row ta-between" style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
+                <span>Track Progress</span>
+                <span style={{ color: secondaryColor }}>72%</span>
+              </div>
               <div style={{ width: "100%", height: 8, background: themeMode === "dark" ? "#334155" : "var(--surface-3)", borderRadius: 6, overflow: "hidden" }}>
                 <div style={{ width: "72%", height: "100%", background: primaryColor, borderRadius: 6 }} />
               </div>

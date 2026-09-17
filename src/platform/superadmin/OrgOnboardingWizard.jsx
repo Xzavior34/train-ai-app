@@ -202,6 +202,7 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
   const existingQuery = useSupabaseQuery(async () => (org?.id ? fetchOrgBranding(org.id) : null), [org?.id]);
   const [logoUrl, setLogoUrl] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#2563EB");
+  const [secondaryColor, setSecondaryColor] = useState("#0EA5E9");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -209,6 +210,7 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
     if (existingQuery.data) {
       setLogoUrl(existingQuery.data.logo_url || "");
       setPrimaryColor(existingQuery.data.primary_color || "#2563EB");
+      setSecondaryColor(existingQuery.data.secondary_color || "#0EA5E9");
     }
   }, [existingQuery.data]);
 
@@ -216,7 +218,11 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
     if (!org?.id) return;
     setSaving(true); setError("");
     try {
-      const data = await upsertOrgBranding(org.id, { logoUrl: logoUrl || null, primaryColor: primaryColor || null });
+      const data = await upsertOrgBranding(org.id, {
+        logoUrl: logoUrl || null,
+        primaryColor: primaryColor || null,
+        secondaryColor: secondaryColor || null,
+      });
       showToast("Branding saved!");
       onSaved(data);
     } catch (e) {
@@ -226,7 +232,6 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
     }
   }
 
-  const hasInput = !!(logoUrl || (primaryColor && primaryColor !== "#2563EB"));
   const alreadyBranded = !!(existingQuery.data?.logo_url || existingQuery.data?.primary_color);
 
   return (
@@ -239,7 +244,10 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
 
       <div className="ta-title ta-mt20" style={{ fontSize: 13.5 }}>Logo</div>
       {logoUrl && (
-        <img src={logoUrl} alt="Logo preview" style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", marginTop: 10, border: "1px solid var(--border)" }} />
+        <div style={{ marginTop: 10, marginBottom: 10, display: "flex", alignItems: "center", gap: 12 }}>
+          <img src={logoUrl} alt="Logo preview" style={{ width: 56, height: 56, borderRadius: 8, objectFit: "contain", background: "var(--surface-2)", border: "1px solid var(--border)" }} />
+          <button type="button" className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setLogoUrl("")}>Remove Logo</button>
+        </div>
       )}
       <div style={{ marginTop: 10 }}>
         <FileUploadZone
@@ -264,12 +272,23 @@ function BrandingStep({ org, onSaved, onSkip, onBack }) {
         <Palette size={18} color="var(--primary)" />
       </div>
 
+      <div className="ta-title ta-mt20" style={{ fontSize: 13.5 }}>Secondary accent color</div>
+      <div className="ta-row ta-gap10" style={{ marginTop: 10 }}>
+        <input
+          type="color"
+          value={/^#[0-9a-fA-F]{6}$/.test(secondaryColor) ? secondaryColor : "#0EA5E9"}
+          onChange={(e) => setSecondaryColor(e.target.value)}
+          style={{ width: 48, height: 36, padding: 0, border: "1px solid var(--border)", borderRadius: 8, cursor: "pointer" }}
+        />
+        <input className="ta-input" style={{ flex: 1 }} value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} placeholder="#0EA5E9" />
+      </div>
+
       {error && <div className="ta-mt12" style={{ color: "var(--danger)", fontSize: 12.5 }}>{error}</div>}
 
       <div className="ta-row ta-gap8 ta-mt20" style={{ flexWrap: "wrap" }}>
         <button className="ta-btn ta-btn-outline" onClick={onBack}><ArrowLeft size={14} /> Back</button>
         <button className="ta-btn ta-btn-ghost" onClick={onSkip}>Skip branding for now</button>
-        <button className="ta-btn ta-btn-primary" onClick={handleSave} disabled={saving || !hasInput}>
+        <button className="ta-btn ta-btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? "Saving..." : <>Save branding & continue <ArrowRight size={14} /></>}
         </button>
       </div>

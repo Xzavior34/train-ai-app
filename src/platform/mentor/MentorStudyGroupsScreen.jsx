@@ -7,7 +7,8 @@ import {
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { 
   fetchMyManagedStudyGroups, fetchStudyGroupMembers, 
-  removeStudyGroupMember, updateStudyGroupDetails, createStudyGroup 
+  removeStudyGroupMember, updateStudyGroupDetails, createStudyGroup,
+  fetchStudyGroupMessages, sendStudyGroupMessage,
 } from "../../lib/api/schemaHelper.js";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
@@ -24,6 +25,8 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
   const [creatingGroup, setCreatingGroup] = useState(false);
   const [selectedGroupId, setSelectedGroupId] = useState(null);
   const [description, setDescription] = useState("");
+  const [announcementText, setAnnouncementText] = useState("");
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
 
   const groupsQuery = useSupabaseQuery(async () => (mentorId ? fetchMyManagedStudyGroups(mentorId) : []), [mentorId]);
   const rawGroups = groupsQuery.data || [];
@@ -63,7 +66,12 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
     async () => (selectedGroupId && !selectedGroupId.startsWith("demo-") ? fetchStudyGroupMembers(selectedGroupId) : []),
     [selectedGroupId]
   );
-  
+
+  const groupMessagesQuery = useSupabaseQuery(
+    async () => (selectedGroupId && !selectedGroupId.startsWith("demo-") ? fetchStudyGroupMessages(selectedGroupId) : []),
+    [selectedGroupId]
+  );
+
   const rawMembers = membersQuery.data || [];
   const defaultMembers = [
     { user_id: "m-1", display_name: "Fatima Diallo", role: "lead", email: "fatima@domain.com" },
@@ -260,7 +268,19 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                   <button
                     className="ta-btn ta-btn-outline ta-btn-sm"
                     style={{ fontSize: 11, padding: "3px 8px" }}
-                    onClick={() => showToast("Invite link copied to clipboard!")}
+                    onClick={async () => {
+                      if (activeGroup.id.startsWith("demo-")) {
+                        showToast("Create a real study group first to get a shareable link.");
+                        return;
+                      }
+                      const link = `${window.location.origin}${window.location.pathname}?screen=studygroups&groupId=${activeGroup.id}`;
+                      try {
+                        await navigator.clipboard.writeText(link);
+                        showToast("Invite link copied to clipboard!");
+                      } catch {
+                        showToast(`Share this link: ${link}`);
+                      }
+                    }}
                   >
                     <UserPlus size={12} /> Invite Learner
                   </button>
@@ -305,6 +325,66 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                           </button>
                         )}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Announcements to the group - this is the only thing
+                  learners see in their Study Group screen (real-time
+                  updates from the instructor); there was previously no way
+                  to post one at all, so that panel was permanently empty. */}
+              <div style={{ marginTop: 22, paddingTop: 18, borderTop: "1px solid var(--border)" }}>
+                <div className="ta-row ta-gap8" style={{ marginBottom: 10 }}>
+                  <MessageCircle size={15} color="var(--primary)" />
+                  <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Announcements to This Group</span>
+                </div>
+
+                <div className="ta-col ta-gap8" style={{ marginBottom: 12 }}>
+                  <textarea
+                    className="ta-input"
+                    style={{ width: "100%", fontSize: 13, resize: "vertical" }}
+                    rows={2}
+                    placeholder="Post an update, reading assignment, or reminder to everyone in this group..."
+                    value={announcementText}
+                    onChange={(e) => setAnnouncementText(e.target.value)}
+                  />
+                  <button
+                    className="ta-btn ta-btn-primary ta-btn-sm"
+                    style={{ alignSelf: "flex-end" }}
+                    disabled={postingAnnouncement || !announcementText.trim() || activeGroup.id.startsWith("demo-")}
+                    onClick={async () => {
+                      setPostingAnnouncement(true);
+                      try {
+                        await sendStudyGroupMessage({ studyGroupId: activeGroup.id, senderId: mentorId, message: announcementText.trim() });
+                        setAnnouncementText("");
+                        groupMessagesQuery.refetch();
+                        showToast("Posted to the group.");
+                      } catch (e) {
+                        showToast(e.message || "Could not post announcement.");
+                      } finally {
+                        setPostingAnnouncement(false);
+                      }
+                    }}
+                  >
+                    {postingAnnouncement ? "Posting..." : "Post to Group"}
+                  </button>
+                  {activeGroup.id.startsWith("demo-") && (
+                    <div style={{ fontSize: 11, color: "var(--text-3)" }}>Create a real study group to post announcements.</div>
+                  )}
+                </div>
+
+                <div className="ta-col ta-gap8" style={{ maxHeight: 260, overflowY: "auto" }}>
+                  {groupMessagesQuery.loading && <div className="ta-empty" style={{ fontSize: 12 }}>Loading announcements...</div>}
+                  {!groupMessagesQuery.loading && (groupMessagesQuery.data || []).length === 0 && (
+                    <div style={{ fontSize: 12, color: "var(--text-3)" }}>No announcements posted yet.</div>
+                  )}
+                  {(groupMessagesQuery.data || []).slice().reverse().map((msg) => (
+                    <div key={msg.id} style={{ padding: "8px 10px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                      <div style={{ fontSize: 10.5, color: "var(--text-3)", marginBottom: 2 }}>
+                        {msg.user_profiles?.display_name || "You"} • {new Date(msg.created_at).toLocaleString()}
+                      </div>
+                      <div style={{ fontSize: 12.5, color: "var(--text)" }}>{msg.message}</div>
                     </div>
                   ))}
                 </div>

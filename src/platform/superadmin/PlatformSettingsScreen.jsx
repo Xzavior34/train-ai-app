@@ -9,10 +9,14 @@ import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockDat
 import { SUPABASE_PROJECTS } from "../../services/supabaseClient.js";
 
 const PROJECT_LABELS = {
-  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Sara Foundation",
-  [SUPABASE_PROJECTS.DIGITAL_TRAINING]: "Digital Training Org (+ Super Admin)",
-  [SUPABASE_PROJECTS.B2B]: "B2B Organizations",
+  [SUPABASE_PROJECTS.ORGANIZATION_DB]: "Train AI 2.0 Organization Database (Platform Owner, Digital Users & B2B Orgs)",
+  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Train AI 2.0 Sara Foundation (Dedicated)",
 };
+
+const PROJECT_KEYS = [
+  SUPABASE_PROJECTS.ORGANIZATION_DB,
+  SUPABASE_PROJECTS.SARA_FOUNDATION,
+];
 
 // Real `platform_settings` table (setting_key unique, setting_value text,
 // setting_type, description, is_public) - see 0004_community_gamification_admin.sql:638
@@ -179,7 +183,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
                     </div>
                   </div>
                   <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-                    {Object.values(SUPABASE_PROJECTS).map((key) => {
+                    {PROJECT_KEYS.map((key) => {
                       const status = projectSessionStatus?.[key];
                       const isActive = key === activeProject;
                       return (

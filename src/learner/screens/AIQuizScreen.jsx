@@ -7,13 +7,14 @@ import {
   History, MessageSquarePlus, Clock, ChevronDown, ChevronUp, Plus, Brain, TrendingUp
 } from "lucide-react";
 import { AIInsightsCard } from "../components/AIInsightsCard.jsx";
+import { FormattedAIResponse } from "../components/FormattedAIResponse.jsx";
 
 const COACH_PROMPT_PRESETS = [
-  { label: "Explain Design Tokens simply", icon: Lightbulb, prompt: "Can you explain how design tokens and variables work in Figma and code with a clear analogy?" },
-  { label: "Generate Spatial UI Quiz", icon: HelpCircle, prompt: "Generate a quick 3-question conceptual quiz on Spatial Computing and VisionOS design principles." },
-  { label: "Review UX Deliverable", icon: CheckCircle2, prompt: "What are the most critical components of an enterprise UX audit report before client presentation?" },
-  { label: "Full-Stack AI Study Plan", icon: Target, prompt: "Create a focused 5-day study schedule for mastering LangChain, vector databases, and RAG architectures." },
-  { label: "Senior Designer Interview Prep", icon: Briefcase, prompt: "Ask me a realistic behavioral interview question for a Senior Product Designer role, then critique my answer." }
+  { label: "Explain this concept to me", icon: Lightbulb, prompt: "Can you explain the concept I am currently studying in simple terms, with a clear example?" },
+  { label: "Give me study tips", icon: Briefcase, prompt: "What study techniques would help me learn this material more effectively?" },
+  { label: "Help me understand better", icon: CheckCircle2, prompt: "I am finding this topic difficult - can you break it down step by step?" },
+  { label: "Create a study plan", icon: Target, prompt: "Create a focused study schedule to help me finish my current course on track." },
+  { label: "Summarize my last lesson", icon: Clock, prompt: "Summarize the key takeaways from the last lesson I completed." }
 ];
 
 export function AIQuizScreen({
@@ -27,9 +28,25 @@ export function AIQuizScreen({
   quizAnswers, setQuizAnswers, quizSelected, setQuizSelected, quizShowHint, setQuizShowHint,
   quizResult, setQuizResult, quizSubmitting, setQuizSubmitting, quizzesQuery, selectedQuizQuestionsQuery,
   quizAttemptsQuery, quizHistory, weakAreas, session, showToast, submitQuizAnswers,
-  generateAIQuiz, awardAIQuizCompletionPoints, credits, consumeCredit, onBuyCredits,
+  generateAIQuiz, awardAIQuizCompletionPoints, credits, consumeCredit, onBuyCredits, onRequestCredits,
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
+  gamificationStatsQuery,
 }) {
+  const DAILY_QUIZ_GOAL = 3;
+  const todayKey = new Date().toDateString();
+  const quizzesCompletedToday = (quizAttemptsQuery?.data || []).filter(
+    (a) => a.completed_at && new Date(a.completed_at).toDateString() === todayKey
+  ).length;
+  const dailyGoalPct = Math.min(100, Math.round((quizzesCompletedToday / DAILY_QUIZ_GOAL) * 100));
+  // gamificationStatsQuery.total_points is a lifetime, all-source total
+  // (lessons + quizzes + logins combined - see user_gamification_stats),
+  // not a quiz-only figure, so summing the fetched quiz_attempts rows
+  // themselves is what "Quiz Points" actually means here. quizAttemptsQuery
+  // only loads the most recent 10 attempts, so this is a recent total, not
+  // an all-time one - labeled accordingly below.
+  const recentQuizPoints = (quizAttemptsQuery?.data || []).reduce((sum, a) => sum + (a.total_points || 0), 0);
+  const hasQuizAttempts = (quizAttemptsQuery?.data || []).length > 0;
+  const practiceStreakDays = gamificationStatsQuery?.data?.streak_days ?? null;
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [activeThreadId, setActiveThreadId] = useState("thread-1");
@@ -224,6 +241,17 @@ export function AIQuizScreen({
             )}
 
             <button
+              className="tai-btn tai-btn-outline tai-btn-sm"
+              onClick={onRequestCredits}
+              style={{
+                borderRadius: 8, fontWeight: 700, fontSize: 12,
+                display: "inline-flex", alignItems: "center", gap: 5
+              }}
+            >
+              Request Credits
+            </button>
+
+            <button
               className="tai-btn tai-btn-primary tai-btn-sm"
               onClick={onBuyCredits}
               style={{
@@ -372,7 +400,7 @@ export function AIQuizScreen({
           {/* Quick Prompt Starters Strip */}
           <div>
             <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 8 }}>
-              Suggested Inquiries &amp; Guided Exercises
+              Suggested Questions
             </div>
             <div className="tai-scrollx" style={{ paddingBottom: 4, width: "100%", boxSizing: "border-box" }}>
               {COACH_PROMPT_PRESETS.map((cp, idx) => {
@@ -479,10 +507,11 @@ export function AIQuizScreen({
                         fontSize: 13,
                         lineHeight: 1.55,
                         border: isUser ? "none" : "1px solid var(--border)",
-                        whiteSpace: "pre-wrap"
+                        width: "100%",
+                        boxSizing: "border-box"
                       }}
                     >
-                      {m.content}
+                      <FormattedAIResponse content={m.content} isUser={isUser} />
                     </div>
 
                     {!isUser && (
@@ -639,21 +668,21 @@ export function AIQuizScreen({
                 <div className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
                   <div className="tai-row tai-between" style={{ marginBottom: 12 }}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>Assessment Daily Goal</span>
-                    <Tag tone="primary">1 of 3 Done</Tag>
+                    <Tag tone="primary">{quizzesCompletedToday} of {DAILY_QUIZ_GOAL} Done</Tag>
                   </div>
-                  <ProgressBar value={33} height={8} />
+                  <ProgressBar value={dailyGoalPct} height={8} />
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Trophy size={20} color="#F59E0B" />
-                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>340 XP</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Total Quiz Points</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>{hasQuizAttempts ? `${recentQuizPoints} XP` : "—"}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Recent Quiz Points</div>
                   </div>
 
                   <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Flame size={20} color="#EF4444" />
-                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>8 Days</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>{practiceStreakDays != null ? `${practiceStreakDays} Day${practiceStreakDays === 1 ? "" : "s"}` : "—"}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Practice Streak</div>
                   </div>
                 </div>
@@ -785,7 +814,9 @@ export function AIQuizScreen({
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", marginBottom: 4 }}>
                 {m.role === "user" ? "You" : "AI Coach"} • {m.created_at ? new Date(m.created_at).toLocaleString() : "Recent"}
               </div>
-              <div style={{ fontSize: 13.5, color: "var(--text)", lineHeight: 1.5 }}>{m.content}</div>
+              <div style={{ fontSize: 13.5, color: "var(--text)", lineHeight: 1.5 }}>
+                <FormattedAIResponse content={m.content} isUser={m.role === "user"} />
+              </div>
             </div>
           ))}
         </div>

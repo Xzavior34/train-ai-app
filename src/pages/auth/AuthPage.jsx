@@ -6,7 +6,7 @@ import { registerOrganization, joinDefaultOrganization, attributeReferralSignupI
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "",
   onForgotPassword, recoveryMode = false, onCompletePasswordReset,
-  onGoHome
+  onGoHome, orgParam = ""
 }) {
   const [mode, setMode] = useState("signin");
 
@@ -59,6 +59,8 @@ export default function AuthPage({
     }
   }
 
+  const [resetSuccess, setResetSuccess] = useState(false);
+
   async function handleSetNewPasswordSubmit(e) {
     e.preventDefault();
     setResetError("");
@@ -75,6 +77,11 @@ export default function AuthPage({
       const result = await onCompletePasswordReset?.(newPassword);
       if (!result?.success) {
         setResetError(result?.error || "Could not update your password. The reset link may have expired - request a new one.");
+      } else {
+        setResetSuccess(true);
+        setTimeout(() => {
+          window.location.replace(window.location.pathname);
+        }, 1800);
       }
     } finally {
       setResettingPassword(false);
@@ -150,6 +157,15 @@ export default function AuthPage({
           </span>
         </div>
 
+        {orgParam && (
+          <div style={{ padding: "10px 12px", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+            <Building2 size={16} color="#2563EB" />
+            <div style={{ fontSize: 12.5, color: "#1E40AF", fontWeight: 600 }}>
+              Organization Workspace Portal ({orgParam})
+            </div>
+          </div>
+        )}
+
         {mode === "forgot" && (
           <>
             <h1 style={styles.h1}>Reset your password</h1>
@@ -188,31 +204,48 @@ export default function AuthPage({
         {mode === "recovery" && (
           <>
             <h1 style={styles.h1}>Choose a new password</h1>
-            <p style={styles.sub}>You followed a password reset link. Set a new password for your account below.</p>
+            {resetSuccess ? (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <CheckCircle2 size={40} color="#16A34A" style={{ margin: "0 auto 12px" }} />
+                <p style={{ ...styles.sub, color: "#16A34A", fontWeight: 700, fontSize: 14 }}>
+                  Password updated successfully!
+                </p>
+                <p style={{ ...styles.sub, fontSize: 12.5 }}>
+                  Redirecting to your dashboard...
+                </p>
+              </div>
+            ) : (
+              <>
+                <p style={styles.sub}>You followed a password reset link. Set a new password for your account below.</p>
 
-            <label style={styles.label}>New Password</label>
-            <div style={styles.inputWrap}>
-              <Lock size={15} color="#94A3B8" style={styles.inputIcon} />
-              <input
-                type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                className="auth-input" style={styles.input} placeholder="At least 8 characters"
-              />
-            </div>
+                <label style={styles.label}>New Password</label>
+                <div style={styles.inputWrap}>
+                  <Lock size={15} color="#94A3B8" style={styles.inputIcon} />
+                  <input
+                    type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                    className="auth-input" style={styles.input} placeholder="At least 8 characters"
+                  />
+                </div>
 
-            <label style={{ ...styles.label, marginTop: 14 }}>Confirm New Password</label>
-            <div style={styles.inputWrap}>
-              <Lock size={15} color="#94A3B8" style={styles.inputIcon} />
-              <input
-                type="password" required value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                className="auth-input" style={styles.input} placeholder="••••••••"
-              />
-            </div>
+                <label style={{ ...styles.label, marginTop: 14 }}>Confirm New Password</label>
+                <div style={styles.inputWrap}>
+                  <Lock size={15} color="#94A3B8" style={styles.inputIcon} />
+                  <input
+                    type="password" required value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                    className="auth-input" style={styles.input} placeholder="••••••••"
+                  />
+                </div>
 
-            {resetError && <div style={styles.errorBox}>{resetError}</div>}
+                {resetError && <div style={styles.errorBox}>{resetError}</div>}
 
-            <button type="submit" disabled={resettingPassword} className="auth-submit" style={{ ...styles.submit, opacity: resettingPassword ? .75 : 1 }}>
-              {resettingPassword ? "Updating..." : "Update password"}
-            </button>
+                <button type="submit" disabled={resettingPassword} className="auth-submit" style={{ ...styles.submit, opacity: resettingPassword ? .75 : 1 }}>
+                  {resettingPassword ? "Updating..." : "Update password"}
+                </button>
+                <div style={styles.switchRow}>
+                  <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); window.location.replace(window.location.pathname); }}>Back to sign in</span>
+                </div>
+              </>
+            )}
           </>
         )}
 

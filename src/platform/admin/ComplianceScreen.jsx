@@ -2,18 +2,43 @@ import React, { useContext, useState } from "react";
 import { TopBar, Tag, ToastContext, ProgressBar, StatCard, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { ShieldCheck, RefreshCw, Download, AlertTriangle, CheckCircle2, Clock, Plus, X, Search, Trash2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail } from "../../lib/api/platform.js";
+import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail, fetchCohortsWithStats, fetchCourseEnrolledLearners } from "../../lib/api/platform.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
   const [filter, setFilter] = useState("all");
   const [mainTab, setMainTab] = useState("progress");
-  const progressOverviewQuery = useSupabaseQuery(async () => (orgId ? fetchOrgLearnerProgressOverview(orgId) : []), [orgId]);
-  const learnerProgress = progressOverviewQuery.data || [];
+
+  // Historic range + cohort/name filtering for the Progress Overview tab -
+  // previously there was no way to see progress as of a past date, or to
+  // narrow the leaderboard/behind lists to one cohort or one person.
+  const [progressStartDate, setProgressStartDate] = useState("");
+  const [progressEndDate, setProgressEndDate] = useState("");
+  const [progressCohortId, setProgressCohortId] = useState("all");
+  const [progressSearch, setProgressSearch] = useState("");
+  const [expandedProgressCourseId, setExpandedProgressCourseId] = useState(null);
+
+  const cohortsForFilterQuery = useSupabaseQuery(async () => (orgId ? fetchCohortsWithStats(orgId) : []), [orgId]);
+  const cohortsForFilter = cohortsForFilterQuery.data || [];
+
+  const progressOverviewQuery = useSupabaseQuery(
+    async () => (orgId ? fetchOrgLearnerProgressOverview(orgId, { startDate: progressStartDate || null, endDate: progressEndDate || null }) : []),
+    [orgId, progressStartDate, progressEndDate]
+  );
+  const learnerProgressAll = progressOverviewQuery.data || [];
+  const learnerProgress = learnerProgressAll.filter((l) => {
+    if (progressCohortId !== "all" && !(l.cohorts || []).some((c) => c.id === progressCohortId)) return false;
+    if (progressSearch.trim() && !l.name.toLowerCase().includes(progressSearch.trim().toLowerCase())) return false;
+    return true;
+  });
   const leaderboard = [...learnerProgress].sort((a, b) => (b.avgProgress ?? 0) - (a.avgProgress ?? 0)).slice(0, 10);
   const behindLearners = learnerProgress.filter((l) => l.pace === "behind");
   const progressByCourseQuery = useSupabaseQuery(async () => (orgId ? fetchTopCourses(orgId, 20) : []), [orgId]);
+  const expandedCourseRosterQuery = useSupabaseQuery(
+    async () => (expandedProgressCourseId ? fetchCourseEnrolledLearners(expandedProgressCourseId) : []),
+    [expandedProgressCourseId]
+  );
   const skillGapsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgSkillGapsDetail(orgId) : []), [orgId]);
   const [expandedLearnerId, setExpandedLearnerId] = useState(null);
   const complianceQuery = useSupabaseQuery(async () => orgId ? fetchComplianceAssignments(orgId) : [], [orgId]);
@@ -244,6 +269,48 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
 
         {mainTab === "progress" && (
           <div className="ta-col ta-gap16">
+            <div className="ta-card">
+              <div className="ta-row ta-gap12" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
+                <div>
+                  <label className="ta-label" style={{ display: "block", marginBottom: 4 }}>Search learner</label>
+                  <div className="ta-search" style={{ width: 200 }}>
+                    <Search size={14} />
+                    <input placeholder="Name..." value={progressSearch} onChange={(e) => setProgressSearch(e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <label className="ta-label" style={{ display: "block", marginBottom: 4 }}>Cohort</label>
+                  <select className="ta-input" style={{ width: 180 }} value={progressCohortId} onChange={(e) => setProgressCohortId(e.target.value)}>
+                    <option value="all">All cohorts</option>
+                    {cohortsForFilter.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="ta-label" style={{ display: "block", marginBottom: 4 }}>Completed from</label>
+                  <input type="date" className="ta-input" style={{ width: 150 }} value={progressStartDate} onChange={(e) => setProgressStartDate(e.target.value)} />
+                </div>
+                <div>
+                  <label className="ta-label" style={{ display: "block", marginBottom: 4 }}>Completed to</label>
+                  <input type="date" className="ta-input" style={{ width: 150 }} value={progressEndDate} onChange={(e) => setProgressEndDate(e.target.value)} />
+                </div>
+                {(progressStartDate || progressEndDate || progressCohortId !== "all" || progressSearch) && (
+                  <button
+                    className="ta-btn ta-btn-outline ta-btn-sm"
+                    onClick={() => { setProgressStartDate(""); setProgressEndDate(""); setProgressCohortId("all"); setProgressSearch(""); }}
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+              {(progressStartDate || progressEndDate) && (
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 8, fontStyle: "italic" }}>
+                  Showing completions in this date range - progress percentages reflect current state, since this data doesn't keep a full historical snapshot per day.
+                </div>
+              )}
+            </div>
+
             <div className="ta-grid ta-grid-2">
               <div className="ta-card">
                 <div className="ta-label">Leaderboard • Top Performers</div>
@@ -277,15 +344,43 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
 
             <div className="ta-card">
               <div className="ta-label">Progress by course</div>
+              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Click a course to see who's enrolled and their individual progress.</div>
               {progressByCourseQuery.loading && <div className="ta-empty">Loading...</div>}
               {!progressByCourseQuery.loading && (progressByCourseQuery.data || []).length === 0 && <div className="ta-empty">No enrollments yet.</div>}
               <div className="ta-col ta-gap8 ta-mt12">
-                {(progressByCourseQuery.data || []).map((c) => (
-                  <div key={c.courseId} className="ta-row ta-between" style={{ fontSize: 12.5, padding: "6px 0", gap: 10 }}>
-                    <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</span>
-                    <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.enrolled} enrolled - {c.completed} completed</span>
-                  </div>
-                ))}
+                {(progressByCourseQuery.data || []).map((c) => {
+                  const isOpen = expandedProgressCourseId === c.courseId;
+                  return (
+                    <div key={c.courseId} style={{ borderRadius: 8, background: isOpen ? "var(--surface-3)" : "transparent" }}>
+                      <div
+                        className="ta-row ta-between"
+                        style={{ fontSize: 12.5, padding: "8px 10px", gap: 10, cursor: "pointer" }}
+                        onClick={() => setExpandedProgressCourseId(isOpen ? null : c.courseId)}
+                      >
+                        <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</span>
+                        <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.enrolled} enrolled - {c.completed} completed</span>
+                      </div>
+                      {isOpen && (
+                        <div style={{ padding: "0 10px 10px" }}>
+                          {expandedCourseRosterQuery.loading && <div className="ta-empty">Loading roster...</div>}
+                          {!expandedCourseRosterQuery.loading && (expandedCourseRosterQuery.data || []).length === 0 && (
+                            <div className="ta-empty">No one enrolled yet.</div>
+                          )}
+                          <div className="ta-col ta-gap6">
+                            {(expandedCourseRosterQuery.data || []).map((r) => (
+                              <div key={r.userId} className="ta-row ta-between" style={{ fontSize: 12, padding: "4px 0" }}>
+                                <span>{r.name}</span>
+                                <span style={{ color: r.progress >= 100 ? "var(--success)" : "var(--text-2)", fontWeight: 700 }}>
+                                  {r.progress}%{r.completedAt ? ` - completed ${new Date(r.completedAt).toLocaleDateString()}` : ""}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

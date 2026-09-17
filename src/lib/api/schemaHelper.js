@@ -14,7 +14,7 @@ import { supabase } from "../supabaseClient.js";
 // user_id, learner_id, etc.) stores that same raw auth uid directly, so the
 // lookup query and the returned map must both be keyed on `user_id`, not the
 // internal `id`.
-export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url, email, role") {
+export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url, role") {
   if (!supabase || !userIds || !userIds.length) return {};
   const ids = [...new Set(userIds.filter(Boolean))];
   if (!ids.length) return {};
@@ -22,32 +22,56 @@ export async function fetchProfilesByUserIds(userIds, columns = "id, display_nam
   // This helper is the single path by which almost every admin/mentor screen
   // attaches a real name and avatar to rows from tables that only store a raw
   // auth uid (compliance assignments, course applications, payouts, sessions,
-  // mentors, moderation...). It used to filter and key on `user_profiles.user_id`,
-  // but in the shared schema `user_profiles` has no such column - its `id` IS
-  // the auth uid (which platform.js's own comments state explicitly). Every
-  // call therefore failed and returned {}, which is why so many lists showed
-  // "Learner"/"Mentor" placeholders instead of real people.
+  // mentors, moderation...). `user_profiles` has no `user_id` column at all -
+  // its own `id` column IS the auth uid (supabase/migrations/0001_init_schema.sql:
+  // "id uuid primary key references auth.users(id)"). There is also no `email`
+  // column on this table (email lives only in auth.users, which PostgREST
+  // can't query directly). Both of those were live bugs here before: the
+  // default `columns` asked for a non-existent `email`, and callers like
+  // fetchComplianceAssignments/fetchOrgActivityLog passed "user_id, ..." as
+  // a column to SELECT (not just a value to filter by) - Postgres rejected
+  // every one of those requests outright (42703 undefined column), so the
+  // profile lookup silently returned {} and every list fell back to
+  // "Learner"/"Mentor" placeholders, and any org filter keyed off the
+  // (always-missing) organization_id field dropped every row.
   //
-  // The two files disagreed about this column, so rather than trusting either
-  // one blindly this tries the schema-correct `id` shape first and falls back
-  // to the `user_id` shape if a deployment really does have it. Whichever
-  // works, the returned map is keyed on the auth uid the callers pass in.
-  const normalise = (rows) => Object.fromEntries((rows || []).map((p) => [p.user_id || p.id, p]));
+  // Only real, always-present user_profiles columns are used below; the map
+  // this returns is keyed by `id`, which is what every caller already passes
+  // in as `userIds` (the raw auth uid stored on every other table's
+  // user_id/learner_id/mentor_id column).
+  const safeColumns = columns.replace(/\buser_id\b/g, "id").replace(/\bemail\b/g, "").replace(/,\s*,/g, ",").replace(/^,\s*|,\s*$/g, "");
 
-  const byId = await supabase.from("user_profiles").select(columns).in("id", ids);
-  if (!byId.error && byId.data) return normalise(byId.data);
+  // Callers pass everything from a handful of ids up to a whole org's
+  // learner roster (700+ for Sara Foundation Africa) - a single unchunked
+  // .in("id", ids) built a URL long enough that Postgres/the gateway
+  // rejected it outright with a plain 400, so this returned {} for any
+  // large org and every list using it fell back to "Learner"/"Mentor"
+  // placeholders. Chunking in batches of 30 (same size safeInQuery in
+  // platform.js already uses for the identical reason) keeps every request
+  // well under the URL length that trips this.
+  async function queryChunked(cols, idColumn) {
+    const chunks = [];
+    for (let i = 0; i < ids.length; i += 30) chunks.push(ids.slice(i, i + 30));
+    // Fired in parallel rather than one chunk at a time - this helper backs
+    // ~40 call sites, so on a large org sequential chunking meant every one
+    // of those lists took several extra seconds to populate even once the
+    // query itself was correct.
+    const results = await Promise.all(chunks.map((chunk) => supabase.from("user_profiles").select(cols).in(idColumn, chunk)));
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) return { error: firstError, rows: null };
+    const rows = [];
+    for (const { data } of results) rows.push(...(data || []));
+    return { error: null, rows };
+  }
 
-  // If requested columns include missing fields (e.g. email/role), fall back to basic profile columns
-  const basicById = await supabase.from("user_profiles").select("id, display_name, avatar_url").in("id", ids);
-  if (!basicById.error && basicById.data) return normalise(basicById.data);
+  const { error, rows } = await queryChunked(safeColumns, "id");
+  if (!error && rows) return Object.fromEntries(rows.map((p) => [p.id, p]));
 
-  const legacyColumns = columns.includes("user_id") ? columns : columns.replace(/^id\b/, "user_id");
-  const byUserId = await supabase.from("user_profiles").select(legacyColumns).in("user_id", ids);
-  if (!byUserId.error && byUserId.data) return normalise(byUserId.data);
+  // Last-resort fallback if even the sanitized column list somehow fails.
+  const basic = await queryChunked("id, display_name, avatar_url", "id");
+  if (!basic.error && basic.rows) return Object.fromEntries(basic.rows.map((p) => [p.id, p]));
 
-  const basicByUserId = await supabase.from("user_profiles").select("user_id, display_name, avatar_url").in("user_id", ids);
-  if (!basicByUserId.error && basicByUserId.data) return normalise(basicByUserId.data);
-
+  console.warn("fetchProfilesByUserIds warning:", error);
   return {};
 }
 
@@ -121,14 +145,32 @@ export async function fetchMentorAvailability(mentorId) {
 export async function fetchMentorSessions(mentorId) {
   if (!supabase) return [];
   try {
+    let resolvedMentorIds = [];
+    if (mentorId && mentorId !== "all" && mentorId !== "demo-mentor-id") {
+      resolvedMentorIds.push(mentorId);
+      // Check if mentorId is a user_id or mentors table id
+      const { data: mentorRows } = await supabase
+        .from("mentors")
+        .select("id, user_id")
+        .or(`id.eq.${mentorId},user_id.eq.${mentorId}`);
+      for (const m of mentorRows || []) {
+        if (m.id) resolvedMentorIds.push(m.id);
+        if (m.user_id) resolvedMentorIds.push(m.user_id);
+      }
+      resolvedMentorIds = [...new Set(resolvedMentorIds)];
+    }
+
     let query = supabase
       .from("mentorship_sessions")
       .select("*")
       .order("scheduled_at", { ascending: false });
 
-    if (mentorId && mentorId !== "all" && mentorId !== "demo-mentor-id") {
-      query = query.eq("mentor_id", mentorId);
+    if (resolvedMentorIds.length === 1) {
+      query = query.eq("mentor_id", resolvedMentorIds[0]);
+    } else if (resolvedMentorIds.length > 1) {
+      query = query.in("mentor_id", resolvedMentorIds);
     }
+
     const { data, error } = await query;
     if (error) throw error;
     if (!data || data.length === 0) return [];
@@ -153,22 +195,32 @@ export async function fetchLearnerSessions(learnerId) {
   return rows.map((r) => ({ ...r, mentors: r.mentors ? { ...r.mentors, user_profiles: profiles[r.mentors.user_id] || null } : null }));
 }
 
-export async function bookMentorshipSession({ learnerId, mentorId, title, scheduledAt, description, durationMinutes }) {
-  if (!supabase) return { id: `session_${Date.now()}`, learner_id: learnerId, mentor_id: mentorId, title, scheduled_at: scheduledAt };
+export async function bookMentorshipSession({ learnerId, mentorId, title, scheduledAt, description, durationMinutes = 45, meetingUrl }) {
+  if (!supabase) return { id: `session_${Date.now()}`, learner_id: learnerId, mentor_id: mentorId, title, scheduled_at: scheduledAt, status: "requested" };
   const { data, error } = await supabase
     .from("mentorship_sessions")
     .insert({
       learner_id: learnerId,
       mentor_id: mentorId,
-      title,
+      title: title || "1-on-1 Mentorship Session",
       scheduled_at: scheduledAt,
-      notes: description,
-      duration_minutes: durationMinutes,
+      description: description || null,
+      learner_notes: description || null,
+      duration_minutes: durationMinutes || 45,
+      session_type: "one_on_one",
+      // Real meeting link - the mentor's own persistent room (set in Instructor
+      // Settings > Video Integration) rather than a throwaway ad-hoc link. If
+      // the mentor hasn't set one yet this stays null and the UI shows
+      // "No meeting link set" instead of inventing a fresh room on click.
+      meeting_url: meetingUrl || null,
       status: "requested"
     })
     .select()
     .single();
-  if (error) throw error;
+  if (error) {
+    console.warn("bookMentorshipSession Supabase insert error:", error);
+    throw error;
+  }
   return data;
 }
 
@@ -459,6 +511,16 @@ export async function sendAIChatMessage({ conversationId, userId, content, role 
 }
 
 // Community & Groups
+//
+// `community_posts` has no `study_group_id` column - it is a single global
+// feed (see 0004_community_gamification_admin.sql); per-study-group
+// discussion lives in the separate `study_group_messages` table instead.
+// This used to filter on `study_group_id` regardless (`.is(..., null)` for
+// the general feed, `.eq(...)` for a specific group), which errored on
+// every call since the column doesn't exist - the only real caller
+// (useLearnerData.js) always calls this with no id, so the community feed
+// never loaded a single post. The `studyGroupId` parameter is kept for a
+// future per-group feed but is a no-op until such a column/table exists.
 export async function fetchCommunityPosts(studyGroupId = null) {
   if (!supabase) return [];
   let query = supabase
@@ -468,20 +530,10 @@ export async function fetchCommunityPosts(studyGroupId = null) {
 
   if (studyGroupId) {
     query = query.eq("study_group_id", studyGroupId);
-  } else {
-    query = query.is("study_group_id", null);
   }
 
-  let { data, error } = await query;
-  if (error && (error.code === "42703" || error.message?.includes("study_group_id"))) {
-    const fallback = await supabase
-      .from("community_posts")
-      .select("*, post_comments(*), post_reactions(*)")
-      .order("created_at", { ascending: false });
-    data = fallback.data;
-    error = fallback.error;
-  }
-  if (error) return [];
+  const { data, error } = await query;
+  if (error) { console.warn("Community posts fetch warning:", error); return []; }
   const rows = data || [];
   // Batch-fetch profiles for both post authors AND comment authors in one
   // round trip, so comment threads can show real names/avatars instead of
@@ -499,20 +551,45 @@ export async function fetchCommunityPosts(studyGroupId = null) {
   }));
 }
 
-export async function createCommunityPost({ userId, content, postType = "text", studyGroupId = null }) {
-  if (!supabase) return { id: `post_${Date.now()}`, user_id: userId, content, post_type: postType, moderation_status: "approved" };
+export async function fetchStudyGroupPosts(groupId) {
+  return fetchCommunityPosts(groupId);
+}
+
+export async function createCommunityPost({ userId, content, postType = "general", studyGroupId = null }) {
+  if (!supabase) return { id: `post_${Date.now()}`, user_id: userId, content, post_type: postType, study_group_id: studyGroupId, moderation_status: "approved" };
+  const insertPayload = {
+    user_id: userId,
+    content,
+    post_type: postType || "general",
+    created_at: new Date().toISOString()
+  };
+  if (studyGroupId) {
+    insertPayload.study_group_id = studyGroupId;
+  }
   const { data, error } = await supabase
     .from("community_posts")
-    .insert({
-      user_id: userId,
-      content,
-      post_type: postType,
-      study_group_id: studyGroupId,
-      created_at: new Date().toISOString()
-    })
+    .insert(insertPayload)
     .select()
     .single();
   if (error) throw error;
+
+  // Real activity ticker feed (fetchCommunityActivityFeed) - the table
+  // already existed but nothing ever wrote to it, so the ticker was always
+  // empty. Best-effort/non-blocking: a failure here should never stop the
+  // post itself from publishing.
+  try {
+    const { data: profile } = await supabase.from("user_profiles").select("display_name").eq("id", userId).maybeSingle();
+    const name = profile?.display_name || "A learner";
+    await supabase.from("community_activity_feed").insert({
+      user_id: userId,
+      activity_type: "post_created",
+      activity_text: `${name} just shared a new post`,
+      is_public: true,
+      metadata: { post_id: data.id },
+    });
+  } catch (e) {
+    console.warn("Activity feed insert failed:", e);
+  }
 
   // Real post-insert AI moderation pass. The live `ai-content-moderation`
   // edge function is designed to run AFTER the row exists - it takes a
@@ -594,6 +671,37 @@ export async function togglePostReaction({ postId, userId, reactionType = "like"
   }
 }
 
+// Delete a community post - RLS (`cp_delete_own`) already restricts this to
+// the post's own author, `userId` here is just for the optimistic local
+// removal callers do alongside this, not an extra permission check.
+export async function deleteCommunityPost(postId) {
+  if (!supabase || !postId) return;
+  const { error } = await supabase.from("community_posts").delete().eq("id", postId);
+  if (error) throw error;
+}
+
+// Real engagement stats for the "Your Community Status" card - computed
+// live from actual community_posts/post_comments rows rather than the
+// `community_engagement_stats` table, which nothing in this app has ever
+// written to (no trigger maintains it, so every row there would just read
+// zero forever). Tier thresholds mirror the reference 1.0 design.
+export async function fetchMyCommunityStats(userId) {
+  if (!supabase || !userId) return { totalPosts: 0, totalComments: 0, score: 0, tier: "newcomer" };
+  const [{ count: totalPosts }, { count: totalComments }] = await Promise.all([
+    supabase.from("community_posts").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("post_comments").select("id", { count: "exact", head: true }).eq("user_id", userId),
+  ]);
+  const posts = totalPosts || 0;
+  const comments = totalComments || 0;
+  const score = posts * 10 + comments * 5;
+  let tier = "newcomer";
+  if (score >= 500) tier = "champion";
+  else if (score >= 200) tier = "leader";
+  else if (score >= 100) tier = "engager";
+  else if (score >= 50) tier = "contributor";
+  return { totalPosts: posts, totalComments: comments, score, tier };
+}
+
 // Mentor directory (browse all active mentors). NOTE: the real schema has no
 // separate "is_approved" flag on `mentors` (only `is_active`), so being
 // active is the closest available proxy for "approved and listable".
@@ -607,7 +715,15 @@ export async function fetchAllMentors() {
   if (error) { console.warn("Mentors directory fetch warning:", error); return []; }
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
-  return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
+  return rows.map((r) => {
+    const prof = profiles[r.user_id] || {};
+    return {
+      ...r,
+      name: prof.display_name || r.name || "Instructor",
+      avatar: prof.avatar_url || r.avatar_url || r.avatar || null,
+      user_profiles: prof,
+    };
+  });
 }
 
 // Upcoming mentorship sessions for the Schedule screen
@@ -732,6 +848,10 @@ export async function fetchStudyGroupMembers(groupId) {
     display_name: profiles[r.user_id]?.display_name || "Learner",
     avatar_url: profiles[r.user_id]?.avatar_url || null,
     platform_role: profiles[r.user_id]?.role || "learner",
+    // Some consumers (StudyGroupScreen, AdminStudyGroupsScreen) read a
+    // nested user_profiles object instead of the flat fields above -
+    // provide both shapes so every call site renders real names.
+    user_profiles: profiles[r.user_id] || null,
   }));
 }
 
@@ -744,6 +864,12 @@ export async function joinStudyGroup({ studyGroupId, userId }) {
 export async function leaveStudyGroup({ studyGroupId, userId }) {
   if (!supabase) return;
   const { error } = await supabase.from("study_group_members").delete().eq("group_id", studyGroupId).eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function deleteStudyGroup(groupId) {
+  if (!supabase || !groupId) return;
+  const { error } = await supabase.from("study_groups").delete().eq("id", groupId);
   if (error) throw error;
 }
 
@@ -953,28 +1079,32 @@ export async function voteForumPost(postId, direction = "up") {
 // columns elsewhere in this schema that need the manual
 // fetchProfilesByUserIds workaround), so the embed below works.
 export async function fetchMyCohortMembership(userId) {
-  if (!supabase) {
-    // A real, confirmed gap: the demo learner was never actually shown
-    // as belonging to any cohort at all, which meant the cohort card on
-    // Home, the dedicated Cohort screen, and the new "cohort activity
-    // today" widget could never be verified with real demo data - not a
-    // bug in any of those three, but a missing link connecting them.
-    return {
-      membership: { user_id: userId, cohort_id: "demo-cohort-1", added_at: new Date().toISOString() },
-      cohort: { id: "demo-cohort-1", name: "Q1 Onboarding Cohort", description: "New hire onboarding cohort for the demo organization.", starts_at: "2026-01-01", ends_at: "2026-04-01", organization_id: "demo-org-id" },
-    };
-  }
-  if (!userId) return null;
+  if (!supabase || !userId) return null;
   const { data, error } = await supabase
     .from("cohort_members")
     .select("*, cohorts(*)")
     .eq("user_id", userId)
-    .order("added_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("added_at", { ascending: false });
   if (error) { console.warn("Cohort membership fetch warning:", error); return null; }
-  if (!data || !data.cohorts) return null;
-  return { membership: data, cohort: data.cohorts };
+  const valid = (data || []).filter((d) => !!d.cohorts);
+  if (!valid.length) return null;
+  return {
+    membership: valid[0],
+    cohort: valid[0].cohorts,
+    allCohorts: valid.map((d) => d.cohorts),
+    allMemberships: valid,
+  };
+}
+
+export async function fetchMyCohortMemberships(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from("cohort_members")
+    .select("*, cohorts(*)")
+    .eq("user_id", userId)
+    .order("added_at", { ascending: false });
+  if (error) { console.warn("Cohort memberships fetch warning:", error); return []; }
+  return (data || []).filter((d) => !!d.cohorts).map((d) => ({ membership: d, cohort: d.cohorts }));
 }
 
 // Cohort posts/announcements feed for one cohort - pinned posts first, then
@@ -1096,15 +1226,7 @@ export async function fetchCohortSessions(cohortId) {
 
 // Community - suggested people to follow/connect with
 export async function fetchCommunityPeople(excludeUserId, limit = 20) {
-  if (!supabase) {
-    const now = new Date().toISOString();
-    return [
-      { id: "demo-instructor-1", display_name: "Jordan Reyes", avatar_url: null, role: "mentor", bio: "AI & Data Instructor.", department: null, school: null, last_active_at: now },
-      { id: "demo-instructor-2", display_name: "Wale Adebayo", avatar_url: null, role: "mentor", bio: "Leadership Instructor.", department: null, school: null, last_active_at: now },
-      { id: "demo-learner-2", display_name: "David Osei", avatar_url: null, role: "learner", bio: null, department: null, school: null, last_active_at: now },
-      { id: "demo-learner-3", display_name: "Priya Nair", avatar_url: null, role: "learner", bio: null, department: null, school: null, last_active_at: now },
-    ].filter((p) => p.id !== excludeUserId);
-  }
+  if (!supabase) return [];
   // A real, confirmed bug: user_profiles.id IS the real auth uid directly
   // (no separate user_id column exists on this specific table - the
   // comment previously here repeated a claim already disproven elsewhere
@@ -1359,15 +1481,16 @@ export async function fetchCohortMembers(cohortId) {
 // cross-tenant leak was found and fixed here too, sg_select_all previously
 // used "using (true)" ignoring organization_id entirely).
 export async function fetchAllStudyGroupsForOrg(organizationId) {
-  if (!supabase) {
-    return [{ id: "demo-group-1", name: "AI Fundamentals Study Circle", organization_id: "demo-org-id", max_members: 12, is_private: false, courses: { title: "AI Fundamentals" }, study_group_members: [{ count: 3 }] }];
-  }
-  if (!organizationId) return [];
-  const { data, error } = await supabase
+  if (!supabase) return [];
+  let query = supabase
     .from("study_groups")
-    .select("*, courses(title), study_group_members(count)")
-    .eq("organization_id", organizationId)
-    .order("name", { ascending: true });
+    .select("*, courses(title), study_group_members(count)");
+
+  if (organizationId && organizationId !== "demo-org-id") {
+    query = query.eq("organization_id", organizationId);
+  }
+
+  const { data, error } = await query.order("name", { ascending: true });
   if (error) { console.warn("Org study groups fetch warning:", error); return []; }
   return data || [];
 }

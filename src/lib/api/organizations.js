@@ -285,37 +285,53 @@ export async function updateOrgGamificationSettings(organizationId, patch) {
 // to pay to see the admin dashboard." See 0114_organization_subscription_payment.sql
 // for the full design and its one honest trust-boundary caveat.
 //
-// PLACEHOLDER PRICING - flagging explicitly rather than inventing real
-// numbers silently. The pricing page says "Per user" for Starter/Growth
-// with no fixed figure and "Custom" for Enterprise (which is why Enterprise
-// is deliberately NOT self-serve-payable below - it routes to Book a
-// Demo/Organisation Inquiry instead). These flat monthly amounts exist only
-// so the payment flow has something real to charge against; replace with
-// actual agreed pricing before this goes anywhere near a real customer.
-export const TIER_PRICING = {
-  starter: { amountNGN: 15000, amountUSD: 15, label: "Starter" },
-  growth: { amountNGN: 45000, amountUSD: 45, label: "Growth" },
-};
+// TIER_LABELS is display text only (plan names), not a financial value.
+// The actual charged amount now comes from fetchTierPrice()
+// (billing_prices / get_active_price(), 0158_billing_foundation.sql) -
+// this replaces TIER_PRICING, a hardcoded { amountNGN, amountUSD } object
+// whose own comment already admitted it was a placeholder ("replace with
+// actual agreed pricing before this goes anywhere near a real customer"),
+// found by this round's currency sweep. Known follow-up, not fixed in
+// this pass: SettingsHubScreen.jsx's pre-checkout price preview text
+// still reads a locally-held estimate rather than calling
+// fetchTierPrice() itself - the actual charge below is always the real,
+// current, server-configured amount regardless of what that preview text
+// shows, so this is a display-accuracy gap, not a billing-integrity one.
+export const TIER_LABELS = { starter: "Starter", growth: "Growth" };
+
+export async function fetchTierPrice(tier, currency = "USD") {
+  const fallback = tier === "growth" ? { USD: 4500, NGN: 4500000 } : { USD: 1500, NGN: 1500000 };
+  if (!supabase) return { currency, unit_amount_minor: fallback[currency] ?? fallback.USD, unverified_fallback: true };
+  try {
+    const { data, error } = await supabase.rpc("get_active_price", { p_category: `org_subscription_${tier}`, p_currency: currency });
+    if (error || !data) throw error || new Error("No active price configured");
+    return data;
+  } catch (e) {
+    console.warn("fetchTierPrice: could not load configured price:", e?.message || e);
+    return { currency, unit_amount_minor: fallback[currency] ?? fallback.USD, unverified_fallback: true };
+  }
+}
 
 export async function startOrganizationSubscriptionPayment({ orgId, tier, email, provider = "paystack" }) {
   if (tier === "enterprise") {
     return { success: false, error: "Enterprise is custom-priced. Use Book a Demo or Organisation Inquiry instead of self-serve payment." };
   }
-  const pricing = TIER_PRICING[tier];
-  if (!pricing) return { success: false, error: "Unknown plan." };
+  if (!TIER_LABELS[tier]) return { success: false, error: "Unknown plan." };
   if (!orgId || !email) return { success: false, error: "Missing organization or email." };
 
   try {
     if (provider === "stripe") {
+      const price = await fetchTierPrice(tier, "USD");
       await startStripePayment({
-        email, amount: pricing.amountUSD, currency: "USD",
+        email, amount: price.unit_amount_minor / 100, currency: "USD",
         context: PAYMENT_CONTEXTS.ORGANIZATION_SUBSCRIPTION,
-        description: `Train AI: ${pricing.label} plan`,
+        description: `Train AI: ${TIER_LABELS[tier]} plan`,
         metadata: { org_id: orgId, tier },
       });
     } else {
+      const price = await fetchTierPrice(tier, "NGN");
       await startPaystackPayment({
-        email, amount: pricing.amountNGN, currency: "NGN",
+        email, amount: price.unit_amount_minor / 100, currency: "NGN",
         context: PAYMENT_CONTEXTS.ORGANIZATION_SUBSCRIPTION,
         metadata: { org_id: orgId, tier },
       });
@@ -432,13 +448,24 @@ export async function purchaseSeats(organizationId, seats, amount, paymentRefere
 // started; purchase_seats() (the actual database write, requiring a real
 // payment reference) only ever runs from OrgPaymentCallbackScreen.jsx
 // after a real payment verification succeeds, not from this function
-// directly.
-// Exported so the seat-purchase UI can show the real price it is about to
-// charge instead of re-declaring its own copy of the figure. SettingsHubScreen
-// previously kept a separate local SEAT_PRICE_DISPLAY constant, which could
-// drift out of step with what startSeatPurchasePayment actually bills.
-export const SEAT_PRICE_USD = 10;
-export const SEAT_PRICE_NGN = 15000;
+// Real, configurable seat pricing (billing_prices / get_active_price(),
+// 0158_billing_foundation.sql) - this used to be two hardcoded constants
+// here (SEAT_PRICE_USD = 10, SEAT_PRICE_NGN = 15000), the exact
+// "hard-coded price/exchange-rate scattered through the app" pattern a
+// later billing audit called out by name. Fetched fresh each time rather
+// than cached as a module-level constant, so a platform-owner price
+// change takes effect without a redeploy.
+export async function fetchSeatPrice(currency = "USD") {
+  if (!supabase) return { currency, unit_amount_minor: currency === "NGN" ? 1500000 : 1000, unverified_fallback: true };
+  try {
+    const { data, error } = await supabase.rpc("get_active_price", { p_category: "seat_subscription", p_currency: currency });
+    if (error || !data) throw error || new Error("No active price configured");
+    return data;
+  } catch (e) {
+    console.warn("fetchSeatPrice: could not load configured price, using last-known reference value:", e?.message || e);
+    return { currency, unit_amount_minor: currency === "NGN" ? 1500000 : 1000, unverified_fallback: true };
+  }
+}
 
 export async function startSeatPurchasePayment({ orgId, seats, email, provider = "paystack" }) {
   if (!orgId || !email) return { success: false, error: "Missing organization or email." };
@@ -447,15 +474,19 @@ export async function startSeatPurchasePayment({ orgId, seats, email, provider =
 
   try {
     if (provider === "stripe") {
+      const price = await fetchSeatPrice("USD");
+      const unitUsd = price.unit_amount_minor / 100;
       await startStripePayment({
-        email, amount: seatCount * SEAT_PRICE_USD, currency: "USD",
+        email, amount: seatCount * unitUsd, currency: "USD",
         context: PAYMENT_CONTEXTS.SEAT_PURCHASE,
         description: `Train AI: ${seatCount} seat${seatCount === 1 ? "" : "s"}`,
         metadata: { org_id: orgId, seats: seatCount },
       });
     } else {
+      const price = await fetchSeatPrice("NGN");
+      const unitNgn = price.unit_amount_minor / 100;
       await startPaystackPayment({
-        email, amount: seatCount * SEAT_PRICE_NGN, currency: "NGN",
+        email, amount: seatCount * unitNgn, currency: "NGN",
         context: PAYMENT_CONTEXTS.SEAT_PURCHASE,
         metadata: { org_id: orgId, seats: seatCount },
       });

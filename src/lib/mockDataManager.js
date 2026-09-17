@@ -3,6 +3,23 @@ import { HAS_DATABASE } from "./demoMode.js";
 const STORAGE_KEY = "trainai_mock_data_enabled";
 const CHANGE_EVENT = "trainai_mock_data_changed";
 
+// Every real Supabase row id in this schema is a Postgres uuid. Every mock/
+// demo id used across this codebase (course-figma-ai, demo-course-...,
+// l-figma-2, etc.) is a plain slug - never a UUID. Querying a real
+// UUID-typed column (course_id, etc.) with one of those slugs throws
+// "invalid input syntax for type uuid" against a real, connected Supabase
+// project - the actual cause of a course/lesson detail page rendering
+// blank when it's reached from mock/demo course data. This is the single
+// general check for that bug class, used anywhere a course/lesson id is
+// about to be sent into a real-table query - simpler and more robust than
+// maintaining a duplicate list of every mock id by hand, since it also
+// catches any new mock course/lesson added later without needing this
+// check updated too.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export function isRealDatabaseId(id) {
+  return typeof id === "string" && UUID_RE.test(id);
+}
+
 /**
  * Returns true if mock/demo data is enabled (defaults to true for prototyping until disabled by admin/owner).
  * Always returns false when Supabase database is connected.

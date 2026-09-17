@@ -17,10 +17,14 @@ import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 
 const PROJECT_LABELS = {
-  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Sara Foundation",
-  [SUPABASE_PROJECTS.DIGITAL_TRAINING]: "Digital Training Org (+ Super Admin)",
-  [SUPABASE_PROJECTS.B2B]: "B2B Organizations",
+  [SUPABASE_PROJECTS.ORGANIZATION_DB]: "Train AI 2.0 Organization Database (Platform Owner, Digital Users & B2B Orgs)",
+  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Train AI 2.0 Sara Foundation (Dedicated)",
 };
+
+const PROJECT_KEYS = [
+  SUPABASE_PROJECTS.ORGANIZATION_DB,
+  SUPABASE_PROJECTS.SARA_FOUNDATION,
+];
 
 function ProjectSwitcherBanner({ activeProject: current, projectSessionStatus, onSwitch }) {
   return (
@@ -28,7 +32,7 @@ function ProjectSwitcherBanner({ activeProject: current, projectSessionStatus, o
       <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
         <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-2)" }}>DATABASE / PROJECT</div>
         <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-          {Object.values(SUPABASE_PROJECTS).map((key) => {
+          {PROJECT_KEYS.map((key) => {
             const status = projectSessionStatus?.[key];
             const isActive = key === current;
             return (
@@ -76,6 +80,10 @@ export default function PlatformOwnerApp({
   const { session, profileQuery, userRoles: hookRoles } = usePlatformData();
   const userRoles = userRolesProp || hookRoles;
 
+  useEffect(() => {
+    setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+  }, []);
+
   const allOrgsQuery = useSupabaseQuery(async () => fetchAllOrganizationsWithUserCounts(), [activeProject]);
   const allOrgs = allOrgsQuery.data || [];
   const [internalOrgId, setInternalOrgId] = useState("");
@@ -92,7 +100,7 @@ export default function PlatformOwnerApp({
     let cancelled = false;
     (async () => {
       const statuses = {};
-      for (const projectKey of Object.values(SUPABASE_PROJECTS)) {
+      for (const projectKey of PROJECT_KEYS) {
         const client = getSupabaseClientForProject(projectKey);
         if (!client) { statuses[projectKey] = "not_configured"; continue; }
         try {
@@ -116,7 +124,7 @@ export default function PlatformOwnerApp({
     setTimeout(() => setToast(null), 2500);
   }
 
-  const availableDashboards = getAvailableDashboards(userRoles);
+  const availableDashboards = getAvailableDashboards(userRoles, session?.user?.email || profileQuery?.data?.email);
   const [isDark, setIsDark] = useState(() => {
     try {
       return localStorage.getItem("trainai_theme_dark") === "true";

@@ -14,12 +14,12 @@ import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail
 // way for a manager to claim reports from here), the table just says so.
 export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelector }) {
   const showToast = React.useContext(ToastContext);
-  const reportsQuery = useSupabaseQuery(async () => (userId ? fetchDirectReports(userId) : []), [userId]);
+  const reportsQuery = useSupabaseQuery(async () => (userId ? fetchDirectReports(userId, orgId) : []), [userId, orgId]);
   const reports = reportsQuery.data || [];
-  const skillSnapshotQuery = useSupabaseQuery(async () => (userId ? fetchTeamSkillSnapshot(userId) : []), [userId]);
-  const skillGapsDetailQuery = useSupabaseQuery(async () => (userId ? fetchManagerSkillGapsDetail(userId) : []), [userId]);
-  const teamCohortsQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCohorts(userId) : []), [userId]);
-  const teamComplianceQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCompliance(userId) : []), [userId]);
+  const skillSnapshotQuery = useSupabaseQuery(async () => (userId ? fetchTeamSkillSnapshot(userId, orgId) : []), [userId, orgId]);
+  const skillGapsDetailQuery = useSupabaseQuery(async () => (userId ? fetchManagerSkillGapsDetail(userId, orgId) : []), [userId, orgId]);
+  const teamCohortsQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCohorts(userId, orgId) : []), [userId, orgId]);
+  const teamComplianceQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCompliance(userId, orgId) : []), [userId, orgId]);
   const [expandedReportId, setExpandedReportId] = useState(null);
 
   function handleDownloadReport() {
@@ -61,7 +61,7 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
     { label: "Avg. completed courses", value: reportsQuery.loading ? "..." : avgCompletedCourses, icon: CheckCircle2, sub: `${totalCompletedCourses} total completed` },
     { label: "Avg. course completion", value: reportsQuery.loading ? "..." : `${avgCompletion}%`, icon: Target },
     { label: "Overdue compliance items", value: reportsQuery.loading ? "..." : totalOverdue, icon: AlertTriangle },
-    { label: "Team readiness score", value: readinessScore != null ? `${readinessScore}%` : "82%", icon: Gauge },
+    { label: "Team readiness score", value: readinessScore != null ? `${readinessScore}%` : (reports.length ? `${avgCompletion}%` : "N/A"), icon: Gauge },
   ];
 
   return (

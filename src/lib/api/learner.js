@@ -2,7 +2,7 @@ import { supabase } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { ACHIEVEMENT_CATALOG } from "../../learner/achievementCatalog.js";
 
-export async function fetchPublishedCourses() {
+export async function fetchPublishedCourses(organizationId) {
   if (!supabase) {
     const now = new Date().toISOString();
     return [
@@ -24,17 +24,20 @@ export async function fetchPublishedCourses() {
     ];
   }
   try {
-    let { data, error } = await supabase
+    let query = supabase
       .from("courses")
       .select("*")
-      .eq("is_published", true)
-      .order("created_at", { ascending: false });
-    if (!error && data && data.length > 0) {
+      .eq("is_published", true);
+
+    if (organizationId && organizationId !== "demo-org-id") {
+      query = query.or(`organization_id.eq.${organizationId},organization_id.is.null`);
+    }
+
+    let { data, error } = await query.order("created_at", { ascending: false });
+    if (!error && data) {
       return data;
     }
-    // Fallback if is_published filter or order had issue
-    const { data: allCourses } = await supabase.from("courses").select("*");
-    return allCourses || [];
+    return [];
   } catch (e) {
     console.warn("Could not fetch published courses:", e);
     return [];
@@ -368,6 +371,49 @@ export async function fetchLeaderboard(limit = 50) {
   return [];
 }
 
+// "This Week"/"This Month" leaderboard tabs (see 0148_leaderboard_period_and_cohort.sql
+// for why this can't just be a date filter on user_gamification_stats -
+// that table only has a lifetime running total, no per-period history).
+export async function fetchLeaderboardForPeriod(startDate, endDate, limit = 50) {
+  if (!supabase || !startDate || !endDate) return [];
+  try {
+    const { data, error } = await supabase.rpc("get_leaderboard_for_period", {
+      p_start: startDate, p_end: endDate, p_limit: limit,
+    });
+    if (error) { console.warn("Period leaderboard fetch warning:", error); return []; }
+    return (data || []).map((r) => ({ ...r, total_points: r.period_points }));
+  } catch (e) {
+    console.warn("Period leaderboard fetch error:", e);
+    return [];
+  }
+}
+
+// "My Cohort" leaderboard tab. Looks up the learner's own cohort first
+// (a learner can technically belong to more than one; the most recently
+// joined one is used, matching how CohortScreen picks "my" cohort) then
+// ranks only that cohort's members.
+export async function fetchMyCohortLeaderboard(userId, limit = 50) {
+  if (!supabase || !userId) return [];
+  try {
+    const { data: membership } = await supabase
+      .from("cohort_members")
+      .select("cohort_id")
+      .eq("user_id", userId)
+      .order("added_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!membership?.cohort_id) return [];
+    const { data, error } = await supabase.rpc("get_cohort_leaderboard", {
+      p_cohort_id: membership.cohort_id, p_limit: limit,
+    });
+    if (error) { console.warn("Cohort leaderboard fetch warning:", error); return []; }
+    return data || [];
+  } catch (e) {
+    console.warn("Cohort leaderboard fetch error:", e);
+    return [];
+  }
+}
+
 export async function fetchMyGamificationStats(userId) {
   if (!supabase) {
     return {
@@ -453,6 +499,24 @@ export async function fetchPublishedLessonCounts() {
   return counts;
 }
 
+// Real course instructor names (courses.instructor_id -> user_profiles).
+// LessonScreen/CourseDetailScreen used to hardcode "Astrid Larsson" for
+// every single lesson on every course, regardless of what course/lesson
+// was actually open - this gives real per-course instructor names to
+// replace that fake, always-wrong placeholder.
+export async function fetchCourseInstructorNames() {
+  if (!supabase) return {};
+  const { data, error } = await supabase.from("courses").select("id, instructor_id").not("instructor_id", "is", null);
+  if (error) { console.warn("Course instructor fetch warning:", error); return {}; }
+  const rows = data || [];
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.instructor_id));
+  const byCourseId = {};
+  for (const r of rows) {
+    byCourseId[r.id] = profiles[r.instructor_id]?.display_name || null;
+  }
+  return byCourseId;
+}
+
 // Course review averages/counts per course (course_reviews has no
 // aggregate view yet, so this aggregates client-side from the raw rows).
 export async function fetchCourseReviewSummaries() {
@@ -490,7 +554,7 @@ export async function fetchCourseReviews(courseId) {
 
 // Lesson timestamp notes (lesson_notes table)
 export async function fetchLessonNotes(userId, lessonId) {
-  if (!supabase || !userId || !lessonId) return [];
+  if (!supabase || !userId || !lessonId || !isValidUuid(lessonId)) return [];
   const { data, error } = await supabase
     .from("lesson_notes")
     .select("*")
@@ -503,6 +567,7 @@ export async function fetchLessonNotes(userId, lessonId) {
 
 export async function addLessonNote({ userId, lessonId, timestampSeconds, content }) {
   if (!supabase) return null;
+  if (!isValidUuid(lessonId)) throw new Error("Notes aren't available for this lesson yet.");
   const { data, error } = await supabase
     .from("lesson_notes")
     .insert({ user_id: userId, lesson_id: lessonId, timestamp_seconds: timestampSeconds, content })
@@ -536,52 +601,79 @@ export async function addCourseNote({ userId, courseId, content }) {
   return data;
 }
 
-// Course discussion (general Q&A thread per course).
-//
-// The real schema's `course_discussions` table has no "container" row /
-// `is_general` flag and no separate messages table for it - every row IS a
-// question/comment (content, title, user_id, parent_id for threading). Its
-// `course_discussion_messages` table exists instead for `course_mentor_discussions`
-// (1:1 mentor<->learner support threads), which is a different feature.
-// So there is no DB-level "discussion container" to fetch/create here; we
-// just use the courseId itself as the discussion identifier and treat
-// `course_discussions` rows for that course as the flat message list, while
-// keeping the same `{ discussion, messages }` / `{id, sender_id, content,
-// user_profiles }` shapes the UI already expects.
-export async function fetchOrCreateCourseDiscussion(courseId) {
-  if (!courseId) return null;
-  return { id: courseId };
+// Course discussion (general Q&A thread per course, or per lesson when a
+// lessonId is passed). `course_discussions` is the real thread/container
+// row (course_id, lesson_id, is_general, title) and `course_discussion_messages`
+// is the real flat message list against it (discussion_id, sender_id,
+// content, is_question, parent_id) - two separate tables, not one. An
+// earlier version of this file merged them into a single non-existent
+// shape (selecting content/user_id directly off course_discussions, which
+// has neither column), so every discussion fetch/post here silently
+// errored and the two screens that already called this (CourseDetailScreen's
+// Discussion tab, useLearnerData's courseDiscussionQuery) always showed an
+// empty thread no matter what anyone posted.
+// Placeholder curriculum (generateCurriculumForCourse in useLearnerData.js)
+// synthesizes lesson ids like "<courseId>-l1" for a course with no real
+// rows in the `lessons` table yet - those ids are not valid UUIDs, so a
+// query scoped to lesson_id would just 400 (22P02) every time and the Q&A
+// composer would silently no-op. Treat a non-UUID lessonId the same as no
+// lessonId at all: fall back to the course's general discussion thread so
+// Q&A still works, just not scoped to one specific placeholder lesson.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function isValidUuid(id) {
+  return typeof id === "string" && UUID_RE.test(id);
+}
+
+export async function fetchOrCreateCourseDiscussion(courseId, lessonId = null) {
+  if (!supabase || !courseId) return null;
+  if (lessonId && !isValidUuid(lessonId)) lessonId = null;
+  try {
+    let existingQuery = supabase.from("course_discussions").select("*").eq("course_id", courseId);
+    existingQuery = lessonId ? existingQuery.eq("lesson_id", lessonId) : existingQuery.eq("is_general", true);
+    const { data: existing } = await existingQuery.maybeSingle();
+    if (existing) return existing;
+
+    const { data: created, error } = await supabase
+      .from("course_discussions")
+      .insert({
+        course_id: courseId,
+        lesson_id: lessonId || null,
+        is_general: !lessonId,
+        title: lessonId ? "Lesson Q&A" : "Course Discussion",
+      })
+      .select()
+      .single();
+    if (error) { console.warn("Course discussion create warning:", error); return null; }
+    return created;
+  } catch (e) {
+    console.warn("Course discussion fetch/create error:", e);
+    return null;
+  }
 }
 
 export async function fetchCourseDiscussionMessages(discussionId) {
   if (!supabase || !discussionId) return [];
   const { data, error } = await supabase
-    .from("course_discussions")
+    .from("course_discussion_messages")
     .select("*")
-    .eq("course_id", discussionId)
+    .eq("discussion_id", discussionId)
     .order("created_at", { ascending: true });
   if (error) { console.warn("Course discussion messages fetch warning:", error); return []; }
   const rows = data || [];
-  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
-  return rows.map((r) => ({
-    id: r.id,
-    sender_id: r.user_id,
-    content: r.content,
-    created_at: r.created_at,
-    user_profiles: profiles[r.user_id] || null,
-  }));
+  const profiles = await fetchProfilesByUserIds(rows.map((r) => r.sender_id));
+  return rows.map((r) => ({ ...r, user_profiles: profiles[r.sender_id] || null }));
 }
 
 export async function postCourseDiscussionMessage({ discussionId, senderId, content, isQuestion = true }) {
   if (!supabase) return null;
   const { data, error } = await supabase
-    .from("course_discussions")
+    .from("course_discussion_messages")
     .insert({
-      course_id: discussionId,
-      user_id: senderId,
+      discussion_id: discussionId,
+      sender_id: senderId,
       content,
-      title: content.slice(0, 80) || "Question",
       is_question: isQuestion,
+      sender_type: "learner",
     })
     .select()
     .single();
@@ -637,30 +729,71 @@ export async function fetchPublishedLearningPaths(organizationId) {
     query = query.or(`organization_id.eq.${organizationId},organization_id.is.null`);
   }
   const { data, error } = await query;
-  if (error) { console.warn("Learning paths fetch warning:", error); return DEMO_PATHS; }
-  if (!data || data.length === 0) return [];
-  return (data || []).map((p) => ({
+  if (error) { console.warn("Learning paths fetch warning:", error); }
+  
+  const formattedPaths = (data || []).map((p) => ({
     id: p.id,
     title: p.title,
     description: p.description || "",
     category: p.category || null,
-    level: p.level_label || "beginner",
+    level: p.level_label || "All Levels",
     courses: (p.learning_path_courses || [])
-      .sort((a, b) => a.order_index - b.order_index)
+      .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
       .map((pc) => ({
-        id: pc.course_id,
+        id: pc.course_id || pc.courses?.id,
         pathCourseId: pc.id,
-        title: pc.courses?.title || "Course",
+        title: pc.courses?.title || "Course Module",
         description: pc.courses?.description || "",
-        level: pc.courses?.level || null,
-        category: pc.courses?.category || null,
+        level: pc.courses?.level || "intermediate",
+        category: pc.courses?.category || p.category || "General",
         coverImageUrl: pc.courses?.cover_image_url || null,
-        hours: pc.courses?.duration_hours || 0,
+        hours: pc.courses?.duration_hours || 4,
         isRequired: pc.is_required !== false,
         unlockRule: pc.unlock_rule || "complete_previous",
         prerequisiteCourseIds: pc.prerequisite_course_ids || [],
         orderIndex: pc.order_index ?? 0,
-      })),
+      })).filter(c => c.id),
+  })).filter(p => p.courses && p.courses.length > 0);
+
+  if (formattedPaths.length > 0) return formattedPaths;
+
+  // If learning_paths table has no mapped courses yet, dynamically group live courses into career pathways
+  let courseQuery = supabase
+    .from("courses")
+    .select("id, title, description, level, category, duration_hours, cover_image_url")
+    .order("created_at", { ascending: true });
+  if (organizationId && organizationId !== "demo-org-id") {
+    courseQuery = courseQuery.or(`organization_id.eq.${organizationId},organization_id.is.null`);
+  }
+  const { data: allCourses } = await courseQuery;
+  const coursesList = allCourses || [];
+  if (!coursesList.length) return DEMO_PATHS;
+
+  const byCategory = {};
+  for (const c of coursesList) {
+    const cat = c.category || "Core Systems";
+    if (!byCategory[cat]) byCategory[cat] = [];
+    byCategory[cat].push({
+      id: c.id,
+      title: c.title,
+      description: c.description || "",
+      level: c.level || "intermediate",
+      category: c.category || cat,
+      coverImageUrl: c.cover_image_url || null,
+      hours: c.duration_hours || 6,
+      isRequired: true,
+      unlockRule: "complete_previous",
+      orderIndex: byCategory[cat].length,
+    });
+  }
+
+  return Object.entries(byCategory).map(([catName, courseArr], idx) => ({
+    id: `path-track-${idx + 1}`,
+    title: `${catName} Career Track`,
+    description: `Comprehensive industry career progression track for ${catName}.`,
+    category: catName,
+    level: "All Levels",
+    courses: courseArr,
   }));
 }
 
@@ -1243,8 +1376,8 @@ export async function fetchMyFeedbackNotes(userId) {
   try {
     const { data, error } = await supabase
       .from("feedback_notes")
-      .select("*, courses(title)")
-      .eq("user_id", userId)
+      .select("*")
+      .eq("target_learner_id", userId)
       .order("created_at", { ascending: false });
     if (error) {
       console.warn("Feedback notes fetch warning:", error);

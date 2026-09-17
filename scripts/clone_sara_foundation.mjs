@@ -2,9 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 
 // SOURCE (1.0) & TARGET (2.0) Credentials passed via Environment Variables
 const sourceUrl = process.env.SOURCE_SUPABASE_URL || "https://qibqouymqtpirtbyjvjr.supabase.co";
-const sourceKey = process.env.SOURCE_SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpYnFvdXltcXRwaXJ0YnlqdmpyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTk4MjM4MSwiZXhwIjoyMDY1NTU4MzgxfQ.K8GPpqfxXTLZyemMbLhamavKHYDBir5qVogJkoU7Jcw";
+const sourceKey = process.env.SOURCE_SUPABASE_SERVICE_ROLE_KEY || "";
 const targetUrl = process.env.TARGET_SUPABASE_URL || "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const targetKey = process.env.TARGET_SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Implb2JnZ3J0eGV5Ynh2bHdweHZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzMyNjM1NywiZXhwIjoyMTAyOTAyMzU3fQ.uDCs11c1ti9xGopgIcrVAGALgvjrhYSLMZyu5A_F-_Y";
+const targetKey = process.env.TARGET_SUPABASE_SERVICE_ROLE_KEY || "";
 
 // Clients initialized with service_role keys
 const source = createClient(sourceUrl, sourceKey, {

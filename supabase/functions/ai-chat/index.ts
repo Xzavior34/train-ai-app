@@ -18,7 +18,7 @@
 // Configure with:  supabase secrets set OPENAI_API_KEY=sk-...
 //              or:  supabase secrets set GEMINI_API_KEY=...
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +39,17 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Hoisted outside the try block below on purpose: a `const` declared
+  // inside a try block is not visible to that try's own catch block (JS
+  // block scoping, not a function-level scope) - found while wiring the
+  // same metering pattern into ai-generate-quiz and realized it applied
+  // here too. Without this, a genuinely unexpected exception (a network
+  // error on the fetch() call itself, for instance, as opposed to a
+  // handled non-2xx HTTP response) after credits were already consumed
+  // would silently never be refunded - the outer catch had no way to
+  // reach the transaction id to reverse it.
+  let creditTransactionId: string | null = null;
 
   try {
     const authHeader = req.headers.get("Authorization") || "";
@@ -149,6 +160,49 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Real, server-side AI credit metering (0156_ai_credit_ledger.sql) -
+    // called with the caller's OWN authenticated client (authClient, not
+    // the service-role db client) specifically so auth.uid() inside the
+    // RPC correctly resolves to this real user - consume_ai_credits()
+    // derives the organization from that identity itself, never trusting
+    // a client-supplied value (an earlier draft of that function did
+    // trust client-supplied org/user ids and was proven exploitable
+    // during this same implementation pass - see that migration's own
+    // comments). This must happen BEFORE the provider is called, so an
+    // unauthorized request never reaches OpenAI/Gemini at all.
+    const { data: creditResult, error: creditErr } = await authClient.rpc("consume_ai_credits", {
+      p_operation_key: "ai_chat_message",
+      p_reference_id: conversationId,
+    });
+    if (creditErr) {
+      console.error("ai-chat: credit metering call failed:", creditErr);
+      // Fail closed, per spec - if metering itself can't be verified, the
+      // request is blocked rather than allowed through unmetered.
+      return jsonResponse({ error: "AI usage could not be verified. Please try again." }, 503);
+    }
+    if (!creditResult?.authorized) {
+      return jsonResponse({
+        error: "AI credits exhausted",
+        message: "Your available AI credits have been used. Ask your organization administrator to add more credits, or purchase personal AI credits.",
+        code: "insufficient_credits",
+      }, 402);
+    }
+    creditTransactionId = creditResult.transaction_id || null;
+
+    // If anything below fails after this point, the credits already spent
+    // must be given back - the customer didn't get a response, so they
+    // shouldn't be charged for one. refund_ai_credits() requires a
+    // service-role caller by design (a learner must never be able to
+    // trigger their own refund), which `db` already is.
+    async function refundOnFailure() {
+      if (!creditTransactionId) return;
+      try {
+        await db.rpc("refund_ai_credits", { p_transaction_id: creditTransactionId, p_reason: "provider_failure" });
+      } catch (refundErr) {
+        console.error("ai-chat: credit refund failed:", refundErr);
+      }
+    }
+
     const { data: history, error: histErr } = await db
       .from("ai_messages")
       .select("role, content, created_at")
@@ -185,6 +239,7 @@ Deno.serve(async (req) => {
         });
         if (!resp.ok) {
           const errText = await resp.text();
+          await refundOnFailure();
           return jsonResponse({ error: `OpenAI API error: ${resp.status} ${errText.slice(0, 300)}` }, 502);
         }
         const json = await resp.json();
@@ -207,6 +262,7 @@ Deno.serve(async (req) => {
         );
         if (!resp.ok) {
           const errText = await resp.text();
+          await refundOnFailure();
           return jsonResponse({ error: `Gemini API error: ${resp.status} ${errText.slice(0, 300)}` }, 502);
         }
         const json = await resp.json();
@@ -214,10 +270,12 @@ Deno.serve(async (req) => {
       }
     } catch (providerError) {
       console.error("ai-chat: provider call failed:", providerError);
+      await refundOnFailure();
       return jsonResponse({ error: "AI provider request failed. Please try again." }, 502);
     }
 
     if (!replyText) {
+      await refundOnFailure();
       return jsonResponse({ error: "The AI provider returned an empty response. Please try again." }, 502);
     }
 
@@ -248,6 +306,24 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("ai-chat: unhandled error:", error);
+    // Best-effort refund for a genuinely unexpected exception (not one of
+    // the handled non-2xx/empty-response cases above, which already
+    // refund themselves) that happened after credits were consumed - a
+    // fresh service-role client is built here rather than relying on one
+    // from inside the try block, since this catch can't see anything
+    // declared there.
+    if (creditTransactionId) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+        const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+          const fallbackDb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+          await fallbackDb.rpc("refund_ai_credits", { p_transaction_id: creditTransactionId, p_reason: "unexpected_error" });
+        }
+      } catch (refundErr) {
+        console.error("ai-chat: fallback credit refund failed:", refundErr);
+      }
+    }
     return jsonResponse({ error: "Internal server error" }, 500);
   }
 });

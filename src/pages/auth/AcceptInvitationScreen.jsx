@@ -251,12 +251,27 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
             <CheckCircle2 size={36} color="#10B981" style={{ marginBottom: 10 }} />
             <h1 style={styles.h1}>{doneNeedsSignIn ? "Almost there" : "Welcome aboard!"}</h1>
             <p style={styles.sub}>{doneMessage}</p>
+
+            {invitation && (
+              <div style={{ ...styles.infoBox, marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#656C86", textTransform: "uppercase", letterSpacing: ".06em" }}>
+                  Permanent Workspace Access
+                </div>
+                <div style={{ fontSize: 12.5, color: "#10142A", wordBreak: "break-all", background: "#FFFFFF", padding: "8px 10px", borderRadius: 6, border: "1px solid #E2E8F0" }}>
+                  {typeof window !== "undefined" ? `${window.location.origin}/?org=${invitation.organization_slug || invitation.organization_id}` : ""}
+                </div>
+                <div style={{ fontSize: 11.5, color: "#656C86", lineHeight: 1.4 }}>
+                  Bookmark this permanent link to return directly to your {invitation.organization_name} workspace at any time.
+                </div>
+              </div>
+            )}
+
             <button
               className="invite-submit"
               style={styles.submit}
               onClick={() => (doneNeedsSignIn ? onNeedsSignIn?.(doneEmail) : onAccepted?.())}
             >
-              {doneNeedsSignIn ? "Continue to sign in" : "Continue"} <ArrowRight size={16} />
+              {doneNeedsSignIn ? "Continue to sign in" : "Continue to Workspace"} <ArrowRight size={16} />
             </button>
           </>
         )}

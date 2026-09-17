@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { TopBar, ProgressBar, Tag, Avatar } from "../components/LearnerUI.jsx";
+import { TopBar, ProgressBar, Tag, Avatar, initialsOf } from "../components/LearnerUI.jsx";
 import {
   Play, Pause, RotateCcw, RotateCw, Volume2, VolumeX, Maximize2, Minimize2,
   CheckCircle2, ChevronRight, ChevronLeft, PlusCircle, ThumbsUp, ThumbsDown,
@@ -24,7 +24,7 @@ const DEFAULT_CHAPTERS = [
 
 // Interactive Synchronized Video Transcript Lines
 const DEFAULT_TRANSCRIPT = [
-  { time: "00:00", seconds: 0, speaker: "Instructor", text: "Welcome back! In this masterclass module, we are diving deep into production-grade multi-agent AI architecture." },
+  { time: "00:00", seconds: 0, speaker: "Instructor", text: "Welcome back! In this course module, we are diving deep into production-grade multi-agent AI architecture." },
   { time: "01:15", seconds: 75, speaker: "Instructor", text: "Before we write our first function call, let's examine why traditional single-prompt chains break down in enterprise applications." },
   { time: "03:45", seconds: 225, speaker: "Instructor", text: "Here we have our design tokens and variable schema. Notice how structured JSON definitions allow seamless synchronization." },
   { time: "06:20", seconds: 380, speaker: "Instructor", text: "Let's inspect the payload received from the API and observe how the latency drops under 180 milliseconds." },
@@ -39,7 +39,7 @@ const DEFAULT_TRANSCRIPT = [
 const LESSON_RESOURCES = [
   { id: "res-1", title: "Starter Code Repository (GitHub)", type: "GitHub Repo", size: "ZIP • 4.2 MB", icon: Code2, url: "https://github.com" },
   { id: "res-2", title: "Complete Figma Design Tokens & Variables Kit", type: "Figma File", size: "FIG • 18.5 MB", icon: Layers, url: "https://figma.com" },
-  { id: "res-3", title: "Masterclass Slide Deck & Architecture Diagrams", type: "PDF Document", size: "PDF • 8.1 MB", icon: FileText, url: "#" },
+  { id: "res-3", title: "Course Slide Deck & Architecture Diagrams", type: "PDF Document", size: "PDF • 8.1 MB", icon: FileText, url: "#" },
   { id: "res-4", title: "AI Prompt Engineering & Function Schemas Cheat Sheet", type: "Quick Reference", size: "PDF • 2.4 MB", icon: BookOpen, url: "#" }
 ];
 
@@ -98,7 +98,8 @@ const INITIAL_QA_THREADS = [
 export function LessonScreen({
   course, lessons = [], lessonId, session, lessonNotesQuery, noteInputText, setNoteInputText,
   back, push, showToast, markLessonComplete, enrollmentsQuery, lessonProgressQuery,
-  completedLessonIds, setCompletedLessonIds, addLessonNote
+  completedLessonIds, setCompletedLessonIds, addLessonNote,
+  lessonDiscussionQuery, postCourseDiscussionMessage
 }) {
   const videoPlayerRef = useRef(null);
 
@@ -134,11 +135,11 @@ export function LessonScreen({
   const [aiInput, setAiInput] = useState("");
   const [aiThinking, setAiThinking] = useState(false);
 
-  // Q&A States
-  const [qaThreads, setQaThreads] = useState(INITIAL_QA_THREADS);
-  const [newQuestionTitle, setNewQuestionTitle] = useState("");
+  // Q&A States - real data lives in lessonDiscussionQuery (course_discussions
+  // / course_discussion_messages), not local state; see handlePostQuestion.
   const [newQuestionContent, setNewQuestionContent] = useState("");
   const [showQuestionComposer, setShowQuestionComposer] = useState(false);
+  const [postingQuestion, setPostingQuestion] = useState(false);
   const [qaSearch, setQaSearch] = useState("");
 
   // Feedback Prompt
@@ -203,42 +204,24 @@ export function LessonScreen({
     }, 900);
   }
 
-  // Handle Q&A Upvote
-  function handleToggleUpvote(threadId) {
-    setQaThreads(prev => prev.map(t => {
-      if (t.id === threadId) {
-        return {
-          ...t,
-          upvoted: !t.upvoted,
-          upvotes: t.upvoted ? t.upvotes - 1 : t.upvotes + 1
-        };
-      }
-      return t;
-    }));
-  }
-
-  // Handle New Q&A Question
-  function handlePostQuestion() {
-    if (!newQuestionTitle.trim()) return;
-    const newThread = {
-      id: `qa-${Date.now()}`,
-      author: session?.user?.user_metadata?.full_name || "Learner",
-      role: "Learner",
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80",
-      time: "Just now",
-      timestamp: formatTime(currentTimeSec),
-      title: newQuestionTitle.trim(),
-      content: newQuestionContent.trim() || newQuestionTitle.trim(),
-      upvotes: 1,
-      upvoted: true,
-      answersCount: 0,
-      answers: []
-    };
-    setQaThreads(prev => [newThread, ...prev]);
-    setNewQuestionTitle("");
-    setNewQuestionContent("");
-    setShowQuestionComposer(false);
-    showToast?.("Question posted to Q&A discussion!");
+  // Handle New Q&A Question - a real row in course_discussion_messages,
+  // scoped to this lesson's discussion thread.
+  async function handlePostQuestion() {
+    const content = newQuestionContent.trim();
+    const discussionId = lessonDiscussionQuery?.data?.discussion?.id;
+    if (!content || !session?.user?.id || !discussionId || !postCourseDiscussionMessage) return;
+    setPostingQuestion(true);
+    try {
+      await postCourseDiscussionMessage({ discussionId, senderId: session.user.id, content, isQuestion: true });
+      setNewQuestionContent("");
+      setShowQuestionComposer(false);
+      await lessonDiscussionQuery?.refetch?.();
+      showToast?.("Question posted to Q&A discussion!");
+    } catch (e) {
+      showToast?.(e?.message || "Could not post your question.");
+    } finally {
+      setPostingQuestion(false);
+    }
   }
 
   // Calculate course completion progress
@@ -276,10 +259,10 @@ export function LessonScreen({
           </button>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em" }}>
-              {course?.category || "Masterclass Track"} • Lesson {currentLessonIndex + 1} of {rawLessons.length}
+              {course?.category || "Course Track"} • Lesson {currentLessonIndex + 1} of {rawLessons.length}
             </div>
             <div style={{ fontWeight: 800, fontSize: "clamp(12.5px, 2.5vw, 15px)", color: "var(--text)", lineHeight: 1.3, wordBreak: "break-word" }}>
-              {course?.title || "AI Product Architecture Masterclass"}
+              {course?.title || "AI Product Architecture Course"}
             </div>
           </div>
         </div>
@@ -555,7 +538,7 @@ export function LessonScreen({
               { id: "overview", label: "Overview", icon: BookOpen },
               { id: "ai-tutor", label: "AI Tutor", icon: Bot, badge: "AI" },
               { id: "notes", label: `Notes (${lessonNotesQuery?.data?.length || 0})`, icon: FileText },
-              { id: "qa", label: `Q&A (${qaThreads.length})`, icon: MessageSquare },
+              { id: "qa", label: `Q&A (${(lessonDiscussionQuery?.data?.messages || []).length})`, icon: MessageSquare },
               { id: "transcript", label: "Transcript", icon: Terminal },
               { id: "resources", label: `Resources (${LESSON_RESOURCES.length})`, icon: Paperclip },
               { id: "reviews", label: "Feedback", icon: Award }
@@ -612,41 +595,18 @@ export function LessonScreen({
                   {lesson?.title}
                 </h2>
                 <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.55, margin: 0 }}>
-                  In this comprehensive masterclass module, you will learn the foundational architecture for building resilient multi-agent AI systems, configuring design tokens with vector variables, and optimizing sub-second query performance in production environments.
+                  {lesson?.description || course?.tagline || "Follow along with the video for this lesson's key concepts."}
                 </p>
               </div>
 
-              {/* Learning Objectives Checklist */}
-              <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8 }}>
-                <div style={{ fontSize: 11.5, fontWeight: 800, color: "var(--primary)", textTransform: "uppercase", letterSpacing: ".04em", marginBottom: 10 }}>
-                  What You'll Master in this Lesson
-                </div>
-                <div className="tai-col tai-gap8">
-                  {[
-                    "Architecting asynchronous function calling with schema validation.",
-                    "Configuring Figma variables & vector tokens for design system automation.",
-                    "Setting up Supabase pgvector with HNSW similarity index scoring.",
-                    "Implementing exponential backoff and jittered retry hooks for multi-agent reliability."
-                  ].map((obj, idx) => (
-                    <div key={idx} className="tai-row tai-gap8" style={{ alignItems: "flex-start", fontSize: 12.5, color: "var(--text)", fontWeight: 600 }}>
-                      <CheckCircle2 size={15} color="var(--primary)" style={{ flexShrink: 0, marginTop: 2 }} />
-                      <span>{obj}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Instructor Bio Card */}
+              {/* Instructor Bio Card - real per-course instructor (courses.instructor_id),
+                  not a hardcoded name shown for every lesson on every course. */}
               <div className="tai-row tai-between" style={{ padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, flexWrap: "wrap", gap: 12 }}>
                 <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: "1 1 200px" }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-                    alt="Instructor"
-                    style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
-                  />
+                  <Avatar size={40} initials={initialsOf(course?.instructor || "Course Instructor")} />
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Astrid Larsson</div>
-                    <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>Lead AI Systems Architect • Former Staff Designer</div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>{course?.instructor || "Course Instructor"}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{course?.category || "Course"} Instructor</div>
                   </div>
                 </div>
 
@@ -655,7 +615,7 @@ export function LessonScreen({
                   onClick={() => { setActiveTab("qa"); setShowQuestionComposer(true); }}
                   style={{ borderRadius: 10, padding: "7px 12px", fontSize: 12 }}
                 >
-                  <MessageSquare size={14} /> Ask Astrid a Question
+                  <MessageSquare size={14} /> Ask a Question
                 </button>
               </div>
             </div>
@@ -838,7 +798,7 @@ export function LessonScreen({
               <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10 }}>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Lesson Q&A Discussion</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>Ask questions and learn from instructors and peers</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 1 }}>Ask questions - visible to everyone taking this lesson</div>
                 </div>
 
                 <button
@@ -853,17 +813,10 @@ export function LessonScreen({
               {/* Question Composer */}
               {showQuestionComposer && (
                 <div className="tai-card" style={{ background: "var(--surface-3)", padding: 14, borderRadius: 8 }}>
-                  <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 8 }}>Ask a Question linked to {formatTime(currentTimeSec)}</div>
-                  <input
-                    className="tai-input"
-                    placeholder="Question title (e.g. How does vector similarity work?)"
-                    value={newQuestionTitle}
-                    onChange={(e) => setNewQuestionTitle(e.target.value)}
-                    style={{ marginBottom: 8, padding: "8px 12px", fontSize: 12.5 }}
-                  />
+                  <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 8 }}>Ask a Question about this lesson</div>
                   <textarea
                     className="tai-input"
-                    placeholder="Provide more context or paste code..."
+                    placeholder="What are you stuck on? Paste code or describe the issue..."
                     rows={3}
                     value={newQuestionContent}
                     onChange={(e) => setNewQuestionContent(e.target.value)}
@@ -871,55 +824,43 @@ export function LessonScreen({
                   />
                   <div className="tai-row tai-gap8" style={{ justifyContent: "flex-end" }}>
                     <button className="tai-btn tai-btn-outline tai-btn-sm" onClick={() => setShowQuestionComposer(false)}>Cancel</button>
-                    <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={!newQuestionTitle.trim()} onClick={handlePostQuestion}>Post Question</button>
+                    <button className="tai-btn tai-btn-primary tai-btn-sm" disabled={postingQuestion || !newQuestionContent.trim()} onClick={handlePostQuestion}>
+                      {postingQuestion ? "Posting..." : "Post Question"}
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* Q&A List */}
+              {/* Q&A List - real course_discussion_messages rows for this lesson */}
               <div className="tai-col tai-gap10">
-                {qaThreads.map((thread) => (
-                  <div key={thread.id} className="tai-card tai-card-hover" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
-                    <div className="tai-row tai-between" style={{ alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
-                      <div className="tai-row tai-gap8" style={{ minWidth: 0, flex: 1 }}>
-                        <img src={thread.avatar} alt="" style={{ width: 30, height: 30, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", wordBreak: "break-word" }}>{thread.title}</div>
-                          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>{thread.author} • {thread.time} • at {thread.timestamp}</div>
+                {lessonDiscussionQuery?.loading && (
+                  <div className="tai-empty" style={{ padding: "20px 0" }}>Loading Q&amp;A...</div>
+                )}
+                {!lessonDiscussionQuery?.loading && (lessonDiscussionQuery?.data?.messages || []).length === 0 && (
+                  <div className="tai-empty" style={{ padding: "20px 0" }}>
+                    <MessageSquare size={22} color="var(--text-3)" />
+                    <div className="tai-mt8">No questions yet for this lesson. Be the first to ask!</div>
+                  </div>
+                )}
+                {(lessonDiscussionQuery?.data?.messages || []).slice().reverse().map((msg) => (
+                  <div key={msg.id} className="tai-card" style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
+                    <div className="tai-row tai-gap8" style={{ minWidth: 0, marginBottom: 8 }}>
+                      <Avatar size={30} src={msg.user_profiles?.avatar_url} initials={(msg.user_profiles?.display_name || "L")[0]} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: 12.5, color: "var(--text)" }}>
+                          {msg.user_profiles?.display_name || "Learner"}
+                          {msg.sender_type === "instructor" && (
+                            <span style={{ fontSize: 9.5, fontWeight: 800, background: "var(--primary-tint)", color: "var(--primary)", padding: "1px 5px", borderRadius: 4, marginLeft: 6 }}>
+                              INSTRUCTOR
+                            </span>
+                          )}
                         </div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>{new Date(msg.created_at).toLocaleString()}</div>
                       </div>
-
-                      <button
-                        className="tai-btn tai-btn-sm"
-                        style={{
-                          background: thread.upvoted ? "var(--primary)" : "var(--surface)",
-                          color: thread.upvoted ? "#FFFFFF" : "var(--text)",
-                          border: "1px solid var(--border)", borderRadius: 8, padding: "3px 8px", flexShrink: 0, fontSize: 11.5
-                        }}
-                        onClick={() => handleToggleUpvote(thread.id)}
-                      >
-                        <ThumbsUp size={12} /> {thread.upvotes}
-                      </button>
                     </div>
-
-                    <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.45, margin: "0 0 8px" }}>
-                      {thread.content}
+                    <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.45, margin: 0 }}>
+                      {msg.content}
                     </p>
-
-                    {/* Instructor Verified Answer Box */}
-                    {thread.answers.map(ans => (
-                      <div key={ans.id} style={{ background: "var(--surface)", borderLeft: "3px solid var(--primary)", padding: "10px 12px", borderRadius: "0 10px 10px 0", marginTop: 6 }}>
-                        <div className="tai-row tai-gap6" style={{ marginBottom: 3 }}>
-                          <span style={{ fontSize: 9.5, fontWeight: 800, background: "var(--primary-tint)", color: "var(--primary)", padding: "1px 5px", borderRadius: 4 }}>
-                            INSTRUCTOR
-                          </span>
-                          <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text)" }}>{ans.author}</span>
-                        </div>
-                        <div style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.45 }}>
-                          {ans.text}
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 ))}
               </div>

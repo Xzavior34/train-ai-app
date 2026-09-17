@@ -1,21 +1,26 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
-import { Plus, Layers, Users, Calendar, ArrowRight, X } from "lucide-react";
+import { Plus, Layers, Users, Calendar, ArrowRight, X, Send } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCohortsWithStats, createCohort } from "../../lib/api/platform.js";
+import { fetchCohortsWithStats, createCohort, fetchUpcomingOrgSessions } from "../../lib/api/platform.js";
+import { createCohortPost } from "../../lib/api/schemaHelper.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
   const [newCohortOpen, setNewCohortOpen] = useState(false);
   const [name, setName] = useState("");
+  const [announcementText, setAnnouncementText] = useState("");
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
   const cohortsQuery = useSupabaseQuery(async () => orgId ? fetchCohortsWithStats(orgId) : [], [orgId]);
   const cohorts = cohortsQuery.data || [];
+  const sessionsQuery = useSupabaseQuery(async () => orgId ? fetchUpcomingOrgSessions(orgId) : [], [orgId]);
+  const upcomingSessions = sessionsQuery.data || [];
 
   return (
     <div className="ta-fade">
       <TopBar
-        title="Cohort Management" sub="Active learning batches & timeline progress"
+        title="Cohorts" sub="Active cohorts & timeline progress"
         orgSelector={orgSelector}
         onNavigate={setScreen}
       />
@@ -28,10 +33,10 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">
-                Cohort Governance &amp; Pacing
+                Cohorts
               </h1>
               <p className="ta-hero-desc">
-                Manage batch schedules, enrollment windows, synchronous sessions, and student milestone pacing.
+                Manage schedules, enrollment windows, live sessions, and student milestone pacing.
               </p>
             </div>
 
@@ -76,7 +81,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(15,23,42,0.15) 0%, rgba(15,23,42,0.75) 100%)" }} />
                       <div style={{ position: "absolute", top: 10, left: 10, right: 10, display: "flex", justifyContent: "space-between" }}>
                         <Tag tone="primary">{c.courses || 0} course{c.courses === 1 ? "" : "s"}</Tag>
-                        <Tag tone={isCompleted ? "warning" : "success"}>{isCompleted ? "Completed" : "Active Batch"}</Tag>
+                        <Tag tone={isCompleted ? "warning" : "success"}>{isCompleted ? "Completed" : "Active"}</Tag>
                       </div>
                       <div style={{ position: "absolute", bottom: 8, left: 12, right: 12, color: "#FFFFFF", fontWeight: 800, fontSize: 14.5, textShadow: "0 2px 4px rgba(0,0,0,0.6)", lineHeight: 1.25, wordBreak: "break-word" }}>
                         {c.name}
@@ -91,7 +96,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       <div className="ta-mt8"><ProgressBar value={c.progress || 0} /></div>
                       <div className="ta-row ta-between ta-mt12" style={{ paddingTop: 10, borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)" }}>
                         <span>Schedule: Active</span>
-                        <span style={{ fontWeight: 700, color: "var(--primary)", display: "flex", alignItems: "center", gap: 3 }}>Manage Batch <ArrowRight size={12} /></span>
+                        <span style={{ fontWeight: 700, color: "var(--primary)", display: "flex", alignItems: "center", gap: 3 }}>Manage Cohort <ArrowRight size={12} /></span>
                       </div>
                     </div>
                   </div>
@@ -110,7 +115,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                 <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setNewCohortOpen(false)}><X size={16} /></button>
               </div>
               <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 14 }}>
-                Set up a new synchronous learning batch for your organization.
+                Set up a new cohort for your organization.
               </p>
               <div className="ta-label">Cohort Name</div>
               <input
@@ -156,51 +161,90 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
               </div>
 
               <div className="ta-col ta-gap12 ta-mt14">
-                {[
-                  { title: "Module 4 Design Critique", date: "Tomorrow • 6:00 PM", status: "Live Review", tone: "primary" },
-                  { title: "Mid-Term Capstone Submissions", date: "Friday • 11:59 PM", status: "Deadline", tone: "danger" },
-                  { title: "Industry Pitch & Demo Day", date: "Next Week • 4:00 PM", status: "Demo Day", tone: "success" }
-                ].map((m, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>{m.title}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{m.date}</div>
+                {sessionsQuery.loading && <div className="ta-empty">Loading milestone sessions...</div>}
+                {!sessionsQuery.loading && upcomingSessions.length === 0 && (
+                  <div className="ta-empty" style={{ padding: "16px 8px" }}>
+                    No upcoming live cohort milestones scheduled yet.
+                  </div>
+                )}
+                {upcomingSessions.map((s, idx) => (
+                  <div key={s.id || idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)" }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                        {s.time || "Scheduled"} {s.mentor ? `• ${s.mentor}` : ""}
+                      </div>
                     </div>
-                    <Tag tone={m.tone}>{m.status}</Tag>
+                    <Tag tone={s.status === "live" ? "danger" : "primary"}>
+                      {s.status === "live" ? "Live Now" : "Live Session"}
+                    </Tag>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Assigned Facilitators */}
+            {/* Cohort Discussion Feed & Announcement Composer */}
             <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
-                  <div className="ta-title" style={{ fontSize: 15 }}>Lead Instructors</div>
-                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Active cohort mentors</div>
+                  <div className="ta-title" style={{ fontSize: 15 }}>Cohort Announcements &amp; Discussion</div>
+                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Post announcements into cohort stream</div>
                 </div>
-                <Tag tone="success">{cohorts.filter(c => c.status === "active" || !c.status).length || cohorts.length} Active</Tag>
+                <Tag tone="primary">Stream</Tag>
               </div>
 
               <div className="ta-col ta-gap10 ta-mt14">
-                {[
-                  { name: "Astrid Larsson", track: "UI/UX & Design Systems", avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" },
-                  { name: "Alex Rivera", track: "Generative AI Workflows", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80" },
-                  { name: "Sarah Jenkins", track: "DevOps & Cloud Architecture", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80" }
-                ].map((ins, idx) => (
-                  <div key={idx} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10 }}>
-                    <div className="ta-row ta-gap10">
-                      <img src={ins.avatar} alt={ins.name} style={{ width: 32, height: 32, borderRadius: 10, objectFit: "cover" }} />
-                      <div>
-                        <div style={{ fontSize: 12.5, fontWeight: 700 }}>{ins.name}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{ins.track}</div>
-                      </div>
-                    </div>
-                    <button className="ta-btn ta-btn-outline ta-btn-sm" style={{ padding: "4px 8px", fontSize: 11 }} onClick={() => setScreen?.("people")}>
-                      View
-                    </button>
+                <textarea
+                  className="ta-input"
+                  rows={3}
+                  placeholder="Broadcast an announcement to all active cohorts in your org..."
+                  style={{ width: "100%", fontSize: 12.5, boxSizing: "border-box", resize: "vertical" }}
+                  value={announcementText}
+                  onChange={e => setAnnouncementText(e.target.value)}
+                />
+                <button
+                  className="ta-btn ta-btn-primary ta-btn-sm"
+                  style={{ alignSelf: "flex-end", height: 32, display: "inline-flex", alignItems: "center", gap: 6 }}
+                  disabled={postingAnnouncement || !announcementText.trim()}
+                  onClick={async () => {
+                    if (!announcementText.trim() || !currentUserId) return;
+                    // Post to all cohorts in this org
+                    const targets = cohorts.slice(0, 10); // cap at 10 to avoid floods
+                    if (targets.length === 0) {
+                      showToast("No active cohorts to broadcast to.");
+                      return;
+                    }
+                    setPostingAnnouncement(true);
+                    try {
+                      await Promise.all(
+                        targets.map(c =>
+                          createCohortPost({
+                            cohortId: c.id,
+                            authorId: currentUserId,
+                            content: announcementText.trim(),
+                            isAnnouncement: true,
+                          }).catch(() => {})
+                        )
+                      );
+                      setAnnouncementText("");
+                      showToast(`Announcement posted to ${targets.length} cohort${targets.length === 1 ? "" : "s"}!`);
+                    } catch {
+                      showToast("Could not post announcement. Try again.");
+                    } finally {
+                      setPostingAnnouncement(false);
+                    }
+                  }}
+                >
+                  <Send size={13} /> {postingAnnouncement ? "Posting..." : "Post Announcement →"}
+                </button>
+
+                <div className="ta-col ta-gap8 ta-mt10">
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Recent Announcements</div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+                    Announcements you post here will appear in the cohort discussion stream for all learners in each cohort.
+                    Open a specific cohort below to view its full discussion history.
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>

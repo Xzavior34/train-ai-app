@@ -586,19 +586,8 @@ html.tai-high-contrast .ta-card {
 .ta-hero-dark .ta-hero-subcard,
 .tai-card-dark .tai-subcard,
 .ta-card-dark .ta-subcard {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  color: #FFFFFF !important;
-}
-.tai-hero-card .tai-hero-subcard *,
-.ta-hero-banner .tai-hero-subcard *,
-.tai-hero-dark .tai-hero-subcard *,
-.ta-hero-dark .tai-hero-subcard *,
-.tai-hero-dark .ta-hero-subcard *,
-.ta-hero-dark .ta-hero-subcard *,
-.tai-card-dark .tai-subcard *,
-.ta-card-dark .ta-subcard * {
-  color: #FFFFFF !important;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 .tai-hero-dark .tai-hero-subcard div:first-child,
 .ta-hero-dark .tai-hero-subcard div:first-child,
@@ -979,11 +968,39 @@ html, body {
   .tai-body, .ta-content {
     padding-left: 10px !important;
     padding-right: 10px !important;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
   }
   .ta-topbar, .tai-topbar {
     padding: 0 10px !important;
   }
+  .tai-h1 {
+    font-size: 17px !important;
+  }
+  .tai-btn, .ta-btn {
+    padding: 8px 12px !important;
+    font-size: 12.5px !important;
+  }
+  .portal-modal-content, .tai-modal, [role="dialog"] {
+    width: min(calc(100vw - 20px), 540px) !important;
+    max-height: 88dvh !important;
+    margin: 10px !important;
+    padding: 16px 14px !important;
+  }
 }
 
+/* Universal Media and Responsive Clamping */
+img, video, canvas, iframe {
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
-
+/* Touch Device Target Enhancements */
+@media (hover: none) and (pointer: coarse) {
+  .tai-btn, .ta-btn, .tai-iconbtn, button.tai-link, .tai-navitem {
+    min-height: 38px;
+    touch-action: manipulation;
+  }
+  .tai-pill, .tai-tag {
+    touch-action: manipulation;
+  }
+}

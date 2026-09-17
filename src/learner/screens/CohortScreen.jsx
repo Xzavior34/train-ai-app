@@ -2,16 +2,17 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Layers, Video, Calendar, FileText, Link2, ExternalLink, Flame, Users,
-  CheckCircle2, Clock, Play, ArrowRight, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send
+  CheckCircle2, Clock, Play, ArrowRight, ArrowLeft, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
 import { createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
+import { fetchCohortDetail } from "../../lib/api/platform.js";
 
 export function CohortScreen({
-  cohort, cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
+  cohort: propCohort, cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
   cohortCoursesQuery, cohortMembersQuery,
-  session, showToast = () => {}, back, push, goTab
+  session, showToast = () => {}, back, push, goTab, params
 }) {
   const [tab, setTab] = useState("chat"); // "chat" | "courses" | "resources" | "sessions" | "members"
   const [expandedPostId, setExpandedPostId] = useState(null);
@@ -20,10 +21,16 @@ export function CohortScreen({
   const [replyInputs, setReplyInputs] = useState({});
   const [submittingReply, setSubmittingReply] = useState(false);
 
-  const activityTodayQuery = useSupabaseQuery(async () => (cohort?.id ? fetchCohortActivityToday(cohort.id) : 0), [cohort?.id]);
-  const activityToday = activityTodayQuery.data || 0;
+  const targetCohortId = params?.id || params?.cohortId || propCohort?.id || cohortMembershipQuery?.data?.cohort?.id;
 
-  if (cohortMembershipQuery?.loading && !cohort) {
+  const fallbackCohortQuery = useSupabaseQuery(async () => {
+    if (!targetCohortId) return null;
+    return fetchCohortDetail(targetCohortId);
+  }, [targetCohortId]);
+
+  const resolvedCohort = propCohort || fallbackCohortQuery.data?.cohort || cohortMembershipQuery?.data?.cohort || null;
+
+  if (cohortMembershipQuery?.loading && fallbackCohortQuery?.loading && !resolvedCohort) {
     return (
       <div>
         <TopBar title="Cohort" onBack={back} />
@@ -32,7 +39,7 @@ export function CohortScreen({
     );
   }
 
-  if (!cohort) {
+  if (!resolvedCohort) {
     return (
       <div>
         <TopBar title="Cohort" onBack={back} />
@@ -41,22 +48,32 @@ export function CohortScreen({
     );
   }
 
-  const posts = cohortPostsQuery?.data || [];
-  const resources = cohortResourcesQuery?.data || [];
-  const sessions = cohortSessionsQuery?.data || [];
+  const cohort = resolvedCohort;
+
+  const posts = (cohortPostsQuery?.data?.length ? cohortPostsQuery.data : fallbackCohortQuery.data?.posts) || [];
+  const resources = (cohortResourcesQuery?.data?.length ? cohortResourcesQuery.data : fallbackCohortQuery.data?.resources) || [];
+  const sessions = (cohortSessionsQuery?.data?.length ? cohortSessionsQuery.data : fallbackCohortQuery.data?.sessions) || [];
+  const assignedCourses = (cohortCoursesQuery?.data?.length ? cohortCoursesQuery.data : fallbackCohortQuery.data?.learnerCourses) || [];
+  const members = (cohortMembersQuery?.data?.length ? cohortMembersQuery.data : fallbackCohortQuery.data?.members) || [];
+
   const now = Date.now();
   const upcomingSessions = sessions.filter(s => new Date(s.starts_at).getTime() >= now);
   const pastSessions = sessions.filter(s => new Date(s.starts_at).getTime() < now);
 
-  const instructorMembers = (cohortMembersQuery?.data || []).filter(
+  const instructorMembers = members.filter(
     m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin"
   );
+  const peerMembers = members.filter(
+    m => m.user_profiles?.role !== "mentor" && m.user_profiles?.role !== "admin"
+  );
 
-  const assignedCourses = cohortCoursesQuery?.data || [];
+  const completedAssignedCount = assignedCourses.filter(cc => (cc.courses?.progress || 0) >= 100).length;
+  const assignedCompletionRate = assignedCourses.length ? Math.round((completedAssignedCount / assignedCourses.length) * 100) : 0;
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <TopBar title={cohort.name || "Cohort"} sub={cohort.description || "Cohort Workspace"} onBack={back} />
+
       {/* =========================================================================
           HERO BANNER: Dedicated Cohort & Batch Space
           ========================================================================= */}
@@ -87,16 +104,55 @@ export function CohortScreen({
 
         <div style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
-              {cohort?.name || "AI & Product Design Batch"}
-            </h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 25px)", fontWeight: 900, letterSpacing: "-0.025em", margin: "0 0 4px", lineHeight: 1.2 }}>
+                {cohort?.name || "AI & Product Design Batch"}
+              </h1>
+              {cohortMembershipQuery?.data?.allCohorts?.length > 1 && (
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "2px 8px", borderRadius: 8, background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", fontSize: 11, fontWeight: 700, color: "#34D399" }}>
+                  <Layers size={12} />
+                  <span>Multiple Cohorts ({cohortMembershipQuery.data.allCohorts.length})</span>
+                </div>
+              )}
+            </div>
             <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
               {cohort?.description || "Collaborative sprint track with live instructor sessions and peer critique."}
             </p>
+
+            {cohortMembershipQuery?.data?.allCohorts?.length > 1 && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)" }}>Switch Cohort:</span>
+                <select
+                  value={cohort?.id}
+                  onChange={(e) => {
+                    const nextId = e.target.value;
+                    if (push) {
+                      push("cohort", { cohortId: nextId, id: nextId });
+                    }
+                  }}
+                  style={{
+                    padding: "4px 10px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: "var(--surface-2, rgba(0,0,0,0.3))",
+                    color: "var(--text, #fff)",
+                    border: "1px solid var(--border, rgba(255,255,255,0.15))",
+                    cursor: "pointer"
+                  }}
+                >
+                  {cohortMembershipQuery.data.allCohorts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} {c.code ? `(${c.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{(cohortMembersQuery?.data || []).length} Peers Enrolled</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{members.length} Peers Enrolled</div>
             <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Active Cohort Track</div>
           </div>
         </div>
@@ -155,11 +211,11 @@ export function CohortScreen({
           ========================================================================= */}
       <div className="tai-row tai-gap8" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         {[
-          { k: "chat", label: `Announcements & Feed (${posts.length})`, icon: MessageCircle },
-          { k: "sessions", label: `Live Studios (${sessions.length})`, icon: Video },
+          { k: "chat", label: `Announcements & Discussion (${posts.length})`, icon: MessageCircle },
+          { k: "sessions", label: `Live Sessions (${sessions.length})`, icon: Video },
           { k: "courses", label: `Assigned Courses (${assignedCourses.length})`, icon: BookOpen },
           { k: "resources", label: `Shared Resources (${resources.length})`, icon: FileText },
-          { k: "members", label: `Facilitators (${instructorMembers.length})`, icon: Users },
+          { k: "members", label: `People (${members.length})`, icon: Users },
         ].map(t => {
           const Icon = t.icon;
           const isActive = tab === t.k;
@@ -197,61 +253,10 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "chat" && (
         <div className="tai-col tai-gap14">
-          {/* Post to Cohort Composer */}
-          <div className="tai-card" style={{ padding: 16, borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", marginBottom: 8 }}>
-              Share with your Cohort
-            </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-              <textarea
-                placeholder="Ask a question, share progress, or discuss sprint topics..."
-                value={newPostText}
-                onChange={(e) => setNewPostText(e.target.value)}
-                rows={2}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 8,
-                  border: "1px solid var(--border)",
-                  background: "var(--surface-2)",
-                  color: "var(--text)",
-                  fontSize: 13,
-                  resize: "vertical",
-                  outline: "none"
-                }}
-              />
-              <button
-                className="tai-btn tai-btn-primary"
-                style={{ height: 42, padding: "0 16px", borderRadius: 8, fontWeight: 800, display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}
-                disabled={posting || !newPostText.trim()}
-                onClick={async () => {
-                  if (!session?.user?.id || !cohort?.id || !newPostText.trim()) return;
-                  setPosting(true);
-                  try {
-                    await createCohortPost({
-                      cohortId: cohort.id,
-                      authorId: session.user.id,
-                      content: newPostText.trim()
-                    });
-                    setNewPostText("");
-                    cohortPostsQuery?.refetch();
-                    showToast?.("Posted to cohort feed!");
-                  } catch (e) {
-                    showToast?.(e?.message || "Failed to post to cohort feed.");
-                  } finally {
-                    setPosting(false);
-                  }
-                }}
-              >
-                <Send size={14} />
-                <span>{posting ? "Posting..." : "Post"}</span>
-              </button>
-            </div>
-          </div>
-
+          {/* Read-only - only instructors/admins can post here (learners can read). */}
           {cohortPostsQuery?.loading && <div className="tai-empty">Loading cohort chat...</div>}
           {!cohortPostsQuery?.loading && posts.length === 0 && (
-            <div className="tai-empty">No posts in your cohort chat yet. Be the first to start the discussion!</div>
+            <div className="tai-empty">No announcements from your instructor yet.</div>
           )}
           {posts.map(cp => (
             <div
@@ -427,17 +432,17 @@ export function CohortScreen({
                   <Clock size={13} />
                   <span>{new Date(s.starts_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
                   <span>•</span>
-                  <span>Facilitator: <strong>{s.instructor || "TBD"}</strong></span>
+                  <span>Facilitator: <strong>{s.host_name || s.instructor || "Sara Foundation"}</strong></span>
                 </div>
 
                 <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
-                  <Avatar src={s.instructorAvatar} initials="AL" size={32} />
+                  <Avatar src={s.instructorAvatar} initials={initialsOf(s.host_name || s.instructor || "SF")} size={32} />
                   {s.join_url ? (
                     <a href={s.join_url} target="_blank" rel="noreferrer" className="tai-btn tai-btn-primary tai-btn-sm" style={{ textDecoration: "none" }}>
                       <Video size={13} /> Join Virtual Studio →
                     </a>
                   ) : (
-                    <a href={s.recording_url || "#"} target="_blank" rel="noreferrer" className="tai-btn tai-btn-outline tai-btn-sm" style={{ textDecoration: "none" }}>
+                    <a href={s.recording_url || s.external_url || "#"} target="_blank" rel="noreferrer" className="tai-btn tai-btn-outline tai-btn-sm" style={{ textDecoration: "none" }}>
                       <Play size={13} /> Watch Replay
                     </a>
                   )}
@@ -453,14 +458,22 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "courses" && (
         <div className="tai-col tai-gap16">
+          <div className="tai-card" style={{ padding: "14px 16px", borderRadius: 10, border: "1px solid var(--border)" }}>
+            <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>
+              <span style={{ color: "var(--text-2)" }}>Cohort Assigned-Course Completion Rate</span>
+              <span style={{ color: "var(--primary)", fontWeight: 800 }}>{completedAssignedCount} of {assignedCourses.length} ({assignedCompletionRate}%)</span>
+            </div>
+            <ProgressBar value={assignedCompletionRate} height={8} />
+          </div>
+
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {assignedCourses.map(cc => (
-              <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 10, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id })}>
+              <div key={cc.id} className="tai-card tai-card-hover" style={{ padding: 22, borderRadius: 10, cursor: "pointer" }} onClick={() => push?.("courseDetail", { id: cc.courses?.id || cc.course_id })}>
                 <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 4px" }}>
-                  {cc.courses?.title || "Untitled course"}
+                  {cc.courses?.title || "Assigned Cohort Course"}
                 </h3>
                 <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 14px" }}>
-                  {cc.courses?.description}
+                  {cc.courses?.description || "Curriculum requirement for this cohort track."}
                 </p>
 
                 <div style={{ marginBottom: 16, background: "var(--surface-3)", padding: "12px 14px", borderRadius: 8, border: "1px solid var(--border)" }}>
@@ -474,12 +487,12 @@ export function CohortScreen({
                 </div>
 
                 <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 11.5, color: "var(--danger)", fontWeight: 700 }}>
-                    Due: {new Date(cc.due_at).toLocaleDateString()}
+                  <span style={{ fontSize: 11.5, color: cc.due_at ? "var(--danger)" : "var(--text-3)", fontWeight: 700 }}>
+                    {cc.due_at ? `Due: ${new Date(cc.due_at).toLocaleDateString()}` : "Active Track"}
                   </span>
                   <button
                     className="tai-btn tai-btn-primary tai-btn-sm"
-                    onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: cc.courses?.id || "course-figma-ai" }); }}
+                    onClick={(e) => { e.stopPropagation(); push("courseDetail", { id: cc.courses?.id || cc.course_id }); }}
                   >
                     Open Syllabus →
                   </button>
@@ -513,7 +526,7 @@ export function CohortScreen({
                 </div>
 
                 <a
-                  href={r.file_url || r.external_url || "https://figma.com"}
+                  href={r.external_url || r.file_url || r.url || "#"}
                   target="_blank"
                   rel="noreferrer"
                   className="tai-btn tai-btn-outline tai-btn-sm"
@@ -531,35 +544,47 @@ export function CohortScreen({
           TAB 5: FACILITATORS
           ========================================================================= */}
       {tab === "members" && (
-        <div className="tai-grid2">
-          {cohortMembersQuery?.loading && <div className="tai-empty">Loading facilitators...</div>}
-          {!cohortMembersQuery?.loading && instructorMembers.length === 0 && (
-            <div className="tai-empty">No instructor assigned to this cohort yet.</div>
+        <div className="tai-col tai-gap16">
+          {cohortMembersQuery?.loading && !members.length && <div className="tai-empty">Loading members...</div>}
+          {!cohortMembersQuery?.loading && members.length === 0 && (
+            <div className="tai-empty">No members in this cohort yet.</div>
           )}
-          {instructorMembers.map(m => (
-            <div key={m.id} className="tai-card" style={{ padding: 20, borderRadius: 10 }}>
-              <div className="tai-row tai-between" style={{ gap: 12, flexWrap: "wrap" }}>
-                <div className="tai-row tai-gap12" style={{ minWidth: 0, flex: "1 1 160px" }}>
-                  <Avatar src={m.user_profiles?.avatar_url} initials={initialsOf(m.user_profiles?.display_name)} size={48} />
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.user_profiles?.display_name}</div>
-                    <div style={{ fontSize: 12, color: "var(--primary)", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.user_profiles?.role || "Lead Facilitator"}</div>
+          <div className="tai-grid2">
+            {members.map(m => {
+              const isInstructor = m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin";
+              return (
+                <div key={m.id} className="tai-card" style={{ padding: "14px 16px", borderRadius: 10 }}>
+                  <div className="tai-row tai-gap12" style={{ alignItems: "center", justifyContent: "space-between" }}>
+                    <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
+                      <Avatar src={m.user_profiles?.avatar_url} initials={initialsOf(m.user_profiles?.display_name)} size={40} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {m.user_profiles?.display_name || "Cohort Member"}
+                        </div>
+                        {isInstructor && (
+                          <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4 }}>
+                            INSTRUCTOR
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {isInstructor && (
+                      <button
+                        className="tai-btn tai-btn-primary tai-btn-sm"
+                        style={{ flexShrink: 0 }}
+                        onClick={() => {
+                          if (push) push("messages", { recipientName: m.user_profiles?.display_name });
+                          showToast(`Starting chat with ${m.user_profiles?.display_name}...`);
+                        }}
+                      >
+                        <MessageCircle size={13} /> Message
+                      </button>
+                    )}
                   </div>
                 </div>
-
-                <button
-                  className="tai-btn tai-btn-primary tai-btn-sm"
-                  style={{ flexShrink: 0 }}
-                  onClick={() => {
-                    if (push) push("messages", { recipientName: m.user_profiles?.display_name });
-                    showToast(`Starting chat with ${m.user_profiles?.display_name}...`);
-                  }}
-                >
-                  <MessageCircle size={13} /> Message
-                </button>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       )}
 
