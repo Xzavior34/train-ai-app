@@ -20,6 +20,9 @@ export function CohortScreen({
   const [replyInputs, setReplyInputs] = useState({});
   const [submittingReply, setSubmittingReply] = useState(false);
 
+  const activityTodayQuery = useSupabaseQuery(async () => (cohort?.id ? fetchCohortActivityToday(cohort.id) : 0), [cohort?.id]);
+  const activityToday = activityTodayQuery.data || 0;
+
   if (cohortMembershipQuery?.loading && !cohort) {
     return (
       <div>
@@ -44,8 +47,6 @@ export function CohortScreen({
   const now = Date.now();
   const upcomingSessions = sessions.filter(s => new Date(s.starts_at).getTime() >= now);
   const pastSessions = sessions.filter(s => new Date(s.starts_at).getTime() < now);
-  const activityTodayQuery = useSupabaseQuery(async () => (cohort?.id ? fetchCohortActivityToday(cohort.id) : 0), [cohort?.id]);
-  const activityToday = activityTodayQuery.data || 0;
 
   const instructorMembers = (cohortMembersQuery?.data || []).filter(
     m => m.user_profiles?.role === "mentor" || m.user_profiles?.role === "admin"

@@ -52,12 +52,6 @@ export default function App() {
       return false;
     }
   })();
-  if (isOwnerPortalURL && !ownerPortalAuthenticated) {
-    return <PlatformOwnerLoginScreen onAuthenticated={() => setOwnerPortalAuthenticated(true)} />;
-  }
-  if (isOwnerPortalURL && ownerPortalAuthenticated) {
-    return <PlatformOwnerApp onSwitchDashboard={() => {}} userRoles={["super_admin"]} />;
-  }
 
   // Step-up MFA gate: "checking" while we ask Supabase for this session's
   // Authenticator Assurance Level, "required" when the user has a verified
@@ -243,6 +237,29 @@ export default function App() {
       <>
         <OfflineIndicator mode={offlineMode} />
         <LoadingScreen message="Connecting to Train AI..." />
+      </>
+    );
+  }
+
+  if (isOwnerPortalURL && !ownerPortalAuthenticated) {
+    return (
+      <>
+        <OfflineIndicator mode={offlineMode} />
+        <PlatformOwnerLoginScreen onAuthenticated={() => setOwnerPortalAuthenticated(true)} />
+      </>
+    );
+  }
+  if (isOwnerPortalURL && ownerPortalAuthenticated) {
+    return (
+      <>
+        <OfflineIndicator mode={offlineMode} />
+        <PlatformOwnerApp
+          onSwitchDashboard={switchDashboard}
+          userRoles={["super_admin"]}
+          superAdminSelectedOrgId={superAdminSelectedOrgId}
+          setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
+          onSignOut={handleGlobalSignOut}
+        />
       </>
     );
   }

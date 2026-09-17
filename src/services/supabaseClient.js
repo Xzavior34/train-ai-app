@@ -36,6 +36,16 @@ export const SUPABASE_PROJECTS = {
   B2B: "b2b", // every business-organization tenant, isolated internally by organization_id + RLS
 };
 
+function normalizeSupabaseUrl(string) {
+  if (!string) return "";
+  let clean = string.trim();
+  if (clean.toLowerCase().includes("your-")) return "";
+  if (!clean.startsWith("http://") && !clean.startsWith("https://")) {
+    clean = `https://${clean}.supabase.co`;
+  }
+  return clean;
+}
+
 function isValidHttpUrl(string) {
   try {
     const parsed = new URL(string);
@@ -45,15 +55,15 @@ function isValidHttpUrl(string) {
   }
 }
 
-function buildClient(urlEnvKey, anonKeyEnvKey) {
-  let url = (import.meta.env[urlEnvKey] || "").trim();
+function buildClient(urlEnvKey, anonKeyEnvKey, fallbackUrlKey = "VITE_SUPABASE_URL", fallbackKeyKey = "VITE_SUPABASE_ANON_KEY") {
+  let url = normalizeSupabaseUrl(import.meta.env[urlEnvKey]);
   let anonKey = (import.meta.env[anonKeyEnvKey] || "").trim();
 
-  if (!url || url.toLowerCase().includes("your-")) {
-    url = (import.meta.env.VITE_SUPABASE_URL || "").trim();
+  if (!url) {
+    url = normalizeSupabaseUrl(import.meta.env[fallbackUrlKey]);
   }
   if (!anonKey || anonKey.toLowerCase().includes("your-") || anonKey.toLowerCase().includes("anon-public-key")) {
-    anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim();
+    anonKey = (import.meta.env[fallbackKeyKey] || "").trim();
   }
 
   const isValidUrl = isValidHttpUrl(url);
@@ -75,19 +85,14 @@ function buildClient(urlEnvKey, anonKeyEnvKey) {
   return { configured: !!client, client };
 }
 
-// Sara Foundation - the project already in .env.example (previously
-// described as "the" shared project for this whole app - that was correct
-// before the three-project split was confirmed; it belongs to this one
-// tenant only now).
+// Sara Foundation - dedicated project (jeobggrtxeybxvlwpxvn)
 const sara = buildClient("VITE_SUPABASE_URL", "VITE_SUPABASE_ANON_KEY");
 
-// Digital Training Organization - real credentials don't exist in this
-// codebase yet. Also where Super Admin accounts are provisioned - see the
-// header comment above.
+// Digital Training Organization - Train AI B2C + Super Admin (djikuoucsuhdiyrhsduz)
 const digitalTraining = buildClient("VITE_SUPABASE_DIGITAL_TRAINING_URL", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY");
 
-// B2B - real credentials don't exist in this codebase yet.
-const b2b = buildClient("VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_B2B_ANON_KEY");
+// B2B - every business-organization tenant. Falls back to Digital Training if running on a 2-database setup
+const b2b = buildClient("VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_B2B_ANON_KEY", "VITE_SUPABASE_DIGITAL_TRAINING_URL", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY");
 
 const CLIENTS_BY_PROJECT = {
   [SUPABASE_PROJECTS.SARA_FOUNDATION]: sara.client,
