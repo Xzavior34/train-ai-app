@@ -96,6 +96,23 @@ export function StudyGroupScreen({
     [selectedGroupId]
   );
 
+  const filteredGroups = useMemo(() => {
+    let list = groups;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (g) =>
+          g.name?.toLowerCase().includes(q) ||
+          g.description?.toLowerCase().includes(q) ||
+          g.courses?.title?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [groups, searchQuery]);
+
+  const myGroups = filteredGroups.filter((g) => myGroupIds.has(g.id));
+  const otherGroups = filteredGroups.filter((g) => !myGroupIds.has(g.id));
+
   // -------------------------------------------------------------------
   // Handlers
   // -------------------------------------------------------------------
@@ -841,22 +858,6 @@ export function StudyGroupScreen({
   // -------------------------------------------------------------------
   // Render: GROUP LIST / BROWSER VIEW (1.0 Parity)
   // -------------------------------------------------------------------
-  const filteredGroups = useMemo(() => {
-    let list = groups;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      list = list.filter(
-        (g) =>
-          g.name?.toLowerCase().includes(q) ||
-          g.description?.toLowerCase().includes(q) ||
-          g.courses?.title?.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [groups, searchQuery]);
-
-  const myGroups = filteredGroups.filter((g) => myGroupIds.has(g.id));
-  const otherGroups = filteredGroups.filter((g) => !myGroupIds.has(g.id));
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
