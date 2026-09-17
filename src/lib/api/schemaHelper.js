@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient.js";
+import { isRealDatabaseId } from "../mockDataManager.js";
 
 // Helper utilities for full 164-table database operations
 
@@ -822,7 +823,20 @@ export async function fetchStudyGroups() {
 
 export async function fetchMyStudyGroupIds(userId) {
   if (!supabase || !userId) return [];
-  const { data, error } = await supabase.from("study_group_members").select("group_id").eq("user_id", userId);
+  let actualUserId = userId;
+  if (!isRealDatabaseId(actualUserId)) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user?.id && isRealDatabaseId(userData.user.id)) {
+        actualUserId = userData.user.id;
+      } else {
+        return [];
+      }
+    } catch {
+      return [];
+    }
+  }
+  const { data, error } = await supabase.from("study_group_members").select("group_id").eq("user_id", actualUserId);
   if (error) { console.warn("Study group membership fetch warning:", error); return []; }
   return (data || []).map((r) => r.group_id);
 }
@@ -830,7 +844,7 @@ export async function fetchMyStudyGroupIds(userId) {
 // Real members of a specific study group (not a generic community-people
 // slice) - used by the Group Members tab in StudyGroupWorkspace.
 export async function fetchStudyGroupMembers(groupId) {
-  if (!supabase || !groupId) return [];
+  if (!supabase || !groupId || !isRealDatabaseId(groupId)) return [];
   const { data, error } = await supabase
     .from("study_group_members")
     .select("user_id, role, joined_at")
@@ -856,19 +870,91 @@ export async function fetchStudyGroupMembers(groupId) {
 }
 
 export async function joinStudyGroup({ studyGroupId, userId }) {
-  if (!supabase) return;
-  const { error } = await supabase.from("study_group_members").insert({ group_id: studyGroupId, user_id: userId, role: "member" });
-  if (error) throw error;
+  if (!supabase || !studyGroupId) return { success: false, error: "Invalid study group." };
+
+  let actualUserId = userId;
+  if (!actualUserId) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      actualUserId = userData?.user?.id;
+    } catch { /* ignore */ }
+  }
+
+  if (!actualUserId) {
+    throw new Error("Please sign in to join this study group.");
+  }
+
+  // Gracefully handle demo mode or non-UUID inputs without database error
+  if (!isRealDatabaseId(actualUserId) || !isRealDatabaseId(studyGroupId)) {
+    return { success: true, demo: true };
+  }
+
+  // Upsert member record to prevent duplicate key errors (23505) on rapid or repeated clicks
+  let { error } = await supabase
+    .from("study_group_members")
+    .upsert({ group_id: studyGroupId, user_id: actualUserId, role: "member" }, { onConflict: "group_id, user_id" });
+
+  // If foreign key violation (23503), the user's profile is not yet in public.user_profiles.
+  // Auto-provision the profile via join_default_organization RPC and retry.
+  if (error && (error.code === "23503" || error.message?.includes("foreign key constraint"))) {
+    try {
+      await supabase.rpc("join_default_organization");
+    } catch (rpcErr) {
+      console.warn("Auto-provision profile via RPC failed:", rpcErr);
+    }
+    const retry = await supabase
+      .from("study_group_members")
+      .upsert({ group_id: studyGroupId, user_id: actualUserId, role: "member" }, { onConflict: "group_id, user_id" });
+    error = retry.error;
+  }
+
+  // Duplicate key constraint - treat as idempotent success
+  if (error && (error.code === "23505" || error.message?.includes("duplicate key"))) {
+    return { success: true, alreadyMember: true };
+  }
+
+  if (error) {
+    console.error("Failed to join study group:", error);
+    throw new Error(error.message || "Failed to join study group. Please try again.");
+  }
+
+  return { success: true };
 }
 
 export async function leaveStudyGroup({ studyGroupId, userId }) {
-  if (!supabase) return;
-  const { error } = await supabase.from("study_group_members").delete().eq("group_id", studyGroupId).eq("user_id", userId);
-  if (error) throw error;
+  if (!supabase || !studyGroupId) return { success: true };
+
+  let actualUserId = userId;
+  if (!actualUserId) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      actualUserId = userData?.user?.id;
+    } catch { /* ignore */ }
+  }
+
+  if (!actualUserId) return { success: true };
+
+  if (!isRealDatabaseId(actualUserId) || !isRealDatabaseId(studyGroupId)) {
+    return { success: true, demo: true };
+  }
+
+  const { error } = await supabase
+    .from("study_group_members")
+    .delete()
+    .eq("group_id", studyGroupId)
+    .eq("user_id", actualUserId);
+
+  if (error) {
+    console.error("Failed to leave study group:", error);
+    throw new Error(error.message || "Failed to leave study group. Please try again.");
+  }
+
+  return { success: true };
 }
 
 export async function deleteStudyGroup(groupId) {
   if (!supabase || !groupId) return;
+  if (!isRealDatabaseId(groupId)) return;
   const { error } = await supabase.from("study_groups").delete().eq("id", groupId);
   if (error) throw error;
 }
@@ -876,7 +962,7 @@ export async function deleteStudyGroup(groupId) {
 // Study group chat - backed by the real `study_group_messages` table
 // (study_group_id, sender_id, message, media_type/url, created_at).
 export async function fetchStudyGroupMessages(groupId) {
-  if (!supabase || !groupId) return [];
+  if (!supabase || !groupId || !isRealDatabaseId(groupId)) return [];
   const { data, error } = await supabase
     .from("study_group_messages")
     .select("*")
@@ -1515,21 +1601,67 @@ export async function fetchMyStudyGroups(userId) {
 
 export async function createStudyGroup({ organizationId, name, description, courseId, createdBy, maxMembers }) {
   if (!supabase) return null;
+
+  let actualCreatedBy = createdBy;
+  if (!actualCreatedBy) {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      actualCreatedBy = userData?.user?.id;
+    } catch { /* ignore */ }
+  }
+
+  let orgId = organizationId;
+  if (!orgId || !isRealDatabaseId(orgId)) {
+    if (actualCreatedBy && isRealDatabaseId(actualCreatedBy)) {
+      try {
+        const { data: prof } = await supabase.from("user_profiles").select("organization_id").eq("id", actualCreatedBy).maybeSingle();
+        if (prof?.organization_id) orgId = prof.organization_id;
+      } catch { /* ignore */ }
+    }
+  }
+
+  if (!orgId || !isRealDatabaseId(orgId)) {
+    try {
+      const { data: defOrg } = await supabase.from("organizations").select("id").eq("slug", "tech-learning").maybeSingle();
+      orgId = defOrg?.id || null;
+    } catch { /* ignore */ }
+  }
+
+  const insertPayload = {
+    organization_id: orgId,
+    name,
+    description: description || null,
+    max_members: maxMembers || 50,
+  };
+  if (courseId && isRealDatabaseId(courseId)) {
+    insertPayload.course_id = courseId;
+  }
+  if (actualCreatedBy && isRealDatabaseId(actualCreatedBy)) {
+    insertPayload.created_by = actualCreatedBy;
+  }
+
   const { data, error } = await supabase
     .from("study_groups")
-    .insert({
-      organization_id: organizationId, name, description: description || null,
-      course_id: courseId || null, created_by: createdBy, max_members: maxMembers || 50,
-    })
+    .insert(insertPayload)
     .select()
     .single();
-  if (error) throw error;
-  // Creator is added as a real member too - matters for the member list
-  // and for posting in the group's own chat (both scoped to "is a member
-  // of this specific group").
-  if (createdBy && data?.id) {
+  if (error) {
+    console.error("Failed to create study group:", error);
+    throw new Error(error.message || "Failed to create study group.");
+  }
+
+  // Creator is added as a real lead member too
+  if (actualCreatedBy && data?.id && isRealDatabaseId(actualCreatedBy) && isRealDatabaseId(data.id)) {
     try {
-      await supabase.from("study_group_members").insert({ group_id: data.id, user_id: createdBy, role: "lead" });
+      let { error: memErr } = await supabase
+        .from("study_group_members")
+        .upsert({ group_id: data.id, user_id: actualCreatedBy, role: "lead" }, { onConflict: "group_id, user_id" });
+      if (memErr && (memErr.code === "23503" || memErr.message?.includes("foreign key constraint"))) {
+        await supabase.rpc("join_default_organization").catch(() => {});
+        await supabase
+          .from("study_group_members")
+          .upsert({ group_id: data.id, user_id: actualCreatedBy, role: "lead" }, { onConflict: "group_id, user_id" });
+      }
     } catch (e) {
       console.warn("Could not auto-add study group creator as a member:", e);
     }

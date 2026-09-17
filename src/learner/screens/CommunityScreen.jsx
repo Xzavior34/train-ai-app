@@ -1182,7 +1182,7 @@ export function CommunityScreen({
   }
 
   async function handleToggleGroupJoin(groupId, isMember) {
-    if (!myId) return;
+    if (!myId || !groupId) return;
     setJoiningGroupId(groupId);
     try {
       if (isMember) {
@@ -1192,34 +1192,48 @@ export function CommunityScreen({
         if (joinStudyGroup) await joinStudyGroup({ studyGroupId: groupId, userId: myId });
         showToast?.("Joined study group!");
       }
-      myGroupIdsQuery.refetch?.();
-      studyGroupsQuery.refetch?.();
+      await Promise.allSettled([
+        myGroupIdsQuery.refetch?.(),
+        studyGroupsQuery.refetch?.(),
+      ]);
     } catch (e) {
-      showToast?.("Could not update group membership.");
+      showToast?.(e?.message || "Could not update group membership.");
     } finally {
       setJoiningGroupId(null);
     }
   }
 
   async function handleJoinGroup(groupId) {
-    if (!myId || !joinStudyGroup) return;
+    if (!myId || !groupId || !joinStudyGroup) return;
+    setJoiningGroupId(groupId);
     try {
       await joinStudyGroup({ studyGroupId: groupId, userId: myId });
-      myGroupIdsQuery.refetch?.();
+      await Promise.allSettled([
+        myGroupIdsQuery.refetch?.(),
+        studyGroupsQuery.refetch?.(),
+      ]);
       showToast?.("Joined study group!");
     } catch (e) {
-      showToast?.("Could not join group.");
+      showToast?.(e?.message || "Could not join group.");
+    } finally {
+      setJoiningGroupId(null);
     }
   }
 
   async function handleLeaveGroup(groupId) {
-    if (!myId || !leaveStudyGroup) return;
+    if (!myId || !groupId || !leaveStudyGroup) return;
+    setJoiningGroupId(groupId);
     try {
       await leaveStudyGroup({ studyGroupId: groupId, userId: myId });
-      myGroupIdsQuery.refetch?.();
+      await Promise.allSettled([
+        myGroupIdsQuery.refetch?.(),
+        studyGroupsQuery.refetch?.(),
+      ]);
       showToast?.("Left study group.");
     } catch (e) {
-      showToast?.("Could not leave group.");
+      showToast?.(e?.message || "Could not leave group.");
+    } finally {
+      setJoiningGroupId(null);
     }
   }
 
@@ -1630,7 +1644,7 @@ export function CommunityScreen({
                           handleToggleGroupJoin(g.id, isMember);
                         }}
                       >
-                        {isMember ? "Joined" : "Join"}
+                        {joiningGroupId === g.id ? (isMember ? "Leaving..." : "Joining...") : (isMember ? "Joined" : "Join")}
                       </button>
                     </div>
                   </div>

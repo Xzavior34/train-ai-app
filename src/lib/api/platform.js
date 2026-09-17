@@ -1,5 +1,6 @@
 import { supabase, activeProject } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
+import { isRealDatabaseId } from "../mockDataManager.js";
 import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
 
 // Admin-scoped queries. RLS (up_select_org_admin in 0006_rls_policies.sql)
@@ -18,17 +19,30 @@ export async function fetchCurrentUserProfile(userId) {
       manager_id: role === "learner" ? "demo-manager-id" : null,
     };
   }
-  const { data, error } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
+  let { data, error } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
   if (error) throw error;
 
   let orgId = data?.organization_id;
-  if (!orgId && data?.id) {
-    try {
-      const { data: defaultOrgId } = await supabase.rpc("join_default_organization");
-      orgId = defaultOrgId;
-    } catch {
-      const { data: defaultOrg } = await supabase.from("organizations").select("id").eq("slug", "tech-learning").maybeSingle();
-      orgId = defaultOrg?.id || null;
+  // If the profile row does not exist in user_profiles or has no organization_id,
+  // invoke join_default_organization (SECURITY DEFINER) to provision the profile and org membership
+  if (!data || !orgId) {
+    if (isRealDatabaseId(userId)) {
+      try {
+        const { data: defaultOrgId } = await supabase.rpc("join_default_organization");
+        if (defaultOrgId) orgId = defaultOrgId;
+        // Re-query user_profiles now that the RPC has inserted the profile row
+        const { data: refreshed } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
+        if (refreshed) {
+          data = refreshed;
+          orgId = refreshed.organization_id || orgId;
+        }
+      } catch (e) {
+        console.warn("Auto-provision profile via join_default_organization:", e);
+        try {
+          const { data: defaultOrg } = await supabase.from("organizations").select("id").eq("slug", "tech-learning").maybeSingle();
+          orgId = defaultOrg?.id || orgId || null;
+        } catch { /* best effort */ }
+      }
     }
   }
 

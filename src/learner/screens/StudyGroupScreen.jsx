@@ -49,6 +49,7 @@ export function StudyGroupScreen({
   const [newGroupDesc, setNewGroupDesc] = useState("");
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [joiningGroupId, setJoiningGroupId] = useState(null);
 
   // Sync selectedGroupId with params.groupId on navigation changes
   React.useEffect(() => {
@@ -117,30 +118,38 @@ export function StudyGroupScreen({
   // Handlers
   // -------------------------------------------------------------------
   async function handleJoin(groupId) {
+    if (!groupId || joiningGroupId) return;
+    setJoiningGroupId(groupId);
     try {
       await joinStudyGroup?.({ studyGroupId: groupId, userId: session?.user?.id });
       showToast?.("Joined study group!");
-      myGroupIdsQuery.refetch?.();
-      studyGroupsQuery.refetch?.();
-      if (selectedGroupId === groupId) {
-        membersQuery.refetch?.();
-      }
+      await Promise.allSettled([
+        myGroupIdsQuery.refetch?.(),
+        studyGroupsQuery.refetch?.(),
+        selectedGroupId === groupId ? membersQuery.refetch?.() : Promise.resolve(),
+      ]);
     } catch (err) {
       showToast?.(err?.message || "Could not join group");
+    } finally {
+      setJoiningGroupId(null);
     }
   }
 
   async function handleLeave(groupId) {
+    if (!groupId || joiningGroupId) return;
+    setJoiningGroupId(groupId);
     try {
       await leaveStudyGroup?.({ studyGroupId: groupId, userId: session?.user?.id });
       showToast?.("Left study group.");
-      myGroupIdsQuery.refetch?.();
-      studyGroupsQuery.refetch?.();
-      if (selectedGroupId === groupId) {
-        membersQuery.refetch?.();
-      }
+      await Promise.allSettled([
+        myGroupIdsQuery.refetch?.(),
+        studyGroupsQuery.refetch?.(),
+        selectedGroupId === groupId ? membersQuery.refetch?.() : Promise.resolve(),
+      ]);
     } catch (err) {
       showToast?.(err?.message || "Could not leave group");
+    } finally {
+      setJoiningGroupId(null);
     }
   }
 
@@ -161,8 +170,10 @@ export function StudyGroupScreen({
       setNewGroupName("");
       setNewGroupDesc("");
       setCreating(false);
-      studyGroupsQuery.refetch?.();
-      myGroupIdsQuery.refetch?.();
+      await Promise.allSettled([
+        studyGroupsQuery.refetch?.(),
+        myGroupIdsQuery.refetch?.(),
+      ]);
       if (group?.id) setSelectedGroupId(group.id);
     } catch (err) {
       showToast?.(err?.message || "Could not create group");
@@ -353,18 +364,19 @@ export function StudyGroupScreen({
                 <button
                   className="tai-btn tai-btn-outline"
                   style={{ borderRadius: 999, padding: "8px 18px", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.4)", fontSize: 13 }}
+                  disabled={joiningGroupId === selectedGroup.id}
                   onClick={() => handleLeave(selectedGroup.id)}
                 >
-                  Leave Group
+                  {joiningGroupId === selectedGroup.id ? "Leaving..." : "Leave Group"}
                 </button>
               ) : (
                 <button
                   className="tai-btn tai-btn-primary"
                   style={{ borderRadius: 999, padding: "8px 20px", fontSize: 13 }}
-                  disabled={isFull}
+                  disabled={isFull || joiningGroupId === selectedGroup.id}
                   onClick={() => handleJoin(selectedGroup.id)}
                 >
-                  {isFull ? "Group Full" : "Join Group"}
+                  {joiningGroupId === selectedGroup.id ? "Joining..." : isFull ? "Group Full" : "Join Group"}
                 </button>
               )}
             </div>
@@ -514,10 +526,10 @@ export function StudyGroupScreen({
                 <button
                   className="tai-btn tai-btn-primary tai-btn-sm"
                   style={{ borderRadius: 999, padding: "6px 18px" }}
-                  disabled={isFull}
+                  disabled={isFull || joiningGroupId === selectedGroup.id}
                   onClick={() => handleJoin(selectedGroup.id)}
                 >
-                  {isFull ? "Group Full" : "Join to Participate"}
+                  {joiningGroupId === selectedGroup.id ? "Joining..." : isFull ? "Group Full" : "Join to Participate"}
                 </button>
               </div>
             )}
@@ -1073,9 +1085,10 @@ export function StudyGroupScreen({
                       <button
                         className="tai-btn tai-btn-outline tai-btn-sm"
                         style={{ borderRadius: 999, padding: "7px 16px", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.4)" }}
+                        disabled={joiningGroupId === g.id}
                         onClick={() => handleLeave(g.id)}
                       >
-                        Leave
+                        {joiningGroupId === g.id ? "Leaving..." : "Leave"}
                       </button>
                     </div>
                   </div>
@@ -1177,10 +1190,10 @@ export function StudyGroupScreen({
                     <button
                       className="tai-btn tai-btn-primary tai-btn-sm"
                       style={{ borderRadius: 999, padding: "7px 16px" }}
-                      disabled={isFull}
+                      disabled={isFull || joiningGroupId === g.id}
                       onClick={() => handleJoin(g.id)}
                     >
-                      {isFull ? "Group Full" : "Join Group"}
+                      {joiningGroupId === g.id ? "Joining..." : isFull ? "Group Full" : "Join Group"}
                     </button>
                   </div>
                 </div>

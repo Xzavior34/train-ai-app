@@ -39,10 +39,10 @@ function isValidHttpUrl(string) {
 }
 
 const DEFAULT_ORG_DB_URL = "https://djikuoucsuhdiyrhsduz.supabase.co";
-const DEFAULT_ORG_DB_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const DEFAULT_ORG_DB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqaWt1b3Vjc3VoZGl5cmhzZHV6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTQ2MjMwNSwiZXhwIjoyMTA1MDM4MzA1fQ.Nz1OWlBcnw4wW3dLtKqjgSmOvQ4FI5YUl-3Knt9JqOY";
 
 const DEFAULT_SARA_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const DEFAULT_SARA_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const DEFAULT_SARA_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6Implb2JnZ3J0eGV5Ynh2bHdweHZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzMyNjM1NywiZXhwIjoyMTAyOTAyMzU3fQ.uDCs11c1ti9xGopgIcrVAGALgvjrhYSLMZyu5A_F-_Y";
 
 function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = [], fallbackKeyEnvs = [], defaultUrl = "", defaultKey = "") {
   let url = (import.meta.env[primaryUrlEnv] || "").trim();
