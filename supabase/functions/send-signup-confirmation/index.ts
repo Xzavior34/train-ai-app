@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const clientOrigin = (body?.origin || "").trim();
-    const appUrl = (Deno.env.get("APP_URL") || "https://trainai.app").trim().replace(/\/$/, "");
+    const appUrl = (Deno.env.get("APP_URL") || "https://train-ai-app.vercel.app").trim().replace(/\/$/, "");
 
     let targetOrigin = appUrl;
     if (clientOrigin && clientOrigin !== "null" && clientOrigin !== "undefined") {

@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
 
     // Extract target origin from request body or environment
     const clientOrigin = (body?.origin || body?.redirectTo || "").trim();
-    const appUrl = (Deno.env.get("APP_URL") || "https://trainai.app").trim().replace(/\/$/, "");
+    const appUrl = (Deno.env.get("APP_URL") || "https://train-ai-app.vercel.app").trim().replace(/\/$/, "");
     
     // Determine target redirect origin
     let targetOrigin = appUrl;

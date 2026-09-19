@@ -131,7 +131,7 @@ export function useAuth() {
 
     if (supabase) {
       const cleanEmail = email.trim().toLowerCase();
-      const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://trainai.app";
+      const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://train-ai-app.vercel.app";
 
       // 1. Proactively verify if the email is already registered to an account in any org
       try {
@@ -268,7 +268,7 @@ export function useAuth() {
       return { success: true };
     }
     const cleanEmail = email.trim().toLowerCase();
-    const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://trainai.app";
+    const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://train-ai-app.vercel.app";
 
     // 1. Try Resend branded Edge Function first
     try {

@@ -18,7 +18,7 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "https://jeobggrtxeybxvlwpxvn.supabase.co";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    const appUrl = (Deno.env.get("APP_URL") || "https://trainai.app").trim().replace(/\/$/, "");
+    const appUrl = (Deno.env.get("APP_URL") || "https://train-ai-app.vercel.app").trim().replace(/\/$/, "");
 
     let body: any = {};
     try {

@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 const PROJECT_REF = "jeobggrtxeybxvlwpxvn";
 let MANAGEMENT_TOKEN = process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_MGMT_TOKEN;
 
@@ -73,6 +75,7 @@ async function deployFunction(slug, name, filePath) {
 async function main() {
   await deployFunction('send-certificate-email', 'send-certificate-email', 'supabase/functions/send-certificate-email/index.ts');
   await deployFunction('send-signup-confirmation', 'send-signup-confirmation', 'supabase/functions/send-signup-confirmation/index.ts');
+  await deployFunction('reset-password', 'reset-password', 'supabase/functions/reset-password/index.ts');
   console.log("All email Edge Functions successfully deployed!");
 }
 
