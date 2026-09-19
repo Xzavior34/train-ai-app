@@ -15,11 +15,25 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const PROJECT_REF = 'jeobggrtxeybxvlwpxvn';
-const TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+// Attempt to load token from environment, .env.local, or .env
+let TOKEN = process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_MGMT_TOKEN;
 
 if (!TOKEN) {
-  console.error('ERROR: Set SUPABASE_ACCESS_TOKEN env var.');
+  for (const envFile of ['.env.local', '.env']) {
+    const envPath = path.resolve(__dirname, '..', envFile);
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      const match = content.match(/^SUPABASE_(?:ACCESS|MGMT)_TOKEN\s*=\s*["']?([^"'\r\n]+)["']?/m);
+      if (match && match[1]) {
+        TOKEN = match[1].trim();
+        break;
+      }
+    }
+  }
+}
+
+if (!TOKEN) {
+  console.error('ERROR: Set SUPABASE_ACCESS_TOKEN env var or add it to .env.local.');
   console.error('Get your PAT from: https://supabase.com/dashboard/account/tokens');
   process.exit(1);
 }
