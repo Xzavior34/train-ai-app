@@ -536,7 +536,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       // Integration), used as the real session link instead of inventing a
       // throwaway one when a learner or the instructor books a session.
       meetingUrl: m.personal_meeting_url || m.meeting_url || "",
-      name: m.name || m.user_profiles?.display_name || (m.title?.includes("Marketing") ? "Inem Emmanuel" : m.title?.includes("Data") ? "Loveth Omokaro" : m.title?.includes("Full-Stack") ? "Olumide Shode" : "Sara Foundation"),
+      name: m.name || m.user_profiles?.display_name || (m.title?.includes("Marketing") ? "Inem Emmanuel" : m.title?.includes("Data") ? "Loveth Omokaro" : m.title?.includes("Full-Stack") ? "Olumide Shode" : "Instructor"),
       avatar: m.avatar || m.user_profiles?.avatar_url || m.avatar_url || null,
       title: m.title || "Instructor",
       tagline: m.tagline || "",

@@ -240,7 +240,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
               <p className="ta-hero-desc">Manage organization profile, seat licenses, AI policies, security rules, and gamification toggles.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
                 <span className="ta-tag ta-tag-success">
-                  <Building2 size={13} /> {org?.name || "Sara Foundation Africa"}
+                  <Building2 size={13} /> {org?.name || "Train AI"}
                 </span>
                 <span className="ta-tag ta-tag-info">
                   <ShieldCheck size={13} /> {(org?.subscription_tier || "Enterprise").toUpperCase()} Plan Active

@@ -439,11 +439,11 @@ export function CohortScreen({
                   <Clock size={13} />
                   <span>{new Date(s.starts_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
                   <span>•</span>
-                  <span>Facilitator: <strong>{s.host_name || s.instructor || "Sara Foundation"}</strong></span>
+                  <span>Facilitator: <strong>{s.host_name || s.instructor || "Lead Facilitator"}</strong></span>
                 </div>
 
                 <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
-                  <Avatar src={s.instructorAvatar} initials={initialsOf(s.host_name || s.instructor || "SF")} size={32} />
+                  <Avatar src={s.instructorAvatar} initials={initialsOf(s.host_name || s.instructor || "Lead Facilitator")} size={32} />
                   {s.join_url ? (
                     <a href={s.join_url} target="_blank" rel="noreferrer" className="tai-btn tai-btn-primary tai-btn-sm" style={{ textDecoration: "none" }}>
                       <Video size={13} /> Join Virtual Studio →

@@ -522,7 +522,7 @@ export async function sendAIChatMessage({ conversationId, userId, content, role 
 // (useLearnerData.js) always calls this with no id, so the community feed
 // never loaded a single post. The `studyGroupId` parameter is kept for a
 // future per-group feed but is a no-op until such a column/table exists.
-export async function fetchCommunityPosts(studyGroupId = null) {
+export async function fetchCommunityPosts(studyGroupId = null, orgId = null) {
   if (!supabase) return [];
   let query = supabase
     .from("community_posts")
@@ -542,12 +542,19 @@ export async function fetchCommunityPosts(studyGroupId = null) {
   const postAuthorIds = rows.map((r) => r.user_id);
   const commentAuthorIds = rows.flatMap((r) => (r.post_comments || []).map((c) => c.user_id));
   const profiles = await fetchProfilesByUserIds([...postAuthorIds, ...commentAuthorIds]);
-  return rows.map((r) => ({
+  
+  // Isolate posts to the learner's organization if orgId is provided
+  const tenantRows = orgId
+    ? rows.filter(r => !profiles[r.user_id] || profiles[r.user_id].organization_id === orgId)
+    : rows;
+
+  return tenantRows.map((r) => ({
     ...r,
     user_profiles: profiles[r.user_id] || null,
     post_comments: (r.post_comments || [])
       .slice()
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      .filter((c) => !orgId || !profiles[c.user_id] || profiles[c.user_id].organization_id === orgId)
       .map((c) => ({ ...c, user_profiles: profiles[c.user_id] || null })),
   }));
 }
@@ -706,13 +713,19 @@ export async function fetchMyCommunityStats(userId) {
 // Mentor directory (browse all active mentors). NOTE: the real schema has no
 // separate "is_approved" flag on `mentors` (only `is_active`), so being
 // active is the closest available proxy for "approved and listable".
-export async function fetchAllMentors() {
+export async function fetchAllMentors(orgId = null) {
   if (!supabase) return [];
-  const { data, error } = await supabase
+  let query = supabase
     .from("mentors")
     .select("*")
     .eq("is_active", true)
     .order("rating", { ascending: false });
+
+  if (orgId) {
+    query = query.eq("organization_id", orgId);
+  }
+
+  const { data, error } = await query;
   if (error) { console.warn("Mentors directory fetch warning:", error); return []; }
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
@@ -811,12 +824,18 @@ export async function markMentorMessagesRead(userId, counterpartId) {
 }
 
 // Study groups
-export async function fetchStudyGroups() {
+export async function fetchStudyGroups(orgId = null) {
   if (!supabase) return [];
-  const { data, error } = await supabase
+  let query = supabase
     .from("study_groups")
     .select("*, courses(title), study_group_members(count)")
     .order("name", { ascending: true });
+
+  if (orgId) {
+    query = query.eq("organization_id", orgId);
+  }
+
+  const { data, error } = await query;
   if (error) { console.warn("Study groups fetch warning:", error); return []; }
   return data || [];
 }
@@ -989,18 +1008,21 @@ export async function sendStudyGroupMessage({ studyGroupId, senderId, message })
 // (activity_type, activity_text, is_public, metadata). No client-side
 // derivation needed since this table already exists for exactly this
 // purpose; only public rows are shown here.
-export async function fetchCommunityActivityFeed(limit = 15) {
+export async function fetchCommunityActivityFeed(limit = 15, orgId = null) {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("community_activity_feed")
     .select("*")
     .eq("is_public", true)
     .order("created_at", { ascending: false })
-    .limit(limit);
+    .limit(limit * 2);
   if (error) { console.warn("Community activity feed fetch warning:", error); return []; }
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
-  return rows.map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
+  const filtered = orgId
+    ? rows.filter((r) => !profiles[r.user_id] || profiles[r.user_id].organization_id === orgId)
+    : rows;
+  return filtered.slice(0, limit).map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
 }
 
 // ---------------------------------------------------------------------------
@@ -1310,25 +1332,17 @@ export async function fetchCohortSessions(cohortId) {
   return data || [];
 }
 
-// Community - suggested people to follow/connect with
-export async function fetchCommunityPeople(excludeUserId, limit = 20) {
+// Community - suggested people to follow/connect with (strictly scoped to user's organization)
+export async function fetchCommunityPeople(excludeUserId, limit = 20, orgId = null) {
   if (!supabase) return [];
-  // A real, confirmed bug: user_profiles.id IS the real auth uid directly
-  // (no separate user_id column exists on this specific table - the
-  // comment previously here repeated a claim already disproven elsewhere
-  // in this codebase). The primary query below was filtering on a column
-  // that doesn't exist, meaning it silently errored on every real call
-  // and fell through to the fallback path every time - and that fallback
-  // never excluded the caller's own profile at all, meaning a real user
-  // has always seen themselves listed among "community people."
   let query = supabase.from("user_profiles").select("*").limit(limit);
   if (excludeUserId) query = query.neq("id", excludeUserId);
+  if (orgId) query = query.eq("organization_id", orgId);
   const { data, error } = await query;
   if (error) {
-    // Retry with public_user_profiles if user_profiles query fails -
-    // this view's own real PK is also `id`, not `user_id`.
     let fallbackQuery = supabase.from("public_user_profiles").select("*").limit(limit);
     if (excludeUserId) fallbackQuery = fallbackQuery.neq("id", excludeUserId);
+    if (orgId) fallbackQuery = fallbackQuery.eq("organization_id", orgId);
     const { data: fallbackData } = await fallbackQuery;
     return fallbackData || [];
   }

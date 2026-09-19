@@ -513,7 +513,7 @@ export async function fetchOrganizationById(orgId) {
     const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
     const found = projData.orgs?.find(o => o.id === orgId);
     if (found) return found;
-    return projData.orgs?.[0] || { id: "demo-org-id", name: "Sara Foundation Africa", status: "active", subscription_tier: "enterprise", max_users: 50 };
+    return projData.orgs?.[0] || { id: "demo-org-id", name: "Train AI Organization", status: "active", subscription_tier: "enterprise", max_users: 50 };
   }
   try {
     if (orgId && orgId !== "demo-org-id") {

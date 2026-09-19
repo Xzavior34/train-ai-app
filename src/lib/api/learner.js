@@ -305,15 +305,19 @@ export async function awardAIQuizCompletionPoints(userId, points) {
   }
 }
 
-export async function fetchAvailableQuizzes() {
+export async function fetchAvailableQuizzes(orgId = null) {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("quizzes")
-    .select("*, courses(title)")
+    .select("*, courses(title, organization_id)")
     .eq("is_published", true)
     .order("title", { ascending: true });
   if (error) { console.warn("Quizzes fetch warning:", error); return []; }
-  return data || [];
+  const rows = data || [];
+  if (orgId) {
+    return rows.filter((r) => !r.courses || r.courses.organization_id === orgId);
+  }
+  return rows;
 }
 
 export async function fetchMyQuizAttempts(userId, limit = 10) {

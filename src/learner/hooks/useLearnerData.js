@@ -280,19 +280,19 @@ export function useLearnerData(session, screen, params) {
     return { discussion, messages };
   }, [screen === "lesson" ? params?.id : null, screen === "lesson" ? params?.lessonId : null]);
 
-  const quizzesQuery = useSupabaseQuery(async () => fetchAvailableQuizzes(), []);
+  const quizzesQuery = useSupabaseQuery(async () => fetchAvailableQuizzes(orgId), [orgId]);
   const quizAttemptsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
     return fetchMyQuizAttempts(session.user.id, 10);
   }, [session?.user?.id]);
 
-  const postsQuery = useSupabaseQuery(async () => fetchCommunityPosts(), []);
-  const studyGroupsQuery = useSupabaseQuery(async () => fetchStudyGroups(), []);
+  const postsQuery = useSupabaseQuery(async () => fetchCommunityPosts(null, orgId), [orgId]);
+  const studyGroupsQuery = useSupabaseQuery(async () => fetchStudyGroups(orgId), [orgId]);
   const myGroupIdsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
     return fetchMyStudyGroupIds(session.user.id);
   }, [session?.user?.id]);
-  const communityPeopleQuery = useSupabaseQuery(async () => fetchCommunityPeople(session?.user?.id), [session?.user?.id]);
+  const communityPeopleQuery = useSupabaseQuery(async () => fetchCommunityPeople(session?.user?.id, 20, orgId), [session?.user?.id, orgId]);
   // Backs the "Your Community Status" card on the Community screen - real
   // engagement counts for the signed-in learner (see fetchMyCommunityStats).
   const myCommunityStatsQuery = useSupabaseQuery(async () => {
@@ -312,7 +312,7 @@ export function useLearnerData(session, screen, params) {
 
   // Real-time-ish activity ticker for the Community screen, sourced from the
   // actual `community_activity_feed` table (not client-derived).
-  const activityFeedQuery = useSupabaseQuery(async () => fetchCommunityActivityFeed(15), []);
+  const activityFeedQuery = useSupabaseQuery(async () => fetchCommunityActivityFeed(15, orgId), [orgId]);
 
   // Which real cohort (if any) the learner belongs to, and that cohort's
   // real posts feed - backs the Community screen's "Cohort Channels" tab,
@@ -375,7 +375,7 @@ export function useLearnerData(session, screen, params) {
     return fetchUpcomingLearnerSessions(session.user.id);
   }, [session?.user?.id]);
 
-  const mentorsQuery = useSupabaseQuery(async () => fetchAllMentors(), []);
+  const mentorsQuery = useSupabaseQuery(async () => fetchAllMentors(orgId), [orgId]);
 
   // Learning paths - org-scoped the same way the admin builder scopes them
   // on create (see createLearningPath in lib/api/platform.js).
