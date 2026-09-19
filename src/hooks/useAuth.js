@@ -267,27 +267,22 @@ export function useAuth() {
     if (!supabase) {
       return { success: true };
     }
-    const cleanEmail = email.trim();
+    const cleanEmail = email.trim().toLowerCase();
     const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://trainai.app";
 
-    // 1. Invoke the reset-password edge function for Resend branded email
+    // 1. Try Resend branded Edge Function first
     try {
       const { data, error } = await supabase.functions.invoke("reset-password", {
         body: { email: cleanEmail, origin: clientOrigin },
       });
-      if (!error && data) {
-        if (data.success && data.emailSent) {
-          return { success: true, emailSent: true, organizationName: data.organization_name };
-        }
-        if (data.error || data.resend_response?.message) {
-          return { success: false, error: data.error || data.resend_response?.message || "Could not send reset email via Resend." };
-        }
+      if (!error && data?.success && data?.emailSent) {
+        return { success: true, emailSent: true, organizationName: data.organization_name };
       }
     } catch (edgeErr) {
       console.warn("Reset password edge function warning:", edgeErr);
     }
 
-    // 2. Direct HTTP call to reset-password function endpoint
+    // 2. Direct HTTP call to reset-password Edge Function
     try {
       const res = await fetch("https://jeobggrtxeybxvlwpxvn.supabase.co/functions/v1/reset-password", {
         method: "POST",
@@ -299,15 +294,27 @@ export function useAuth() {
         if (json?.success && json?.emailSent) {
           return { success: true, emailSent: true, organizationName: json.organization_name };
         }
-        if (json?.error || json?.resend_response?.message) {
-          return { success: false, error: json.error || json.resend_response?.message || "Could not send reset email via Resend." };
-        }
       }
     } catch (fetchErr) {
       console.warn("Reset password function endpoint warning:", fetchErr);
     }
 
-    return { success: false, error: "Unable to send password reset email. Please try again later." };
+    // 3. Robust Fallback: Native Supabase Auth reset password email
+    try {
+      const redirectTo = `${clientOrigin}/auth/callback?type=recovery`;
+      const { error: nativeErr } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo,
+      });
+      if (!nativeErr) {
+        return { success: true, emailSent: true, native: true };
+      }
+      if (nativeErr?.status === 429 || nativeErr?.code === "over_email_send_rate_limit") {
+        return { success: false, error: "A reset link was recently sent. Please check your inbox or wait 60 seconds before trying again." };
+      }
+      return { success: false, error: nativeErr.message || "Could not send reset password email." };
+    } catch (nativeExc) {
+      return { success: false, error: nativeExc?.message || "Unable to send password reset email. Please try again later." };
+    }
   }, []);
 
   const completePasswordReset = useCallback(async (newPassword) => {
