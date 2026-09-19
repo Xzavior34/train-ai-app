@@ -915,15 +915,31 @@ export async function fetchPendingInvitations(organizationId) {
 // both the edge function and the RPC fallback below always derive the real
 // inviter from the caller's own auth identity (auth.uid()/JWT), never from a
 // client-supplied value.
-export async function createInvitation({ email, role = "learner", organizationId, organizationRole = "member", invitedBy }) {
+export async function createInvitation({ email, role = "learner", organizationId, organizationRole = "member", organizationName, invitedBy }) {
   if (!supabase) return null;
   const trimmedEmail = (email || "").trim();
   if (!trimmedEmail || !organizationId) throw new Error("Email and organization are required");
 
+  let resolvedOrgName = organizationName;
+  if (!resolvedOrgName) {
+    try {
+      const { data: orgData } = await supabase.from("organizations").select("name").eq("id", organizationId).maybeSingle();
+      resolvedOrgName = orgData?.name || "Train AI";
+    } catch (_) {
+      resolvedOrgName = "Train AI";
+    }
+  }
+
   let edgeFunctionOk = false;
   try {
     const { data, error } = await supabase.functions.invoke("invite-user", {
-      body: { email: trimmedEmail, organization_id: organizationId, role, organization_role: organizationRole },
+      body: {
+        email: trimmedEmail,
+        organization_id: organizationId,
+        organization_name: resolvedOrgName,
+        role,
+        organization_role: organizationRole
+      },
     });
     if (error) throw error;
     const result = data?.results?.[0];

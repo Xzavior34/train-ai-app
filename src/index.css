@@ -820,6 +820,412 @@ html.dark .ta-hero-dark .tai-hero-subcard {
   z-index: 100 !important;
 }
 
+.tai-glow-cyan {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-violet {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-rose {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-cobalt {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-magenta {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(217, 70, 239, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+
+/* In Dark Mode: ALL hero cards seamlessly adapt to the sleek frosted theme */
+.dark .tai-hero-card,
+.dark .ta-hero-banner,
+.dark .tai-hero-dark,
+.dark .ta-hero-dark,
+html.dark .tai-hero-card,
+html.dark .ta-hero-banner,
+html.dark .tai-hero-dark,
+html.dark .ta-hero-dark {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0, 0, 0, 0.55) !important;
+}
+.dark .tai-hero-card h1,
+.dark .ta-hero-banner h1,
+.dark .tai-hero-dark h1,
+.dark .ta-hero-dark h1,
+html.dark .tai-hero-card h1,
+html.dark .ta-hero-banner h1,
+html.dark .tai-hero-dark h1,
+html.dark .ta-hero-dark h1,
+.dark .tai-hero-card .tai-hero-title,
+.dark .ta-hero-banner .tai-hero-title,
+.dark .tai-hero-dark .tai-hero-title,
+.dark .ta-hero-dark .tai-hero-title,
+html.dark .tai-hero-card .tai-hero-title,
+html.dark .ta-hero-banner .tai-hero-title,
+html.dark .tai-hero-dark .tai-hero-title,
+html.dark .ta-hero-dark .tai-hero-title {
+  color: var(--text) !important;
+}
+.dark .tai-hero-card p,
+.dark .ta-hero-banner p,
+.dark .tai-hero-dark p,
+.dark .ta-hero-dark p,
+html.dark .tai-hero-card p,
+html.dark .ta-hero-banner p,
+html.dark .tai-hero-dark p,
+html.dark .ta-hero-dark p,
+.dark .tai-hero-card .tai-hero-desc,
+.dark .ta-hero-banner .tai-hero-desc,
+.dark .tai-hero-dark .tai-hero-desc,
+.dark .ta-hero-dark .tai-hero-desc,
+html.dark .tai-hero-card .tai-hero-desc,
+html.dark .ta-hero-banner .tai-hero-desc,
+html.dark .tai-hero-dark .tai-hero-desc,
+html.dark .ta-hero-dark .tai-hero-desc {
+  color: var(--text-2) !important;
+}
+.dark .tai-hero-card .tai-hero-subcard,
+.dark .ta-hero-banner .tai-hero-subcard,
+.dark .tai-hero-dark .tai-hero-subcard,
+.dark .ta-hero-dark .tai-hero-subcard,
+html.dark .tai-hero-card .tai-hero-subcard,
+html.dark .ta-hero-banner .tai-hero-subcard,
+html.dark .tai-hero-dark .tai-hero-subcard,
+html.dark .ta-hero-dark .tai-hero-subcard {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* =========================================================================
+   UNIVERSAL LIQUID GLASS VIDEO PLAYER CONTROLS
+   ========================================================================= */
+.tai-video-glass-bar {
+  background: rgba(15, 23, 42, 0.92) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .tai-video-glass-bar {
+    padding: 8px 10px !important;
+    gap: 6px !important;
+  }
+  .tai-video-glass-bar .tai-video-timestamp {
+    font-size: 10.5px !important;
+    padding: 3px 6px !important;
+    margin-left: 2px !important;
+  }
+  .tai-video-control-pill {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+.tai-video-control-pill {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 8px;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tai-video-control-pill:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  transform: translateY(-1px);
+}
+
+.tai-video-control-pill.active {
+  background: var(--primary, #2563EB) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+}
+
+.tai-video-glass-dropdown {
+  background: rgba(18, 24, 41, 0.96) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  border-radius: 10px;
+}
+
+/* =========================================================================
+   MOBILE & RESPONSIVE FULLSCREEN VIDEO MODES
+   ========================================================================= */
+.tai-video-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  z-index: 99999 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  background: #000000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+}
+
+.tai-video-fullscreen .tai-video-viewport {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  padding-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #000000 !important;
+}
+
+.tai-video-fullscreen .tai-video-viewport video,
+.tai-video-fullscreen .tai-video-viewport iframe {
+  position: relative !important;
+  width: 100% !important;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-violet {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-rose {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-cobalt {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+.tai-glow-magenta {
+  position: absolute; top: -40px; right: -40px; width: 190px; height: 190px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(217, 70, 239, 0.25) 0%, transparent 70%); pointer-events: none;
+}
+
+/* In Dark Mode: ALL hero cards seamlessly adapt to the sleek frosted theme */
+.dark .tai-hero-card,
+.dark .ta-hero-banner,
+.dark .tai-hero-dark,
+.dark .ta-hero-dark,
+html.dark .tai-hero-card,
+html.dark .ta-hero-banner,
+html.dark .tai-hero-dark,
+html.dark .ta-hero-dark {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: inset 0 1px 0 var(--glass-specular), 0 10px 30px -10px rgba(0, 0, 0, 0.55) !important;
+}
+.dark .tai-hero-card h1,
+.dark .ta-hero-banner h1,
+.dark .tai-hero-dark h1,
+.dark .ta-hero-dark h1,
+html.dark .tai-hero-card h1,
+html.dark .ta-hero-banner h1,
+html.dark .tai-hero-dark h1,
+html.dark .ta-hero-dark h1,
+.dark .tai-hero-card .tai-hero-title,
+.dark .ta-hero-banner .tai-hero-title,
+.dark .tai-hero-dark .tai-hero-title,
+.dark .ta-hero-dark .tai-hero-title,
+html.dark .tai-hero-card .tai-hero-title,
+html.dark .ta-hero-banner .tai-hero-title,
+html.dark .tai-hero-dark .tai-hero-title,
+html.dark .ta-hero-dark .tai-hero-title {
+  color: var(--text) !important;
+}
+.dark .tai-hero-card p,
+.dark .ta-hero-banner p,
+.dark .tai-hero-dark p,
+.dark .ta-hero-dark p,
+html.dark .tai-hero-card p,
+html.dark .ta-hero-banner p,
+html.dark .tai-hero-dark p,
+html.dark .ta-hero-dark p,
+.dark .tai-hero-card .tai-hero-desc,
+.dark .ta-hero-banner .tai-hero-desc,
+.dark .tai-hero-dark .tai-hero-desc,
+.dark .ta-hero-dark .tai-hero-desc,
+html.dark .tai-hero-card .tai-hero-desc,
+html.dark .ta-hero-banner .tai-hero-desc,
+html.dark .tai-hero-dark .tai-hero-desc,
+html.dark .ta-hero-dark .tai-hero-desc {
+  color: var(--text-2) !important;
+}
+.dark .tai-hero-card .tai-hero-subcard,
+.dark .ta-hero-banner .tai-hero-subcard,
+.dark .tai-hero-dark .tai-hero-subcard,
+.dark .ta-hero-dark .tai-hero-subcard,
+html.dark .tai-hero-card .tai-hero-subcard,
+html.dark .ta-hero-banner .tai-hero-subcard,
+html.dark .tai-hero-dark .tai-hero-subcard,
+html.dark .ta-hero-dark .tai-hero-subcard {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* =========================================================================
+   UNIVERSAL LIQUID GLASS VIDEO PLAYER CONTROLS
+   ========================================================================= */
+.tai-video-glass-bar {
+  background: rgba(15, 23, 42, 0.92) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .tai-video-glass-bar {
+    padding: 8px 10px !important;
+    gap: 6px !important;
+  }
+  .tai-video-glass-bar .tai-video-timestamp {
+    font-size: 10.5px !important;
+    padding: 3px 6px !important;
+    margin-left: 2px !important;
+  }
+  .tai-video-control-pill {
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+.tai-video-control-pill {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  border-radius: 8px;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tai-video-control-pill:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  transform: translateY(-1px);
+}
+
+.tai-video-control-pill.active {
+  background: var(--primary, #2563EB) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #FFFFFF !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+}
+
+.tai-video-glass-dropdown {
+  background: rgba(18, 24, 41, 0.96) !important;
+  backdrop-filter: blur(20px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+  border-radius: 10px;
+}
+
+/* =========================================================================
+   MOBILE & RESPONSIVE FULLSCREEN VIDEO MODES
+   ========================================================================= */
+.tai-video-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  z-index: 99999 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  background: #000000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+}
+
+.tai-video-fullscreen .tai-video-viewport {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  padding-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #000000 !important;
+}
+
+.tai-video-fullscreen .tai-video-viewport video,
+.tai-video-fullscreen .tai-video-viewport iframe {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+.tai-video-fullscreen .tai-video-glass-bar {
+  border-radius: 0 !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  position: relative !important;
+  z-index: 100 !important;
+}
+
 /* =========================================================================
    COMPREHENSIVE MOBILE & DESKTOP SYSTEM-WIDE OPTIMIZATION RULES
    Delivers fluid responsiveness, robust container widths, safe-area
@@ -872,6 +1278,7 @@ html, body {
     max-width: 100vw !important;
     overflow-x: clip !important;
     width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Universal text wrapping - eliminates squeezed and clipped titles */
@@ -927,14 +1334,20 @@ html, body {
     text-align: center !important;
   }
 
-  /* Touch-friendly input fields on mobile (prevents iOS auto-zoom) */
+  /* Touch-friendly input fields on mobile (16px base font size prevents iOS Safari auto-zoom) */
   input[type="text"],
   input[type="email"],
   input[type="password"],
   input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
   select,
-  textarea {
-    font-size: 14.5px !important;
+  textarea,
+  .tai-input,
+  .ta-input,
+  .auth-input {
+    font-size: 16px !important;
   }
 
   /* Mobile scrollable tabs & horizontal containers */
@@ -968,7 +1381,7 @@ html, body {
   .tai-body, .ta-content {
     padding-left: 10px !important;
     padding-right: 10px !important;
-    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
   }
   .ta-topbar, .tai-topbar {
     padding: 0 10px !important;
@@ -978,13 +1391,31 @@ html, body {
   }
   .tai-btn, .ta-btn {
     padding: 8px 12px !important;
-    font-size: 12.5px !important;
+    font-size: 13px !important;
   }
   .portal-modal-content, .tai-modal, [role="dialog"] {
-    width: min(calc(100vw - 20px), 540px) !important;
-    max-height: 88dvh !important;
-    margin: 10px !important;
-    padding: 16px 14px !important;
+    width: min(calc(100vw - 16px), 540px) !important;
+    max-height: calc(100dvh - 20px) !important;
+    margin: 8px !important;
+    padding: 14px 12px !important;
+  }
+}
+
+/* Ultra-compact Mobile Phones (<= 360px) */
+@media (max-width: 360px) {
+  .tai-h1, .ta-h1 {
+    font-size: 15px !important;
+  }
+  .tai-hero-title, .ta-hero-title {
+    font-size: 16px !important;
+  }
+  .tai-btn, .ta-btn {
+    padding: 7px 10px !important;
+    font-size: 12px !important;
+  }
+  .tai-body, .ta-content {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
 }
 
@@ -996,11 +1427,11 @@ img, video, canvas, iframe {
 
 /* Touch Device Target Enhancements */
 @media (hover: none) and (pointer: coarse) {
-  .tai-btn, .ta-btn, .tai-iconbtn, button.tai-link, .tai-navitem {
-    min-height: 38px;
+  .tai-btn, .ta-btn, .tai-iconbtn, button.tai-link, .tai-navitem, .ta-nav-item {
+    min-height: 42px;
     touch-action: manipulation;
   }
-  .tai-pill, .tai-tag {
+  .tai-pill, .tai-tag, .ta-pill {
     touch-action: manipulation;
   }
 }

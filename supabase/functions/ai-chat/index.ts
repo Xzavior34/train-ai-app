@@ -130,6 +130,12 @@ Deno.serve(async (req) => {
       if (org?.settings?.ai_coach) {
         aiCoachSettings = { ...aiCoachSettings, ...org.settings.ai_coach };
       }
+      if (org?.settings?.ai) {
+        aiCoachSettings = { ...aiCoachSettings, ...org.settings.ai };
+      }
+      if (org?.settings?.ai_coach?.enabled === false || org?.settings?.ai?.enabled === false) {
+        aiCoachSettings.enabled = false;
+      }
     }
 
     if (!aiCoachSettings.enabled) {

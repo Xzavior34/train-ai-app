@@ -105,7 +105,7 @@ export function PortalModal({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "clamp(12px, 3vw, 24px)",
+        padding: "clamp(8px, 2.5vw, 24px)",
         boxSizing: "border-box",
         overflow: "hidden"
       }}
@@ -116,10 +116,11 @@ export function PortalModal({
         style={{
           maxWidth,
           width: "100%",
-          maxHeight: "calc(100dvh - 32px)",
+          maxHeight: "calc(100dvh - 16px)",
           overflowY: "auto",
-          borderRadius: 10,
-          padding: "clamp(18px, 2.5vw, 28px)",
+          WebkitOverflowScrolling: "touch",
+          borderRadius: 14,
+          padding: "clamp(14px, 2.5vw, 26px)",
           boxSizing: "border-box",
           position: "relative",
           ...glassCardStyle,

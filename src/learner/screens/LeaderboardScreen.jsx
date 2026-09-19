@@ -4,16 +4,19 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchLeaderboard, fetchLeaderboardForPeriod } from "../../lib/api/learner.js";
 import { LeaderboardPanel } from "../components/LeaderboardPanel.jsx";
 
-export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, gamificationStatsQuery }) {
+import { Trophy, ShieldAlert } from "lucide-react";
+
+export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, gamificationStatsQuery, leaderboardEnabled = true }) {
   const userId = session?.user?.id || null;
+  const orgId = user?.organization_id || null;
 
   const defaultLeaderboardQuery = useSupabaseQuery(async () => {
-    if (leaderboardQuery) return null;
-    return fetchLeaderboard(100);
-  }, [leaderboardQuery]);
+    if (leaderboardQuery || !leaderboardEnabled) return null;
+    return fetchLeaderboard(100, orgId);
+  }, [leaderboardQuery, leaderboardEnabled, orgId]);
 
   const activeQuery = leaderboardQuery || defaultLeaderboardQuery;
-  const activeData = activeQuery.data || [];
+  const activeData = leaderboardQuery?.data || activeQuery.data || [];
   const activeLoading = activeQuery.loading;
 
   const [period, setPeriod] = useState("all");
@@ -21,22 +24,43 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
   const [periodLoading, setPeriodLoading] = useState(false);
 
   const loadPeriodLeaderboard = useCallback((periodKey) => {
-    if (periodKey === "all") return;
+    if (periodKey === "all" || !leaderboardEnabled) return;
     setPeriodLoading(true);
     const now = new Date();
     const start = new Date(now);
     if (periodKey === "week") start.setDate(now.getDate() - 7);
     else start.setDate(now.getDate() - 30);
-    return fetchLeaderboardForPeriod(start.toISOString(), now.toISOString())
-      .then((rows) => setPeriodRows(rows))
+    return fetchLeaderboardForPeriod(start.toISOString(), now.toISOString(), 50, orgId)
+      .then((rows) => setPeriodRows(rows || []))
       .finally(() => setPeriodLoading(false));
-  }, []);
+  }, [leaderboardEnabled, orgId]);
 
   useEffect(() => {
-    if (period === "all") return;
+    if (period === "all" || !leaderboardEnabled) return;
     loadPeriodLeaderboard(period);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period]);
+  }, [period, leaderboardEnabled]);
+
+  if (!leaderboardEnabled) {
+    return (
+      <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <TopBar
+          title="Leaderboard"
+          sub="Rankings and competitive points"
+          onBack={back}
+        />
+        <div className="tai-card" style={{ padding: 32, textAlign: "center", background: "var(--surface)", borderRadius: 12 }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            <Trophy size={24} color="var(--text-3)" />
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>Leaderboard Disabled</div>
+          <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, maxWidth: 420, margin: "6px auto 0", lineHeight: 1.5 }}>
+            Rankings and leaderboards are currently disabled by your organization administrator.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>

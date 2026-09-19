@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowRight, Building2, User, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { validateInvitationToken, acceptInvitation } from "../../lib/api/invitations.js";
+import { supabase } from "../../services/supabaseClient.js";
 
 // Rendered instead of the whole app whenever the URL has a `?invite=TOKEN`
 // param on boot (there's no router here, so App.jsx detects that query
@@ -78,10 +79,7 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
         return;
       }
 
-      // Already-signed-in caller accepting their own invite: refresh the
-      // whole app boot so App.jsx re-fetches roles/org membership from
-      // scratch rather than trying to patch a handful of pieces of state
-      // that were computed before this org membership existed.
+      // If user was already signed in:
       if (session?.user?.id && session.user.id === result.userId) {
         setPhase("done");
         setDoneMessage(`You're all set. You've joined ${invitation?.organization_name || "the organization"}.`);
@@ -90,9 +88,29 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
         return;
       }
 
-      // New account or an existing-but-signed-out account: there is no local
-      // session for that user (accept-invitation never issues one - it uses
-      // the service-role admin API), so send them to sign in.
+      // Automatic sign-in for newly created or password-equipped accounts:
+      if (withPassword && password && (invitation?.email || result.email) && supabase) {
+        try {
+          const userEmail = (invitation?.email || result.email).trim();
+          const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+            email: userEmail,
+            password: password,
+          });
+          if (!signInErr && signInData?.session) {
+            setPhase("done");
+            setDoneMessage(`Welcome to ${invitation?.organization_name || "the workspace"}! Entering your dashboard...`);
+            setDoneNeedsSignIn(false);
+            setTimeout(() => {
+              onAccepted?.();
+            }, 800);
+            return;
+          }
+        } catch (autoLoginErr) {
+          console.warn("Auto-login note:", autoLoginErr);
+        }
+      }
+
+      // Fallback: send them to sign in screen
       setPhase("done");
       setDoneNeedsSignIn(true);
       setDoneEmail(invitation?.email || result.email || "");
@@ -163,27 +181,31 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
 
         {(phase === "ready" || phase === "needs_signup") && invitation && (
           <>
-            <h1 style={styles.h1}>You're invited!</h1>
-            <p style={styles.sub}>Join {invitation.organization_name} on Train AI.</p>
+            <h1 style={styles.h1}>Join {invitation.organization_name}</h1>
+            <p style={styles.sub}>
+              You have been invited to join <strong>{invitation.organization_name}</strong> on Train AI as an active <strong style={{ textTransform: "capitalize" }}>{invitation.role}</strong>.
+            </p>
 
             <div style={styles.infoBox}>
               <div style={styles.infoRow}>
                 <Building2 size={15} color="#656C86" />
                 <div>
-                  <div style={styles.infoLabel}>Organization</div>
+                  <div style={styles.infoLabel}>Organization Workspace</div>
                   <div style={styles.infoValue}>{invitation.organization_name}</div>
                 </div>
               </div>
               <div style={styles.infoRow}>
                 <User size={15} color="#656C86" />
                 <div>
-                  <div style={styles.infoLabel}>Your role</div>
-                  <div style={{ ...styles.infoValue, textTransform: "capitalize" }}>{invitation.role}</div>
+                  <div style={styles.infoLabel}>Invited Email & Role</div>
+                  <div style={styles.infoValue}>
+                    {invitation.email} • <span style={{ textTransform: "capitalize", color: "#2563EB" }}>{invitation.role}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {phase === "ready" && (
+            {session?.user?.id && session.user.email?.toLowerCase() === invitation.email?.toLowerCase() ? (
               <>
                 {error && <div style={styles.errorBox}>{error}</div>}
                 <button
@@ -192,25 +214,26 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
                   disabled={submitting}
                   onClick={() => handleAccept(false)}
                 >
-                  {submitting ? "Checking..." : (<>Accept invitation <ArrowRight size={16} /></>)}
+                  {submitting ? "Joining workspace..." : (<>Accept Invitation & Enter <ArrowRight size={16} /></>)}
                 </button>
               </>
-            )}
-
-            {phase === "needs_signup" && (
+            ) : (
               <form onSubmit={handleSignupSubmit}>
-                <p style={{ ...styles.sub, marginTop: 0 }}>
-                  No account exists yet for {invitation.email}. Set a password to create one and join automatically.
-                </p>
-                <label style={styles.label}>Display name</label>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A", marginBottom: 12 }}>
+                  Set your password to get started
+                </div>
+                
+                <label style={styles.label}>Your Name</label>
                 <input
                   className="invite-input"
                   style={styles.input}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder="e.g. Alex Johnson"
+                  required
                 />
-                <label style={{ ...styles.label, marginTop: 12 }}>Password</label>
+
+                <label style={{ ...styles.label, marginTop: 12 }}>Set Password</label>
                 <input
                   className="invite-input"
                   style={styles.input}
@@ -219,8 +242,10 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 8 characters"
+                  required
                 />
-                <label style={{ ...styles.label, marginTop: 12 }}>Confirm password</label>
+
+                <label style={{ ...styles.label, marginTop: 12 }}>Confirm Password</label>
                 <input
                   className="invite-input"
                   style={styles.input}
@@ -229,6 +254,7 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter your password"
+                  required
                 />
 
                 {error && <div style={styles.errorBox}>{error}</div>}
@@ -239,7 +265,7 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
                   style={{ ...styles.submit, opacity: submitting ? 0.75 : 1 }}
                   disabled={submitting}
                 >
-                  {submitting ? "Creating account..." : (<>Create account & join <ArrowRight size={16} /></>)}
+                  {submitting ? "Setting up account..." : (<>Set Password & Join Workspace <ArrowRight size={16} /></>)}
                 </button>
               </form>
             )}

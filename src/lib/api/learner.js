@@ -331,33 +331,40 @@ export async function fetchMyQuizAttempts(userId, limit = 10) {
   return data || [];
 }
 
-export async function fetchLeaderboard(limit = 50) {
+export async function fetchLeaderboard(limit = 50, orgId = null) {
   if (!supabase) return [];
   try {
-    const { data, error } = await supabase.rpc("get_leaderboard_with_profiles", { p_limit: limit });
+    const { data, error } = await supabase.rpc("get_leaderboard_with_profiles", {
+      p_limit: limit,
+      ...(orgId ? { p_org_id: orgId } : {})
+    });
     if (!error && data && data.length > 0) return data;
   } catch (e) {
     console.warn("RPC leaderboard fetch warning:", e);
   }
-  // Direct table query fallback for when RPC is not created yet
+  // Direct table query fallback scoped to organization
   try {
-    const { data: stats, error: statsError } = await supabase
+    let query = supabase
       .from("user_gamification_stats")
-      .select("user_id, total_points, streak_days, current_level, lessons_completed, courses_completed")
+      .select("user_id, total_points, streak_days, current_level, lessons_completed, courses_completed, user_profiles!inner(id, display_name, avatar_url, role, organization_id)")
       .order("total_points", { ascending: false })
       .limit(limit);
+
+    if (orgId) {
+      query = query.eq("user_profiles.organization_id", orgId);
+    }
+
+    const { data: stats, error: statsError } = await query;
     if (!statsError && stats && stats.length > 0) {
-      const userIds = stats.map(s => s.user_id).filter(Boolean);
-      const profiles = await fetchProfilesByUserIds(userIds);
       return stats.map(s => {
-        const prof = profiles[s.user_id] || {};
+        const prof = s.user_profiles || {};
         return {
           user_id: s.user_id,
-          display_name: prof.display_name || prof.name || "Learner",
+          display_name: prof.display_name || "Learner",
           avatar_url: prof.avatar_url || null,
           role: prof.role || "Specialist",
-          school: prof.school || prof.department || "Active Batch",
-          cohort_name: prof.cohort_name || "Active Batch",
+          school: "Active Batch",
+          cohort_name: "Active Batch",
           total_points: s.total_points || 0,
           streak: s.streak_days || 1,
           completed_courses: s.courses_completed || 0,
@@ -374,11 +381,11 @@ export async function fetchLeaderboard(limit = 50) {
 // "This Week"/"This Month" leaderboard tabs (see 0148_leaderboard_period_and_cohort.sql
 // for why this can't just be a date filter on user_gamification_stats -
 // that table only has a lifetime running total, no per-period history).
-export async function fetchLeaderboardForPeriod(startDate, endDate, limit = 50) {
+export async function fetchLeaderboardForPeriod(startDate, endDate, limit = 50, orgId = null) {
   if (!supabase || !startDate || !endDate) return [];
   try {
     const { data, error } = await supabase.rpc("get_leaderboard_for_period", {
-      p_start: startDate, p_end: endDate, p_limit: limit,
+      p_start: startDate, p_end: endDate, p_limit: limit, ...(orgId ? { p_org_id: orgId } : {})
     });
     if (error) { console.warn("Period leaderboard fetch warning:", error); return []; }
     return (data || []).map((r) => ({ ...r, total_points: r.period_points }));

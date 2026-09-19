@@ -1,22 +1,9 @@
 import React, { useState, useContext, useEffect } from "react";
 import { TopBar, ToastContext, Switch } from "../components/PlatformUI.jsx";
-import { Plus } from "lucide-react";
+import { Plus, Database, Server, CheckCircle2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchPlatformSettings, upsertPlatformSetting } from "../../lib/api/platform.js";
-
-import { Database, Trash2, RefreshCw, CheckCircle2, Server } from "lucide-react";
-import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
-import { SUPABASE_PROJECTS } from "../../services/supabaseClient.js";
-
-const PROJECT_LABELS = {
-  [SUPABASE_PROJECTS.ORGANIZATION_DB]: "Train AI 2.0 Organization Database (Platform Owner, Digital Users & B2B Orgs)",
-  [SUPABASE_PROJECTS.SARA_FOUNDATION]: "Train AI 2.0 Sara Foundation (Dedicated)",
-};
-
-const PROJECT_KEYS = [
-  SUPABASE_PROJECTS.ORGANIZATION_DB,
-  SUPABASE_PROJECTS.SARA_FOUNDATION,
-];
+import { isSupabaseConfigured } from "../../services/supabaseClient.js";
 
 // Real `platform_settings` table (setting_key unique, setting_value text,
 // setting_type, description, is_public) - see 0004_community_gamification_admin.sql:638
@@ -24,7 +11,7 @@ const PROJECT_KEYS = [
 // admin only, which is exactly who reaches this screen).
 const ALLOW_REGISTRATION_KEY = "allow_self_registration";
 
-export function PlatformSettingsScreen({ activeProject, projectSessionStatus, onSwitchProject }) {
+export function PlatformSettingsScreen() {
   const showToast = useContext(ToastContext);
   const settingsQuery = useSupabaseQuery(async () => fetchPlatformSettings(), []);
   const settings = settingsQuery.data || [];
@@ -92,37 +79,6 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
     }
   }
 
-  const [mockDataActive, setMockDataActive] = useState(() => isMockDataEnabled());
-  useEffect(() => {
-    return subscribeToMockDataChanges((enabled) => setMockDataActive(enabled));
-  }, []);
-
-  function handleToggleMockData(enabled) {
-    setMockDataEnabled(enabled);
-    setMockDataActive(enabled);
-    showToast(enabled ? "Mock / Demo data enabled" : "Real database mode active (Mock data disabled)");
-  }
-
-  function handlePurgeAllMock() {
-    if (window.confirm("Are you sure you want to purge all mock data? The entire platform will switch to live Supabase database records only.")) {
-      purgeAllMockData();
-      setMockDataActive(false);
-      showToast("All mock data purged! Real database mode is now live.");
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    }
-  }
-
-  function handleRestoreMock() {
-    restoreMockData();
-    setMockDataActive(true);
-    showToast("Demo & mock masterclasses restored for testing.");
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-  }
-
   return (
     <div className="ta-fade">
       <TopBar title="Platform Settings" sub="Global system configuration" />
@@ -138,7 +94,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
                 Platform Architecture &amp; Settings
               </h1>
               <p className="ta-hero-desc">
-                Configure global database connectivity, platform feature flags, demo mock toggles, and environment key-value pairs.
+                Configure unified production database connectivity, global feature flags, and environment key-value pairs.
               </p>
             </div>
           </div>
@@ -149,7 +105,7 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
 
         {!settingsQuery.loading && (
           <>
-            {/* Database & Mock Data Management Card */}
+            {/* Unified Database Architecture Card */}
             <div className="ta-card" style={{ border: "1.5px solid var(--primary-light, #60A5FA)", background: "var(--surface)", borderRadius: 10 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div className="ta-row ta-gap10">
@@ -157,91 +113,25 @@ export function PlatformSettingsScreen({ activeProject, projectSessionStatus, on
                     <Database size={18} color="var(--primary)" />
                   </div>
                   <div>
-                    <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Database &amp; Mock Data Management</div>
+                    <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Production Database Connectivity</div>
                     <div className="ta-sub" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
-                      Control demo sandbox data vs live production database records
+                      Train AI 2.0 Consolidated Database: <code style={{ fontSize: 11, background: "var(--surface-3)", padding: "1px 6px", borderRadius: 4 }}>jeobggrtxeybxvlwpxvn</code>
                     </div>
                   </div>
                 </div>
 
                 <span style={{
                   fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 8,
-                  background: mockDataActive ? "var(--warning-bg, #FEF3C7)" : "var(--success-bg, #DCFCE7)",
-                  color: mockDataActive ? "var(--warning, #D97706)" : "var(--success, #16A34A)",
-                  border: `1px solid ${mockDataActive ? "var(--warning-border, #FDE68A)" : "var(--success-border, #BBF7D0)"}`
+                  background: isSupabaseConfigured ? "var(--success-bg, #DCFCE7)" : "var(--warning-bg, #FEF3C7)",
+                  color: isSupabaseConfigured ? "var(--success, #16A34A)" : "var(--warning, #D97706)",
+                  border: `1px solid ${isSupabaseConfigured ? "var(--success-border, #BBF7D0)" : "var(--warning-border, #FDE68A)"}`
                 }}>
-                  {mockDataActive ? "DEMO MODE (MOCK ACTIVE)" : "LIVE DATABASE MODE"}
+                  {isSupabaseConfigured ? "LIVE PRODUCTION DATABASE CONNECTED" : "DATABASE CONFIGURATION PENDING"}
                 </span>
               </div>
 
-              {/* Active Supabase Multi-Project Switcher */}
-              {onSwitchProject && (
-                <div style={{ marginTop: 16, padding: "12px 14px", background: "var(--surface-2)", borderRadius: 8, border: "1px solid var(--border)" }}>
-                  <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                      Active Supabase Project
-                    </div>
-                  </div>
-                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-                    {PROJECT_KEYS.map((key) => {
-                      const status = projectSessionStatus?.[key];
-                      const isActive = key === activeProject;
-                      return (
-                        <button
-                          key={key}
-                          className={isActive ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
-                          style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8 }}
-                          onClick={() => !isActive && onSwitchProject(key)}
-                          title={
-                            status === "not_configured" ? "No real project connected yet - demo mode"
-                            : status === "authenticated" ? "You have an active session here"
-                            : "Configured, but you are not signed in here yet"
-                          }
-                        >
-                          {PROJECT_LABELS[key]}
-                          {status === "not_configured" && " (demo)"}
-                          {status === "no_session" && " (not signed in)"}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {projectSessionStatus?.[activeProject] === "no_session" && (
-                    <div style={{ fontSize: 11.5, color: "var(--warning, #D97706)", marginTop: 8, lineHeight: 1.4 }}>
-                      This project is configured, but you don't have a session here yet - sign in with an account that has
-                      super_admin access in this specific project to see its real data.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div style={{ marginTop: 16 }}>
-                <div className="ta-row ta-between" style={{ alignItems: "center" }}>
-                  <div style={{ minWidth: 0, flex: 1, paddingRight: 16 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>Include Mock &amp; Demo Masterclasses</div>
-                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, lineHeight: 1.5 }}>
-                      When enabled, fallback masterclasses with YouTube video tutorials, interactive transcripts, and demo Q&amp;A threads are shown for prototyping.
-                    </div>
-                  </div>
-                  <Switch on={mockDataActive} onChange={() => handleToggleMockData(!mockDataActive)} />
-                </div>
-
-                <div className="ta-row ta-gap10 ta-mt20" style={{ flexWrap: "wrap" }}>
-                  <button
-                    className="ta-btn ta-btn-danger"
-                    style={{ fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
-                    onClick={handlePurgeAllMock}
-                  >
-                    <Trash2 size={15} /> Purge All Mock Data (Leave Only Real DB)
-                  </button>
-
-                  <button
-                    className="ta-btn ta-btn-outline"
-                    style={{ fontWeight: 700, fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
-                    onClick={handleRestoreMock}
-                  >
-                    <RefreshCw size={14} /> Restore Demo Data
-                  </button>
-                </div>
+              <div style={{ marginTop: 14, fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.6 }}>
+                All organizations, academies, foundations, and digital learners operate within this single authoritative database under strict Row-Level Security (RLS) tenant isolation.
               </div>
             </div>
 

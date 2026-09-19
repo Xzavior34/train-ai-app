@@ -965,6 +965,7 @@ export function CommunityScreen({
   memberStatsQuery = {},
   leaderboardQuery = {},
   gamificationStatsQuery = {},
+  leaderboardEnabled = true,
   upcomingSessionsQuery = {},
   setRequestingSession,
   setSessionMentorChoice,
@@ -1887,60 +1888,62 @@ export function CommunityScreen({
           <StatusCard stats={myCommunityStatsQuery.data} />
 
           {/* 2. TOP CONTRIBUTORS LEADERBOARD */}
-          <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
-            <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14 }}>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                <Trophy size={18} color="#F59E0B" />
-                <span style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Top Contributors</span>
+          {leaderboardEnabled && (
+            <div className="tai-card" style={{ padding: 20, background: "var(--glass-surface)", border: "1px solid var(--glass-border)", borderRadius: 16, boxShadow: "var(--glass-shadow)" }}>
+              <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 14 }}>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <Trophy size={18} color="#F59E0B" />
+                  <span style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>Top Contributors</span>
+                </div>
+                <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--primary)" }}>Rank #{myRankNumber}</span>
+                  {push && (
+                    <button
+                      onClick={() => push("leaderboard")}
+                      style={{ background: "none", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}
+                    >
+                      Full <ChevronRight size={14} />
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: "var(--primary)" }}>Rank #{myRankNumber}</span>
-                {push && (
-                  <button
-                    onClick={() => push("leaderboard")}
-                    style={{ background: "none", border: "none", color: "var(--primary)", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 3 }}
-                  >
-                    Full <ChevronRight size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {leaderboardRows.slice(0, 5).map((row, idx) => {
-                const isYou = row.user_id === myId;
-                return (
-                  <div
-                    key={row.user_id || idx}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "8px 10px",
-                      borderRadius: 10,
-                      background: isYou ? "var(--primary-tint)" : "var(--surface-2)",
-                      border: isYou ? "1px solid var(--primary)" : "1px solid var(--border)",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                      <span style={{ fontWeight: 900, fontSize: 12, color: idx === 0 ? "#F59E0B" : idx === 1 ? "#94A3B8" : idx === 2 ? "#D97706" : "var(--text-3)", width: 16 }}>
-                        #{idx + 1}
-                      </span>
-                      <Avatar size={28} src={row.avatar_url} initials={row.initials || "L"} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 12.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {row.name} {isYou ? "(You)" : ""}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {leaderboardRows.slice(0, 5).map((row, idx) => {
+                  const isYou = row.user_id === myId;
+                  return (
+                    <div
+                      key={row.user_id || idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "8px 10px",
+                        borderRadius: 10,
+                        background: isYou ? "var(--primary-tint)" : "var(--surface-2)",
+                        border: isYou ? "1px solid var(--primary)" : "1px solid var(--border)",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                        <span style={{ fontWeight: 900, fontSize: 12, color: idx === 0 ? "#F59E0B" : idx === 1 ? "#94A3B8" : idx === 2 ? "#D97706" : "var(--text-3)", width: 16 }}>
+                          #{idx + 1}
+                        </span>
+                        <Avatar size={28} src={row.avatar_url} initials={row.initials || "L"} />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 12.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {row.name} {isYou ? "(You)" : ""}
+                          </div>
                         </div>
                       </div>
+                      <span style={{ fontWeight: 800, fontSize: 12, color: "var(--primary)", flexShrink: 0 }}>
+                        {row.points ?? 0} pts
+                      </span>
                     </div>
-                    <span style={{ fontWeight: 800, fontSize: 12, color: "var(--primary)", flexShrink: 0 }}>
-                      {row.points ?? 0} pts
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 3. TRENDING TAGS */}
           {trendingTags.length > 0 && (

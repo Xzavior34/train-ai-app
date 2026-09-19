@@ -119,9 +119,11 @@ export function useLearnerData(session, screen, params) {
     accuracy: 85,
   };
 
+  const orgId = userProfileQuery.data?.organization_id || null;
+
   const leaderboardQuery = useSupabaseQuery(async () => {
     if (!session) return [];
-    const rows = await fetchLeaderboard(50);
+    const rows = await fetchLeaderboard(50, orgId);
     return rows.map((r, i) => ({
       user_id: r.user_id,
       rank: i + 1,
@@ -139,9 +141,8 @@ export function useLearnerData(session, screen, params) {
       badges_count: r.badges_count || 1,
       you: r.user_id === session?.user?.id,
     }));
-  }, [session?.user?.id]);
+  }, [session?.user?.id, orgId]);
 
-  const orgId = userProfileQuery.data?.organization_id || null;
   const coursesQuery = useSupabaseQuery(async () => fetchPublishedCourses(orgId), [orgId]);
   const enrollmentsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
@@ -158,277 +159,13 @@ export function useLearnerData(session, screen, params) {
     return fetchMyBookmarks(session.user.id);
   }, [session?.user?.id]);
 
-  const [mockEnabled, setMockEnabled] = useState(() => isMockDataEnabled());
-  useEffect(() => {
-    return subscribeToMockDataChanges((enabled) => setMockEnabled(enabled));
-  }, []);
-
-  const MOCK_COURSE_LESSONS = {
-    "course-figma-ai": [
-      { id: "l-figma-1", title: "1. Foundations of Spatial Design Systems & Tokens", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "gHGN6hs2gZY" },
-      { id: "l-figma-2", title: "2. Setting Up Figma Variables & Modes for Enterprise", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "c9Wg6Cb_YlU" },
-      { id: "l-figma-3", title: "3. Auto-Layout 5.0 & Responsive Component Matrix", duration: 26, module: "Module 2: Advanced Prototyping", youtubeVideoId: "jk1T0CdLxwU" },
-      { id: "l-figma-4", title: "4. Integrating AI Design Plugins & Code Exporters", duration: 30, module: "Module 2: Advanced Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
-    ],
-    "course-fullstack-ai": [
-      { id: "l-fullstack-1", title: "1. Multi-Agent Systems Architecture & Tool Calling", duration: 24, module: "Module 1: Agent Systems", youtubeVideoId: "2xxziIWmaSA" },
-      { id: "l-fullstack-2", title: "2. FastAPI Backend Setup with Streaming Endpoints", duration: 28, module: "Module 1: Agent Systems", youtubeVideoId: "aywZrzNaKjs" },
-      { id: "l-fullstack-3", title: "3. Vector Search with Supabase pgvector & RAG Pipelines", duration: 35, module: "Module 2: Vector Stores & Scaling", youtubeVideoId: "bMknfKXIFA8" },
-      { id: "l-fullstack-4", title: "4. React 19 Server Actions & Realtime AI UI", duration: 30, module: "Module 2: Frontend Integration", youtubeVideoId: "843nec-IvW0" }
-    ],
-    "course-prompt-pro": [
-      { id: "l-prompt-1", title: "1. Zero-Shot, Few-Shot & Chain-of-Thought Prompting", duration: 16, module: "Module 1: Core Prompting", youtubeVideoId: "jC4v5AS4RIM" },
-      { id: "l-prompt-2", title: "2. Function Calling Schemas & Automated Model Eval", duration: 20, module: "Module 2: Schemas & Evals", youtubeVideoId: "VMj-3S1tku0" },
-      { id: "l-prompt-3", title: "3. Building Autonomous Multi-Modal AI Agents", duration: 25, module: "Module 2: Agent Systems", youtubeVideoId: "aircAruvnKk" }
-    ],
-    "course-cloud-devops": [
-      { id: "l-cloud-1", title: "1. Containerizing Microservices with Multi-Stage Docker", duration: 22, module: "Module 1: Containers", youtubeVideoId: "fqMOX6JJhGo" },
-      { id: "l-cloud-2", title: "2. Deploying & Scaling Kubernetes Pods on Cloud", duration: 30, module: "Module 2: Kubernetes", youtubeVideoId: "3c-iBn73dDE" },
-      { id: "l-cloud-3", title: "3. Setting Up Automated CI/CD Deployment Pipelines", duration: 24, module: "Module 2: CI/CD", youtubeVideoId: "X48VuDVv0do" }
-    ],
-    "course-spatial-ui": [
-      { id: "l-spatial-1", title: "1. VisionOS Spatial Canvas & Depth Ergonomics", duration: 18, module: "Module 1: Spatial Canvas", youtubeVideoId: "c9Wg6Cb_YlU" },
-      { id: "l-spatial-2", title: "2. Eye Tracking, Gaze Targets & Glassmorphism Tokens", duration: 25, module: "Module 2: Interactions", youtubeVideoId: "jk1T0CdLxwU" },
-      { id: "l-spatial-3", title: "3. Interactive Spatial RealityKit UI Components", duration: 28, module: "Module 3: Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
-    ],
-    "course-data-python": [
-      { id: "l-data-1", title: "1. Python for Data Science & Pandas DataFrame Analytics", duration: 24, module: "Module 1: Data Analytics", youtubeVideoId: "LHBE6Q9XlzI" },
-      { id: "l-data-2", title: "2. Exploratory Data Analysis & Visualizations", duration: 28, module: "Module 2: Visualizations", youtubeVideoId: "nLRL_NcnK-4" },
-      { id: "l-data-3", title: "3. Statistical Analysis & Hypothesis Testing", duration: 32, module: "Module 3: Statistics", youtubeVideoId: "7eh4d6sabA0" }
-    ],
-    "course-product-analytics": [
-      { id: "l-prod-1", title: "1. Product Analytics 101: Cohorts, Funnels & Retention", duration: 18, module: "Module 1: Metrics", youtubeVideoId: "nLRL_NcnK-4" },
-      { id: "l-prod-2", title: "2. Setting Up Telemetry & User Event Tracking", duration: 22, module: "Module 1: Telemetry", youtubeVideoId: "aywZrzNaKjs" },
-      { id: "l-prod-3", title: "3. A/B Experimentation & Conversion Optimization", duration: 26, module: "Module 2: Experimentation", youtubeVideoId: "843nec-IvW0" }
-    ],
-    "course-compliance-101": [
-      { id: "l-comp-1", title: "1. Workplace Compliance, Ethics & SOC2 Standards", duration: 18, module: "Module 1: Compliance", youtubeVideoId: "H14bBuluwB8" },
-      { id: "l-comp-2", title: "2. Zero-Trust Cloud Access Controls & Identity", duration: 22, module: "Module 1: Security", youtubeVideoId: "fqMOX6JJhGo" },
-      { id: "l-comp-3", title: "3. Audit Logging, Data Privacy & GDPR Safeguards", duration: 25, module: "Module 2: Governance", youtubeVideoId: "X48VuDVv0do" }
-    ],
-    "course-techpreneur-business": [
-      { id: "l-biz-1", title: "1. Identifying High-Value Market Inefficiencies", duration: 18, module: "Module 1: Opportunity Discovery", youtubeVideoId: "gHGN6hs2gZY" },
-      { id: "l-biz-2", title: "2. Customer Discovery & Validation Interviews", duration: 22, module: "Module 1: Opportunity Discovery", youtubeVideoId: "c9Wg6Cb_YlU" },
-      { id: "l-biz-3", title: "3. Business Model Canvas & Moat Architecture", duration: 26, module: "Module 2: Business Models", youtubeVideoId: "jk1T0CdLxwU" },
-      { id: "l-biz-4", title: "4. Unit Economics & Go-To-Market Strategy", duration: 30, module: "Module 2: Business Models", youtubeVideoId: "HZuk6Wkx_Eg" }
-    ],
-    "course-techpreneur-experimentation": [
-      { id: "l-exp-1", title: "1. Rapid Prototyping & Lean MVP Design", duration: 20, module: "Module 1: Lean Execution", youtubeVideoId: "2xxziIWmaSA" },
-      { id: "l-exp-2", title: "2. Running High-Velocity Acquisition Experiments", duration: 24, module: "Module 1: Lean Execution", youtubeVideoId: "aywZrzNaKjs" },
-      { id: "l-exp-3", title: "3. Measuring Product-Market Fit with Cohort Retention", duration: 28, module: "Module 2: Traction & Scaling", youtubeVideoId: "bMknfKXIFA8" },
-      { id: "l-exp-4", title: "4. Crafting the Winning Investor Pitch Deck", duration: 32, module: "Module 2: Traction & Scaling", youtubeVideoId: "843nec-IvW0" }
-    ]
-  };
-
-  const DEFAULT_FALLBACK_COURSES = [
-    {
-      id: "course-figma-ai",
-      title: "Master Design Systems in Figma with AI",
-      tagline: "Build scalable enterprise design systems using Figma variables, token architecture, auto-layout 5.0, and generative AI plugins.",
-      category: "UI/UX & Design Systems",
-      level: "intermediate",
-      hours: 18,
-      lessons: 4,
-      enrolled: true,
-      isBookmarked: true,
-      progress: 72,
-      source: "assigned",
-      coverImageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
-      instructor: "Astrid Larsson",
-      partner: "Figma Official",
-      grad: gradForIndex(0),
-      mandatory: true,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-fullstack-ai",
-      title: "Full-Stack AI Application Engineering",
-      tagline: "Architect and deploy end-to-end multi-agent applications with Python FastAPI backends, LangChain orchestration, and React frontends.",
-      category: "Full-Stack & Web Dev",
-      level: "advanced",
-      hours: 26,
-      lessons: 4,
-      enrolled: false,
-      isBookmarked: false,
-      progress: 0,
-      source: "internal",
-      isInternal: true,
-      coverImageUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&auto=format&fit=crop&q=80",
-      instructor: "Alex Rivera",
-      grad: gradForIndex(1),
-      mandatory: false,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-prompt-pro",
-      title: "Prompt Engineering & LLM Architecture",
-      tagline: "Master zero-shot, few-shot, chain-of-thought prompting, function calling schemas, and automated model evaluations.",
-      category: "AI & Prompt Engineering",
-      level: "beginner",
-      hours: 12,
-      lessons: 3,
-      enrolled: true,
-      isBookmarked: false,
-      progress: 100,
-      source: "assigned",
-      partner: "Anthropic / OpenAI",
-      coverImageUrl: "https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=80",
-      instructor: "Elena Rostova",
-      grad: gradForIndex(2),
-      mandatory: true,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-cloud-devops",
-      title: "Cloud Native Microservices & Kubernetes",
-      tagline: "Containerize scalable services with Docker, manage Kubernetes clusters on Google Cloud, and set up automated CI/CD pipelines.",
-      category: "Cloud & DevOps",
-      level: "intermediate",
-      hours: 22,
-      lessons: 3,
-      enrolled: false,
-      isBookmarked: false,
-      progress: 0,
-      source: "partner",
-      partner: "Google Cloud",
-      coverImageUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
-      instructor: "David Vance",
-      grad: gradForIndex(3),
-      mandatory: false,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-spatial-ui",
-      title: "Spatial Computing & VisionOS Design Foundations",
-      tagline: "Design immersive 3D spatial user experiences, depth layering, eye-tracking ergonomics, and glassmorphism interface tokens.",
-      category: "UI/UX & Design Systems",
-      level: "advanced",
-      hours: 14,
-      lessons: 3,
-      enrolled: false,
-      isBookmarked: false,
-      progress: 0,
-      source: "partner",
-      partner: "Apple VisionOS",
-      coverImageUrl: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80",
-      instructor: "Sarah Connor",
-      grad: gradForIndex(4),
-      mandatory: false,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-data-python",
-      title: "Python Data Science, Vector Stores & pgvector",
-      tagline: "Perform high-performance data wrangling, model training, similarity search indexing, and real-time visualization dashboards.",
-      category: "Data Science & Python",
-      level: "intermediate",
-      hours: 20,
-      lessons: 3,
-      enrolled: false,
-      isBookmarked: false,
-      progress: 0,
-      source: "internal",
-      isInternal: true,
-      coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
-      instructor: "David Kim",
-      grad: gradForIndex(5),
-      mandatory: false,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-product-analytics",
-      title: "Product Analytics 101 & Metric Architecture",
-      tagline: "Cohort retention analysis, conversion funnels, data instrumentation, and feature telemetry frameworks.",
-      category: "Product Management",
-      level: "intermediate",
-      hours: 16,
-      lessons: 3,
-      enrolled: false,
-      isBookmarked: false,
-      progress: 0,
-      source: "internal",
-      isInternal: true,
-      coverImageUrl: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&auto=format&fit=crop&q=80",
-      instructor: "Elena Rostova",
-      grad: gradForIndex(6),
-      mandatory: false,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-compliance-101",
-      title: "Workplace Compliance & Data Protection 101",
-      tagline: "Enterprise confidentiality, ethical governance, zero-trust protocols, and information security safeguards.",
-      category: "Cybersecurity & Compliance",
-      level: "beginner",
-      hours: 12,
-      lessons: 3,
-      enrolled: false,
-      isBookmarked: false,
-      progress: 0,
-      source: "assigned",
-      coverImageUrl: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80",
-      instructor: "David Vance",
-      grad: gradForIndex(7),
-      mandatory: true,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-techpreneur-business",
-      title: "Recognizing a Business Opportunity & Market Fit",
-      tagline: "Market sizing, competitive moat analysis, unit economics, validation interviews, and business model design.",
-      category: "Tech-preneur & Founders",
-      level: "intermediate",
-      hours: 18,
-      lessons: 4,
-      enrolled: false,
-      isBookmarked: false,
-      progress: 0,
-      source: "internal",
-      isInternal: true,
-      coverImageUrl: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&auto=format&fit=crop&q=80",
-      instructor: "Astrid Larsson",
-      grad: gradForIndex(0),
-      mandatory: false,
-      price: 0,
-      requiresApproval: false
-    },
-    {
-      id: "course-techpreneur-experimentation",
-      title: "Entrepreneurial Experimentation & MVP Launch",
-      tagline: "Lean MVP builds, beta tester acquisition, pricing experiments, product-market fit metrics, and pitch decks.",
-      category: "Tech-preneur & Founders",
-      level: "advanced",
-      hours: 20,
-      lessons: 4,
-      enrolled: false,
-      isBookmarked: false,
-      progress: 0,
-      source: "internal",
-      isInternal: true,
-      coverImageUrl: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&auto=format&fit=crop&q=80",
-      instructor: "Alex Rivera",
-      grad: gradForIndex(1),
-      mandatory: false,
-      price: 0,
-      requiresApproval: false
-    }
-  ];
-
   const courses = (() => {
     const enrollmentByCourseId = new Map((enrollmentsQuery.data || []).map(e => [e.course_id, e]));
     const lessonCounts = lessonCountsQuery.data || {};
     const bookmarkedIds = new Set(bookmarksQuery.data || []);
-    
     const instructorNames = courseInstructorsQuery.data || {};
-    const dbCourses = (coursesQuery.data || []).map((c, i) => {
+
+    return (coursesQuery.data || []).map((c, i) => {
       const enrollment = enrollmentByCourseId.get(c.id);
       return {
         id: c.id,
@@ -451,59 +188,11 @@ export function useLearnerData(session, screen, params) {
         instructor: instructorNames[c.id] || null,
       };
     });
-
-    const merged = new Map();
-    // Mock/demo courses (course-figma-ai and friends) were being merged in
-    // unconditionally here, regardless of mockEnabled - so a real org with
-    // real courses in the database still saw fake demo courses (and, worse,
-    // could land on their lesson pages, where every real-data feature fails
-    // with "invalid input syntax for type uuid" since these ids are plain
-    // strings, not UUIDs). Only show them when mock data is actually on.
-    if (mockEnabled) {
-      DEFAULT_FALLBACK_COURSES.forEach(c => {
-        const enrollment = enrollmentByCourseId.get(c.id);
-        merged.set(c.id, {
-          ...c,
-          enrolled: !!enrollment || c.enrolled,
-          progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : c.progress,
-          isBookmarked: bookmarkedIds.has(c.id) || c.isBookmarked
-        });
-      });
-    }
-    dbCourses.forEach(c => {
-      merged.set(c.id, c);
-    });
-
-    return Array.from(merged.values());
   })();
 
   function courseById(id) {
-    if (!id) return courses[0] || (mockEnabled ? DEFAULT_FALLBACK_COURSES[0] : undefined);
-    const found = courses.find(c => c.id === id);
-    if (found) return found;
-    const fallback = mockEnabled ? DEFAULT_FALLBACK_COURSES.find(c => c.id === id) : null;
-    if (fallback) {
-      const enrollment = (enrollmentsQuery.data || []).find(e => e.course_id === id);
-      return {
-        ...fallback,
-        enrolled: !!enrollment || fallback.enrolled,
-        progress: enrollment ? Math.round(enrollment.progress_percentage || 0) : fallback.progress
-      };
-    }
-    return {
-      id: id,
-      title: "Course Curriculum",
-      tagline: "Comprehensive course modules and video lessons.",
-      category: "Specialization",
-      level: "intermediate",
-      hours: 18,
-      lessons: 4,
-      enrolled: false,
-      progress: 0,
-      source: "internal",
-      instructor: "Curriculum Specialist",
-      grad: gradForIndex(0)
-    };
+    if (!id) return courses[0] || undefined;
+    return courses.find(c => c.id === id);
   }
 
   const courseLessonsQuery = useSupabaseQuery(async () => {
@@ -517,102 +206,11 @@ export function useLearnerData(session, screen, params) {
     return fetchMyLessonProgress(session.user.id, lessonIdsKey.split(","));
   }, [session?.user?.id, lessonIdsKey]);
 
-  function generateCurriculumForCourse(course, courseId) {
-    const title = (course?.title || courseId || "").toLowerCase();
-    const category = (course?.category || "").toLowerCase();
-
-    if (title.includes("thinking") || title.includes("design thinking")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. What is Design Thinking? An Overview", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "gHGN6hs2gZY" },
-        { id: `${courseId}-l2`, title: "2. UI / UX Design Wireframe & Mockup in Figma", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "c9Wg6Cb_YlU" },
-        { id: `${courseId}-l3`, title: "3. Intro to Figma Design Components", duration: 26, module: "Module 2: Prototyping", youtubeVideoId: "jk1T0CdLxwU" },
-        { id: `${courseId}-l4`, title: "4. Complete Design System from Start to Finish", duration: 30, module: "Module 2: Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
-      ];
-    }
-    if (title.includes("figma") || title.includes("design") || category.includes("design")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Foundations of Spatial Design Systems & Tokens", duration: 18, module: "Module 1: Foundations", youtubeVideoId: "gHGN6hs2gZY" },
-        { id: `${courseId}-l2`, title: "2. Setting Up Figma Variables & Modes for Enterprise", duration: 22, module: "Module 1: Foundations", youtubeVideoId: "c9Wg6Cb_YlU" },
-        { id: `${courseId}-l3`, title: "3. Auto-Layout & Responsive Component Matrix", duration: 26, module: "Module 2: Advanced Prototyping", youtubeVideoId: "jk1T0CdLxwU" },
-        { id: `${courseId}-l4`, title: "4. Complete Design System from Start to Finish", duration: 30, module: "Module 2: Advanced Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
-      ];
-    }
-    if (title.includes("full-stack") || title.includes("react") || title.includes("web") || category.includes("engineering")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Multi-Agent Systems Architecture & Tool Calling", duration: 24, module: "Module 1: Agent Systems", youtubeVideoId: "2xxziIWmaSA" },
-        { id: `${courseId}-l2`, title: "2. FastAPI Backend Setup with Streaming Endpoints", duration: 28, module: "Module 1: Agent Systems", youtubeVideoId: "aywZrzNaKjs" },
-        { id: `${courseId}-l3`, title: "3. React Frontend Architecture & State", duration: 35, module: "Module 2: Frontend Integration", youtubeVideoId: "bMknfKXIFA8" },
-        { id: `${courseId}-l4`, title: "4. Next.js Server Actions & Realtime AI UI", duration: 30, module: "Module 2: Frontend Integration", youtubeVideoId: "843nec-IvW0" }
-      ];
-    }
-    if (title.includes("prompt") || title.includes("llm") || category.includes("ai")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Zero-Shot, Few-Shot & Chain-of-Thought Prompting", duration: 16, module: "Module 1: Core Prompting", youtubeVideoId: "jC4v5AS4RIM" },
-        { id: `${courseId}-l2`, title: "2. Function Calling Schemas & Automated Model Eval", duration: 20, module: "Module 2: Schemas & Evals", youtubeVideoId: "VMj-3S1tku0" },
-        { id: `${courseId}-l3`, title: "3. Neural Networks & Deep Learning Foundations", duration: 25, module: "Module 2: Agent Systems", youtubeVideoId: "aircAruvnKk" }
-      ];
-    }
-    if (title.includes("cloud") || title.includes("devops") || title.includes("kubernetes") || category.includes("cloud")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Containerizing Microservices with Multi-Stage Docker", duration: 22, module: "Module 1: Containers", youtubeVideoId: "fqMOX6JJhGo" },
-        { id: `${courseId}-l2`, title: "2. Deploying & Scaling Kubernetes Pods on Cloud", duration: 30, module: "Module 2: Kubernetes", youtubeVideoId: "3c-iBn73dDE" },
-        { id: `${courseId}-l3`, title: "3. Kubernetes Architecture & Cluster Management", duration: 24, module: "Module 2: CI/CD", youtubeVideoId: "X48VuDVv0do" }
-      ];
-    }
-    if (title.includes("spatial") || title.includes("visionos") || title.includes("3d")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. VisionOS Spatial Canvas & Depth Ergonomics", duration: 18, module: "Module 1: Spatial Canvas", youtubeVideoId: "c9Wg6Cb_YlU" },
-        { id: `${courseId}-l2`, title: "2. Eye Tracking, Gaze Targets & Glassmorphism Tokens", duration: 25, module: "Module 2: Interactions", youtubeVideoId: "jk1T0CdLxwU" },
-        { id: `${courseId}-l3`, title: "3. Interactive Spatial UI Components", duration: 28, module: "Module 3: Prototyping", youtubeVideoId: "HZuk6Wkx_Eg" }
-      ];
-    }
-    if (title.includes("algebra") || title.includes("math")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Linear Algebra: Vectors, Matrices & Transformations", duration: 26, module: "Module 1: Vector Foundations", youtubeVideoId: "fNk_zzaMoSs" },
-        { id: `${courseId}-l2`, title: "2. Eigenvalues, Dot Products & Matrix Decomposition", duration: 30, module: "Module 2: Matrix Mathematics", youtubeVideoId: "JnTa9XtvmfI" }
-      ];
-    }
-    if (title.includes("machine learning") || title.includes("ml") || title.includes("foundations")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Applied Machine Learning Foundations with Python", duration: 25, module: "Module 1: ML Foundations", youtubeVideoId: "7eh4d6sabA0" },
-        { id: `${courseId}-l2`, title: "2. Training & Evaluating Scikit-Learn Classifiers", duration: 30, module: "Module 2: Model Training", youtubeVideoId: "i_LwzRVP7bg" },
-        { id: `${courseId}-l3`, title: "3. Neural Networks & Deep Learning Architectures", duration: 35, module: "Module 3: Deep Learning", youtubeVideoId: "fNk_zzaMoSs" }
-      ];
-    }
-    if (title.includes("data") || title.includes("python") || category.includes("data")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Python for Data Science & Pandas DataFrame Analytics", duration: 24, module: "Module 1: Data Analytics", youtubeVideoId: "LHBE6Q9XlzI" },
-        { id: `${courseId}-l2`, title: "2. Harvard CS50 Programming in Python", duration: 28, module: "Module 2: Visualizations", youtubeVideoId: "nLRL_NcnK-4" },
-        { id: `${courseId}-l3`, title: "3. Statistical Analysis & Hypothesis Testing", duration: 32, module: "Module 3: Statistics", youtubeVideoId: "7eh4d6sabA0" }
-      ];
-    }
-    if (title.includes("compliance") || title.includes("policy") || title.includes("security")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Workplace Compliance, Ethics & Safety Standards", duration: 18, module: "Module 1: Compliance Foundations", youtubeVideoId: "H14bBuluwB8" },
-        { id: `${courseId}-l2`, title: "2. Data Protection & Security Protocols", duration: 22, module: "Module 2: Data Security", youtubeVideoId: "f60dheI4ARg" }
-      ];
-    }
-    if (title.includes("leadership") || title.includes("management") || category.includes("leadership") || title.includes("preneur")) {
-      return [
-        { id: `${courseId}-l1`, title: "1. Core Principles of Modern Technical Leadership", duration: 20, module: "Module 1: Leadership Foundations", youtubeVideoId: "f60dheI4ARg" },
-        { id: `${courseId}-l2`, title: "2. High-Performance Team Communication & Feedback", duration: 22, module: "Module 1: Leadership Foundations", youtubeVideoId: "H14bBuluwB8" },
-        { id: `${courseId}-l3`, title: "3. Agile Project Delivery & Roadmapping", duration: 25, module: "Module 2: Strategic Delivery", youtubeVideoId: "8aGhZQkoFbQ" }
-      ];
-    }
-
-    return [
-      { id: `${courseId}-l1`, title: `1. Introduction to ${course?.title || "Course Concepts"}`, duration: 18, module: "Module 1: Introduction", youtubeVideoId: "gHGN6hs2gZY" },
-      { id: `${courseId}-l2`, title: `2. Core Architecture & Implementation Practices`, duration: 25, module: "Module 1: Core Architecture", youtubeVideoId: "2xxziIWmaSA" },
-      { id: `${courseId}-l3`, title: `3. Advanced Production Workflows & Evaluation`, duration: 28, module: "Module 2: Advanced Workflows", youtubeVideoId: "jC4v5AS4RIM" },
-      { id: `${courseId}-l4`, title: `4. Capstone Project & Deployment Review`, duration: 32, module: "Module 2: Capstone", youtubeVideoId: "fqMOX6JJhGo" }
-    ];
-  }
-
   function lessonsForCurrentCourse() {
     const raw = courseLessonsQuery.data || [];
     const progressByLessonId = new Map((lessonProgressQuery.data || []).map(p => [p.lesson_id, p]));
     const currentCourse = courseById(params?.id);
-    const courseKey = params?.id || "course-figma-ai";
+    const courseKey = params?.id || "";
 
     if (raw.length > 0) {
       const mapped = raw.map(l => ({
@@ -628,20 +226,8 @@ export function useLearnerData(session, screen, params) {
       return mapped;
     }
 
-    const defaultLessons = MOCK_COURSE_LESSONS[courseKey] || generateCurriculumForCourse(currentCourse, courseKey);
-    const mapped = defaultLessons.map((l, i) => ({
-      ...l,
-      youtubeVideoId: l.youtubeVideoId || getYouTubeEmbedId(courseKey, l.id, currentCourse?.title, currentCourse?.category),
-      completed: !!progressByLessonId.get(l.id)?.is_completed,
-      current: i === 0
-    }));
-
-    const firstIncomplete = mapped.findIndex(l => !l.completed);
-    if (firstIncomplete >= 0) {
-      mapped.forEach((m, idx) => { m.current = idx === firstIncomplete; });
-    }
-
-    return mapped;
+    // When course has no lessons in the database, return honest empty curriculum state
+    return [];
   }
 
   // Mock/demo course ids (course-figma-ai and friends, see

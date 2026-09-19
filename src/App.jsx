@@ -335,6 +335,22 @@ export default function App() {
     );
   }
 
+  if (isPasswordRecovery) {
+    return (
+      <>
+        <OfflineIndicator mode={offlineMode} />
+        <AuthPage
+          recoveryMode={true}
+          onCompletePasswordReset={completePasswordReset}
+          onGoHome={() => {
+            window.location.replace(window.location.pathname);
+          }}
+        />
+        <ConsentBanner session={session} />
+      </>
+    );
+  }
+
   if (!session) {
     if (publicView === "auth") {
       return (
@@ -346,6 +362,8 @@ export default function App() {
             authError={authError}
             initialEmail={inviteAuthEmail}
             onForgotPassword={sendPasswordReset}
+            recoveryMode={isPasswordRecovery}
+            onCompletePasswordReset={completePasswordReset}
             onGoHome={() => setPublicView("landing")}
             orgParam={orgSlugParam}
           />

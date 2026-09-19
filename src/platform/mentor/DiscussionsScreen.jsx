@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchDiscussionsForMentor, resolveDiscussion } from "../../lib/api/platform.js";
-import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function DiscussionsScreen({ mentorId, orgSelector }) {
   const showToast = useContext(ToastContext);
@@ -20,72 +19,16 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
   const discussionsQuery = useSupabaseQuery(async () => (mentorId ? fetchDiscussionsForMentor(mentorId) : []), [mentorId]);
   const rawDiscussions = discussionsQuery.data || [];
 
-  // Fallback demo discussions if none in database yet, so the UI is rich and interactive
-  const defaultDiscussions = [
-    {
-      id: "demo-q1",
-      title: "How do we handle state hydration in Spatial UI ViewTransitions?",
-      description: "In Module 4 of the Spatial UI course, when navigating between the 3D model inspector and the telemetry card, the CSS view transition resets the rotation state. Should we persist coordinates in localStorage or a global zustand store?",
-      mentee: "Fatima Diallo",
-      menteeAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-      course: "Spatial UI & VisionOS Tokens",
-      module: "Module 4 • Spatial State",
-      createdAt: "3 hours ago",
-      upvotes: 6,
-      resolved: false,
-      replies: [
-        {
-          author: "Liam Torres",
-          role: "Student",
-          text: "I ran into the same issue! I ended up using a shared zustand store with custom event listeners.",
-          time: "1 hour ago"
-        }
-      ]
-    },
-    {
-      id: "demo-q2",
-      title: "Clarification on Vector Embeddings cosine similarity threshold",
-      description: "For the retrieval augmented generation (RAG) capstone, what cosine distance cutoff do you recommend for filtering out irrelevant company policy documents?",
-      mentee: "Marcus Webb",
-      menteeAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-      course: "Advanced Neural Networks & LLM Agents",
-      module: "Module 2 • Vector Indexing",
-      createdAt: "Yesterday",
-      upvotes: 11,
-      resolved: false,
-      replies: []
-    },
-    {
-      id: "demo-q3",
-      title: "Figma Tokens export syntax for Dark Mode variables",
-      description: "When exporting CSS custom properties from Figma Tokens Studio, should we use semantic tokens (--surface, --border) or raw hex color values?",
-      mentee: "Priya Nair",
-      menteeAvatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80",
-      course: "Enterprise AI Architecture",
-      module: "Module 1 • Token Architecture",
-      createdAt: "3 days ago",
-      upvotes: 8,
-      resolved: true,
-      replies: [
-        {
-          author: "Instructor",
-          role: "Instructor",
-          text: "Always use semantic tokens (e.g. var(--surface-2)) so your components automatically respond to theme toggles without hardcoded overrides.",
-          time: "2 days ago"
-        }
-      ]
-    }
-  ];
-
-  const allDiscussions = rawDiscussions.length > 0 ? rawDiscussions.map((d, i) => ({
+  const allDiscussions = rawDiscussions.map((d) => ({
     ...d,
-    description: d.description || "Can you explain this concept in more detail? I want to make sure I implement the best practice for the final project submission.",
-    menteeAvatar: defaultDiscussions[i % defaultDiscussions.length].menteeAvatar,
-    module: d.module || "General Course Q&A",
+    description: d.description || "",
+    mentee: d.mentee || d.author_name || "Learner",
+    menteeAvatar: d.menteeAvatar || d.avatar_url || null,
+    module: d.module || "General Q&A",
     createdAt: d.created_at ? new Date(d.created_at).toLocaleDateString() : "Recent",
-    upvotes: d.upvotes || Math.floor(Math.random() * 8) + 2,
+    upvotes: typeof d.upvotes === "number" ? d.upvotes : 0,
     replies: d.replies || []
-  })) : (isMockDataEnabled() ? defaultDiscussions : []);
+  }));
 
   const filteredDiscussions = allDiscussions.filter(d => {
     const matchesSearch = searchQuery === "" ||

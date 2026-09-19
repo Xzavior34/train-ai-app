@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase, resolveProjectForSignIn, resolveProjectForSignUp, fallbackProjectForSignIn, setActiveSupabaseProject, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../services/supabaseClient.js";
+import { supabase } from "../services/supabaseClient.js";
 import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../lib/roleRouting.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1";
@@ -18,47 +18,21 @@ export function useAuth() {
   useEffect(() => {
     let cancelled = false;
 
-    const syncProject = (userEmail) => {
-      if (userEmail) {
-        const canonical = resolveProjectForSignIn(userEmail);
-        setActiveSupabaseProject(canonical);
-      }
-    };
-
     (async () => {
       let resolvedSession = null;
 
-      // 1. First probe primary project client
-      const primaryClient = supabase || getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
-      if (primaryClient) {
+      if (supabase) {
         try {
-          const { data } = await primaryClient.auth.getSession();
+          const { data } = await supabase.auth.getSession();
           if (data?.session) {
             resolvedSession = data.session;
           }
         } catch {}
       }
 
-      // 2. If not found on primary, probe alternate project client
-      if (!resolvedSession) {
-        for (const projKey of [SUPABASE_PROJECTS.ORGANIZATION_DB, SUPABASE_PROJECTS.SARA_FOUNDATION]) {
-          const client = getSupabaseClientForProject(projKey);
-          if (client && client !== primaryClient) {
-            try {
-              const { data } = await client.auth.getSession();
-              if (data?.session) {
-                resolvedSession = data.session;
-                break;
-              }
-            } catch {}
-          }
-        }
-      }
-
       if (cancelled) return;
 
       if (resolvedSession) {
-        syncProject(resolvedSession.user?.email);
         setSession(resolvedSession);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(resolvedSession));
       } else {
@@ -66,7 +40,6 @@ export function useAuth() {
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            syncProject(parsed?.user?.email);
             setSession(parsed);
           } catch {
             setSession(null);
@@ -84,103 +57,53 @@ export function useAuth() {
       setIsPasswordRecovery(true);
     }
 
-    const listeners = [];
-    for (const projKey of [SUPABASE_PROJECTS.ORGANIZATION_DB, SUPABASE_PROJECTS.SARA_FOUNDATION]) {
-      const client = getSupabaseClientForProject(projKey);
-      if (client?.auth?.onAuthStateChange) {
-        const { data: listener } = client.auth.onAuthStateChange((event, newSession) => {
-          if (event === "PASSWORD_RECOVERY") {
-            setIsPasswordRecovery(true);
-          }
-          if (newSession) {
-            syncProject(newSession.user?.email);
-            setSession(newSession);
-            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
-          }
-        });
-        if (listener?.subscription) {
-          listeners.push(listener.subscription);
+    let subscription = null;
+    if (supabase?.auth?.onAuthStateChange) {
+      const { data: listener } = supabase.auth.onAuthStateChange((event, newSession) => {
+        if (event === "PASSWORD_RECOVERY") {
+          setIsPasswordRecovery(true);
         }
-      }
+        if (newSession) {
+          setSession(newSession);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
+        } else if (event === "SIGNED_OUT") {
+          setSession(null);
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+        }
+      });
+      subscription = listener?.subscription || null;
     }
 
     return () => {
       cancelled = true;
-      listeners.forEach((l) => l.unsubscribe());
+      if (subscription) subscription.unsubscribe();
     };
   }, []);
 
-  // IMPORTANT: the local/demo session below is ONLY a fallback for when no
-  // Supabase project is configured at all (`supabase === null`). It must
-  // never fire just because a *real* sign-in attempt failed (wrong password,
-  // network error, etc.) - doing that would let anyone log in as anyone,
-  // including as the hardcoded admin email, without a valid password. If
-  // Supabase is configured, a failed/rejected auth call always surfaces a
-  // real error and stops there.
   const signIn = useCallback(async (email, password) => {
     setAuthError(null);
 
-    // Two Supabase projects:
-    // @sarafoundationafrica.com -> Sierra Foundation dedicated project
-    // Everything else -> Train AI Shared Multi-Tenant Database
-    let targetProject = resolveProjectForSignIn(email);
-    setActiveSupabaseProject(targetProject);
-
-    async function attemptSignIn(projectKey) {
-      const client = getSupabaseClientForProject(projectKey);
-      if (!client) return { client: null, supaRes: null, networkErr: null };
-      try {
-        const supaRes = await client.auth.signInWithPassword({ email, password });
-        return { client, supaRes, networkErr: null };
-      } catch (networkErr) {
-        return { client, supaRes: null, networkErr };
-      }
-    }
-
     if (supabase) {
-      let { client, supaRes, networkErr } = await attemptSignIn(targetProject);
-
-      // If initial target project sign in fails and an alternate configured project exists,
-      // try the alternate project (e.g. Sara Foundation users signing in from non-sara domain)
-      if (!supaRes?.data?.session && !networkErr) {
-        const alternateProject =
-          targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION
-            ? SUPABASE_PROJECTS.ORGANIZATION_DB
-            : SUPABASE_PROJECTS.SARA_FOUNDATION;
-        const altAttempt = await attemptSignIn(alternateProject);
-        if (altAttempt.supaRes?.data?.session) {
-          targetProject = alternateProject;
-          setActiveSupabaseProject(alternateProject);
-          client = altAttempt.client;
-          supaRes = altAttempt.supaRes;
-          networkErr = altAttempt.networkErr;
+      try {
+        const supaRes = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (supaRes?.error) {
+          const message = supaRes.error.message || "Sign in failed. Check your email and password and try again.";
+          setAuthError(message);
+          return { data: null, error: supaRes.error };
         }
-      }
-
-      if (networkErr) {
-        const message = "Could not reach the configured backend (network error). If you want to test in demo mode instead, remove the relevant project's URL/anon key from your .env.local (or delete the file) and restart the dev server.";
+        if (supaRes?.data?.session) {
+          setSession(supaRes.data.session);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
+          return { data: supaRes.data, error: null };
+        }
+      } catch (networkErr) {
+        const message = "Could not reach the configured backend (network error). Please check your internet connection.";
         setAuthError(message);
         return { data: null, error: new Error(message) };
       }
-      if (supaRes?.data?.session) {
-        setSession(supaRes.data.session);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
-        return { data: supaRes.data, error: null };
-      }
-      const message = supaRes?.error?.message || "Sign in failed. Check your email and password and try again.";
-      setAuthError(message);
-      return { data: null, error: supaRes?.error || new Error(message) };
     }
 
-    // Demo mode only (no Supabase project configured for this environment).
-    // No database exists here to read a real role from. First check
-    // whether this email already has a demo role on record in this browser
-    // (e.g. a prior organization sign-up promoted it to admin) - without
-    // this, every sign-in fabricated a brand-new session from scratch and
-    // a demo org account would silently revert to plain "learner" the
-    // moment you signed out and back in, since only the +admin marker was
-    // ever checked. Fall back to the +admin marker for an email with no
-    // history yet.
+    // Demo mode fallback only when no database client is initialized
     let userRole = getDemoRoleForEmail(email) || "learner";
     if (!getDemoRoleForEmail(email) && isDemoAdminMarker(email)) {
       userRole = "admin";
@@ -200,38 +123,20 @@ export function useAuth() {
     return { data: newSession, error: null };
   }, []);
 
-  const signUp = useCallback(async (email, password, role = "learner", accountType = "learner") => {
+  const signUp = useCallback(async (email, password, role = "learner", _accountType = "learner") => {
     setAuthError(null);
     let finalRole = role === "mentor" ? "mentor" : "learner";
 
-    // Sign-up routing knows something sign-in can't: the account type the
-    // person actually chose on the form, before any account exists. An
-    // "organization" sign-up needs to land in the B2B project; everyone
-    // else (including a future org's eventual invited members, who sign up
-    // as individuals first if they don't already have an account) lands in
-    // Digital Training Organization. Fixed domains
-    // (@sarafoundationafrica.com, @trainailtd.com) override this
-    // regardless of account type - see resolveProjectForSignUp().
-    setActiveSupabaseProject(resolveProjectForSignUp(email, accountType));
-
     if (supabase) {
-      // Real mode: role metadata is informational only (nothing reads
-      // raw_user_meta_data into the real user_roles table), and the demo
-      // admin marker below deliberately does not apply here - an admin role
-      // is only ever real once granted in user_roles by an existing
-      // super_admin.
       let supaRes;
       try {
         supaRes = await supabase.auth.signUp({
-          email,
+          email: email.trim(),
           password,
           options: { data: { role: finalRole } }
         });
       } catch (networkErr) {
-        // Same uncaught-network-failure gap as signIn above - a configured
-        // but unreachable project threw a raw "Failed to fetch" here with
-        // no indication of what to do about it.
-        const message = "Could not reach the configured backend (network error). If you want to test in demo mode instead, remove the relevant project's URL/anon key from your .env.local (or delete the file) and restart the dev server.";
+        const message = "Could not reach the configured backend (network error). Please check your internet connection.";
         setAuthError(message);
         return { data: null, error: new Error(message) };
       }
@@ -244,16 +149,10 @@ export function useAuth() {
         setSession(supaRes.data.session);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
       }
-      // Supabase projects with email confirmation enabled return a user but
-      // no session yet - that's success (check your email), not a fallback
-      // to demo mode, so return here either way.
       return { data: supaRes.data, error: null };
     }
 
-    // Demo mode only (no Supabase project configured for this environment).
-    // No database exists here to read a real role from, so this uses the
-    // plus-addressing demo-admin marker (see roleRouting.js) purely to let
-    // this sandbox preview the platform/admin shell - never a real email.
+    // Demo mode only
     if (isDemoAdminMarker(email)) {
       finalRole = "admin";
     }
@@ -276,12 +175,6 @@ export function useAuth() {
     try {
       if (supabase) {
         await supabase.auth.signOut().catch(() => {});
-      }
-      for (const projectKey of Object.values(SUPABASE_PROJECTS)) {
-        const client = getSupabaseClientForProject(projectKey);
-        if (client && client !== supabase) {
-          await client.auth.signOut().catch(() => {});
-        }
       }
     } catch (e) {
       console.warn("Sign out warning:", e);
@@ -322,32 +215,18 @@ export function useAuth() {
     } catch {}
   }, []);
 
-  // "Forgot password" - previously there was no way to request a reset
-  // email at all. Resolves the same project a sign-in for this email would
-  // use (see signIn above), matching the multi-project routing everywhere
-  // else in this file. Always reports success regardless of whether the
-  // email actually has an account (Supabase's own behavior too) - this is
-  // deliberate, not a bug: it avoids leaking which emails are registered.
   const sendPasswordReset = useCallback(async (email) => {
     if (!supabase) {
-      // Demo mode: no real email can be sent. Still returns success so the
-      // UI behaves the same way as the real path (no enumeration signal),
-      // rather than exposing that this environment has no backend.
       return { success: true };
     }
     try {
-      const targetProject = resolveProjectForSignIn(email);
-      const client = getSupabaseClientForProject(targetProject) || supabase;
-      await client.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+      await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin });
     } catch (e) {
       console.warn("Password reset request warning:", e);
     }
     return { success: true };
   }, []);
 
-  // Completes the flow above once the visitor has followed the emailed
-  // link back (isPasswordRecovery below turns true) and chosen a new
-  // password.
   const completePasswordReset = useCallback(async (newPassword) => {
     if (!supabase) return { success: false, error: "Not available in demo mode." };
     try {

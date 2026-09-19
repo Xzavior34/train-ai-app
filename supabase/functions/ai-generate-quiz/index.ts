@@ -63,6 +63,27 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Topic is required" }, 400);
     }
 
+    // Verify organization AI feature gating server-side
+    const userId = userData.user.id;
+    const { data: profile } = await db
+      .from("user_profiles")
+      .select("organization_id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profile?.organization_id) {
+      const { data: org } = await db
+        .from("organizations")
+        .select("settings")
+        .eq("id", profile.organization_id)
+        .maybeSingle();
+
+      const aiSettings = org?.settings?.ai || org?.settings?.ai_coach;
+      if (aiSettings && (aiSettings.enabled === false || aiSettings.quiz_enabled === false)) {
+        return jsonResponse({ error: "AI Quiz generation has been disabled for your organization." }, 403);
+      }
+    }
+
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       return jsonResponse({ error: "AI provider not configured - OPENAI_API_KEY missing" }, 402);

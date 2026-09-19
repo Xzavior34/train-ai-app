@@ -1,7 +1,7 @@
 import { supabase } from "../../services/supabaseClient.js";
 
 // Thin wrappers around Supabase Auth's built-in MFA (TOTP) API. These work
-// against the shared Supabase project (qibqouymqtpirtbyjvjr) exactly like
+// against the unified Supabase project (jeobggrtxeybxvlwpxvn) exactly like
 // they do in the reference train-ai-ltd-main app - `supabase.auth.mfa.*` is
 // core Supabase Auth functionality, not a custom edge function, so no extra
 // deployment is required for enroll/challenge/verify/unenroll/listFactors.

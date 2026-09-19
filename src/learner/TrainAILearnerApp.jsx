@@ -705,6 +705,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
           onSignOut={handleSignOut}
           brandLogoUrl={brandLogoUrl}
           dark={dark}
+          leaderboardEnabled={leaderboardEnabled}
           go={handleSidebarNav}
           active={screen}
           searchComponent={
@@ -740,6 +741,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
             brandLogoUrl={brandLogoUrl}
             user={user}
             unreadNotifs={unreadNotifs}
+            leaderboardEnabled={leaderboardEnabled}
           />
 
           <div className="tai-app">
@@ -992,6 +994,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   leaderboardQuery={leaderboardQuery}
                   session={session}
                   push={push}
+                  leaderboardEnabled={leaderboardEnabled}
                 />
               )}
               {screen === "creditsCheckout" && (

@@ -765,6 +765,7 @@ export function LearnerHeader({
   active,
   searchComponent,
   dark,
+  leaderboardEnabled = true,
 }) {
   const isDarkActive = typeof dark === "boolean" ? dark : (typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
   const defaultLogo = isDarkActive ? "/logo-dark.png" : "/train-ai-logo.png";
@@ -775,7 +776,11 @@ export function LearnerHeader({
         <div className="tai-header-brand" onClick={() => go?.("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}>
           <img
             src={brandLogoUrl || defaultLogo}
-            alt="Train AI"
+            alt="Train AI Logo"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/train-ai-logo.png";
+            }}
             className="tai-header-logo"
             style={{ height: 24, width: "auto", minWidth: 70, objectFit: "contain", display: "block", flexShrink: 0 }}
           />
@@ -793,7 +798,7 @@ export function LearnerHeader({
         </div>
 
         {/* XP Pill */}
-        <div className="tai-credits-pill" onClick={() => go?.("leaderboard")} title="Total Earned XP">
+        <div className="tai-credits-pill" onClick={() => leaderboardEnabled ? go?.("leaderboard") : go?.("achievements")} title="Total Earned XP">
           <Zap size={13} color="#F59E0B" />
           <span>{user?.totalPoints || 0} <span className="tai-pill-unit">XP</span></span>
         </div>
@@ -874,6 +879,7 @@ export function DesktopSidebar({
   brandLogoUrl,
   user,
   unreadNotifs = 0,
+  leaderboardEnabled = true,
 }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("tai_sidebar_minimized") === "true");
   // Default all categories to open so learner can explore and collapse at will
@@ -939,7 +945,7 @@ export function DesktopSidebar({
         { key: "mentors", label: "Instructors", icon: GraduationCap },
         { key: "studyGroup", label: "Study Group", icon: Users },
         { key: "messages", label: "Messages", icon: Mail },
-        { key: "leaderboard", label: "Leaderboard", icon: Award }
+        ...(leaderboardEnabled ? [{ key: "leaderboard", label: "Leaderboard", icon: Award }] : [])
       ]
     },
     {
