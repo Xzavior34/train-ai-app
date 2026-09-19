@@ -19,7 +19,7 @@ export async function fetchCurrentUserProfile(userId) {
       manager_id: role === "learner" ? "demo-manager-id" : null,
     };
   }
-  let { data, error } = await supabase.from("user_profiles").select("*, organizations(id, name, slug)").eq("id", userId).maybeSingle();
+  let { data, error } = await supabase.from("user_profiles").select("*, organizations:organizations!user_profiles_organization_id_fkey(id, name, slug)").eq("id", userId).maybeSingle();
   if (error) throw error;
 
   let orgId = data?.organization_id;
@@ -31,7 +31,7 @@ export async function fetchCurrentUserProfile(userId) {
         const { data: defaultOrgId } = await supabase.rpc("join_default_organization");
         if (defaultOrgId) orgId = defaultOrgId;
         // Re-query user_profiles now that the RPC has inserted the profile row
-        const { data: refreshed } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
+        const { data: refreshed } = await supabase.from("user_profiles").select("*, organizations:organizations!user_profiles_organization_id_fkey(id, name, slug)").eq("id", userId).maybeSingle();
         if (refreshed) {
           data = refreshed;
           orgId = refreshed.organization_id || orgId;

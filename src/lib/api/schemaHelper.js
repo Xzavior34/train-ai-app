@@ -15,7 +15,7 @@ import { isRealDatabaseId } from "../mockDataManager.js";
 // user_id, learner_id, etc.) stores that same raw auth uid directly, so the
 // lookup query and the returned map must both be keyed on `user_id`, not the
 // internal `id`.
-export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url, role") {
+export async function fetchProfilesByUserIds(userIds, columns = "id, display_name, avatar_url, role, organization_id") {
   if (!supabase || !userIds || !userIds.length) return {};
   const ids = [...new Set(userIds.filter(Boolean))];
   if (!ids.length) return {};
