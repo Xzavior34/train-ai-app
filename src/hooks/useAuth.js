@@ -156,6 +156,11 @@ export function useAuth() {
         setAuthError(message);
         return { data: null, error: supaRes.error };
       }
+      if (supaRes?.data?.user && Array.isArray(supaRes.data.user.identities) && supaRes.data.user.identities.length === 0) {
+        const message = "An account with this email address already exists. Please sign in instead.";
+        setAuthError(message);
+        return { data: null, error: new Error(message), userExists: true };
+      }
       if (supaRes?.data?.session) {
         setSession(supaRes.data.session);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
