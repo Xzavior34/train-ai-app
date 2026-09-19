@@ -122,7 +122,7 @@ export function useLearnerData(session, screen, params) {
   const orgId = userProfileQuery.data?.organization_id || null;
 
   const leaderboardQuery = useSupabaseQuery(async () => {
-    if (!session) return [];
+    if (!session || !orgId) return [];
     const rows = await fetchLeaderboard(50, orgId);
     return rows.map((r, i) => ({
       user_id: r.user_id,
@@ -143,7 +143,10 @@ export function useLearnerData(session, screen, params) {
     }));
   }, [session?.user?.id, orgId]);
 
-  const coursesQuery = useSupabaseQuery(async () => fetchPublishedCourses(orgId), [orgId]);
+  const coursesQuery = useSupabaseQuery(async () => {
+    if (!orgId) return [];
+    return fetchPublishedCourses(orgId);
+  }, [orgId]);
   const enrollmentsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
     return fetchMyEnrollments(session.user.id);

@@ -35,6 +35,7 @@ export function useAuth() {
       if (resolvedSession) {
         setSession(resolvedSession);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(resolvedSession));
+        supabase.rpc("join_default_organization").catch(() => {});
       } else {
         const saved = localStorage.getItem(AUTH_STORAGE_KEY);
         if (saved) {
@@ -94,6 +95,7 @@ export function useAuth() {
         if (supaRes?.data?.session) {
           setSession(supaRes.data.session);
           localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
+          supabase.rpc("join_default_organization").catch(() => {});
           return { data: supaRes.data, error: null };
         }
       } catch (networkErr) {
@@ -128,10 +130,43 @@ export function useAuth() {
     let finalRole = role === "mentor" ? "mentor" : "learner";
 
     if (supabase) {
+      const cleanEmail = email.trim().toLowerCase();
+      const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://trainai.app";
+
+      // 1. Invoke send-signup-confirmation Edge Function for Resend email dispatch
+      try {
+        const { data: edgeData, error: edgeErr } = await supabase.functions.invoke("send-signup-confirmation", {
+          body: { email: cleanEmail, password, role: finalRole, origin: clientOrigin },
+        });
+        if (!edgeErr && edgeData && edgeData.success) {
+          return { data: { user: { email: cleanEmail, role: finalRole } }, error: null };
+        }
+      } catch (err) {
+        console.warn("send-signup-confirmation Edge Function warning:", err);
+      }
+
+      // 2. Direct HTTP call to send-signup-confirmation Edge Function endpoint
+      try {
+        const res = await fetch("https://jeobggrtxeybxvlwpxvn.supabase.co/functions/v1/send-signup-confirmation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail, password, role: finalRole, origin: clientOrigin }),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.success) {
+            return { data: { user: { email: cleanEmail, role: finalRole } }, error: null };
+          }
+        }
+      } catch (fetchErr) {
+        console.warn("send-signup-confirmation fetch warning:", fetchErr);
+      }
+
+      // 3. Fallback to standard Supabase auth signup
       let supaRes;
       try {
         supaRes = await supabase.auth.signUp({
-          email: email.trim(),
+          email: cleanEmail,
           password,
           options: {
             data: { role: finalRole },

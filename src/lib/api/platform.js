@@ -1014,22 +1014,8 @@ export async function updateOrgMemberStatus(userId, organizationId, status) {
    ADMIN: Content: courses, lessons, learning paths, moderation
    ========================================================================= */
 
-export async function fetchCourses() {
+export async function fetchCourses(organizationId = null) {
   if (!supabase) {
-    // A real, confirmed gap: this is a completely separate function from
-    // fetchPublishedCourses() (the learner-facing catalog) - Content &
-    // Courses (admin) and My Courses (instructor) both call this one
-    // specifically, and it returned nothing at all in demo mode, meaning
-    // there was genuinely no course to click into and no way to reach
-    // the Assessment Grading / Certificates tabs underneath it.
-    //
-    // Uses the exact same three courses and IDs as
-    // fetchPublishedCourses() in lib/api/learner.js, rather than a
-    // separate, differently-IDed demo set - fetchCertificateForCourse()
-    // and the assessment demo data both specifically key off
-    // "demo-course-ai-fundamentals", so a mismatched ID here would have
-    // shown the course but left its Assessment/Certificate tabs empty
-    // again, just one click deeper.
     const now = new Date().toISOString();
     return [
       {
@@ -1052,11 +1038,16 @@ export async function fetchCourses() {
       },
     ];
   }
-  const { data, error } = await supabase
+  let query = supabase
     .from("courses")
     .select("*, lessons(*)")
-    .is("archived_at", null)
-    .order("created_at", { ascending: false });
+    .is("archived_at", null);
+
+  if (organizationId) {
+    query = query.eq("organization_id", organizationId);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
   if (error) throw error;
   const courses = data || [];
   if (!courses.length) return courses;
@@ -3090,6 +3081,13 @@ export async function reviewCertificate(certificateId, approve, rejectionReason 
       p_certificate_id: certificateId, p_approve: approve, p_rejection_reason: rejectionReason || null,
     });
     if (error) throw error;
+    if (approve) {
+      try {
+        await supabase.functions.invoke("send-certificate-email", { body: { certificate_id: certificateId } });
+      } catch (emailErr) {
+        console.warn("send-certificate-email call warning:", emailErr);
+      }
+    }
     return data || { success: false };
   } catch (e) {
     return { success: false, error: e?.message || "Could not review this certificate." };
@@ -3571,6 +3569,13 @@ export async function issueCertificateDirectly(userId, organizationId, title, co
       p_user_id: userId, p_organization_id: organizationId, p_title: title, p_course_id: courseId || null, p_file_url: fileUrl || null,
     });
     if (error) throw error;
+    if (data) {
+      try {
+        await supabase.functions.invoke("send-certificate-email", { body: { certificate_id: data } });
+      } catch (emailErr) {
+        console.warn("send-certificate-email call warning:", emailErr);
+      }
+    }
     return { success: true, certificateId: data };
   } catch (e) {
     return { success: false, error: e?.message || "Could not issue this certificate." };
