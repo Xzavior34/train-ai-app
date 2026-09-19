@@ -725,10 +725,11 @@ export const NAV_ITEMS = [
   { key: "community", label: "Community", icon: Users },
 ];
 
-export function BottomNav({ active, go }) {
+export function BottomNav({ active, go, aiEnabled = true }) {
+  const items = aiEnabled ? NAV_ITEMS : NAV_ITEMS.filter(i => i.key !== "ai");
   return (
     <nav className="tai-navbar" aria-label="Bottom Navigation">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         const isActive = active === item.key;
         return (
@@ -880,6 +881,7 @@ export function DesktopSidebar({
   user,
   unreadNotifs = 0,
   leaderboardEnabled = true,
+  aiEnabled = true,
 }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("tai_sidebar_minimized") === "true");
   // Default all categories to open so learner can explore and collapse at will
@@ -900,7 +902,7 @@ export function DesktopSidebar({
     }));
   };
 
-  const NAV_CATEGORIES = [
+  const ALL_NAV_CATEGORIES = [
     {
       key: "home",
       label: "Home",
@@ -961,6 +963,8 @@ export function DesktopSidebar({
       ]
     }
   ];
+
+  const NAV_CATEGORIES = aiEnabled ? ALL_NAV_CATEGORIES : ALL_NAV_CATEGORIES.filter(c => c.key !== "ai");
 
   return (
     <aside className={`tai-desktop-sidebar ${isMinimized ? "tai-sidebar-minimized" : ""}`}>

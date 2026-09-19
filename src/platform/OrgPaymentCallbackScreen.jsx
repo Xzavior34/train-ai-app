@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { verifyPaystackPayment, verifyStripePayment, readPendingPayment, PAYMENT_CONTEXTS } from "../lib/api/payments.js";
 import { applyOrganizationSubscriptionPayment, purchaseSeats } from "../lib/api/organizations.js";
+import { supabase } from "../lib/supabaseClient.js";
 import { TOKENS } from "./components/PlatformUI.jsx";
 
 // Platform-app equivalent of learner/screens/PaymentCallbackScreen.jsx
@@ -58,6 +59,39 @@ export function OrgPaymentCallbackScreen({ onDone }) {
           } else {
             setState("failed");
             setMessage(applyResult.error || "Payment succeeded but adding seats failed. Contact support with this reference: " + (reference || sessionId));
+          }
+        } else if (result?.success && result?.status === "completed" && context === PAYMENT_CONTEXTS.CREDITS && (result?.metadata?.account_scope || pending?.metadata?.account_scope) === "organization") {
+          // Organization AI credit top-up (CreditsScreen.jsx). Unlike
+          // seats/subscription above, crediting an AI credit account goes
+          // through the grant-ai-credits-from-payment Edge Function (not a
+          // direct RPC call) - see that function's own comments for why:
+          // purchase_ai_credits()/record_and_grant_ai_credit_payment() are
+          // service-role-only, and the Edge Function independently
+          // re-verifies the payment and re-derives the caller's own
+          // organization/admin status server-side rather than trusting
+          // this screen's local `context`/metadata for anything beyond
+          // which branch to take.
+          const credits = result?.metadata?.credits || pending?.metadata?.credits;
+          try {
+            const { data: grantData, error: grantErr } = await supabase.functions.invoke("grant-ai-credits-from-payment", {
+              body: {
+                provider: isStripe ? "stripe" : "paystack",
+                reference: reference || undefined,
+                session_id: sessionId || undefined,
+                accountScope: "organization",
+              },
+            });
+            if (grantErr) throw grantErr;
+            if (grantData?.granted) {
+              setState("success");
+              setMessage(`Payment confirmed. ${grantData?.credits_added || credits || ""} AI credits added to your organization.`);
+            } else {
+              setState("failed");
+              setMessage(grantData?.error || "Payment succeeded but crediting your organization failed. Contact support with this reference: " + (reference || sessionId));
+            }
+          } catch (grantErr) {
+            setState("failed");
+            setMessage(grantErr?.message || "Payment succeeded but crediting your organization failed. Contact support with this reference: " + (reference || sessionId));
           }
         } else if (result?.success && result?.status === "completed") {
           // A real payment succeeded but wasn't for an organization

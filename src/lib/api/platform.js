@@ -2047,11 +2047,11 @@ export async function fetchOrgIntegrations(organizationId) {
   return data || [];
 }
 
-export async function createOrgIntegration({ organizationId, name, webhookUrl, events = [], createdBy }) {
+export async function createOrgIntegration({ organizationId, name, webhookUrl, events = [], createdBy, payloadFormat = "raw" }) {
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("org_integrations")
-    .insert({ organization_id: organizationId, kind: "webhook", name, webhook_url: webhookUrl, events, created_by: createdBy })
+    .insert({ organization_id: organizationId, kind: "webhook", name, webhook_url: webhookUrl, events, created_by: createdBy, payload_format: payloadFormat })
     .select()
     .single();
   if (error) throw error;

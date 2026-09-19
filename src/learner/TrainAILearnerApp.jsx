@@ -50,6 +50,11 @@ function initialScreenFromLocation() {
     if (params.get("reference") || params.get("trxref") || params.get("session_id")) {
       return "paymentCallback";
     }
+    const screenParam = params.get("screen") || params.get("tab") || params.get("view");
+    if (screenParam) return screenParam;
+
+    const hash = window.location.hash.replace(/^#\/?/, "");
+    if (hash) return hash;
   } catch {
     // window/URLSearchParams unavailable (e.g. SSR) - fall through to home
   }
@@ -742,6 +747,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
             user={user}
             unreadNotifs={unreadNotifs}
             leaderboardEnabled={leaderboardEnabled}
+            aiEnabled={orgAISettings.enabled !== false}
           />
 
           <div className="tai-app">
@@ -839,6 +845,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               {screen === "ai" && (
                 <AIQuizScreen
                   orgId={orgId}
+                  orgAISettings={orgAISettings}
+                  back={back}
                   aiTab={aiTab} setAiTab={setAiTab}
                   activeQuizSource={activeQuizSource} setActiveQuizSource={setActiveQuizSource}
                   quizGenTopic={quizGenTopic} setQuizGenTopic={setQuizGenTopic}
@@ -886,6 +894,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   cohortMembershipQuery={cohortMembershipQuery} cohortSessionsQuery={cohortSessionsQuery}
                   communityPeopleQuery={communityPeopleQuery} memberStatsQuery={memberStatsQuery}
                   leaderboardQuery={leaderboardQuery} gamificationStatsQuery={gamificationStatsQuery}
+                  leaderboardEnabled={leaderboardEnabled}
                   upcomingSessionsQuery={upcomingSessionsQuery}
                   setRequestingSession={setRequestingSession} setSessionMentorChoice={setSessionMentorChoice}
                   activeMentorThread={activeMentorThread} setActiveMentorThread={setActiveMentorThread}
@@ -1012,7 +1021,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
             </div>
 
-            <BottomNav active={activeTabKey} go={goTab} />
+            <BottomNav active={activeTabKey} go={goTab} aiEnabled={orgAISettings.enabled !== false} />
 
             {toast && <div className="tai-toast anim-pop"><CheckCircle2 size={15} />{toast}</div>}
           </div>

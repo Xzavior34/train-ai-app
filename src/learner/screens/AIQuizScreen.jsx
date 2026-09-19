@@ -19,6 +19,8 @@ const COACH_PROMPT_PRESETS = [
 
 export function AIQuizScreen({
   orgId,
+  orgAISettings,
+  back,
   aiTab = "coach", setAiTab,
   quizTopic, setQuizTopic,
   quizGenTopic, setQuizGenTopic, quizGenDifficulty, setQuizGenDifficulty,
@@ -32,6 +34,26 @@ export function AIQuizScreen({
   coachMessages = [], coachMessagesLoading, coachInput, setCoachInput, coachSending, onSendCoachMessage,
   gamificationStatsQuery,
 }) {
+  if (orgAISettings && orgAISettings.enabled === false) {
+    return (
+      <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <TopBar
+          title="AI Learning Coach & Quiz Arena"
+          sub="AI-powered assistance and practice"
+          onBack={back}
+        />
+        <div className="tai-card" style={{ padding: 32, textAlign: "center", background: "var(--surface)", borderRadius: 12 }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            <Bot size={24} color="var(--text-3)" />
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)" }}>AI Features Disabled</div>
+          <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, maxWidth: 420, margin: "6px auto 0", lineHeight: 1.5 }}>
+            AI Coach and AI Quiz generation are currently disabled by your organization administrator.
+          </div>
+        </div>
+      </div>
+    );
+  }
   const DAILY_QUIZ_GOAL = 3;
   const todayKey = new Date().toDateString();
   const quizzesCompletedToday = (quizAttemptsQuery?.data || []).filter(

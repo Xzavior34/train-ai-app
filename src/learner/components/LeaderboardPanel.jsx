@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Trophy, RefreshCw, Zap, Quote, Crown, Medal, Award } from "lucide-react";
+import React from "react";
+import { Trophy, RefreshCw, Zap, Crown, Medal, Award } from "lucide-react";
 import { Avatar, initialsOf } from "./LearnerUI.jsx";
 
 const FALLBACK_AVATARS = [
@@ -20,29 +20,6 @@ function resolveAvatar(l, index = 0) {
   return FALLBACK_AVATARS[index % FALLBACK_AVATARS.length];
 }
 
-const MOTIVATION_QUOTES = [
-  {
-    quote: "Education is not preparation for life; education is life itself.",
-    author: "John Dewey",
-  },
-  {
-    quote: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.",
-    author: "Dr. Seuss",
-  },
-  {
-    quote: "Live as if you were to die tomorrow. Learn as if you were to live forever.",
-    author: "Mahatma Gandhi",
-  },
-  {
-    quote: "Learning is not attained by chance, it must be sought for with ardor and attended to with diligence.",
-    author: "Abigail Adams",
-  },
-  {
-    quote: "Success is the sum of small efforts, repeated day in and day out.",
-    author: "Robert Collier",
-  }
-];
-
 export function LeaderboardPanel({
   rows = [],
   loading = false,
@@ -51,9 +28,11 @@ export function LeaderboardPanel({
   userStats = {},
   period = "all",
   onPeriodChange,
+  customStart = "",
+  customEnd = "",
+  onCustomStartChange,
+  onCustomEndChange,
 }) {
-  const [quoteIndex] = useState(() => Math.floor(Math.random() * MOTIVATION_QUOTES.length));
-  const dailyQuote = MOTIVATION_QUOTES[quoteIndex] || MOTIVATION_QUOTES[0];
 
   const learners = rows.map((r, i) => ({
     id: r.user_id || r.id || `l-${i}`,
@@ -134,7 +113,15 @@ export function LeaderboardPanel({
               </h1>
             </div>
             <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, lineHeight: 1.45 }}>
-              {learners.length} learners competing • {period === "week" ? "This week" : period === "month" ? "This month" : "All time"} ranking
+              {learners.length} learners competing •{" "}
+              {period === "week"
+                ? "This week"
+                : period === "month"
+                ? "This month"
+                : period === "custom"
+                ? (customStart && customEnd ? `${customStart} to ${customEnd}` : "Pick a date range")
+                : "All time"}{" "}
+              ranking
             </p>
           </div>
 
@@ -154,6 +141,7 @@ export function LeaderboardPanel({
                   { key: "all", label: "All Time" },
                   { key: "week", label: "This Week" },
                   { key: "month", label: "This Month" },
+                  { key: "custom", label: "Custom" },
                 ].map((opt) => (
                   <button
                     key={opt.key}
@@ -174,6 +162,52 @@ export function LeaderboardPanel({
                     {opt.label}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {onPeriodChange && period === "custom" && (
+              <div
+                className="tai-row tai-gap6"
+                style={{
+                  alignItems: "center",
+                  background: "var(--surface-3)",
+                  border: "1px solid var(--border)",
+                  borderRadius: 8,
+                  padding: "4px 8px",
+                }}
+              >
+                <input
+                  type="date"
+                  value={customStart}
+                  max={customEnd || undefined}
+                  onChange={(e) => onCustomStartChange?.(e.target.value)}
+                  aria-label="Range start date"
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--text)",
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    padding: "3px 2px",
+                  }}
+                />
+                <span style={{ color: "var(--text-3)", fontSize: 11 }}>to</span>
+                <input
+                  type="date"
+                  value={customEnd}
+                  min={customStart || undefined}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => onCustomEndChange?.(e.target.value)}
+                  aria-label="Range end date"
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    color: "var(--text)",
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    padding: "3px 2px",
+                  }}
+                />
               </div>
             )}
 
@@ -430,31 +464,6 @@ export function LeaderboardPanel({
               ✨ Leading the board!
             </div>
           )}
-        </div>
-      </div>
-
-      {/* 2. Daily Motivation Card */}
-      <div
-        className="tai-card"
-        style={{
-          padding: "16px 20px",
-          background: "var(--glass-surface)",
-          border: "1px solid var(--glass-border)",
-          borderRadius: 14,
-          boxShadow: "var(--glass-shadow)",
-          display: "flex",
-          alignItems: "center",
-          gap: 14,
-        }}
-      >
-        <Quote size={24} color="var(--primary)" style={{ transform: "rotate(180deg)", flexShrink: 0 }} />
-        <div>
-          <div style={{ fontStyle: "italic", fontSize: 13, color: "var(--text)", fontWeight: 600, lineHeight: 1.5 }}>
-            "{dailyQuote.quote}"
-          </div>
-          <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, marginTop: 3 }}>
-            — {dailyQuote.author}
-          </div>
         </div>
       </div>
 

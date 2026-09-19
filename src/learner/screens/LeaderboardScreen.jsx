@@ -22,9 +22,11 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
   const [period, setPeriod] = useState("all");
   const [periodRows, setPeriodRows] = useState([]);
   const [periodLoading, setPeriodLoading] = useState(false);
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   const loadPeriodLeaderboard = useCallback((periodKey) => {
-    if (periodKey === "all" || !leaderboardEnabled) return;
+    if (periodKey === "all" || periodKey === "custom" || !leaderboardEnabled) return;
     setPeriodLoading(true);
     const now = new Date();
     const start = new Date(now);
@@ -35,11 +37,29 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
       .finally(() => setPeriodLoading(false));
   }, [leaderboardEnabled, orgId]);
 
+  // Custom calendar-style range: only queries once the learner has picked
+  // both a real start and end date - no default/mock range is assumed.
+  const loadCustomRangeLeaderboard = useCallback((start, end) => {
+    if (!start || !end || !leaderboardEnabled) return;
+    setPeriodLoading(true);
+    const startISO = new Date(`${start}T00:00:00`).toISOString();
+    const endISO = new Date(`${end}T23:59:59`).toISOString();
+    return fetchLeaderboardForPeriod(startISO, endISO, 50, orgId)
+      .then((rows) => setPeriodRows(rows || []))
+      .finally(() => setPeriodLoading(false));
+  }, [leaderboardEnabled, orgId]);
+
   useEffect(() => {
-    if (period === "all" || !leaderboardEnabled) return;
+    if (period === "all" || period === "custom" || !leaderboardEnabled) return;
     loadPeriodLeaderboard(period);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period, leaderboardEnabled]);
+
+  useEffect(() => {
+    if (period !== "custom") return;
+    loadCustomRangeLeaderboard(customStart, customEnd);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period, customStart, customEnd]);
 
   if (!leaderboardEnabled) {
     return (
@@ -73,11 +93,19 @@ export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, 
       <LeaderboardPanel
         rows={period === "all" ? activeData : periodRows}
         loading={period === "all" ? activeLoading : periodLoading}
-        onRefresh={() => period === "all" ? activeQuery.refetch?.() : loadPeriodLeaderboard(period)}
+        onRefresh={() => {
+          if (period === "all") return activeQuery.refetch?.();
+          if (period === "custom") return loadCustomRangeLeaderboard(customStart, customEnd);
+          return loadPeriodLeaderboard(period);
+        }}
         currentUserId={userId}
         userStats={gamificationStatsQuery?.data || {}}
         period={period}
         onPeriodChange={setPeriod}
+        customStart={customStart}
+        customEnd={customEnd}
+        onCustomStartChange={setCustomStart}
+        onCustomEndChange={setCustomEnd}
       />
     </div>
   );

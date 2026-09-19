@@ -28,13 +28,18 @@
 //      same payment is rejected at the database level, not just an
 //      application-level check.
 //
-// Currently scoped to personal (learner) credit purchases only - that is
-// the one purchase flow actually wired into the frontend today
-// (CreditsCheckoutScreen.jsx / PaymentCallbackScreen.jsx). An
-// organization-level "Buy AI Credits" admin flow does not exist in the UI
-// yet, so there is no real caller for the org-credit path to wire up -
-// purchase_ai_credits() is left in place, service-role-restricted, for
-// when that screen is built.
+// Organization-level purchases: the admin-facing "Buy AI Credits" screen
+// (src/platform/admin/CreditsScreen.jsx) now exists and can request
+// accountScope: "organization" in the request body. That flag ONLY
+// selects which account gets credited - it is never trusted for WHICH
+// organization or WHETHER the caller is allowed to fund one. Both of
+// those are re-derived server-side below (get_user_organization_id /
+// is_org_admin, called with the caller's own JWT-verified user id), the
+// same "never trust the client's claim" principle as the amount/currency
+// above. A non-admin (or an admin with no organization) requesting
+// "organization" scope is rejected before any credit is granted, and the
+// credits still land in that admin's OWN organization only - never a
+// client-supplied organization id.
 //
 // Deploy with: supabase functions deploy grant-ai-credits-from-payment
 
@@ -72,8 +77,9 @@ Deno.serve(async (req) => {
     }
 
     // Verify the caller's own identity - credits are only ever granted to
-    // the real, currently-authenticated user, never to a client-supplied
-    // user id.
+    // the real, currently-authenticated user (or, for organization scope,
+    // that user's own real organization), never to a client-supplied user
+    // id or organization id.
     const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -89,19 +95,44 @@ Deno.serve(async (req) => {
     } catch {
       return jsonResponse({ error: "Invalid JSON body" }, 400);
     }
-    const { provider, reference, session_id } = body || {};
+    const { provider, reference, session_id, accountScope } = body || {};
     if (!provider || !["paystack", "stripe"].includes(provider)) {
       return jsonResponse({ error: "provider must be 'paystack' or 'stripe'" }, 400);
     }
     if (!reference && !session_id) {
       return jsonResponse({ error: "reference or session_id is required" }, 400);
     }
+    if (accountScope && !["learner", "organization"].includes(accountScope)) {
+      return jsonResponse({ error: "accountScope must be 'learner' or 'organization'" }, 400);
+    }
 
-    // Service-role client - used both to call the real verify function
-    // (it doesn't need the caller's own auth, it needs Paystack/Stripe's
-    // secret keys, which are already configured server-side for it) and
-    // to call the service-role-only grant RPC afterward.
+    // Service-role client - used to call the real verify function (it
+    // doesn't need the caller's own auth, it needs Paystack/Stripe's
+    // secret keys, which are already configured server-side for it), to
+    // independently re-derive the caller's own organization/admin status,
+    // and to call the service-role-only grant RPC afterward.
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Resolve which account this payment is for. Only ever the CALLER's
+    // own organization, and only if the caller is actually an admin of
+    // it - re-derived here, not read from anything the client sent.
+    let resolvedScope = "learner";
+    let resolvedOrgId = null;
+    if (accountScope === "organization") {
+      const [{ data: isAdmin, error: adminErr }, { data: orgId, error: orgErr }] = await Promise.all([
+        db.rpc("is_org_admin", { check_user_id: userId }),
+        db.rpc("get_user_organization_id", { check_user_id: userId }),
+      ]);
+      if (adminErr || orgErr) {
+        console.error("grant-ai-credits-from-payment: org/admin lookup failed:", adminErr || orgErr);
+        return jsonResponse({ error: "Could not verify organization admin status." }, 500);
+      }
+      if (!isAdmin || !orgId) {
+        return jsonResponse({ error: "Only an organization admin can purchase credits for their organization.", granted: false }, 403);
+      }
+      resolvedScope = "organization";
+      resolvedOrgId = orgId;
+    }
 
     const verifyFn = provider === "paystack" ? "paystack-verify" : "stripe-verify";
     const verifyBody = provider === "paystack" ? { reference } : { session_id, reference };
@@ -121,7 +152,7 @@ Deno.serve(async (req) => {
     // The real amount/currency/reference/credits come from what Paystack/
     // Stripe's own verify response echoes back - not from this request's
     // body, which is never used for anything beyond selecting which
-    // provider/reference to check.
+    // provider/reference/account this is for.
     const verifiedReference = verifyResult.reference || reference || session_id;
     const creditsToGrant = Number(verifyResult?.metadata?.credits_to_add || 0);
     if (!verifiedReference || creditsToGrant <= 0) {
@@ -131,8 +162,8 @@ Deno.serve(async (req) => {
     const { data: grantResult, error: grantErr } = await db.rpc("record_and_grant_ai_credit_payment", {
       p_provider: provider,
       p_provider_reference: verifiedReference,
-      p_account_scope: "learner",
-      p_organization_id: null,
+      p_account_scope: resolvedScope,
+      p_organization_id: resolvedOrgId,
       p_user_id: userId,
       p_credits: creditsToGrant,
       p_amount: verifyResult.amount ?? null,
@@ -149,7 +180,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ granted: true, already_processed: true });
     }
 
-    return jsonResponse({ granted: true, new_balance: grantResult?.new_balance, credits_added: creditsToGrant });
+    return jsonResponse({ granted: true, new_balance: grantResult?.new_balance, credits_added: creditsToGrant, account_scope: resolvedScope });
   } catch (error) {
     console.error("grant-ai-credits-from-payment: unhandled error:", error);
     return jsonResponse({ error: "Internal server error" }, 500);

@@ -2,8 +2,8 @@ import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail, Trophy, CheckSquare,
-  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, ChevronRight, ChevronDown, Flag, Palette, Rocket, Brain, LifeBuoy,
-  Armchair,
+  Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, ChevronRight, ChevronDown, Palette, Rocket, Brain, LifeBuoy,
+  Armchair, Rss, CreditCard,
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
@@ -637,6 +637,7 @@ const ADMIN_NAV = [
     items: [
       { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
       { key: "workforce", label: "Workforce Intelligence", icon: Brain },
+      { key: "analytics", label: "Analytics Hub", icon: BarChart3 },
     ],
   },
   {
@@ -665,13 +666,7 @@ const ADMIN_NAV = [
       { key: "seats", label: "Seats & Licensing", icon: Armchair },
       { key: "payouts", label: "Payouts", icon: Briefcase },
       { key: "integrations", label: "Integrations", icon: Plug },
-      { key: "moderation", label: "Content Moderation", icon: Flag },
-    ],
-  },
-  {
-    section: "Insights",
-    items: [
-      { key: "analytics", label: "Analytics Hub", icon: BarChart3 },
+      { key: "credits", label: "AI Credits", icon: CreditCard },
     ],
   },
   {
@@ -693,7 +688,7 @@ const MENTOR_NAV = [
   { key: "assessments", label: "Assessments & Grading", icon: CheckSquare },
   { key: "mentees", label: "My Learners", icon: Users },
   { key: "messages", label: "Direct Messages", icon: MessageSquare },
-  { key: "discussions", label: "Learner Q&A", icon: MessagesSquare },
+  { key: "learnerfeed", label: "Learner Feed", icon: Rss },
   { key: "analytics", label: "My Performance", icon: BarChart3 },
   { key: "admin", label: "Earnings & Payouts", icon: Briefcase },
   { key: "settings", label: "Instructor Settings", icon: Settings },

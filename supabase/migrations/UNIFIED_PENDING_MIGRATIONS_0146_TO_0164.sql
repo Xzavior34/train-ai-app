@@ -2692,3 +2692,382 @@ begin
   limit p_limit;
 end;
 $$;
+-- ============================================================================
+-- Allow moderators (can_moderate_content) to delete community_posts, not
+-- just update their moderation_status. cp_update_own_or_moderator (0006)
+-- already lets a moderator update a post; cp_delete_own only ever let the
+-- post's own author delete it, with no moderator exception at all. Added
+-- for the new Instructor "Learner Feed" management screen, where a mentor
+-- needs to remove a learner's post (spam, policy violation, etc.), not just
+-- flip its moderation_status.
+-- ============================================================================
+
+drop policy if exists cp_delete_own on community_posts;
+create policy cp_delete_own_or_moderator on community_posts for delete
+  using (user_id = auth.uid() or can_moderate_content(auth.uid()));
+-- ============================================================================
+-- Real outbound webhook dispatch for org_integrations.
+--
+-- Confirmed gap: org_integrations and integration_dispatch_log already
+-- existed, and the admin "New Webhook" form (IntegrationsScreen.jsx)
+-- already saved a name/url/events row and could toggle it on/off - but
+-- nothing anywhere in this codebase ever read that row back and actually
+-- called webhook_url. It was a form that saved to a table nobody read.
+-- This migration adds the actual dispatch path with pg_net (Supabase's
+-- built-in async HTTP extension), fired from real row-level triggers on
+-- the only events an admin can actually pick in the UI.
+--
+-- Wired for real, from real row events:
+--   - user.invited       -> AFTER INSERT on user_invitations
+--   - enrollment.created -> AFTER INSERT on course_enrollments
+--   - course.completed   -> AFTER UPDATE on course_enrollments, only when
+--                           completed_at goes from null to not null
+--
+-- Deliberately NOT wired, and deliberately removed from the UI's
+-- selectable events rather than left there half-working: compliance.overdue.
+-- "Overdue" is a passage-of-time state, not a row insert/update - firing it
+-- for real needs a scheduled job (pg_cron or similar) periodically scanning
+-- course_enrollments against courses.compliance_due_days, with a
+-- de-duplication marker so it doesn't refire on every scan. That is a real,
+-- separate piece of work; faking it here (e.g. firing on enrollment insert)
+-- would be exactly the kind of mock behavior this change is meant to remove.
+--
+-- pg_net is async: it queues the HTTP request and returns immediately, it
+-- does not hand back the destination's real response inline. The dispatch
+-- log therefore records "sent" (the request was genuinely queued and
+-- handed to pg_net for delivery) rather than a live HTTP status/body -
+-- reading the real delivery outcome back would mean polling pg_net's own
+-- net._http_response table by request id, which is a reasonable follow-up
+-- but out of scope here. This is a real, functioning dispatch - not a mock
+-- - it just doesn't yet report delivery confirmation into
+-- integration_dispatch_log.http_status.
+-- ============================================================================
+
+create extension if not exists pg_net;
+
+create or replace function dispatch_org_webhooks(p_org_id uuid, p_event text, p_payload jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  integ record;
+  req_id bigint;
+begin
+  if p_org_id is null or p_event is null then
+    return;
+  end if;
+
+  for integ in
+    select id, webhook_url
+    from org_integrations
+    where organization_id = p_org_id
+      and enabled = true
+      and webhook_url is not null
+      and webhook_url <> ''
+      and p_event = any(events)
+  loop
+    begin
+      select net.http_post(
+        url := integ.webhook_url,
+        body := p_payload,
+        headers := jsonb_build_object('Content-Type', 'application/json')
+      ) into req_id;
+
+      insert into integration_dispatch_log (integration_id, organization_id, event, payload, status)
+      values (integ.id, p_org_id, p_event, p_payload, 'sent');
+    exception when others then
+      insert into integration_dispatch_log (integration_id, organization_id, event, payload, status, error)
+      values (integ.id, p_org_id, p_event, p_payload, 'failed', sqlerrm);
+    end;
+  end loop;
+end;
+$$;
+
+-- user.invited
+create or replace function trg_dispatch_user_invited()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform dispatch_org_webhooks(
+    new.organization_id,
+    'user.invited',
+    jsonb_build_object(
+      'event', 'user.invited',
+      'email', new.email,
+      'role', new.organization_role,
+      'invited_at', new.created_at
+    )
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists on_user_invitation_dispatch_webhook on user_invitations;
+create trigger on_user_invitation_dispatch_webhook
+  after insert on user_invitations
+  for each row execute function trg_dispatch_user_invited();
+
+-- enrollment.created
+create or replace function trg_dispatch_enrollment_created()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_org_id uuid;
+begin
+  select organization_id into v_org_id from user_profiles where id = new.user_id;
+  if v_org_id is not null then
+    perform dispatch_org_webhooks(
+      v_org_id,
+      'enrollment.created',
+      jsonb_build_object(
+        'event', 'enrollment.created',
+        'user_id', new.user_id,
+        'course_id', new.course_id,
+        'enrolled_at', new.enrolled_at
+      )
+    );
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_course_enrollment_dispatch_webhook on course_enrollments;
+create trigger on_course_enrollment_dispatch_webhook
+  after insert on course_enrollments
+  for each row execute function trg_dispatch_enrollment_created();
+
+-- course.completed
+create or replace function trg_dispatch_course_completed()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_org_id uuid;
+begin
+  if new.completed_at is not null and old.completed_at is null then
+    select organization_id into v_org_id from user_profiles where id = new.user_id;
+    if v_org_id is not null then
+      perform dispatch_org_webhooks(
+        v_org_id,
+        'course.completed',
+        jsonb_build_object(
+          'event', 'course.completed',
+          'user_id', new.user_id,
+          'course_id', new.course_id,
+          'completed_at', new.completed_at
+        )
+      );
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_course_completion_dispatch_webhook on course_enrollments;
+create trigger on_course_completion_dispatch_webhook
+  after update on course_enrollments
+  for each row execute function trg_dispatch_course_completed();
+-- ============================================================================
+-- Broaden webhook dispatch beyond raw JSON to the actual message formats
+-- real chat destinations expect, so a saved webhook shows up as a readable
+-- message instead of an unparsed JSON blob.
+--
+-- Confirmed protocol differences (this is why one payload shape can't
+-- serve all of them):
+--   - Slack Incoming Webhooks, and anything that intentionally mirrors that
+--     same wire format (Mattermost, Rocket.Chat, and similar self-hosted
+--     chat tools all document "Slack-compatible incoming webhooks"), want
+--     a JSON body shaped {"text": "..."}.
+--   - Discord's webhook endpoint wants {"content": "..."} - same idea,
+--     different field name, so it needs its own branch.
+--   - Microsoft Teams incoming webhooks want a MessageCard object
+--     ({"@type": "MessageCard", ...}), not a bare text field - the closest
+--     of the four to actually being rejected outright if you send it
+--     something else.
+--   - Anything else (Zapier, a custom endpoint, a developer's own
+--     receiver) generally wants the real event data, not a pre-formatted
+--     chat message - so "raw" (the original behavior) stays the default
+--     and is left completely unchanged.
+--
+-- This does not hardcode "Slack" and "Teams" as the only two destinations
+-- the way the earlier version did in spirit - `payload_format` is a
+-- protocol choice (raw / slack-compatible / discord / teams-card), so any
+-- tool that speaks one of those same wire formats works too, not just the
+-- two named products.
+-- ============================================================================
+
+alter table org_integrations
+  add column if not exists payload_format text not null default 'raw';
+
+alter table org_integrations
+  drop constraint if exists org_integrations_payload_format_check;
+alter table org_integrations
+  add constraint org_integrations_payload_format_check
+  check (payload_format in ('raw', 'slack', 'discord', 'teams'));
+
+comment on column org_integrations.payload_format is
+  'How the outgoing webhook body is shaped: raw (original event JSON - Zapier, custom endpoints), slack (Slack-compatible {"text":...} - also correct for Mattermost/Rocket.Chat), discord ({"content":...}), teams (MessageCard).';
+
+-- Replaces the 0163 version: adds p_summary (a human-readable one-line
+-- description the caller already has the real names for, e.g. "Jane Doe
+-- enrolled in Intro to Python") and branches the outgoing body by each
+-- integration's own payload_format instead of always sending raw JSON.
+create or replace function dispatch_org_webhooks(p_org_id uuid, p_event text, p_payload jsonb, p_summary text default null)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  integ record;
+  req_id bigint;
+  body jsonb;
+  summary text;
+begin
+  if p_org_id is null or p_event is null then
+    return;
+  end if;
+
+  summary := coalesce(p_summary, 'Train AI event: ' || p_event);
+
+  for integ in
+    select id, webhook_url, payload_format
+    from org_integrations
+    where organization_id = p_org_id
+      and enabled = true
+      and webhook_url is not null
+      and webhook_url <> ''
+      and p_event = any(events)
+  loop
+    begin
+      body := case integ.payload_format
+        when 'slack' then jsonb_build_object('text', summary)
+        when 'discord' then jsonb_build_object('content', summary)
+        when 'teams' then jsonb_build_object(
+          '@type', 'MessageCard',
+          '@context', 'http://schema.org/extensions',
+          'summary', summary,
+          'themeColor', '2563EB',
+          'title', 'Train AI',
+          'text', summary
+        )
+        else p_payload
+      end;
+
+      select net.http_post(
+        url := integ.webhook_url,
+        body := body,
+        headers := jsonb_build_object('Content-Type', 'application/json')
+      ) into req_id;
+
+      insert into integration_dispatch_log (integration_id, organization_id, event, payload, status)
+      values (integ.id, p_org_id, p_event, p_payload, 'sent');
+    exception when others then
+      insert into integration_dispatch_log (integration_id, organization_id, event, payload, status, error)
+      values (integ.id, p_org_id, p_event, p_payload, 'failed', sqlerrm);
+    end;
+  end loop;
+end;
+$$;
+
+-- user.invited - now also builds a real human-readable summary line.
+create or replace function trg_dispatch_user_invited()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform dispatch_org_webhooks(
+    new.organization_id,
+    'user.invited',
+    jsonb_build_object(
+      'event', 'user.invited',
+      'email', new.email,
+      'role', new.organization_role,
+      'invited_at', new.created_at
+    ),
+    new.email || ' was invited to join as ' || new.organization_role || '.'
+  );
+  return new;
+end;
+$$;
+
+-- enrollment.created - joins to real display name / course title so the
+-- chat-formatted message reads as a sentence, not a row of ids.
+create or replace function trg_dispatch_enrollment_created()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_org_id uuid;
+  v_display_name text;
+  v_course_title text;
+begin
+  select organization_id, display_name into v_org_id, v_display_name
+  from user_profiles where id = new.user_id;
+  select title into v_course_title from courses where id = new.course_id;
+
+  if v_org_id is not null then
+    perform dispatch_org_webhooks(
+      v_org_id,
+      'enrollment.created',
+      jsonb_build_object(
+        'event', 'enrollment.created',
+        'user_id', new.user_id,
+        'course_id', new.course_id,
+        'enrolled_at', new.enrolled_at
+      ),
+      coalesce(v_display_name, 'A learner') || ' enrolled in ' || coalesce(v_course_title, 'a course') || '.'
+    );
+  end if;
+  return new;
+end;
+$$;
+
+-- course.completed - same real-name join as above.
+create or replace function trg_dispatch_course_completed()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_org_id uuid;
+  v_display_name text;
+  v_course_title text;
+begin
+  if new.completed_at is not null and old.completed_at is null then
+    select organization_id, display_name into v_org_id, v_display_name
+    from user_profiles where id = new.user_id;
+    select title into v_course_title from courses where id = new.course_id;
+
+    if v_org_id is not null then
+      perform dispatch_org_webhooks(
+        v_org_id,
+        'course.completed',
+        jsonb_build_object(
+          'event', 'course.completed',
+          'user_id', new.user_id,
+          'course_id', new.course_id,
+          'completed_at', new.completed_at
+        ),
+        coalesce(v_display_name, 'A learner') || ' completed ' || coalesce(v_course_title, 'a course') || '.'
+      );
+    end if;
+  end if;
+  return new;
+end;
+$$;

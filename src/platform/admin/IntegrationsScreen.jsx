@@ -16,7 +16,23 @@ import { fetchOrgFeatures } from "../../lib/api/organizations.js";
 // existing in lib/api/platform.js. Both are fixed below, plus the real
 // integration_dispatch_log is now shown so admins can see whether webhook
 // deliveries actually succeeded.
-const EVENT_OPTIONS = ["enrollment.created", "course.completed", "user.invited", "compliance.overdue"];
+// Only events that a real trigger actually dispatches (see
+// 0163_webhook_dispatch.sql) are selectable here - listing an event with
+// no real dispatcher behind it would be exactly the kind of mock behavior
+// this page should not have.
+const EVENT_OPTIONS = ["enrollment.created", "course.completed", "user.invited"];
+
+// Destination formats the dispatcher (0164_webhook_payload_formats.sql)
+// actually builds a correct body for. "Raw JSON" is the default and fits
+// any custom endpoint or automation tool (Zapier, a developer's own
+// receiver) that wants the real event data rather than a pre-formatted
+// chat message.
+const FORMAT_OPTIONS = [
+  { value: "raw", label: "Raw JSON (Zapier, custom endpoint)" },
+  { value: "slack", label: "Slack-compatible (Slack, Mattermost, Rocket.Chat)" },
+  { value: "discord", label: "Discord" },
+  { value: "teams", label: "Microsoft Teams" },
+];
 
 export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPlatformOwner }) {
   const showToast = useContext(ToastContext);
@@ -37,6 +53,7 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
   const [name, setName] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [events, setEvents] = useState([]);
+  const [payloadFormat, setPayloadFormat] = useState("raw");
   const [creating, setCreating] = useState(false);
 
   function toggleEvent(ev) {
@@ -47,12 +64,13 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
     if (!name.trim() || !webhookUrl.trim() || !orgId) return;
     setCreating(true);
     try {
-      await createOrgIntegration({ organizationId: orgId, name: name.trim(), webhookUrl: webhookUrl.trim(), events, createdBy: userId });
+      await createOrgIntegration({ organizationId: orgId, name: name.trim(), webhookUrl: webhookUrl.trim(), events, createdBy: userId, payloadFormat });
       showToast(`"${name.trim()}" integration added`);
       setFormOpen(false);
       setName("");
       setWebhookUrl("");
       setEvents([]);
+      setPayloadFormat("raw");
       integrationsQuery.refetch();
     } catch (err) {
       showToast(err.message || "Could not create integration");
@@ -143,6 +161,22 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
                 })}
               </div>
             </div>
+            <div className="ta-mt12">
+              <div className="ta-label">Message format</div>
+              <select
+                className="ta-input ta-mt8"
+                style={{ width: "100%", maxWidth: 420 }}
+                value={payloadFormat}
+                onChange={(e) => setPayloadFormat(e.target.value)}
+              >
+                {FORMAT_OPTIONS.map((f) => (
+                  <option key={f.value} value={f.value}>{f.label}</option>
+                ))}
+              </select>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>
+                Controls how the event is shaped when it's sent - pick the one matching where this URL came from. Not sure? "Raw JSON" always works for a custom endpoint, Zapier, or your own server.
+              </div>
+            </div>
             <div className="ta-row ta-gap8 ta-mt16">
               <button className="ta-btn ta-btn-primary" onClick={handleCreate} disabled={creating || !name.trim() || !webhookUrl.trim()}>
                 {creating ? "Saving..." : "Save integration"}
@@ -151,39 +185,6 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
             </div>
           </div>
         )}
-
-        {/* Pre-built Enterprise Connectors Catalog */}
-        <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 16 }}>
-          {[
-            { name: "Slack Notifications", category: "Communication", desc: "Push real-time cohort milestones & completion alerts into team channels.", icon: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80", status: "Connected", enabled: true },
-            { name: "Zapier Automations", category: "Workflow", desc: "Sync enrolled learners and assessment outcomes with 5,000+ business apps.", icon: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&auto=format&fit=crop&q=80", status: "Active", enabled: true },
-            { name: "Discord Community Bot", category: "Community", desc: "Manage role gated channels and sync cohort study pod discussions.", icon: "https://images.unsplash.com/photo-1614680376593-902f749f7ffc?w=100&auto=format&fit=crop&q=80", status: "Configured", enabled: false },
-            { name: "Custom Event Webhooks", category: "Developer API", desc: "Stream raw JSON payloads for all student and instructor platform lifecycle events.", icon: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100&auto=format&fit=crop&q=80", status: "Custom", enabled: true },
-          ].map((conn, idx) => (
-            <div key={idx} className="ta-card ta-card-hover" style={{ borderRadius: 10, padding: 18, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div className="ta-row ta-between">
-                  <div className="ta-row ta-gap10">
-                    <img src={conn.icon} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: 14 }}>{conn.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-3)" }}>{conn.category}</div>
-                    </div>
-                  </div>
-                  <Tag tone={conn.enabled ? "success" : "default"}>{conn.status}</Tag>
-                </div>
-                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 12, lineHeight: 1.45 }}>
-                  {conn.desc}
-                </div>
-              </div>
-
-              <div className="ta-row ta-between" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Realtime Sync</span>
-                <Switch on={conn.enabled} onChange={() => showToast(`${conn.name} settings toggled.`)} />
-              </div>
-            </div>
-          ))}
-        </div>
 
         {integrationsQuery.loading && <div className="ta-empty">Loading integrations...</div>}
         {integrationsQuery.error && <div className="ta-empty">Couldn't load integrations: {integrationsQuery.error}</div>}
@@ -205,6 +206,9 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
                       showToast(`${i.name} ${!i.enabled ? "enabled" : "disabled"}`);
                     }} />
                   </div>
+                  <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 8, textTransform: "capitalize" }}>
+                    {FORMAT_OPTIONS.find((f) => f.value === (i.payload_format || "raw"))?.label || i.payload_format}
+                  </div>
                   {i.events?.length > 0 && (
                     <div className="ta-row ta-gap6 ta-mt10" style={{ flexWrap: "wrap" }}>
                       {i.events.map((ev) => <Tag key={ev}>{ev}</Tag>)}
@@ -221,6 +225,9 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
             <Activity size={16} color="var(--text-3)" />
             <div className="ta-title" style={{ margin: 0 }}>Recent dispatch log</div>
           </div>
+          <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 4 }}>
+            Fires automatically when a learner is invited, enrolls in a course, or completes one. "Sent" means the request was actually dispatched to your URL, not yet confirmed as received.
+          </div>
           <div className="ta-table-wrap">
           <table className="ta-table ta-mt12">
             <thead><tr><th>Integration</th><th>Event</th><th>Status</th><th>When</th></tr></thead>
@@ -231,7 +238,7 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
                 <tr key={l.id}>
                   <td>{l.org_integrations?.name || "N/A"}</td>
                   <td>{l.event || "N/A"}</td>
-                  <td><Tag tone={l.status === "success" ? "success" : "danger"}>{l.status || (l.http_status ? `HTTP ${l.http_status}` : "unknown")}</Tag></td>
+                  <td><Tag tone={l.status === "failed" ? "danger" : "success"}>{l.status || (l.http_status ? `HTTP ${l.http_status}` : "unknown")}</Tag></td>
                   <td style={{ fontSize: 12, color: "var(--text-2)" }}>{l.created_at ? new Date(l.created_at).toLocaleString() : "N/A"}</td>
                 </tr>
               ))}

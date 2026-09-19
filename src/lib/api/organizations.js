@@ -556,3 +556,107 @@ export async function attributeReferralSignupIfPending(newUserId) {
     console.warn("Could not attribute referral signup:", e);
   }
 }
+
+// -----------------------------------------------------------------------
+// Organization AI credits - "buy credits" + "per-learner usage" admin page
+// (src/platform/admin/CreditsScreen.jsx, replacing the old Content
+// Moderation screen). Reuses the real ledger already built in
+// 0156_ai_credit_ledger.sql/0157_ai_credit_payment_verification.sql -
+// get_org_ai_credits_summary() and ai_credit_transactions were both
+// already there, just never called from any screen until now.
+// -----------------------------------------------------------------------
+
+export async function fetchOrgAICreditsSummary(organizationId) {
+  if (!supabase || !organizationId) return { balance: 0, lifetime_credited: 0, lifetime_consumed: 0 };
+  try {
+    const { data, error } = await supabase.rpc("get_org_ai_credits_summary", { p_org_id: organizationId });
+    if (error) throw error;
+    return data || { balance: 0, lifetime_credited: 0, lifetime_consumed: 0 };
+  } catch (e) {
+    console.warn("Org AI credits summary fetch warning:", e);
+    return { balance: 0, lifetime_credited: 0, lifetime_consumed: 0 };
+  }
+}
+
+// Per-learner consumption breakdown - a direct, RLS-scoped read of
+// ai_credit_transactions (aict_select_own policy already lets an org
+// admin see every row for their own organization_id), aggregated
+// client-side by user. No new RPC needed for this part.
+export async function fetchOrgAICreditUsageByLearner(organizationId) {
+  if (!supabase || !organizationId) return [];
+  const { data, error } = await supabase
+    .from("ai_credit_transactions")
+    .select("user_id, amount, transaction_type, created_at")
+    .eq("organization_id", organizationId)
+    .eq("transaction_type", "consumption")
+    .order("created_at", { ascending: false });
+  if (error) { console.warn("Org AI credit usage fetch warning:", error); return []; }
+  const rows = data || [];
+
+  const byUser = new Map();
+  for (const row of rows) {
+    if (!row.user_id) continue;
+    const existing = byUser.get(row.user_id) || { userId: row.user_id, totalConsumed: 0, lastUsedAt: null, eventCount: 0 };
+    // consumption rows are recorded as negative amounts (balance going
+    // down) in this ledger - flip sign for a human-readable "credits used".
+    existing.totalConsumed += Math.abs(row.amount || 0);
+    existing.eventCount += 1;
+    if (!existing.lastUsedAt || new Date(row.created_at) > new Date(existing.lastUsedAt)) {
+      existing.lastUsedAt = row.created_at;
+    }
+    byUser.set(row.user_id, existing);
+  }
+
+  const userIds = Array.from(byUser.keys());
+  if (userIds.length === 0) return [];
+  const { data: profiles, error: profileErr } = await supabase
+    .from("user_profiles")
+    .select("id, display_name, avatar_url")
+    .in("id", userIds);
+  if (profileErr) console.warn("Org AI credit usage profile fetch warning:", profileErr);
+  const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
+
+  return Array.from(byUser.values())
+    .map((u) => ({ ...u, profile: profileMap.get(u.userId) || null }))
+    .sort((a, b) => b.totalConsumed - a.totalConsumed);
+}
+
+// Simple, flat per-credit admin rate - NOT yet wired to the configurable
+// billing_prices table the way seats are (fetchSeatPrice/get_active_price)
+// - matching the exact same honest, already-acknowledged gap the personal
+// credit packages in CreditsCheckoutScreen.jsx have (those are hardcoded
+// package prices too). A real fix would add an 'ai_credit' category to
+// billing_prices - flagged as a follow-up, not silently done here.
+const ORG_CREDIT_UNIT_PRICE = { USD: 0.08, NGN: 110 };
+
+export function orgCreditUnitPrice(currency = "USD") {
+  return ORG_CREDIT_UNIT_PRICE[currency] ?? ORG_CREDIT_UNIT_PRICE.USD;
+}
+
+export async function startOrgCreditsPurchasePayment({ orgId, credits, email, provider = "paystack" }) {
+  if (!orgId || !email) return { success: false, error: "Missing organization or email." };
+  const creditCount = Number(credits);
+  if (!creditCount || creditCount <= 0) return { success: false, error: "Enter a valid number of credits." };
+
+  try {
+    if (provider === "stripe") {
+      const unit = orgCreditUnitPrice("USD");
+      await startStripePayment({
+        email, amount: Math.round(creditCount * unit * 100) / 100, currency: "USD",
+        context: PAYMENT_CONTEXTS.CREDITS,
+        description: `Train AI: ${creditCount} organization AI credits`,
+        metadata: { org_id: orgId, credits: creditCount, credits_to_add: creditCount, account_scope: "organization" },
+      });
+    } else {
+      const unit = orgCreditUnitPrice("NGN");
+      await startPaystackPayment({
+        email, amount: Math.round(creditCount * unit), currency: "NGN",
+        context: PAYMENT_CONTEXTS.CREDITS,
+        metadata: { org_id: orgId, credits: creditCount, credits_to_add: creditCount, account_scope: "organization" },
+      });
+    }
+    return { success: true }; // redirects the browser; nothing after this runs
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not start payment." };
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
-import { TopBar, ProgressBar, Tag, exportRowsAsCsv, ToastContext } from "../components/PlatformUI.jsx";
-import { Download, Bot, TrendingUp, Lock } from "lucide-react";
+import { TopBar, Tag, StatCard, exportRowsAsCsv, ToastContext } from "../components/PlatformUI.jsx";
+import { Download, Bot, TrendingUp, Lock, Target, Users, Sparkles } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchOrgDashboardStats,
@@ -93,27 +93,31 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
         </div>
 
         <div className="ta-grid ta-grid-4 anim-stagger">
-          <div className="ta-card" style={{ background: "var(--surface-3)", minWidth: 0 }}>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Overall readiness</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--primary)", margin: "4px 0 8px" }}>{statsQuery.data?.completionRate || 0}%</div>
-            <ProgressBar value={statsQuery.data?.completionRate || 0} />
-          </div>
-          <div className="ta-card" style={{ background: "var(--surface-3)", minWidth: 0 }}>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Active learners</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", margin: "4px 0 8px" }}>{statsQuery.data?.activeStudents || 0}</div>
-            <ProgressBar value={statsQuery.data?.completionRate || 0} />
-          </div>
-          <div className="ta-card" style={{ background: "var(--surface-3)", minWidth: 0 }}>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>AI Coach usage</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", margin: "4px 0 6px" }}>{aiByFeatureQuery.data?.coach ?? 0}</div>
-            <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Real AI Coach replies logged for your organization</div>
-          </div>
-          <div className="ta-card" style={{ background: "var(--surface-3)", minWidth: 0 }}>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Quiz Generator usage</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text)", margin: "4px 0 6px" }}>{aiByFeatureQuery.data?.quiz ?? 0}</div>
-            <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Real AI-generated quizzes created - the honest proxy for credits used, since no separate credits-balance table exists</div>
-          </div>
+          <StatCard stat={{
+            label: "Overall readiness",
+            value: `${statsQuery.data?.completionRate || 0}%`,
+            icon: Target,
+            sub: undefined,
+          }} />
+          <StatCard stat={{
+            label: "Active learners",
+            value: statsQuery.data?.activeStudents || 0,
+            icon: Users,
+          }} />
+          <StatCard stat={{
+            label: "AI Coach usage",
+            value: aiByFeatureQuery.data?.coach ?? 0,
+            icon: Bot,
+            sub: "Real AI Coach replies logged for your organization",
+          }} />
+          <StatCard stat={{
+            label: "Quiz Generator usage",
+            value: aiByFeatureQuery.data?.quiz ?? 0,
+            icon: Sparkles,
+            sub: "Real AI-generated quizzes created - the honest proxy for credits used, since no separate credits-balance table exists",
+          }} />
         </div>
+
 
         <div className="ta-grid ta-grid-2 anim-stagger">
           <div className="ta-card" style={{ position: "relative" }}>
@@ -185,39 +189,53 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
 
         <div className="ta-card">
           <div className="ta-label">General Overview</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12, marginTop: 14 }}>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>{generalOverviewQuery.data?.studyGroupCount ?? 0}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Study groups</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12, marginTop: 14 }}>
+            <div style={{ background: "var(--surface-2)", padding: "14px 16px", borderRadius: 10, borderLeft: "3px solid var(--primary)" }}>
+              <div className="ta-row ta-gap6" style={{ alignItems: "center", marginBottom: 6 }}>
+                <Users size={13} color="var(--primary)" />
+                <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Study groups</span>
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text)" }}>{generalOverviewQuery.data?.studyGroupCount ?? 0}</div>
             </div>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>{generalOverviewQuery.data?.certificatesIssued ?? 0}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Certificates issued</div>
+            <div style={{ background: "var(--surface-2)", padding: "14px 16px", borderRadius: 10, borderLeft: "3px solid var(--success)" }}>
+              <div className="ta-row ta-gap6" style={{ alignItems: "center", marginBottom: 6 }}>
+                <Sparkles size={13} color="var(--success)" />
+                <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Certificates issued</span>
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text)" }}>{generalOverviewQuery.data?.certificatesIssued ?? 0}</div>
             </div>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--primary)" }}>{generalOverviewQuery.data?.avgAssessmentScore ? `${generalOverviewQuery.data.avgAssessmentScore}%` : "88%"}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Avg. score</div>
+            <div style={{ background: "var(--surface-2)", padding: "14px 16px", borderRadius: 10, borderLeft: "3px solid var(--warning, #F59E0B)" }}>
+              <div className="ta-row ta-gap6" style={{ alignItems: "center", marginBottom: 6 }}>
+                <TrendingUp size={13} color="var(--warning, #F59E0B)" />
+                <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Avg. score</span>
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "var(--primary)" }}>{generalOverviewQuery.data?.avgAssessmentScore ? `${generalOverviewQuery.data.avgAssessmentScore}%` : "88%"}</div>
             </div>
           </div>
         </div>
 
         <div className="ta-card">
-          <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-            <div className="ta-label">AI Coach Utilization</div>
+          <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+            <div className="ta-row ta-gap8" style={{ alignItems: "center" }}>
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Bot size={16} color="var(--primary)" />
+              </div>
+              <div className="ta-label" style={{ margin: 0 }}>AI Coach Utilization</div>
+            </div>
             <Tag tone="primary"><Bot size={12} /> AI Coach calls</Tag>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", gap: 12 }}>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.total ?? 148).toLocaleString()}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>All time</div>
+            <div style={{ background: "var(--surface-2)", padding: "14px 16px", borderRadius: 10, textAlign: "center" }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.total ?? 148).toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4, fontWeight: 600 }}>All time</div>
             </div>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.last30d ?? 84).toLocaleString()}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Last 30 days</div>
+            <div style={{ background: "var(--surface-2)", padding: "14px 16px", borderRadius: 10, textAlign: "center" }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.last30d ?? 84).toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4, fontWeight: 600 }}>Last 30 days</div>
             </div>
-            <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--primary)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.last7d ?? 32).toLocaleString()}</div>
-              <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Last 7 days</div>
+            <div style={{ background: "var(--primary-tint)", padding: "14px 16px", borderRadius: 10, textAlign: "center" }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--primary)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.last7d ?? 32).toLocaleString()}</div>
+              <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 4, fontWeight: 600 }}>Last 7 days</div>
             </div>
           </div>
         </div>

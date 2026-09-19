@@ -23,6 +23,12 @@ export function CohortScreen({
 
   const targetCohortId = params?.id || params?.cohortId || propCohort?.id || cohortMembershipQuery?.data?.cohort?.id;
 
+  const activityTodayQuery = useSupabaseQuery(
+    () => (targetCohortId ? fetchCohortActivityToday(targetCohortId) : 0),
+    [targetCohortId]
+  );
+  const activityToday = activityTodayQuery.data || 0;
+
   const fallbackCohortQuery = useSupabaseQuery(async () => {
     if (!targetCohortId) return null;
     return fetchCohortDetail(targetCohortId);

@@ -14,7 +14,7 @@ import { EmailCenterScreen } from "./admin/EmailCenterScreen.jsx";
 import { PayoutsScreen } from "./admin/PayoutsScreen.jsx";
 import { SeatsScreen } from "./admin/SeatsScreen.jsx";
 import { WorkforceIntelligenceScreen } from "./admin/WorkforceIntelligenceScreen.jsx";
-import { ModerationScreen } from "./admin/ModerationScreen.jsx";
+import { CreditsScreen } from "./admin/CreditsScreen.jsx";
 import { AdminStudyGroupsScreen } from "./admin/AdminStudyGroupsScreen.jsx";
 import { AdminAnalyticsScreen } from "./admin/AdminAnalyticsScreen.jsx";
 import { CohortsScreen } from "./admin/CohortsScreen.jsx";
@@ -29,7 +29,7 @@ import { MentorStudyGroupsScreen } from "./mentor/MentorStudyGroupsScreen.jsx";
 import { MentorScheduleScreen } from "./mentor/MentorScheduleScreen.jsx";
 import { MenteesScreen } from "./mentor/MenteesScreen.jsx";
 import { MentorMessagesScreen } from "./mentor/MentorMessagesScreen.jsx";
-import { DiscussionsScreen } from "./mentor/DiscussionsScreen.jsx";
+import { LearnerFeedScreen } from "./mentor/LearnerFeedScreen.jsx";
 import { MentorAnalyticsScreen } from "./mentor/MentorAnalyticsScreen.jsx";
 import { AdministrativeScreen } from "./mentor/AdministrativeScreen.jsx";
 import { MentorSettingsScreen } from "./mentor/MentorSettingsScreen.jsx";
@@ -130,7 +130,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
     const normalizedScreen = MENTOR_KEY_MAP[targetScreen] || targetScreen;
     let ws = targetWs;
     if (!ws) {
-      if (["mentor-dashboard", "schedule", "mentees", "messages", "discussions", "mentor-analytics", "administrative", "mentor-settings"].includes(targetScreen)) {
+      if (["mentor-dashboard", "schedule", "mentees", "messages", "learnerfeed", "mentor-analytics", "administrative", "mentor-settings"].includes(targetScreen)) {
         ws = "mentor";
       } else if (["manager-overview"].includes(targetScreen)) {
         ws = "manager";
@@ -226,7 +226,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "payouts" && <PayoutsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "seats" && <SeatsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} />}
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
-                  {screen === "moderation" && <ModerationScreen orgSelector={orgSelector} setScreen={setScreen} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
+                  {screen === "credits" && <CreditsScreen orgId={effectiveOrgId} orgSelector={orgSelector} userEmail={session?.user?.email} />}
                   {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "analytics" && <AdminAnalyticsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
                   {screen === "cohorts" && (
@@ -292,7 +292,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "schedule" && <MentorScheduleScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "mentees" && <MenteesScreen mentorId={mentorId} orgSelector={orgSelector} setScreen={setScreen} setSelectedLearnerForChat={setSelectedLearnerForChat} orgId={effectiveOrgId} currentUserId={session?.user?.id} />}
                   {screen === "messages" && <MentorMessagesScreen userId={session?.user?.id} mentorId={mentorId} orgSelector={orgSelector} selectedLearnerForChat={selectedLearnerForChat} setScreen={setScreen} orgId={effectiveOrgId} />}
-                  {screen === "discussions" && <DiscussionsScreen mentorId={mentorId} orgSelector={orgSelector} />}
+                  {screen === "learnerfeed" && <LearnerFeedScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} onNavigate={navigateToScreen} />}
                   {screen === "admin" && <AdministrativeScreen mentorId={mentorId} orgSelector={orgSelector} mentorProfileQuery={mentorProfileQuery} currentUserId={session?.user?.id} />}
                   {screen === "settings" && <MentorSettingsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} currentUserId={session?.user?.id} userProfileQuery={profileQuery} onNavigate={navigateToScreen} />}
