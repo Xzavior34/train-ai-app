@@ -133,9 +133,19 @@ export function useAuth() {
       const cleanEmail = email.trim().toLowerCase();
       const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://trainai.app";
 
-      // 1. Always create the Supabase auth account first so a real session exists
-      //    before any downstream RPCs (joinDefaultOrganization, registerOrganization)
-      //    are invoked. Calling those RPCs without a session causes 400 errors.
+      // 1. Proactively verify if the email is already registered to an account in any org
+      try {
+        const { data: alreadyRegistered } = await supabase.rpc("is_email_registered", { p_email: cleanEmail });
+        if (alreadyRegistered) {
+          const message = "An account with this email address already exists. Please sign in instead.";
+          setAuthError(message);
+          return { data: null, error: new Error(message), userExists: true };
+        }
+      } catch (checkErr) {
+        // Fallback: proceed to signUp which also checks user.identities below
+      }
+
+      // 2. Create the Supabase auth account
       let supaRes;
       try {
         supaRes = await supabase.auth.signUp({

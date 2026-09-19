@@ -394,7 +394,24 @@ export default function AuthPage({
               </div>
             )}
 
-            {authError && <div style={styles.errorBox}>{authError}</div>}
+            {authError && (
+              <div style={styles.errorBox}>
+                <div>{authError}</div>
+                {authError.toLowerCase().includes("already exists") && (
+                  <button
+                    type="button"
+                    onClick={() => { setMode("signin"); setBreachWarning(false); setSignupConfirmationSent(false); }}
+                    style={{
+                      marginTop: 8, background: "#2563EB", color: "#FFFFFF", border: "none",
+                      borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 700,
+                      cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4
+                    }}
+                  >
+                    Switch to Sign In →
+                  </button>
+                )}
+              </div>
+            )}
 
             <button type="submit" disabled={submitting} className="auth-submit" style={{ ...styles.submit, opacity: submitting ? .75 : 1 }}>
               {submitting ? "Processing..." : (
