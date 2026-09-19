@@ -1,13 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createClient } from '@supabase/supabase-js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const PROJECT_REF = "jeobggrtxeybxvlwpxvn";
-const SUPABASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
 
 let MANAGEMENT_TOKEN = process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_MGMT_TOKEN;
 if (!MANAGEMENT_TOKEN) {
@@ -77,6 +74,14 @@ async function main() {
     // 0. Pre-cleanup
     console.log("\n--- PHASE 0: PRE-CLEANUP STALE QA ARTIFACTS ---");
     await runSql(`
+      DELETE FROM cohort_members WHERE cohort_id IN (SELECT id FROM cohorts WHERE organization_id IN (SELECT id FROM organizations WHERE name LIKE 'PLATFORM_OWNER_QA_%'));
+      DELETE FROM cohorts WHERE organization_id IN (SELECT id FROM organizations WHERE name LIKE 'PLATFORM_OWNER_QA_%');
+      DELETE FROM courses WHERE organization_id IN (SELECT id FROM organizations WHERE name LIKE 'PLATFORM_OWNER_QA_%');
+      DELETE FROM ai_usage_events WHERE organization_id IN (SELECT id FROM organizations WHERE name LIKE 'PLATFORM_OWNER_QA_%');
+      DELETE FROM branding_settings WHERE organization_id IN (SELECT id FROM organizations WHERE name LIKE 'PLATFORM_OWNER_QA_%');
+      DELETE FROM organization_feature_flags WHERE organization_id IN (SELECT id FROM organizations WHERE name LIKE 'PLATFORM_OWNER_QA_%');
+      DELETE FROM admin_audit_log WHERE organization_id IN (SELECT id FROM organizations WHERE name LIKE 'PLATFORM_OWNER_QA_%');
+      DELETE FROM user_profiles WHERE organization_id IN (SELECT id FROM organizations WHERE name LIKE 'PLATFORM_OWNER_QA_%');
       DELETE FROM organizations WHERE name IN ('${QA_ORG_A_NAME}', '${QA_ORG_B_NAME}') OR name LIKE 'PLATFORM_OWNER_QA_%';
     `);
     console.log("✅ Pre-cleanup completed cleanly.");
@@ -123,7 +128,6 @@ async function main() {
 
     // 2. TENANT SWITCHING & ISOLATION
     console.log("\n--- PHASE 2: TENANT SWITCHING & ISOLATION ---");
-    // Verify querying Org A vs Org B
     const verifyA = await runSql(`SELECT id, name FROM organizations WHERE id = '${orgA.id}';`);
     const verifyB = await runSql(`SELECT id, name FROM organizations WHERE id = '${orgB.id}';`);
     if (verifyA[0].id === verifyB[0].id) throw new Error("Tenant collision detected!");
@@ -132,16 +136,30 @@ async function main() {
 
     // 3. GLOBAL PEOPLE MANAGEMENT & ROLES/RBAC
     console.log("\n--- PHASE 3: GLOBAL PEOPLE MANAGEMENT & RBAC ---");
+    const uidA = (await runSql(`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+      VALUES (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'qa_learner_a_${Date.now()}@example.com', '', now(), '{"provider":"email","providers":["email"]}', '{}', now(), now())
+      RETURNING id;
+    `))[0].id;
+
+    const uidB = (await runSql(`
+      INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+      VALUES (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'qa_instructor_b_${Date.now()}@example.com', '', now(), '{"provider":"email","providers":["email"]}', '{}', now(), now())
+      RETURNING id;
+    `))[0].id;
+
     const profileARes = await runSql(`
       INSERT INTO user_profiles (id, display_name, organization_id, role)
-      VALUES (gen_random_uuid(), 'QA Learner A', '${orgA.id}', 'learner')
+      VALUES ('${uidA}', 'QA Learner A', '${orgA.id}', 'learner')
+      ON CONFLICT (id) DO UPDATE SET organization_id = EXCLUDED.organization_id, role = EXCLUDED.role, display_name = EXCLUDED.display_name
       RETURNING id, display_name, role, organization_id;
     `);
     const profileA = profileARes[0];
 
     const profileBRes = await runSql(`
       INSERT INTO user_profiles (id, display_name, organization_id, role)
-      VALUES (gen_random_uuid(), 'QA Instructor B', '${orgB.id}', 'mentor')
+      VALUES ('${uidB}', 'QA Instructor B', '${orgB.id}', 'mentor')
+      ON CONFLICT (id) DO UPDATE SET organization_id = EXCLUDED.organization_id, role = EXCLUDED.role, display_name = EXCLUDED.display_name
       RETURNING id, display_name, role, organization_id;
     `);
     const profileB = profileBRes[0];
@@ -165,7 +183,7 @@ async function main() {
     if (roleA !== 'learner') throw new Error("Role transition Admin -> Learner failed");
     console.log("✅ Role transition Admin -> Learner PASSED.");
 
-    // Update & Reactivate User Profile metadata
+    // Update User Profile metadata
     await runSql(`UPDATE user_profiles SET display_name = 'QA Learner A (Updated)', department = 'Engineering' WHERE id = '${profileA.id}';`);
     let updatedProfileA = (await runSql(`SELECT display_name, department FROM user_profiles WHERE id = '${profileA.id}'`))[0];
     if (updatedProfileA.display_name !== 'QA Learner A (Updated)' || updatedProfileA.department !== 'Engineering') {
@@ -179,9 +197,9 @@ async function main() {
     // 4. COURSES & CONTENT MANAGEMENT
     console.log("\n--- PHASE 4: COURSES & CONTENT OVERSIGHT ---");
     const courseRes = await runSql(`
-      INSERT INTO courses (title, slug, description, organization_id, published, status)
-      VALUES ('QA Platform Course A', 'qa-platform-course-a', 'Test Course', '${orgA.id}', true, 'published')
-      RETURNING id, title, published, organization_id;
+      INSERT INTO courses (title, description, organization_id, is_published)
+      VALUES ('QA Platform Course A', 'Test Course Description', '${orgA.id}', true)
+      RETURNING id, title, is_published, organization_id;
     `);
     const courseA = courseRes[0];
     console.log(`Created Course: ${courseA.title} in Org A (${courseA.id})`);
@@ -195,8 +213,8 @@ async function main() {
     // 5. COHORTS MANAGEMENT
     console.log("\n--- PHASE 5: COHORTS MANAGEMENT ---");
     const cohortRes = await runSql(`
-      INSERT INTO cohorts (name, organization_id, course_id, status)
-      VALUES ('QA Platform Cohort A', '${orgA.id}', '${courseA.id}', 'active')
+      INSERT INTO cohorts (name, organization_id)
+      VALUES ('QA Platform Cohort A', '${orgA.id}')
       RETURNING id, name, organization_id;
     `);
     const cohortA = cohortRes[0];
@@ -263,13 +281,13 @@ async function main() {
     // 9. AI USAGE & CREDITS
     console.log("\n--- PHASE 9: AI USAGE & CREDITS ---");
     await runSql(`
-      INSERT INTO ai_usage_events (user_id, organization_id, feature_name, tokens_used, model)
-      VALUES ('${profileA.id}', '${orgA.id}', 'ai_coach', 150, 'gemini-1.5-flash');
+      INSERT INTO ai_usage_events (user_id, organization_id, feature)
+      VALUES ('${profileA.id}', '${orgA.id}', 'ai_coach');
     `);
     const aiEventsA = await runSql(`
-      SELECT count(*) as count, sum(tokens_used) as total_tokens FROM ai_usage_events WHERE organization_id = '${orgA.id}';
+      SELECT count(*) as count FROM ai_usage_events WHERE organization_id = '${orgA.id}';
     `);
-    console.log("Org A AI Usage:", aiEventsA[0]);
+    console.log("Org A AI Usage Events:", aiEventsA[0]);
     if (parseInt(aiEventsA[0].count, 10) !== 1) throw new Error("AI usage logging failed!");
     results.aiUsageAndCredits = 'PASS';
 
@@ -290,14 +308,14 @@ async function main() {
     // 11. AUDIT LOGGING
     console.log("\n--- PHASE 11: AUDIT LOGGING ---");
     await runSql(`
-      INSERT INTO audit_logs (action, target_type, target_id, target_identifier, organization_id, metadata)
-      VALUES ('organization.update', 'organization', '${orgA.id}', '${QA_ORG_A_NAME}', '${orgA.id}', '{"change": "plan_upgraded"}');
+      INSERT INTO admin_audit_log (action_type, target_type, target_id, target_identifier, organization_id, metadata, row_hash)
+      VALUES ('organization.update', 'organization', '${orgA.id}', '${QA_ORG_A_NAME}', '${orgA.id}', '{"change": "plan_upgraded"}', md5(gen_random_uuid()::text));
     `);
     const auditEvents = await runSql(`
-      SELECT id, action, target_identifier FROM audit_logs WHERE organization_id = '${orgA.id}';
+      SELECT id, action_type, target_identifier FROM admin_audit_log WHERE organization_id = '${orgA.id}';
     `);
     if (auditEvents.length === 0) throw new Error("Audit logging record missing!");
-    console.log(`✅ Audit Logging PASSED: ${auditEvents.length} audit record verified.`);
+    console.log(`✅ Audit Logging PASSED: ${auditEvents.length} audit record verified in admin_audit_log.`);
     results.auditLogging = 'PASS';
 
     // 12. PLATFORM SETTINGS
@@ -308,7 +326,6 @@ async function main() {
 
     // 13. PLATFORM & SESSION SECURITY
     console.log("\n--- PHASE 13: PLATFORM & SESSION SECURITY ---");
-    // Verify that is_super_admin check exists
     const superAdminFunc = await runSql(`
       SELECT routine_name FROM information_schema.routines WHERE routine_name = 'is_super_admin';
     `);
@@ -326,8 +343,9 @@ async function main() {
       DELETE FROM ai_usage_events WHERE organization_id IN ('${orgA.id}', '${orgB.id}');
       DELETE FROM branding_settings WHERE organization_id IN ('${orgA.id}', '${orgB.id}');
       DELETE FROM organization_feature_flags WHERE organization_id IN ('${orgA.id}', '${orgB.id}');
-      DELETE FROM audit_logs WHERE organization_id IN ('${orgA.id}', '${orgB.id}');
+      DELETE FROM admin_audit_log WHERE organization_id IN ('${orgA.id}', '${orgB.id}');
       DELETE FROM user_profiles WHERE organization_id IN ('${orgA.id}', '${orgB.id}');
+      DELETE FROM auth.users WHERE id IN ('${uidA}', '${uidB}') OR email LIKE 'qa_learner_a_%' OR email LIKE 'qa_instructor_b_%';
       DELETE FROM organizations WHERE id IN ('${orgA.id}', '${orgB.id}') OR name LIKE 'PLATFORM_OWNER_QA_%';
     `);
 
