@@ -4185,7 +4185,7 @@ export async function submitPlatformFeedback(userId, { category, message, rating
 // (lib/roleRouting.js) and most RLS policies actually read. Writing only one
 // of the two leaves a member who "looks" like an admin in the directory but
 // still lands on the learner dashboard, so both are kept in step here.
-export async function updateUserPlatformRole(userId, role, organizationId) {
+export async function updateUserPlatformRole(userId, role, organizationId, actorId) {
   if (!supabase || !userId || !role) return { success: false, error: "Missing user or role." };
   try {
     const { error: profileErr } = await supabase.from("user_profiles").update({ role }).eq("id", userId);
@@ -4209,10 +4209,21 @@ export async function updateUserPlatformRole(userId, role, organizationId) {
 
     // organization_members.role is a *different* enum (org_member_role) with
     // its own vocabulary - map the platform role onto the closest org role
-    // rather than trying to write an invalid enum value into it.
+    // using update_user_org_role RPC if available.
     if (organizationId) {
       const orgRole = role === "admin" ? "admin" : role === "manager" ? "people_manager" : role === "mentor" ? "content_manager" : "member";
-      await supabase.from("organization_members").update({ role: orgRole }).eq("user_id", userId).eq("organization_id", organizationId);
+      try {
+        const { error: rpcErr } = await supabase.rpc("update_user_org_role", {
+          p_user_id: userId,
+          p_organization_id: organizationId,
+          p_new_role: orgRole,
+          p_actor_id: actorId || null,
+        });
+        if (rpcErr) throw rpcErr;
+      } catch (err) {
+        console.warn("update_user_org_role RPC fallback:", err);
+        await supabase.from("organization_members").update({ role: orgRole }).eq("user_id", userId).eq("organization_id", organizationId);
+      }
     }
     return { success: true };
   } catch (e) {
@@ -4559,3 +4570,47 @@ export async function assignLearningPathToUsers(pathId, userIds) {
   }
   return { success: failed.length === 0, enrolled, failed };
 }
+
+export async function fetchCertificateRequests(orgId) {
+  if (!supabase) return [];
+  try {
+    let q = supabase
+      .from("certificate_requests")
+      .select("*, user_profiles:user_id(id, full_name, email, avatar_url), courses:course_id(id, title)")
+      .order("created_at", { ascending: false });
+    if (orgId && orgId !== "all" && orgId !== "demo-org-id") {
+      q = q.eq("organization_id", orgId);
+    }
+    const { data, error } = await q;
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn("fetchCertificateRequests warning:", err);
+    return [];
+  }
+}
+
+export async function approveCertificateRequest({ requestId, reviewerId, status = "approved", reviewNotes = null }) {
+  if (!supabase) throw new Error("Not connected");
+  const { data, error } = await supabase.rpc("approve_certificate_request", {
+    p_request_id: requestId,
+    p_reviewer_id: reviewerId,
+    p_status: status,
+    p_review_notes: reviewNotes,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function updateUserOrgRole({ userId, organizationId, newRole, actorId }) {
+  if (!supabase) throw new Error("Not connected");
+  const { data, error } = await supabase.rpc("update_user_org_role", {
+    p_user_id: userId,
+    p_organization_id: organizationId,
+    p_new_role: newRole,
+    p_actor_id: actorId,
+  });
+  if (error) throw error;
+  return data;
+}
+

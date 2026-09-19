@@ -46,7 +46,7 @@ export default function App() {
       // PlatformOwnerLoginScreen.jsx - it only changes how someone finds
       // their way to that same screen.
       const path = window.location.pathname.replace(/\/+$/, "");
-      const isAdminPath = path === "/admin" || path.endsWith("/admin");
+      const isAdminPath = path === "/admin" || path.endsWith("/admin") || path === "/superadmin" || path.endsWith("/superadmin");
       return new URLSearchParams(window.location.search).get("portal") === "owner" || isAdminPath;
     } catch {
       return false;

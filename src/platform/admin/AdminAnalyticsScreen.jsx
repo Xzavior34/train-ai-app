@@ -17,6 +17,9 @@ import { fetchOrgFeatures } from "../../lib/api/organizations.js";
 
 export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatformOwner }) {
   const showToast = useContext(ToastContext);
+  const [startDate, setStartDate] = React.useState("");
+  const [endDate, setEndDate] = React.useState("");
+
   const statsQuery = useSupabaseQuery(async () => orgId ? fetchOrgDashboardStats(orgId) : null, [orgId]);
   const trendQuery = useSupabaseQuery(async () => orgId ? fetchEnrollmentTrend(orgId, 6) : [], [orgId]);
   const topCoursesQuery = useSupabaseQuery(async () => orgId ? fetchTopCourses(orgId) : [], [orgId]);
@@ -89,6 +92,26 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
                 {!canExport && <Lock size={12} />} <Download size={13} /> Export CSV
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Date Range Telemetry Filter Bar */}
+        <div className="ta-card" style={{ padding: "12px 16px", background: "var(--surface)" }}>
+          <div className="ta-row ta-gap12" style={{ flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>Date Range Filter:</span>
+            <div className="ta-row ta-gap6" style={{ alignItems: "center" }}>
+              <label style={{ fontSize: 12, color: "var(--text-3)" }}>From</label>
+              <input type="date" className="ta-input" style={{ width: 140 }} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            <div className="ta-row ta-gap6" style={{ alignItems: "center" }}>
+              <label style={{ fontSize: 12, color: "var(--text-3)" }}>To</label>
+              <input type="date" className="ta-input" style={{ width: 140 }} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            </div>
+            {(startDate || endDate) && (
+              <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => { setStartDate(""); setEndDate(""); }}>
+                Clear Dates
+              </button>
+            )}
           </div>
         </div>
 

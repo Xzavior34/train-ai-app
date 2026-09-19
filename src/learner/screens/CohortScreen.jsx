@@ -174,14 +174,14 @@ export function CohortScreen({
           <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
             <div className="tai-row tai-gap6">
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34D399" }} />
-              <span>Cohort Pace: Sprint 5 of 12</span>
+              <span>Cohort Track: {assignedCourses.length ? `${completedAssignedCount} of ${assignedCourses.length} Modules Completed` : "Active Cohort Sprint"}</span>
             </div>
             <span style={{
               color: "#34D399",
               fontSize: 12,
               fontWeight: 700
             }}>
-              42% Completed
+              {assignedCompletionRate}% Completed
             </span>
           </div>
 
@@ -192,10 +192,11 @@ export function CohortScreen({
             overflow: "hidden"
           }}>
             <div style={{
-              width: "42%",
+              width: `${assignedCompletionRate}%`,
               height: "100%",
               background: "#10B981",
-              borderRadius: 99
+              borderRadius: 99,
+              transition: "width 0.3s ease"
             }} />
           </div>
         </div>

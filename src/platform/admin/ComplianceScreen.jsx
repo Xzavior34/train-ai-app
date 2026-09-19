@@ -1,8 +1,8 @@
 import React, { useContext, useState } from "react";
 import { TopBar, Tag, ToastContext, ProgressBar, StatCard, exportRowsAsCsv } from "../components/PlatformUI.jsx";
-import { ShieldCheck, RefreshCw, Download, AlertTriangle, CheckCircle2, Clock, Plus, X, Search, Trash2 } from "lucide-react";
+import { ShieldCheck, RefreshCw, Download, AlertTriangle, CheckCircle2, Clock, Plus, X, Search, Trash2, Award, FileCheck } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail, fetchCohortsWithStats, fetchCourseEnrolledLearners } from "../../lib/api/platform.js";
+import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail, fetchCohortsWithStats, fetchCourseEnrolledLearners, fetchCertificateRequests, approveCertificateRequest } from "../../lib/api/platform.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId }) {
@@ -40,6 +40,28 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
     [expandedProgressCourseId]
   );
   const skillGapsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgSkillGapsDetail(orgId) : []), [orgId]);
+  const certRequestsQuery = useSupabaseQuery(async () => fetchCertificateRequests(orgId), [orgId]);
+  const certRequests = certRequestsQuery.data || [];
+  const [certActionBusy, setCertActionBusy] = useState(null);
+
+  async function handleApproveRejectCert(requestId, newStatus) {
+    setCertActionBusy(requestId);
+    try {
+      await approveCertificateRequest({
+        requestId,
+        reviewerId: currentUserId,
+        status: newStatus,
+        reviewNotes: newStatus === "approved" ? "Approved by Admin" : "Rejected by Admin"
+      });
+      showToast(`Certificate request ${newStatus}`);
+      certRequestsQuery.refetch();
+    } catch (e) {
+      showToast(e?.message || `Failed to update certificate request`);
+    } finally {
+      setCertActionBusy(null);
+    }
+  }
+
   const [expandedLearnerId, setExpandedLearnerId] = useState(null);
   const complianceQuery = useSupabaseQuery(async () => orgId ? fetchComplianceAssignments(orgId) : [], [orgId]);
   const orgUsersQuery = useSupabaseQuery(async () => (orgId ? fetchUsersInOrg(orgId) : []), [orgId]);
@@ -262,7 +284,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
         </div>
 
         <div className="ta-row ta-gap8" style={{ marginBottom: 8 }}>
-          {[{ k: "progress", label: "Progress Overview" }, { k: "skillgaps", label: "Skill Gaps" }, { k: "compliance", label: "Compliance" }].map((t) => (
+          {[{ k: "progress", label: "Progress Overview" }, { k: "skillgaps", label: "Skill Gaps" }, { k: "compliance", label: "Compliance" }, { k: "certificates", label: "Certificate Approvals" }].map((t) => (
             <div key={t.k} className={`ta-pill ${mainTab === t.k ? "ta-pill-active" : "ta-pill-inactive"}`} style={{ cursor: "pointer" }} onClick={() => setMainTab(t.k)}>{t.label}</div>
           ))}
         </div>
@@ -535,6 +557,87 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
           </div>
         </div>
       </>
+        )}
+
+        {mainTab === "certificates" && (
+          <div className="ta-card">
+            <div className="ta-row ta-between" style={{ marginBottom: 12 }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
+                  Certificate Issuance &amp; Approvals
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+                  Review learner certificate requests before official badge &amp; diploma generation.
+                </div>
+              </div>
+              <Tag tone="primary">{certRequests.filter(r => r.status === "pending").length} Pending</Tag>
+            </div>
+
+            {certRequestsQuery.loading && <div className="ta-empty">Loading certificate requests...</div>}
+            {!certRequestsQuery.loading && certRequests.length === 0 && (
+              <div className="ta-empty" style={{ padding: 24, textAlign: "center" }}>
+                <Award size={28} color="var(--primary)" style={{ opacity: 0.5, marginBottom: 8 }} />
+                <div>No certificate requests submitted yet.</div>
+              </div>
+            )}
+
+            {!certRequestsQuery.loading && certRequests.length > 0 && (
+              <div style={{ overflowX: "auto" }}>
+                <table className="ta-table" style={{ width: "100%", fontSize: 13 }}>
+                  <thead>
+                    <tr>
+                      <th>Learner</th>
+                      <th>Course</th>
+                      <th>Requested At</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {certRequests.map((r) => (
+                      <tr key={r.id}>
+                        <td>
+                          <div className="ta-col">
+                            <span style={{ fontWeight: 600 }}>{r.user_profiles?.full_name || "Unnamed Learner"}</span>
+                            <span style={{ fontSize: 11, color: "var(--text-3)" }}>{r.user_profiles?.email || ""}</span>
+                          </div>
+                        </td>
+                        <td><span style={{ fontWeight: 600 }}>{r.courses?.title || r.course_title || "Course"}</span></td>
+                        <td style={{ fontSize: 12, color: "var(--text-3)" }}>{new Date(r.created_at).toLocaleDateString()}</td>
+                        <td>
+                          <Tag tone={r.status === "approved" ? "success" : r.status === "rejected" ? "danger" : "warning"}>
+                            {r.status || "pending"}
+                          </Tag>
+                        </td>
+                        <td>
+                          {r.status === "pending" ? (
+                            <div className="ta-row ta-gap6">
+                              <button
+                                className="ta-btn ta-btn-primary ta-btn-sm"
+                                disabled={certActionBusy === r.id}
+                                onClick={() => handleApproveRejectCert(r.id, "approved")}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                className="ta-btn ta-btn-outline ta-btn-sm"
+                                disabled={certActionBusy === r.id}
+                                onClick={() => handleApproveRejectCert(r.id, "rejected")}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>Processed</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         )}
 
       <PortalModal

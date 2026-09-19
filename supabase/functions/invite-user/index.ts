@@ -107,7 +107,7 @@ Deno.serve(async (req: Request) => {
     // Send via Resend if key is configured
     if (resendApiKey && inviteRow?.token) {
       try {
-        const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || Deno.env.get("SENDER_EMAIL") || "Train AI <onboarding@resend.dev>";
+        const fromEmail = Deno.env.get("RESEND_FROM_EMAIL") || Deno.env.get("SENDER_EMAIL") || "Train AI <onboarding@trainailtd.com>";
         const emailRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {

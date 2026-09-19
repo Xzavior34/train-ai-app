@@ -8,7 +8,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchOrgSeatsSummary, fetchSeatPurchaseHistory, startSeatPurchasePayment, fetchSeatPrice,
 } from "../../lib/api/organizations.js";
-import { fetchOrganizationById, fetchOrgMembers, fetchPendingInvitations } from "../../lib/api/platform.js";
+import { fetchOrganizationById, fetchOrgMembers, fetchPendingInvitations, updateUserPlatformRole } from "../../lib/api/platform.js";
 import {
   fetchOrgCreditRequests, approveCreditRequest, denyCreditRequest, grantDirectCredits,
 } from "../../lib/api/creditRequests.js";
@@ -450,7 +450,33 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
                         <div style={{ fontSize: 11, color: "var(--text-3)", textTransform: "capitalize" }}>{m.role || "learner"}</div>
                       </div>
                     </div>
-                    <Tag tone="success">Seat in use</Tag>
+                    <div className="ta-row ta-gap8" style={{ alignItems: "center" }}>
+                      <select
+                        className="ta-input"
+                        style={{ fontSize: 11, padding: "2px 6px", height: 26 }}
+                        value={m.role || "learner"}
+                        onChange={async (e) => {
+                          const newRole = e.target.value;
+                          try {
+                            const res = await updateUserPlatformRole(m.id, newRole, orgId);
+                            if (res.success) {
+                              showToast(`Role updated to ${newRole}`);
+                              membersQuery.refetch();
+                            } else {
+                              showToast(res.error || "Failed to update role");
+                            }
+                          } catch (err) {
+                            showToast("Could not update role");
+                          }
+                        }}
+                      >
+                        <option value="learner">Learner</option>
+                        <option value="mentor">Instructor</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      <Tag tone="success">Seat in use</Tag>
+                    </div>
                   </div>
                 ))}
 

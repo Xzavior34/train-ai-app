@@ -12,6 +12,7 @@ import {
 
 const FEED_TAGS = [
   "All",
+  "Study Groups",
   "General",
   "AI & ML",
   "Web Development",
@@ -48,7 +49,11 @@ export function CommunityFeedScreen({
 
   // Filtered posts
   const filteredPosts = posts.filter(post => {
-    const matchesTag = selectedTag === "All" || (post.category || post.tags?.[0] || "General").toLowerCase() === selectedTag.toLowerCase();
+    const matchesTag = selectedTag === "All"
+      ? true
+      : selectedTag === "Study Groups"
+      ? Boolean(post.study_group_id)
+      : (post.category || post.tags?.[0] || "General").toLowerCase() === selectedTag.toLowerCase();
     const query = searchQuery.trim().toLowerCase();
     const matchesSearch = !query ||
       (post.content || post.body || "").toLowerCase().includes(query) ||

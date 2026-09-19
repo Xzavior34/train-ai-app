@@ -133,7 +133,10 @@ export function useAuth() {
         supaRes = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { role: finalRole } }
+          options: {
+            data: { role: finalRole },
+            emailRedirectTo: window.location.origin + "/auth/callback",
+          }
         });
       } catch (networkErr) {
         const message = "Could not reach the configured backend (network error). Please check your internet connection.";
@@ -219,8 +222,40 @@ export function useAuth() {
     if (!supabase) {
       return { success: true };
     }
+    const cleanEmail = email.trim();
+
+    // 1. Try invoking the reset-password edge function for Resend branded email
     try {
-      await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin });
+      const { data, error } = await supabase.functions.invoke("reset-password", {
+        body: { email: cleanEmail },
+      });
+      if (!error && data?.success) {
+        return { success: true, emailSent: true, organizationName: data.organization_name };
+      }
+    } catch (edgeErr) {
+      console.warn("Reset password edge function warning:", edgeErr);
+    }
+
+    // 2. Direct HTTP call to reset-password function endpoint
+    try {
+      const res = await fetch("https://jeobggrtxeybxvlwpxvn.supabase.co/functions/v1/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: cleanEmail }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.success) {
+          return { success: true, emailSent: true, organizationName: json.organization_name };
+        }
+      }
+    } catch (fetchErr) {
+      console.warn("Reset password function endpoint warning:", fetchErr);
+    }
+
+    // 3. Standard Supabase Auth fallback
+    try {
+      await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo: window.location.origin + "/auth/callback" });
     } catch (e) {
       console.warn("Password reset request warning:", e);
     }

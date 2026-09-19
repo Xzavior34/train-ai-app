@@ -128,6 +128,13 @@ body {
   box-sizing: border-box;
 }
 
+/* Desktop Spacing & Layout Container Optimization */
+.ta-content, .tai-content, .ta-app-main, .tai-app-main, .ta-main-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
 /* Modern smooth scrollbars (hidden on touch/mobile) */
 @media (min-width: 900px) {
   ::-webkit-scrollbar {

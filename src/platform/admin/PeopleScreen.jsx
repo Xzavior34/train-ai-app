@@ -92,7 +92,7 @@ function downloadDirectoryCsv(rows, progressByMemberId) {
 /* ==========================================================================
    Member record drawer - the whole of one member, in one place
    ========================================================================= */
-function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToast }) {
+function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToast, currentUserId }) {
   const detailQuery = useSupabaseQuery(
     async () => (member ? fetchUserDetailForAdmin(member.id, orgId) : null),
     [member?.id, orgId]
@@ -142,7 +142,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
     if (role === (member.role || "learner")) { showToast("That's already their role."); return; }
     setSavingRole(true);
     try {
-      const res = await updateUserPlatformRole(member.id, role, orgId);
+      const res = await updateUserPlatformRole(member.id, role, orgId, currentUserId);
       showToast(res.success ? `Role changed to ${ROLE_LABEL[role] || role}.` : res.error);
       if (res.success) { detailQuery.refetch(); onChanged?.(); }
     } finally {
@@ -1427,6 +1427,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         onClose={() => setDetailMember(null)}
         onChanged={refreshDirectory}
         showToast={showToast}
+        currentUserId={currentUserId}
       />
 
       <PortalModal
