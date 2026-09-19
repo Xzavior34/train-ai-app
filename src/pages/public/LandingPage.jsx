@@ -17,7 +17,7 @@ const TEAM_SIZE_OPTIONS = ["1–50", "51–200", "201–1,000", "1,000+"];
 const LEGAL_CONTENT = {
   about: {
     title: "About Us",
-    body: "Train AI is an enterprise AI-powered workforce learning and intelligence platform. We bridge the gap between static training and measurable business capability by uniting adaptive AI tutoring, live cohort mentorship, and real-time skill telemetry in one unified system."
+    body: "Train AI is an enterprise AI Learning & Development Platform. We bridge the gap between static training and measurable capability by uniting adaptive AI tutoring, live cohort mentorship, and real-time skill telemetry in one unified system."
   },
   privacy: {
     title: "Privacy Policy",
@@ -103,7 +103,7 @@ const TRUST_FEATURES = [
 const FAQ_ITEMS = [
   {
     q: "What is Train AI?",
-    a: "Train AI is an enterprise AI-powered workforce learning and intelligence platform. We combine adaptive AI tutoring, structured learning pathways, live cohort mentorship, and real-time skill telemetry so organizations can track measurable capability."
+    a: "Train AI is an enterprise AI Learning & Development Platform. We combine adaptive AI tutoring, structured learning pathways, live cohort mentorship, and real-time skill telemetry so organizations can track measurable capability."
   },
   {
     q: "How is this different from a normal LMS?",
@@ -1612,7 +1612,7 @@ export default function LandingPage({ onNavigate }) {
             <div>
               <img src="/logo-dark.png" alt="Train AI" style={{ height: 22, width: "auto", objectFit: "contain", display: "block", marginBottom: 10 }} />
               <p style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.5, margin: "0 0 14px", maxWidth: 260 }}>
-                AI-powered workforce learning and intelligence for modern businesses.
+                AI Learning &amp; Development Platform for modern organizations.
               </p>
               <div style={{ display: "flex", gap: 6 }}>
                 <div className="lp-social-btn" aria-label="Facebook"><Facebook size={14} /></div>

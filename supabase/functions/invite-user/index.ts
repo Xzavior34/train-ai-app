@@ -137,7 +137,7 @@ Deno.serve(async (req: Request) => {
                         <tr>
                           <td style="padding: 28px 32px; background-color: #2563eb; color: #ffffff;">
                             <h2 style="margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: #ffffff;">Train AI</h2>
-                            <p style="margin: 4px 0 0 0; font-size: 13px; color: #bfdbfe; font-weight: 500;">Workforce Learning & Capability Platform</p>
+                            <p style="margin: 4px 0 0 0; font-size: 13px; color: #bfdbfe; font-weight: 500;">AI Learning &amp; Development Platform</p>
                           </td>
                         </tr>
 

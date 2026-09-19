@@ -303,7 +303,7 @@ export default function AuthPage({
           <>
             <h1 style={styles.h1}>{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
             <p style={styles.sub}>
-              {mode === "signin" ? "Sign in with your email and password." : "Join Train AI to start your workforce learning path."}
+              {mode === "signin" ? "Sign in with your email and password." : "Join Train AI to start your AI learning & development journey."}
             </p>
 
             {mode === "signup" && (
