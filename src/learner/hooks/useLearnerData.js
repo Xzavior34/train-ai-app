@@ -26,6 +26,7 @@ import {
 } from "../../lib/api/schemaHelper.js";
 import { initialsOf, gradForIndex, timeAgo } from "../components/LearnerUI.jsx";
 import { isMockDataEnabled, subscribeToMockDataChanges, getYouTubeEmbedId, isRealDatabaseId } from "../../lib/mockDataManager.js";
+import { isPlatformOwnerEmail } from "../../lib/roleRouting.js";
 
 export function useLearnerData(session, screen, params) {
   const userProfileQuery = useSupabaseQuery(async () => {
