@@ -39,7 +39,7 @@ const UNLOCK_LABEL = {
 function PathBuilder({ path, orgId, onBack, onChanged }) {
   const showToast = useContext(ToastContext);
   const stepsQuery = useSupabaseQuery(async () => fetchLearningPathCourses(path.id), [path.id]);
-  const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
+  const coursesQuery = useSupabaseQuery(async () => fetchCourses(orgId), [orgId]);
   const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
 
   const steps = stepsQuery.data || [];
@@ -339,7 +339,7 @@ function PathBuilder({ path, orgId, onBack, onChanged }) {
 export function LearningPathsScreen({ orgId, orgSelector, setScreen }) {
   const showToast = useContext(ToastContext);
   const pathsQuery = useSupabaseQuery(async () => fetchLearningPathsAdmin(orgId), [orgId]);
-  const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
+  const coursesQuery = useSupabaseQuery(async () => fetchCourses(orgId), [orgId]);
   const enrollmentCountsQuery = useSupabaseQuery(async () => fetchLearningPathEnrollmentCounts(), []);
   const paths = pathsQuery.data || [];
   const courses = coursesQuery.data || [];

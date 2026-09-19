@@ -939,6 +939,7 @@ function PostCard({
 export function CommunityScreen({
   session,
   user = {},
+  orgId,
   push,
   back,
   showToast,
@@ -1272,16 +1273,16 @@ export function CommunityScreen({
   const [periodLoading, setPeriodLoading] = useState(false);
 
   const loadPeriodLeaderboard = React.useCallback((periodKey) => {
-    if (periodKey === "all") return;
+    if (periodKey === "all" || !orgId) return;
     setPeriodLoading(true);
     const now = new Date();
     const start = new Date(now);
     if (periodKey === "week") start.setDate(now.getDate() - 7);
     else start.setDate(now.getDate() - 30);
-    return fetchLeaderboardForPeriod(start.toISOString(), now.toISOString())
-      .then((rows) => setPeriodRows(rows))
+    return fetchLeaderboardForPeriod(start.toISOString(), now.toISOString(), 50, orgId)
+      .then((rows) => setPeriodRows(rows || []))
       .finally(() => setPeriodLoading(false));
-  }, []);
+  }, [orgId]);
 
   React.useEffect(() => {
     let cancelled = false;

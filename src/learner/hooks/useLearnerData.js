@@ -99,6 +99,7 @@ export function useLearnerData(session, screen, params) {
     avatarUrl: userProfileQuery.data?.avatar_url || null,
     location: userProfileQuery.data?.school || userProfileQuery.data?.department || "Member",
     role: "Learner",
+    organization_id: userProfileQuery.data?.organization_id || null,
     level: gamificationStatsQuery.data?.current_level || Math.floor((gamificationStatsQuery.data?.total_points || 0) / 500) + 1 || 1,
     totalPoints: gamificationStatsQuery.data?.total_points || 0,
     streak: gamificationStatsQuery.data?.streak_days || 1,

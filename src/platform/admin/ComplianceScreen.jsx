@@ -65,7 +65,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
   const [expandedLearnerId, setExpandedLearnerId] = useState(null);
   const complianceQuery = useSupabaseQuery(async () => orgId ? fetchComplianceAssignments(orgId) : [], [orgId]);
   const orgUsersQuery = useSupabaseQuery(async () => (orgId ? fetchUsersInOrg(orgId) : []), [orgId]);
-  const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
+  const coursesQuery = useSupabaseQuery(async () => (orgId ? fetchCourses(orgId) : []), [orgId]);
   const publishedCourses = (coursesQuery.data || []).filter(c => c.is_published);
 
   const rawAssignments = complianceQuery.data || [];

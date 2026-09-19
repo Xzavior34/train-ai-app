@@ -15,7 +15,7 @@ import { fetchCourses, fetchAssessmentAttemptsForCourse } from "../../lib/api/pl
 // door: a course-by-course summary of assessment attempts, linking into the
 // existing (working) per-course grading UI rather than re-implementing it.
 export function AssessmentsScreen({ orgId, orgSelector, setScreen, setSelectedCourseId, scope = "admin" }) {
-  const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
+  const coursesQuery = useSupabaseQuery(async () => fetchCourses(orgId), [orgId]);
   const courses = (coursesQuery.data || []).filter((c) => c.is_published);
   const [expandedId, setExpandedId] = useState(null);
 

@@ -16,10 +16,10 @@ import {
 // 0009_forum_rls_gapfill.sql). Drill-down is handled as internal state here
 // (not a second top-level screen) since it's just a filtered view of the
 // same data, mirroring how ModerationScreen is a single flat screen.
-export function ForumsScreen({ orgSelector, setScreen }) {
+export function ForumsScreen({ orgId, orgSelector, setScreen }) {
   const showToast = useContext(ToastContext);
   const categoriesQuery = useSupabaseQuery(async () => fetchAllForumCategories(), []);
-  const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
+  const coursesQuery = useSupabaseQuery(async () => fetchCourses(orgId), [orgId]);
   const categories = categoriesQuery.data || [];
   const courses = coursesQuery.data || [];
 

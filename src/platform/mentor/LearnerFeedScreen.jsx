@@ -40,7 +40,8 @@ export function LearnerFeedScreen({ mentorId, orgSelector }) {
   const [submittingReply, setSubmittingReply] = useState(null);
   const [busyPostId, setBusyPostId] = useState(null);
 
-  const postsQuery = useSupabaseQuery(async () => fetchCommunityPosts(), []);
+  const scopedOrgId = orgSelector?.selectedOrgId || null;
+  const postsQuery = useSupabaseQuery(async () => fetchCommunityPosts(null, scopedOrgId), [scopedOrgId]);
   const rawPosts = postsQuery.data || [];
 
   const posts = rawPosts.map((p) => ({

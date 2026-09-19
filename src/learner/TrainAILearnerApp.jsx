@@ -889,7 +889,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               )}
               {screen === "community" && (
                 <CommunityScreen
-                  session={session} user={user} push={push} back={back} showToast={showToast} params={params}
+                  session={session} user={user} orgId={orgId} push={push} back={back} showToast={showToast} params={params}
                   activeTab={communityTab}
                   onTabChange={(t) => {
                     setCommunityTab(t);

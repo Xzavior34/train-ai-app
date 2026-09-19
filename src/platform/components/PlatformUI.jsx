@@ -1241,14 +1241,14 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
   const scopedOrgId = orgSelector?.selectedOrgId || profileQuery?.data?.organization_id || ownProfileQuery.data?.organization_id || null;
 
   const studentsQuery = useSupabaseQuery(async () => {
-    if (!searchActive) return [];
-    return scopedOrgId ? fetchUsersInOrg(scopedOrgId) : fetchOrgMembers();
+    if (!searchActive || !scopedOrgId) return [];
+    return fetchUsersInOrg(scopedOrgId);
   }, [searchActive, scopedOrgId]);
 
   const coursesQuery = useSupabaseQuery(async () => {
-    if (!searchActive) return [];
-    return fetchCourses();
-  }, [searchActive]);
+    if (!searchActive || !scopedOrgId) return [];
+    return fetchCourses(scopedOrgId);
+  }, [searchActive, scopedOrgId]);
 
   const cohortsQuery = useSupabaseQuery(async () => {
     if (!searchActive || !scopedOrgId) return [];
