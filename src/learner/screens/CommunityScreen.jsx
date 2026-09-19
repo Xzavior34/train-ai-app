@@ -1606,6 +1606,11 @@ export function CommunityScreen({
 
             {/* Groups Grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
+              {filteredGroups.length === 0 && (
+                <div style={{ padding: "18px", textAlign: "center", color: "var(--text-3)", fontSize: 13, gridColumn: "1 / -1" }}>
+                  No study groups created yet. Click "Create Group" to start one!
+                </div>
+              )}
               {filteredGroups.slice(0, 4).map((g) => {
                 const isMember = myGroupIds.has(g.id);
                 const memberCount = g.member_count || g.study_group_members?.[0]?.count || (isMember ? 1 : 0);
@@ -1836,6 +1841,11 @@ export function CommunityScreen({
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+              {mentorsList.length === 0 && (
+                <div style={{ padding: "18px", textAlign: "center", color: "var(--text-3)", fontSize: 13, gridColumn: "1 / -1" }}>
+                  No instructors listed for your organization yet.
+                </div>
+              )}
               {mentorsList.slice(0, 3).map((m) => (
                 <div
                   key={m.id}
@@ -1909,6 +1919,11 @@ export function CommunityScreen({
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {leaderboardRows.length === 0 && (
+                  <div style={{ fontSize: 12.5, color: "var(--text-3)", textAlign: "center", padding: "10px 0" }}>
+                    No ranked learners yet
+                  </div>
+                )}
                 {leaderboardRows.slice(0, 5).map((row, idx) => {
                   const isYou = row.user_id === myId;
                   return (

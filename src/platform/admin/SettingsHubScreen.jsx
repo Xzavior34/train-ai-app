@@ -7,6 +7,8 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
 import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice } from "../../lib/api/organizations.js";
 import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
+import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
+import { Sparkles, ArrowRight, Eye, Check } from "lucide-react";
 
 // organization's name with that fake placeholder if an admin didn't notice
 // and retype their real name first. Fixed by fetching the real organizations
@@ -17,6 +19,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
   const org = orgQuery.data;
   const [payingTier, setPayingTier] = useState(null);
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const seatsSummaryQuery = useSupabaseQuery(async () => (orgId ? fetchOrgSeatsSummary(orgId) : { purchased: 0, used: 0, available: 0 }), [orgId]);
   const seatsSummary = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
   const [seatsToBuy, setSeatsToBuy] = useState("");
@@ -292,33 +295,76 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
 
               <div className="ta-card">
                 <div className="ta-row ta-between">
-                  <div className="ta-title">Billing & Plan</div>
+                  <div className="ta-title">Billing & Subscription Plan</div>
                   <Tag tone={org?.status === "active" ? "success" : "warning"}>
-                    {org?.status === "active" ? "Active" : "Trial • Payment required"}
+                    {org?.status === "active" ? "Active Plan" : "Trial • Activation required"}
                   </Tag>
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
-                  Current plan: <strong style={{ color: "var(--text-1)" }}>{org?.subscription_tier ? org.subscription_tier[0].toUpperCase() + org.subscription_tier.slice(1) : "Enterprise"}</strong>
-                  {org?.status !== "active" && ": self-serve organizations start on a trial and need a plan activated to unlock the full admin dashboard."}
+                  Current active tier: <strong style={{ color: "var(--text-1)", textTransform: "capitalize" }}>{org?.subscription_tier || "Enterprise"}</strong>
+                  {org?.status !== "active" && " (Trial status • choose a plan to activate the full workspace)"}
                 </div>
 
-                <div className="ta-row ta-gap10 ta-mt16" style={{ flexWrap: "wrap" }}>
-                  {["starter", "growth"].map((tier) => (
+                {/* Plan Highlights Grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
+                  {/* Starter Box */}
+                  <div style={{
+                    padding: "12px", borderRadius: 8, border: `1.5px solid ${org?.subscription_tier === "starter" ? "var(--primary)" : "var(--border)"}`,
+                    background: org?.subscription_tier === "starter" ? "rgba(37,99,235,0.06)" : "var(--surface-2)"
+                  }}>
+                    <div className="ta-row ta-between">
+                      <strong style={{ fontSize: 13 }}>Starter</strong>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>₦1.5M/mo</span>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+                      Up to 100 learners • Course Builder • 10 AI credits/user • Org-wide analytics.
+                    </div>
                     <button
-                      key={tier}
-                      className={org?.subscription_tier === tier && org?.status === "active" ? "ta-btn ta-btn-ghost" : "ta-btn ta-btn-primary"}
-                      disabled={payingTier === tier || (org?.subscription_tier === tier && org?.status === "active")}
-                      onClick={() => handleUpgrade(tier)}
+                      className={`ta-btn ${org?.subscription_tier === "starter" && org?.status === "active" ? "ta-btn-ghost" : "ta-btn-primary"} ta-mt10`}
+                      style={{ width: "100%", fontSize: 12, height: 32 }}
+                      disabled={payingTier === "starter" || (org?.subscription_tier === "starter" && org?.status === "active")}
+                      onClick={() => handleUpgrade("starter")}
                     >
-                      {org?.subscription_tier === tier && org?.status === "active"
-                        ? `Current plan: ${TIER_LABELS[tier]}`
-                        : payingTier === tier
-                          ? "Redirecting to checkout..."
-                          : `${org?.status === "active" ? "Switch to" : "Activate"} ${TIER_LABELS[tier]}: ₦${TIER_PRICES_NGN[tier].toLocaleString()}/mo`}
+                      {org?.subscription_tier === "starter" && org?.status === "active" ? "Current Plan" : payingTier === "starter" ? "Redirecting..." : "Activate Starter"}
                     </button>
-                  ))}
-                  <a className="ta-btn ta-btn-ghost" href="mailto:info@trainailtd.com?subject=Enterprise%20plan%20inquiry">
-                    Enterprise: Speak with us
+                  </div>
+
+                  {/* Growth Box */}
+                  <div style={{
+                    padding: "12px", borderRadius: 8, border: `1.5px solid ${org?.subscription_tier === "growth" ? "var(--primary)" : "var(--border)"}`,
+                    background: org?.subscription_tier === "growth" ? "rgba(37,99,235,0.06)" : "var(--surface-2)",
+                    position: "relative"
+                  }}>
+                    <div className="ta-row ta-between">
+                      <strong style={{ fontSize: 13 }}>Growth</strong>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>₦4.5M/mo</span>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+                      Up to 500 learners • Manager View • Advanced Skill Graphs • CSV/PDF Exports.
+                    </div>
+                    <button
+                      className={`ta-btn ${org?.subscription_tier === "growth" && org?.status === "active" ? "ta-btn-ghost" : "ta-btn-primary"} ta-mt10`}
+                      style={{ width: "100%", fontSize: 12, height: 32 }}
+                      disabled={payingTier === "growth" || (org?.subscription_tier === "growth" && org?.status === "active")}
+                      onClick={() => handleUpgrade("growth")}
+                    >
+                      {org?.subscription_tier === "growth" && org?.status === "active" ? "Current Plan" : payingTier === "growth" ? "Redirecting..." : "Activate Growth"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Compare & Enterprise actions */}
+                <div className="ta-row ta-between ta-mt14" style={{ flexWrap: "wrap", gap: 8 }}>
+                  <button
+                    type="button"
+                    className="ta-btn ta-btn-outline"
+                    style={{ fontSize: 12, height: 32, display: "inline-flex", alignItems: "center", gap: 5 }}
+                    onClick={() => setShowPlanModal(true)}
+                  >
+                    <Eye size={13} /> Compare all plan features & pricing
+                  </button>
+                  <a className="ta-btn ta-btn-ghost" style={{ fontSize: 12, height: 32 }} href="mailto:info@trainailtd.com?subject=Enterprise%20plan%20inquiry">
+                    Enterprise: Speak with us →
                   </a>
                 </div>
               </div>
@@ -587,6 +633,23 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
 
           </div>
         )}
+
+        <PlanSelectionModal
+          isOpen={showPlanModal}
+          onClose={() => setShowPlanModal(false)}
+          currentTier={org?.subscription_tier}
+          selectedTier={org?.subscription_tier || "growth"}
+          isUpgradeMode={true}
+          isLoading={payingTier !== null}
+          onSelectTier={(tier) => {
+            setShowPlanModal(false);
+            handleUpgrade(tier);
+          }}
+          onContactEnterprise={() => {
+            setShowPlanModal(false);
+            window.location.href = "mailto:info@trainailtd.com?subject=Enterprise%20plan%20inquiry";
+          }}
+        />
       </div>
     </div>
   );

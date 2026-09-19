@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Sparkles, Layers, Eye } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
 import { registerOrganization, joinDefaultOrganization, attributeReferralSignupIfPending } from "../../lib/api/organizations.js";
+import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
 
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "",
@@ -23,6 +24,8 @@ export default function AuthPage({
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [accountType, setAccountType] = useState("organization");
+  const [selectedOrgTier, setSelectedOrgTier] = useState("growth");
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const [orgName, setOrgName] = useState("");
   const [orgError, setOrgError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -117,7 +120,7 @@ export default function AuthPage({
 
       if (accountType === "organization" && !result?.error) {
         if (result?.data?.session) {
-          const orgResult = await registerOrganization(orgName);
+          const orgResult = await registerOrganization(orgName, selectedOrgTier);
           if (!orgResult.success) {
             setOrgError(orgResult.error || "Account created, but we couldn't register your organization. You can try again from Settings.");
           } else {
@@ -340,7 +343,7 @@ export default function AuthPage({
                 </div>
 
                 {accountType === "organization" && (
-                  <div style={{ marginTop: 12 }}>
+                  <div style={{ marginTop: 14 }}>
                     <label style={styles.label}>Organization name</label>
                     <div style={styles.inputWrap}>
                       <Building2 size={15} color="#94A3B8" style={styles.inputIcon} />
@@ -351,10 +354,79 @@ export default function AuthPage({
                       />
                     </div>
                     {orgError && <div style={{ ...styles.breachBox, marginTop: 8 }}><ShieldAlert size={14} style={{ flexShrink: 0, marginTop: 1 }} /><span>{orgError}</span></div>}
+
+                    {/* Plan Selector Grid */}
+                    <div style={{ marginTop: 16 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <label style={{ ...styles.label, margin: 0 }}>Select Initial Plan</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowPlanModal(true)}
+                          style={{
+                            background: "transparent", border: "none", color: "#2563EB",
+                            fontSize: 11.5, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3
+                          }}
+                        >
+                          <Eye size={12} /> Compare all plan features
+                        </button>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                        {/* Starter */}
+                        <div
+                          onClick={() => setSelectedOrgTier("starter")}
+                          style={{
+                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "starter" ? "#2563EB" : "#E2E8F0"}`,
+                            background: selectedOrgTier === "starter" ? "#EFF6FF" : "#FFFFFF", cursor: "pointer", textAlign: "center",
+                            transition: "all 0.15s ease"
+                          }}
+                        >
+                          <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Starter</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", marginTop: 2 }}>₦1.5M<span style={{ fontSize: 9, color: "#64748B" }}>/mo</span></div>
+                          <div style={{ fontSize: 9.5, color: "#64748B", marginTop: 4 }}>100 seats</div>
+                        </div>
+
+                        {/* Growth */}
+                        <div
+                          onClick={() => setSelectedOrgTier("growth")}
+                          style={{
+                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "growth" ? "#2563EB" : "#E2E8F0"}`,
+                            background: selectedOrgTier === "growth" ? "#EFF6FF" : "#FFFFFF", cursor: "pointer", textAlign: "center",
+                            position: "relative", transition: "all 0.15s ease"
+                          }}
+                        >
+                          <span style={{ position: "absolute", top: -7, left: "50%", transform: "translateX(-50%)", background: "#2563EB", color: "#fff", fontSize: 8, fontWeight: 800, padding: "1px 5px", borderRadius: 10, whiteSpace: "nowrap" }}>POPULAR</span>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Growth</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", marginTop: 2 }}>₦4.5M<span style={{ fontSize: 9, color: "#64748B" }}>/mo</span></div>
+                          <div style={{ fontSize: 9.5, color: "#64748B", marginTop: 4 }}>500 seats</div>
+                        </div>
+
+                        {/* Enterprise */}
+                        <div
+                          onClick={() => setSelectedOrgTier("enterprise")}
+                          style={{
+                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "enterprise" ? "#2563EB" : "#E2E8F0"}`,
+                            background: selectedOrgTier === "enterprise" ? "#EFF6FF" : "#FFFFFF", cursor: "pointer", textAlign: "center",
+                            transition: "all 0.15s ease"
+                          }}
+                        >
+                          <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Enterprise</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "#0F172A", marginTop: 2 }}>Custom</div>
+                          <div style={{ fontSize: 9.5, color: "#64748B", marginTop: 4 }}>Unlimited</div>
+                        </div>
+                      </div>
+
+                      {/* Summary of Selected Plan */}
+                      <div style={{ marginTop: 10, padding: "8px 10px", background: "#F8FAFC", borderRadius: 6, border: "1px solid #E2E8F0", fontSize: 11.5, color: "#475569", lineHeight: 1.4 }}>
+                        {selectedOrgTier === "starter" && "Includes 100 learner seats, Course Builder, org-wide progress tracking, and 10 AI credits per user."}
+                        {selectedOrgTier === "growth" && "Includes 500 seats, Manager View, Advanced AI Workforce Intelligence, and CSV/PDF compliance exports."}
+                        {selectedOrgTier === "enterprise" && "Includes unlimited seats, Enterprise SSO (SAML/Okta), HRIS & LMS integrations, and white-label branding."}
+                      </div>
+                    </div>
                   </div>
                 )}
 
-                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 10, display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 12, display: "flex", alignItems: "center", gap: 5 }}>
                   <ShieldCheck size={13} color="#94A3B8" /> Admin access is granted by your organisation or the platform team.
                 </div>
               </div>
@@ -430,6 +502,20 @@ export default function AuthPage({
           )
         )}
       </form>
+
+      <PlanSelectionModal
+        isOpen={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
+        selectedTier={selectedOrgTier}
+        onSelectTier={(tier) => {
+          setSelectedOrgTier(tier);
+          setShowPlanModal(false);
+        }}
+        onContactEnterprise={() => {
+          setSelectedOrgTier("enterprise");
+          setShowPlanModal(false);
+        }}
+      />
     </div>
   );
 }

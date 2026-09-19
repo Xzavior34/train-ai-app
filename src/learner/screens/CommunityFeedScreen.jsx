@@ -41,9 +41,10 @@ export function CommunityFeedScreen({
   const [submittingComment, setSubmittingComment] = useState(false);
 
   // Live posts query
+  const orgId = userProfile?.organization_id || null;
   const postsQuery = useSupabaseQuery(async () => {
-    return fetchCommunityPosts();
-  }, []);
+    return fetchCommunityPosts(null, orgId);
+  }, [orgId]);
 
   const posts = postsQuery.data || [];
 

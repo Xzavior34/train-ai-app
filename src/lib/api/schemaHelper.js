@@ -545,7 +545,7 @@ export async function fetchCommunityPosts(studyGroupId = null, orgId = null) {
   
   // Isolate posts to the learner's organization if orgId is provided
   const tenantRows = orgId
-    ? rows.filter(r => !profiles[r.user_id] || profiles[r.user_id].organization_id === orgId)
+    ? rows.filter(r => profiles[r.user_id] && profiles[r.user_id].organization_id === orgId)
     : rows;
 
   return tenantRows.map((r) => ({
@@ -554,7 +554,7 @@ export async function fetchCommunityPosts(studyGroupId = null, orgId = null) {
     post_comments: (r.post_comments || [])
       .slice()
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      .filter((c) => !orgId || !profiles[c.user_id] || profiles[c.user_id].organization_id === orgId)
+      .filter((c) => !orgId || (profiles[c.user_id] && profiles[c.user_id].organization_id === orgId))
       .map((c) => ({ ...c, user_profiles: profiles[c.user_id] || null })),
   }));
 }
@@ -1020,7 +1020,7 @@ export async function fetchCommunityActivityFeed(limit = 15, orgId = null) {
   const rows = data || [];
   const profiles = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
   const filtered = orgId
-    ? rows.filter((r) => !profiles[r.user_id] || profiles[r.user_id].organization_id === orgId)
+    ? rows.filter((r) => profiles[r.user_id] && profiles[r.user_id].organization_id === orgId)
     : rows;
   return filtered.slice(0, limit).map((r) => ({ ...r, user_profiles: profiles[r.user_id] || null }));
 }

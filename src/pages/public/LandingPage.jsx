@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
+import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
 
 const TEAM_SIZE_OPTIONS = ["1–50", "51–200", "201–1,000", "1,000+"];
 
@@ -156,20 +157,22 @@ export default function LandingPage({ onNavigate }) {
   const [openFaq, setOpenFaq] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [demoModalOpen, setDemoModalOpen] = useState(false);
+  const [planModalOpen, setPlanModalOpen] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
 
   useEffect(() => {
-    if (!activeModal && !demoModalOpen) return;
+    if (!activeModal && !demoModalOpen && !planModalOpen) return;
     function handleKeyDown(e) {
       if (e.key === "Escape") {
         setActiveModal(null);
         setDemoModalOpen(false);
+        setPlanModalOpen(false);
       }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [activeModal, demoModalOpen]);
+  }, [activeModal, demoModalOpen, planModalOpen]);
 
   async function handleDemoSubmit(e) {
     e.preventDefault();
@@ -222,6 +225,10 @@ export default function LandingPage({ onNavigate }) {
     }
     if (target === "demo") {
       setDemoModalOpen(true);
+      return;
+    }
+    if (target === "pricing" || target === "plans") {
+      setPlanModalOpen(true);
       return;
     }
     onNavigate(target);
@@ -410,6 +417,7 @@ export default function LandingPage({ onNavigate }) {
             <span className="lp-nav-link" onClick={() => handleNav("intelligence")}>Intelligence</span>
             <span className="lp-nav-link" onClick={() => handleNav("learners")}>Learners</span>
             <span className="lp-nav-link" onClick={() => handleNav("organisation")}>Organisation</span>
+            <span className="lp-nav-link" onClick={() => handleNav("pricing")}>Pricing</span>
             <span className="lp-nav-link" onClick={() => handleNav("faq")}>FAQ</span>
           </nav>
 
@@ -474,6 +482,7 @@ export default function LandingPage({ onNavigate }) {
             <span className="lp-nav-link anim-stagger-2" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("intelligence")}>Intelligence</span>
             <span className="lp-nav-link anim-stagger-3" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("learners")}>Learners</span>
             <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("organisation")}>Organisation</span>
+            <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("pricing")}>Pricing & Plans</span>
             <span className="lp-nav-link anim-stagger-4" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => handleNav("faq")}>FAQ</span>
             <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: 10, display: "flex", flexDirection: "column", gap: 8 }}>
               <button
@@ -531,7 +540,7 @@ export default function LandingPage({ onNavigate }) {
 
               {/* Dual CTAs */}
               <div className="lp-hero-ctas" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
-                <button className="action-btn-primary" style={styles.startOrgBtn} onClick={() => handleNav("signin")}>
+                <button className="action-btn-primary" style={styles.startOrgBtn} onClick={() => handleNav("pricing")}>
                   Start with your organisation <ArrowRight size={14} />
                 </button>
                 <button className="action-btn-outline" style={styles.requestDemoOutlineBtn} onClick={() => handleNav("demo")}>
@@ -1618,6 +1627,7 @@ export default function LandingPage({ onNavigate }) {
               <div style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", marginBottom: 1 }}>Product</div>
               <span className="lp-footer-link" onClick={() => scrollToId("intelligence")}>Features</span>
               <span className="lp-footer-link" onClick={() => scrollToId("how-it-works")}>How It Works</span>
+              <span className="lp-footer-link" onClick={() => handleNav("pricing")}>Pricing & Plans</span>
               <span className="lp-footer-link" onClick={() => handleNav("signup")}>Sign Up</span>
               <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Courses</span>
             </div>
@@ -1648,6 +1658,16 @@ export default function LandingPage({ onNavigate }) {
 
         </div>
       </footer>
+
+      {/* Plan Selection Modal */}
+      <PlanSelectionModal
+        isOpen={planModalOpen}
+        onClose={() => setPlanModalOpen(false)}
+        onSelectPlan={(tier) => {
+          setPlanModalOpen(false);
+          onNavigate("signin");
+        }}
+      />
 
       {/* Demo Modal */}
       {demoModalOpen && (

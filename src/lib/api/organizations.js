@@ -53,11 +53,12 @@ export async function joinDefaultOrganization() {
  * @param {string} orgName
  * @returns {Promise<{ success: boolean, organizationId?: string, error?: string, demo?: boolean }>}
  */
-export async function registerOrganization(orgName) {
+export async function registerOrganization(orgName, tier = "growth") {
   const trimmed = (orgName || "").trim();
   if (trimmed.length < 2) {
     return { success: false, error: "Organization name is required." };
   }
+  const selectedTier = ["starter", "growth", "enterprise"].includes(tier) ? tier : "growth";
   if (!supabase) {
     // Demo mode: no backend to create a real organization row or run the
     // real RPC's role promotion against. To still preview what a real
@@ -94,7 +95,7 @@ export async function registerOrganization(orgName) {
     if (!sessionData?.session?.user) {
       return { success: true, pendingSession: true };
     }
-    const { data, error } = await supabase.rpc("create_organization_self_serve", { p_org_name: trimmed });
+    const { data, error } = await supabase.rpc("create_organization_self_serve", { p_org_name: trimmed, p_tier: selectedTier });
     if (error) throw error;
     return { success: true, organizationId: data };
   } catch (e) {

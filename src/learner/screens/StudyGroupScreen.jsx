@@ -93,8 +93,8 @@ export function StudyGroupScreen({
   );
 
   const groupPostsQuery = useSupabaseQuery(
-    () => (selectedGroupId && fetchCommunityPosts ? fetchCommunityPosts(selectedGroupId) : Promise.resolve([])),
-    [selectedGroupId]
+    () => (selectedGroupId && fetchCommunityPosts ? fetchCommunityPosts(selectedGroupId, orgId) : Promise.resolve([])),
+    [selectedGroupId, orgId]
   );
 
   const filteredGroups = useMemo(() => {
