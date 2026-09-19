@@ -598,7 +598,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   height: 36,
                   padding: "0 14px",
                   borderRadius: 8,
-                  background: "#2563EB",
+                  background: "var(--primary, #2563EB)",
                   color: "#FFFFFF",
                   fontWeight: 700,
                   fontSize: 12.5,
@@ -654,7 +654,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               </div>
               <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
                 <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Point Earners</div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "#2563EB", marginTop: 4 }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "var(--primary, #2563EB)", marginTop: 4 }}>
                   {kpisQuery.loading ? "..." : (kpis?.topAchievers ?? 0)}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 2 }}>Members with points on the board</div>

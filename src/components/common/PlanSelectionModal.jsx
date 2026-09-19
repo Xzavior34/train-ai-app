@@ -12,7 +12,7 @@ export const PLAN_TIERS = {
     seatLimit: "Up to 100 learners",
     popular: false,
     badge: "Essential",
-    color: "#3B82F6",
+    color: "var(--primary-light, #3B82F6)",
     features: [
       { text: "Up to 100 active learner seats", included: true },
       { text: "Admin, Instructor & Learner workspaces", included: true },
@@ -38,7 +38,7 @@ export const PLAN_TIERS = {
     seatLimit: "Up to 500 learners",
     popular: true,
     badge: "Most Popular",
-    color: "#2563EB",
+    color: "var(--primary, #2563EB)",
     features: [
       { text: "Up to 500 active learner seats", included: true },
       { text: "All Starter features included", included: true },
@@ -146,7 +146,7 @@ export function PlanSelectionModal({
                 key={plan.id}
                 style={{
                   ...modalStyles.card,
-                  borderColor: plan.popular ? "#2563EB" : isSelected ? "#3B82F6" : "#E2E8F0",
+                  borderColor: plan.popular ? "var(--primary, #2563EB)" : isSelected ? "var(--primary-light, #3B82F6)" : "#E2E8F0",
                   boxShadow: plan.popular ? "0 10px 25px -5px rgba(37,99,235,0.15), 0 8px 10px -6px rgba(37,99,235,0.1)" : "0 1px 3px rgba(15,23,42,0.05)",
                   transform: plan.popular ? "scale(1.02)" : "none",
                 }}
@@ -160,7 +160,7 @@ export function PlanSelectionModal({
                 <div style={modalStyles.cardHeader}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <h3 style={modalStyles.planName}>{plan.name}</h3>
-                    <span style={{ ...modalStyles.badge, background: plan.popular ? "#EFF6FF" : "#F1F5F9", color: plan.popular ? "#2563EB" : "#475569" }}>
+                    <span style={{ ...modalStyles.badge, background: plan.popular ? "var(--primary-tint, #EFF6FF)" : "#F1F5F9", color: plan.popular ? "var(--primary, #2563EB)" : "#475569" }}>
                       {plan.seatLimit}
                     </span>
                   </div>
@@ -188,7 +188,7 @@ export function PlanSelectionModal({
                   disabled={isLoading || isCurrent}
                   style={{
                     ...modalStyles.ctaBtn,
-                    background: isCurrent ? "#F1F5F9" : plan.popular ? "#2563EB" : isSelected ? "#1E293B" : "#0F172A",
+                    background: isCurrent ? "#F1F5F9" : plan.popular ? "var(--primary, #2563EB)" : isSelected ? "#1E293B" : "#0F172A",
                     color: isCurrent ? "#64748B" : "#FFFFFF",
                     cursor: isCurrent ? "default" : "pointer",
                   }}
@@ -234,7 +234,7 @@ export function PlanSelectionModal({
         {/* Footer info */}
         <div style={modalStyles.footer}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#64748B" }}>
-            <ShieldCheck size={16} color="#2563EB" />
+            <ShieldCheck size={16} color="var(--primary, #2563EB)" />
             <span>All plans include encrypted data isolation, automated audit logging, and individual AI credit governance.</span>
           </div>
           <button type="button" onClick={onClose} style={modalStyles.closeBtn}>
@@ -287,8 +287,8 @@ const modalStyles = {
     alignItems: "center",
     fontSize: 11,
     fontWeight: 700,
-    color: "#2563EB",
-    background: "#EFF6FF",
+    color: "var(--primary, #2563EB)",
+    background: "var(--primary-tint, #EFF6FF)",
     padding: "3px 8px",
     borderRadius: 6,
     letterSpacing: "0.04em",
@@ -360,7 +360,7 @@ const modalStyles = {
     top: -12,
     left: "50%",
     transform: "translateX(-50%)",
-    background: "#2563EB",
+    background: "var(--primary, #2563EB)",
     color: "#FFFFFF",
     fontSize: 10,
     fontWeight: 800,

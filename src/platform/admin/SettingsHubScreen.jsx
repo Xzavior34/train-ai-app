@@ -337,7 +337,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             <div className="ta-hero-actions">
               <button 
                 className="ta-btn ta-btn-primary" 
-                style={{ background: "#2563EB", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
+                style={{ background: "var(--primary, #2563EB)", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none" }}
                 onClick={handleSave}
                 disabled={saving || !orgName.trim()}
               >

@@ -146,12 +146,12 @@ export default function AuthPage({
       <style>{`
         @keyframes authFadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         .auth-card { animation: authFadeUp .2s ease; }
-        .auth-input:focus { outline: none; border-color: #2563EB !important; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
-        .auth-submit:hover { background-color: #1D4ED8 !important; }
+        .auth-input:focus { outline: none; border-color: var(--primary, #2563EB) !important; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+        .auth-submit:hover { background-color: var(--primary-hover, #1D4ED8) !important; }
         .auth-switch:hover { text-decoration: underline; }
         .role-picker-card { transition: border-color .15s ease, background-color .15s ease; }
         .role-picker-card:hover { border-color: #CBD5E1; }
-        .role-picker-card.active { border-color: #2563EB !important; background: #EFF6FF !important; }
+        .role-picker-card.active { border-color: var(--primary, #2563EB) !important; background: var(--primary-tint, #EFF6FF) !important; }
         @media (max-width: 440px) {
           .auth-card { padding: 24px 18px !important; }
           .role-picker-header { flex-wrap: wrap; row-gap: 4px; }
@@ -177,8 +177,8 @@ export default function AuthPage({
         </div>
 
         {orgParam && (
-          <div style={{ padding: "10px 12px", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-            <Building2 size={16} color="#2563EB" />
+          <div style={{ padding: "10px 12px", background: "var(--primary-tint, #EFF6FF)", border: "1px solid #BFDBFE", borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+            <Building2 size={16} color="var(--primary, #2563EB)" />
             <div style={{ fontSize: 12.5, color: "#1E40AF", fontWeight: 600 }}>
               Organization Workspace Portal ({orgParam})
             </div>
@@ -318,9 +318,9 @@ export default function AuthPage({
                   }}
                 >
                   <div className="role-picker-header" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Building2 size={15} color={accountType === "organization" ? "#2563EB" : "#64748B"} />
+                    <Building2 size={15} color={accountType === "organization" ? "var(--primary, #2563EB)" : "#64748B"} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Organization</span>
-                    <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
+                    <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "var(--primary, #2563EB)", background: "var(--primary-tint, #EFF6FF)", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
                   </div>
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
                     Workforce readiness, team cohorts, and org-wide reporting. You become the organization's admin.
@@ -336,7 +336,7 @@ export default function AuthPage({
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <User size={15} color={accountType === "learner" ? "#2563EB" : "#64748B"} />
+                    <User size={15} color={accountType === "learner" ? "var(--primary, #2563EB)" : "#64748B"} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Individual learner</span>
                   </div>
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>Access courses, AI quizzes, and community independently.</span>
@@ -363,7 +363,7 @@ export default function AuthPage({
                           type="button"
                           onClick={() => setShowPlanModal(true)}
                           style={{
-                            background: "transparent", border: "none", color: "#2563EB",
+                            background: "transparent", border: "none", color: "var(--primary, #2563EB)",
                             fontSize: 11.5, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 3
                           }}
                         >
@@ -376,13 +376,13 @@ export default function AuthPage({
                         <div
                           onClick={() => setSelectedOrgTier("starter")}
                           style={{
-                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "starter" ? "#2563EB" : "#E2E8F0"}`,
-                            background: selectedOrgTier === "starter" ? "#EFF6FF" : "#FFFFFF", cursor: "pointer", textAlign: "center",
+                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "starter" ? "var(--primary, #2563EB)" : "#E2E8F0"}`,
+                            background: selectedOrgTier === "starter" ? "var(--primary-tint, #EFF6FF)" : "#FFFFFF", cursor: "pointer", textAlign: "center",
                             transition: "all 0.15s ease"
                           }}
                         >
                           <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Starter</div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", marginTop: 2 }}>₦1.5M<span style={{ fontSize: 9, color: "#64748B" }}>/mo</span></div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--primary, #2563EB)", marginTop: 2 }}>₦1.5M<span style={{ fontSize: 9, color: "#64748B" }}>/mo</span></div>
                           <div style={{ fontSize: 9.5, color: "#64748B", marginTop: 4 }}>100 seats</div>
                         </div>
 
@@ -390,14 +390,14 @@ export default function AuthPage({
                         <div
                           onClick={() => setSelectedOrgTier("growth")}
                           style={{
-                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "growth" ? "#2563EB" : "#E2E8F0"}`,
-                            background: selectedOrgTier === "growth" ? "#EFF6FF" : "#FFFFFF", cursor: "pointer", textAlign: "center",
+                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "growth" ? "var(--primary, #2563EB)" : "#E2E8F0"}`,
+                            background: selectedOrgTier === "growth" ? "var(--primary-tint, #EFF6FF)" : "#FFFFFF", cursor: "pointer", textAlign: "center",
                             position: "relative", transition: "all 0.15s ease"
                           }}
                         >
-                          <span style={{ position: "absolute", top: -7, left: "50%", transform: "translateX(-50%)", background: "#2563EB", color: "#fff", fontSize: 8, fontWeight: 800, padding: "1px 5px", borderRadius: 10, whiteSpace: "nowrap" }}>POPULAR</span>
+                          <span style={{ position: "absolute", top: -7, left: "50%", transform: "translateX(-50%)", background: "var(--primary, #2563EB)", color: "#fff", fontSize: 8, fontWeight: 800, padding: "1px 5px", borderRadius: 10, whiteSpace: "nowrap" }}>POPULAR</span>
                           <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A" }}>Growth</div>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: "#2563EB", marginTop: 2 }}>₦4.5M<span style={{ fontSize: 9, color: "#64748B" }}>/mo</span></div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--primary, #2563EB)", marginTop: 2 }}>₦4.5M<span style={{ fontSize: 9, color: "#64748B" }}>/mo</span></div>
                           <div style={{ fontSize: 9.5, color: "#64748B", marginTop: 4 }}>500 seats</div>
                         </div>
 
@@ -405,8 +405,8 @@ export default function AuthPage({
                         <div
                           onClick={() => setSelectedOrgTier("enterprise")}
                           style={{
-                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "enterprise" ? "#2563EB" : "#E2E8F0"}`,
-                            background: selectedOrgTier === "enterprise" ? "#EFF6FF" : "#FFFFFF", cursor: "pointer", textAlign: "center",
+                            padding: "10px 8px", borderRadius: 8, border: `1.5px solid ${selectedOrgTier === "enterprise" ? "var(--primary, #2563EB)" : "#E2E8F0"}`,
+                            background: selectedOrgTier === "enterprise" ? "var(--primary-tint, #EFF6FF)" : "#FFFFFF", cursor: "pointer", textAlign: "center",
                             transition: "all 0.15s ease"
                           }}
                         >
@@ -474,7 +474,7 @@ export default function AuthPage({
                     type="button"
                     onClick={() => { setMode("signin"); setBreachWarning(false); setSignupConfirmationSent(false); }}
                     style={{
-                      marginTop: 8, background: "#2563EB", color: "#FFFFFF", border: "none",
+                      marginTop: 8, background: "var(--primary, #2563EB)", color: "#FFFFFF", border: "none",
                       borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 700,
                       cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4
                     }}
@@ -551,8 +551,8 @@ const styles = {
   submit: {
     width: "100%", marginTop: 20, border: "none", borderRadius: 8, padding: "11px 16px", fontWeight: 700, fontSize: 14,
     color: "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-    background: "#2563EB", transition: "background-color .15s ease",
+    background: "var(--primary, #2563EB)", transition: "background-color .15s ease",
   },
   switchRow: { textAlign: "center", marginTop: 16, fontSize: 13, color: "#64748B" },
-  switchLink: { color: "#2563EB", fontWeight: 700, cursor: "pointer" },
+  switchLink: { color: "var(--primary, #2563EB)", fontWeight: 700, cursor: "pointer" },
 };

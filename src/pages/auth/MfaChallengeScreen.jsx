@@ -77,7 +77,7 @@ export default function MfaChallengeScreen({ onVerified, onSignOut }) {
         .mfa-submit:hover { box-shadow: 0 14px 28px -8px rgba(37,99,235,.55); transform: translateY(-1px); }
         .mfa-submit:active { transform: scale(.98); }
         .mfa-signout { transition: color .15s ease; }
-        .mfa-signout:hover { text-decoration: underline; color: #2563EB; }
+        .mfa-signout:hover { text-decoration: underline; color: var(--primary, #2563EB); }
       `}</style>
 
       <div style={styles.glowTop} />
@@ -155,7 +155,7 @@ const styles = {
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 },
   brandMark: {
     width: 34, height: 34, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#2563EB",
+    background: "var(--primary, #2563EB)",
   },
   brandName: { fontWeight: 800, fontSize: 15.5, letterSpacing: "-0.01em", color: "#10142A" },
   h1: { fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: "#10142A", letterSpacing: "-0.01em" },
@@ -174,9 +174,9 @@ const styles = {
   submit: {
     width: "100%", marginTop: 20, border: "none", borderRadius: 8, padding: "11px 16px", fontWeight: 700, fontSize: 14,
     color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-    background: "#2563EB",
+    background: "var(--primary, #2563EB)",
     transition: "background .12s ease",
   },
   switchRow: { textAlign: "center", marginTop: 18, fontSize: 12.5, color: "#656C86" },
-  switchLink: { color: "#2563EB", fontWeight: 700, cursor: "pointer" },
+  switchLink: { color: "var(--primary, #2563EB)", fontWeight: 700, cursor: "pointer" },
 };

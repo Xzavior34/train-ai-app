@@ -253,7 +253,7 @@ export function NotificationsScreen({
               style={{
                 background: n.read ? "var(--surface)" : "var(--surface-2)",
                 borderColor: n.read ? "var(--border)" : "var(--border)",
-                borderLeft: n.read ? "1px solid var(--border)" : "3px solid #2563EB",
+                borderLeft: n.read ? "1px solid var(--border)" : "3px solid var(--primary, #2563EB)",
                 borderRadius: 10,
                 padding: "14px 16px",
                 transition: "all .16s ease",
@@ -288,7 +288,7 @@ export function NotificationsScreen({
                         {!n.read && (
                           <span
                             className="anim-pulse"
-                            style={{ width: 7, height: 7, borderRadius: "50%", background: "#2563EB", flexShrink: 0 }}
+                            style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--primary, #2563EB)", flexShrink: 0 }}
                             title="Unread"
                           />
                         )}
@@ -306,7 +306,7 @@ export function NotificationsScreen({
                           <button
                             type="button"
                             className="tai-btn tai-btn-primary tai-btn-sm"
-                            style={{ borderRadius: 6, height: 28, padding: "0 10px", fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5, background: "#2563EB" }}
+                            style={{ borderRadius: 6, height: 28, padding: "0 10px", fontSize: 11.5, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5, background: "var(--primary, #2563EB)" }}
                             onClick={() => {
                               if (push && n.actionUrl) push(n.actionUrl);
                             }}

@@ -150,7 +150,7 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
         .invite-submit:hover { box-shadow: 0 14px 28px -8px rgba(37,99,235,.55); transform: translateY(-1px); }
         .invite-submit:active { transform: scale(.98); }
         .invite-link { transition: color .15s ease; }
-        .invite-link:hover { text-decoration: underline; color: #2563EB; }
+        .invite-link:hover { text-decoration: underline; color: var(--primary, #2563EB); }
       `}</style>
 
       <div style={styles.glowTop} />
@@ -199,7 +199,7 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
                 <div>
                   <div style={styles.infoLabel}>Invited Email & Role</div>
                   <div style={styles.infoValue}>
-                    {invitation.email} • <span style={{ textTransform: "capitalize", color: "#2563EB" }}>{invitation.role}</span>
+                    {invitation.email} • <span style={{ textTransform: "capitalize", color: "var(--primary, #2563EB)" }}>{invitation.role}</span>
                   </div>
                 </div>
               </div>
@@ -320,7 +320,7 @@ const styles = {
   brandRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 20 },
   brandMark: {
     width: 34, height: 34, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center",
-    background: "#2563EB",
+    background: "var(--primary, #2563EB)",
   },
   brandName: { fontWeight: 800, fontSize: 15.5, letterSpacing: "-0.01em", color: "#10142A" },
   h1: { fontSize: 20, fontWeight: 800, margin: "0 0 4px", color: "#10142A", letterSpacing: "-0.01em" },
@@ -343,7 +343,7 @@ const styles = {
   submit: {
     width: "100%", marginTop: 20, border: "none", borderRadius: 8, padding: "11px 16px", fontWeight: 700, fontSize: 14,
     color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-    background: "#2563EB",
+    background: "var(--primary, #2563EB)",
     transition: "background .12s ease",
   },
 };

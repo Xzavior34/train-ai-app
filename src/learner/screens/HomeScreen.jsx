@@ -70,7 +70,7 @@ export function HomeScreen({
                   Welcome back, {userFirstName || "Learner"}
                 </h1>
                 <span
-                  style={{ background: "#2563EB", color: "#FFFFFF", padding: "3px 10px", borderRadius: 6, fontWeight: 800, fontSize: 11.5, letterSpacing: "0.02em", border: "1px solid rgba(255, 255, 255, 0.25)", display: "inline-flex", alignItems: "center" }}
+                  style={{ background: "var(--primary, #2563EB)", color: "#FFFFFF", padding: "3px 10px", borderRadius: 6, fontWeight: 800, fontSize: 11.5, letterSpacing: "0.02em", border: "1px solid rgba(255, 255, 255, 0.25)", display: "inline-flex", alignItems: "center" }}
                 >
                   {activePathway?.title ? `Pathway: ${activePathway.title}` : (continueCourse?.category ? `${continueCourse.category} Track` : "No active pathway yet")}
                 </span>

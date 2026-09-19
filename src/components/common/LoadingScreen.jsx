@@ -97,7 +97,7 @@ const styles = {
     left: 0,
     width: "60%",
     height: "100%",
-    background: "#2563EB",
+    background: "var(--primary, #2563EB)",
     borderRadius: 99,
   },
   message: {

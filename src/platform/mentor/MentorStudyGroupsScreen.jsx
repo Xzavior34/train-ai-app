@@ -105,7 +105,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                 rel="noreferrer"
                 className="ta-btn ta-btn-primary"
                 style={{
-                  background: "#2563EB", color: "#fff", border: "none", fontWeight: 800,
+                  background: "var(--primary, #2563EB)", color: "#fff", border: "none", fontWeight: 800,
                   boxShadow: "0 4px 16px rgba(37, 99, 235, 0.4)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6
                 }}
               >

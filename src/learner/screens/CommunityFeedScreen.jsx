@@ -192,7 +192,7 @@ export function CommunityFeedScreen({
                 borderRadius: 10,
                 fontWeight: 700,
                 fontSize: 13,
-                background: "#2563EB",
+                background: "var(--primary, #2563EB)",
                 color: "#FFFFFF",
                 border: "none",
                 boxShadow: "0 4px 14px rgba(37, 99, 235, 0.4)"
@@ -214,7 +214,7 @@ export function CommunityFeedScreen({
                 fontWeight: 700,
                 fontSize: 13,
                 background: "rgba(37, 99, 235, 0.28)",
-                border: "1.5px solid #3B82F6",
+                border: "1.5px solid var(--primary-light, #3B82F6)",
                 color: "#60A5FA",
                 cursor: "pointer",
                 transition: "all 0.15s ease"

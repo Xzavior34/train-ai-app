@@ -241,7 +241,7 @@ export function ProfileScreen({
                     width: 26,
                     height: 26,
                     borderRadius: "50%",
-                    background: "#2563EB",
+                    background: "var(--primary, #2563EB)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -489,7 +489,7 @@ export function ProfileScreen({
                     </div>
 
                     <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
-                      <span style={{ background: "#2563EB", color: "#FFFFFF", fontSize: 10.5, fontWeight: 800, padding: "3px 8px", borderRadius: 4 }}>
+                      <span style={{ background: "var(--primary, #2563EB)", color: "#FFFFFF", fontSize: 10.5, fontWeight: 800, padding: "3px 8px", borderRadius: 4 }}>
                         VERIFIED CREDENTIAL
                       </span>
                     </div>

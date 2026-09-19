@@ -41,7 +41,7 @@ const TIER_CONFIG = {
     label: "Active Engager",
     nextLabel: "Community Leader",
     Icon: Flame,
-    color: "#2563EB",
+    color: "var(--primary, #2563EB)",
     bg: "rgba(37, 99, 235, 0.12)",
     border: "rgba(37, 99, 235, 0.25)",
   },

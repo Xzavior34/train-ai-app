@@ -172,7 +172,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
             <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Flame size={18} color="#3B82F6" />
+              <Flame size={18} color="var(--primary-light, #3B82F6)" />
             </div>
             <div>
               <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{user.streak || 0} Days</div>
@@ -215,7 +215,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
                       width: "45%",
                       maxWidth: 32,
                       height: `${d.heightPct}%`,
-                      background: d.active ? "#2563EB" : "var(--primary-tint)",
+                      background: d.active ? "var(--primary, #2563EB)" : "var(--primary-tint)",
                       borderRadius: "6px 6px 0 0",
                       transition: "height 0.3s ease"
                     }}

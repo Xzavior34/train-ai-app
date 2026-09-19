@@ -171,7 +171,7 @@ export function MessagesScreen({
                     padding: "12px 14px",
                     cursor: "pointer",
                     background: isActive ? "var(--surface)" : "transparent",
-                    borderLeft: isActive ? "3px solid #2563EB" : "3px solid transparent",
+                    borderLeft: isActive ? "3px solid var(--primary, #2563EB)" : "3px solid transparent",
                     borderBottom: "1px solid var(--border)",
                     transition: "background .15s ease"
                   }}
@@ -182,7 +182,7 @@ export function MessagesScreen({
                       <div className="tai-row tai-between">
                         <span style={{ fontWeight: 700, fontSize: 13.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "var(--text)" }}>{t.name}</span>
                         {t.unread > 0 && (
-                          <span style={{ fontSize: 10, fontWeight: 800, background: "#2563EB", color: "#fff", borderRadius: 99, padding: "2px 7px" }}>{t.unread}</span>
+                          <span style={{ fontSize: 10, fontWeight: 800, background: "var(--primary, #2563EB)", color: "#fff", borderRadius: 99, padding: "2px 7px" }}>{t.unread}</span>
                         )}
                       </div>
                       <div style={{ fontSize: 11.5, color: "var(--text-3)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{t.last || "No messages yet"}</div>
@@ -240,7 +240,7 @@ export function MessagesScreen({
                     <div key={m.id || idx} className="tai-row tai-gap10" style={{ alignSelf: isMe ? "flex-end" : "flex-start", maxWidth: "80%", flexDirection: isMe ? "row-reverse" : "row" }}>
                       {!isMe && <Avatar initials={initialsOf(currentThread.name)} size={28} src={currentThread.avatar} />}
                       <div style={{
-                        background: isMe ? "#2563EB" : "var(--surface-2)",
+                        background: isMe ? "var(--primary, #2563EB)" : "var(--surface-2)",
                         color: isMe ? "#FFFFFF" : "var(--text)",
                         padding: "10px 14px", borderRadius: 10, fontSize: 13.5,
                         lineHeight: 1.45,
@@ -265,7 +265,7 @@ export function MessagesScreen({
                 />
                 <button
                   className="tai-btn tai-btn-primary"
-                  style={{ height: 38, padding: "0 16px", borderRadius: 8, background: "#2563EB", color: "#FFFFFF", fontWeight: 700 }}
+                  style={{ height: 38, padding: "0 16px", borderRadius: 8, background: "var(--primary, #2563EB)", color: "#FFFFFF", fontWeight: 700 }}
                   onClick={handleSendLocal}
                 >
                   <Send size={15} />

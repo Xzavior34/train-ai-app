@@ -283,7 +283,7 @@ export function CohortScreen({
                     <div className="tai-row tai-gap6" style={{ flexWrap: "wrap" }}>
                       <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180 }}>{cp.user_profiles?.display_name || "Cohort Member"}</span>
                       {cp.user_profiles?.role === "admin" || cp.user_profiles?.role === "mentor" ? (
-                        <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
+                        <span style={{ background: "var(--primary, #2563EB)", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4, flexShrink: 0 }}>
                           INSTRUCTOR
                         </span>
                       ) : null}
@@ -569,7 +569,7 @@ export function CohortScreen({
                           {m.user_profiles?.display_name || "Cohort Member"}
                         </div>
                         {isInstructor && (
-                          <span style={{ background: "#2563EB", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4 }}>
+                          <span style={{ background: "var(--primary, #2563EB)", color: "#fff", fontSize: 9.5, fontWeight: 800, padding: "1px 6px", borderRadius: 4 }}>
                             INSTRUCTOR
                           </span>
                         )}

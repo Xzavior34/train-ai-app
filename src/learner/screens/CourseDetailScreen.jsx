@@ -253,13 +253,13 @@ export function CourseDetailScreen({
                   <div style={{
                     position: "absolute", left: 0, top: 0, bottom: 0,
                     width: `${Math.max(15, (lessons.filter(l => l.completed || completedLessonIds.has(`${course.id}-${l.id}`)).length / (lessons.length || 1)) * 100)}%`,
-                    background: "#3B82F6", borderRadius: 99
+                    background: "var(--primary-light, #3B82F6)", borderRadius: 99
                   }} />
                   <div style={{
                     position: "absolute",
                     left: `calc(${Math.max(15, (lessons.filter(l => l.completed || completedLessonIds.has(`${course.id}-${l.id}`)).length / (lessons.length || 1)) * 100)}% - 6px)`,
                     top: -3, width: 12, height: 12, borderRadius: "50%",
-                    background: "#1D4ED8", border: "2px solid #FFFFFF",
+                    background: "var(--primary-hover, #1D4ED8)", border: "2px solid #FFFFFF",
                     boxShadow: "0 2px 6px rgba(67, 56, 202, 0.4)"
                   }} />
                 </div>
@@ -310,7 +310,7 @@ export function CourseDetailScreen({
                         <div
                           style={{
                             width: 36, height: 36, borderRadius: "50%",
-                            background: isDone ? "var(--success-bg)" : "#3B82F6",
+                            background: isDone ? "var(--success-bg)" : "var(--primary-light, #3B82F6)",
                             color: isDone ? "var(--success)" : "#FFFFFF",
                             display: "flex", alignItems: "center", justifyContent: "center",
                             flexShrink: 0,

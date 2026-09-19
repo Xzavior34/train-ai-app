@@ -241,7 +241,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
             <div className="ta-hero-actions">
               <button 
                 className="ta-btn ta-btn-primary" 
-                style={{ background: "#2563EB", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+                style={{ background: "var(--primary, #2563EB)", color: "#FFFFFF", fontWeight: 700, height: 36, padding: "0 16px", borderRadius: 8, border: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
                 onClick={handleExportSkillRadar}
               >
                 <Download size={14} /> Export Skill Radar (CSV)
@@ -255,7 +255,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
           <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
-              <Brain size={18} color="#2563EB" />
+              <Brain size={18} color="var(--primary, #2563EB)" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
               {readinessDisplay}
@@ -288,7 +288,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
           <div className="ta-card" style={{ padding: 18 }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>AI Coach Queries (7d)</span>
-              <Bot size={18} color="#3B82F6" />
+              <Bot size={18} color="var(--primary-light, #3B82F6)" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
               {wi.aiUsageCount7d ?? 0}
@@ -375,14 +375,14 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
                   padding: 18, 
                   borderRadius: 10, 
                   background: isActive ? "rgba(59, 130, 246, 0.1)" : "var(--surface-3)",
-                  border: isActive ? "2px solid #2563EB" : "1px solid var(--border)",
+                  border: isActive ? "2px solid var(--primary, #2563EB)" : "1px solid var(--border)",
                   position: "relative",
                   boxShadow: isActive ? "0 4px 16px rgba(37, 99, 235, 0.15)" : "none",
                   transition: "all 0.2s ease"
                 }}
               >
                 <div className="ta-row ta-between">
-                  <span style={{ fontSize: 11, fontWeight: 800, color: isActive ? "#2563EB" : "var(--text-3)", letterSpacing: "0.05em" }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: isActive ? "var(--primary, #2563EB)" : "var(--text-3)", letterSpacing: "0.05em" }}>
                     STEP 0{idx + 1}
                   </span>
                   <Tag tone={step.status === "completed" ? "success" : isActive ? "primary" : "default"}>
@@ -403,7 +403,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
                 </div>
                 <div className="ta-row ta-between ta-mt8" style={{ fontSize: 11.5 }}>
                   <span style={{ color: "var(--text-3)" }}>Course Progress</span>
-                  <span style={{ fontWeight: 800, color: step.progress === 100 ? "#10B981" : "#2563EB" }}>{step.progress}%</span>
+                  <span style={{ fontWeight: 800, color: step.progress === 100 ? "#10B981" : "var(--primary, #2563EB)" }}>{step.progress}%</span>
                 </div>
               </div>
               );
@@ -499,7 +499,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
             <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
               border: "1px solid var(--border)" }}>
-              <div className="ta-row ta-gap8" style={{ color: "#2563EB", fontWeight: 700, fontSize: 14 }}>
+              <div className="ta-row ta-gap8" style={{ color: "var(--primary, #2563EB)", fontWeight: 700, fontSize: 14 }}>
                 <Brain size={18} />
                 <span>Skill Growth Recommendation</span>
               </div>

@@ -672,7 +672,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
           <div style={{
             width: `${progressPercent}%`,
             height: "100%",
-            background: "#2563EB",
+            background: "var(--primary, #2563EB)",
             borderRadius: 99,
             position: "relative",
             transition: "width 0.1s linear",
@@ -684,7 +684,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
               borderRadius: "50%",
               background: "#FFFFFF",
               boxShadow: "0 0 10px rgba(255, 255, 255, 0.8)",
-              border: "2px solid #2563EB"
+              border: "2px solid var(--primary, #2563EB)"
             }} />
           </div>
         </div>
@@ -701,7 +701,7 @@ export const CourseVideoPlayer = forwardRef(function CourseVideoPlayer({
               style={{
                 width: 36, height: 36, borderRadius: "50%",
                 padding: 0, justifyContent: "center",
-                background: "#2563EB"
+                background: "var(--primary, #2563EB)"
               }}
               onClick={handlePlayPauseToggle}
               aria-label={isPlaying ? "Pause Video" : "Play Video"}

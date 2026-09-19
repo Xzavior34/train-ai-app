@@ -81,7 +81,7 @@ export const TOKENS = `
   }
   .tai-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .tai-header-brand { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; flex-shrink: 0; }
-  .tai-header-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(37,99,235,0.35); display: flex; align-items: center; justify-content: center; color: #fff; }
+  .tai-header-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(37,99,235,0.35); display: flex; align-items: center; justify-content: center; color: #fff; }
   .tai-header-brand-name { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
   .tai-header-search {
     display: flex; align-items: center; gap: 6px;
@@ -93,7 +93,7 @@ export const TOKENS = `
   
   .tai-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .tai-streak-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(255, 247, 237, 0.9); border: 1px solid rgba(255, 237, 213, 0.9); color: #EA580C; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
-  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(238, 242, 255, 0.9); border: 1px solid rgba(224, 231, 255, 0.9); color: #2563EB; font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .tai-credits-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: rgba(238, 242, 255, 0.9); border: 1px solid rgba(224, 231, 255, 0.9); color: var(--primary, #2563EB); font-size: 11.5px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
   .tai-workspace-pill { display: flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 6px; background: var(--glass-surface); border: 1px solid var(--glass-border); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; transition: all .16s ease; flex-shrink: 0; box-shadow: inset 0 1px 0 var(--glass-specular); }
   .tai-workspace-pill:hover { background: var(--glass-elevated); border-color: rgba(59, 130, 246, 0.35); }
   
@@ -231,7 +231,7 @@ export const TOKENS = `
     }
     .tai-sub-item.active {
       background: linear-gradient(135deg, rgba(37, 99, 235, 0.14) 0%, rgba(59, 130, 246, 0.20) 100%) !important;
-      color: #2563EB !important;
+      color: var(--primary, #2563EB) !important;
       font-weight: 700;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(37, 99, 235, 0.12);
     }
@@ -242,7 +242,7 @@ export const TOKENS = `
     }
     .tai-badge {
       margin-left: auto;
-      background: #2563EB;
+      background: var(--primary, #2563EB);
       color: #fff;
       font-size: 10px;
       font-weight: 700;
@@ -356,17 +356,17 @@ export const TOKENS = `
   .tai-btn { border:none; cursor:pointer; border-radius: 8px; font-weight:600; font-size:13.5px; padding: 10px 16px;
     display:flex; align-items:center; justify-content:center; gap:6px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); user-select: none; }
   .tai-btn-primary {
-    background: #2563EB !important;
+    background: var(--primary, #2563EB) !important;
     color: #FFFFFF !important;
     border: 1px solid rgba(255, 255, 255, 0.20) !important;
     box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.32), 0 4px 14px -2px rgba(37, 99, 235, 0.40) !important;
   }
   .tai-btn-primary:hover {
-    background: #1D4ED8 !important;
+    background: var(--primary-hover, #1D4ED8) !important;
     box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 6px 20px -2px rgba(37, 99, 235, 0.50) !important;
     transform: translateY(-1.5px);
   }
-  .tai-btn-primary:active { background: #3730A3 !important; transform: translateY(1px) scale(.975); }
+  .tai-btn-primary:active { background: var(--primary-dark, #3730A3) !important; transform: translateY(1px) scale(.975); }
   .tai-btn-ghost {
     background: var(--glass-surface); color: var(--primary); font-weight: 700;
     backdrop-filter: var(--glass-blur-sm); border: 1px solid var(--glass-border);
@@ -385,7 +385,7 @@ export const TOKENS = `
   
   .tai-pill { padding:6px 12px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); }
   .tai-pill-active {
-    background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+    background: linear-gradient(135deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%);
     color:#fff;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 8px rgba(37, 99, 235, 0.35);
   }
@@ -409,12 +409,12 @@ export const TOKENS = `
   .tai-progress-track { width:100%; height:6px; border-radius:4px; background: var(--glass-border-subtle); overflow:hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
   .tai-progress-fill {
     height:100%; border-radius:4px;
-    background: linear-gradient(90deg, #2563EB 0%, #3B82F6 100%);
+    background: linear-gradient(90deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%);
     box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
     transition: width .25s ease;
   }
   .tai-avatar {
-    border-radius:50%; background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+    border-radius:50%; background: linear-gradient(135deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(37, 99, 235, 0.3);
     color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;
   }
@@ -460,7 +460,7 @@ export const TOKENS = `
   }
   /* Active dynamic pill state */
   .tai-navitem.active {
-    background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+    background: linear-gradient(135deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%);
     color: #FFFFFF;
     padding: 8px 18px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 16px rgba(37, 99, 235, 0.45);
@@ -806,7 +806,7 @@ export function LearnerHeader({
 
         {/* AI Credits Pill */}
         <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
-          <Plus size={13} color="#2563EB" />
+          <Plus size={13} color="var(--primary, #2563EB)" />
           <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
         </div>
 
@@ -1086,7 +1086,7 @@ export function CourseThumb({ course, size = 56, rounded = 8 }) {
     return (
       <div style={{
         width: size, height: size, borderRadius: rounded, flexShrink: 0,
-        background: course.grad?.[0] || "#2563EB",
+        background: course.grad?.[0] || "var(--primary, #2563EB)",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <GraduationCap size={size * 0.42} color="#fff" strokeWidth={1.6} />

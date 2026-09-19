@@ -75,7 +75,7 @@ export function OrgRoleAccessScreen({ orgId, orgSelector, currentUserId }) {
               <h1 className="ta-hero-title">Role &amp; Permission Access Controls</h1>
               <p className="ta-hero-desc">Configure role access levels across curriculum, billing, and reporting.</p>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <span className="ta-tag" style={{ background: "rgba(59, 130, 246, 0.15)", color: "#3B82F6", border: "1px solid rgba(59, 130, 246, 0.3)" }}>
+                <span className="ta-tag" style={{ background: "rgba(59, 130, 246, 0.15)", color: "var(--primary-light, #3B82F6)", border: "1px solid rgba(59, 130, 246, 0.3)" }}>
                   <ShieldCheck size={13} /> Enterprise Security Matrix
                 </span>
                 <span className="ta-tag" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#10B981", border: "1px solid rgba(16, 185, 129, 0.3)" }}>

@@ -209,7 +209,7 @@ const SPOTLIGHT_SLIDES = [
   {
     id: "course-fullstack-ai",
     badge: "ACTIVE MULTI-COURSE LEARNING",
-    badgeGradient: "#2563EB",
+    badgeGradient: "var(--primary, #2563EB)",
     cohortTag: "Full-Stack AI Track",
     pathwayName: "Full-Stack & Web Dev",
     trackKeyword: "engineering",
@@ -237,7 +237,7 @@ const SPOTLIGHT_SLIDES = [
   {
     id: "course-spatial-ui",
     badge: "FEATURED COURSE SPOTLIGHT",
-    badgeGradient: "#2563EB",
+    badgeGradient: "var(--primary, #2563EB)",
     cohortTag: "AI & Machine Learning Track",
     pathwayName: "Data & AI Systems",
     trackKeyword: "ai",
@@ -303,7 +303,7 @@ const SPECIALIZATIONS = [
     reviews: "3,420",
     level: "Intermediate",
     badge: "PROFESSIONAL CERTIFICATE",
-    badgeBg: "#2563EB",
+    badgeBg: "var(--primary, #2563EB)",
     description: "Master modern AI design workflows, generative prototyping, vector tokens, and spatial interfaces with direct industry credentialing.",
     skills: ["Figma AI", "Design Systems", "Spatial UI", "Token Architecture", "UX Research"],
     image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80"
@@ -337,7 +337,7 @@ const RECENT_RECORDINGS = [
     thumbnail: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     badge: "UI/UX DESIGN COURSE",
-    badgeColor: "#2563EB"
+    badgeColor: "var(--primary, #2563EB)"
   },
   {
     id: "rec-2",
@@ -350,7 +350,7 @@ const RECENT_RECORDINGS = [
     thumbnail: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     badge: "UX + AI TOKENS",
-    badgeColor: "#2563EB"
+    badgeColor: "var(--primary, #2563EB)"
   },
   {
     id: "rec-3",
@@ -363,7 +363,7 @@ const RECENT_RECORDINGS = [
     thumbnail: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
     badge: "ENGINEERING",
-    badgeColor: "#2563EB"
+    badgeColor: "var(--primary, #2563EB)"
   },
   {
     id: "rec-4",
@@ -545,7 +545,7 @@ export function CoursesScreen({
     : uncompletedTrackCourses.map((c, idx) => ({
         id: c.id,
         badge: c.enrolled ? (c.progress > 0 ? `IN PROGRESS • ${c.progress}% DONE` : "ENROLLED • READY TO START") : `COURSE 0${idx + 1} • REQUIRED FOR TRACK`,
-        badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "#2563EB" : "#D97706",
+        badgeGradient: idx === 0 ? "#059669" : idx === 1 ? "var(--primary, #2563EB)" : "#D97706",
         cohortTag: trackDisplayName,
         pathwayName: trackDisplayName,
         title: c.title,
@@ -995,7 +995,7 @@ export function CoursesScreen({
                   {/* Progress Line */}
                   {isEnrolled && (
                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 5, background: "rgba(255,255,255,0.3)", zIndex: 1 }}>
-                      <div style={{ height: "100%", width: `${course.progress || 0}%`, background: isCompleted ? "#10B981" : "#2563EB" }} />
+                      <div style={{ height: "100%", width: `${course.progress || 0}%`, background: isCompleted ? "#10B981" : "var(--primary, #2563EB)" }} />
                     </div>
                   )}
                 </div>

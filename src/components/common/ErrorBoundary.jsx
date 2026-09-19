@@ -104,7 +104,7 @@ export default class ErrorBoundary extends React.Component {
                     width: 36,
                     height: 36,
                     borderRadius: 8,
-                    background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
+                    background: "linear-gradient(135deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%)",
                     boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(37, 99, 235, 0.45)",
                     display: "flex",
                     alignItems: "center",

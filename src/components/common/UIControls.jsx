@@ -6,7 +6,7 @@ export function Avatar({ initials = "U", size = 36, style = {} }) {
     <div
       style={{
         width: size, height: size, borderRadius: "50%",
-        background: "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)",
+        background: "linear-gradient(135deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%)",
         boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 14px rgba(37, 99, 235, 0.4)",
         border: "1px solid rgba(255, 255, 255, 0.18)",
         color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
@@ -25,7 +25,7 @@ export function ProgressBar({ value = 0, height = 7 }) {
       <div
         style={{
           width: `${safeVal}%`, height, borderRadius: 99,
-          background: "linear-gradient(90deg, #2563EB 0%, #3B82F6 100%)",
+          background: "linear-gradient(90deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%)",
           boxShadow: "0 0 8px rgba(37, 99, 235, 0.4)",
           transition: "width .4s cubic-bezier(0.16, 1, 0.3, 1)"
         }}
@@ -36,7 +36,7 @@ export function ProgressBar({ value = 0, height = 7 }) {
 
 export function Tag({ children, tone, icon: Icon }) {
   const bg = tone === "success" ? "rgba(16, 185, 129, 0.12)" : tone === "warning" ? "rgba(245, 158, 11, 0.12)" : tone === "danger" ? "rgba(239, 68, 68, 0.12)" : "rgba(37, 99, 235, 0.12)";
-  const color = tone === "success" ? "#10B981" : tone === "warning" ? "#F59E0B" : tone === "danger" ? "#EF4444" : "#2563EB";
+  const color = tone === "success" ? "#10B981" : tone === "warning" ? "#F59E0B" : tone === "danger" ? "#EF4444" : "var(--primary, #2563EB)";
   const border = tone === "success" ? "rgba(16, 185, 129, 0.25)" : tone === "warning" ? "rgba(245, 158, 11, 0.25)" : tone === "danger" ? "rgba(239, 68, 68, 0.25)" : "rgba(37, 99, 235, 0.25)";
   return (
     <span style={{
@@ -59,7 +59,7 @@ export function Switch({ on, onChange }) {
       aria-checked={on}
       style={{
         width: 38, height: 22, borderRadius: 99,
-        background: on ? "linear-gradient(135deg, #2563EB 0%, #3B82F6 100%)" : "var(--glass-surface, #EFF6FF)",
+        background: on ? "linear-gradient(135deg, var(--primary, #2563EB) 0%, var(--primary-light, #3B82F6) 100%)" : "var(--glass-surface, #EFF6FF)",
         boxShadow: on ? "inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 6px rgba(37, 99, 235, 0.3)" : "inset 0 1px 2px rgba(0,0,0,0.06)",
         border: "1px solid var(--glass-border, #E2E8F0)",
         position: "relative", cursor: "pointer", flexShrink: 0, transition: "all .18s cubic-bezier(0.16, 1, 0.3, 1)"
@@ -93,11 +93,11 @@ export function StatCard({ stat }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{
           width: 34, height: 34, borderRadius: 8,
-          background: "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)",
+          background: "linear-gradient(135deg, var(--primary-tint, #EFF6FF) 0%, #DBEAFE 100%)",
           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.8)",
           display: "flex", alignItems: "center", justifyContent: "center"
         }}>
-          {Icon && <Icon size={16} color="#2563EB" />}
+          {Icon && <Icon size={16} color="var(--primary, #2563EB)" />}
         </div>
         {stat.delta && (
           <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11.5, fontWeight: 700, color: stat.up ? "#10B981" : "#EF4444" }}>

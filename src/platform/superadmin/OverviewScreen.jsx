@@ -120,7 +120,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
               </div>
               <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
                 <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Active Tenants</div>
-                <div style={{ fontSize: 15, fontWeight: 900, color: "#3B82F6" }}>{effectiveTotalOrgs}</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "var(--primary-light, #3B82F6)" }}>{effectiveTotalOrgs}</div>
               </div>
             </div>
           </div>
@@ -135,7 +135,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Organizations</span>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(59, 130, 246, 0.12)", color: "var(--primary, #2563EB)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Building2 size={18} />
               </div>
             </div>
@@ -156,7 +156,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Platform Users</span>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(37, 99, 235, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(37, 99, 235, 0.12)", color: "var(--primary, #2563EB)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <Users size={18} />
               </div>
             </div>
@@ -264,7 +264,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                           width: "100%", maxWidth: 36,
                           height: `${heightPct}%`,
                           background: idx === trendData.length - 1
-                            ? "#2563EB"
+                            ? "var(--primary, #2563EB)"
                             : "var(--surface-3)",
                           borderRadius: "4px 4px 0 0",
                           transition: "all 0.2s ease"

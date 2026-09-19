@@ -200,7 +200,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
         <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
           <div className="tai-row tai-gap10">
             <div style={{ width: 38, height: 38, borderRadius: 8, background: "rgba(139, 92, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Clock size={18} color="#3B82F6" />
+              <Clock size={18} color="var(--primary-light, #3B82F6)" />
             </div>
             <div>
               <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{user.studyHours ? `${user.studyHours} hrs` : "0.0 hrs"}</div>
