@@ -3,7 +3,22 @@ import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 
 const PROJECT_REF = "jeobggrtxeybxvlwpxvn";
-const MANAGEMENT_TOKEN = process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_MGMT_TOKEN;
+let MANAGEMENT_TOKEN = process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_MGMT_TOKEN;
+
+if (!MANAGEMENT_TOKEN) {
+  for (const envFile of ['.env.local', '.env']) {
+    const envPath = path.resolve(envFile);
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, 'utf8');
+      const match = content.match(/^SUPABASE_(?:ACCESS|MGMT)_TOKEN\s*=\s*["']?([^"'\r\n]+)["']?/m);
+      if (match && match[1]) {
+        MANAGEMENT_TOKEN = match[1].trim();
+        break;
+      }
+    }
+  }
+}
+
 if (!MANAGEMENT_TOKEN) {
   console.error("ERROR: Set SUPABASE_ACCESS_TOKEN or SUPABASE_MGMT_TOKEN env var before running this script.");
   process.exit(1);

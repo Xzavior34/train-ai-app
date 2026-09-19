@@ -31,6 +31,13 @@ export async function joinDefaultOrganization() {
     return { success: true, demo: true };
   }
   try {
+    const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: {} }));
+    if (!sessionData?.session?.user) {
+      // If user is unconfirmed or no active session token is present, RPC will fail with 400.
+      // Return gracefully. The session listener in useAuth.js will call join_default_organization
+      // as soon as the user confirms their email and signs in.
+      return { success: true, pendingSession: true };
+    }
     const { data, error } = await supabase.rpc("join_default_organization");
     if (error) throw error;
     return { success: true, organizationId: data };
@@ -83,6 +90,10 @@ export async function registerOrganization(orgName) {
   }
 
   try {
+    const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: {} }));
+    if (!sessionData?.session?.user) {
+      return { success: true, pendingSession: true };
+    }
     const { data, error } = await supabase.rpc("create_organization_self_serve", { p_org_name: trimmed });
     if (error) throw error;
     return { success: true, organizationId: data };

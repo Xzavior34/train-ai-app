@@ -28,6 +28,7 @@ export default function AuthPage({
   const [submitting, setSubmitting] = useState(false);
   const [breachWarning, setBreachWarning] = useState(false);
   const [checkingBreach, setCheckingBreach] = useState(false);
+  const [signupConfirmationSent, setSignupConfirmationSent] = useState(false);
 
   function handlePasswordChange(value) {
     setPassword(value);
@@ -115,15 +116,23 @@ export default function AuthPage({
       }
 
       if (accountType === "organization" && !result?.error) {
-        const orgResult = await registerOrganization(orgName);
-        if (!orgResult.success) {
-          setOrgError(orgResult.error || "Account created, but we couldn't register your organization. You can try again from Settings.");
+        if (result?.data?.session) {
+          const orgResult = await registerOrganization(orgName);
+          if (!orgResult.success) {
+            setOrgError(orgResult.error || "Account created, but we couldn't register your organization. You can try again from Settings.");
+          } else {
+            window.location.reload();
+            return;
+          }
         } else {
-          window.location.reload();
-          return;
+          setSignupConfirmationSent(true);
         }
       } else if (accountType === "learner" && !result?.error) {
-        joinDefaultOrganization().catch(() => {});
+        if (result?.data?.session) {
+          joinDefaultOrganization().catch(() => {});
+        } else {
+          setSignupConfirmationSent(true);
+        }
       }
     }
     setSubmitting(false);
@@ -257,6 +266,37 @@ export default function AuthPage({
         )}
 
         {(mode === "signin" || mode === "signup") && (
+          signupConfirmationSent ? (
+            <div style={{ textAlign: "center", padding: "12px 0" }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: "50%", background: "#DCFCE7",
+                display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px"
+              }}>
+                <CheckCircle2 size={32} color="#16A34A" />
+              </div>
+              <h1 style={styles.h1}>Check your email</h1>
+              <p style={{ ...styles.sub, margin: "10px 0 20px" }}>
+                We've sent a verification link to <strong>{email}</strong>. Please check your inbox and confirm your email to activate your account.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setSignupConfirmationSent(false); setMode("signin"); }}
+                className="auth-submit"
+                style={styles.submit}
+              >
+                Proceed to Sign In <ArrowRight size={15} />
+              </button>
+              <div style={styles.switchRow}>
+                <span
+                  className="auth-switch"
+                  style={styles.switchLink}
+                  onClick={() => { setSignupConfirmationSent(false); setMode("signup"); }}
+                >
+                  ← Back to sign up
+                </span>
+              </div>
+            </div>
+          ) : (
           <>
             <h1 style={styles.h1}>{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
             <p style={styles.sub}>
@@ -332,7 +372,7 @@ export default function AuthPage({
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
               <label style={styles.label}>Password</label>
               {mode === "signin" && (
-                <span className="auth-switch" style={{ ...styles.switchLink, fontSize: 12 }} onClick={() => setMode("forgot")}>Forgot password?</span>
+                <span className="auth-switch" style={{ ...styles.switchLink, fontSize: 12 }} onClick={() => { setMode("forgot"); setSignupConfirmationSent(false); }}>Forgot password?</span>
               )}
             </div>
             <div style={styles.inputWrap}>
@@ -364,12 +404,13 @@ export default function AuthPage({
 
             <div style={styles.switchRow}>
               {mode === "signin" ? (
-                <>Don't have an account? <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signup"); setBreachWarning(false); }}>Sign up</span></>
+                <>Don't have an account? <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signup"); setBreachWarning(false); setSignupConfirmationSent(false); }}>Sign up</span></>
               ) : (
-                <>Already have an account? <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); setBreachWarning(false); }}>Sign in</span></>
+                <>Already have an account? <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); setBreachWarning(false); setSignupConfirmationSent(false); }}>Sign in</span></>
               )}
             </div>
           </>
+          )
         )}
       </form>
     </div>
