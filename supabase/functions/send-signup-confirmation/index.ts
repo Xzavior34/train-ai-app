@@ -1,6 +1,7 @@
 // Train AI - send-signup-confirmation edge function
-// Receives { email, password, role, origin } and generates a secure confirmation link via Supabase Auth Admin API,
-// then sends an organization-branded signup confirmation email via Resend.
+// Called after Supabase auth.signUp has already created the user account.
+// Receives { email, userId, role, origin } and sends an organization-branded
+// welcome / confirmation email via Resend. Password is NOT required.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -30,7 +31,6 @@ Deno.serve(async (req: Request) => {
     }
 
     const email = (body?.email || "").trim().toLowerCase();
-    const password = body?.password || "";
     const role = body?.role || "learner";
 
     if (!email) {
@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const clientOrigin = (body?.origin || body?.redirectTo || "").trim();
+    const clientOrigin = (body?.origin || "").trim();
     const appUrl = (Deno.env.get("APP_URL") || "https://trainai.app").trim().replace(/\/$/, "");
 
     let targetOrigin = appUrl;
@@ -62,45 +62,36 @@ Deno.serve(async (req: Request) => {
       console.warn("Could not query organization for signup confirmation email:", err);
     }
 
-    // 2. Generate Supabase signup/confirmation link via Auth Admin API
-    let linkData: any = null;
-    let linkErr: any = null;
-
-    if (password) {
-      const res = await adminClient.auth.admin.generateLink({
-        type: "signup",
-        email,
-        password,
-        options: {
-          redirectTo: redirectTarget,
-          data: { role },
-        },
-      });
-      linkData = res.data;
-      linkErr = res.error;
-    } else {
-      // Fallback: magiclink / signup without password
+    // 2. Generate a confirmation link for the already-created account.
+    //    The user was created by auth.signUp before this function is called,
+    //    so we use type:"magiclink" which works on an existing account.
+    let confirmUrl: string | null = null;
+    try {
       const res = await adminClient.auth.admin.generateLink({
         type: "magiclink",
         email,
-        options: {
-          redirectTo: redirectTarget,
-          data: { role },
-        },
+        options: { redirectTo: redirectTarget, data: { role } },
       });
-      linkData = res.data;
-      linkErr = res.error;
+      confirmUrl = res.data?.properties?.action_link || null;
+    } catch (linkErr) {
+      console.warn("Could not generate confirmation link (will send welcome email without link):", linkErr);
     }
 
-    if (linkErr || !linkData?.properties?.action_link) {
-      console.warn("Generate signup link warning:", linkErr);
-      return new Response(
-        JSON.stringify({ error: linkErr?.message || "Could not generate signup confirmation link for this email." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const confirmUrl = linkData.properties.action_link;
+    const confirmSection = confirmUrl
+      ? `
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${confirmUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 8px; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25); text-align: center;">
+            Confirm Email &amp; Sign In
+          </a>
+        </div>
+        <p style="margin: 0 0 10px 0; font-size: 11.5px; color: #94a3b8; line-height: 1.4; word-break: break-all;">
+          If the button above does not work, copy and paste this link into your browser:<br/>
+          <a href="${confirmUrl}" style="color: #2563eb; text-decoration: underline;">${confirmUrl}</a>
+        </p>`
+      : `
+        <p style="margin: 0 0 16px 0; font-size: 14.5px; color: #475569; line-height: 1.6;">
+          You can sign in at <a href="${targetOrigin}" style="color: #2563eb;">${targetOrigin}</a> using your email and password.
+        </p>`;
     let emailSent = false;
     let resendDetails: any = null;
 
@@ -124,7 +115,7 @@ Deno.serve(async (req: Request) => {
               <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Confirm Your Account for ${orgName}</title>
+                <title>Welcome to ${orgName} on Train AI</title>
               </head>
               <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
                 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 16px;">
@@ -144,22 +135,12 @@ Deno.serve(async (req: Request) => {
                         <tr>
                           <td style="padding: 32px 32px 24px 32px;">
                             <h1 style="margin: 0 0 12px 0; font-size: 20px; font-weight: 700; color: #0f172a; line-height: 1.3;">
-                              Confirm Your Account for <span style="color: #2563eb;">${orgName}</span>
+                              Welcome to <span style="color: #2563eb;">${orgName}</span>!
                             </h1>
                             <p style="margin: 0 0 16px 0; font-size: 14.5px; color: #475569; line-height: 1.6;">
-                              Welcome! Please confirm your email address to activate your account for <strong>${orgName}</strong> on Train AI.
+                              Your account has been created for <strong>${email}</strong>. Please verify your email address to activate your account on Train AI.
                             </p>
-                            <p style="margin: 0 0 24px 0; font-size: 14.5px; color: #475569; line-height: 1.6;">
-                              Click the button below to verify your email address and access your learning workspace.
-                            </p>
-
-                            <!-- CTA Button -->
-                            <div style="text-align: center; margin: 28px 0;">
-                              <a href="${confirmUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 8px; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25); text-align: center;">
-                                Confirm Email Address
-                              </a>
-                            </div>
-
+                            ${confirmSection}
                             <!-- Org Details Card -->
                             <div style="background-color: #f1f5f9; border-radius: 8px; padding: 14px 18px; margin-top: 24px; border: 1px solid #e2e8f0;">
                               <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -179,12 +160,8 @@ Deno.serve(async (req: Request) => {
                         <!-- Footer -->
                         <tr>
                           <td style="padding: 20px 32px 28px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
-                            <p style="margin: 0 0 10px 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">
-                              If you did not initiate this account setup on <strong>${orgName}</strong>, you can safely disregard this email.
-                            </p>
-                            <p style="margin: 0; font-size: 11.5px; color: #94a3b8; line-height: 1.4; word-break: break-all;">
-                              If the button above does not work, copy and paste this link into your browser:<br/>
-                              <a href="${confirmUrl}" style="color: #2563eb; text-decoration: underline;">${confirmUrl}</a>
+                            <p style="margin: 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">
+                              If you did not create this account on <strong>${orgName}</strong>, you can safely disregard this email.
                             </p>
                           </td>
                         </tr>

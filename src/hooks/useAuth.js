@@ -133,36 +133,9 @@ export function useAuth() {
       const cleanEmail = email.trim().toLowerCase();
       const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://trainai.app";
 
-      // 1. Invoke send-signup-confirmation Edge Function for Resend email dispatch
-      try {
-        const { data: edgeData, error: edgeErr } = await supabase.functions.invoke("send-signup-confirmation", {
-          body: { email: cleanEmail, password, role: finalRole, origin: clientOrigin },
-        });
-        if (!edgeErr && edgeData && edgeData.success) {
-          return { data: { user: { email: cleanEmail, role: finalRole } }, error: null };
-        }
-      } catch (err) {
-        console.warn("send-signup-confirmation Edge Function warning:", err);
-      }
-
-      // 2. Direct HTTP call to send-signup-confirmation Edge Function endpoint
-      try {
-        const res = await fetch("https://jeobggrtxeybxvlwpxvn.supabase.co/functions/v1/send-signup-confirmation", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: cleanEmail, password, role: finalRole, origin: clientOrigin }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.success) {
-            return { data: { user: { email: cleanEmail, role: finalRole } }, error: null };
-          }
-        }
-      } catch (fetchErr) {
-        console.warn("send-signup-confirmation fetch warning:", fetchErr);
-      }
-
-      // 3. Fallback to standard Supabase auth signup
+      // 1. Always create the Supabase auth account first so a real session exists
+      //    before any downstream RPCs (joinDefaultOrganization, registerOrganization)
+      //    are invoked. Calling those RPCs without a session causes 400 errors.
       let supaRes;
       try {
         supaRes = await supabase.auth.signUp({
@@ -170,7 +143,7 @@ export function useAuth() {
           password,
           options: {
             data: { role: finalRole },
-            emailRedirectTo: window.location.origin + "/auth/callback",
+            emailRedirectTo: clientOrigin + "/auth/callback",
           }
         });
       } catch (networkErr) {
@@ -187,6 +160,28 @@ export function useAuth() {
         setSession(supaRes.data.session);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
       }
+
+      // 2. Fire the Resend confirmation email in the background (fire-and-forget).
+      //    Failures here don't block account creation.
+      const userId = supaRes?.data?.user?.id;
+      if (userId) {
+        Promise.resolve().then(async () => {
+          try {
+            await supabase.functions.invoke("send-signup-confirmation", {
+              body: { email: cleanEmail, userId, role: finalRole, origin: clientOrigin },
+            });
+          } catch {
+            try {
+              await fetch("https://jeobggrtxeybxvlwpxvn.supabase.co/functions/v1/send-signup-confirmation", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: cleanEmail, userId, role: finalRole, origin: clientOrigin }),
+              });
+            } catch { /* silent – Supabase native email is the fallback */ }
+          }
+        });
+      }
+
       return { data: supaRes.data, error: null };
     }
 
