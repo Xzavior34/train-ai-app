@@ -14,6 +14,7 @@ import { AccessControlScreen } from "./superadmin/AccessControlScreen.jsx";
 import { SupportQueueScreen } from "./superadmin/SupportQueueScreen.jsx";
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
+import { initDynamicBranding } from "../lib/brandingHelper.js";
 
 // The Platform Owner Dashboard - a genuinely separate top-level dashboard,
 // not a tab inside the Organisation dashboard's Sidebar the way it used to
@@ -36,6 +37,13 @@ export default function PlatformOwnerApp({
   const [internalOrgId, setInternalOrgId] = useState("");
   const selectedOrgId = controlledOrgId !== undefined ? controlledOrgId : internalOrgId;
   const setSelectedOrgId = controlledSetOrgId || setInternalOrgId;
+
+  useEffect(() => {
+    if (selectedOrgId) {
+      initDynamicBranding(selectedOrgId);
+    }
+  }, [selectedOrgId]);
+
   const orgSelector = {
     orgs: allOrgs,
     selectedOrgId: selectedOrgId,

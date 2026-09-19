@@ -223,14 +223,20 @@ export function useAuth() {
       return { success: true };
     }
     const cleanEmail = email.trim();
+    const clientOrigin = typeof window !== "undefined" ? window.location.origin : "https://trainai.app";
 
-    // 1. Try invoking the reset-password edge function for Resend branded email
+    // 1. Invoke the reset-password edge function for Resend branded email
     try {
       const { data, error } = await supabase.functions.invoke("reset-password", {
-        body: { email: cleanEmail },
+        body: { email: cleanEmail, origin: clientOrigin },
       });
-      if (!error && data?.success) {
-        return { success: true, emailSent: true, organizationName: data.organization_name };
+      if (!error && data) {
+        if (data.success && data.emailSent) {
+          return { success: true, emailSent: true, organizationName: data.organization_name };
+        }
+        if (data.error || data.resend_response?.message) {
+          return { success: false, error: data.error || data.resend_response?.message || "Could not send reset email via Resend." };
+        }
       }
     } catch (edgeErr) {
       console.warn("Reset password edge function warning:", edgeErr);
@@ -241,25 +247,22 @@ export function useAuth() {
       const res = await fetch("https://jeobggrtxeybxvlwpxvn.supabase.co/functions/v1/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail }),
+        body: JSON.stringify({ email: cleanEmail, origin: clientOrigin }),
       });
       if (res.ok) {
         const json = await res.json();
-        if (json?.success) {
+        if (json?.success && json?.emailSent) {
           return { success: true, emailSent: true, organizationName: json.organization_name };
+        }
+        if (json?.error || json?.resend_response?.message) {
+          return { success: false, error: json.error || json.resend_response?.message || "Could not send reset email via Resend." };
         }
       }
     } catch (fetchErr) {
       console.warn("Reset password function endpoint warning:", fetchErr);
     }
 
-    // 3. Standard Supabase Auth fallback
-    try {
-      await supabase.auth.resetPasswordForEmail(cleanEmail, { redirectTo: window.location.origin + "/auth/callback" });
-    } catch (e) {
-      console.warn("Password reset request warning:", e);
-    }
-    return { success: true };
+    return { success: false, error: "Unable to send password reset email. Please try again later." };
   }, []);
 
   const completePasswordReset = useCallback(async (newPassword) => {

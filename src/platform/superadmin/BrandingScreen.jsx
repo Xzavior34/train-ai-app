@@ -5,6 +5,8 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllOrganizations, fetchOrgBranding, upsertOrgBranding } from "../../lib/api/platform.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 
+import { applyDynamicBranding } from "../../lib/brandingHelper.js";
+
 const PRESET_PALETTES = [
   { name: "Train AI Bluish-Purple", color: "#1D4ED8" },
   { name: "Electric Indigo", color: "#2563EB" },
@@ -51,22 +53,28 @@ export function BrandingScreen({ orgSelector } = {}) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setLogoUrl(brandingQuery.data?.logo_url || "");
-    setPrimaryColor(brandingQuery.data?.primary_color || "#1D4ED8");
-    setSecondaryColor(brandingQuery.data?.secondary_color || "#0EA5E9");
-    setCustomCss(brandingQuery.data?.custom_css || "");
+    const data = brandingQuery.data;
+    setLogoUrl(data?.logo_url || "");
+    setPrimaryColor(data?.primary_color || "#1D4ED8");
+    setSecondaryColor(data?.secondary_color || "#0EA5E9");
+    setCustomCss(data?.custom_css || "");
+    if (data) {
+      applyDynamicBranding(data);
+    }
   }, [brandingQuery.data, selectedOrgId]);
 
   async function handleSave() {
     if (!selectedOrgId) return;
     setSaving(true);
     try {
-      await upsertOrgBranding(selectedOrgId, {
+      const payload = {
         logoUrl: logoUrl || null,
         primaryColor: primaryColor || null,
         secondaryColor: secondaryColor || null,
         customCss: customCss || null,
-      });
+      };
+      await upsertOrgBranding(selectedOrgId, payload);
+      applyDynamicBranding(payload);
       brandingQuery.refetch();
       showToast("Branding settings updated!");
     } catch (e) {

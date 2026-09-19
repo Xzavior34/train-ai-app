@@ -4215,9 +4215,8 @@ export async function updateUserPlatformRole(userId, role, organizationId, actor
       try {
         const { error: rpcErr } = await supabase.rpc("update_user_org_role", {
           p_user_id: userId,
-          p_organization_id: organizationId,
+          p_org_id: organizationId,
           p_new_role: orgRole,
-          p_actor_id: actorId || null,
         });
         if (rpcErr) throw rpcErr;
       } catch (err) {
@@ -4590,25 +4589,21 @@ export async function fetchCertificateRequests(orgId) {
   }
 }
 
-export async function approveCertificateRequest({ requestId, reviewerId, status = "approved", reviewNotes = null }) {
+export async function approveCertificateRequest({ requestId }) {
   if (!supabase) throw new Error("Not connected");
   const { data, error } = await supabase.rpc("approve_certificate_request", {
     p_request_id: requestId,
-    p_reviewer_id: reviewerId,
-    p_status: status,
-    p_review_notes: reviewNotes,
   });
   if (error) throw error;
   return data;
 }
 
-export async function updateUserOrgRole({ userId, organizationId, newRole, actorId }) {
+export async function updateUserOrgRole({ userId, organizationId, newRole }) {
   if (!supabase) throw new Error("Not connected");
   const { data, error } = await supabase.rpc("update_user_org_role", {
     p_user_id: userId,
-    p_organization_id: organizationId,
+    p_org_id: organizationId,
     p_new_role: newRole,
-    p_actor_id: actorId,
   });
   if (error) throw error;
   return data;

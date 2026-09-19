@@ -103,6 +103,7 @@ Deno.serve(async (req: Request) => {
 
     const acceptUrl = `${appUrl}/accept-invitation?token=${inviteRow?.token || ""}`;
     let emailSent = false;
+    let resendDetails: any = null;
 
     // Send via Resend if key is configured
     if (resendApiKey && inviteRow?.token) {
@@ -199,18 +200,23 @@ Deno.serve(async (req: Request) => {
           }),
         });
         emailSent = emailRes.ok;
-        if (!emailRes.ok) {
-          const errText = await emailRes.text();
-          console.warn("Resend API warning in invite-user:", emailRes.status, errText);
+        try {
+          const resText = await emailRes.text();
+          resendDetails = JSON.parse(resText);
+        } catch {
+          resendDetails = null;
         }
-      } catch (emailErr) {
+        if (!emailRes.ok) {
+          console.warn("Resend API warning in invite-user:", emailRes.status, resendDetails);
+        }
+      } catch (emailErr: any) {
         console.warn("Resend email dispatch exception in invite-user:", emailErr);
       }
     }
 
     return new Response(
       JSON.stringify({
-        results: [{ success: true, email, emailSent, invitationId: inviteRow?.id }],
+        results: [{ success: true, email, emailSent, invitationId: inviteRow?.id, accept_url: acceptUrl, resend_response: resendDetails }],
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

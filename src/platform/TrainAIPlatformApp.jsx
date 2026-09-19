@@ -38,6 +38,7 @@ import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
 import { CommunityScreen } from "../learner/screens/CommunityScreen.jsx";
 import { getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
+import { initDynamicBranding } from "../lib/brandingHelper.js";
 
 // Picks which workspace tab a signed-in platform user lands on by default,
 // in descending order of privilege - admin/super_admin keep the previous
@@ -96,6 +97,12 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   // local state here couldn't do once Owner became a separate top-level
   // component instead of a workspace tab inside this one.
   const effectiveOrgId = (userRoles.includes("super_admin") && superAdminSelectedOrgId) ? superAdminSelectedOrgId : orgId;
+
+  useEffect(() => {
+    if (effectiveOrgId) {
+      initDynamicBranding(effectiveOrgId);
+    }
+  }, [effectiveOrgId]);
 
   const orgSelector = userRoles.includes("super_admin") ? {
     orgs: allOrgs,

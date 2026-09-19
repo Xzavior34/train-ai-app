@@ -51,11 +51,18 @@ export default function AuthPage({
     e.preventDefault();
     if (!email.trim() || sendingReset) return;
     setSendingReset(true);
+    setResetError("");
     try {
-      await onForgotPassword?.(email.trim());
+      const res = await onForgotPassword?.(email.trim());
+      if (res && res.error) {
+        setResetError(res.error);
+      } else {
+        setResetEmailSent(true);
+      }
+    } catch (err) {
+      setResetError(err?.message || "Failed to send reset email.");
     } finally {
       setSendingReset(false);
-      setResetEmailSent(true);
     }
   }
 

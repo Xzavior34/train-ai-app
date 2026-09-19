@@ -16,7 +16,6 @@ Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "https://jeobggrtxeybxvlwpxvn.supabase.co";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    const appUrl = Deno.env.get("APP_URL") || "https://trainai.app";
 
     let body: any = {};
     try {
@@ -36,24 +35,26 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Extract target origin from request body or environment
+    const clientOrigin = (body?.origin || body?.redirectTo || "").trim();
+    const appUrl = (Deno.env.get("APP_URL") || "https://trainai.app").trim().replace(/\/$/, "");
+    
+    // Determine target redirect origin
+    let targetOrigin = appUrl;
+    if (clientOrigin && clientOrigin !== "null" && clientOrigin !== "undefined") {
+      targetOrigin = clientOrigin.replace(/\/$/, "");
+    }
+    
+    const redirectTarget = `${targetOrigin}/auth/callback?type=recovery`;
+
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Fetch user's organization name
+    // 1. Fetch user's organization name via authoritative RPC
     let orgName = "Train AI";
     try {
-      const { data: userList } = await adminClient.auth.admin.listUsers();
-      const targetAuthUser = userList?.users?.find((u) => u.email?.toLowerCase() === email);
-
-      if (targetAuthUser) {
-        const { data: profile } = await adminClient
-          .from("user_profiles")
-          .select("organization_id, organizations(name)")
-          .eq("id", targetAuthUser.id)
-          .maybeSingle();
-
-        if (profile?.organizations?.name) {
-          orgName = profile.organizations.name;
-        }
+      const { data: resolvedOrgName } = await adminClient.rpc("get_user_org_name", { p_email: email });
+      if (resolvedOrgName) {
+        orgName = resolvedOrgName;
       }
     } catch (err) {
       console.warn("Could not query organization for password reset email:", err);
@@ -64,7 +65,7 @@ Deno.serve(async (req: Request) => {
       type: "recovery",
       email,
       options: {
-        redirectTo: `${appUrl}?type=recovery`,
+        redirectTo: redirectTarget,
       },
     });
 
@@ -78,6 +79,7 @@ Deno.serve(async (req: Request) => {
 
     const resetUrl = linkData.properties.action_link;
     let emailSent = false;
+    let resendDetails: any = null;
 
     // 3. Send email via Resend API
     if (resendApiKey) {
@@ -174,12 +176,18 @@ Deno.serve(async (req: Request) => {
           }),
         });
         emailSent = emailRes.ok;
-        if (!emailRes.ok) {
-          const errText = await emailRes.text();
-          console.warn("Resend API warning in reset-password:", emailRes.status, errText);
+        const resText = await emailRes.text();
+        try {
+          resendDetails = JSON.parse(resText);
+        } catch {
+          resendDetails = resText;
         }
-      } catch (resendErr) {
+        if (!emailRes.ok) {
+          console.warn("Resend API warning in reset-password:", emailRes.status, resText);
+        }
+      } catch (resendErr: any) {
         console.warn("Resend email dispatch error in reset-password:", resendErr);
+        resendDetails = resendErr?.message || String(resendErr);
       }
     }
 
@@ -189,6 +197,8 @@ Deno.serve(async (req: Request) => {
         emailSent,
         email,
         organization_name: orgName,
+        reset_url: resetUrl,
+        resend_response: resendDetails,
         message: `Password reset email dispatched to ${email}`,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

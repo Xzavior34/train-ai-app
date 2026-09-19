@@ -16,6 +16,7 @@ import { applyAccessibilityPrefs, getStoredAccessibilityPrefs } from "./componen
 import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./services/authService.js";
 import { resolveViewMode, DASHBOARDS } from "./lib/roleRouting.js";
 import { getAuthenticatorAssuranceLevel } from "./lib/api/mfa.js";
+import { initDynamicBranding } from "./lib/brandingHelper.js";
 
 export default function App() {
   const {
@@ -82,9 +83,10 @@ export default function App() {
     return () => { cancelled = true; };
   }, [loading, session?.user?.id, isDemoMode]);
 
-  // Apply persisted accessibility and theme preferences immediately on boot
+  // Apply persisted accessibility, theme preferences, and global dynamic branding immediately on boot
   useEffect(() => {
     applyAccessibilityPrefs(getStoredAccessibilityPrefs());
+    initDynamicBranding();
     try {
       if (localStorage.getItem("trainai_theme_dark") === "true") {
         document.documentElement.classList.add("dark");
