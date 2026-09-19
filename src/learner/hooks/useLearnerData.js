@@ -97,13 +97,14 @@ export function useLearnerData(session, screen, params) {
     name: userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner",
     initials: initialsOf(userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email),
     avatarUrl: userProfileQuery.data?.avatar_url || null,
-    location: userProfileQuery.data?.school || userProfileQuery.data?.department || "Member",
+    location: userProfileQuery.data?.school || userProfileQuery.data?.department || "",
     role: "Learner",
+    organization: userProfileQuery.data?.organizations?.name || userProfileQuery.data?.organization_name || "",
     organization_id: userProfileQuery.data?.organization_id || null,
     level: gamificationStatsQuery.data?.current_level || Math.floor((gamificationStatsQuery.data?.total_points || 0) / 500) + 1 || 1,
     totalPoints: gamificationStatsQuery.data?.total_points || 0,
-    streak: gamificationStatsQuery.data?.streak_days || 1,
-    streakFreezes: gamificationStatsQuery.data?.streak_freezes_available || 1,
+    streak: gamificationStatsQuery.data?.streak_days || 0,
+    streakFreezes: gamificationStatsQuery.data?.streak_freezes_available || 0,
     lessonsCompleted: gamificationStatsQuery.data?.lessons_completed || 0,
     coursesCompleted: gamificationStatsQuery.data?.courses_completed || 0,
     sessionsCompleted: gamificationStatsQuery.data?.sessions_completed || 0,
@@ -114,10 +115,10 @@ export function useLearnerData(session, screen, params) {
     // reward claim, etc.), so it doubles as a "last learning activity"
     // signal for the retention nudges without needing a second query.
     lastActiveAt: gamificationStatsQuery.data?.updated_at || null,
-    track: personalizationQuery.data?.learning_tracks?.[0] || "Data & AI",
+    track: personalizationQuery.data?.learning_tracks?.[0] || "",
     skillLevel: personalizationQuery.data?.skill_level || "beginner",
     mastery: Math.min(100, Math.round(((gamificationStatsQuery.data?.lessons_completed || 0) * 10) / 2)),
-    accuracy: 85,
+    accuracy: 0,
   };
 
   const orgId = userProfileQuery.data?.organization_id || null;

@@ -19,7 +19,7 @@ export async function fetchCurrentUserProfile(userId) {
       manager_id: role === "learner" ? "demo-manager-id" : null,
     };
   }
-  let { data, error } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
+  let { data, error } = await supabase.from("user_profiles").select("*, organizations(id, name, slug)").eq("id", userId).maybeSingle();
   if (error) throw error;
 
   let orgId = data?.organization_id;

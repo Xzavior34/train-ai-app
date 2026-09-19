@@ -259,7 +259,7 @@ export function ProfileScreen({
             <div style={{ minWidth: 0, flex: "1 1 200px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <h1 style={{ fontWeight: 900, fontSize: "clamp(19px, 3.5vw, 25px)", color: "var(--text)", letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2, wordBreak: "break-word" }}>
-                  {user.name || "Evelyn Hayes"}
+                  {user.name || (user.email ? user.email.split("@")[0] : "Learner")}
                 </h1>
                 <span
                   style={{
@@ -284,25 +284,37 @@ export function ProfileScreen({
                   <Mail size={12} color="var(--text-3)" />
                   {user.email || session?.user?.email || "No email provided"}
                 </span>
-                <span style={{ opacity: 0.4 }}>•</span>
-                <span>{user.location || "San Francisco, CA"}</span>
-                <span style={{ opacity: 0.4 }}>•</span>
-                <span>{user.organization || "Train AI Academy"}</span>
+                {user.location && (
+                  <>
+                    <span style={{ opacity: 0.4 }}>•</span>
+                    <span>{user.location}</span>
+                  </>
+                )}
+                {user.organization && (
+                  <>
+                    <span style={{ opacity: 0.4 }}>•</span>
+                    <span>{user.organization}</span>
+                  </>
+                )}
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-                <span className="tai-tag" style={{ fontWeight: 700, padding: "3px 8px", fontSize: 11 }}>
-                  <Target size={11} style={{ marginRight: 4 }} />
-                  {user.track || "Full-Stack AI & Design"}
-                </span>
+                {user.track && (
+                  <span className="tai-tag" style={{ fontWeight: 700, padding: "3px 8px", fontSize: 11 }}>
+                    <Target size={11} style={{ marginRight: 4 }} />
+                    {user.track}
+                  </span>
+                )}
                 {user.role && (
                   <span className="tai-tag" style={{ background: "var(--surface-3)", color: "var(--text-2)", padding: "3px 8px", fontSize: 11 }}>
                     {user.role.toUpperCase()}
                   </span>
                 )}
-                <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
-                  Cohort 04 • Sprint 5
-                </span>
+                {(user.batch || user.cohort) && (
+                  <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
+                    {user.batch || user.cohort}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -316,7 +328,7 @@ export function ProfileScreen({
                 style={{ padding: "7px 12px", fontWeight: 700, fontSize: 12 }}
               >
                 <CreditCard size={13} color="var(--primary)" />
-                <span>{typeof credits === "number" ? credits : 10} Credits</span>
+                <span>{typeof credits === "number" ? credits : 0} Credits</span>
               </button>
             )}
             {session?.user?.id && (
@@ -352,17 +364,17 @@ export function ProfileScreen({
         {/* 4 Stat Cards with Responsive Grid & Liquid Glass Styling */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: 8, marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
           <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
-            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--primary)", letterSpacing: "-0.02em" }}>{user.mastery ?? 88}%</div>
+            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--primary)", letterSpacing: "-0.02em" }}>{user.mastery ?? 0}%</div>
             <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Curriculum Mastery</div>
           </div>
           <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
             <div className="tai-row tai-gap4" style={{ justifyContent: "center", fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "#F59E0B" }}>
-              <span>{user.streak ?? 8}</span> <Flame size={16} color="#F59E0B" fill="#F59E0B" />
+              <span>{user.streak ?? 0}</span> <Flame size={16} color="#F59E0B" fill="#F59E0B" />
             </div>
             <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Active Day Streak</div>
           </div>
           <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
-            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--text)", letterSpacing: "-0.02em" }}>{(user.totalPoints || 4520).toLocaleString()}</div>
+            <div style={{ fontWeight: 900, fontSize: "clamp(17px, 2.2vw, 21px)", color: "var(--text)", letterSpacing: "-0.02em" }}>{(user.totalPoints || user.points || 0).toLocaleString()}</div>
             <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2, fontWeight: 600 }}>Credential XP</div>
           </div>
           <div className="tai-card" style={{ textAlign: "center", padding: "12px 8px", borderRadius: 10, background: "var(--surface-2)" }}>
@@ -409,7 +421,7 @@ export function ProfileScreen({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Full Name</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.name || "Evelyn Hayes"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.name || (user.email ? user.email.split("@")[0] : "Learner")}</div>
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Email Address</label>
@@ -417,11 +429,11 @@ export function ProfileScreen({
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Current Organization</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.organization || "Train AI Academy"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.organization || "No Organization"}</div>
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Enrolled Batch</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>Cohort 04 • Sprint 5</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.batch || user.cohort || "Self-Paced"}</div>
               </div>
             </div>
           </div>
