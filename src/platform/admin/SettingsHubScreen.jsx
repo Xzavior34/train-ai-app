@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
+import { applyDynamicBranding } from "../../lib/brandingHelper.js";
 import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
-import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save } from "lucide-react";
+import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save, Palette, Eye, Sparkles, ArrowRight, Check } from "lucide-react";
 import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
+import { fetchOrganizationById, updateOrganization, fetchOrgBranding, upsertOrgBranding, fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice } from "../../lib/api/organizations.js";
-import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
 import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
-import { Sparkles, ArrowRight, Eye, Check } from "lucide-react";
 
 // organization's name with that fake placeholder if an admin didn't notice
 // and retype their real name first. Fixed by fetching the real organizations
@@ -228,6 +227,91 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
       showToast(err.message || "Could not save organization settings");
     } finally {
       setSaving(false);
+    }
+  }
+
+  // ─── Custom Branding ────────────────────────────────────────────────────
+  // Stored in the real `branding_settings` table (see lib/api/platform.js).
+  // Org admins can set their primary brand color and logo so their learners
+  // see a unique identity instead of the default Train AI blue.
+  const PRESET_COLORS = [
+    { name: "Train AI Blue",   color: "#1D4ED8" },
+    { name: "Electric Indigo", color: "#4F46E5" },
+    { name: "Emerald Tech",    color: "#059669" },
+    { name: "Midnight Teal",   color: "#0D9488" },
+    { name: "Rose Vibrant",    color: "#E11D48" },
+    { name: "Royal Amber",     color: "#D97706" },
+    { name: "Sky Blue",        color: "#0284C7" },
+    { name: "Cyber Purple",    color: "#7C3AED" },
+  ];
+
+  const brandingQuery = useSupabaseQuery(async () => (orgId ? fetchOrgBranding(orgId) : null), [orgId]);
+  const [brandPrimary,  setBrandPrimary]  = useState("#1D4ED8");
+  const [brandSecondary,setBrandSecondary]= useState("#0EA5E9");
+  const [brandLogo,     setBrandLogo]     = useState("");
+  const [savingBrand,   setSavingBrand]   = useState(false);
+
+  useEffect(() => {
+    const d = brandingQuery.data;
+    if (d === undefined) return;
+    setBrandPrimary(d?.primary_color   || "#1D4ED8");
+    setBrandSecondary(d?.secondary_color || "#0EA5E9");
+    setBrandLogo(d?.logo_url || "");
+    if (d) applyDynamicBranding(d);
+  }, [brandingQuery.data, orgId]);
+
+  const handleBrandPrimaryChange = useCallback((val) => {
+    setBrandPrimary(val);
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      applyDynamicBranding({ primary_color: val, secondary_color: brandSecondary });
+    }
+  }, [brandSecondary]);
+
+  const handleBrandSecondaryChange = useCallback((val) => {
+    setBrandSecondary(val);
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      applyDynamicBranding({ primary_color: brandPrimary, secondary_color: val });
+    }
+  }, [brandPrimary]);
+
+  async function handleSaveBranding() {
+    if (!orgId) return;
+    setSavingBrand(true);
+    try {
+      await upsertOrgBranding(orgId, {
+        primaryColor:   brandPrimary   || null,
+        secondaryColor: brandSecondary || null,
+        logoUrl:        brandLogo      || null,
+      });
+      applyDynamicBranding({
+        primary_color:   brandPrimary   || null,
+        secondary_color: brandSecondary || null,
+        logo_url:        brandLogo      || null,
+      });
+      brandingQuery.refetch();
+      showToast("✓ Branding saved and applied site-wide!");
+    } catch (e) {
+      showToast(e?.message || "Could not save branding.");
+    } finally {
+      setSavingBrand(false);
+    }
+  }
+
+  async function handleResetBranding() {
+    if (!orgId) return;
+    setSavingBrand(true);
+    try {
+      await upsertOrgBranding(orgId, { primaryColor: null, secondaryColor: null, logoUrl: null });
+      applyDynamicBranding({});
+      setBrandPrimary("#1D4ED8");
+      setBrandSecondary("#0EA5E9");
+      setBrandLogo("");
+      brandingQuery.refetch();
+      showToast("Branding reset to Train AI defaults.");
+    } catch (e) {
+      showToast(e?.message || "Could not reset branding.");
+    } finally {
+      setSavingBrand(false);
     }
   }
 
@@ -607,12 +691,147 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                 </div>
               </div>
 
+
+              {/* ── Custom Branding Card ──────────────────────────────── */}
+              <div className="ta-card">
+                <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
+                  <div className="ta-row ta-gap10">
+                    <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Palette size={17} color="var(--primary)" />
+                    </div>
+                    <div>
+                      <div className="ta-title" style={{ fontSize: 15, fontWeight: 800 }}>Custom Branding</div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                        Customize your organization's colors and logo — changes apply site-wide instantly
+                      </div>
+                    </div>
+                  </div>
+                  {brandingQuery.loading && <RefreshCw size={14} style={{ color: "var(--text-3)", animation: "spin 1s linear infinite" }} />}
+                </div>
+
+                {/* Primary Brand Color */}
+                <div>
+                  <div className="ta-label" style={{ marginBottom: 8 }}>Primary Brand Color</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                    {PRESET_COLORS.map(p => (
+                      <button
+                        key={p.color}
+                        type="button"
+                        title={p.name}
+                        onClick={() => handleBrandPrimaryChange(p.color)}
+                        style={{
+                          width: 28, height: 28, borderRadius: "50%", background: p.color, cursor: "pointer",
+                          border: brandPrimary === p.color ? "2.5px solid #fff" : "2px solid transparent",
+                          boxShadow: brandPrimary === p.color ? `0 0 0 2px ${p.color}` : "0 1px 3px rgba(0,0,0,0.2)",
+                          display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
+                          transform: brandPrimary === p.color ? "scale(1.15)" : "scale(1)", transition: "transform .15s",
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      type="color"
+                      value={/^#[0-9a-fA-F]{6}$/.test(brandPrimary) ? brandPrimary : "#1D4ED8"}
+                      onChange={e => handleBrandPrimaryChange(e.target.value)}
+                      style={{ width: 40, height: 36, padding: 2, border: "1px solid var(--border)", borderRadius: 7, cursor: "pointer", flexShrink: 0 }}
+                    />
+                    <input
+                      className="ta-input"
+                      style={{ flex: 1, fontFamily: "monospace", fontSize: 13 }}
+                      placeholder="#1D4ED8"
+                      value={brandPrimary}
+                      onChange={e => handleBrandPrimaryChange(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Secondary / Accent Color */}
+                <div style={{ marginTop: 14 }}>
+                  <div className="ta-label" style={{ marginBottom: 8 }}>Accent / Secondary Color</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      type="color"
+                      value={/^#[0-9a-fA-F]{6}$/.test(brandSecondary) ? brandSecondary : "#0EA5E9"}
+                      onChange={e => handleBrandSecondaryChange(e.target.value)}
+                      style={{ width: 40, height: 36, padding: 2, border: "1px solid var(--border)", borderRadius: 7, cursor: "pointer", flexShrink: 0 }}
+                    />
+                    <input
+                      className="ta-input"
+                      style={{ flex: 1, fontFamily: "monospace", fontSize: 13 }}
+                      placeholder="#0EA5E9"
+                      value={brandSecondary}
+                      onChange={e => handleBrandSecondaryChange(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Logo URL */}
+                <div style={{ marginTop: 14 }}>
+                  <div className="ta-label" style={{ marginBottom: 6 }}>Organization Logo URL <span style={{ fontWeight: 400, fontSize: 11, color: "var(--text-3)" }}>(optional — paste a public image URL)</span></div>
+                  <input
+                    className="ta-input"
+                    style={{ width: "100%", fontSize: 12.5 }}
+                    placeholder="https://your-org.com/logo.png"
+                    value={brandLogo}
+                    onChange={e => setBrandLogo(e.target.value)}
+                  />
+                  {brandLogo && (
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                      <img
+                        src={brandLogo}
+                        alt="Logo preview"
+                        style={{ width: 48, height: 48, borderRadius: 8, objectFit: "contain", background: "var(--surface-2)", border: "1px solid var(--border)", padding: 4 }}
+                        onError={e => { e.target.style.display = "none"; }}
+                      />
+                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>Logo preview</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Live Preview strip */}
+                <div style={{ marginTop: 16, background: "var(--surface-2)", borderRadius: 10, padding: "12px 14px", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 7, background: brandPrimary, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 14, overflow: "hidden", flexShrink: 0 }}>
+                      {brandLogo ? <img src={brandLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} /> : (org?.name?.charAt(0) || "T")}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 12.5 }}>{org?.name || "Your Org"}</div>
+                      <div style={{ fontSize: 10, color: "var(--text-3)" }}>Live preview</div>
+                    </div>
+                  </div>
+                  <button style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecondary})`, color: "#fff", border: "none", padding: "5px 12px", borderRadius: 7, fontSize: 11.5, fontWeight: 700, cursor: "default" }}>
+                    Dashboard →
+                  </button>
+                </div>
+
+                {/* Save / Reset */}
+                <div className="ta-row ta-gap8 ta-mt16">
+                  <button
+                    className="ta-btn ta-btn-primary"
+                    style={{ flex: 2, height: 36, fontSize: 13, gap: 6, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    onClick={handleSaveBranding}
+                    disabled={savingBrand}
+                  >
+                    {savingBrand ? <><RefreshCw size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</> : <><Save size={13} /> Save Branding</>}
+                  </button>
+                  <button
+                    className="ta-btn ta-btn-outline"
+                    style={{ flex: 1, height: 36, fontSize: 12 }}
+                    onClick={handleResetBranding}
+                    disabled={savingBrand}
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+
               <div className="ta-card">
                 <div className="ta-row ta-between">
                   <div className="ta-row ta-gap10">
                     <Moon size={20} color="var(--primary)" />
                     <div>
-                      <div className="ta-title">Theme & Appearance</div>
+                      <div className="ta-title">Theme &amp; Appearance</div>
                       <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 2 }}>
                         Switch between light mode and high-contrast dark theme.
                       </div>

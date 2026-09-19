@@ -344,7 +344,7 @@ export function HomeScreen({
               </div>
               <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Lessons Done</div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: "#059669", marginTop: 2 }}>{user?.completedLessonsCount || user?.lessonsCompleted || 0} Lessons</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: "#059669", marginTop: 2 }}>{user?.lessonsCompleted ?? 0} Lessons</div>
               </div>
               <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Total Hours</div>

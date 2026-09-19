@@ -672,6 +672,7 @@ const ADMIN_NAV = [
   {
     section: "Platform",
     items: [
+      { key: "branding", label: "Branding & Theme", icon: Palette },
       { key: "settings", label: "Settings Hub", icon: Settings },
     ],
   },
@@ -719,16 +720,18 @@ const NAV_BY_WORKSPACE = { admin: ADMIN_NAV, mentor: MENTOR_NAV, manager: MANAGE
 // such sub-workspaces to switch between - it is one dashboard, which is
 // the entire point of pulling it out of that shared component in the first
 // place rather than passing it an empty workspace list.
-export function BrandLogo({ height = 22, isMinimized = false, style = {} }) {
+export function BrandLogo({ height = 22, isMinimized = false, style = {}, customLogoUrl = null }) {
   const isDark = typeof document !== "undefined" && (document.documentElement.classList.contains("dark") || localStorage.getItem("trainai_theme_dark") === "true");
-  const src = isDark ? "/logo-dark.png" : "/train-ai-logo.png";
+  const storedBrandLogo = typeof localStorage !== "undefined" ? localStorage.getItem("trainai_brand_logo") : null;
+  const src = customLogoUrl || storedBrandLogo || (isDark ? "/logo-dark.png" : "/train-ai-logo.png");
   return (
     <img
       src={src}
-      alt="Train AI"
+      alt="Logo"
       style={{
         height: isMinimized ? Math.round(height * 0.72) : height,
         width: "auto",
+        maxWidth: isMinimized ? 34 : 160,
         objectFit: "contain",
         display: "block",
         ...style

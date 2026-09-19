@@ -37,6 +37,7 @@ import {
   fetchOrCreateAIConversation, fetchAIChatMessages, sendAIChatMessage, requestAIReply
 } from "../lib/api/schemaHelper.js";
 import { updateUserAvatar, fetchOrgBranding } from "../lib/api/platform.js";
+import { applyDynamicBranding } from "../lib/brandingHelper.js";
 import { CheckCircle2, Search } from "lucide-react";
 
 // Paystack/Stripe redirect the browser back to this same page (no router in
@@ -256,6 +257,15 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   }, [orgId]);
   const brandPrimaryColor = orgBrandingQuery.data?.primary_color || null;
   const brandLogoUrl = orgBrandingQuery.data?.logo_url || null;
+
+  // Apply full CSS-variable branding (primary, hover, tint, glow, logo…)
+  // whenever org branding arrives or changes. This covers the learner portal;
+  // the platform/admin app calls initDynamicBranding() from its own useEffect.
+  useEffect(() => {
+    if (orgBrandingQuery.data) {
+      applyDynamicBranding(orgBrandingQuery.data);
+    }
+  }, [orgBrandingQuery.data]);
 
   const [wishlist, setWishlist] = useState(new Set());
   const [bookmarks, setBookmarks] = useState(new Set());

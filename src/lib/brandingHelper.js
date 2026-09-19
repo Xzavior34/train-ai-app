@@ -37,22 +37,46 @@ function darkenHex(hex, amount = 0.15) {
   }
 }
 
+// Convert hex to comma-separated RGB values "r, g, b"
+export function hexToRgb(hex) {
+  try {
+    const h = hex.replace("#", "");
+    const full = h.length === 3 ? h.split("").map(c => c + c).join("") : h;
+    const r = parseInt(full.slice(0, 2), 16) || 0;
+    const g = parseInt(full.slice(2, 4), 16) || 0;
+    const b = parseInt(full.slice(4, 6), 16) || 0;
+    return `${r}, ${g}, ${b}`;
+  } catch {
+    return "37, 99, 235";
+  }
+}
+
 export function applyDynamicBranding(branding) {
   if (typeof document === "undefined") return;
 
   const root = document.documentElement;
+  const isDark = root.classList.contains("dark") || (typeof localStorage !== "undefined" && localStorage.getItem("trainai_theme_dark") === "true");
 
   const primary = branding?.primary_color || branding?.primaryColor || null;
   if (primary && /^#[0-9a-fA-F]{3,6}$/.test(primary)) {
+    const rgb = hexToRgb(primary);
     root.style.setProperty("--primary", primary);
+    root.style.setProperty("--primary-rgb", rgb);
     root.style.setProperty("--primary-hover", darkenHex(primary, 0.12));
-    root.style.setProperty("--primary-light", lightenHex(primary, 0.8));
-    root.style.setProperty("--primary-tint", lightenHex(primary, 0.92));
+    root.style.setProperty("--primary-dark", darkenHex(primary, 0.25));
+    root.style.setProperty("--primary-light", isDark ? lightenHex(primary, 0.4) : lightenHex(primary, 0.8));
+    root.style.setProperty("--primary-tint", isDark ? `rgba(${rgb}, 0.18)` : lightenHex(primary, 0.92));
+    root.style.setProperty("--brand-glow", `0 0 24px rgba(${rgb}, 0.35)`);
   }
 
   const secondary = branding?.secondary_color || branding?.secondaryColor || null;
   if (secondary && /^#[0-9a-fA-F]{3,6}$/.test(secondary)) {
+    const secRgb = hexToRgb(secondary);
     root.style.setProperty("--secondary", secondary);
+    root.style.setProperty("--secondary-rgb", secRgb);
+    root.style.setProperty("--accent-gradient", `linear-gradient(135deg, ${primary || "var(--primary)"}, ${secondary})`);
+  } else if (primary) {
+    root.style.setProperty("--accent-gradient", `linear-gradient(135deg, ${primary}, ${darkenHex(primary, 0.2)})`);
   }
 
   // Store logo URL as CSS variable AND in localStorage so components can read it

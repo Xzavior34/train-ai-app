@@ -137,8 +137,8 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
           borderRadius: 10
         }}>
           <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
-            <span>Level {user.level || 2} Progress ({percent}%)</span>
-            <span style={{ color: "#FBBF24", fontWeight: 700 }}>{Math.max(0, ceiling - (user.totalPoints || 450)).toLocaleString()} XP to Level {(user.level || 2) + 1}</span>
+            <span>Level {user.level || 1} Progress ({percent}%)</span>
+            <span style={{ color: "#FBBF24", fontWeight: 700 }}>{Math.max(0, ceiling - (user.totalPoints ?? 0)).toLocaleString()} XP to Level {(user.level || 1) + 1}</span>
           </div>
           <div style={{
             height: 8,

@@ -275,7 +275,7 @@ export function ProfileScreen({
                     fontWeight: 700
                   }}
                 >
-                  <CheckCircle2 size={11} /> Verified Learner
+                  <CheckCircle2 size={11} /> {user.role === "Platform Owner" || user.role === "super_admin" ? "Platform Owner" : user.role === "admin" || user.role === "Admin" ? "Verified Admin" : user.role === "instructor" || user.role === "mentor" ? "Verified Instructor" : "Verified Learner"}
                 </span>
               </div>
 
@@ -539,7 +539,7 @@ export function ProfileScreen({
                   </div>
                   <div>
                     <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>View Achievements, XP & Rank</div>
-                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Level {user.level || 2} • {(user.totalPoints || 4520).toLocaleString()} XP earned across 8 badges</div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>Level {user.level || 1} • {(user.totalPoints ?? 0).toLocaleString()} XP earned across {myCertificates.length} credentials</div>
                   </div>
                 </div>
                 <ChevronRight size={18} color="var(--text-3)" />

@@ -15,38 +15,58 @@ import {
 } from "../../lib/api/platform.js";
 import { fetchOrgFeatureFlagOverrides, setOrgFeatureFlag, fetchOrgSeatsSummary } from "../../lib/api/organizations.js";
 
+import { PortalModal } from "../../components/common/PortalModal.jsx";
+
 const FEATURE_KEYS = [
-  { key: "learner_view", label: "Learner view" },
-  { key: "instructor_view", label: "Instructor view" },
-  { key: "manager_view", label: "Manager view" },
-  { key: "admin_view", label: "Admin view" },
-  { key: "ai_intelligence_layer", label: "AI Intelligence Layer" },
-  { key: "ai_intelligence_advanced", label: "AI Intelligence Layer (Advanced)" },
-  { key: "sso", label: "SSO" },
-  { key: "api_integrations", label: "API integrations" },
-  { key: "analytics_export", label: "Analytics export" },
-  { key: "multi_department_breakdown", label: "Multi-department breakdown" },
-  { key: "custom_branding", label: "Custom branding" },
+  { key: "learner_view", label: "Learner view", desc: "Access to student dashboard & course player" },
+  { key: "instructor_view", label: "Instructor view", desc: "Access to mentor/instructor portal" },
+  { key: "manager_view", label: "Manager view", desc: "Department and team management" },
+  { key: "admin_view", label: "Admin view", desc: "Institutional admin dashboard" },
+  { key: "ai_intelligence_layer", label: "AI Intelligence Layer", desc: "AI Coach & Tutor integration" },
+  { key: "ai_intelligence_advanced", label: "AI Intelligence Layer (Advanced)", desc: "Deep analytics & automated recommendations" },
+  { key: "sso", label: "SSO", desc: "Single Sign-On (SAML / Okta / Azure AD)" },
+  { key: "api_integrations", label: "API integrations", desc: "REST API & Webhooks access" },
+  { key: "analytics_export", label: "Analytics export", desc: "CSV / BI direct exports" },
+  { key: "multi_department_breakdown", label: "Multi-department breakdown", desc: "Sub-organization structuring" },
+  { key: "custom_branding", label: "Custom branding", desc: "White-label logos and theme colors" },
 ];
 
 const TIERS = ["free", "starter", "growth", "enterprise"];
 
-function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId }) {
-  const overridesQuery = useSupabaseQuery(async () => fetchOrgFeatureFlagOverrides(org.id), [org.id]);
+function OrgManageModal({ org, isOpen, onClose, showToast, refetchOrgs, currentUserId, orgSelector, onSwitchToOrgWorkspace }) {
+  const [activeTab, setActiveTab] = useState("identity"); // identity | capacity | features | danger
+  const overridesQuery = useSupabaseQuery(async () => fetchOrgFeatureFlagOverrides(org?.id), [org?.id]);
   const overrides = overridesQuery.data || [];
   const overrideMap = Object.fromEntries(overrides.map((o) => [o.feature_key, o.enabled]));
-  const seatsSummaryQuery = useSupabaseQuery(async () => fetchOrgSeatsSummary(org.id), [org.id]);
+  
+  const seatsSummaryQuery = useSupabaseQuery(async () => fetchOrgSeatsSummary(org?.id), [org?.id]);
   const seats = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(org.name);
-  const [editTier, setEditTier] = useState(org.subscription_tier || "growth");
-  const [editMaxUsers, setEditMaxUsers] = useState(org.max_users || 100);
+  const [editName, setEditName] = useState(org?.name || "");
+  const [editTier, setEditTier] = useState(org?.subscription_tier || "growth");
+  const [editMaxUsers, setEditMaxUsers] = useState(org?.max_users || 100);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Sync state when org changes
+  React.useEffect(() => {
+    if (org) {
+      setEditName(org.name || "");
+      setEditTier(org.subscription_tier || "growth");
+      setEditMaxUsers(org.max_users || 100);
+      setDeleteConfirm(false);
+    }
+  }, [org]);
+
+  if (!org) return null;
 
   async function handleToggleStatus() {
+    setStatusLoading(true);
     const next = org.status === "suspended" ? "active" : "suspended";
     const result = await setOrganizationStatus(org.id, next);
+    setStatusLoading(false);
     if (!result.success) {
       showToast(result.error || "Could not update status.");
     } else {
@@ -55,7 +75,7 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
     }
   }
 
-  async function handleSaveEdit() {
+  async function handleSaveIdentity() {
     if (!editName.trim()) {
       showToast("Organization name is required.");
       return;
@@ -68,7 +88,6 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
         max_users: parseInt(editMaxUsers, 10) || 100,
       });
       showToast("Organization details updated successfully!");
-      setIsEditing(false);
       refetchOrgs();
     } catch (err) {
       showToast(err.message || "Failed to update organization.");
@@ -82,95 +101,337 @@ function OrgManagePanel({ org, onClose, showToast, refetchOrgs, currentUserId })
     if (!result.success) {
       showToast(result.error || "Could not update this feature flag.");
     } else {
+      showToast(`Feature flag '${featureKey}' updated.`);
       overridesQuery.refetch();
     }
   }
 
+  async function handleDeleteOrg() {
+    setDeleting(true);
+    const result = await deleteOrganization(org.id);
+    setDeleting(false);
+    if (!result.success) {
+      showToast(result.error || "Failed to delete organization. Ensure all members and records are unlinked first.");
+    } else {
+      showToast(`Organization '${org.name}' deleted successfully.`);
+      refetchOrgs();
+      onClose();
+    }
+  }
+
+  const purchasedSeats = seats.purchased || org.max_users || 100;
+  const usedSeats = seats.used || org.user_count || 0;
+  const seatPct = Math.min(100, Math.round((usedSeats / Math.max(1, purchasedSeats)) * 100));
+
   return (
-    <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--primary)", borderRadius: 12 }}>
-      <div className="ta-row ta-between" style={{ gap: 10, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <div className="ta-title" style={{ wordBreak: "break-word", fontSize: 18, fontWeight: 800 }}>{org.name}</div>
-          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
-            <span style={{ textTransform: "capitalize", fontWeight: 700 }}>{org.subscription_tier || "Growth"}</span> plan • status: <Tag tone={org.status === "active" ? "success" : org.status === "suspended" ? "danger" : "warning"}>{org.status}</Tag>
-          </div>
-        </div>
-        <div className="ta-row ta-gap8" style={{ flexShrink: 0 }}>
-          <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setIsEditing((v) => !v)}>
-            <Edit3 size={13} /> {isEditing ? "Cancel Edit" : "Edit Org"}
-          </button>
-          <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={handleToggleStatus}>
-            {org.status === "suspended" ? <><Unlock size={13} /> Reactivate</> : <><Lock size={13} /> Suspend</>}
-          </button>
-          <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={onClose}>Close</button>
-        </div>
-      </div>
-
-      {isEditing && (
-        <div className="ta-card ta-mt12 ta-fade" style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Edit Organization Properties</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>ORGANIZATION NAME</label>
-              <input className="ta-input" value={editName} onChange={(e) => setEditName(e.target.value)} />
+    <PortalModal isOpen={isOpen} onClose={onClose} maxWidth={660}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        {/* Modal Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, borderBottom: "1px solid var(--border)", paddingBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 10,
+              background: "var(--primary-tint)", color: "var(--primary)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: "1px solid rgba(59, 130, 246, 0.2)", flexShrink: 0
+            }}>
+              <Building2 size={22} />
             </div>
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>SUBSCRIPTION PLAN</label>
-              <select className="ta-input" value={editTier} onChange={(e) => setEditTier(e.target.value)}>
-                {TIERS.map((t) => <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>MAX SEATS / USERS</label>
-              <input className="ta-input" type="number" value={editMaxUsers} onChange={(e) => setEditMaxUsers(e.target.value)} />
-            </div>
-          </div>
-          <div className="ta-row ta-gap8 ta-mt12">
-            <button className="ta-btn ta-btn-primary ta-btn-sm" disabled={savingEdit} onClick={handleSaveEdit}>
-              {savingEdit ? "Saving..." : "Save Changes"}
-            </button>
-            <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => setIsEditing(false)}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      <div className="ta-mt16">
-        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>Seats &amp; Capacity</div>
-        <div className="ta-row ta-gap16">
-          <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.purchased || org.max_users || 0}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Purchased/Limit</div></div>
-          <div><div style={{ fontSize: 16, fontWeight: 800 }}>{seats.used || org.user_count || 0}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Used</div></div>
-          <div><div style={{ fontSize: 16, fontWeight: 800, color: seats.available > 0 ? "var(--success)" : "var(--danger)" }}>{seats.available}</div><div style={{ fontSize: 10.5, color: "var(--text-2)" }}>Available</div></div>
-        </div>
-        {org.status === "active" && seats.available <= 0 && (
-          <div style={{ fontSize: 11, color: "var(--danger)", marginTop: 4 }}>This organization has reached its seat limit.</div>
-        )}
-      </div>
-
-      <div className="ta-mt16">
-        <div style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 6 }}>Feature flags</div>
-        <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 10 }}>
-          Tier defaults shown unless explicitly overridden below. Overriding a flag here applies to this organization only, independent of its tier.
-        </div>
-        <div className="ta-col ta-gap6">
-          {FEATURE_KEYS.map(({ key, label }) => {
-            const hasOverride = key in overrideMap;
-            const resolved = hasOverride ? overrideMap[key] : null;
-            return (
-              <div key={key} className="ta-row ta-between" style={{ padding: "6px 4px", gap: 8 }}>
-                <div className="ta-row ta-gap8" style={{ minWidth: 0, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12.5 }}>{label}</span>
-                  {hasOverride && <Tag tone="warning">Override</Tag>}
-                </div>
-                <Switch
-                  on={hasOverride ? resolved : false}
-                  onChange={() => handleToggleFeature(key, hasOverride ? resolved : false)}
-                />
+              <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text)", lineHeight: 1.2 }}>
+                {org.name}
               </div>
+              <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, display: "flex", alignItems: "center", gap: 8 }}>
+                <span>ID: {org.id.slice(0, 16)}...</span>
+                <span>•</span>
+                <Tag tone={org.status === "active" ? "success" : org.status === "suspended" ? "danger" : "warning"}>
+                  {org.status}
+                </Tag>
+                <Tag tone="primary" style={{ textTransform: "capitalize" }}>
+                  {org.subscription_tier || "Growth"} Plan
+                </Tag>
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="ta-btn ta-btn-ghost ta-btn-sm"
+            style={{ padding: 6, borderRadius: 8 }}
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Tab Navigation */}
+        <div style={{ display: "flex", gap: 6, borderBottom: "1px solid var(--border)", paddingBottom: 6, overflowX: "auto" }}>
+          {[
+            { id: "identity", label: "Settings & Plan", icon: Settings },
+            { id: "capacity", label: "Seats & Capacity", icon: Users },
+            { id: "features", label: "Feature Flags", icon: Layers },
+            { id: "danger", label: "Danger Zone", icon: Lock },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isSelected = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`ta-btn ta-btn-sm ${isSelected ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  borderRadius: 8, fontSize: 12.5, fontWeight: isSelected ? 700 : 500,
+                  whiteSpace: "nowrap"
+                }}
+              >
+                <Icon size={14} />
+                {tab.label}
+              </button>
             );
           })}
         </div>
+
+        {/* Tab 1: Settings & Plan */}
+        {activeTab === "identity" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>
+                  ORGANIZATION NAME
+                </label>
+                <input
+                  className="ta-input"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="e.g. Acme Corp"
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>
+                  SUBSCRIPTION PLAN
+                </label>
+                <select
+                  className="ta-input"
+                  value={editTier}
+                  onChange={(e) => setEditTier(e.target.value)}
+                >
+                  {TIERS.map((t) => (
+                    <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>
+                  MAX SEATS / CAPACITY LIMIT
+                </label>
+                <input
+                  className="ta-input"
+                  type="number"
+                  min="1"
+                  value={editMaxUsers}
+                  onChange={(e) => setEditMaxUsers(e.target.value)}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>
+                  ORGANIZATION SLUG
+                </label>
+                <input
+                  className="ta-input"
+                  disabled
+                  value={org.slug || org.id}
+                  style={{ opacity: 0.7, cursor: "not-allowed" }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginTop: 8, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+              <button
+                className="ta-btn ta-btn-outline ta-btn-sm"
+                onClick={() => {
+                  orgSelector?.onSelectOrg?.(org.id);
+                  onSwitchToOrgWorkspace?.();
+                  onClose();
+                  showToast(`Switched Super Admin context to ${org.name}`);
+                }}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <ExternalLink size={13} /> Enter Tenant Workspace
+              </button>
+
+              <button
+                className="ta-btn ta-btn-primary ta-btn-sm"
+                disabled={savingEdit}
+                onClick={handleSaveIdentity}
+                style={{ minWidth: 120 }}
+              >
+                {savingEdit ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: Seats & Capacity */}
+        {activeTab === "capacity" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{
+              display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10,
+              background: "var(--surface-2)", padding: "14px 16px", borderRadius: 10, border: "1px solid var(--border)"
+            }}>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700 }}>PURCHASED / LIMIT</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)", marginTop: 2 }}>{purchasedSeats}</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Allocated quota</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700 }}>ACTIVE MEMBERS</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: "var(--primary)", marginTop: 2 }}>{usedSeats}</div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Currently joined</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700 }}>AVAILABLE SEATS</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: (purchasedSeats - usedSeats) > 0 ? "var(--success)" : "var(--danger)", marginTop: 2 }}>
+                  {Math.max(0, purchasedSeats - usedSeats)}
+                </div>
+                <div style={{ fontSize: 10.5, color: "var(--text-3)" }}>Remaining</div>
+              </div>
+            </div>
+
+            {/* Capacity Progress Bar */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 600, marginBottom: 6 }}>
+                <span>Seat Utilization</span>
+                <span>{seatPct}% ({usedSeats} of {purchasedSeats})</span>
+              </div>
+              <div style={{ width: "100%", height: 8, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
+                <div style={{
+                  width: `${seatPct}%`,
+                  height: "100%",
+                  background: seatPct >= 100 ? "var(--danger)" : seatPct >= 80 ? "var(--warning)" : "var(--primary)",
+                  borderRadius: 4,
+                  transition: "width 0.3s ease"
+                }} />
+              </div>
+            </div>
+
+            <div style={{ fontSize: 12, color: "var(--text-2)", background: "var(--surface-2)", padding: 12, borderRadius: 8, border: "1px solid var(--border)" }}>
+              <div style={{ fontWeight: 700, marginBottom: 4 }}>💡 Quota Management</div>
+              To increase or adjust seat allocation, change the "Max Seats / Capacity Limit" under the <strong>Settings &amp; Plan</strong> tab.
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Feature Flags */}
+        {activeTab === "features" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+              Toggle enterprise capabilities specifically for this tenant. Overriding here overrides standard plan defaults.
+            </div>
+
+            <div style={{ maxHeight: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, paddingRight: 4 }}>
+              {FEATURE_KEYS.map(({ key, label, desc }) => {
+                const hasOverride = key in overrideMap;
+                const resolved = hasOverride ? overrideMap[key] : false;
+                return (
+                  <div
+                    key={key}
+                    style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      padding: "8px 12px", background: "var(--surface-2)", borderRadius: 8,
+                      border: "1px solid var(--border)", gap: 10
+                    }}
+                  >
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
+                        {hasOverride && <Tag tone="warning" style={{ fontSize: 10, padding: "1px 5px" }}>Override</Tag>}
+                      </div>
+                      <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{desc}</div>
+                    </div>
+                    <Switch
+                      on={resolved}
+                      onChange={() => handleToggleFeature(key, resolved)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Danger Zone */}
+        {activeTab === "danger" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Suspend / Reactivate */}
+            <div style={{
+              padding: 14, borderRadius: 10, border: "1px solid var(--border)",
+              background: "var(--surface-2)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12
+            }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13.5 }}>
+                  {org.status === "suspended" ? "Reactivate Organization" : "Suspend Organization"}
+                </div>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                  {org.status === "suspended"
+                    ? "Restore access to dashboards, courses, and APIs for all organization members."
+                    : "Immediately disable login and active sessions for all members of this organization."}
+                </div>
+              </div>
+              <button
+                className={`ta-btn ta-btn-sm ${org.status === "suspended" ? "ta-btn-primary" : "ta-btn-outline"}`}
+                onClick={handleToggleStatus}
+                disabled={statusLoading}
+                style={{ flexShrink: 0, minWidth: 100 }}
+              >
+                {statusLoading ? "Updating..." : org.status === "suspended" ? <><Unlock size={13} /> Reactivate</> : <><Lock size={13} /> Suspend</>}
+              </button>
+            </div>
+
+            {/* Permanent Deletion */}
+            <div style={{
+              padding: 14, borderRadius: 10, border: "1px solid rgba(239, 68, 68, 0.3)",
+              background: "rgba(239, 68, 68, 0.05)", display: "flex", flexDirection: "column", gap: 10
+            }}>
+              <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--danger)" }}>
+                Delete Organization
+              </div>
+              <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>
+                Permanently delete this organization record. If this organization has active members or courses, ensure they are unlinked first.
+              </div>
+              {!deleteConfirm ? (
+                <div>
+                  <button
+                    className="ta-btn ta-btn-sm"
+                    style={{ background: "var(--danger)", color: "#FFF", borderColor: "var(--danger)" }}
+                    onClick={() => setDeleteConfirm(true)}
+                  >
+                    <Trash2 size={13} /> Delete This Organization
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", background: "var(--surface)", padding: 10, borderRadius: 8, border: "1px solid var(--danger)" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--danger)" }}>Are you absolutely sure?</span>
+                  <button
+                    className="ta-btn ta-btn-sm"
+                    style={{ background: "var(--danger)", color: "#FFF" }}
+                    disabled={deleting}
+                    onClick={handleDeleteOrg}
+                  >
+                    {deleting ? "Deleting..." : "Yes, Delete Organization"}
+                  </button>
+                  <button
+                    className="ta-btn ta-btn-ghost ta-btn-sm"
+                    onClick={() => setDeleteConfirm(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </PortalModal>
   );
 }
 
@@ -566,57 +827,114 @@ export function OrganizationsScreen({ orgSelector, onSwitchToOrgWorkspace, onLau
           </div>
         )}
 
-        {managingOrg && (
-          <OrgManagePanel
-            org={managingOrg}
-            onClose={() => setManagingOrgId(null)}
-            showToast={showToast}
-            refetchOrgs={orgsQuery.refetch}
-            currentUserId={currentUserId}
-          />
-        )}
+        <OrgManageModal
+          org={managingOrg}
+          isOpen={!!managingOrg}
+          onClose={() => setManagingOrgId(null)}
+          showToast={showToast}
+          refetchOrgs={orgsQuery.refetch}
+          currentUserId={currentUserId}
+          orgSelector={orgSelector}
+          onSwitchToOrgWorkspace={onSwitchToOrgWorkspace}
+        />
 
-        {newOrgOpen && (
-          <div className="ta-card ta-mt16 ta-fade" style={{ borderColor: "var(--border)", borderRadius: 10 }}>
-            <div className="ta-title">Create New Organization</div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginTop: 12 }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>ORGANIZATION NAME</label>
-                <input className="ta-input" placeholder="e.g. Apex Learning Academy" value={name} onChange={(e) => setName(e.target.value)} />
+        <PortalModal isOpen={newOrgOpen} onClose={() => setNewOrgOpen(false)} maxWidth={560}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border)", paddingBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8,
+                  background: "var(--primary-tint)", color: "var(--primary)",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <Plus size={18} />
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 800 }}>Create New Organization</div>
               </div>
+              <button
+                onClick={() => setNewOrgOpen(false)}
+                className="ta-btn ta-btn-ghost ta-btn-sm"
+                style={{ padding: 6, borderRadius: 8 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>SUBSCRIPTION TIER</label>
-                <select className="ta-input" value={newTier} onChange={(e) => setNewTier(e.target.value)}>
-                  {TIERS.map((t) => <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)}</option>)}
-                </select>
+                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>
+                  ORGANIZATION NAME *
+                </label>
+                <input
+                  className="ta-input"
+                  placeholder="e.g. Apex Learning Academy"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoFocus
+                />
               </div>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>MAX SEATS / CAPACITY</label>
-                <input className="ta-input" type="number" value={newMaxUsers} onChange={(e) => setNewMaxUsers(e.target.value)} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>
+                    SUBSCRIPTION TIER
+                  </label>
+                  <select
+                    className="ta-input"
+                    value={newTier}
+                    onChange={(e) => setNewTier(e.target.value)}
+                  >
+                    {TIERS.map((t) => (
+                      <option key={t} value={t}>{t[0].toUpperCase() + t.slice(1)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>
+                    MAX SEATS / CAPACITY
+                  </label>
+                  <input
+                    className="ta-input"
+                    type="number"
+                    min="1"
+                    value={newMaxUsers}
+                    onChange={(e) => setNewMaxUsers(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
-            <div className="ta-row ta-gap8 ta-mt16" style={{ flexWrap: "wrap" }}>
-              <button className="ta-btn ta-btn-primary" onClick={async () => {
-                if (!name.trim()) return;
-                try {
-                  await createOrganization({
-                    name: name.trim(),
-                    subscription_tier: newTier,
-                    max_users: parseInt(newMaxUsers, 10) || 100,
-                    createdBy: currentUserId,
-                  });
-                  setNewOrgOpen(false);
-                  setName("");
-                  orgsQuery.refetch();
-                  showToast("Organization created!");
-                } catch (e) {
-                  showToast(e?.message || "Failed to create organization.");
-                }
-              }}>Save organization</button>
-              <button className="ta-btn ta-btn-outline" onClick={() => setNewOrgOpen(false)}>Cancel</button>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, borderTop: "1px solid var(--border)", paddingTop: 14 }}>
+              <button className="ta-btn ta-btn-outline" onClick={() => setNewOrgOpen(false)}>
+                Cancel
+              </button>
+              <button
+                className="ta-btn ta-btn-primary"
+                onClick={async () => {
+                  if (!name.trim()) {
+                    showToast("Please enter an organization name.");
+                    return;
+                  }
+                  try {
+                    await createOrganization({
+                      name: name.trim(),
+                      subscription_tier: newTier,
+                      max_users: parseInt(newMaxUsers, 10) || 100,
+                      createdBy: currentUserId,
+                    });
+                    setNewOrgOpen(false);
+                    setName("");
+                    orgsQuery.refetch();
+                    showToast("Organization created successfully!");
+                  } catch (e) {
+                    showToast(e?.message || "Failed to create organization.");
+                  }
+                }}
+              >
+                Create Organization
+              </button>
             </div>
           </div>
-        )}
+        </PortalModal>
       </div>
     </div>
   );

@@ -92,28 +92,38 @@ export function useLearnerData(session, screen, params) {
     return fetchMyStreakActivity(session.user.id, 14);
   }, [session?.user?.id, screen === "achievements"]);
 
+  const cohortMembershipQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return null;
+    return fetchMyCohortMembership(session.user.id);
+  }, [session?.user?.id]);
+
   const user = {
     email: userProfileQuery.data?.email || session?.user?.email || "",
     name: userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner",
     initials: initialsOf(userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email),
     avatarUrl: userProfileQuery.data?.avatar_url || null,
     location: userProfileQuery.data?.school || userProfileQuery.data?.department || "",
-    role: "Learner",
+    role: (userProfileQuery.data?.platform_role === "platform_owner" || userProfileQuery.data?.role === "super_admin" || isPlatformOwnerEmail(session?.user?.email))
+      ? "Platform Owner"
+      : userProfileQuery.data?.role === "admin"
+      ? "Admin"
+      : userProfileQuery.data?.role === "instructor" || userProfileQuery.data?.role === "mentor"
+      ? "Instructor"
+      : "Learner",
     organization: userProfileQuery.data?.organizations?.name || userProfileQuery.data?.organization_name || "",
     organization_id: userProfileQuery.data?.organization_id || null,
+    cohort: cohortMembershipQuery.data?.cohort?.name || null,
+    batch: cohortMembershipQuery.data?.cohort?.name || null,
     level: gamificationStatsQuery.data?.current_level || Math.floor((gamificationStatsQuery.data?.total_points || 0) / 500) + 1 || 1,
-    totalPoints: gamificationStatsQuery.data?.total_points || 0,
+    totalPoints: gamificationStatsQuery.data?.total_points ?? 0,
     streak: gamificationStatsQuery.data?.streak_days || 0,
     streakFreezes: gamificationStatsQuery.data?.streak_freezes_available || 0,
     lessonsCompleted: gamificationStatsQuery.data?.lessons_completed || 0,
     coursesCompleted: gamificationStatsQuery.data?.courses_completed || 0,
     sessionsCompleted: gamificationStatsQuery.data?.sessions_completed || 0,
+    studyHours: Math.round(((gamificationStatsQuery.data?.lessons_completed || 0) * 20) / 60 * 10) / 10,
     weeklyGoal: userProfileQuery.data?.weekly_lesson_goal || 5,
     weeklyDone: (gamificationStatsQuery.data?.lessons_completed || 0) % (userProfileQuery.data?.weekly_lesson_goal || 5),
-    // Real `updated_at` column on `user_gamification_stats` - touched every
-    // time points/streak/lessons are written (lesson complete, quiz, daily
-    // reward claim, etc.), so it doubles as a "last learning activity"
-    // signal for the retention nudges without needing a second query.
     lastActiveAt: gamificationStatsQuery.data?.updated_at || null,
     track: personalizationQuery.data?.learning_tracks?.[0] || "",
     skillLevel: personalizationQuery.data?.skill_level || "beginner",
@@ -317,15 +327,7 @@ export function useLearnerData(session, screen, params) {
   const activityFeedQuery = useSupabaseQuery(async () => fetchCommunityActivityFeed(15, orgId), [orgId]);
 
   // Which real cohort (if any) the learner belongs to, and that cohort's
-  // real posts feed - backs the Community screen's "Cohort Channels" tab,
-  // which previously rendered hardcoded sample cohort/announcement copy
-  // instead of querying anything. The posts query is gated on the resolved
-  // cohort id, the same "dependent query" pattern memberStatsQuery below
-  // uses against communityPeopleQuery's ids.
-  const cohortMembershipQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id) return null;
-    return fetchMyCohortMembership(session.user.id);
-  }, [session?.user?.id]);
+  // real posts feed - backs the Community screen's "Cohort Channels" tab.
   const cohortId = params?.id || params?.cohortId || cohortMembershipQuery.data?.cohort?.id || null;
   const cohortPostsQuery = useSupabaseQuery(async () => {
     if (!cohortId) return [];
