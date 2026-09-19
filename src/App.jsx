@@ -24,35 +24,32 @@ export default function App() {
     isPasswordRecovery, sendPasswordReset, completePasswordReset,
   } = useAuth();
 
-  // Platform Owner's separate login - PRD Section 10: "not login from
-  // initial login area - separate login." Checked before any of the
-  // regular auth/session logic below runs, and returns immediately if
-  // matched - this path never touches AuthPage, never shows the
-  // Organization/Individual Learner choice, and isn't linked from
-  // anywhere in the regular flow.
-  const [ownerPortalAuthenticated, setOwnerPortalAuthenticated] = useState(false);
-  const isOwnerPortalURL = (() => {
+  // Platform Owner's separate login: Accessible ONLY via /admin (or /#admin, ?portal=owner)
+  // When logged in normally, platform owner access is strictly suppressed so the user
+  // only sees the Organisation and Learner roles.
+  const [ownerPortalAuthenticated, setOwnerPortalAuthenticated] = useState(() => {
     try {
-      // Two entry points into the exact same real login screen and role
-      // check below - neither weakens the other. "?portal=owner" is the
-      // permanent one. "/admin" is confirmed as a deliberately temporary
-      // second path - "let access super admin temporary by typing
-      // url/admin for now before database" - easier to remember for a
-      // one-off review than a query string, explicitly meant to be
-      // reconsidered once real database-driven access control is fully in
-      // place (Philip's task list: "Prepare the system for database-driven
-      // access controls once the database integration is complete" -
-      // this is the temporary bridge to that, not a replacement for it).
-      // It does not skip authentication or the super_admin check in
-      // PlatformOwnerLoginScreen.jsx - it only changes how someone finds
-      // their way to that same screen.
-      const path = window.location.pathname.replace(/\/+$/, "");
-      const isAdminPath = path === "/admin" || path.endsWith("/admin") || path === "/superadmin" || path.endsWith("/superadmin");
-      return new URLSearchParams(window.location.search).get("portal") === "owner" || isAdminPath;
+      return sessionStorage.getItem("trainai_admin_portal_active") === "true";
     } catch {
       return false;
     }
-  })();
+  });
+
+  const checkIsOwnerPortalURL = () => {
+    try {
+      const path = window.location.pathname.toLowerCase().replace(/\/+$/, "");
+      const hash = window.location.hash.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      const isAdminPath = path === "/admin" || path.endsWith("/admin") || path === "/superadmin" || path.endsWith("/superadmin");
+      const isAdminHash = hash.includes("admin") || hash.includes("portal=owner");
+      const isAdminQuery = search.includes("portal=owner") || search.includes("admin=true");
+      return isAdminPath || isAdminHash || isAdminQuery;
+    } catch {
+      return false;
+    }
+  };
+
+  const isOwnerPortalURL = checkIsOwnerPortalURL();
 
   // Step-up MFA gate: "checking" while we ask Supabase for this session's
   // Authenticator Assurance Level, "required" when the user has a verified
@@ -172,7 +169,7 @@ export default function App() {
   function switchDashboard(target) {
     if (target === DASHBOARDS.LEARNER) setViewMode("learner");
     else if (target === DASHBOARDS.ORGANISATION) setViewMode("platform");
-    else if (target === DASHBOARDS.OWNER) setViewMode("owner");
+    else if (target === DASHBOARDS.OWNER && ownerPortalAuthenticated) setViewMode("owner");
   }
 
   useEffect(() => {
@@ -196,10 +193,10 @@ export default function App() {
           fetchMyRoles().catch(() => ["learner"])
         ]);
         const rolesList = Array.isArray(roles) && roles.length > 0 ? roles : ["learner"];
-        const mode = resolveViewMode(rolesList);
+        const mode = resolveViewMode(rolesList, ownerPortalAuthenticated);
         if (!cancelled) {
           setUserRoles(rolesList);
-          setHasPlatformRole(mode === "platform");
+          setHasPlatformRole(rolesList.some((r) => ["admin", "mentor", "manager", "super_admin"].includes(r)));
           setViewMode(mode);
           // Admin-Managed Grouping: organizations/admins now control learner
           // groupings, track badges, and course visibility directly (cohort
@@ -232,22 +229,25 @@ export default function App() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [loading, session?.user?.id]);
+  }, [loading, session?.user?.id, ownerPortalAuthenticated]);
 
   async function handleOnboardingComplete({ tracks, level }) {
     if (session?.user?.id) {
       await saveMyPersonalization(session.user.id, tracks, level);
       const roles = await fetchMyRoles().catch(() => ["learner"]);
       const rolesList = Array.isArray(roles) && roles.length > 0 ? roles : ["learner"];
-      const mode = resolveViewMode(rolesList);
+      const mode = resolveViewMode(rolesList, ownerPortalAuthenticated);
       setUserRoles(rolesList);
-      setHasPlatformRole(mode === "platform");
+      setHasPlatformRole(rolesList.some((r) => ["admin", "mentor", "manager", "super_admin"].includes(r)));
       setViewMode(mode);
     }
     setNeedsOnboarding(false);
   }
 
   async function handleGlobalSignOut() {
+    try {
+      sessionStorage.removeItem("trainai_admin_portal_active");
+    } catch {}
     await signOut();
     setUserRoles(["learner"]);
     setHasPlatformRole(false);
@@ -269,7 +269,19 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <PlatformOwnerLoginScreen onAuthenticated={() => setOwnerPortalAuthenticated(true)} />
+        <PlatformOwnerLoginScreen
+          initialEmail={session?.user?.email || "trainailtd@gmail.com"}
+          onAuthenticated={(newSession) => {
+            try {
+              sessionStorage.setItem("trainai_admin_portal_active", "true");
+            } catch {}
+            setOwnerPortalAuthenticated(true);
+            setViewMode("owner");
+          }}
+          onCancel={() => {
+            window.location.replace("/");
+          }}
+        />
       </>
     );
   }
@@ -277,13 +289,38 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <PlatformOwnerApp
-          onSwitchDashboard={switchDashboard}
-          userRoles={["super_admin"]}
-          superAdminSelectedOrgId={superAdminSelectedOrgId}
-          setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
-          onSignOut={handleGlobalSignOut}
-        />
+        <div style={{ display: viewMode === "learner" ? "block" : "none" }}>
+          <TrainAILearnerApp
+            isActive={viewMode === "learner"}
+            onSwitchToPlatform={hasPlatformRole ? () => setViewMode("platform") : undefined}
+            onSwitchDashboard={switchDashboard}
+            userRoles={userRoles}
+            isOwnerPortalActive={true}
+            onSignOut={handleGlobalSignOut}
+          />
+        </div>
+        <div style={{ display: viewMode === "platform" ? "block" : "none" }}>
+          <TrainAIPlatformApp
+            isActive={viewMode === "platform"}
+            onSwitchToLearner={() => setViewMode("learner")}
+            onSwitchDashboard={switchDashboard}
+            userRoles={userRoles}
+            isOwnerPortalActive={true}
+            superAdminSelectedOrgId={superAdminSelectedOrgId}
+            setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
+            onSignOut={handleGlobalSignOut}
+          />
+        </div>
+        <div style={{ display: (viewMode === "owner" || (viewMode !== "learner" && viewMode !== "platform")) ? "block" : "none" }}>
+          <PlatformOwnerApp
+            onSwitchDashboard={switchDashboard}
+            userRoles={userRoles}
+            superAdminSelectedOrgId={superAdminSelectedOrgId}
+            setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
+            onSignOut={handleGlobalSignOut}
+          />
+        </div>
+        <ConsentBanner session={session} />
       </>
     );
   }
@@ -433,6 +470,7 @@ export default function App() {
           onSwitchToPlatform={hasPlatformRole ? () => setViewMode("platform") : undefined}
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
+          isOwnerPortalActive={ownerPortalAuthenticated}
           onSignOut={handleGlobalSignOut}
         />
       </div>
@@ -442,6 +480,7 @@ export default function App() {
           onSwitchToLearner={() => setViewMode("learner")}
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
+          isOwnerPortalActive={ownerPortalAuthenticated}
           superAdminSelectedOrgId={superAdminSelectedOrgId}
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
           onSignOut={handleGlobalSignOut}

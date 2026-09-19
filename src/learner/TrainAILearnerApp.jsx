@@ -64,7 +64,7 @@ function initialScreenFromLocation() {
 import { DashboardSwitcher } from "../platform/components/PlatformUI.jsx";
 import { getAvailableDashboards, DASHBOARDS, hasStaffOrAdminRole, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
-export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform, onSwitchDashboard, userRoles = [], onSignOut } = {}) {
+export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform, onSwitchDashboard, userRoles = [], isOwnerPortalActive = false, onSignOut } = {}) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const { session, signOut } = useAuth();
   const hasStaffAccess = hasStaffOrAdminRole(userRoles);
@@ -1030,9 +1030,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       {switcherOpen && (
         <DashboardSwitcher
           currentDashboard={DASHBOARDS.LEARNER}
-          availableDashboards={getAvailableDashboards(userRoles, session?.user?.email || user?.email)}
+          availableDashboards={getAvailableDashboards(userRoles, session?.user?.email || user?.email, isOwnerPortalActive)}
           roleLabel={
-            isPlatformOwnerEmail(session?.user?.email || user?.email) && userRoles.includes("super_admin")
+            isOwnerPortalActive && isPlatformOwnerEmail(session?.user?.email || user?.email) && userRoles.includes("super_admin")
               ? "Super Admin"
               : userRoles.includes("admin") || userRoles.includes("manager")
                 ? "Admin"

@@ -14,8 +14,8 @@ import { isPlatformOwnerEmail } from "../lib/roleRouting.js";
 // Authenticates directly against the single production database and explicitly
 // rejects any account that isn't confirmed super_admin after signing in, rather
 // than silently falling through to a Learner or Organisation dashboard.
-export function PlatformOwnerLoginScreen({ onAuthenticated }) {
-  const [email, setEmail] = useState("");
+export function PlatformOwnerLoginScreen({ onAuthenticated, initialEmail = "", onCancel }) {
+  const [email, setEmail] = useState(initialEmail || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -51,6 +51,14 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
     }
   }
 
+  function handleGoBack() {
+    if (onCancel) {
+      onCancel();
+    } else {
+      window.location.replace("/");
+    }
+  }
+
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0F172A", fontFamily: "var(--font-sans, 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)" }}>
       <style>{`
@@ -65,28 +73,34 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
         .owner-preview-btn:hover { background: #F8FAFC; }
         .owner-preview-btn:active { transform: scale(.98); }
       `}</style>
-      <form onSubmit={handleSignIn} className="owner-card" style={{ maxWidth: 360, width: "100%", padding: 32, background: "#fff", borderRadius: 10, margin: 16 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#EF4444", textTransform: "uppercase" }}>Train AI Internal</div>
-        <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4 }}>Platform Owner Access</div>
-        <div style={{ fontSize: 12.5, color: "#656C86", marginTop: 6, marginBottom: 20 }}>
-          Train AI staff only. This is not the organization or learner sign-in.
+      <form onSubmit={handleSignIn} className="owner-card" style={{ maxWidth: 380, width: "100%", padding: 32, background: "#fff", borderRadius: 12, margin: 16, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#EF4444", textTransform: "uppercase" }}>Train AI Internal</div>
+          <button type="button" onClick={handleGoBack} style={{ background: "none", border: "none", color: "#64748B", fontSize: 12, fontWeight: 600, cursor: "pointer", padding: 0 }}>
+            ← Back to App
+          </button>
         </div>
-        <label style={{ fontSize: 12, fontWeight: 600 }}>Email</label>
+        <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4, color: "#0F172A" }}>Platform Owner Access</div>
+        <div style={{ fontSize: 12.5, color: "#656C86", marginTop: 6, marginBottom: 20 }}>
+          Train AI administrative portal. Sign in with your platform owner credentials to access global management.
+        </div>
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>Email</label>
         <input
           type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@trainailtd.com"
+          placeholder="trainailtd@gmail.com"
           className="owner-input"
-          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 12, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box" }}
+          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 12, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box", fontSize: 13.5 }}
         />
-        <label style={{ fontSize: 12, fontWeight: 600 }}>Password</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>Password</label>
         <input
           type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
           className="owner-input"
-          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 16, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box" }}
+          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 16, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box", fontSize: 13.5 }}
         />
-        {error && <div style={{ fontSize: 12.5, color: "#DC2626", marginBottom: 12 }}>{error}</div>}
-        <button type="submit" disabled={loading} className="owner-submit" style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, border: "none", cursor: loading ? "default" : "pointer" }}>
-          {loading ? "Signing in..." : "Sign in"}
+        {error && <div style={{ fontSize: 12.5, color: "#DC2626", marginBottom: 12, padding: "8px 12px", background: "#FEF2F2", borderRadius: 6 }}>{error}</div>}
+        <button type="submit" disabled={loading} className="owner-submit" style={{ width: "100%", padding: "11px 12px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, border: "none", cursor: loading ? "default" : "pointer", fontSize: 14 }}>
+          {loading ? "Authenticating..." : "Sign in as Platform Owner"}
         </button>
         {!hasRealProject && (
           <>

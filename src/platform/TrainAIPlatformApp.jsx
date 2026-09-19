@@ -56,7 +56,7 @@ function defaultWorkspaceForRoles(roles = []) {
 
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 
-export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboard, userRoles: userRolesProp, superAdminSelectedOrgId, setSuperAdminSelectedOrgId } = {}) {
+export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboard, userRoles: userRolesProp, isOwnerPortalActive = false, superAdminSelectedOrgId, setSuperAdminSelectedOrgId } = {}) {
   const { session, profileQuery, orgId, userRoles: fallbackUserRoles } = usePlatformData();
   const userRoles = userRolesProp && userRolesProp.length ? userRolesProp : fallbackUserRoles;
 
@@ -345,9 +345,9 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
           {switcherOpen && (
             <DashboardSwitcher
               currentDashboard={DASHBOARDS.ORGANISATION}
-              availableDashboards={getAvailableDashboards(userRoles, session?.user?.email || profileQuery?.data?.email)}
+              availableDashboards={getAvailableDashboards(userRoles, session?.user?.email || profileQuery?.data?.email, isOwnerPortalActive)}
               roleLabel={
-                isPlatformOwnerEmail(session?.user?.email || profileQuery?.data?.email) && userRoles.includes("super_admin")
+                isOwnerPortalActive && isPlatformOwnerEmail(session?.user?.email || profileQuery?.data?.email) && userRoles.includes("super_admin")
                   ? "Super Admin"
                   : userRoles.includes("admin") || userRoles.includes("manager")
                     ? "Admin"

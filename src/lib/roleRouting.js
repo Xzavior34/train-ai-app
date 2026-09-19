@@ -81,12 +81,15 @@ export function setDemoRoleForEmail(email, role) {
 
 /**
  * Decide which app shell a signed-in user should see, from their real roles
- * alone.
+ * alone. In normal sign-in, Platform Owner is strictly suppressed and routes
+ * to Organisation or Learner view. Platform Owner view is ONLY resolved when
+ * the admin portal (/admin) has been explicitly authenticated.
  * @param {string[]} roles - platform roles for the user (e.g. from user_roles)
- * @returns {"platform"|"learner"}
+ * @param {boolean} isOwnerPortalActive - whether authenticated via /admin
+ * @returns {"owner"|"platform"|"learner"}
  */
-export function resolveViewMode(roles = []) {
-  if (roles.includes("super_admin")) return "owner";
+export function resolveViewMode(roles = [], isOwnerPortalActive = false) {
+  if (isOwnerPortalActive && roles.includes("super_admin")) return "owner";
   return roles.some((r) => PLATFORM_ROLES.includes(r)) ? "platform" : "learner";
 }
 
@@ -102,12 +105,11 @@ export function resolveViewMode(roles = []) {
 // Super Admin, now its own top-level shell with its own sidebar, in
 // src/platform/PlatformOwnerApp.jsx).
 //
-// Access rule, matching what was confirmed directly:
-//   - super_admin -> can switch between all three.
-//   - any other platform role (admin/mentor/hr/manager) -> can switch
-//     between Organisation and Learner only. Owner never appears as an
-//     option for them, regardless of which org they administer or how
-//     large it is.
+// Access rule:
+//   - When authenticated via /admin portal (isOwnerPortalActive === true)
+//     and holding super_admin / platform owner email -> can switch between all three (Learner, Organisation, Owner).
+//   - In normal sign-in (even for trainailtd@gmail.com / trainai@gmail.com) ->
+//     sees Organisation and Learner only. Platform Owner never appears.
 //   - a plain learner with no platform role -> Learner only, nothing to
 //     switch to.
 export const DASHBOARDS = {
@@ -131,17 +133,17 @@ export function hasStaffOrAdminRole(roles = []) {
   return roles.some((r) => PLATFORM_ROLES.includes(r));
 }
 
-export function getAvailableDashboards(roles = [], email = "") {
+export function getAvailableDashboards(roles = [], email = "", isOwnerPortalActive = false) {
   const normalizedEmail = (email || "").toLowerCase().trim();
   
-  // Platform Owner Dashboard ONLY shows when signed in with trainailtd@gmail.com
-  if (isPlatformOwnerEmail(normalizedEmail) && (roles.includes("super_admin") || roles.includes("admin") || roles.length > 0)) {
+  // Platform Owner Dashboard ONLY shows when authenticated through the dedicated /admin portal
+  if (isOwnerPortalActive && (isPlatformOwnerEmail(normalizedEmail) || roles.includes("super_admin"))) {
     return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION, DASHBOARDS.OWNER];
   }
   
-  // For instructors, managers, and admins (e.g. info@sarafoundationafrica.com):
-  // They see Learner and Organisation dashboards only. Platform Owner never shows.
-  if (roles.some((r) => PLATFORM_ROLES.includes(r))) {
+  // For normal sign-in (including trainailtd@gmail.com and org staff):
+  // They see Learner and Organisation dashboards only. Platform Owner is completely hidden.
+  if (roles.some((r) => PLATFORM_ROLES.includes(r)) || isPlatformOwnerEmail(normalizedEmail)) {
     return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION];
   }
   
