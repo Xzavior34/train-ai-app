@@ -458,20 +458,48 @@ export async function fetchAllOrganizationsWithUserCounts() {
   }
   const orgs = await fetchAllOrganizations();
   return Promise.all(orgs.map(async (o) => {
-    const { count } = await supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", o.id);
-    return { ...o, user_count: count || 0 };
+    const [userRes, courseRes, cohortRes] = await Promise.all([
+      supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("organization_id", o.id),
+      supabase.from("courses").select("id", { count: "exact", head: true }).eq("organization_id", o.id),
+      supabase.from("cohorts").select("id", { count: "exact", head: true }).eq("organization_id", o.id),
+    ]);
+    return {
+      ...o,
+      user_count: userRes.count || 0,
+      course_count: courseRes.count || 0,
+      cohort_count: cohortRes.count || 0,
+    };
   }));
 }
 
-export async function createOrganization({ name, slug, createdBy }) {
+export async function createOrganization({ name, slug, createdBy, subscription_tier = "growth", status = "active", max_users = 100 }) {
   if (!supabase) return null;
+  const orgSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
   const { data, error } = await supabase
     .from("organizations")
-    .insert({ name, slug, status: "trial", subscription_tier: "free", max_users: 100, created_by: createdBy })
+    .insert({
+      name,
+      slug: orgSlug,
+      status,
+      subscription_tier,
+      max_users,
+      created_by: createdBy
+    })
     .select()
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function deleteOrganization(orgId) {
+  if (!supabase || !orgId) return { success: false, error: "Missing organization ID" };
+  try {
+    const { error } = await supabase.from("organizations").delete().eq("id", orgId);
+    if (error) throw error;
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message || "Could not delete organization" };
+  }
 }
 
 export async function updateOrganization(orgId, patch) {
