@@ -76,6 +76,7 @@ async function main() {
   await deployFunction('send-certificate-email', 'send-certificate-email', 'supabase/functions/send-certificate-email/index.ts');
   await deployFunction('send-signup-confirmation', 'send-signup-confirmation', 'supabase/functions/send-signup-confirmation/index.ts');
   await deployFunction('reset-password', 'reset-password', 'supabase/functions/reset-password/index.ts');
+  await deployFunction('invite-user', 'invite-user', 'supabase/functions/invite-user/index.ts');
   console.log("All email Edge Functions successfully deployed!");
 }
 
