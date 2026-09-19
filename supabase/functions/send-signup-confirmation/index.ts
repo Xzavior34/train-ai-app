@@ -63,8 +63,6 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Generate a confirmation link for the already-created account.
-    //    The user was created by auth.signUp before this function is called,
-    //    so we use type:"magiclink" which works on an existing account.
     let confirmUrl: string | null = null;
     try {
       const res = await adminClient.auth.admin.generateLink({
@@ -72,7 +70,10 @@ Deno.serve(async (req: Request) => {
         email,
         options: { redirectTo: redirectTarget, data: { role } },
       });
-      confirmUrl = res.data?.properties?.action_link || null;
+      const hashedToken = res.data?.properties?.hashed_token;
+      confirmUrl = hashedToken
+        ? `${targetOrigin}/?token_hash=${hashedToken}&type=magiclink`
+        : res.data?.properties?.action_link || null;
     } catch (linkErr) {
       console.warn("Could not generate confirmation link (will send welcome email without link):", linkErr);
     }

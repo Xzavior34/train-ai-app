@@ -51,11 +51,30 @@ export function useAuth() {
       }
     })();
 
-    // Check if landing directly on recovery URL from email link
+    // Check if landing directly on recovery URL or token_hash from email link
     const hash = window.location.hash || "";
     const search = window.location.search || "";
+    const searchParams = new URLSearchParams(search);
+    const tokenHash = searchParams.get("token_hash");
+    const tokenType = searchParams.get("type");
+
     if (hash.includes("type=recovery") || hash.includes("type%3Drecovery") || search.includes("type=recovery")) {
       setIsPasswordRecovery(true);
+    }
+
+    if (tokenHash && tokenType && supabase) {
+      if (tokenType === "recovery") {
+        setIsPasswordRecovery(true);
+      }
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type: tokenType }).then(({ data, error }) => {
+        if (!error && data?.session) {
+          setSession(data.session);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.session));
+          if (tokenType === "recovery") {
+            setIsPasswordRecovery(true);
+          }
+        }
+      }).catch(() => {});
     }
 
     let subscription = null;

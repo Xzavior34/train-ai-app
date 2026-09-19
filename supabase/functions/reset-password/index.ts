@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
       },
     });
 
-    if (linkErr || !linkData?.properties?.action_link) {
+    if (linkErr || (!linkData?.properties?.action_link && !linkData?.properties?.hashed_token)) {
       console.warn("Generate recovery link warning:", linkErr);
       return new Response(
         JSON.stringify({ error: linkErr?.message || "Could not generate password reset link for this email." }),
@@ -77,7 +77,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const resetUrl = linkData.properties.action_link;
+    // Direct link to target origin with token_hash - lands directly on the app (e.g. Vercel)
+    const hashedToken = linkData.properties.hashed_token;
+    const resetUrl = hashedToken
+      ? `${targetOrigin}/?token_hash=${hashedToken}&type=recovery`
+      : linkData.properties.action_link;
     let emailSent = false;
     let resendDetails: any = null;
 
