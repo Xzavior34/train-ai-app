@@ -371,6 +371,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   async function handleSendCoachMessage() {
     const content = coachInput.trim();
     if (!content || !coachConversationId || !session?.user?.id || coachSending) return;
+
+    if (typeof credits === "number" && credits <= 0) {
+      showToast("You're out of AI credits. Please purchase more credits to continue chatting with the AI Coach.");
+      push("creditsCheckout", { mode: "credits" });
+      return;
+    }
+
     setCoachInput("");
     setCoachSending(true);
     try {
@@ -399,7 +406,12 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
 
       const reply = await requestAIReply({ conversationId: coachConversationId, message: content });
       if (reply?.error) {
-        showToast(reply.error);
+        showToast(reply.message || reply.error);
+        if (reply.code === "insufficient_credits" || reply.error?.toLowerCase().includes("credit")) {
+          push("creditsCheckout", { mode: "credits" });
+        }
+      } else {
+        if (consumeCredit) consumeCredit();
       }
       coachMessagesQuery.refetch();
     } catch (e) {

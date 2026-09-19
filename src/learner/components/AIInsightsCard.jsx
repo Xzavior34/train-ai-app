@@ -105,7 +105,7 @@ export function AIInsightsCard({ session, credits, consumeCredit, onBuyCredits, 
         <button
           className="tai-iconbtn"
           aria-label={outOfCredits ? "Out of AI credits" : "Refresh AI insights"}
-          title={outOfCredits ? "Out of AI credits for today" : "Refresh (uses 1 AI credit)"}
+          title={outOfCredits ? "Out of AI credits. Purchase credits to refresh." : "Refresh (uses 1 AI credit)"}
           disabled={insightsQuery.loading}
           onClick={handleRefresh}
         >

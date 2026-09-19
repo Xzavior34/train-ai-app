@@ -122,7 +122,7 @@ export function AIQuizScreen({
       return;
     }
     if (typeof credits === "number" && credits <= 0) {
-      setQuizGenError("You're out of AI credits for today. Buy more or wait for tomorrow's reset.");
+      setQuizGenError("You're out of AI credits. Buy more credits or request credits from your organization to continue.");
       return;
     }
     setQuizGenError(null);
