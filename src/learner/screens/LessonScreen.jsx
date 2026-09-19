@@ -149,20 +149,25 @@ export function LessonScreen({
   const [feedbackHelpful, setFeedbackHelpful] = useState(true);
 
   // Normalize current lesson
-  const rawLessons = lessons && lessons.length > 0 ? lessons : [
-    { id: "l-1", title: "1. Foundations of Spatial Systems & Multi-Agent AI", duration: 18, module: "Module 1: Foundations" },
-    { id: "l-2", title: "2. Structuring Design Tokens with Figma Variables", duration: 22, module: "Module 1: Foundations" },
-    { id: "l-3", title: "3. Vector Databases & pgvector Index Architectures", duration: 26, module: "Module 2: Core Engineering" },
-    { id: "l-4", title: "4. Building Autonomous Function Calling Agents", duration: 32, module: "Module 2: Core Engineering" },
-    { id: "l-5", title: "5. Production Deployment, Caching & Performance Benchmark", duration: 24, module: "Module 3: Production & Scaling" },
-    { id: "l-6", title: "6. Final Capstone Project & Portfolio Submission", duration: 40, module: "Module 4: Capstone" }
-  ];
+  const rawLessons = lessons && lessons.length > 0 ? lessons : [];
 
   const currentLessonIndex = rawLessons.findIndex(l => l.id === lessonId);
   const lesson = rawLessons[currentLessonIndex >= 0 ? currentLessonIndex : 0] || rawLessons[0];
   const nextLesson = rawLessons[currentLessonIndex + 1];
   const prevLesson = currentLessonIndex > 0 ? rawLessons[currentLessonIndex - 1] : null;
   const isCompleted = lesson && completedLessonIds.has(`${course?.id}-${lesson.id}`);
+
+  if (!course || rawLessons.length === 0) {
+    return (
+      <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 14, width: "100%", maxWidth: 1000, margin: "0 auto" }}>
+        <TopBar title={course?.title || "Lesson"} onBack={back} />
+        <div className="tai-card tai-empty" style={{ padding: 48, textAlign: "center", borderRadius: 12 }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 8px" }}>No Lessons Available Yet</h3>
+          <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0 }}>This course does not have any published lessons yet.</p>
+        </div>
+      </div>
+    );
+  }
 
   // Format MM:SS helper
   const formatTime = (secs) => {

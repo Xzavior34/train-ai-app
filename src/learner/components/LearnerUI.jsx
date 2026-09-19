@@ -1211,46 +1211,20 @@ export function QuickWinCard({ title, duration, points, onClick }) {
 // learning_path_courses / learning_path_enrollments, written by the admin
 // path builder) now only surfaces as a filter on the All Courses screen.
 
-export function ScheduleView({ push, back }) {
-  const SESSIONS = [
-    {
-      id: "live-now",
-      title: "UI Critique & System Architecture Review",
-      track: "Design & UX",
-      time: "Live Now (10:00 AM - 11:30 AM)",
-      instructor: "Astrid Larsson",
-      isLive: true,
-      attendees: 18,
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
-    },
-    {
-      id: "live-2",
-      title: "Full-Stack GenAI: Vector Embeddings & Supabase",
-      track: "AI & Engineering",
-      time: "Tomorrow at 02:00 PM UTC",
-      instructor: "Alex Rivera",
-      isLive: false,
-      attendees: 24,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
-    },
-    {
-      id: "live-3",
-      title: "Axon AI Prompting & Autonomous Workflows",
-      track: "AI Tools",
-      time: "Thursday at 04:30 PM UTC",
-      instructor: "Marcus Vance",
-      isLive: false,
-      attendees: 31,
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80"
-    }
-  ];
-
+export function ScheduleView({ sessions = [], push, back }) {
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <TopBar title="Schedule & Live Sessions" sub="Join live mentor workshops, critiques, and cohort sessions" onBack={back} />
 
-      <div className="tai-col tai-gap14">
-        {SESSIONS.map((sess) => (
+      {sessions.length === 0 ? (
+        <div className="tai-card tai-empty" style={{ padding: 48, textAlign: "center", borderRadius: 12 }}>
+          <Calendar size={32} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.5 }} />
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--text)", margin: "0 0 6px" }}>No Live Sessions Scheduled</h3>
+          <p style={{ fontSize: 13, color: "var(--text-3)", margin: 0 }}>There are currently no upcoming live sessions scheduled.</p>
+        </div>
+      ) : (
+        <div className="tai-col tai-gap14">
+          {sessions.map((sess) => (
           <div
             key={sess.id}
             className="tai-card tai-card-hover"
@@ -1310,6 +1284,7 @@ export function ScheduleView({ push, back }) {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

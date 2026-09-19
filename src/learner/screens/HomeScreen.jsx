@@ -279,29 +279,29 @@ export function HomeScreen({
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", lineHeight: 1.35, wordBreak: "break-word" }}>
-                      {cohort?.name || "Q1 Onboarding Cohort"}
+                      {cohort?.name || "Cohort"}
                     </div>
                     <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>
-                      Sprint 5 of 12
+                      {cohort?.current_sprint ? `Sprint ${cohort.current_sprint}` : "Active"}
                     </div>
                   </div>
                 </div>
-                <Tag tone="primary">Sprint 5</Tag>
+                {cohort?.current_sprint && <Tag tone="primary">{`Sprint ${cohort.current_sprint}`}</Tag>}
               </div>
 
               <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
                 <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
                   <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
-                  <span style={{ color: "var(--primary)" }}>42% Completed</span>
+                  <span style={{ color: "var(--primary)" }}>{cohort?.progress || 0}% Completed</span>
                 </div>
                 <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ width: "42%", height: "100%", background: "var(--primary, #2563EB)", borderRadius: 3 }} />
+                  <div style={{ width: `${cohort?.progress || 0}%`, height: "100%", background: "var(--primary, #2563EB)", borderRadius: 3 }} />
                 </div>
               </div>
 
               <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                 <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
-                  68 enrolled peers • Next: Tomorrow 10:00 AM
+                  {cohort?.members_count ? `${cohort.members_count} enrolled peers` : "Cohort active"} {cohort?.next_session ? `• Next: ${cohort.next_session}` : ""}
                 </div>
                 <button
                   className="tai-btn tai-btn-primary tai-btn-sm"
@@ -344,11 +344,11 @@ export function HomeScreen({
               </div>
               <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Lessons Done</div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: "#059669", marginTop: 2 }}>{user?.completedLessonsCount || 4} Lessons</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: "#059669", marginTop: 2 }}>{user?.completedLessonsCount || user?.lessonsCompleted || 0} Lessons</div>
               </div>
               <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Total Hours</div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: "var(--primary)", marginTop: 2 }}>14.5 Hrs</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: "var(--primary)", marginTop: 2 }}>{user?.studyHours ? `${user.studyHours} Hrs` : "0.0 Hrs"}</div>
               </div>
             </div>
 
