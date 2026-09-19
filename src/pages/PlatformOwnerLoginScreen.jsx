@@ -1,73 +1,45 @@
-import React, { useState, useEffect } from "react";
-import { SUPABASE_PROJECTS, setActiveSupabaseProject, getSupabaseClientForProject } from "../services/supabaseClient.js";
+import React, { useState } from "react";
+import { supabase, isSupabaseConfigured } from "../services/supabaseClient.js";
+import { isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 // Platform Owner's separate login entry point - PRD Section 10: "The
 // platform owner view is for Train AI internal operations... not login
-// from initial login area - separate login." Confirmed a real gap: the
-// only way to reach the Owner dashboard was the Dashboard Switcher,
-// reachable from inside the exact same login/signup flow as every
-// organization and learner - "not from the initial login area" was not
-// actually true.
+// from initial login area - separate login."
 //
 // This is a genuinely distinct screen: no Organization/Individual Learner
 // choice, no public sign-up path at all (there never was one for
 // super_admin - accounts are provisioned directly, per
 // 0119_super_admin_trainai_only.sql), reached only via a dedicated URL
 // (?portal=owner), not linked from the regular AuthPage anywhere.
-// Authenticates directly against the Digital Training project (where
-// Super Admin accounts live - see services/supabaseClient.js's header
-// comment) and explicitly rejects any account that isn't confirmed
-// super_admin after signing in, rather than silently falling through to a
-// Learner or Organisation dashboard.
+// Authenticates directly against the single production database and explicitly
+// rejects any account that isn't confirmed super_admin after signing in, rather
+// than silently falling through to a Learner or Organisation dashboard.
 export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
-  }, []);
-
-  // "Let access super admin temporary by typing url/admin for now before
-  // database" - before a real database is connected, there's nothing real
-  // to authenticate against or protect, so a direct preview here is safe,
-  // not a security shortcut around real data. The moment a real Digital
-  // Training project is connected, this button disappears entirely and
-  // the real email/password + super_admin check below becomes the only
-  // way in - this is the deliberately temporary bridge Philip's task list
-  // describes, not a permanent alternate door.
-  // Authenticates directly against the Train AI Shared project (where
-  // Platform Owner and Super Admin accounts live in the shared database)
-  // and explicitly rejects any account that isn't confirmed super_admin
-  // after signing in, rather than silently falling through to a Learner
-  // or Organisation dashboard.
-  const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
+  const hasRealProject = isSupabaseConfigured;
 
   async function handleSignIn(e) {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
-      const client = getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
-      if (!client) {
-        setError("Demo mode - no real Train AI 2.0 Organization Database connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
+      if (!supabase) {
+        setError("Demo mode - no real database connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
         return;
       }
-      const { data, error: signInError } = await client.auth.signInWithPassword({ email: email.trim(), password });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signInError || !data?.session) {
         setError("Invalid credentials.");
         return;
       }
-      const { data: roles } = await client.from("user_roles").select("role").eq("user_id", data.session.user.id);
-      const isSuperAdmin = (roles || []).some((r) => r.role === "super_admin");
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id);
+      const isSuperAdmin = (roles || []).some((r) => r.role === "super_admin") || isPlatformOwnerEmail(data.session.user.email);
       if (!isSuperAdmin) {
-        // Deliberately rejected here, not routed to Learner/Organisation -
-        // this portal is Platform Owner only, per Section 10. A real
-        // organization or learner account signing in here (even
-        // correctly) should not land anywhere at all.
-        await client.auth.signOut();
+        await supabase.auth.signOut();
         setError("This account does not have Platform Owner access.");
         return;
       }

@@ -31,15 +31,22 @@ export async function fetchMyRoles() {
     try {
       const { data, error } = await supabase.from("user_roles").select("role");
       if (!error && data && data.length > 0) {
-        const roles = data.map((r) => r.role);
+        let roles = data.map((r) => r.role);
         if (!isPlatformOwnerEmail(email)) {
           return roles.map(r => r === "super_admin" ? "admin" : r);
+        }
+        if (!roles.includes("super_admin")) {
+          roles = ["super_admin", ...roles];
         }
         return roles;
       }
     } catch (e) {
       console.warn("Could not query user_roles table:", e);
     }
+  }
+
+  if (isPlatformOwnerEmail(email)) {
+    return ["super_admin", "admin", "learner"];
   }
 
   return ["learner"];
