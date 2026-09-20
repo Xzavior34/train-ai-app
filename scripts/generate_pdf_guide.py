@@ -2,9 +2,53 @@ import os
 import sys
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, KeepTogether
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, PageBreak, KeepTogether
+)
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+from reportlab.pdfgen import canvas
+
+class NumberedCanvas(canvas.Canvas):
+    """Two-pass canvas to dynamically add 'Page X of Y' and running headers."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_decorations(num_pages)
+            super().showPage()
+        super().save()
+
+    def draw_page_decorations(self, page_count):
+        self.saveState()
+        self.setFont("Helvetica", 8.5)
+        self.setFillColor(colors.HexColor("#64748B"))
+
+        # Header (pages 2+)
+        if self._pageNumber > 1:
+            self.drawString(40, 755, "Train AI — Platform Operational & Workflow Guide")
+            self.setStrokeColor(colors.HexColor("#CBD5E1"))
+            self.setLineWidth(0.5)
+            self.line(40, 748, 572, 748)
+
+        # Footer (all pages)
+        self.setStrokeColor(colors.HexColor("#CBD5E1"))
+        self.setLineWidth(0.5)
+        self.line(40, 45, 572, 45)
+
+        self.drawString(40, 30, "Confidential — Built for Train AI Platform Operations")
+        page_str = f"Page {self._pageNumber} of {page_count}"
+        self.drawRightString(572, 30, page_str)
+        self.restoreState()
+
 
 def create_pdf(filename):
     doc = SimpleDocTemplate(
@@ -12,271 +56,266 @@ def create_pdf(filename):
         pagesize=letter,
         rightMargin=40,
         leftMargin=40,
-        topMargin=40,
-        bottomMargin=40
+        topMargin=50,
+        bottomMargin=55
     )
 
     styles = getSampleStyleSheet()
 
-    # Custom Color Palette
-    PRIMARY = colors.HexColor("#0F172A")    # Dark Navy
-    SECONDARY = colors.HexColor("#2563EB")  # Electric Blue
-    ACCENT = colors.HexColor("#0D9488")     # Teal
-    DARK_TEXT = colors.HexColor("#1E293B")  # Charcoal
-    LIGHT_BG = colors.HexColor("#F8FAFC")   # Light Slate
+    # Brand Color Palette
+    PRIMARY = colors.HexColor("#0F172A")    # Deep Slate / Navy
+    SECONDARY = colors.HexColor("#2563EB")  # Cobalt Blue
+    ACCENT = colors.HexColor("#0D9488")     # Emerald Teal
+    WARN_COLOR = colors.HexColor("#D97706") # Amber
+    DARK_TEXT = colors.HexColor("#1E293B")  # Charcoal Text
+    LIGHT_BG = colors.HexColor("#F8FAFC")   # Soft Off-White
     BORDER_COLOR = colors.HexColor("#E2E8F0")
 
     # Typography Styles
-    title_style = ParagraphStyle(
-        'DocTitle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=24,
-        leading=28,
-        textColor=PRIMARY,
-        alignment=TA_LEFT,
-        spaceAfter=6
+    doc_title_style = ParagraphStyle(
+        'DocTitle', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=22, leading=26,
+        textColor=PRIMARY, spaceAfter=4
     )
 
-    subtitle_style = ParagraphStyle(
-        'DocSubTitle',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=13,
-        leading=17,
-        textColor=SECONDARY,
-        alignment=TA_LEFT,
-        spaceAfter=15
+    doc_subtitle_style = ParagraphStyle(
+        'DocSubTitle', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=12, leading=16,
+        textColor=SECONDARY, spaceAfter=12
     )
 
     h1_style = ParagraphStyle(
-        'Heading1_Custom',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=15,
-        leading=19,
-        textColor=PRIMARY,
-        spaceBefore=14,
-        spaceAfter=8
+        'Heading1_Custom', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=14, leading=18,
+        textColor=PRIMARY, spaceBefore=14, spaceAfter=8
     )
 
     h2_style = ParagraphStyle(
-        'Heading2_Custom',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=12,
-        leading=16,
-        textColor=SECONDARY,
-        spaceBefore=10,
-        spaceAfter=6
+        'Heading2_Custom', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=11.5, leading=15,
+        textColor=SECONDARY, spaceBefore=10, spaceAfter=6
     )
 
     body_style = ParagraphStyle(
-        'Body_Custom',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=10,
-        leading=14.5,
-        textColor=DARK_TEXT,
-        alignment=TA_LEFT,
-        spaceAfter=8
+        'Body_Custom', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=9.5, leading=14,
+        textColor=DARK_TEXT, spaceAfter=6
     )
 
     bullet_style = ParagraphStyle(
-        'Bullet_Custom',
-        parent=body_style,
-        leftIndent=15,
-        firstLineIndent=-10,
-        spaceAfter=4
+        'Bullet_Custom', parent=body_style,
+        leftIndent=14, firstLineIndent=-9, spaceAfter=4
     )
 
     callout_style = ParagraphStyle(
-        'CalloutText',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=9.5,
-        leading=14,
+        'CalloutText', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=9, leading=13.5,
         textColor=DARK_TEXT
     )
 
+    th_style = ParagraphStyle('TH', parent=body_style, fontName='Helvetica-Bold', textColor=colors.white)
+
     story = []
 
-    # Title & Subtitle Header
-    story.append(Paragraph("Train AI — Platform & Operational Guide", title_style))
-    story.append(Paragraph("A Plain-English Overview of How the App Works, Business Operations &amp; Payment Flows", subtitle_style))
-    story.append(HRFlowable(width="100%", thickness=2, color=SECONDARY, spaceBefore=0, spaceAfter=15))
+    # Document Header Banner
+    story.append(Paragraph("Train AI — Master Operational & Workflow Guide", doc_title_style))
+    story.append(Paragraph("A Complete Non-Technical Walkthrough of User Invitations, Course Delivery, Payments, Billing &amp; Revenue Splits", doc_subtitle_style))
+    story.append(HRFlowable(width="100%", thickness=2, color=SECONDARY, spaceBefore=0, spaceAfter=12))
 
-    # Executive Summary Box
+    # Executive Overview Box
     summary_text = (
-        "<b>Executive Summary:</b> Train AI is an all-in-one digital training, learning, and workforce development platform. "
-        "It connects three groups of people: <b>Learners</b> (who take courses and build skills), <b>Organizations/Businesses</b> "
-        "(who train their staff and track performance), and <b>Instructors</b> (who create courses and teach). "
-        "This document explains how the entire platform operates without using technical programming jargon."
+        "<b>Executive Overview:</b> This document provides a complete, easy-to-understand breakdown of every key process in Train AI. "
+        "It covers <b>User Onboarding &amp; Invitations</b>, <b>Instructor &amp; Course Publishing</b>, <b>Payment Execution (Paystack &amp; Stripe)</b>, "
+        "<b>Subscription Billing &amp; Seat Licenses</b>, and <b>Revenue Split Percentages &amp; Bank Payouts</b> — with zero technical developer jargon."
     )
-    summary_table = Table([[Paragraph(summary_text, callout_style)]], colWidths=[530])
+    summary_table = Table([[Paragraph(summary_text, callout_style)]], colWidths=[532])
     summary_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), LIGHT_BG),
         ('BOX', (0, 0), (-1, -1), 1, SECONDARY),
-        ('PADDING', (0, 0), (-1, -1), 10),
+        ('PADDING', (0, 0), (-1, -1), 8),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     story.append(summary_table)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 10))
 
-    # SECTION 1: HOW THE APP WORKS AT LARGE
-    story.append(Paragraph("1. How the App Works at Large (The 3 Workspaces)", h1_style))
+    # SECTION 1: WORKSPACE ARCHITECTURE
+    story.append(Paragraph("1. Platform Workspaces & User Roles", h1_style))
     story.append(Paragraph(
-        "Train AI is structured into three dedicated areas so every user has exactly the tools they need:",
+        "Train AI organizes users into three clean, dedicated workspaces:",
         body_style
     ))
 
     ws_data = [
+        [Paragraph("<b>Workspace</b>", th_style), Paragraph("<b>Target Users</b>", th_style), Paragraph("<b>Core Functions</b>", th_style)],
         [
-            Paragraph("<b>Workspace</b>", ParagraphStyle('TH', parent=body_style, fontName='Helvetica-Bold', textColor=colors.white)),
-            Paragraph("<b>Who Uses It</b>", ParagraphStyle('TH', parent=body_style, fontName='Helvetica-Bold', textColor=colors.white)),
-            Paragraph("<b>What They Do Here</b>", ParagraphStyle('TH', parent=body_style, fontName='Helvetica-Bold', textColor=colors.white))
+            Paragraph("<b>Learner Experience</b>", body_style),
+            Paragraph("Employees, Students, Independent Learners", body_style),
+            Paragraph("Enroll in courses, take quizzes, chat with the AI Coach, track personal skills, join study groups, and earn verified certificates.", body_style)
         ],
         [
-            Paragraph("<b>Learner Workspace</b>", body_style),
-            Paragraph("Employees, Students, Individual Learners", body_style),
-            Paragraph("Take interactive courses, practice quizzes, chat with the AI Learning Assistant, join study groups, and earn verified completion certificates.", body_style)
-        ],
-        [
-            Paragraph("<b>Organization Workspace</b>", body_style),
-            Paragraph("Company Executives, Managers, HR, Instructors", body_style),
-            Paragraph("Manage team members, purchase employee seats, assign courses, set role permissions, track skill analytics, and handle company billing.", body_style)
+            Paragraph("<b>Organization Hub</b>", body_style),
+            Paragraph("Company Executives, Admins, Managers, Instructors", body_style),
+            Paragraph("Invite employees, manage seats, assign courses, build quizzes, track workforce analytics, set payment gateways, and configure permissions.", body_style)
         ],
         [
             Paragraph("<b>Platform Owner Portal</b>", body_style),
-            Paragraph("Train AI Platform Administrators", body_style),
-            Paragraph("Oversee overall platform health, manage company subscription plans, monitor global payments, and set system-wide preferences.", body_style)
+            Paragraph("Central Train AI Operators", body_style),
+            Paragraph("Monitor overall system health, manage enterprise pricing plans, set platform commission rates, and track global transactions.", body_style)
         ]
     ]
-    ws_table = Table(ws_data, colWidths=[130, 140, 260])
+    ws_table = Table(ws_data, colWidths=[120, 140, 272])
     ws_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), PRIMARY),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
-        ('PADDING', (0, 0), (-1, -1), 6),
+        ('PADDING', (0, 0), (-1, -1), 5),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT_BG]),
     ]))
     story.append(ws_table)
-    story.append(Spacer(1, 14))
+    story.append(Spacer(1, 10))
 
-    # SECTION 2: THE B2B (BUSINESS-TO-BUSINESS) FLOW
-    story.append(Paragraph("2. The B2B (Business-to-Business) Journey", h1_style))
+    # SECTION 2: USER INVITATION & B2B ONBOARDING FLOW
+    story.append(Paragraph("2. The User Invitation & B2B Onboarding Flow", h1_style))
     story.append(Paragraph(
-        "When a business or institution uses Train AI to train its workforce, the process follows these clear steps:",
+        "How a business signs up and adds employees to their company workspace step-by-step:",
         body_style
     ))
 
-    b2b_steps = [
-        ("Step 1: Company Registration", "A company signs up on Train AI, creates their official company profile, and establishes their company domain."),
-        ("Step 2: Subscription Plan Selection", "The company chooses a plan based on their team size — <b>Starter</b> (for smaller teams) or <b>Growth</b> (for growing enterprises). This activates their business workspace."),
-        ("Step 3: Purchasing Learner Seats", "Train AI uses a simple <b>Seat Licensing System</b>: 1 Seat = 1 active team member. The company buys as many seats as they have employees needing training."),
-        ("Step 4: Inviting Team Members", "Company administrators send email invitations to their staff. When an employee accepts, they automatically occupy one available seat and get access to the company's course catalog."),
-        ("Step 5: Role & Access Management (RBAC)", "Company admins assign specific roles to team members to keep data secure and organized:")
+    invite_steps = [
+        ("1. Company Sign Up", "A company executive creates the organization account on Train AI and inputs company details."),
+        ("2. Purchasing Learner Seats", "The company purchases a bundle of <b>User Seats</b> (e.g. 50 seats). Each seat allows 1 employee to access the platform."),
+        ("3. Sending Email Invitations", "The Company Admin enters employee email addresses in <i>People &amp; Access</i> and selects their role (Manager, Instructor, or Learner)."),
+        ("4. Employee Acceptance", "The employee receives an official email invitation link. Clicking the link takes them to sign in or create their password."),
+        ("5. Seat Deduction & Role Assignment", "Once accepted, 1 seat is automatically deducted from the company's available seat balance, and the employee is routed straight into their assigned workspace."),
+        ("6. Role & Permission Control (RBAC)", "Company Admins can adjust permissions anytime (e.g. allowing Instructors to issue certificates or create assessments).")
     ]
 
-    for title_str, desc_str in b2b_steps:
-        story.append(Paragraph(f"• <b>{title_str}</b>: {desc_str}", bullet_style))
+    for step_title, step_desc in invite_steps:
+        story.append(Paragraph(f"• <b>{step_title}</b>: {step_desc}", bullet_style))
 
-    story.append(Spacer(1, 6))
+    story.append(Spacer(1, 10))
 
-    # Role breakdown mini table
-    role_data = [
-        [Paragraph("<b>Company Role</b>", ParagraphStyle('RTH', parent=body_style, fontName='Helvetica-Bold')), Paragraph("<b>What They Can Access</b>", ParagraphStyle('RTH', parent=body_style, fontName='Helvetica-Bold'))],
-        [Paragraph("<b>Company Admin</b>", body_style), Paragraph("Full control over billing, buying seats, adding/removing members, and configuring payment settings.", body_style)],
-        [Paragraph("<b>Manager / Team Leader</b>", body_style), Paragraph("Views team completion rates, employee progress graphs, and skill gap reports (no access to billing).", body_style)],
-        [Paragraph("<b>Instructor / Teacher</b>", body_style), Paragraph("Creates courses, builds quizzes and assessments, conducts live sessions, and issues certificates.", body_style)],
-        [Paragraph("<b>Learner / Employee</b>", body_style), Paragraph("Focuses on learning — taking courses, completing quizzes, using the AI Coach, and earning badges.", body_style)]
-    ]
-    role_table = Table(role_data, colWidths=[150, 380])
-    role_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#E2E8F0")),
-        ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
-        ('PADDING', (0, 0), (-1, -1), 6),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
-    story.append(role_table)
-    story.append(Spacer(1, 14))
-
-    # SECTION 3: PAYMENT, BILLING & REVENUE FLOW
-    story.append(Paragraph("3. Payment, Billing & How Instructors Earn Money", h1_style))
+    # SECTION 3: INSTRUCTOR & COURSES FLOW
+    story.append(Paragraph("3. The Instructor & Course Publishing Flow", h1_style))
     story.append(Paragraph(
-        "Train AI features a complete global financial engine powered by <b>Paystack</b> and <b>Stripe</b>. "
-        "Here is how payments, billing, and revenue distribution work:",
+        "How instructors build courses, deliver training, evaluate learners, and issue certificates:",
         body_style
     ))
 
-    story.append(Paragraph("A. Global Payment Processing (Paystack & Stripe)", h2_style))
+    course_steps = [
+        ("1. Instructor Profile Setup", "Instructors set up their professional bio, teaching specializations, and portfolio in <i>Instructor Settings</i>."),
+        ("2. Course Creation & Builder", "Instructors use the <i>Course Builder</i> to create structured courses with titles, descriptions, categories, video/text lessons, and attachments."),
+        ("3. Quiz & Assessment Builder", "Instructors add multiple-choice practice quizzes and final course assessments with marked correct answers and point values."),
+        ("4. Course Publishing & Access", "Courses can be published as <b>Free</b> (for all company staff), <b>Assigned</b> (mandatory for specific cohorts), or <b>Paid</b> (priced for external sale)."),
+        ("5. Cohorts & Student Engagement", "Instructors facilitate study cohorts, answer learner questions, and run discussion topics."),
+        ("6. Automatic & Direct Certificate Issuance", "When a learner passes the final course assessment, Train AI automatically generates a verified digital certificate. Instructors can also directly grant certificates to deserving students.")
+    ]
+
+    for c_title, c_desc in course_steps:
+        story.append(Paragraph(f"• <b>{c_title}</b>: {c_desc}", bullet_style))
+
+    story.append(Spacer(1, 10))
+
+    # SECTION 4: PAYMENT EXECUTION FLOW
+    story.append(Paragraph("4. The Payment Execution Flow (Paystack & Stripe)", h1_style))
     story.append(Paragraph(
-        "To ensure seamless payments worldwide, Train AI automatically detects the customer's location and currency:",
+        "How transactions are securely initiated, processed, and confirmed end-to-end:",
         body_style
     ))
 
-    pay_data = [
-        [Paragraph("<b>Payment Provider</b>", ParagraphStyle('PTH', parent=body_style, fontName='Helvetica-Bold', textColor=colors.white)), Paragraph("<b>Currencies Supported</b>", ParagraphStyle('PTH', parent=body_style, fontName='Helvetica-Bold', textColor=colors.white)), Paragraph("<b>Payment Methods Accepted</b>", ParagraphStyle('PTH', parent=body_style, fontName='Helvetica-Bold', textColor=colors.white))],
-        [Paragraph("<b>Paystack</b>", body_style), Paragraph("Nigerian Naira (₦), Ghanaian Cedi (GH₵), Kenyan Shilling (KSh), South African Rand (R)", body_style), Paragraph("Local Debit/Credit Cards, Direct Bank Transfers, USSD Code, Mobile Money", body_style)],
-        [Paragraph("<b>Stripe</b>", body_style), Paragraph("US Dollars ($), British Pounds (£), Euros (€)", body_style), Paragraph("International Credit/Debit Cards (Visa, Mastercard, American Express), Apple Pay, Google Pay", body_style)]
+    pay_steps = [
+        ("1. Automatic Location & Currency Detection", "Train AI automatically detects the user's location and displays prices in their local currency (Naira ₦, US Dollars $, Pounds £, Euros €, Cedi GH₵, Shillings KSh, Rand R)."),
+        ("2. Provider Checkout Redirection", "When a customer clicks <i>Buy Course</i>, <i>Upgrade Plan</i>, or <i>Purchase Seats</i>, the platform seamlessly connects to <b>Paystack</b> (African payments) or <b>Stripe</b> (International payments) hosted checkout pages."),
+        ("3. Real-Time Secure Verification", "Once payment is completed on Paystack or Stripe, the gateway redirects back to Train AI. The platform runs a double-check verification to confirm exact payment amount and transaction reference."),
+        ("4. Automated Fulfillment & Receipts", "Upon confirmation, the service immediately unlocks the purchased item (enrolling the student, adding seats, or upgrading the plan) and issues a receipt.")
     ]
-    pay_table = Table(pay_data, colWidths=[110, 190, 230])
-    pay_table.setStyle(TableStyle([
+
+    for p_title, p_desc in pay_steps:
+        story.append(Paragraph(f"• <b>{p_title}</b>: {p_desc}", bullet_style))
+
+    story.append(Spacer(1, 10))
+
+    # SECTION 5: BILLING & SEAT LICENSING FLOW
+    story.append(Paragraph("5. Billing, Subscriptions & Seat Licensing Flow", h1_style))
+    story.append(Paragraph(
+        "How companies manage subscription plans, user seat licenses, and AI credits:",
+        body_style
+    ))
+
+    bill_data = [
+        [Paragraph("<b>Billing Item</b>", th_style), Paragraph("<b>How It Works</b>", th_style), Paragraph("<b>Billing Frequency</b>", th_style)],
+        [
+            Paragraph("<b>Starter Subscription</b>", body_style),
+            Paragraph("Unlocks core company features, course builder, up to 100 learner accounts, and 10 AI credits per user.", body_style),
+            Paragraph("Monthly or Annual Renewal", body_style)
+        ],
+        [
+            Paragraph("<b>Growth Subscription</b>", body_style),
+            Paragraph("Unlocks advanced workforce skill graphs, manager dashboards, custom branding, and up to 500 learner accounts.", body_style),
+            Paragraph("Monthly or Annual Renewal", body_style)
+        ],
+        [
+            Paragraph("<b>User Seat Packages</b>", body_style),
+            Paragraph("Companies buy additional seat licenses as their team grows. Unused seats remain available in company inventory.", body_style),
+            Paragraph("One-time or Pay-as-you-grow", body_style)
+        ],
+        [
+            Paragraph("<b>AI Credit Top-Ups</b>", body_style),
+            Paragraph("Companies buy extra credit packages to give their learners more AI Coach interactions and quiz generations.", body_style),
+            Paragraph("On-demand Top-up", body_style)
+        ]
+    ]
+    bill_table = Table(bill_data, colWidths=[130, 272, 130])
+    bill_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), SECONDARY),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
-        ('PADDING', (0, 0), (-1, -1), 6),
+        ('PADDING', (0, 0), (-1, -1), 5),
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, LIGHT_BG]),
     ]))
-    story.append(pay_table)
+    story.append(bill_table)
     story.append(Spacer(1, 10))
 
-    story.append(Paragraph("B. Test Mode vs. Live Production Mode", h2_style))
+    # SECTION 6: PERCENTAGE, REVENUE SPLIT & PAYOUT FLOW
+    story.append(Paragraph("6. Percentage Revenue Split & Payout Flow", h1_style))
     story.append(Paragraph(
-        "Companies can toggle between <b>Test Mode</b> (to safely test checkout flows with simulated test keys) and "
-        "<b>Live Production Mode</b> (to collect actual payments). When Live Mode is selected, all charges process real funds immediately.",
+        "How money earned from course sales is automatically split and deposited into bank accounts:",
         body_style
     ))
 
-    story.append(Paragraph("C. How Instructors & Companies Make Money", h2_style))
-    story.append(Paragraph(
-        "Instructors and training organizations monetize their courses on Train AI through three straightforward methods:",
-        body_style
-    ))
-
-    money_points = [
-        ("1. Selling Paid Courses", "Instructors or companies create premium courses and set a price (e.g. $50 or ₦25,000). When an external learner buys the course, the payment is processed immediately."),
-        ("2. Automatic Revenue Splitting", "Organizations can connect their own Paystack Subaccount Code or Stripe Account ID in Settings Hub. When a course is sold, Paystack/Stripe automatically splits the money: the platform's small commission is retained, and the instructor's majority share is deposited directly into their own bank account."),
-        ("3. Direct Bank Settlement & Payout Requests", "For courses sold through central platform channels, earnings accumulate in the instructor's earnings balance. Instructors can request a direct bank payout anytime to receive funds in their verified bank account.")
+    split_steps = [
+        ("1. Course Sale Initiated", "A learner purchases a paid course created by an instructor or training organization."),
+        ("2. Platform Commission Split", "Train AI applies a standard platform fee percentage (e.g. 15% platform commission, 85% instructor payout)."),
+        ("3. Automated Gateway Subaccount Split (Paystack/Stripe)", "If the organization has connected their <b>Paystack Subaccount</b> or <b>Stripe Connected Account ID</b> in <i>Settings Hub</i>, Paystack/Stripe automatically splits the money at checkout: Train AI receives the platform fee, and the remaining majority is deposited directly into the organization's connected bank account."),
+        ("4. Direct Bank Settlement for Central Sales", "For sales collected centrally, earnings accumulate in the instructor's earnings dashboard. Instructors can request a direct bank payout to receive funds into their local bank account."),
+        ("5. Complete Financial Tracking", "Both Platform Owners and Company Admins have transparent revenue reports showing total sales, gross income, platform fees, and net payouts.")
     ]
 
-    for m_title, m_desc in money_points:
-        story.append(Paragraph(f"• <b>{m_title}</b>: {m_desc}", bullet_style))
+    for s_title, s_desc in split_steps:
+        story.append(Paragraph(f"• <b>{s_title}</b>: {s_desc}", bullet_style))
+
+    story.append(Spacer(1, 10))
+
+    # SECTION 7: AI ASSISTANT & COMMUNITY FLOW
+    story.append(Paragraph("7. AI Assistant, Credits & Community Flow", h1_style))
+
+    ai_community_points = [
+        ("AI Neural Coach & Credit Consumption", "Learners ask questions or generate practice quizzes using the AI Coach. Each interaction uses 1 AI credit. Admins can top up credit balances or set custom manual auto-reply messages."),
+        ("Cohorts & Collaborative Study Groups", "Learners join study cohorts led by instructors. They can chat, share study notes, and track progress together in privacy-safe group channels."),
+        ("Gamification & Leaderboard Control", "Learners earn experience points (XP), maintain daily learning streaks, and unlock achievement badges. Company Admins can toggle leaderboard rankings on or off in Access Control.")
+    ]
+
+    for a_title, a_desc in ai_community_points:
+        story.append(Paragraph(f"• <b>{a_title}</b>: {a_desc}", bullet_style))
 
     story.append(Spacer(1, 14))
+    story.append(HRFlowable(width="100%", thickness=1, color=BORDER_COLOR, spaceBefore=4, spaceAfter=8))
 
-    # SECTION 4: KEY FEATURES & DAILY WORKFLOWS
-    story.append(Paragraph("4. Key Platform Features at a Glance", h1_style))
+    footer_note = "<i>Train AI Operational Guide — Designed for complete operational clarity, secure financial flows, and enterprise scaling.</i>"
+    story.append(Paragraph(footer_note, ParagraphStyle('EndNote', parent=body_style, fontSize=8.5, textColor=colors.HexColor("#64748B"), alignment=TA_CENTER)))
 
-    features = [
-        ("AI Neural Coach & Assistant", "Provides learners with 24/7 instant answers, explains difficult course topics, and generates personalized practice quizzes on demand."),
-        ("Cohorts & Study Groups", "Allows learners to study in structured groups, discuss course material with peers, and collaborate with assigned instructors."),
-        ("Verified Digital Certificates", "When a learner finishes a course and passes its final assessment, Train AI generates an official digital certificate complete with a unique verification code."),
-        ("Workforce Skill Intelligence", "Gives business leaders clear visual dashboards showing employee completion progress, active learning hours, and company-wide skill strengths.")
-    ]
-
-    for f_title, f_desc in features:
-        story.append(Paragraph(f"• <b>{f_title}</b>: {f_desc}", bullet_style))
-
-    story.append(Spacer(1, 15))
-    story.append(HRFlowable(width="100%", thickness=1, color=BORDER_COLOR, spaceBefore=5, spaceAfter=10))
-
-    # Footer note
-    footer_text = "<i>Train AI Platform Operational Guide — Built for simplicity, transparency, and enterprise-grade performance.</i>"
-    story.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=body_style, fontSize=8.5, textColor=colors.HexColor("#64748B"), alignment=TA_CENTER)))
-
-    doc.build(story)
-    print(f"Successfully generated PDF at: {filename}")
+    doc.build(story, canvasmaker=NumberedCanvas)
+    print(f"Successfully generated Master PDF Guide at: {filename}")
 
 if __name__ == "__main__":
     output_pdf = sys.argv[1] if len(sys.argv) > 1 else "Train_AI_Platform_Guide.pdf"
