@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Check, X, Sparkles, Building2, ShieldCheck, ArrowRight, Zap, Layers, Users, Lock, HelpCircle } from "lucide-react";
+import { getUserLocationCurrency } from "../../lib/locationCurrency.js";
 
 export const PLAN_TIERS = {
   starter: {
@@ -8,6 +9,8 @@ export const PLAN_TIERS = {
     tagline: "For small teams and startups initiating structured AI training",
     priceNGN: 1500000,
     priceUSD: 1500,
+    priceGBP: 1200,
+    priceEUR: 1400,
     period: "month",
     seatLimit: "Up to 100 learners",
     popular: false,
@@ -34,6 +37,8 @@ export const PLAN_TIERS = {
     tagline: "For scaling organizations requiring manager visibility & AI workforce intelligence",
     priceNGN: 4500000,
     priceUSD: 4500,
+    priceGBP: 3600,
+    priceEUR: 4200,
     period: "month",
     seatLimit: "Up to 500 learners",
     popular: true,
@@ -84,14 +89,15 @@ export function PlanSelectionModal({
   onClose,
   selectedTier = "growth",
   onSelectTier,
-  currency = "NGN",
+  currency = null,
   onToggleCurrency,
   onContactEnterprise,
   currentTier = null,
   isUpgradeMode = false,
   isLoading = false
 }) {
-  const [curr, setCurr] = useState(currency);
+  const userLoc = useMemo(() => getUserLocationCurrency(), []);
+  const curr = currency || userLoc.currency;
 
   if (!isOpen) return null;
 
@@ -112,24 +118,8 @@ export function PlanSelectionModal({
             </p>
           </div>
 
-          <div style={modalStyles.currencyToggleRow}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#64748B" }}>Currency:</span>
-            <div style={modalStyles.toggleContainer}>
-              <button
-                type="button"
-                style={{ ...modalStyles.toggleBtn, ...(curr === "NGN" ? modalStyles.toggleBtnActive : {}) }}
-                onClick={() => { setCurr("NGN"); onToggleCurrency && onToggleCurrency("NGN"); }}
-              >
-                NGN (₦)
-              </button>
-              <button
-                type="button"
-                style={{ ...modalStyles.toggleBtn, ...(curr === "USD" ? modalStyles.toggleBtnActive : {}) }}
-                onClick={() => { setCurr("USD"); onToggleCurrency && onToggleCurrency("USD"); }}
-              >
-                USD ($)
-              </button>
-            </div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#F1F5F9", padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700, color: "#1E293B" }}>
+            <span>{userLoc.symbol} {curr} • {userLoc.name}</span>
           </div>
         </div>
 
@@ -138,8 +128,14 @@ export function PlanSelectionModal({
           {Object.values(PLAN_TIERS).map((plan) => {
             const isSelected = selectedTier === plan.id;
             const isCurrent = currentTier === plan.id;
-            const price = curr === "NGN" ? plan.priceNGN : plan.priceUSD;
-            const symbol = curr === "NGN" ? "₦" : "$";
+            const priceMap = {
+              NGN: plan.priceNGN,
+              USD: plan.priceUSD,
+              GBP: plan.priceGBP,
+              EUR: plan.priceEUR,
+            };
+            const price = priceMap[curr] ?? plan.priceUSD;
+            const symbol = userLoc.symbol || "$";
 
             return (
               <div

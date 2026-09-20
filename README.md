@@ -548,6 +548,16 @@ editable description, and the member-removal control all working - not
 just a clean build, given the standing lesson that a clean build alone has
 already once hidden a genuine runtime crash in this project.
 
+## Organization Payment Gateway & Settlement Configuration (Paystack, Stripe & Bank Transfers)
+
+Organization Admins can configure their own payment gateways and settlement channels inside **Settings Hub** -> **Payment Gateways & Direct Payouts**:
+
+1. **Active Payment Provider Selection**: Choose between **Platform Default (Train AI Central Gateway)**, **Custom Paystack Direct** (for NGN, GHS, KES, ZAR), **Custom Stripe Direct** (for USD, EUR, GBP), or **Direct Bank Transfer / Invoice**.
+2. **Environment Selector**: Seamlessly switch between **Test / Sandbox Mode** and **Live / Production Mode**.
+3. **Paystack Configuration**: Enter Public Key (`pk_...`), Secret Key (`sk_...`), and Subaccount Code (`ACCT_...`) with real-time format validation via the "Test Paystack Keys" button.
+4. **Stripe Configuration**: Enter Publishable Key (`pk_...`), Secret Key (`sk_...`), and Connected Account ID (`acct_...`) with real-time format validation via the "Test Stripe Keys" button.
+5. **Bank Settlement Account Details**: Configure Bank Name, Account Number / IBAN, Account Name, SWIFT / Sort Code, and Payout Settlement Currency.
+
 ## Correcting a real mistake in the demo data seed - raw SQL cannot create real logins
 
 Directly asked whether the demo data would actually let someone log in

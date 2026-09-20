@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext } from "react";
+import React, { useState, useEffect, useCallback, useContext, useMemo } from "react";
 import { applyDynamicBranding } from "../../lib/brandingHelper.js";
 import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
 import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save, Palette, Eye, Sparkles, ArrowRight, Check } from "lucide-react";
@@ -6,8 +6,9 @@ import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockDat
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization, fetchOrgBranding, upsertOrgBranding, fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice, fetchOrgPaymentGatewaySettings, updateOrgPaymentGatewaySettings } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice, fetchOrgPaymentGatewaySettings, updateOrgPaymentGatewaySettings, testOrgPaymentGatewayConnection } from "../../lib/api/organizations.js";
 import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
+import { getUserLocationCurrency, formatCurrencyAmount } from "../../lib/locationCurrency.js";
 
 // organization's name with that fake placeholder if an admin didn't notice
 // and retype their real name first. Fixed by fetching the real organizations
@@ -23,14 +24,20 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const seatsSummary = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
   const [seatsToBuy, setSeatsToBuy] = useState("");
   const [purchasingSeats, setPurchasingSeats] = useState(false);
-  const seatPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("USD"), []);
-  const SEAT_PRICE_DISPLAY = (seatPriceQuery.data?.unit_amount_minor || 0) / 100;
-  const starterPriceQuery = useSupabaseQuery(async () => fetchTierPrice("starter", "NGN"), []);
-  const growthPriceQuery = useSupabaseQuery(async () => fetchTierPrice("growth", "NGN"), []);
-  const TIER_PRICES_NGN = {
-    starter: (starterPriceQuery.data?.unit_amount_minor || 0) / 100,
-    growth: (growthPriceQuery.data?.unit_amount_minor || 0) / 100,
-  };
+  const userLoc = useMemo(() => getUserLocationCurrency(), []);
+  const locCurrency = userLoc.currency;
+  const seatPriceQuery = useSupabaseQuery(async () => fetchSeatPrice(locCurrency), [locCurrency]);
+  const SEAT_PRICE_DISPLAY = (seatPriceQuery.data?.unit_amount_minor || (locCurrency === "NGN" ? 1500000 : 1000)) / 100;
+  const starterPriceQuery = useSupabaseQuery(async () => fetchTierPrice("starter", locCurrency), [locCurrency]);
+  const growthPriceQuery = useSupabaseQuery(async () => fetchTierPrice("growth", locCurrency), [locCurrency]);
+  const starterAmount = (starterPriceQuery.data?.unit_amount_minor || (locCurrency === "NGN" ? 150000000 : 150000)) / 100;
+  const growthAmount = (growthPriceQuery.data?.unit_amount_minor || (locCurrency === "NGN" ? 450000000 : 450000)) / 100;
+
+  function fmtTierPrice(amount) {
+    if (locCurrency === "NGN") return `₦${(amount / 1000000).toFixed(1)}M/mo`;
+    return `${userLoc.symbol}${Number(amount).toLocaleString()}/mo`;
+  }
+
   const ticketsQuery = useSupabaseQuery(async () => (orgId ? fetchMyOrgSupportTickets(orgId) : []), [orgId]);
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketDescription, setTicketDescription] = useState("");
@@ -58,13 +65,18 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
       return;
     }
     setPayingTier(tier);
-    const result = await startOrganizationSubscriptionPayment({ orgId, tier, email: userEmail });
+    const result = await startOrganizationSubscriptionPayment({
+      orgId,
+      tier,
+      email: userEmail,
+      provider: userLoc.provider,
+    });
     if (!result.success) {
       showToast(result.error || "Could not start payment.");
       setPayingTier(null);
     }
     // On success, startOrganizationSubscriptionPayment redirects the
-    // browser to the real Paystack checkout page - nothing after this runs.
+    // browser to the real checkout page - nothing after this runs.
   }
 
   const [orgName, setOrgName] = useState("");
@@ -111,22 +123,39 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
     }
   }
 
-  // Payment Gateway & Payout Accounts (Paystack Subaccount & Stripe Connect)
+  // Payment Gateway & Payout Accounts (Paystack, Stripe & Direct Bank Transfers)
   const paymentSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgPaymentGatewaySettings(orgId) : null), [orgId]);
+  const [preferredGateway, setPreferredGateway] = useState("default");
+  const [gatewayEnvironment, setGatewayEnvironment] = useState("test");
+  const [paystackPublicKey, setPaystackPublicKey] = useState("");
+  const [paystackSecretKey, setPaystackSecretKey] = useState("");
   const [paystackSubaccount, setPaystackSubaccount] = useState("");
+  const [stripePublishableKey, setStripePublishableKey] = useState("");
+  const [stripeSecretKey, setStripeSecretKey] = useState("");
   const [stripeAccountId, setStripeAccountId] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
+  const [swiftCode, setSwiftCode] = useState("");
+  const [payoutCurrency, setPayoutCurrency] = useState("NGN");
   const [savingPaymentSettings, setSavingPaymentSettings] = useState(false);
+  const [gatewayTestResult, setGatewayTestResult] = useState(null);
 
   useEffect(() => {
     if (paymentSettingsQuery.data) {
+      setPreferredGateway(paymentSettingsQuery.data.preferred_gateway || "default");
+      setGatewayEnvironment(paymentSettingsQuery.data.environment || "test");
+      setPaystackPublicKey(paymentSettingsQuery.data.paystack_public_key || "");
+      setPaystackSecretKey(paymentSettingsQuery.data.paystack_secret_key || "");
       setPaystackSubaccount(paymentSettingsQuery.data.paystack_subaccount_code || "");
+      setStripePublishableKey(paymentSettingsQuery.data.stripe_publishable_key || "");
+      setStripeSecretKey(paymentSettingsQuery.data.stripe_secret_key || "");
       setStripeAccountId(paymentSettingsQuery.data.stripe_account_id || "");
       setBankName(paymentSettingsQuery.data.bank_name || "");
       setAccountNumber(paymentSettingsQuery.data.account_number || "");
       setAccountName(paymentSettingsQuery.data.account_name || "");
+      setSwiftCode(paymentSettingsQuery.data.swift_code || "");
+      setPayoutCurrency(paymentSettingsQuery.data.payout_currency || "NGN");
     }
   }, [paymentSettingsQuery.data]);
 
@@ -135,14 +164,22 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
     setSavingPaymentSettings(true);
     try {
       const res = await updateOrgPaymentGatewaySettings(orgId, {
+        preferred_gateway: preferredGateway,
+        environment: gatewayEnvironment,
+        paystack_public_key: paystackPublicKey.trim(),
+        paystack_secret_key: paystackSecretKey.trim(),
         paystack_subaccount_code: paystackSubaccount.trim(),
+        stripe_publishable_key: stripePublishableKey.trim(),
+        stripe_secret_key: stripeSecretKey.trim(),
         stripe_account_id: stripeAccountId.trim(),
         bank_name: bankName.trim(),
         account_number: accountNumber.trim(),
         account_name: accountName.trim(),
+        swift_code: swiftCode.trim(),
+        payout_currency: payoutCurrency,
       });
       if (res.success) {
-        showToast("Payment gateway & payout settings saved!");
+        showToast("Payment gateway & settlement settings saved!");
         paymentSettingsQuery.refetch();
       } else {
         showToast(res.error || "Could not save payment gateway settings.");
@@ -150,6 +187,20 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
     } finally {
       setSavingPaymentSettings(false);
     }
+  }
+
+  function handleTestGateway(provider) {
+    const isPaystack = provider === "paystack";
+    const res = testOrgPaymentGatewayConnection({
+      provider,
+      publicKey: isPaystack ? paystackPublicKey : stripePublishableKey,
+      secretKey: isPaystack ? paystackSecretKey : stripeSecretKey,
+      subaccountCode: paystackSubaccount,
+      accountId: stripeAccountId,
+      environment: gatewayEnvironment,
+    });
+    setGatewayTestResult({ provider, ...res });
+    showToast(res.message);
   }
 
   // AI Insights manual mode - separate from AI Coach (PRD 8.3 names both
@@ -439,7 +490,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   }}>
                     <div className="ta-row ta-between">
                       <strong style={{ fontSize: 13 }}>Starter</strong>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>₦1.5M/mo</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>{fmtTierPrice(starterAmount)}</span>
                     </div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
                       Up to 100 learners • Course Builder • 10 AI credits/user • Org-wide analytics.
@@ -462,7 +513,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   }}>
                     <div className="ta-row ta-between">
                       <strong style={{ fontSize: 13 }}>Growth</strong>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>₦4.5M/mo</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>{fmtTierPrice(growthAmount)}</span>
                     </div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
                       Up to 500 learners • Manager View • Advanced Skill Graphs • CSV/PDF Exports.
@@ -514,7 +565,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     onClick={async () => {
                       setPurchasingSeats(true);
                       try {
-                        const result = await startSeatPurchasePayment({ orgId, seats: Number(seatsToBuy), email: userEmail });
+                        const result = await startSeatPurchasePayment({ orgId, seats: Number(seatsToBuy), email: userEmail, provider: userLoc.provider, currency: locCurrency });
                         if (!result.success) { showToast(result.error); setPurchasingSeats(false); }
                       } catch (e) {
                         showToast(e?.message || "Could not start seat purchase.");
@@ -522,7 +573,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       }
                     }}
                   >
-                    {purchasingSeats ? "Redirecting to checkout..." : `Purchase seats ($${SEAT_PRICE_DISPLAY}/seat)`}
+                    {purchasingSeats ? "Redirecting to checkout..." : `Purchase seats (${formatCurrencyAmount(SEAT_PRICE_DISPLAY, locCurrency)}/seat)`}
                   </button>
                 </div>
               </div>
@@ -530,34 +581,167 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
               <div className="ta-card">
                 <div className="ta-row ta-between">
                   <div className="ta-title">Payment Gateways & Direct Payouts</div>
-                  <Tag tone={paystackSubaccount || stripeAccountId ? "success" : "neutral"}>
-                    {paystackSubaccount || stripeAccountId ? "Configured" : "Platform Default"}
+                  <Tag tone={preferredGateway !== "default" || paystackPublicKey || stripePublishableKey || paystackSubaccount || stripeAccountId ? "success" : "neutral"}>
+                    {preferredGateway !== "default"
+                      ? `${preferredGateway.toUpperCase()} (${gatewayEnvironment.toUpperCase()})`
+                      : paystackSubaccount || stripeAccountId
+                      ? "Subaccount Connected"
+                      : "Platform Default"}
                   </Tag>
                 </div>
                 <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
-                  Connect your organization's payment accounts so course revenues are settled directly into your own bank account (with the platform commission automatically split).
+                  Configure your organization's payment gateway keys (Paystack &amp; Stripe), select your active payment provider, or set direct bank settlement accounts for course revenues.
                 </div>
 
-                <div className="ta-mt16">
-                  <div className="ta-label" style={{ fontWeight: 700 }}>Paystack Integration (NGN, GHS, KES, ZAR)</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
-                    Enter your Paystack Subaccount Code (e.g. <code>ACCT_xxxxxxxxx</code>) from your Paystack Dashboard &gt; Settings &gt; Subaccounts.
+                {/* Active Provider & Environment Selectors */}
+                <div className="ta-grid ta-grid-2 ta-gap12 ta-mt16">
+                  <div>
+                    <div className="ta-label" style={{ fontWeight: 700 }}>Active Payment Provider</div>
+                    <select
+                      className="ta-input ta-mt6"
+                      style={{ width: "100%", height: 38 }}
+                      value={preferredGateway}
+                      onChange={(e) => setPreferredGateway(e.target.value)}
+                    >
+                      <option value="default">Platform Default (Train AI Central Gateway)</option>
+                      <option value="paystack">Custom Paystack Direct (NGN, GHS, KES, ZAR)</option>
+                      <option value="stripe">Custom Stripe Direct (USD, EUR, GBP)</option>
+                      <option value="bank_transfer">Direct Bank Transfer / Invoice</option>
+                    </select>
                   </div>
-                  <input
-                    className="ta-input ta-mt6"
-                    style={{ width: "100%" }}
-                    placeholder="ACCT_xxxxxxxxx"
-                    value={paystackSubaccount}
-                    onChange={(e) => setPaystackSubaccount(e.target.value)}
-                  />
+                  <div>
+                    <div className="ta-label" style={{ fontWeight: 700 }}>Gateway Environment</div>
+                    <select
+                      className="ta-input ta-mt6"
+                      style={{ width: "100%", height: 38 }}
+                      value={gatewayEnvironment}
+                      onChange={(e) => setGatewayEnvironment(e.target.value)}
+                    >
+                      <option value="test">Test / Sandbox Mode (Safe for Testing)</option>
+                      <option value="live">Live / Production Mode (Real Charges)</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="ta-mt14">
-                  <div className="ta-label" style={{ fontWeight: 700 }}>Organization Bank Settlement Details</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
-                    Used for direct bank transfers or generating subaccounts.
+                {/* Paystack Integration Section */}
+                <div style={{ background: "var(--surface-2, rgba(255,255,255,0.03))", borderRadius: 8, padding: 14, marginTop: 16, border: "1px solid var(--border)" }}>
+                  <div className="ta-row ta-between">
+                    <div className="ta-label" style={{ fontWeight: 700, fontSize: 13 }}>Paystack Configuration</div>
+                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>Supports NGN, GHS, KES, ZAR</span>
                   </div>
-                  <div className="ta-grid ta-grid-2 ta-gap8 ta-mt6">
+                  <div className="ta-grid ta-grid-2 ta-gap10 ta-mt10">
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Public Key</div>
+                      <input
+                        className="ta-input ta-mt4"
+                        style={{ width: "100%" }}
+                        placeholder={gatewayEnvironment === "test" ? "pk_test_xxxxxxxx..." : "pk_live_xxxxxxxx..."}
+                        value={paystackPublicKey}
+                        onChange={(e) => setPaystackPublicKey(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secret Key</div>
+                      <input
+                        type="password"
+                        className="ta-input ta-mt4"
+                        style={{ width: "100%" }}
+                        placeholder={gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx..."}
+                        value={paystackSecretKey}
+                        onChange={(e) => setPaystackSecretKey(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="ta-mt10">
+                    <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Subaccount Code (Optional for revenue splitting)</div>
+                    <input
+                      className="ta-input ta-mt4"
+                      style={{ width: "100%" }}
+                      placeholder="ACCT_xxxxxxxxx"
+                      value={paystackSubaccount}
+                      onChange={(e) => setPaystackSubaccount(e.target.value)}
+                    />
+                  </div>
+                  <div className="ta-row ta-between ta-mt12" style={{ alignItems: "center" }}>
+                    <button
+                      type="button"
+                      className="ta-btn ta-btn-outline"
+                      style={{ fontSize: 11.5, height: 30, padding: "0 12px" }}
+                      onClick={() => handleTestGateway("paystack")}
+                    >
+                      Test Paystack Keys
+                    </button>
+                    {gatewayTestResult?.provider === "paystack" && (
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: gatewayTestResult.success ? "var(--success)" : "var(--danger)" }}>
+                        {gatewayTestResult.message}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Stripe Integration Section */}
+                <div style={{ background: "var(--surface-2, rgba(255,255,255,0.03))", borderRadius: 8, padding: 14, marginTop: 14, border: "1px solid var(--border)" }}>
+                  <div className="ta-row ta-between">
+                    <div className="ta-label" style={{ fontWeight: 700, fontSize: 13 }}>Stripe Configuration</div>
+                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>Supports USD, EUR, GBP</span>
+                  </div>
+                  <div className="ta-grid ta-grid-2 ta-gap10 ta-mt10">
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Publishable Key</div>
+                      <input
+                        className="ta-input ta-mt4"
+                        style={{ width: "100%" }}
+                        placeholder={gatewayEnvironment === "test" ? "pk_test_xxxxxxxx..." : "pk_live_xxxxxxxx..."}
+                        value={stripePublishableKey}
+                        onChange={(e) => setStripePublishableKey(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secret Key</div>
+                      <input
+                        type="password"
+                        className="ta-input ta-mt4"
+                        style={{ width: "100%" }}
+                        placeholder={gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx..."}
+                        value={stripeSecretKey}
+                        onChange={(e) => setStripeSecretKey(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="ta-mt10">
+                    <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Stripe Connected Account ID (Optional)</div>
+                    <input
+                      className="ta-input ta-mt4"
+                      style={{ width: "100%" }}
+                      placeholder="acct_xxxxxxxxx"
+                      value={stripeAccountId}
+                      onChange={(e) => setStripeAccountId(e.target.value)}
+                    />
+                  </div>
+                  <div className="ta-row ta-between ta-mt12" style={{ alignItems: "center" }}>
+                    <button
+                      type="button"
+                      className="ta-btn ta-btn-outline"
+                      style={{ fontSize: 11.5, height: 30, padding: "0 12px" }}
+                      onClick={() => handleTestGateway("stripe")}
+                    >
+                      Test Stripe Keys
+                    </button>
+                    {gatewayTestResult?.provider === "stripe" && (
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: gatewayTestResult.success ? "var(--success)" : "var(--danger)" }}>
+                        {gatewayTestResult.message}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Direct Bank Settlement Account Details */}
+                <div style={{ background: "var(--surface-2, rgba(255,255,255,0.03))", borderRadius: 8, padding: 14, marginTop: 14, border: "1px solid var(--border)" }}>
+                  <div className="ta-row ta-between">
+                    <div className="ta-label" style={{ fontWeight: 700, fontSize: 13 }}>Organization Bank Settlement Details</div>
+                    <span style={{ fontSize: 11, color: "var(--text-3)" }}>For manual / bank transfer payouts</span>
+                  </div>
+                  <div className="ta-grid ta-grid-2 ta-gap10 ta-mt10">
                     <input
                       className="ta-input"
                       placeholder="Bank Name (e.g. Zenith Bank)"
@@ -566,32 +750,41 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     />
                     <input
                       className="ta-input"
-                      placeholder="Account Number (10 digits)"
+                      placeholder="Account Number / IBAN"
                       value={accountNumber}
                       onChange={(e) => setAccountNumber(e.target.value)}
                     />
                   </div>
-                  <input
-                    className="ta-input ta-mt8"
-                    style={{ width: "100%" }}
-                    placeholder="Account Name (e.g. Sara Foundation Africa Ltd)"
-                    value={accountName}
-                    onChange={(e) => setAccountName(e.target.value)}
-                  />
-                </div>
-
-                <div className="ta-mt14">
-                  <div className="ta-label" style={{ fontWeight: 700 }}>Stripe Connect Integration (USD, GBP, EUR)</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
-                    Enter your Stripe Connected Account ID (e.g. <code>acct_xxxxxxxxx</code>).
+                  <div className="ta-grid ta-grid-2 ta-gap10 ta-mt10">
+                    <input
+                      className="ta-input"
+                      placeholder="Account Name (e.g. Acme Corp Ltd)"
+                      value={accountName}
+                      onChange={(e) => setAccountName(e.target.value)}
+                    />
+                    <div className="ta-row ta-gap8">
+                      <input
+                        className="ta-input"
+                        placeholder="SWIFT / Sort Code"
+                        value={swiftCode}
+                        onChange={(e) => setSwiftCode(e.target.value)}
+                      />
+                      <select
+                        className="ta-input"
+                        style={{ width: 110, height: 38 }}
+                        value={payoutCurrency}
+                        onChange={(e) => setPayoutCurrency(e.target.value)}
+                      >
+                        <option value="NGN">NGN (₦)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GHS">GHS (GH₵)</option>
+                        <option value="KES">KES (KSh)</option>
+                        <option value="ZAR">ZAR (R)</option>
+                      </select>
+                    </div>
                   </div>
-                  <input
-                    className="ta-input ta-mt6"
-                    style={{ width: "100%" }}
-                    placeholder="acct_xxxxxxxxx"
-                    value={stripeAccountId}
-                    onChange={(e) => setStripeAccountId(e.target.value)}
-                  />
                 </div>
 
                 <button
@@ -600,7 +793,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   onClick={handleSavePaymentSettings}
                   disabled={savingPaymentSettings}
                 >
-                  {savingPaymentSettings ? "Saving..." : "Save Payment Gateways"}
+                  {savingPaymentSettings ? "Saving..." : "Save Payment Gateways & Payouts"}
                 </button>
               </div>
 

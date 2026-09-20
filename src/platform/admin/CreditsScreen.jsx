@@ -6,6 +6,7 @@ import {
   fetchOrgAICreditsSummary, fetchOrgAICreditUsageByLearner,
   startOrgCreditsPurchasePayment, orgCreditUnitPrice,
 } from "../../lib/api/organizations.js";
+import { getUserLocationCurrency } from "../../lib/locationCurrency.js";
 
 // Replaces the old Content Moderation screen entirely (see
 // 0162_community_posts_moderator_delete.sql's sibling change and the
@@ -31,15 +32,16 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
   const usageQuery = useSupabaseQuery(async () => (orgId ? fetchOrgAICreditUsageByLearner(orgId) : []), [orgId]);
   const usage = usageQuery.data || [];
 
+  const userLoc = useMemo(() => getUserLocationCurrency(), []);
   const [quantity, setQuantity] = useState(500);
-  const [provider, setProvider] = useState("paystack");
   const [starting, setStarting] = useState(false);
   const [search, setSearch] = useState("");
 
-  const currency = provider === "stripe" ? "USD" : "NGN";
+  const currency = userLoc.currency;
+  const provider = userLoc.provider;
   const unitPrice = orgCreditUnitPrice(currency);
   const totalPrice = Math.max(0, Number(quantity) || 0) * unitPrice;
-  const symbol = currency === "NGN" ? "₦" : "$";
+  const symbol = userLoc.symbol;
 
   async function handleBuy() {
     if (!orgId || !userEmail) {
@@ -121,17 +123,8 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
               }}
             />
 
-            <div className="ta-row ta-gap8" style={{ marginBottom: 14 }}>
-              {["paystack", "stripe"].map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setProvider(p)}
-                  className={`ta-pill ${provider === p ? "active" : ""}`}
-                  style={{ padding: "6px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", textTransform: "capitalize" }}
-                >
-                  {p}
-                </button>
-              ))}
+            <div style={{ marginBottom: 14, display: "inline-flex", alignItems: "center", gap: 6, background: "var(--surface-2)", padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700, color: "var(--text-2)" }}>
+              <span>Billed in {userLoc.name} ({currency} • {symbol})</span>
             </div>
 
             <div className="ta-row ta-between" style={{ padding: "10px 14px", background: "var(--surface-2)", borderRadius: 8, marginBottom: 14 }}>

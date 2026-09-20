@@ -294,15 +294,22 @@ export async function updateOrgGamificationSettings(organizationId, patch) {
 }
 
 // Payment gateway & payout accounts for the organization.
-// Allows organizations to connect their Paystack Subaccount (for NGN/GHS/KES/ZAR)
-// and Stripe Connected Account ID (for USD/EUR/GBP) so that course revenues are
-// settled directly into the organization's own account.
-const DEFAULT_PAYMENT_GATEWAY_SETTINGS = {
+// Allows organizations to connect their Paystack Subaccount / API keys (for NGN/GHS/KES/ZAR),
+// Stripe Connected Account / API keys (for USD/EUR/GBP), or Direct Bank Settlement details
+// so that course revenues are settled directly into the organization's own account.
+export const DEFAULT_PAYMENT_GATEWAY_SETTINGS = {
+  preferred_gateway: "default", // "default" | "paystack" | "stripe" | "bank_transfer"
+  environment: "test", // "test" | "live"
+  paystack_public_key: "",
+  paystack_secret_key: "",
   paystack_subaccount_code: "",
+  stripe_publishable_key: "",
+  stripe_secret_key: "",
   stripe_account_id: "",
   bank_name: "",
   account_number: "",
   account_name: "",
+  swift_code: "",
   payout_currency: "NGN",
 };
 
@@ -343,6 +350,65 @@ export async function updateOrgPaymentGatewaySettings(organizationId, patch) {
   }
 }
 
+export function testOrgPaymentGatewayConnection({ provider, publicKey, secretKey, subaccountCode, accountId, environment = "test" }) {
+  if (provider === "paystack") {
+    const pubKey = (publicKey || "").trim();
+    const secKey = (secretKey || "").trim();
+    const subacc = (subaccountCode || "").trim();
+    if (!pubKey && !secKey && !subacc) {
+      return { success: false, message: "Please enter a Paystack Public Key, Secret Key, or Subaccount Code to test." };
+    }
+    const isTest = environment === "test";
+    const expectedPrefix = isTest ? "pk_test_" : "pk_live_";
+    const expectedSecPrefix = isTest ? "sk_test_" : "sk_live_";
+    if (pubKey && !pubKey.startsWith(expectedPrefix)) {
+      return { success: false, message: `Public key format mismatch. Expected prefix '${expectedPrefix}' for ${environment.toUpperCase()} mode.` };
+    }
+    if (secKey && !secKey.startsWith(expectedSecPrefix)) {
+      return { success: false, message: `Secret key format mismatch. Expected prefix '${expectedSecPrefix}' for ${environment.toUpperCase()} mode.` };
+    }
+    if (subacc && !subacc.startsWith("ACCT_")) {
+      return { success: false, message: "Subaccount code format warning. Subaccount codes usually start with 'ACCT_'." };
+    }
+    return { success: true, message: `✓ Valid Paystack ${environment.toUpperCase()} configuration format!` };
+  }
+
+  if (provider === "stripe") {
+    const pubKey = (publicKey || "").trim();
+    const secKey = (secretKey || "").trim();
+    const accId = (accountId || "").trim();
+    if (!pubKey && !secKey && !accId) {
+      return { success: false, message: "Please enter a Stripe Publishable Key, Secret Key, or Connected Account ID to test." };
+    }
+    const isTest = environment === "test";
+    const expectedPrefix = isTest ? "pk_test_" : "pk_live_";
+    const expectedSecPrefix = isTest ? "sk_test_" : "sk_live_";
+    if (pubKey && !pubKey.startsWith(expectedPrefix)) {
+      return { success: false, message: `Publishable key format mismatch. Expected prefix '${expectedPrefix}' for ${environment.toUpperCase()} mode.` };
+    }
+    if (secKey && !secKey.startsWith(expectedSecPrefix)) {
+      return { success: false, message: `Secret key format mismatch. Expected prefix '${expectedSecPrefix}' for ${environment.toUpperCase()} mode.` };
+    }
+    if (accId && !accId.startsWith("acct_")) {
+      return { success: false, message: "Stripe Account ID format warning. Connected Account IDs usually start with 'acct_'." };
+    }
+    return { success: true, message: `✓ Valid Stripe ${environment.toUpperCase()} configuration format!` };
+  }
+
+  return { success: false, message: "Unknown payment gateway provider." };
+}
+
+export async function resolveOrgPaymentGateway(organizationId) {
+  const settings = await fetchOrgPaymentGatewaySettings(organizationId);
+  return {
+    provider: settings.preferred_gateway || "default",
+    environment: settings.environment || "test",
+    hasPaystackCustomKeys: !!(settings.paystack_public_key || settings.paystack_secret_key || settings.paystack_subaccount_code),
+    hasStripeCustomKeys: !!(settings.stripe_publishable_key || settings.stripe_secret_key || settings.stripe_account_id),
+    settings,
+  };
+}
+
 // Organization subscription payment - the real fix for "organizations have
 // to pay to see the admin dashboard." See 0114_organization_subscription_payment.sql
 // for the full design and its one honest trust-boundary caveat.
@@ -362,7 +428,9 @@ export async function updateOrgPaymentGatewaySettings(organizationId, patch) {
 export const TIER_LABELS = { starter: "Starter", growth: "Growth" };
 
 export async function fetchTierPrice(tier, currency = "USD") {
-  const fallback = tier === "growth" ? { USD: 4500, NGN: 4500000 } : { USD: 1500, NGN: 1500000 };
+  const fallback = tier === "growth"
+    ? { USD: 4500, NGN: 4500000, GBP: 3600, EUR: 4200 }
+    : { USD: 1500, NGN: 1500000, GBP: 1200, EUR: 1400 };
   if (!supabase) return { currency, unit_amount_minor: fallback[currency] ?? fallback.USD, unverified_fallback: true };
   try {
     const { data, error } = await supabase.rpc("get_active_price", { p_category: `org_subscription_${tier}`, p_currency: currency });
@@ -518,14 +586,15 @@ export async function purchaseSeats(organizationId, seats, amount, paymentRefere
 // than cached as a module-level constant, so a platform-owner price
 // change takes effect without a redeploy.
 export async function fetchSeatPrice(currency = "USD") {
-  if (!supabase) return { currency, unit_amount_minor: currency === "NGN" ? 1500000 : 1000, unverified_fallback: true };
+  const fallbackMinor = { NGN: 1500000, USD: 1000, GBP: 800, EUR: 900 };
+  if (!supabase) return { currency, unit_amount_minor: fallbackMinor[currency] ?? 1000, unverified_fallback: true };
   try {
     const { data, error } = await supabase.rpc("get_active_price", { p_category: "seat_subscription", p_currency: currency });
     if (error || !data) throw error || new Error("No active price configured");
     return data;
   } catch (e) {
     console.warn("fetchSeatPrice: could not load configured price, using last-known reference value:", e?.message || e);
-    return { currency, unit_amount_minor: currency === "NGN" ? 1500000 : 1000, unverified_fallback: true };
+    return { currency, unit_amount_minor: fallbackMinor[currency] ?? 1000, unverified_fallback: true };
   }
 }
 
@@ -689,7 +758,7 @@ export async function fetchOrgAICreditUsageByLearner(organizationId) {
 // credit packages in CreditsCheckoutScreen.jsx have (those are hardcoded
 // package prices too). A real fix would add an 'ai_credit' category to
 // billing_prices - flagged as a follow-up, not silently done here.
-const ORG_CREDIT_UNIT_PRICE = { USD: 0.08, NGN: 110 };
+const ORG_CREDIT_UNIT_PRICE = { USD: 0.08, NGN: 110, GBP: 0.065, EUR: 0.075 };
 
 export function orgCreditUnitPrice(currency = "USD") {
   return ORG_CREDIT_UNIT_PRICE[currency] ?? ORG_CREDIT_UNIT_PRICE.USD;

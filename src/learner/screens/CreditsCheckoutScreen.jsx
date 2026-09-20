@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { TopBar, Tag } from "../components/LearnerUI.jsx";
 import { Zap, ShieldCheck, Loader2, CreditCard, Plus, CheckCircle2, Lock, Mail, ArrowRight, HelpCircle, Send, Clock3 } from "lucide-react";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "../../lib/api/payments.js";
 import { requestCredits, fetchMyCreditRequests } from "../../lib/api/creditRequests.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { getUserLocationCurrency } from "../../lib/locationCurrency.js";
 
 const PACKAGES = [
   {
@@ -92,26 +93,17 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
     }
   }
 
+  const userLoc = useMemo(() => getUserLocationCurrency(), []);
   const [selectedPackageId, setSelectedPackageId] = useState(PACKAGES[1].id);
-  const [currency, setCurrency] = useState("NGN");
-  const [providerOverride, setProviderOverride] = useState(null);
+  const currency = userLoc.currency;
+  const provider = userLoc.provider;
   const [email, setEmail] = useState(session?.user?.email || "");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const defaultProvider = currency === "NGN" ? "paystack" : "stripe";
-  const provider = providerOverride ?? defaultProvider;
-  const paystackAllowed = currency === "NGN" || currency === "USD";
-  const stripeAllowed = currency !== "NGN";
-
   const pkg = PACKAGES.find((p) => p.id === selectedPackageId) ?? PACKAGES[1];
   const coursePrice = Number(params?.coursePrice) || 0;
   const amount = isCourseMode ? coursePrice : priceFor(pkg, currency);
-
-  function onCurrencyChange(next) {
-    setCurrency(next);
-    setProviderOverride(null);
-  }
 
   async function handlePay() {
     setErrorMsg("");
@@ -324,33 +316,14 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
 
       {(isCourseMode || activeTab === "buy") && !isCourseMode && (
         <>
-          {/* Currency Switcher Controls */}
+          {/* Dynamic Location-Based Pricing Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>Select Currency</div>
-              <div style={{ fontSize: 12, color: "var(--text-2)" }}>Choose your preferred payment denomination</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>Select Package</div>
+              <div style={{ fontSize: 12, color: "var(--text-2)" }}>Pricing in your local currency ({currency} • {userLoc.name})</div>
             </div>
-            <div style={{ display: "flex", gap: 6, background: "var(--surface-3)", padding: 4, borderRadius: 10, border: "1px solid var(--border)" }}>
-              {CREDITS_CURRENCIES.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  style={{
-                    padding: "6px 14px",
-                    borderRadius: 7,
-                    fontSize: 12.5,
-                    fontWeight: currency === c ? 800 : 600,
-                    background: currency === c ? "var(--primary)" : "transparent",
-                    color: currency === c ? "#FFFFFF" : "var(--text)",
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "all 0.15s ease"
-                  }}
-                  onClick={() => onCurrencyChange(c)}
-                >
-                  {SYMBOL[c]} {c}
-                </button>
-              ))}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--surface-3)", padding: "6px 14px", borderRadius: 8, border: "1px solid var(--border)", fontSize: 12.5, fontWeight: 700, color: "var(--text)" }}>
+              <span>{userLoc.symbol} {currency}</span>
             </div>
           </div>
 
@@ -488,43 +461,38 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
           </div>
         </div>
 
-        {/* Payment Provider Selection */}
+        {/* Payment Gateway Info */}
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>
-            Choose payment gateway
+            Payment processing
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
-            <div
-              className={`tai-card-hover`}
-              style={{
-                padding: "12px 14px",
-                borderRadius: 10,
-                cursor: paystackAllowed ? "pointer" : "not-allowed",
-                opacity: paystackAllowed ? 1 : 0.45,
-                border: provider === "paystack" ? "2px solid var(--primary)" : "1px solid var(--border)",
-                background: provider === "paystack" ? "rgba(37, 99, 235, 0.06)" : "var(--surface-3)"
-              }}
-              onClick={() => paystackAllowed && setProviderOverride("paystack")}
-            >
-              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Paystack</div>
-              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2 }}>Card, Bank Transfer &amp; USSD (NGN, USD)</div>
+          <div
+            style={{
+              padding: "12px 14px",
+              borderRadius: 10,
+              border: "1px solid var(--border)",
+              background: "var(--surface-3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              flexWrap: "wrap"
+            }}
+          >
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>
+                {provider === "stripe" ? "Stripe Direct Checkout" : "Paystack Direct Checkout"}
+              </div>
+              <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 2 }}>
+                {provider === "stripe"
+                  ? `Secure card & digital payment in ${currency}`
+                  : `Cards, Bank Transfer & USSD in ${currency}`}
+              </div>
             </div>
-
-            <div
-              className={`tai-card-hover`}
-              style={{
-                padding: "12px 14px",
-                borderRadius: 10,
-                cursor: stripeAllowed ? "pointer" : "not-allowed",
-                opacity: stripeAllowed ? 1 : 0.45,
-                border: provider === "stripe" ? "2px solid var(--primary)" : "1px solid var(--border)",
-                background: provider === "stripe" ? "rgba(37, 99, 235, 0.06)" : "var(--surface-3)"
-              }}
-              onClick={() => stripeAllowed && setProviderOverride("stripe")}
-            >
-              <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>Stripe</div>
-              <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 2 }}>International Cards &amp; Apple Pay (USD, GBP, EUR)</div>
-            </div>
+            <Tag tone="success">
+              <ShieldCheck size={12} style={{ marginRight: 4 }} />
+              256-Bit Encrypted
+            </Tag>
           </div>
         </div>
 
