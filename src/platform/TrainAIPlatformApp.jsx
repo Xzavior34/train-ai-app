@@ -41,7 +41,7 @@ import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
 import { CommunityScreen } from "../learner/screens/CommunityScreen.jsx";
 import { getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
-import { initDynamicBranding } from "../lib/brandingHelper.js";
+import { initDynamicBranding, resetDynamicBranding } from "../lib/brandingHelper.js";
 
 // Picks which workspace tab a signed-in platform user lands on by default,
 // in descending order of privilege - admin/super_admin keep the previous
@@ -84,7 +84,10 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   const mentorStudyGroupsQuery = useSupabaseQuery(async () => (
     mentorId ? fetchMyManagedStudyGroups(mentorId) : []
   ), [mentorId]);
-  const mentorLeaderboardQuery = useSupabaseQuery(async () => fetchLeaderboard(50), []);
+  const mentorLeaderboardQuery = useSupabaseQuery(async () => {
+    if (!effectiveOrgId) return [];
+    return fetchLeaderboard(50, effectiveOrgId);
+  }, [effectiveOrgId]);
 
   const allOrgsQuery = useSupabaseQuery(async () => {
     if (userRoles.includes("super_admin")) {
@@ -104,6 +107,8 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   useEffect(() => {
     if (effectiveOrgId) {
       initDynamicBranding(effectiveOrgId);
+    } else {
+      resetDynamicBranding();
     }
   }, [effectiveOrgId]);
 
@@ -264,7 +269,16 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                     />
                   )}
                   {screen === "compliance" && <ComplianceScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
-                  {screen === "leaderboard" && <LeaderboardScreen back={() => setScreen("dashboard")} push={(s) => setScreen(s)} />}
+                  {screen === "leaderboard" && (
+                    <LeaderboardScreen
+                      back={() => setScreen("dashboard")}
+                      push={(s) => setScreen(s)}
+                      orgId={effectiveOrgId}
+                      user={profileQuery?.data}
+                      session={session}
+                      leaderboardQuery={mentorLeaderboardQuery}
+                    />
+                  )}
                   {screen === "assessments" && <AssessmentsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} scope="admin" />}
                   {screen === "roleaccess" && <OrgRoleAccessScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
@@ -298,7 +312,16 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                     />
                   )}
                   {screen === "studygroups" && <MentorStudyGroupsScreen mentorId={session?.user?.id} orgId={effectiveOrgId} orgSelector={orgSelector} />}
-                  {screen === "leaderboard" && <LeaderboardScreen back={() => setScreen("dashboard")} push={(s) => setScreen(s)} />}
+                  {screen === "leaderboard" && (
+                    <LeaderboardScreen
+                      back={() => setScreen("dashboard")}
+                      push={(s) => setScreen(s)}
+                      orgId={effectiveOrgId}
+                      user={profileQuery?.data}
+                      session={session}
+                      leaderboardQuery={mentorLeaderboardQuery}
+                    />
+                  )}
                   {screen === "assessments" && <AssessmentsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} scope="mentor" />}
                   {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "schedule" && <MentorScheduleScreen mentorId={mentorId} orgSelector={orgSelector} />}

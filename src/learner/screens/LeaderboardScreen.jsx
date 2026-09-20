@@ -6,9 +6,9 @@ import { LeaderboardPanel } from "../components/LeaderboardPanel.jsx";
 
 import { Trophy, ShieldAlert } from "lucide-react";
 
-export function LeaderboardScreen({ back, user = {}, leaderboardQuery, session, gamificationStatsQuery, leaderboardEnabled = true }) {
+export function LeaderboardScreen({ back, user = {}, orgId: propOrgId, leaderboardQuery, session, gamificationStatsQuery, leaderboardEnabled = true }) {
   const userId = session?.user?.id || null;
-  const orgId = user?.organization_id || null;
+  const orgId = propOrgId || user?.organization_id || null;
 
   const defaultLeaderboardQuery = useSupabaseQuery(async () => {
     if (leaderboardQuery || !leaderboardEnabled) return null;

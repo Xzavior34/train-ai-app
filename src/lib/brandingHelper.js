@@ -8,6 +8,33 @@ import { supabase } from "./supabaseClient.js";
 
 const BRANDING_CACHE_KEY = "trainai_active_branding";
 
+export function resetDynamicBranding() {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  root.style.removeProperty("--primary");
+  root.style.removeProperty("--primary-rgb");
+  root.style.removeProperty("--primary-hover");
+  root.style.removeProperty("--primary-dark");
+  root.style.removeProperty("--primary-light");
+  root.style.removeProperty("--primary-tint");
+  root.style.removeProperty("--brand-glow");
+  root.style.removeProperty("--secondary");
+  root.style.removeProperty("--secondary-rgb");
+  root.style.removeProperty("--accent-gradient");
+  root.style.removeProperty("--brand-logo-url");
+
+  const customStyleTag = document.getElementById("trainai-custom-branding");
+  if (customStyleTag) customStyleTag.textContent = "";
+
+  try {
+    localStorage.removeItem("trainai_brand_logo");
+  } catch {}
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("trainai-branding-change", { detail: null }));
+  }
+}
+
 // Lighten a hex color by mixing it with white at `amount` ratio (0–1)
 function lightenHex(hex, amount = 0.85) {
   try {
@@ -51,13 +78,31 @@ export function hexToRgb(hex) {
   }
 }
 
-export function applyDynamicBranding(branding) {
+export function applyDynamicBranding(branding, organizationId = null) {
   if (typeof document === "undefined") return;
+
+  const primary = branding?.primary_color || branding?.primaryColor || null;
+  const secondary = branding?.secondary_color || branding?.secondaryColor || null;
+  const logoUrl = branding?.logo_url || branding?.logoUrl || null;
+  const css = branding?.custom_css || branding?.customCss || "";
+
+  // If no branding values exist or empty reset object, reset to Train AI defaults
+  const hasCustomBranding = (primary && /^#[0-9a-fA-F]{3,6}$/.test(primary)) ||
+    (secondary && /^#[0-9a-fA-F]{3,6}$/.test(secondary)) ||
+    logoUrl ||
+    (css && css.trim().length > 0);
+
+  if (!hasCustomBranding) {
+    resetDynamicBranding();
+    if (organizationId) {
+      try { localStorage.removeItem(`trainai_branding_${organizationId}`); } catch {}
+    }
+    return;
+  }
 
   const root = document.documentElement;
   const isDark = root.classList.contains("dark") || (typeof localStorage !== "undefined" && localStorage.getItem("trainai_theme_dark") === "true");
 
-  const primary = branding?.primary_color || branding?.primaryColor || null;
   if (primary && /^#[0-9a-fA-F]{3,6}$/.test(primary)) {
     const rgb = hexToRgb(primary);
     root.style.setProperty("--primary", primary);
@@ -67,9 +112,16 @@ export function applyDynamicBranding(branding) {
     root.style.setProperty("--primary-light", isDark ? lightenHex(primary, 0.4) : lightenHex(primary, 0.8));
     root.style.setProperty("--primary-tint", isDark ? `rgba(${rgb}, 0.18)` : lightenHex(primary, 0.92));
     root.style.setProperty("--brand-glow", `0 0 24px rgba(${rgb}, 0.35)`);
+  } else {
+    root.style.removeProperty("--primary");
+    root.style.removeProperty("--primary-rgb");
+    root.style.removeProperty("--primary-hover");
+    root.style.removeProperty("--primary-dark");
+    root.style.removeProperty("--primary-light");
+    root.style.removeProperty("--primary-tint");
+    root.style.removeProperty("--brand-glow");
   }
 
-  const secondary = branding?.secondary_color || branding?.secondaryColor || null;
   if (secondary && /^#[0-9a-fA-F]{3,6}$/.test(secondary)) {
     const secRgb = hexToRgb(secondary);
     root.style.setProperty("--secondary", secondary);
@@ -77,10 +129,13 @@ export function applyDynamicBranding(branding) {
     root.style.setProperty("--accent-gradient", `linear-gradient(135deg, ${primary || "var(--primary)"}, ${secondary})`);
   } else if (primary) {
     root.style.setProperty("--accent-gradient", `linear-gradient(135deg, ${primary}, ${darkenHex(primary, 0.2)})`);
+  } else {
+    root.style.removeProperty("--secondary");
+    root.style.removeProperty("--secondary-rgb");
+    root.style.removeProperty("--accent-gradient");
   }
 
   // Store logo URL as CSS variable AND in localStorage so components can read it
-  const logoUrl = branding?.logo_url || branding?.logoUrl || null;
   if (logoUrl) {
     root.style.setProperty("--brand-logo-url", `url('${logoUrl}')`);
     try { localStorage.setItem("trainai_brand_logo", logoUrl); } catch {}
@@ -91,7 +146,6 @@ export function applyDynamicBranding(branding) {
 
   // Inject / update custom CSS tag in document.head
   let customStyleTag = document.getElementById("trainai-custom-branding");
-  const css = branding?.custom_css || branding?.customCss || "";
   if (css && css.trim()) {
     if (!customStyleTag) {
       customStyleTag = document.createElement("style");
@@ -103,8 +157,7 @@ export function applyDynamicBranding(branding) {
     customStyleTag.textContent = "";
   }
 
-  // Cache the normalized branding object in localStorage so the next page
-  // load can apply it before any async fetch completes (avoids a color flash)
+  // Cache normalized branding object strictly scoped to this organization
   try {
     const normalized = {
       primary_color: primary,
@@ -112,7 +165,9 @@ export function applyDynamicBranding(branding) {
       logo_url: logoUrl,
       custom_css: css,
     };
-    localStorage.setItem(BRANDING_CACHE_KEY, JSON.stringify(normalized));
+    if (organizationId) {
+      localStorage.setItem(`trainai_branding_${organizationId}`, JSON.stringify(normalized));
+    }
   } catch {}
 
   // Broadcast to all simultaneously-mounted dashboards / components
@@ -121,40 +176,41 @@ export function applyDynamicBranding(branding) {
   }
 }
 
-// Apply cached branding immediately from localStorage (zero-latency, avoids
-// color flash before the async Supabase fetch returns)
-export function applyCachedBranding() {
+// Apply cached branding immediately from localStorage for a specific organization
+export function applyCachedBranding(organizationId = null) {
+  if (!organizationId) {
+    resetDynamicBranding();
+    return;
+  }
   try {
-    const raw = localStorage.getItem(BRANDING_CACHE_KEY);
-    if (raw) applyDynamicBranding(JSON.parse(raw));
+    const raw = localStorage.getItem(`trainai_branding_${organizationId}`);
+    if (raw) {
+      applyDynamicBranding(JSON.parse(raw), organizationId);
+    } else {
+      resetDynamicBranding();
+    }
   } catch {}
 }
 
 export async function initDynamicBranding(organizationId) {
-  // Apply cached version first for instant paint, then fetch fresh
-  applyCachedBranding();
+  if (!organizationId) {
+    // When no organization context is active, strictly revert to Train AI defaults
+    resetDynamicBranding();
+    return null;
+  }
+
+  // Apply cached version first for instant paint without flash
+  applyCachedBranding(organizationId);
 
   try {
-    let targetOrgId = organizationId;
-    if (!targetOrgId && supabase) {
-      // Only query organizations if there is an active authenticated session.
-      // Querying unauthenticated triggers RLS 403 errors on the login screen.
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) return null;
-
-      const { data: defaultOrg } = await supabase
-        .from("organizations")
-        .select("id")
-        .limit(1)
-        .maybeSingle();
-      targetOrgId = defaultOrg?.id;
-    }
-    if (targetOrgId) {
-      const branding = await fetchOrgBranding(targetOrgId);
-      if (branding) {
-        applyDynamicBranding(branding);
-        return branding;
-      }
+    const branding = await fetchOrgBranding(organizationId);
+    if (branding && (branding.primary_color || branding.secondary_color || branding.logo_url || branding.custom_css)) {
+      applyDynamicBranding(branding, organizationId);
+      return branding;
+    } else {
+      resetDynamicBranding();
+      try { localStorage.removeItem(`trainai_branding_${organizationId}`); } catch {}
+      return null;
     }
   } catch (e) {
     console.warn("Dynamic branding init error:", e);
@@ -166,20 +222,27 @@ export async function initDynamicBranding(organizationId) {
 // branding-change event (e.g. when super admin saves new colors on BrandingScreen)
 export function useDynamicBranding(organizationId) {
   const [branding, setBranding] = useState(() => {
+    if (!organizationId) return null;
     try {
-      const raw = localStorage.getItem(BRANDING_CACHE_KEY);
+      const raw = localStorage.getItem(`trainai_branding_${organizationId}`);
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   });
 
   useEffect(() => {
     let active = true;
+    if (!organizationId) {
+      resetDynamicBranding();
+      setBranding(null);
+      return;
+    }
+
     initDynamicBranding(organizationId).then((data) => {
-      if (active && data) setBranding(data);
+      if (active) setBranding(data);
     });
 
     function handleBrandingChange(e) {
-      if (active && e.detail) {
+      if (active) {
         setBranding(e.detail);
       }
     }

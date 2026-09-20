@@ -83,7 +83,7 @@ export function BrandingScreen({ orgSelector } = {}) {
     setCustomCss(d?.custom_css || "");
     setHasChanges(false);
     // Apply live so the dashboard itself reflects the stored branding immediately
-    if (d) applyDynamicBranding(d);
+    if (d) applyDynamicBranding(d, selectedOrgId);
   }, [brandingQuery.data, selectedOrgId]);
 
   // ─── Save ────────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ export function BrandingScreen({ orgSelector } = {}) {
         primary_color:  primaryColor  || null,
         secondary_color:secondaryColor|| null,
         custom_css:     customCss     || null,
-      });
+      }, selectedOrgId);
 
       // Apply theme preference to document
       if (themeMode === "dark") {
@@ -141,7 +141,7 @@ export function BrandingScreen({ orgSelector } = {}) {
       await upsertOrgBranding(selectedOrgId, {
         logoUrl: null, primaryColor: null, secondaryColor: null, customCss: null,
       });
-      applyDynamicBranding({});
+      applyDynamicBranding({}, selectedOrgId);
       setPrimaryColor("#1D4ED8");
       setSecondaryColor("#0EA5E9");
       setLogoUrl("");
@@ -160,17 +160,17 @@ export function BrandingScreen({ orgSelector } = {}) {
     setPrimaryColor(val);
     setHasChanges(true);
     if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-      applyDynamicBranding({ primary_color: val, secondary_color: secondaryColor });
+      applyDynamicBranding({ primary_color: val, secondary_color: secondaryColor }, selectedOrgId);
     }
-  }, [secondaryColor]);
+  }, [secondaryColor, selectedOrgId]);
 
   const handleSecondaryChange = useCallback((val) => {
     setSecondaryColor(val);
     setHasChanges(true);
     if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-      applyDynamicBranding({ primary_color: primaryColor, secondary_color: val });
+      applyDynamicBranding({ primary_color: primaryColor, secondary_color: val }, selectedOrgId);
     }
-  }, [primaryColor]);
+  }, [primaryColor, selectedOrgId]);
 
   const selectedOrg = orgs.find(o => o.id === selectedOrgId) || { name: "Train AI Platform" };
   const isValidPrimary = /^#[0-9a-fA-F]{6}$/.test(primaryColor);

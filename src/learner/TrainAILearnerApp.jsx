@@ -38,7 +38,7 @@ import {
   fetchOrCreateAIConversation, fetchAIChatMessages, sendAIChatMessage, requestAIReply
 } from "../lib/api/schemaHelper.js";
 import { updateUserAvatar, fetchOrgBranding } from "../lib/api/platform.js";
-import { applyDynamicBranding } from "../lib/brandingHelper.js";
+import { applyDynamicBranding, resetDynamicBranding } from "../lib/brandingHelper.js";
 import { CheckCircle2, Search } from "lucide-react";
 
 // Paystack/Stripe redirect the browser back to this same page (no router in
@@ -266,9 +266,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   // the platform/admin app calls initDynamicBranding() from its own useEffect.
   useEffect(() => {
     if (orgBrandingQuery.data) {
-      applyDynamicBranding(orgBrandingQuery.data);
+      applyDynamicBranding(orgBrandingQuery.data, orgId);
+    } else if (orgBrandingQuery.data === null && !orgBrandingQuery.loading) {
+      resetDynamicBranding();
     }
-  }, [orgBrandingQuery.data]);
+  }, [orgBrandingQuery.data, orgBrandingQuery.loading, orgId]);
 
   const [wishlist, setWishlist] = useState(new Set());
   const [bookmarks, setBookmarks] = useState(new Set());

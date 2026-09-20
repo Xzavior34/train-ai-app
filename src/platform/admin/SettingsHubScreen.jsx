@@ -358,22 +358,22 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
     setBrandPrimary(d?.primary_color   || "#1D4ED8");
     setBrandSecondary(d?.secondary_color || "#0EA5E9");
     setBrandLogo(d?.logo_url || "");
-    if (d) applyDynamicBranding(d);
+    if (d) applyDynamicBranding(d, orgId);
   }, [brandingQuery.data, orgId]);
 
   const handleBrandPrimaryChange = useCallback((val) => {
     setBrandPrimary(val);
     if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-      applyDynamicBranding({ primary_color: val, secondary_color: brandSecondary });
+      applyDynamicBranding({ primary_color: val, secondary_color: brandSecondary }, orgId);
     }
-  }, [brandSecondary]);
+  }, [brandSecondary, orgId]);
 
   const handleBrandSecondaryChange = useCallback((val) => {
     setBrandSecondary(val);
     if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-      applyDynamicBranding({ primary_color: brandPrimary, secondary_color: val });
+      applyDynamicBranding({ primary_color: brandPrimary, secondary_color: val }, orgId);
     }
-  }, [brandPrimary]);
+  }, [brandPrimary, orgId]);
 
   async function handleSaveBranding() {
     if (!orgId) return;
@@ -388,7 +388,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
         primary_color:   brandPrimary   || null,
         secondary_color: brandSecondary || null,
         logo_url:        brandLogo      || null,
-      });
+      }, orgId);
       brandingQuery.refetch();
       showToast("✓ Branding saved and applied site-wide!");
     } catch (e) {
@@ -403,7 +403,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
     setSavingBrand(true);
     try {
       await upsertOrgBranding(orgId, { primaryColor: null, secondaryColor: null, logoUrl: null });
-      applyDynamicBranding({});
+      applyDynamicBranding({}, orgId);
       setBrandPrimary("#1D4ED8");
       setBrandSecondary("#0EA5E9");
       setBrandLogo("");

@@ -438,6 +438,11 @@ export async function decideCourseApplication({ applicationId, userId, courseId,
 // Super-admin-only queries - RLS (org_select_member in 0006_rls_policies.sql)
 // only returns every row here if is_super_admin(auth.uid()) is true; a
 // non-super-admin calling this gets back just their own organization's row.
+// Filter out orphan/ghost empty duplicates so users never land in empty state.
+const GHOST_ORGS_TO_EXCLUDE = new Set([
+  "a7768eb7-bd6b-448b-9e4f-d359578355b1", // 0-member empty placeholder duplicate for Sara Foundation
+]);
+
 export async function fetchAllOrganizations() {
   if (!supabase) {
     const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
@@ -448,7 +453,14 @@ export async function fetchAllOrganizations() {
     .select("*")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data || [];
+  return (data || [])
+    .filter(o => !GHOST_ORGS_TO_EXCLUDE.has(o.id))
+    .map(o => {
+      if (o.id === "58ebdb4d-8209-4e08-9ab3-8c5eee87b278") {
+        return { ...o, name: "Sara Foundation" };
+      }
+      return o;
+    });
 }
 
 export async function fetchRecentOrganizations(limit = 4) {
@@ -2435,7 +2447,8 @@ export async function setOrgPermission(organizationId, role, resource, action, a
    ========================================================================= */
 
 export async function fetchOrgBranding(organizationId) {
-  if (!supabase || !organizationId) return null;
+  const targetOrgId = organizationId === "a7768eb7-bd6b-448b-9e4f-d359578355b1" ? "58ebdb4d-8209-4e08-9ab3-8c5eee87b278" : organizationId;
+  if (!supabase || !targetOrgId) return null;
   // branding_settings is keyed by organization_id and has neither an `id` nor
   // an `updated_at` column, so ordering on updated_at made PostgREST reject
   // the query outright - branding always read back as null, which is why the
@@ -2443,15 +2456,16 @@ export async function fetchOrgBranding(organizationId) {
   const { data, error } = await supabase
     .from("branding_settings")
     .select("*")
-    .eq("organization_id", organizationId)
+    .eq("organization_id", targetOrgId)
     .maybeSingle();
   if (error) { console.warn("Org branding fetch warning:", error); return null; }
   return data;
 }
 
 export async function upsertOrgBranding(organizationId, { logoUrl, faviconUrl, primaryColor, secondaryColor, emailHeader, emailFooter, customCss } = {}) {
-  if (!supabase || !organizationId) return null;
-  const existing = await fetchOrgBranding(organizationId);
+  const targetOrgId = organizationId === "a7768eb7-bd6b-448b-9e4f-d359578355b1" ? "58ebdb4d-8209-4e08-9ab3-8c5eee87b278" : organizationId;
+  if (!supabase || !targetOrgId) return null;
+  const existing = await fetchOrgBranding(targetOrgId);
   // No updated_at column on this table either - writing one made every save
   // fail. organization_id is the key, so the update targets that.
   const patch = {};

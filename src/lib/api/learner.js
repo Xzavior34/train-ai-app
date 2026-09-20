@@ -337,11 +337,12 @@ export async function fetchMyQuizAttempts(userId, limit = 10) {
 }
 
 export async function fetchLeaderboard(limit = 50, orgId = null) {
-  if (!supabase || !orgId) return [];
+  const targetOrgId = orgId === "a7768eb7-bd6b-448b-9e4f-d359578355b1" ? "58ebdb4d-8209-4e08-9ab3-8c5eee87b278" : orgId;
+  if (!supabase || !targetOrgId) return [];
   try {
     const { data, error } = await supabase.rpc("get_leaderboard_with_profiles", {
       p_limit: limit,
-      p_org_id: orgId
+      p_org_id: targetOrgId
     });
     if (!error && data) return data;
   } catch (e) {
@@ -352,7 +353,7 @@ export async function fetchLeaderboard(limit = 50, orgId = null) {
     const { data: stats, error: statsError } = await supabase
       .from("user_gamification_stats")
       .select("user_id, total_points, streak_days, current_level, lessons_completed, courses_completed, user_profiles!inner(id, display_name, avatar_url, role, organization_id)")
-      .eq("user_profiles.organization_id", orgId)
+      .eq("user_profiles.organization_id", targetOrgId)
       .order("total_points", { ascending: false })
       .limit(limit);
 
@@ -380,10 +381,11 @@ export async function fetchLeaderboard(limit = 50, orgId = null) {
 }
 
 export async function fetchLeaderboardForPeriod(startDate, endDate, limit = 50, orgId = null) {
-  if (!supabase || !startDate || !endDate || !orgId) return [];
+  const targetOrgId = orgId === "a7768eb7-bd6b-448b-9e4f-d359578355b1" ? "58ebdb4d-8209-4e08-9ab3-8c5eee87b278" : orgId;
+  if (!supabase || !startDate || !endDate || !targetOrgId) return [];
   try {
     const { data, error } = await supabase.rpc("get_leaderboard_for_period", {
-      p_start: startDate, p_end: endDate, p_limit: limit, p_org_id: orgId
+      p_start: startDate, p_end: endDate, p_limit: limit, p_org_id: targetOrgId
     });
     if (error) { console.warn("Period leaderboard fetch warning:", error); return []; }
     return (data || []).map((r) => ({ ...r, total_points: r.period_points }));

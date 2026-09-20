@@ -16,7 +16,7 @@ import { CommissionConfigScreen } from "./superadmin/CommissionConfigScreen.jsx"
 import { PaymentMonitorScreen } from "./superadmin/PaymentMonitorScreen.jsx";
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
-import { initDynamicBranding } from "../lib/brandingHelper.js";
+import { initDynamicBranding, resetDynamicBranding } from "../lib/brandingHelper.js";
 
 // The Platform Owner Dashboard - a genuinely separate top-level dashboard,
 // not a tab inside the Organisation dashboard's Sidebar the way it used to
@@ -43,6 +43,8 @@ export default function PlatformOwnerApp({
   useEffect(() => {
     if (selectedOrgId) {
       initDynamicBranding(selectedOrgId);
+    } else {
+      resetDynamicBranding();
     }
   }, [selectedOrgId]);
 

@@ -11,6 +11,7 @@ import {
 import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
 import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
+import { resetDynamicBranding } from "../../lib/brandingHelper.js";
 
 const TEAM_SIZE_OPTIONS = ["1–50", "51–200", "201–1,000", "1,000+"];
 
@@ -136,6 +137,7 @@ const FAQ_ITEMS = [
 ];
 
 export default function LandingPage({ onNavigate }) {
+  useEffect(() => { resetDynamicBranding(); }, []);
   useEffect(() => { captureAttributionFromURL(); }, []);
   useEffect(() => {
     const ref = new URLSearchParams(window.location.search).get("ref");
