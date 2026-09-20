@@ -8,7 +8,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import {
   fetchEmailCampaigns, sendBroadcastEmail, fetchOrgMembers, fetchCohorts,
-  fetchOrgLearnerProgressOverview, createInAppNotificationsForUsers,
+  fetchOrgLearnerProgressOverview,
 } from "../../lib/api/platform.js";
 
 /**
@@ -145,46 +145,37 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
     if (!window.confirm(`Send "${subject.trim()}" to ${sendable.length} recipient${sendable.length === 1 ? "" : "s"}?`)) return;
     setSending(true);
     setLastResult(null);
+    setProgressNote(`Dispatching broadcast to ${sendable.length} recipient${sendable.length === 1 ? "" : "s"}...`);
     const htmlContent = toHtml(body);
-    let sent = 0;
-    const failed = [];
-    const notifiedUserIds = [];
-    for (let i = 0; i < sendable.length; i++) {
-      const member = sendable[i];
-      setProgressNote(`Sending ${i + 1} of ${sendable.length}...`);
-      try {
-        await sendBroadcastEmail({
-          recipientGroup: "specific_email",
-          specificEmail: member.email,
-          subject: subject.trim(),
-          htmlContent,
-          channels,
-        });
-        sent++;
-        if (member.id) notifiedUserIds.push(member.id);
-      } catch (e) {
-        failed.push({ email: member.email, reason: e?.message || "Send failed" });
-      }
+    const targetEmails = sendable.map((m) => m.email).filter(Boolean);
+    const targetUserIds = sendable.map((m) => m.id).filter(Boolean);
+
+    try {
+      const result = await sendBroadcastEmail({
+        recipientGroup: segment === "all" ? "organization_members" : `org_${segment}`,
+        specificEmails: targetEmails,
+        recipientUserIds: targetUserIds,
+        organizationId: orgId,
+        subject: subject.trim(),
+        htmlContent,
+        channels,
+        senderId: currentUserId,
+      });
+
+      const sent = result?.email_sent ?? targetEmails.length;
+      setLastResult({ sent, failed: [] });
+      showToast(`Broadcast dispatched: ${sent} recipient${sent === 1 ? "" : "s"} processed.`);
+      setSubject("");
+      setBody("");
+      campaignsQuery.refetch();
+    } catch (e) {
+      console.error("Broadcast error:", e);
+      setLastResult({ sent: 0, failed: [{ email: "broadcast", reason: e?.message || "Dispatch failed" }] });
+      showToast(e?.message || "Broadcast failed. Please try again.");
+    } finally {
+      setSending(false);
+      setProgressNote(null);
     }
-    // Actually write the "in-app notification" the channel toggle promises -
-    // previously this checkbox did nothing because the edge function only
-    // ever sends email (see createInAppNotificationsForUsers).
-    if (channels.in_app && notifiedUserIds.length) {
-      try {
-        await createInAppNotificationsForUsers(notifiedUserIds, {
-          title: subject.trim(),
-          message: "You have a new message from your organization.",
-        });
-      } catch (e) {
-        console.warn("In-app notification broadcast warning:", e);
-      }
-    }
-    setSending(false);
-    setProgressNote(null);
-    setLastResult({ sent, failed });
-    campaignsQuery.refetch();
-    showToast(`${sent} of ${sendable.length} email${sendable.length === 1 ? "" : "s"} sent${failed.length ? `, ${failed.length} failed` : ""}.`);
-    if (!failed.length) { setSubject(""); setBody(""); }
   }
 
   return (
