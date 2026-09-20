@@ -215,6 +215,10 @@ export async function markLessonComplete(userId, lessonId, courseId = null) {
           updated_at: timestamp,
           ...(percentage === 100 ? { completed_at: timestamp } : {})
         }, { onConflict: "user_id,course_id" });
+
+      if (percentage === 100) {
+        syncAllLearningPathsForUser(userId, courseId).catch(() => {});
+      }
     } catch (e) {
       console.warn("Enrollment progress calculation notice:", e);
     }
@@ -974,6 +978,60 @@ export async function syncLearningPathProgress(userId, pathId, { currentIndex, i
     .eq("user_id", userId)
     .eq("path_id", pathId);
   if (error) console.warn("Path progress sync warning:", error);
+}
+
+export async function syncAllLearningPathsForUser(userId, courseId) {
+  if (!supabase || !userId) return;
+  try {
+    const { data: pathEnrollments, error: peErr } = await supabase
+      .from("learning_path_enrollments")
+      .select("path_id, current_course_index, status")
+      .eq("user_id", userId);
+    if (peErr || !pathEnrollments || pathEnrollments.length === 0) return;
+
+    for (const pe of pathEnrollments) {
+      const { data: pathCourses } = await supabase
+        .from("learning_path_courses")
+        .select("id, course_id, order_index, is_required")
+        .eq("path_id", pe.path_id)
+        .order("order_index", { ascending: true });
+
+      if (!pathCourses || pathCourses.length === 0) continue;
+
+      const containsCourse = pathCourses.some(pc => pc.course_id === courseId);
+      if (!containsCourse && courseId) continue;
+
+      const courseIds = pathCourses.map(pc => pc.course_id).filter(Boolean);
+      const { data: courseEnrollments } = await supabase
+        .from("course_enrollments")
+        .select("course_id, progress_percentage, completed_at")
+        .eq("user_id", userId)
+        .in("course_id", courseIds);
+
+      const completedCourseIds = new Set(
+        (courseEnrollments || [])
+          .filter(ce => (ce.progress_percentage || 0) >= 100 || ce.completed_at)
+          .map(ce => ce.course_id)
+      );
+
+      let nextIndex = 0;
+      let allDone = true;
+      for (let i = 0; i < pathCourses.length; i++) {
+        if (!completedCourseIds.has(pathCourses[i].course_id)) {
+          nextIndex = i;
+          allDone = false;
+          break;
+        }
+      }
+
+      await syncLearningPathProgress(userId, pe.path_id, {
+        currentIndex: allDone ? pathCourses.length - 1 : nextIndex,
+        isComplete: allDone,
+      });
+    }
+  } catch (e) {
+    console.warn("syncAllLearningPathsForUser warning:", e);
+  }
 }
 
 export async function fetchMyLearningPathEnrollments(userId) {

@@ -3,7 +3,7 @@ import { Tag } from "../components/LearnerUI.jsx";
 import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
 import {
   BookOpen, Users, ChevronRight, Zap,
-  BarChart3, Bookmark,
+  BarChart3, Bookmark, Compass,
   GraduationCap, HelpCircle, ShieldCheck, Play
 } from "lucide-react";
 
@@ -69,11 +69,29 @@ export function HomeScreen({
                 <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2, color: "#FFFFFF" }}>
                   Welcome back, {userFirstName || "Learner"}
                 </h1>
-                <span
-                  style={{ background: "var(--primary, #2563EB)", color: "#FFFFFF", padding: "3px 10px", borderRadius: 6, fontWeight: 800, fontSize: 11.5, letterSpacing: "0.02em", border: "1px solid rgba(255, 255, 255, 0.25)", display: "inline-flex", alignItems: "center" }}
+                <button
+                  type="button"
+                  onClick={() => push("learningPaths")}
+                  style={{
+                    background: "var(--primary, #2563EB)",
+                    color: "#FFFFFF",
+                    padding: "4px 12px",
+                    borderRadius: 6,
+                    fontWeight: 800,
+                    fontSize: 11.5,
+                    letterSpacing: "0.02em",
+                    border: "1px solid rgba(255, 255, 255, 0.3)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    cursor: "pointer",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.15)"
+                  }}
+                  title="Click to view Learning Paths and Roadmaps"
                 >
-                  {activePathway?.title ? `Pathway: ${activePathway.title}` : (continueCourse?.category ? `${continueCourse.category} Track` : "No active pathway yet")}
-                </span>
+                  <Compass size={13} />
+                  {activePathway?.title ? `Pathway: ${activePathway.title}` : (continueCourse?.category ? `${continueCourse.category} Track` : "Explore Learning Paths →")}
+                </button>
               </div>
               <p className="tai-hero-desc" style={{ fontSize: 13.5, margin: 0, color: "#F8FAFC", fontWeight: 500, lineHeight: 1.45 }}>
                 {continueCourse ? `Pick up where you left off in ${continueCourse.title}.` : "Explore your courses to get started."}

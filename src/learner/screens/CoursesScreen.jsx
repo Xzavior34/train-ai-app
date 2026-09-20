@@ -705,6 +705,19 @@ export function CoursesScreen({
                   <span>{currentSpotlight.cta}</span>
                   <ArrowRight size={14} />
                 </button>
+
+                <button
+                  className="tai-btn tai-btn-outline"
+                  style={{
+                    padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 700,
+                    display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer",
+                    color: "#FFFFFF", borderColor: "rgba(255, 255, 255, 0.3)"
+                  }}
+                  onClick={() => push("learningPaths")}
+                >
+                  <Compass size={14} />
+                  <span>View Learning Paths</span>
+                </button>
               </div>
             </div>
 

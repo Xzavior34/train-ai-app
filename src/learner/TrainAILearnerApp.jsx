@@ -7,6 +7,7 @@ import { fetchOrgAISettings, fetchOrgLeaderboardSettings, fetchOrgGamificationSe
 import { isRealDatabaseId } from "../lib/mockDataManager.js";
 import { HomeScreen } from "./screens/HomeScreen.jsx";
 import { CoursesScreen } from "./screens/CoursesScreen.jsx";
+import { LearningPathsScreen } from "./screens/LearningPathsScreen.jsx";
 import { CourseDetailScreen } from "./screens/CourseDetailScreen.jsx";
 import { LessonScreen } from "./screens/LessonScreen.jsx";
 import { AIQuizScreen } from "./screens/AIQuizScreen.jsx";
@@ -169,6 +170,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       setShowMyCoursesOnly(false);
       setCourseSourceTab("all");
       goTab("courses");
+    } else if (key === "learningPaths" || key === "paths") {
+      push("learningPaths");
     } else if (key === "myCourses" || key === "myProgress") {
       push("myProgress");
     } else if (key === "ai") {
@@ -648,7 +651,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   }, [sessionMentorChoice?.id]);
 
   const activeTabKey = ["home", "courses", "ai", "community"].includes(screen) ? screen
-    : ["courseDetail", "lesson"].includes(screen) ? "courses"
+    : ["courseDetail", "lesson", "learningPaths", "paths"].includes(screen) ? "courses"
     : ["insights"].includes(screen) ? "ai"
     : ["postDetail", "mentors", "mentorDetail", "cohort"].includes(screen) ? "community"
     : null;
@@ -812,6 +815,18 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   push={push} handleEnroll={handleEnroll} handleRequestJoin={handleRequestJoin}
                   onToggleBookmark={handleToggleBookmark}
                   learningPathsQuery={learningPathsQuery}
+                />
+              )}
+              {(screen === "learningPaths" || screen === "paths") && (
+                <LearningPathsScreen
+                  user={user}
+                  courses={courses}
+                  learningPathsQuery={learningPathsQuery}
+                  pathEnrollmentsQuery={pathEnrollmentsQuery}
+                  push={push}
+                  back={back}
+                  showToast={showToast}
+                  session={session}
                 />
               )}
               {screen === "courseDetail" && (() => {
