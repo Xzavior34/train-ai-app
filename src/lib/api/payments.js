@@ -82,8 +82,20 @@ export async function startPaystackPayment({ email, amount, currency = "NGN", co
     }
   }
 
+  const paystackPayload = {
+    email,
+    amount,
+    currency,
+    context,
+    callback_url,
+    metadata: enrichedMetadata,
+  };
+  if (enrichedMetadata?.subaccount) {
+    paystackPayload.subaccount = enrichedMetadata.subaccount;
+  }
+
   const { data, error } = await supabase.functions.invoke("paystack-initialize", {
-    body: { email, amount, currency, context, callback_url, metadata: enrichedMetadata },
+    body: paystackPayload,
   });
 
   if (error || !data?.authorization_url) {
@@ -142,8 +154,22 @@ export async function startStripePayment({ email, amount, currency = "USD", cont
     }
   }
 
+  const stripePayload = {
+    email,
+    amount,
+    currency,
+    context,
+    success_url,
+    cancel_url,
+    description,
+    metadata: enrichedMetadata,
+  };
+  if (enrichedMetadata?.stripe_account) {
+    stripePayload.stripe_account = enrichedMetadata.stripe_account;
+  }
+
   const { data, error } = await supabase.functions.invoke("stripe-initialize", {
-    body: { email, amount, currency, context, success_url, cancel_url, description, metadata: enrichedMetadata },
+    body: stripePayload,
   });
 
   if (error || !data?.checkout_url) {

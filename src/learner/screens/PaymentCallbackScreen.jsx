@@ -61,9 +61,26 @@ export function PaymentCallbackScreen({ addCredits, enrollmentsQuery, goTab, sho
             if (addCredits) await addCredits(creditsToAdd);
             setMessage(creditsToAdd > 0 ? `Added ${creditsToAdd} AI credits to your account.` : "Payment confirmed.");
           } else if (context === PAYMENT_CONTEXTS.COURSE_ENROLLMENT) {
-            // The paystack-initialize/stripe-initialize edge functions already
-            // create the course_enrollments row server-side (pending), and
-            // verify flips it to "completed" - we just need to refetch.
+            const courseId = result?.metadata?.course_id || pending?.metadata?.course_id;
+            const userId = result?.metadata?.user_id || pending?.metadata?.user_id;
+            const amountPaid = result?.amount || pending?.amount;
+            const currency = result?.currency || pending?.currency || "NGN";
+            const paymentRef = reference || sessionId;
+
+            if (courseId && userId && paymentRef) {
+              try {
+                await supabase.rpc("enroll_after_course_payment", {
+                  p_course_id: courseId,
+                  p_user_id: userId,
+                  p_reference: paymentRef,
+                  p_provider: isStripe ? "stripe" : "paystack",
+                  p_amount_paid: amountPaid ? Number(amountPaid) : null,
+                  p_currency: currency,
+                });
+              } catch (enrollErr) {
+                console.warn("enroll_after_course_payment callback warning:", enrollErr);
+              }
+            }
             if (enrollmentsQuery) enrollmentsQuery.refetch();
             setMessage("You're enrolled! Jump into your course any time.");
           } else {

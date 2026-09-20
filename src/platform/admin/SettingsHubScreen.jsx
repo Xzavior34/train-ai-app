@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext, useMemo } from "react";
 import { applyDynamicBranding } from "../../lib/brandingHelper.js";
 import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
-import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save, Palette, Eye, Sparkles, ArrowRight, Check } from "lucide-react";
+import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save, Palette, Eye, EyeOff, Sparkles, ArrowRight, Check } from "lucide-react";
 import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
@@ -140,6 +140,8 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const [payoutCurrency, setPayoutCurrency] = useState("NGN");
   const [savingPaymentSettings, setSavingPaymentSettings] = useState(false);
   const [gatewayTestResult, setGatewayTestResult] = useState(null);
+  const [showPaystackSecret, setShowPaystackSecret] = useState(false);
+  const [showStripeSecret, setShowStripeSecret] = useState(false);
 
   useEffect(() => {
     if (paymentSettingsQuery.data) {
@@ -631,7 +633,12 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   </div>
                   <div className="ta-grid ta-grid-2 ta-gap10 ta-mt10">
                     <div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Public Key</div>
+                      <div className="ta-row ta-between">
+                        <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Public Key</div>
+                        {paymentSettingsQuery.data?.paystack_public_key && (
+                          <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600 }}>✓ Saved</span>
+                        )}
+                      </div>
                       <input
                         className="ta-input ta-mt4"
                         style={{ width: "100%" }}
@@ -641,19 +648,39 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       />
                     </div>
                     <div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secret Key</div>
-                      <input
-                        type="password"
-                        className="ta-input ta-mt4"
-                        style={{ width: "100%" }}
-                        placeholder={gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx..."}
-                        value={paystackSecretKey}
-                        onChange={(e) => setPaystackSecretKey(e.target.value)}
-                      />
+                      <div className="ta-row ta-between">
+                        <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secret Key</div>
+                        {paymentSettingsQuery.data?.paystack_secret_key && (
+                          <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600 }}>✓ Saved in database</span>
+                        )}
+                      </div>
+                      <div style={{ position: "relative", marginTop: 4 }}>
+                        <input
+                          type={showPaystackSecret ? "text" : "password"}
+                          className="ta-input"
+                          style={{ width: "100%", paddingRight: 32 }}
+                          placeholder={gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx..."}
+                          value={paystackSecretKey}
+                          onChange={(e) => setPaystackSecretKey(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 2 }}
+                          onClick={() => setShowPaystackSecret(!showPaystackSecret)}
+                          title={showPaystackSecret ? "Hide secret key" : "Show secret key"}
+                        >
+                          {showPaystackSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div className="ta-mt10">
-                    <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Subaccount Code (Optional for revenue splitting)</div>
+                    <div className="ta-row ta-between">
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Subaccount Code (Optional for revenue splitting)</div>
+                      {paymentSettingsQuery.data?.paystack_subaccount_code && (
+                        <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600 }}>✓ Saved: {paymentSettingsQuery.data.paystack_subaccount_code}</span>
+                      )}
+                    </div>
                     <input
                       className="ta-input ta-mt4"
                       style={{ width: "100%" }}
@@ -687,7 +714,12 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   </div>
                   <div className="ta-grid ta-grid-2 ta-gap10 ta-mt10">
                     <div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Publishable Key</div>
+                      <div className="ta-row ta-between">
+                        <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Publishable Key</div>
+                        {paymentSettingsQuery.data?.stripe_publishable_key && (
+                          <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600 }}>✓ Saved</span>
+                        )}
+                      </div>
                       <input
                         className="ta-input ta-mt4"
                         style={{ width: "100%" }}
@@ -697,19 +729,39 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       />
                     </div>
                     <div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secret Key</div>
-                      <input
-                        type="password"
-                        className="ta-input ta-mt4"
-                        style={{ width: "100%" }}
-                        placeholder={gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx..."}
-                        value={stripeSecretKey}
-                        onChange={(e) => setStripeSecretKey(e.target.value)}
-                      />
+                      <div className="ta-row ta-between">
+                        <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secret Key</div>
+                        {paymentSettingsQuery.data?.stripe_secret_key && (
+                          <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600 }}>✓ Saved in database</span>
+                        )}
+                      </div>
+                      <div style={{ position: "relative", marginTop: 4 }}>
+                        <input
+                          type={showStripeSecret ? "text" : "password"}
+                          className="ta-input"
+                          style={{ width: "100%", paddingRight: 32 }}
+                          placeholder={gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx..."}
+                          value={stripeSecretKey}
+                          onChange={(e) => setStripeSecretKey(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 2 }}
+                          onClick={() => setShowStripeSecret(!showStripeSecret)}
+                          title={showStripeSecret ? "Hide secret key" : "Show secret key"}
+                        >
+                          {showStripeSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div className="ta-mt10">
-                    <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Stripe Connected Account ID (Optional)</div>
+                    <div className="ta-row ta-between">
+                      <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Stripe Connected Account ID (Optional)</div>
+                      {paymentSettingsQuery.data?.stripe_account_id && (
+                        <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600 }}>✓ Saved: {paymentSettingsQuery.data.stripe_account_id}</span>
+                      )}
+                    </div>
                     <input
                       className="ta-input ta-mt4"
                       style={{ width: "100%" }}

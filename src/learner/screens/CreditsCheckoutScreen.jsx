@@ -126,7 +126,11 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
       }
 
       if (isCourseMode) {
-        const metadata = { user_id: session?.user?.id ?? null, course_id: params?.courseId };
+        const metadata = {
+          user_id: session?.user?.id ?? null,
+          course_id: params?.courseId,
+          orgId: params?.orgId || orgId,
+        };
         const description = `Train AI: ${params?.courseTitle || "Course"} enrollment`;
         if (provider === "stripe") {
           await startStripePayment({ email, amount, currency, context: PAYMENT_CONTEXTS.COURSE_ENROLLMENT, description, metadata });

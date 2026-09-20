@@ -668,6 +668,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
         courseId: course.id,
         courseTitle: course.title,
         coursePrice: course.price,
+        orgId: course.organization_id,
       });
       return;
     }
