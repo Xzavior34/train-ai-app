@@ -209,7 +209,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                 </tr>
               )}
                   {filteredMentees.map((m, idx) => {
-                    const avatarUrl = m.avatar || `https://images.unsplash.com/photo-${1534528741775 + (idx * 5000)}?w=150&auto=format&fit=crop&q=80`;
+                    const avatarUrl = m.avatar_url || m.avatar || null;
                     const riskTone = m.risk === "high" ? "danger" : m.risk === "medium" ? "warning" : m.risk === "unknown" ? "neutral" : "success";
                     const riskLabel = m.risk === "high" ? "High Risk" : m.risk === "medium" ? "Needs Attention" : m.risk === "unknown" ? "No Data" : "On Track";
 
@@ -217,15 +217,15 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                       <tr key={m.id}>
                         <td>
                           <div className="ta-row ta-gap10">
-                            <img 
+                            <Avatar 
                               src={avatarUrl} 
-                              alt={m.name} 
-                              style={{ width: 34, height: 34, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)" }}
-                              onError={(e) => { e.target.style.display = "none"; }}
+                              initials={(m.name || "L").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()} 
+                              size={34} 
+                              style={{ borderRadius: 10, border: "1px solid var(--border)", flexShrink: 0 }}
                             />
                             <div>
                               <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.name}</div>
-                              <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.email || `${m.name.toLowerCase().replace(/\s+/g, ".")}@trainai.co`}</div>
+                              <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.email || "No email on file"}</div>
                             </div>
                           </div>
                         </td>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { TopBar, CourseCard, ProgressBar, Tag } from "../components/LearnerUI.jsx";
+import { TopBar, CourseCard, ProgressBar, Tag, Avatar } from "../components/LearnerUI.jsx";
 import {
   Search, Play, Clock, Video, Eye,
   ArrowRight, ExternalLink, Bookmark, CheckCircle2,
@@ -432,7 +432,7 @@ export function CoursesScreen({
       // instead of inventing an identity.
       instructor: c.instructor || null,
       instructorRole: c.instructorRole || "Course Instructor",
-      instructorAvatar: c.instructorAvatar || (idx % 2 === 0 ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80")
+      instructorAvatar: c.instructorAvatar || null
     };
   });
 
@@ -558,7 +558,7 @@ export function CoursesScreen({
         lessonsRemaining: `${c.lessons || c.lessonsCount || 12} lessons`,
         instructor: c.instructor || "Curriculum Specialist",
         instructorRole: c.instructorRole || "Instructor",
-        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        instructorAvatar: c.instructorAvatar || null,
         coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
         cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Course") : "Enroll & Start Course",
         action: c.enrolled ? "continue" : "explore",
@@ -1029,10 +1029,11 @@ export function CoursesScreen({
                     </p>
 
                     <div className="tai-row tai-gap8" style={{ marginBottom: 12 }}>
-                      <img
-                        src={course.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"}
-                        alt=""
-                        style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }}
+                      <Avatar
+                        src={course.instructorAvatar}
+                        initials={(course.instructor || "CI").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                        size={26}
+                        style={{ borderRadius: "50%", flexShrink: 0 }}
                       />
                       <div style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600 }}>
                         {course.instructor || "Course Instructor"}

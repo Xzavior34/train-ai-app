@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { TopBar, StatCard, ProgressBar, Tag, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
+import { TopBar, StatCard, ProgressBar, Tag, ToastContext, exportRowsAsCsv, Avatar } from "../components/PlatformUI.jsx";
 import { 
   Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
@@ -79,12 +79,12 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId,
       return {
         id: m.user_id || m.id,
         name: m.display_name || m.name || m.email || "Learner",
-        email: m.email || `${(m.display_name || 'learner').toLowerCase().replace(/\s+/g, '.')}@trainailtd.com`,
+        email: m.email || "",
         department: m.department || "General",
         status: prog?.pace === "behind" ? "Needs Attention" : avgProg >= 85 ? "High Performer" : "On Track",
         readiness: `${avgProg}%`,
         avgProgress: avgProg,
-        avatar: m.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+        avatar: m.avatar_url || null
       };
     });
 
@@ -381,10 +381,11 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId,
         <div className="ta-card" style={{ padding: 16, borderRadius: 10, background: "var(--surface-2)" }}>
           <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
             <div className="ta-row ta-gap10">
-              <img 
+              <Avatar 
                 src={currentLearner.avatar} 
-                alt={currentLearner.name}
-                style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "2px solid var(--primary)" }}
+                initials={(currentLearner.name || "L").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                size={44}
+                style={{ borderRadius: 8, fontSize: 16, fontWeight: 700, border: "2px solid var(--primary)" }}
               />
               <div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>
@@ -393,7 +394,9 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId,
                     {currentLearner.department}
                   </span>
                 </div>
-                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{currentLearner.email} • {currentLearner.status}</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>
+                  {currentLearner.email ? `${currentLearner.email} • ` : ""}{currentLearner.status}
+                </div>
               </div>
             </div>
 
@@ -579,55 +582,142 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId,
         {/* Skill Profile Radar / Matrix & Promotion Criteria Checklist */}
         <div className="ta-sidebar-layout">
 
-          {/* Skill Profile Breakdown */}
-          <div className="ta-card" style={{ padding: 22 }}>
-            <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
-              <div>
-                <div className="ta-title" style={{ fontSize: 16 }}>Skill Profile & Radar Assessment</div>
-                <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Real assessment scores by course category for {currentLearner.name}</div>
+          {/* Left Column: Skill Profile, Department Skill Gaps, Category Completion */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
+
+            {/* Skill Profile Breakdown */}
+            <div className="ta-card" style={{ padding: 22 }}>
+              <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
+                <div>
+                  <div className="ta-title" style={{ fontSize: 16 }}>Skill Profile & Radar Assessment</div>
+                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Real assessment scores by course category for {currentLearner.name}</div>
+                </div>
+                <div className="ta-row ta-gap8">
+                  <Tag tone="success">{currentLearner?.avgProgress ?? 0}% Readiness</Tag>
+                  {setScreen && (
+                    <button 
+                      className="ta-btn ta-btn-outline ta-btn-xs" 
+                      style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
+                      onClick={() => setScreen("assessments")}
+                      title="View Assessments Screen"
+                    >
+                      <ClipboardCheck size={12} /> Assessments →
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="ta-row ta-gap8">
-                <Tag tone="success">{currentLearner?.avgProgress ?? 0}% Readiness</Tag>
+
+              {/* Visual Skill Matrix with Colored Progress Bars */}
+              <div className="ta-col ta-gap14 ta-mt16">
+                {skillProfile.length === 0 && (
+                  <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>No courses with assessments in this pathway yet.</div>
+                )}
+                {skillProfile.map(s => (
+                  <div key={s.skill}>
+                    <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 6 }}>
+                      <span style={{ fontWeight: 600 }}>{s.skill}</span>
+                      <span style={{ color: "var(--text-2)", fontSize: 12 }}>
+                        {s.level == null ? (
+                          <span style={{ color: "var(--text-3)" }}>Not yet assessed</span>
+                        ) : (
+                          <><strong style={{ color: s.level >= s.target ? "var(--success)" : "var(--danger)" }}>{s.level}%</strong> / target {s.target}%</>
+                        )}
+                      </span>
+                    </div>
+                    <div style={{ width: "100%", height: 8, background: "var(--surface-2)", borderRadius: 6, overflow: "hidden" }}>
+                      <div style={{ width: `${s.level ?? 0}%`, height: "100%", background: s.fill, borderRadius: 6, transition: "width 0.4s ease" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Skill gaps by department */}
+            <div className="ta-card" style={{ padding: 22 }}>
+              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+                <div className="ta-row ta-gap8">
+                  <BarChart3 size={16} color="var(--primary)" />
+                  <div className="ta-title" style={{ fontSize: 16 }}>Skill gaps by department</div>
+                </div>
+                {selectedDepartment !== "all" && (
+                  <button 
+                    className="ta-btn ta-btn-outline ta-btn-xs" 
+                    style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6 }}
+                    onClick={() => setSelectedDepartment("all")}
+                  >
+                    Clear Filter ({selectedDepartment})
+                  </button>
+                )}
+              </div>
+              <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
+                Real course-category completion, broken down by department. Click any department to filter the inspected learner profiles above.
+              </div>
+              <div className="ta-col ta-gap10 ta-mt12">
+                {(wi.departmentBreakdown || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No department data yet.</div>}
+                {(wi.departmentBreakdown || []).map((d) => (
+                  <div 
+                    key={d.department} 
+                    className="ta-card-hover"
+                    style={{ 
+                      padding: "8px 10px", 
+                      borderRadius: 6, 
+                      cursor: "pointer",
+                      background: selectedDepartment === d.department ? "var(--surface-3)" : "transparent",
+                      border: selectedDepartment === d.department ? "1px solid var(--primary)" : "1px solid transparent"
+                    }}
+                    onClick={() => {
+                      setSelectedDepartment(d.department);
+                      const firstInDept = realLearners.find(l => l.department === d.department);
+                      if (firstInDept) setSelectedLearnerId(firstInDept.id);
+                      showToast?.(`Filtered to ${d.department} department`);
+                    }}
+                    title={`Click to filter learners to ${d.department}`}
+                  >
+                    <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                      <span style={{ fontWeight: 600 }}>{d.department}</span>
+                      <span>{d.avgProgress}% avg ({d.count || d.learnerCount || 0} enrollments)</span>
+                    </div>
+                    <ProgressBar value={d.avgProgress} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Completion by course category */}
+            <div className="ta-card" style={{ padding: 22 }}>
+              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+                <div className="ta-row ta-gap8">
+                  <ClipboardCheck size={16} color="var(--primary)" />
+                  <div className="ta-title" style={{ fontSize: 16 }}>Completion by course category</div>
+                </div>
                 {setScreen && (
                   <button 
                     className="ta-btn ta-btn-outline ta-btn-xs" 
                     style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
-                    onClick={() => setScreen("assessments")}
-                    title="View Assessments Screen"
+                    onClick={() => setScreen("content")}
                   >
-                    <ClipboardCheck size={12} /> Assessments →
+                    <BookOpen size={12} /> Manage Course Content →
                   </button>
                 )}
               </div>
+              <div className="ta-col ta-gap10 ta-mt12">
+                {(wi.categoryBreakdown || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No course activity yet.</div>}
+                {(wi.categoryBreakdown || []).map((c) => (
+                  <div key={c.category}>
+                    <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
+                      <span style={{ fontWeight: 600 }}>{c.category}</span>
+                      <span>{c.avgProgress}% avg ({c.count || c.learnerCount || 0} enrollments)</span>
+                    </div>
+                    <ProgressBar value={c.avgProgress} />
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Visual Skill Matrix with Colored Progress Bars */}
-            <div className="ta-col ta-gap14 ta-mt16">
-              {skillProfile.length === 0 && (
-                <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>No courses with assessments in this pathway yet.</div>
-              )}
-              {skillProfile.map(s => (
-                <div key={s.skill}>
-                  <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 6 }}>
-                    <span style={{ fontWeight: 600 }}>{s.skill}</span>
-                    <span style={{ color: "var(--text-2)", fontSize: 12 }}>
-                      {s.level == null ? (
-                        <span style={{ color: "var(--text-3)" }}>Not yet assessed</span>
-                      ) : (
-                        <><strong style={{ color: s.level >= s.target ? "var(--success)" : "var(--danger)" }}>{s.level}%</strong> / target {s.target}%</>
-                      )}
-                    </span>
-                  </div>
-                  <div style={{ width: "100%", height: 8, background: "var(--surface-2)", borderRadius: 6, overflow: "hidden" }}>
-                    <div style={{ width: `${s.level ?? 0}%`, height: "100%", background: s.fill, borderRadius: 6, transition: "width 0.4s ease" }} />
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
 
-          {/* Promotion Criteria & AI Recommendation */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {/* Right Column: Promotion Criteria & AI Recommendation */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 24, minWidth: 0 }}>
             
             {/* Promotion Criteria Checklist */}
             <div className="ta-card" style={{ padding: 22 }}>
@@ -788,86 +878,6 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId,
         </div>
         </>
         )}
-
-        <div className="ta-card">
-          <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
-            <div className="ta-row ta-gap8">
-              <BarChart3 size={16} color="var(--primary)" />
-              <div className="ta-title">Skill gaps by department</div>
-            </div>
-            {selectedDepartment !== "all" && (
-              <button 
-                className="ta-btn ta-btn-outline ta-btn-xs"
-                style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6 }}
-                onClick={() => setSelectedDepartment("all")}
-              >
-                Clear Filter ({selectedDepartment})
-              </button>
-            )}
-          </div>
-          <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
-            Real course-category completion, broken down by department. Click any department to filter the inspected learner profiles above.
-          </div>
-          <div className="ta-col ta-gap10 ta-mt12">
-            {(wi.departmentBreakdown || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No department data yet.</div>}
-            {(wi.departmentBreakdown || []).map((d) => (
-              <div 
-                key={d.department} 
-                className="ta-card-hover"
-                style={{ 
-                  padding: "8px 10px", 
-                  borderRadius: 6, 
-                  cursor: "pointer",
-                  background: selectedDepartment === d.department ? "var(--surface-3)" : "transparent",
-                  border: selectedDepartment === d.department ? "1px solid var(--primary)" : "1px solid transparent"
-                }}
-                onClick={() => {
-                  setSelectedDepartment(d.department);
-                  const firstInDept = realLearners.find(l => l.department === d.department);
-                  if (firstInDept) setSelectedLearnerId(firstInDept.id);
-                  showToast?.(`Filtered to ${d.department} department`);
-                }}
-                title={`Click to filter learners to ${d.department}`}
-              >
-                <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
-                  <span style={{ fontWeight: 600 }}>{d.department}</span>
-                  <span>{d.avgProgress}% avg ({d.count || d.learnerCount || 0} enrollments)</span>
-                </div>
-                <ProgressBar value={d.avgProgress} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="ta-card">
-          <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
-            <div className="ta-row ta-gap8">
-              <ClipboardCheck size={16} color="var(--primary)" />
-              <div className="ta-title">Completion by course category</div>
-            </div>
-            {setScreen && (
-              <button 
-                className="ta-btn ta-btn-outline ta-btn-xs"
-                style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
-                onClick={() => setScreen("content")}
-              >
-                <BookOpen size={12} /> Manage Course Content →
-              </button>
-            )}
-          </div>
-          <div className="ta-col ta-gap10 ta-mt12">
-            {(wi.categoryBreakdown || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No course activity yet.</div>}
-            {(wi.categoryBreakdown || []).map((c) => (
-              <div key={c.category}>
-                <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
-                  <span style={{ fontWeight: 600 }}>{c.category}</span>
-                  <span>{c.avgProgress}% avg ({c.count || c.learnerCount || 0} enrollments)</span>
-                </div>
-                <ProgressBar value={c.avgProgress} />
-              </div>
-            ))}
-          </div>
-        </div>
         </>
         )}
 

@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { TopBar, StatCard, Tag, ToastContext } from "../components/PlatformUI.jsx";
+import { TopBar, StatCard, Tag, ToastContext, Avatar } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { 
   Users, Layers, CheckCircle2, Calendar, Radio, Star,
@@ -14,22 +14,25 @@ import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId, orgSelector, onNavigate }) {
   const showToast = useContext(ToastContext);
-  const [quickActionOpen, setQuickActionOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const [tasks, setTasks] = useState([
-    { id: 1, text: "Grade pending coursework submissions", done: false, priority: "high" },
-    { id: 2, text: "Prepare Workshop Asset Kit for upcoming cohort", done: true, priority: "normal" },
-    { id: 3, text: "1:1 Clarification session with struggling learners", done: false, priority: "high" },
-    { id: 4, text: "Upload latest study materials & syllabus templates to Resources", done: false, priority: "normal" }
+    { id: 1, text: "Grade Module 2 Capstone submissions", done: false, priority: "high" },
+    { id: 2, text: "Respond to Alex's direct message", done: false, priority: "normal" },
+    { id: 3, text: "Prepare slides for tomorrow's AI live workshop", done: true, priority: "normal" },
   ]);
 
   const [aiActionRunning, setAiActionRunning] = useState(false);
   const [aiActionSuccess, setAiActionSuccess] = useState(false);
 
-  const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
-  const activeCohortsQuery = useSupabaseQuery(async () => currentUserId ? fetchMentorActiveCohorts(currentUserId) : [], [currentUserId]);
-  const earningsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorEarnings(mentorId) : [], [mentorId]);
+  const toggleTask = (id) => {
+    setTasks(ts => ts.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  };
+
+  const sessionsQuery = useSupabaseQuery(async () => (mentorId ? fetchMentorSessions(mentorId) : []), [mentorId]);
+  const earningsQuery = useSupabaseQuery(async () => (mentorId ? fetchMentorEarnings(mentorId) : []), [mentorId]);
+  const activeCohortsQuery = useSupabaseQuery(async () => (currentUserId ? fetchMentorActiveCohorts(currentUserId) : (mentorId ? fetchMentorActiveCohorts(mentorId) : [])), [currentUserId, mentorId]);
   const riskQuery = useSupabaseQuery(async () => orgId ? fetchStudentRiskList(orgId) : [], [orgId]);
-  
+
   const mentorSessions = sessionsQuery.data || [];
   const activeCohorts = activeCohortsQuery.data || [];
   const activeLearnerCount = new Set(mentorSessions.map((s) => s.learner_id).filter(Boolean)).size;
@@ -43,9 +46,6 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
   const totalEarnings = earningsRows.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const pendingSessionCount = mentorSessions.filter(s => s.status === "pending" || s.status === "scheduled" || s.status === "requested").length;
 
-  const toggleTask = (id) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
-  };
 
   const handleRunAiSession = () => {
     setAiActionRunning(true);
@@ -62,7 +62,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
     risk: r.risk === "high" ? "High Risk" : "Needs Attention",
     riskTone: r.risk === "high" ? "danger" : "warning",
     lastActive: r.days === "N/A" ? "Inactive" : `${r.days}d ago`,
-    avatar: r.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+    avatar: r.avatar || null
   }));
 
   const activeLiveSession = mentorSessions.find(s => s.status === "in_progress" || s.status === "live") || null;
@@ -346,10 +346,11 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 {studentRisks.map(s => (
                   <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 10 }}>
                     <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 160px" }}>
-                      <img
+                      <Avatar
                         src={s.avatar}
-                        alt={s.name}
-                        style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
+                        initials={(s.name || "L").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                        size={38}
+                        style={{ borderRadius: 10, border: "1px solid var(--border)", flexShrink: 0 }}
                       />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>

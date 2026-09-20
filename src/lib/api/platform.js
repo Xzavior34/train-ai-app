@@ -121,12 +121,39 @@ export async function safeInQuery(tableName, selectFields, idColumn, ids) {
   return results;
 }
 
+let _authEmailCache = null;
+let _authEmailCacheTimestamp = 0;
+async function getAuthEmailMap() {
+  const now = Date.now();
+  if (_authEmailCache && (now - _authEmailCacheTimestamp < 60000)) {
+    return _authEmailCache;
+  }
+  try {
+    if (supabase?.auth?.admin?.listUsers) {
+      const { data } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+      if (data?.users) {
+        const map = new Map();
+        data.users.forEach(u => {
+          const email = u.email || u.user_metadata?.email;
+          if (email) map.set(u.id, email);
+        });
+        _authEmailCache = map;
+        _authEmailCacheTimestamp = now;
+        return map;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not fetch auth email map:", err);
+  }
+  return _authEmailCache || new Map();
+}
+
 export async function fetchOrgMembers(organizationId) {
   if (!supabase) {
     return [
       ...DEMO_LEARNERS.map((l) => ({ id: l.id, display_name: l.name, email: l.email, role: "learner", status: "active", last_active_at: new Date().toISOString() })),
-      ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, display_name: i.name, email: i.email || `${i.name.toLowerCase().replace(/\s+/g, '.')}@trainailtd.com`, role: "mentor", status: "active", last_active_at: new Date().toISOString() })),
-      { id: "demo-manager-id", display_name: "Demo Manager", email: "manager@trainailtd.com", role: "manager", status: "active", last_active_at: new Date().toISOString() },
+      ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, display_name: i.name, email: i.email, role: "mentor", status: "active", last_active_at: new Date().toISOString() })),
+      { id: "demo-manager-id", display_name: "Demo Manager", email: "manager@demoacademy.sample", role: "manager", status: "active", last_active_at: new Date().toISOString() },
     ];
   }
   let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
@@ -142,7 +169,10 @@ export async function fetchOrgMembers(organizationId) {
   if (!profiles.length) return profiles;
 
   // Use chunked safeInQuery to prevent URL length limits when fetching cohort_members for large user lists
-  const memberRows = await safeInQuery("cohort_members", "user_id, cohort_id", "user_id", profiles.map((p) => p.id));
+  const [memberRows, authEmailMap] = await Promise.all([
+    safeInQuery("cohort_members", "user_id, cohort_id", "user_id", profiles.map((p) => p.id)),
+    getAuthEmailMap()
+  ]);
   const cohortIds = [...new Set((memberRows || []).map((m) => m.cohort_id))];
   let cohortNameById = {};
   if (cohortIds.length) {
@@ -163,12 +193,11 @@ export async function fetchOrgMembers(organizationId) {
     if (!cohortNamesByUserId[m.user_id].includes(name)) cohortNamesByUserId[m.user_id].push(name);
   });
   return profiles.map((p) => {
-    const defaultDomain = p.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
-    const email = p.email || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : null);
+    const realEmail = p.email || authEmailMap.get(p.id) || null;
     const cohortNames = cohortNamesByUserId[p.id] || [];
     return {
       ...p,
-      email,
+      email: realEmail,
       cohort_name: cohortNames.length ? cohortNames.join(", ") : null,
       cohort_names: cohortNames,
     };
@@ -2543,8 +2572,7 @@ export async function fetchAllPlatformLearners(organizationId) {
     const progress = progressList.length ? Math.round(progressList.reduce((a, b) => a + b, 0) / progressList.length) : null;
     const quizScores = quizScoresByLearner[id] || [];
     const quizAvg = quizScores.length ? Math.round(quizScores.reduce((a, b) => a + b, 0) / quizScores.length) : null;
-    const defaultDomain = p.organization_id === "sara-org-1" ? "sarafoundationafrica.com" : "trainailtd.com";
-    const email = p.email || (name ? `${name.toLowerCase().replace(/[^a-z0-9]/g, '.')}@${defaultDomain}` : `learner@${defaultDomain}`);
+    const email = p.email || "";
     return {
       id,
       name,

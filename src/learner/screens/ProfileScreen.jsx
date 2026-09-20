@@ -220,16 +220,16 @@ export function ProfileScreen({
               onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}
               title="Change profile photo"
             >
-              <img
-                src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=220&auto=format&fit=crop&q=80"}
-                alt={user.name}
+              <Avatar
+                src={user.avatarUrl}
+                initials={user.initials || (user.name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                size={80}
                 style={{
-                  width: "clamp(68px, 14vw, 88px)",
-                  height: "clamp(68px, 14vw, 88px)",
                   borderRadius: "50%",
-                  objectFit: "cover",
                   border: "3px solid var(--surface-2)",
-                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.22)"
+                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.22)",
+                  fontSize: 28,
+                  fontWeight: 700
                 }}
               />
               {session?.user?.id && (
