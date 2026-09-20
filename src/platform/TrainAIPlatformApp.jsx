@@ -63,6 +63,29 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   const { session, profileQuery, orgId, userRoles: fallbackUserRoles } = usePlatformData();
   const userRoles = userRolesProp && userRolesProp.length ? userRolesProp : fallbackUserRoles;
 
+  // superAdminSelectedOrgId is now a prop from App.jsx, shared with
+  // PlatformOwnerApp - Super Admin picking "View" on an org from the Owner
+  // dashboard needs this to survive the switch into this component, which
+  // local state here couldn't do once Owner became a separate top-level
+  // component instead of a workspace tab inside this one.
+  const effectiveOrgId = (userRoles.includes("super_admin") && superAdminSelectedOrgId) ? superAdminSelectedOrgId : orgId;
+
+  useEffect(() => {
+    if (effectiveOrgId) {
+      initDynamicBranding(effectiveOrgId);
+    } else {
+      resetDynamicBranding();
+    }
+  }, [effectiveOrgId]);
+
+  const allOrgsQuery = useSupabaseQuery(async () => {
+    if (userRoles.includes("super_admin")) {
+      return await fetchAllOrganizationsWithUserCounts();
+    }
+    return [];
+  }, [userRoles]);
+  const allOrgs = allOrgsQuery.data || [];
+
   const mentorProfileQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return null;
     return fetchMentorProfile(session.user.id);
@@ -87,29 +110,6 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   const mentorLeaderboardQuery = useSupabaseQuery(async () => {
     if (!effectiveOrgId) return [];
     return fetchLeaderboard(50, effectiveOrgId);
-  }, [effectiveOrgId]);
-
-  const allOrgsQuery = useSupabaseQuery(async () => {
-    if (userRoles.includes("super_admin")) {
-      return await fetchAllOrganizationsWithUserCounts();
-    }
-    return [];
-  }, [userRoles]);
-  const allOrgs = allOrgsQuery.data || [];
-
-  // superAdminSelectedOrgId is now a prop from App.jsx, shared with
-  // PlatformOwnerApp - Super Admin picking "View" on an org from the Owner
-  // dashboard needs this to survive the switch into this component, which
-  // local state here couldn't do once Owner became a separate top-level
-  // component instead of a workspace tab inside this one.
-  const effectiveOrgId = (userRoles.includes("super_admin") && superAdminSelectedOrgId) ? superAdminSelectedOrgId : orgId;
-
-  useEffect(() => {
-    if (effectiveOrgId) {
-      initDynamicBranding(effectiveOrgId);
-    } else {
-      resetDynamicBranding();
-    }
   }, [effectiveOrgId]);
 
   const orgSelector = userRoles.includes("super_admin") ? {
