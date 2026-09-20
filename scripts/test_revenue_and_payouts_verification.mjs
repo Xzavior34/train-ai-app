@@ -64,12 +64,12 @@ async function run() {
   console.log("\n--- 5. INSTRUCTOR PAYOUT PERMISSIONS (payouts_enabled) ---");
   const { data: mentors, error: mentorErr } = await supabase
     .from("mentors")
-    .select("id, name, payouts_enabled, organization_id")
+    .select("id, user_id, payouts_enabled, organization_id")
     .limit(5);
 
   assertCheck("Mentors Table with payouts_enabled Accessible", !mentorErr, mentorErr?.message || `Found ${mentors?.length || 0} mentors`);
   if (mentors && mentors.length > 0) {
-    assertCheck("payouts_enabled column present", "payouts_enabled" in mentors[0], `Instructor: "${mentors[0].name}", payouts_enabled: ${mentors[0].payouts_enabled}`);
+    assertCheck("payouts_enabled column present", "payouts_enabled" in mentors[0], `Mentor ID: "${mentors[0].id}", payouts_enabled: ${mentors[0].payouts_enabled}`);
   }
 
   // 6. Verify organization payment_gateways settings structure
