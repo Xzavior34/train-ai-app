@@ -201,6 +201,32 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
       />
 
       <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance">
+          <div className="tai-glow-cobalt" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">Seats &amp; Licensing Management</h1>
+              <p className="ta-hero-desc">Allocate learner seat licenses, purchase seat packages, and manage AI credit requests.</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <span className="ta-tag ta-tag-success">
+                  <Armchair size={13} /> {seats.available} Seats Available
+                </span>
+                <span className="ta-tag ta-tag-info">
+                  <Users size={13} /> {seats.used} Seats Active
+                </span>
+              </div>
+            </div>
+            <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-primary"
+                onClick={() => setBuyOpen(true)}
+              >
+                <Plus size={15} /> Buy Seats
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Navigation Tabs */}
         <div
           style={{

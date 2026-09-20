@@ -228,3 +228,220 @@ export async function startPaidCourseEnrollment({ courseId, courseName, price, c
     return { success: false, error: e?.message || "Could not start payment." };
   }
 }
+
+// ============================================================================
+// Platform Owner Payment Gateways & Transactions Monitor APIs
+// ============================================================================
+
+export async function fetchAllOrgPaymentGateways() {
+  if (!supabase) return [];
+  try {
+    const { data: orgs, error } = await supabase
+      .from("organizations")
+      .select("id, name, slug, settings, subscription_tier, status, created_at")
+      .order("name", { ascending: true });
+    if (error) throw error;
+
+    return (orgs || []).map((o) => {
+      const gateways = o.settings?.payment_gateways || {};
+      const hasPaystack = !!(gateways.paystack_subaccount_code || gateways.paystack_public_key || gateways.paystack_secret_key);
+      const hasStripe = !!(gateways.stripe_account_id || gateways.stripe_publishable_key || gateways.stripe_secret_key);
+      const hasBank = !!(gateways.bank_name && gateways.account_number);
+      const isConfigured = hasPaystack || hasStripe || hasBank;
+
+      return {
+        org_id: o.id,
+        org_name: o.name,
+        org_slug: o.slug,
+        subscription_tier: o.subscription_tier,
+        status: o.status,
+        created_at: o.created_at,
+        preferred_gateway: gateways.preferred_gateway || "default",
+        environment: gateways.environment || "test",
+        paystack_subaccount_code: gateways.paystack_subaccount_code || "",
+        paystack_public_key: gateways.paystack_public_key || "",
+        has_paystack_secret: !!gateways.paystack_secret_key,
+        stripe_account_id: gateways.stripe_account_id || "",
+        stripe_publishable_key: gateways.stripe_publishable_key || "",
+        has_stripe_secret: !!gateways.stripe_secret_key,
+        bank_name: gateways.bank_name || "",
+        account_number: gateways.account_number || "",
+        account_name: gateways.account_name || "",
+        payout_currency: gateways.payout_currency || "NGN",
+        swift_code: gateways.swift_code || "",
+        has_paystack: hasPaystack,
+        has_stripe: hasStripe,
+        has_bank: hasBank,
+        is_configured: isConfigured,
+      };
+    });
+  } catch (e) {
+    console.warn("fetchAllOrgPaymentGateways warning:", e);
+    return [];
+  }
+}
+
+export async function fetchAllPlatformTransactions(limit = 100) {
+  if (!supabase) return { transactions: [], summary: { total_gross: 0, total_platform_fee: 0, total_net: 0, count: 0, currency_breakdown: {} } };
+  try {
+    const { data: txns, error } = await supabase
+      .from("academy_transactions")
+      .select(`
+        id,
+        organization_id,
+        learner_id,
+        provider,
+        provider_reference,
+        currency,
+        gross_amount_minor,
+        commission_percent_applied,
+        fixed_fee_minor_applied,
+        platform_fee_minor,
+        academy_net_minor,
+        status,
+        created_at,
+        organizations (id, name, slug),
+        user_profiles:learner_id (id, display_name, email)
+      `)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    const rows = (txns || []).map((t) => ({
+      id: t.id,
+      organization_id: t.organization_id,
+      org_name: t.organizations?.name || "Unknown Organization",
+      org_slug: t.organizations?.slug || "",
+      learner_id: t.learner_id,
+      learner_name: t.user_profiles?.display_name || t.user_profiles?.email || "Learner",
+      learner_email: t.user_profiles?.email || "",
+      provider: t.provider || "paystack",
+      provider_reference: t.provider_reference,
+      currency: t.currency || "NGN",
+      gross_amount: (t.gross_amount_minor || 0) / 100,
+      commission_percent: t.commission_percent_applied,
+      platform_fee: (t.platform_fee_minor || 0) / 100,
+      academy_net: (t.academy_net_minor || 0) / 100,
+      status: t.status || "completed",
+      created_at: t.created_at,
+    }));
+
+    const currencyBreakdown = {};
+    let totalGross = 0;
+    let totalPlatformFee = 0;
+    let totalNet = 0;
+
+    for (const r of rows) {
+      totalGross += r.gross_amount;
+      totalPlatformFee += r.platform_fee;
+      totalNet += r.academy_net;
+
+      const curr = r.currency || "NGN";
+      if (!currencyBreakdown[curr]) {
+        currencyBreakdown[curr] = { gross: 0, platform_fee: 0, net: 0, count: 0 };
+      }
+      currencyBreakdown[curr].gross += r.gross_amount;
+      currencyBreakdown[curr].platform_fee += r.platform_fee;
+      currencyBreakdown[curr].net += r.academy_net;
+      currencyBreakdown[curr].count += 1;
+    }
+
+    return {
+      transactions: rows,
+      summary: {
+        total_gross: totalGross,
+        total_platform_fee: totalPlatformFee,
+        total_net: totalNet,
+        count: rows.length,
+        currency_breakdown: currencyBreakdown,
+      },
+    };
+  } catch (e) {
+    console.warn("fetchAllPlatformTransactions warning:", e);
+    return { transactions: [], summary: { total_gross: 0, total_platform_fee: 0, total_net: 0, count: 0, currency_breakdown: {} } };
+  }
+}
+
+export async function fetchAllPlatformPayoutRequests() {
+  if (!supabase) return [];
+  try {
+    const { data: requests, error } = await supabase
+      .from("mentor_payout_requests")
+      .select(`
+        id,
+        mentor_id,
+        amount,
+        payment_method,
+        status,
+        notes,
+        requested_at,
+        processed_at,
+        processed_by,
+        mentors (
+          id,
+          user_id,
+          payouts_enabled,
+          organization_id,
+          organizations (id, name, slug)
+        )
+      `)
+      .order("requested_at", { ascending: false });
+
+    if (error) throw error;
+
+    // Resolve mentor user_profiles for names
+    const userIds = (requests || []).map((r) => r.mentors?.user_id).filter(Boolean);
+    const profileMap = new Map();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("user_profiles")
+        .select("id, display_name, email")
+        .in("id", userIds);
+      (profiles || []).forEach((p) => profileMap.set(p.id, p));
+    }
+
+    return (requests || []).map((r) => {
+      const mentorProfile = r.mentors?.user_id ? profileMap.get(r.mentors.user_id) : null;
+      return {
+        id: r.id,
+        mentor_id: r.mentor_id,
+        mentor_name: mentorProfile?.display_name || mentorProfile?.email || "Instructor",
+        mentor_email: mentorProfile?.email || "",
+        payouts_enabled: r.mentors?.payouts_enabled ?? false,
+        organization_id: r.mentors?.organization_id,
+        org_name: r.mentors?.organizations?.name || "Independent",
+        org_slug: r.mentors?.organizations?.slug || "",
+        amount: Number(r.amount) || 0,
+        payment_method: r.payment_method || "N/A",
+        status: r.status || "pending",
+        notes: r.notes || "",
+        requested_at: r.requested_at,
+        processed_at: r.processed_at,
+        processed_by: r.processed_by,
+      };
+    });
+  } catch (e) {
+    console.warn("fetchAllPlatformPayoutRequests warning:", e);
+    return [];
+  }
+}
+
+export async function updatePlatformPayoutRequest(requestId, status, processedBy) {
+  if (!supabase || !requestId) return { success: false, error: "Missing request ID" };
+  try {
+    const { error } = await supabase
+      .from("mentor_payout_requests")
+      .update({
+        status,
+        processed_at: new Date().toISOString(),
+        processed_by: processedBy || null,
+      })
+      .eq("id", requestId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not update payout request." };
+  }
+}
+

@@ -702,6 +702,7 @@ export const SUPERADMIN_NAV = [
   { key: "orgs", label: "Organizations", icon: Building2 },
   { key: "onboarding", label: "Org Onboarding", icon: Rocket },
   { key: "commission", label: "Commission Config", icon: TrendingUp },
+  { key: "payments", label: "Payment Gateways", icon: CreditCard },
   { key: "branding", label: "Branding", icon: Palette },
   { key: "settings", label: "Platform Settings", icon: Settings },
   { key: "tracks", label: "Learning Tracks", icon: Map },

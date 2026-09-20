@@ -1,4 +1,5 @@
 import { supabase } from "../supabaseClient.js";
+import { fetchOrgPaymentGatewaySettings } from "./organizations.js";
 
 // Payment "context" values and edge function names below must match the
 // already-deployed Supabase edge functions exactly (paystack-initialize,
@@ -9,28 +10,8 @@ import { supabase } from "../supabaseClient.js";
 export const PAYMENT_CONTEXTS = {
   CREDITS: "credits",
   COURSE_ENROLLMENT: "course_enrollment",
-  // Confirmed against the live paystack-initialize/stripe-initialize edge
-  // functions (Context = "credits" | "waitlist_premium" | "course_enrollment").
-  // Both edge functions insert/update the real `paid_waitlist` table
-  // server-side whenever this context is used - the client never writes to
-  // that table directly, see lib/api/waitlist.js.
   WAITLIST_PREMIUM: "waitlist_premium",
-  // Same honest status as ORGANIZATION_SUBSCRIPTION below - not confirmed
-  // against a live edge function's server-side verification handling the
-  // way CREDITS/COURSE_ENROLLMENT/WAITLIST_PREMIUM are; tier/seat
-  // activation both happen via the client calling their respective real
-  // database functions after a generically-verified successful payment,
-  // matching the exact same established pattern.
   SEAT_PURCHASE: "seat_purchase",
-  // NOT confirmed against a live edge function the way the three above are
-  // - see the header of 0114_organization_subscription_payment.sql for the
-  // full explanation. The shared stripe-initialize/paystack-initialize
-  // functions will accept any context string and start a real charge either
-  // way; what's untested is whether stripe-verify/paystack-verify does
-  // anything server-side with this specific value the way it does for
-  // "waitlist_premium". Until that's confirmed or added, tier activation
-  // happens via the client calling apply_organization_subscription_payment()
-  // after a successful verify response - see lib/api/organizations.js.
   ORGANIZATION_SUBSCRIPTION: "organization_subscription",
 };
 
@@ -74,8 +55,7 @@ function clearPendingPayment(provider, reference) {
 /**
  * Starts a Paystack transaction via the live "paystack-initialize" edge
  * function and redirects the browser to Paystack's hosted checkout.
- * Paystack redirects back to `callback_url` with ?reference=...&trxref=...
- * in the query string once the user finishes (or cancels) checkout.
+ * Supports both Live Production and Test mode transactions.
  *
  * @param {{ email: string, amount: number, currency?: "NGN"|"USD"|"GHS"|"ZAR"|"KES", context: string, metadata?: object }} args
  */
@@ -87,15 +67,30 @@ export async function startPaystackPayment({ email, amount, currency = "NGN", co
 
   const callback_url = currentPageUrl();
 
+  let enrichedMetadata = { ...metadata };
+  if (metadata?.orgId) {
+    try {
+      const gwSettings = await fetchOrgPaymentGatewaySettings(metadata.orgId);
+      if (gwSettings) {
+        enrichedMetadata.gateway_settings = gwSettings;
+        if (gwSettings.paystack_subaccount_code) {
+          enrichedMetadata.subaccount = gwSettings.paystack_subaccount_code;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not enrich org gateway settings:", e);
+    }
+  }
+
   const { data, error } = await supabase.functions.invoke("paystack-initialize", {
-    body: { email, amount, currency, context, callback_url, metadata },
+    body: { email, amount, currency, context, callback_url, metadata: enrichedMetadata },
   });
 
   if (error || !data?.authorization_url) {
-    throw new Error(error?.message || data?.error || "Failed to start payment");
+    throw new Error(error?.message || data?.error || "Failed to start Paystack payment");
   }
 
-  rememberPending("paystack", data.reference, { context, metadata });
+  rememberPending("paystack", data.reference, { context, metadata: enrichedMetadata });
   window.location.href = data.authorization_url;
 }
 
@@ -118,9 +113,8 @@ export async function verifyPaystackPayment(reference) {
 
 /**
  * Starts a Stripe Checkout Session via the live "stripe-initialize" edge
- * function and redirects the browser to Stripe's hosted checkout. Stripe
- * redirects back to `success_url?reference=...&session_id=...` on success,
- * or straight back to `cancel_url` if the user cancels.
+ * function and redirects the browser to Stripe's hosted checkout.
+ * Supports both Live Production and Test mode transactions.
  *
  * @param {{ email: string, amount: number, currency?: "USD"|"GBP"|"EUR", context: string, description?: string, metadata?: object }} args
  */
@@ -133,15 +127,30 @@ export async function startStripePayment({ email, amount, currency = "USD", cont
   const success_url = currentPageUrl();
   const cancel_url = currentPageUrl();
 
+  let enrichedMetadata = { ...metadata };
+  if (metadata?.orgId) {
+    try {
+      const gwSettings = await fetchOrgPaymentGatewaySettings(metadata.orgId);
+      if (gwSettings) {
+        enrichedMetadata.gateway_settings = gwSettings;
+        if (gwSettings.stripe_account_id) {
+          enrichedMetadata.stripe_account = gwSettings.stripe_account_id;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not enrich org gateway settings:", e);
+    }
+  }
+
   const { data, error } = await supabase.functions.invoke("stripe-initialize", {
-    body: { email, amount, currency, context, success_url, cancel_url, description, metadata },
+    body: { email, amount, currency, context, success_url, cancel_url, description, metadata: enrichedMetadata },
   });
 
   if (error || !data?.checkout_url) {
     throw new Error(error?.message || data?.error || "Failed to start Stripe checkout");
   }
 
-  rememberPending("stripe", data.reference, { context, metadata });
+  rememberPending("stripe", data.reference, { context, metadata: enrichedMetadata });
   window.location.href = data.checkout_url;
 }
 

@@ -1442,3 +1442,29 @@ img, video, canvas, iframe {
     touch-action: manipulation;
   }
 }
+
+/* Responsive Hero Banner & Compact Layout Efficiency Rules */
+.ta-hero-banner .ta-hero-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .ta-hero-banner .ta-hero-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ta-hero-banner .ta-hero-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ta-hero-banner .ta-hero-actions button,
+  .ta-hero-banner .ta-hero-actions a {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+

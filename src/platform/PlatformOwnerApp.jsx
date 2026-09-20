@@ -13,6 +13,7 @@ import { EmailsScreen } from "./superadmin/EmailsScreen.jsx";
 import { AccessControlScreen } from "./superadmin/AccessControlScreen.jsx";
 import { SupportQueueScreen } from "./superadmin/SupportQueueScreen.jsx";
 import { CommissionConfigScreen } from "./superadmin/CommissionConfigScreen.jsx";
+import { PaymentMonitorScreen } from "./superadmin/PaymentMonitorScreen.jsx";
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 import { initDynamicBranding } from "../lib/brandingHelper.js";
@@ -127,6 +128,7 @@ export default function PlatformOwnerApp({
                 {screen === "support" && <SupportQueueScreen currentUserId={session?.user?.id} />}
                 {screen === "access" && <AccessControlScreen orgSelector={orgSelector} />}
                 {screen === "commission" && <CommissionConfigScreen orgSelector={orgSelector} />}
+                {screen === "payments" && <PaymentMonitorScreen orgSelector={orgSelector} currentUserId={session?.user?.id} />}
               </div>
             </div>
 

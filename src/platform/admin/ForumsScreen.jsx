@@ -93,6 +93,27 @@ export function ForumsScreen({ orgId, orgSelector, setScreen }) {
         right={!selectedForum && <button className="ta-btn ta-btn-primary" onClick={openCreate}><Plus size={15} /> New category</button>}
       />
       <div className="ta-content">
+        <div className="ta-hero-banner ta-hero-dark anim-fluid-entrance" style={{ marginBottom: 20 }}>
+          <div className="tai-glow-cyan" />
+          <div className="ta-hero-inner">
+            <div className="ta-hero-text">
+              <h1 className="ta-hero-title">Community Forums &amp; Discussions</h1>
+              <p className="ta-hero-desc">Create discussion topics, moderate course threads, and manage community interactions.</p>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <span className="ta-tag ta-tag-info">
+                  <MessageSquare size={13} /> {categories.length} Active Categories
+                </span>
+              </div>
+            </div>
+            <div className="ta-hero-actions">
+              {!selectedForum && (
+                <button className="ta-btn ta-btn-primary" onClick={openCreate}>
+                  <Plus size={15} /> New category
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
         {!selectedForum && (
           <>
             {formOpen && (
