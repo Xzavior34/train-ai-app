@@ -82,7 +82,7 @@ export function PlatformSettingsScreen() {
   return (
     <div className="ta-fade">
       <TopBar title="Platform Settings" sub="Global system configuration" />
-      <div className="ta-content" style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
             PLATFORM SETTINGS HERO BANNER
             ========================================================================= */}

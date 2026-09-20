@@ -112,7 +112,7 @@ export function EmailsScreen() {
   return (
     <div className="ta-fade">
       <TopBar title="Platform Emails" sub="System notifications & email broadcasts" />
-      <div className="ta-content" style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
+      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* =========================================================================
             PLATFORM BROADCASTS HERO BANNER
             ========================================================================= */}
