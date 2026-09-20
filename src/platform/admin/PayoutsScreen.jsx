@@ -1,6 +1,6 @@
 import React, { useState, useContext, useMemo } from "react";
 import { TopBar, ToastContext, Tag, Avatar, Switch } from "../components/PlatformUI.jsx";
-import { Wallet, RefreshCw, Search, CheckCircle2, X, ShieldCheck, Users } from "lucide-react";
+import { Wallet, RefreshCw, Search, CheckCircle2, X, ShieldCheck, Users, CreditCard } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchOrgPayoutRequests, updatePayoutRequestStatus,
@@ -119,6 +119,21 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
                 onClick={() => { requestsQuery.refetch(); mentorsQuery.refetch(); }}
               >
                 <RefreshCw size={13} /> Refresh
+              </button>
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{
+                  height: 36,
+                  padding: "0 14px",
+                  borderRadius: 8,
+                  fontSize: 12.5,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+                onClick={() => setScreen("payment-settings")}
+              >
+                <CreditCard size={13} /> Payment Setup
               </button>
             </div>
           </div>

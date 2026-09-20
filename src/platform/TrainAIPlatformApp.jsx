@@ -25,6 +25,7 @@ import { AssessmentsScreen } from "./admin/AssessmentsScreen.jsx";
 import { ComplianceScreen } from "./admin/ComplianceScreen.jsx";
 import { IntegrationsScreen } from "./admin/IntegrationsScreen.jsx";
 import { SettingsHubScreen } from "./admin/SettingsHubScreen.jsx";
+import { PaymentSettingsScreen } from "./admin/PaymentSettingsScreen.jsx";
 import { MentorDashboardScreen } from "./mentor/MentorDashboardScreen.jsx";
 import { MentorStudyGroupsScreen } from "./mentor/MentorStudyGroupsScreen.jsx";
 import { MentorScheduleScreen } from "./mentor/MentorScheduleScreen.jsx";
@@ -237,6 +238,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "credits" && <CreditsScreen orgId={effectiveOrgId} orgSelector={orgSelector} userEmail={session?.user?.email} />}
                   {screen === "courserevenue" && <CourseRevenueScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
+                  {screen === "payment-settings" && <PaymentSettingsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} currentUserId={session?.user?.id} />}
                   {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "analytics" && <AdminAnalyticsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
                   {screen === "cohorts" && (

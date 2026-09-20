@@ -3,7 +3,7 @@ import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail, Trophy, CheckSquare,
   Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, ChevronRight, ChevronDown, Palette, Rocket, Brain, LifeBuoy,
-  Armchair, Rss, CreditCard, TrendingUp,
+  Armchair, Rss, CreditCard, TrendingUp, Landmark, Wallet,
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
@@ -666,6 +666,7 @@ const ADMIN_NAV = [
       { key: "seats", label: "Seats & Licensing", icon: Armchair },
       { key: "payouts", label: "Payouts", icon: Briefcase },
       { key: "courserevenue", label: "Course Revenue", icon: TrendingUp },
+      { key: "payment-settings", label: "Payment Setup", icon: Landmark },
       { key: "integrations", label: "Integrations", icon: Plug },
       { key: "credits", label: "AI Credits", icon: CreditCard },
     ],

@@ -1,6 +1,6 @@
 import React, { useState, useContext, useMemo } from "react";
 import { TopBar, ToastContext, Tag } from "../components/PlatformUI.jsx";
-import { DollarSign, TrendingUp, RefreshCw, Download, BookOpen, AlertTriangle } from "lucide-react";
+import { DollarSign, TrendingUp, RefreshCw, Download, BookOpen, AlertTriangle, CreditCard } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrgRevenueSummary, fetchOrgCourseRevenue } from "../../lib/api/revenue.js";
 
@@ -93,6 +93,13 @@ export function CourseRevenueScreen({ orgId, orgSelector, setScreen }) {
                 onClick={() => { if (filtered.length === 0) { showToast("No data to export."); return; } exportCSV(filtered); }}
               >
                 <Download size={13} /> Export CSV
+              </button>
+              <button
+                className="ta-btn ta-btn-primary"
+                style={{ height: 36, padding: "0 14px", borderRadius: 8, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6 }}
+                onClick={() => setScreen("payment-settings")}
+              >
+                <CreditCard size={13} /> Payment Setup
               </button>
             </div>
           </div>
