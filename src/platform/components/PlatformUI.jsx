@@ -3,7 +3,7 @@ import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
   Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail, Trophy, CheckSquare,
   Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, ChevronRight, ChevronDown, Palette, Rocket, Brain, LifeBuoy,
-  Armchair, Rss, CreditCard,
+  Armchair, Rss, CreditCard, TrendingUp,
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
@@ -665,6 +665,7 @@ const ADMIN_NAV = [
       { key: "emails", label: "Email Center", icon: Mail },
       { key: "seats", label: "Seats & Licensing", icon: Armchair },
       { key: "payouts", label: "Payouts", icon: Briefcase },
+      { key: "courserevenue", label: "Course Revenue", icon: TrendingUp },
       { key: "integrations", label: "Integrations", icon: Plug },
       { key: "credits", label: "AI Credits", icon: CreditCard },
     ],
@@ -691,6 +692,7 @@ const MENTOR_NAV = [
   { key: "messages", label: "Direct Messages", icon: MessageSquare },
   { key: "learnerfeed", label: "Learner Feed", icon: Rss },
   { key: "analytics", label: "My Performance", icon: BarChart3 },
+  { key: "earnings", label: "My Earnings", icon: TrendingUp },
   { key: "admin", label: "Earnings & Payouts", icon: Briefcase },
   { key: "settings", label: "Instructor Settings", icon: Settings },
 ];
@@ -699,6 +701,7 @@ export const SUPERADMIN_NAV = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "orgs", label: "Organizations", icon: Building2 },
   { key: "onboarding", label: "Org Onboarding", icon: Rocket },
+  { key: "commission", label: "Commission Config", icon: TrendingUp },
   { key: "branding", label: "Branding", icon: Palette },
   { key: "settings", label: "Platform Settings", icon: Settings },
   { key: "tracks", label: "Learning Tracks", icon: Map },

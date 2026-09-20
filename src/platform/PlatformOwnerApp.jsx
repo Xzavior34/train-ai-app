@@ -12,6 +12,7 @@ import { TracksScreen } from "./superadmin/TracksScreen.jsx";
 import { EmailsScreen } from "./superadmin/EmailsScreen.jsx";
 import { AccessControlScreen } from "./superadmin/AccessControlScreen.jsx";
 import { SupportQueueScreen } from "./superadmin/SupportQueueScreen.jsx";
+import { CommissionConfigScreen } from "./superadmin/CommissionConfigScreen.jsx";
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 import { initDynamicBranding } from "../lib/brandingHelper.js";
@@ -125,6 +126,7 @@ export default function PlatformOwnerApp({
                 {screen === "emails" && <EmailsScreen orgSelector={orgSelector} />}
                 {screen === "support" && <SupportQueueScreen currentUserId={session?.user?.id} />}
                 {screen === "access" && <AccessControlScreen orgSelector={orgSelector} />}
+                {screen === "commission" && <CommissionConfigScreen orgSelector={orgSelector} />}
               </div>
             </div>
 

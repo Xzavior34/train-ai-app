@@ -15,6 +15,7 @@ import { PayoutsScreen } from "./admin/PayoutsScreen.jsx";
 import { SeatsScreen } from "./admin/SeatsScreen.jsx";
 import { WorkforceIntelligenceScreen } from "./admin/WorkforceIntelligenceScreen.jsx";
 import { CreditsScreen } from "./admin/CreditsScreen.jsx";
+import { CourseRevenueScreen } from "./admin/CourseRevenueScreen.jsx";
 import { AdminStudyGroupsScreen } from "./admin/AdminStudyGroupsScreen.jsx";
 import { AdminAnalyticsScreen } from "./admin/AdminAnalyticsScreen.jsx";
 import { CohortsScreen } from "./admin/CohortsScreen.jsx";
@@ -33,6 +34,7 @@ import { LearnerFeedScreen } from "./mentor/LearnerFeedScreen.jsx";
 import { MentorAnalyticsScreen } from "./mentor/MentorAnalyticsScreen.jsx";
 import { AdministrativeScreen } from "./mentor/AdministrativeScreen.jsx";
 import { MentorSettingsScreen } from "./mentor/MentorSettingsScreen.jsx";
+import { InstructorEarningsScreen } from "./mentor/InstructorEarningsScreen.jsx";
 import { CheckCircle2 } from "lucide-react";
 import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
@@ -234,6 +236,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "seats" && <SeatsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} />}
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "credits" && <CreditsScreen orgId={effectiveOrgId} orgSelector={orgSelector} userEmail={session?.user?.email} />}
+                  {screen === "courserevenue" && <CourseRevenueScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
                   {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "analytics" && <AdminAnalyticsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
                   {screen === "cohorts" && (
@@ -301,6 +304,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "messages" && <MentorMessagesScreen userId={session?.user?.id} mentorId={mentorId} orgSelector={orgSelector} selectedLearnerForChat={selectedLearnerForChat} setScreen={setScreen} orgId={effectiveOrgId} />}
                   {screen === "learnerfeed" && <LearnerFeedScreen mentorId={mentorId} orgSelector={orgSelector} />}
                   {screen === "analytics" && <MentorAnalyticsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} onNavigate={navigateToScreen} />}
+                  {screen === "earnings" && <InstructorEarningsScreen mentorId={mentorId} orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} userEmail={session?.user?.email} mentorProfileQuery={mentorProfileQuery} />}
                   {screen === "admin" && <AdministrativeScreen mentorId={mentorId} orgSelector={orgSelector} mentorProfileQuery={mentorProfileQuery} currentUserId={session?.user?.id} />}
                   {screen === "settings" && <MentorSettingsScreen mentorId={mentorId} mentorProfileQuery={mentorProfileQuery} orgSelector={orgSelector} currentUserId={session?.user?.id} userProfileQuery={profileQuery} onNavigate={navigateToScreen} />}
                   {screen === "community" && (
