@@ -6,7 +6,7 @@ import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockDat
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization, fetchOrgBranding, upsertOrgBranding, fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice, fetchOrgPaymentGatewaySettings, updateOrgPaymentGatewaySettings } from "../../lib/api/organizations.js";
 import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
 
 // organization's name with that fake placeholder if an admin didn't notice
@@ -108,6 +108,47 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
       }
     } finally {
       setSavingAI(false);
+    }
+  }
+
+  // Payment Gateway & Payout Accounts (Paystack Subaccount & Stripe Connect)
+  const paymentSettingsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgPaymentGatewaySettings(orgId) : null), [orgId]);
+  const [paystackSubaccount, setPaystackSubaccount] = useState("");
+  const [stripeAccountId, setStripeAccountId] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [savingPaymentSettings, setSavingPaymentSettings] = useState(false);
+
+  useEffect(() => {
+    if (paymentSettingsQuery.data) {
+      setPaystackSubaccount(paymentSettingsQuery.data.paystack_subaccount_code || "");
+      setStripeAccountId(paymentSettingsQuery.data.stripe_account_id || "");
+      setBankName(paymentSettingsQuery.data.bank_name || "");
+      setAccountNumber(paymentSettingsQuery.data.account_number || "");
+      setAccountName(paymentSettingsQuery.data.account_name || "");
+    }
+  }, [paymentSettingsQuery.data]);
+
+  async function handleSavePaymentSettings() {
+    if (!orgId) return;
+    setSavingPaymentSettings(true);
+    try {
+      const res = await updateOrgPaymentGatewaySettings(orgId, {
+        paystack_subaccount_code: paystackSubaccount.trim(),
+        stripe_account_id: stripeAccountId.trim(),
+        bank_name: bankName.trim(),
+        account_number: accountNumber.trim(),
+        account_name: accountName.trim(),
+      });
+      if (res.success) {
+        showToast("Payment gateway & payout settings saved!");
+        paymentSettingsQuery.refetch();
+      } else {
+        showToast(res.error || "Could not save payment gateway settings.");
+      }
+    } finally {
+      setSavingPaymentSettings(false);
     }
   }
 
@@ -484,6 +525,83 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     {purchasingSeats ? "Redirecting to checkout..." : `Purchase seats ($${SEAT_PRICE_DISPLAY}/seat)`}
                   </button>
                 </div>
+              </div>
+
+              <div className="ta-card">
+                <div className="ta-row ta-between">
+                  <div className="ta-title">Payment Gateways & Direct Payouts</div>
+                  <Tag tone={paystackSubaccount || stripeAccountId ? "success" : "neutral"}>
+                    {paystackSubaccount || stripeAccountId ? "Configured" : "Platform Default"}
+                  </Tag>
+                </div>
+                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
+                  Connect your organization's payment accounts so course revenues are settled directly into your own bank account (with the platform commission automatically split).
+                </div>
+
+                <div className="ta-mt16">
+                  <div className="ta-label" style={{ fontWeight: 700 }}>Paystack Integration (NGN, GHS, KES, ZAR)</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                    Enter your Paystack Subaccount Code (e.g. <code>ACCT_xxxxxxxxx</code>) from your Paystack Dashboard &gt; Settings &gt; Subaccounts.
+                  </div>
+                  <input
+                    className="ta-input ta-mt6"
+                    style={{ width: "100%" }}
+                    placeholder="ACCT_xxxxxxxxx"
+                    value={paystackSubaccount}
+                    onChange={(e) => setPaystackSubaccount(e.target.value)}
+                  />
+                </div>
+
+                <div className="ta-mt14">
+                  <div className="ta-label" style={{ fontWeight: 700 }}>Organization Bank Settlement Details</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                    Used for direct bank transfers or generating subaccounts.
+                  </div>
+                  <div className="ta-grid ta-grid-2 ta-gap8 ta-mt6">
+                    <input
+                      className="ta-input"
+                      placeholder="Bank Name (e.g. Zenith Bank)"
+                      value={bankName}
+                      onChange={(e) => setBankName(e.target.value)}
+                    />
+                    <input
+                      className="ta-input"
+                      placeholder="Account Number (10 digits)"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                    />
+                  </div>
+                  <input
+                    className="ta-input ta-mt8"
+                    style={{ width: "100%" }}
+                    placeholder="Account Name (e.g. Sara Foundation Africa Ltd)"
+                    value={accountName}
+                    onChange={(e) => setAccountName(e.target.value)}
+                  />
+                </div>
+
+                <div className="ta-mt14">
+                  <div className="ta-label" style={{ fontWeight: 700 }}>Stripe Connect Integration (USD, GBP, EUR)</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>
+                    Enter your Stripe Connected Account ID (e.g. <code>acct_xxxxxxxxx</code>).
+                  </div>
+                  <input
+                    className="ta-input ta-mt6"
+                    style={{ width: "100%" }}
+                    placeholder="acct_xxxxxxxxx"
+                    value={stripeAccountId}
+                    onChange={(e) => setStripeAccountId(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  className="ta-btn ta-btn-primary ta-mt16"
+                  style={{ height: 36, padding: "0 16px", borderRadius: 8, fontSize: 13 }}
+                  onClick={handleSavePaymentSettings}
+                  disabled={savingPaymentSettings}
+                >
+                  {savingPaymentSettings ? "Saving..." : "Save Payment Gateways"}
+                </button>
               </div>
 
               <div className="ta-card">

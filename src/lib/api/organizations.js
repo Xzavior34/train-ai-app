@@ -293,6 +293,56 @@ export async function updateOrgGamificationSettings(organizationId, patch) {
   }
 }
 
+// Payment gateway & payout accounts for the organization.
+// Allows organizations to connect their Paystack Subaccount (for NGN/GHS/KES/ZAR)
+// and Stripe Connected Account ID (for USD/EUR/GBP) so that course revenues are
+// settled directly into the organization's own account.
+const DEFAULT_PAYMENT_GATEWAY_SETTINGS = {
+  paystack_subaccount_code: "",
+  stripe_account_id: "",
+  bank_name: "",
+  account_number: "",
+  account_name: "",
+  payout_currency: "NGN",
+};
+
+export async function fetchOrgPaymentGatewaySettings(organizationId) {
+  if (!supabase || !organizationId) return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
+  try {
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (error || !data) return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
+    return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS, ...(data.settings?.payment_gateways || {}) };
+  } catch (e) {
+    console.warn("Payment gateway settings fetch warning:", e);
+    return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
+  }
+}
+
+export async function updateOrgPaymentGatewaySettings(organizationId, patch) {
+  if (!supabase || !organizationId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (fetchError) throw fetchError;
+    const nextSettings = {
+      ...(existing?.settings || {}),
+      payment_gateways: { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS, ...(existing?.settings?.payment_gateways || {}), ...patch },
+    };
+    const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save payment gateway settings." };
+  }
+}
+
 // Organization subscription payment - the real fix for "organizations have
 // to pay to see the admin dashboard." See 0114_organization_subscription_payment.sql
 // for the full design and its one honest trust-boundary caveat.
