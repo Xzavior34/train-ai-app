@@ -793,6 +793,60 @@ export async function fetchOrgAllUsersAICreditMonitoring(organizationId) {
       if (a.owner_user_id) accountByUserId.set(a.owner_user_id, a);
     }
 
+    // Resilient fallback for other organizations: fetch accounts for members whose
+    // ai_credit_accounts row may have a null or alternate organization_id
+    const missingMemberIds = profiles.map((p) => p.id).filter((id) => !accountByUserId.has(id));
+    if (missingMemberIds.length > 0) {
+      try {
+        const { data: extraAccounts } = await supabase
+          .from("ai_credit_accounts")
+          .select("id, owner_user_id, balance, lifetime_credited, lifetime_consumed, account_type")
+          .in("owner_user_id", missingMemberIds);
+        for (const a of extraAccounts || []) {
+          if (a.owner_user_id) accountByUserId.set(a.owner_user_id, a);
+        }
+      } catch (err) {
+        console.warn("Extra credit accounts lookup warning:", err);
+      }
+    }
+
+    // Automatic lazy-initialization: grant 10 initial credits to any unallocated members across any org
+    const unallocatedMembers = profiles.filter((p) => !accountByUserId.has(p.id));
+    if (unallocatedMembers.length > 0) {
+      for (const u of unallocatedMembers) {
+        try {
+          const { data: newAcc } = await supabase
+            .from("ai_credit_accounts")
+            .insert({
+              organization_id: organizationId,
+              owner_user_id: u.id,
+              account_type: "learner",
+              balance: 10,
+              lifetime_credited: 10,
+              lifetime_consumed: 0,
+            })
+            .select("id, owner_user_id, balance, lifetime_credited, lifetime_consumed, account_type")
+            .single();
+          if (newAcc) {
+            accountByUserId.set(u.id, newAcc);
+            // Record initial top-up transaction
+            await supabase.from("ai_credit_transactions").insert({
+              organization_id: organizationId,
+              account_id: newAcc.id,
+              user_id: u.id,
+              transaction_type: "top_up",
+              amount: 10,
+              balance_before: 0,
+              balance_after: 10,
+              reference_type: "initial_org_grant",
+              reference_id: "initial_10_credits",
+              metadata: { reason: "Initial 10 credits grant" },
+            });
+          }
+        } catch (_) {}
+      }
+    }
+
     // Index transactions and usage by user_id
     const usageByUserId = new Map();
     for (const t of txs) {

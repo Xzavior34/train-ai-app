@@ -377,6 +377,34 @@ export async function fetchLeaderboard(limit = 50, orgId = null) {
   } catch (e) {
     console.warn("Direct leaderboard query warning:", e);
   }
+
+  // Resilient fallback for any organization with members but without prior gamification rows
+  try {
+    const { data: profiles, error: pErr } = await supabase
+      .from("user_profiles")
+      .select("id, display_name, avatar_url, role")
+      .eq("organization_id", targetOrgId)
+      .order("display_name", { ascending: true })
+      .limit(limit);
+
+    if (!pErr && profiles && profiles.length > 0) {
+      return profiles.map((p) => ({
+        user_id: p.id,
+        display_name: p.display_name || "Learner",
+        avatar_url: p.avatar_url || null,
+        role: p.role || "Specialist",
+        school: "Active Batch",
+        cohort_name: "Active Batch",
+        total_points: 0,
+        streak: 1,
+        completed_courses: 0,
+        badges_count: 1,
+      }));
+    }
+  } catch (e) {
+    console.warn("User profiles leaderboard fallback warning:", e);
+  }
+
   return [];
 }
 
@@ -435,6 +463,22 @@ export async function fetchMyGamificationStats(userId) {
     .eq("user_id", userId)
     .maybeSingle();
   if (error) return null;
+  if (!data) {
+    const initialStats = {
+      user_id: userId,
+      total_points: 0,
+      current_level: 1,
+      streak_days: 1,
+      streak_freezes_available: 1,
+      lessons_completed: 0,
+      courses_completed: 0,
+      sessions_completed: 0,
+    };
+    try {
+      await supabase.from("user_gamification_stats").insert(initialStats);
+    } catch {}
+    return initialStats;
+  }
   return data;
 }
 

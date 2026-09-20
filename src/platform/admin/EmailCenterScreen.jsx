@@ -82,9 +82,9 @@ function toHtml(body) {
 export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
 
-  const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
-  const cohortsQuery = useSupabaseQuery(async () => (orgId ? fetchCohorts(orgId) : []), [orgId]);
-  const progressQuery = useSupabaseQuery(async () => (orgId ? fetchOrgLearnerProgressOverview(orgId) : []), [orgId]);
+  const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId || null), [orgId]);
+  const cohortsQuery = useSupabaseQuery(async () => fetchCohorts(orgId || null), [orgId]);
+  const progressQuery = useSupabaseQuery(async () => fetchOrgLearnerProgressOverview(orgId || null), [orgId]);
   const campaignsQuery = useSupabaseQuery(async () => fetchEmailCampaigns(currentUserId), [currentUserId]);
 
   const members = membersQuery.data || [];
