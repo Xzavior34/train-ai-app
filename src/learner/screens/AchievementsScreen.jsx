@@ -34,7 +34,7 @@ function formatDate(dateStr) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-export function AchievementsScreen({ user = {}, courses = [], achievements = [], streakActivity = [], leaderboardQuery = {}, complianceAssignmentsQuery = {}, back, session, showToast, credits, consumeCredit, onBuyCredits }) {
+export function AchievementsScreen({ user = {}, courses = [], achievements = [], myCertificates = [], streakActivity = [], leaderboardQuery = {}, complianceAssignmentsQuery = {}, back, session, showToast, credits, consumeCredit, onBuyCredits }) {
   const userId = session?.user?.id;
   const [activeProgressTab, setActiveProgressTab] = useState("overview"); // "overview" | "certificates" | "badges" | "activity"
   const [mysteryBoxes, setMysteryBoxes] = useState([]);
@@ -70,7 +70,22 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
 
   const DEFAULT_EARNED = [];
 
-  const earnedCertificates = (achievements || []).filter(a => a.type === "certificate" || a.certificate_id || a.is_certificate);
+  const earnedCertificates = [
+    ...(myCertificates || []).map((c) => ({
+      id: c.id,
+      credentialId: c.certificate_number || c.id,
+      title: c.title || c.courses?.title || "Certificate of Completion",
+      specialization: c.courses?.category || "Professional Track",
+      issueDate: c.issued_at,
+      grade: "Verified",
+      instructor: c.courses?.instructor || "Train AI Certified Instructor",
+      verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/?verify=${c.certificate_number || c.id}`,
+      skills: c.courses?.category ? [c.courses.category] : ["Core Competency"],
+      bannerImage: c.courses?.cover_image_url || null,
+      is_certificate: true,
+    })),
+    ...(achievements || []).filter((a) => a.type === "certificate" || a.certificate_id || a.is_certificate),
+  ];
 
   const WEEKLY_HOURS = user.weeklyHours || [];
   const SKILL_RADAR = user.skillRadar || [];
@@ -235,6 +250,8 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
         {[
           { k: "overview", label: "Progress Analytics", icon: BarChart3 },
           { k: "certificates", label: `Certificates (${earnedCertificates.length})`, icon: GraduationCap },
+          { k: "badges", label: `Badges (${effectiveAchievements.length})`, icon: Award },
+          { k: "activity", label: "Activity Log", icon: Clock },
         ].map(t => {
           const Icon = t.icon;
           const isActive = activeProgressTab === t.k;

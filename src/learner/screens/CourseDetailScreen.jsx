@@ -107,11 +107,40 @@ export function CourseDetailScreen({
   enrollmentsQuery, handleEnroll, addCourseNote, postCourseDiscussionMessage,
   assessmentQuery, assessmentQuestionsQuery, myAssessmentAttemptQuery, handleSubmitAssessment,
   certificateQuery, myCertificateQuery, handleRequestCertificate, orgBrandingQuery,
-  myApplication, handleRequestJoin
+  myApplication, handleRequestJoin,
+  learningPathsQuery, pathEnrollmentsQuery, courses
 }) {
   if (!course) return <div className="tai-card tai-empty">Course not found.</div>;
   const tab = params._tab || "lessons";
   const setTabLocal = (t) => setParams(p => ({ ...p, _tab: t }));
+
+  // Learning Path prerequisite evaluation
+  const enrolledPath = (learningPathsQuery?.data || []).find((p) => {
+    const isEnrolledInPath = (pathEnrollmentsQuery?.data || []).some((pe) => pe.learning_path_id === p.id);
+    if (!isEnrolledInPath) return false;
+    const pCourses = p.courses || p.learning_path_courses || [];
+    return pCourses.some((c) => (c.course_id || c.id) === course.id);
+  });
+
+  let prerequisiteCourse = null;
+  let isLockedByPath = false;
+
+  if (enrolledPath && enrolledPath.unlock_rule === "complete_previous") {
+    const pCourses = [...(enrolledPath.courses || enrolledPath.learning_path_courses || [])].sort(
+      (a, b) => (a.step_number || a.position || 0) - (b.step_number || b.position || 0)
+    );
+    const currentIndex = pCourses.findIndex((c) => (c.course_id || c.id) === course.id);
+    if (currentIndex > 0) {
+      const prevCourseMeta = pCourses[currentIndex - 1];
+      const prevCourseId = prevCourseMeta.course_id || prevCourseMeta.id;
+      const prevCourse = (courses || []).find((c) => c.id === prevCourseId) || prevCourseMeta.courses;
+      const prevProgress = prevCourse?.progress ?? 0;
+      if (prevProgress < 100) {
+        isLockedByPath = true;
+        prerequisiteCourse = prevCourse;
+      }
+    }
+  }
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -159,6 +188,56 @@ export function CourseDetailScreen({
             Mandatory Compliance Requirement {course.complianceDueAt ? `• Complete before ${new Date(course.complianceDueAt).toLocaleDateString()}` : "• Required by your Organization"}
           </div>
           <span style={{ fontSize: 11, fontWeight: 800, color: "#DC2626" }}>REQUIRED SPRINT</span>
+        </div>
+      )}
+
+      {/* Learning Path Prerequisite Alert */}
+      {isLockedByPath && prerequisiteCourse && (
+        <div
+          className="tai-card"
+          style={{
+            padding: "14px 18px",
+            background: "linear-gradient(135deg, rgba(245, 158, 11, 0.09) 0%, rgba(217, 119, 6, 0.05) 100%)",
+            border: "1px solid rgba(245, 158, 11, 0.35)",
+            borderRadius: 10,
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          <div className="tai-row tai-between" style={{ flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+            <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 8,
+                  background: "rgba(245, 158, 11, 0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <Lock size={18} color="#D97706" />
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 13.5, color: "var(--text)" }}>
+                  Prerequisite Required • {enrolledPath.title}
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2, lineHeight: 1.4 }}>
+                  You must complete <strong>{prerequisiteCourse.title || "the previous course"}</strong> (100% progress) before unlocking this course.
+                </div>
+              </div>
+            </div>
+            <button
+              className="tai-btn tai-btn-outline tai-btn-sm"
+              style={{ borderColor: "rgba(245, 158, 11, 0.5)", color: "#B45309", fontWeight: 700, flexShrink: 0 }}
+              onClick={() => push("courseDetail", { id: prerequisiteCourse.id })}
+            >
+              Go to Prerequisite Course →
+            </button>
+          </div>
         </div>
       )}
 
@@ -216,14 +295,19 @@ export function CourseDetailScreen({
 
       {/* Tabs */}
       <div className="tai-row tai-gap10 tai-mt6" style={{ flexWrap: "wrap" }}>
-        {["lessons", "assessment"].map((t) => (
+        {[
+          { key: "lessons", label: "Curriculum & Lessons" },
+          { key: "notes", label: "Notes" },
+          { key: "discussion", label: "Discussion & Q&A" },
+          { key: "assessment", label: "Final Assessment" },
+        ].map((t) => (
           <button
-            key={t}
-            className={`tai-pill ${tab === t ? "tai-pill-active" : "tai-pill-inactive"}`}
-            onClick={() => setTabLocal(t)}
+            key={t.key}
+            className={`tai-pill ${tab === t.key ? "tai-pill-active" : "tai-pill-inactive"}`}
+            onClick={() => setTabLocal(t.key)}
             style={{ fontSize: 12.5 }}
           >
-            {t === "lessons" ? "Curriculum & Lessons" : "Final Assessment"}
+            {t.label}
           </button>
         ))}
       </div>

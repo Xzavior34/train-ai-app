@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useContext, useMemo, useRef } from "react";
 import { applyDynamicBranding } from "../../lib/brandingHelper.js";
 import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
 import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save, Palette, Eye, EyeOff, Sparkles, ArrowRight, Check } from "lucide-react";
@@ -13,8 +13,17 @@ import { getUserLocationCurrency, formatCurrencyAmount } from "../../lib/locatio
 // organization's name with that fake placeholder if an admin didn't notice
 // and retype their real name first. Fixed by fetching the real organizations
 // row directly via the org id already available on this screen.
-export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen, userEmail }) {
+export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen, userEmail, initialSection = "general" }) {
   const showToast = useContext(ToastContext);
+  const brandingRef = useRef(null);
+
+  useEffect(() => {
+    if (initialSection === "branding" && brandingRef.current) {
+      setTimeout(() => {
+        brandingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    }
+  }, [initialSection]);
   const [showMfaSetup, setShowMfaSetup] = useState(false);
   const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
   const org = orgQuery.data;
@@ -1046,7 +1055,11 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
 
 
               {/* ── Custom Branding Card ──────────────────────────────── */}
-              <div className="ta-card">
+              <div
+                className="ta-card"
+                ref={brandingRef}
+                style={initialSection === "branding" ? { border: "2px solid var(--primary)", boxShadow: "0 0 16px rgba(37, 99, 235, 0.2)" } : undefined}
+              >
                 <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)", marginBottom: 16 }}>
                   <div className="ta-row ta-gap10">
                     <div style={{ width: 34, height: 34, borderRadius: 8, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>

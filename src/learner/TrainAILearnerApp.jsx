@@ -860,6 +860,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   myAssessmentAttemptQuery={myAssessmentAttemptQuery} handleSubmitAssessment={handleSubmitAssessment}
                   certificateQuery={certificateQuery} myCertificateQuery={myCertificateQuery} handleRequestCertificate={handleRequestCertificate}
                   orgBrandingQuery={orgBrandingQuery}
+                  learningPathsQuery={learningPathsQuery}
+                  pathEnrollmentsQuery={pathEnrollmentsQuery}
+                  courses={courses}
                 />
                 );
               })()}
@@ -1025,6 +1028,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   user={user}
                   courses={courses}
                   achievements={achievementsQuery.data || []}
+                  myCertificates={myCertificatesQuery.data || []}
                   streakActivity={streakActivityQuery.data || []}
                   leaderboardQuery={leaderboardQuery}
                   complianceAssignmentsQuery={complianceAssignmentsQuery}

@@ -268,7 +268,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "assessments" && <AssessmentsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} scope="admin" />}
                   {screen === "roleaccess" && <OrgRoleAccessScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
-                  {screen === "settings" && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} session={session} />}
+                  {(screen === "settings" || screen === "branding") && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} session={session} initialSection={screen === "branding" ? "branding" : "general"} />}
                 </>
               )}
 
