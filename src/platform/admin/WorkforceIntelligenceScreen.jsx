@@ -3,16 +3,32 @@ import { TopBar, StatCard, ProgressBar, Tag, ToastContext, exportRowsAsCsv } fro
 import { 
   Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
-  Award, ShieldCheck, ChevronRight, Activity, BarChart3, Target, BookOpen, Download
+  Award, ShieldCheck, ChevronRight, Activity, BarChart3, Target, BookOpen, Download,
+  ExternalLink, Eye, Filter, Sparkles, PlusCircle, ArrowUpRight
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchWorkforceIntelligence, fetchOrgMembers, fetchOrgLearnerProgressOverview, assignComplianceCourse, fetchLearnerAssessmentScoresForCourses } from "../../lib/api/platform.js";
-import { fetchPublishedLearningPaths, fetchMyEnrollments, resolvePathProgress } from "../../lib/api/learner.js";
+import { 
+  fetchWorkforceIntelligence, 
+  fetchOrgMembers, 
+  fetchOrgLearnerProgressOverview, 
+  assignComplianceCourse, 
+  fetchLearnerAssessmentScoresForCourses,
+  createInAppNotificationsForUsers
+} from "../../lib/api/platform.js";
+import { 
+  fetchPublishedLearningPaths, 
+  fetchMyEnrollments, 
+  resolvePathProgress,
+  enrollInCourse
+} from "../../lib/api/learner.js";
 
-export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId }) {
+export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId, setScreen, setSelectedCourseId }) {
   const showToast = useContext(ToastContext);
   const [selectedLearnerId, setSelectedLearnerId] = useState(null);
-  const [assignSuccess, setAssignSuccess] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [assignSuccess, setAssignSuccess] = useState(null);
+  const [assigningCourseId, setAssigningCourseId] = useState(null);
+  const [selectedCourseToAssign, setSelectedCourseToAssign] = useState("");
 
   // Career Path Progression used to be driven by CORE_PLATFORM_TRACKS, a
   // hardcoded design-track demo array - so it showed the same fixed content
@@ -64,6 +80,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
         id: m.user_id || m.id,
         name: m.display_name || m.name || m.email || "Learner",
         email: m.email || `${(m.display_name || 'learner').toLowerCase().replace(/\s+/g, '.')}@trainailtd.com`,
+        department: m.department || "General",
         status: prog?.pace === "behind" ? "Needs Attention" : avgProg >= 85 ? "High Performer" : "On Track",
         readiness: `${avgProg}%`,
         avgProgress: avgProg,
@@ -71,7 +88,10 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
       };
     });
 
-  const allLearners = realLearners;
+  const departments = ["all", ...new Set(realLearners.map(l => l.department).filter(Boolean))];
+  const allLearners = selectedDepartment === "all" 
+    ? realLearners 
+    : realLearners.filter(l => l.department === selectedDepartment);
   const currentLearner = allLearners.find(l => l.id === selectedLearnerId) || allLearners[0] || null;
 
   const aggregateLearnerAvg = allLearners.length 
@@ -130,25 +150,28 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
   // pathway - completion straight from the learner's own course_enrollments
   // row (via resolvePathProgress), and the assessment result straight from
   // assessment_attempts against the assessment's real passing_score_pct.
-  // This replaced a clickable checklist that started from four hardcoded
-  // lines like "96/100 Passed" and just flipped a local boolean on click,
-  // never writing anywhere real.
   const promotionCriteria = (activeTrackObj.courses || []).flatMap((c, idx) => {
     const step = careerSteps[idx];
     const s = scoresByCourse.get(c.id);
     const items = [{
       id: `${c.id}-complete`,
+      courseId: c.id,
+      courseTitle: c.title,
       text: `${c.title}: Course Completed`,
       done: !!step?.isCompleted,
       score: step?.isCompleted ? "Completed" : step?.progress ? `In Progress (${step.progress}%)` : "Not started",
+      isCourseCompletion: true,
     }];
     if (s) {
       const passed = s.score != null && s.score >= s.passingScorePct;
       items.push({
         id: `${c.id}-assessment`,
+        courseId: c.id,
+        courseTitle: c.title,
         text: `${c.title}: Assessment`,
         done: passed,
         score: s.score == null ? "Not yet attempted" : `${s.score}/100 (passing ${s.passingScorePct})${passed ? " - Passed" : ""}`,
+        isCourseCompletion: false,
       });
     }
     return items;
@@ -186,22 +209,54 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
     showToast?.(`Development plan for ${currentLearner?.name || "this learner"} exported.`);
   };
 
-  const handleAssignModule = async () => {
-    const targetCourse = activeTrackObj.courses[0];
+  // Smart recommended target course:
+  // First incomplete course in the active pathway, or fallback to first course
+  const firstIncompleteIdx = (activeTrackObj.courses || []).findIndex((c, idx) => !careerSteps[idx]?.isCompleted);
+  const firstIncompleteCourse = firstIncompleteIdx !== -1 ? activeTrackObj.courses[firstIncompleteIdx] : (activeTrackObj.courses?.[0] || null);
+  const targetCourse = (activeTrackObj.courses || []).find(c => c.id === selectedCourseToAssign) || firstIncompleteCourse;
+
+  const handleAssignModule = async (courseToAssign = targetCourse) => {
+    if (!currentLearner?.id || !courseToAssign?.id) {
+      showToast?.("No course or learner selected to assign.");
+      return;
+    }
+    setAssigningCourseId(courseToAssign.id);
     try {
-      if (currentLearner?.id && targetCourse?.id) {
-        await assignComplianceCourse({
-          userIds: [currentLearner.id],
-          courseId: targetCourse.id,
-          assignmentType: "mandatory",
-          assignedBy: currentUserId || null
-        }).catch(() => {});
-      }
-      setAssignSuccess(true);
-      showToast?.(`Assigned "${targetCourse?.title || 'Recommended Module'}" to ${currentLearner?.name || "this learner"}'s path!`);
-      setTimeout(() => setAssignSuccess(false), 4000);
+      // 1. Assign to compliance_assignments (mandatory training)
+      await assignComplianceCourse({
+        userIds: [currentLearner.id],
+        courseId: courseToAssign.id,
+        assignmentType: "mandatory",
+        assignedBy: currentUserId || null
+      });
+
+      // 2. Formally enroll learner in course_enrollments
+      await enrollInCourse(currentLearner.id, courseToAssign.id).catch(err => {
+        console.warn("Auto-enrollment notice:", err);
+      });
+
+      // 3. Dispatch real in-app notification to learner in real_notifications
+      await createInAppNotificationsForUsers([currentLearner.id], {
+        title: `New Module Assigned: ${courseToAssign.title}`,
+        message: `Your organization administrator assigned you to "${courseToAssign.title}" as part of your "${activeTrackObj.title}" pathway.`,
+        actionUrl: "/courses"
+      }).catch(err => {
+        console.warn("Notification dispatch notice:", err);
+      });
+
+      // 4. Refetch all queries so UI updates immediately across the board
+      learnerEnrollmentsQuery.refetch();
+      wiQuery.refetch();
+      progressOverviewQuery.refetch();
+
+      setAssignSuccess(courseToAssign.title);
+      showToast?.(`Assigned "${courseToAssign.title}" to ${currentLearner.name}!`);
+      setTimeout(() => setAssignSuccess(null), 5000);
     } catch (err) {
-      showToast?.(`Assigned module to ${currentLearner?.name || "this learner"}.`);
+      console.error("Failed to assign module:", err);
+      showToast?.(err?.message || `Failed to assign module to ${currentLearner.name}.`);
+    } finally {
+      setAssigningCourseId(null);
     }
   };
 
@@ -250,9 +305,14 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
           </div>
         </div>
 
-        {/* Top 4 KPI Metrics */}
+        {/* Top 4 KPI Metrics with Interactive Click-Throughs */}
         <div className="ta-grid ta-grid-4 anim-stagger">
-          <div className="ta-card" style={{ padding: 18 }}>
+          <div 
+            className="ta-card ta-card-hover" 
+            style={{ padding: 18, cursor: setScreen ? "pointer" : "default" }}
+            onClick={() => setScreen?.("analytics")}
+            title={setScreen ? "Click to view Enterprise Analytics" : undefined}
+          >
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
               <Brain size={18} color="var(--primary, #2563EB)" />
@@ -260,10 +320,18 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
               {readinessDisplay}
             </div>
-            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Enterprise baseline</div>
+            <div className="ta-row ta-between ta-mt4" style={{ fontSize: 11.5 }}>
+              <span style={{ color: "var(--success)" }}>Enterprise baseline</span>
+              {setScreen && <ArrowUpRight size={13} color="var(--text-3)" />}
+            </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18 }}>
+          <div 
+            className="ta-card ta-card-hover" 
+            style={{ padding: 18, cursor: setScreen ? "pointer" : "default" }}
+            onClick={() => setScreen?.("compliance")}
+            title={setScreen ? "Click to view Course Compliance Tracker" : undefined}
+          >
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Avg Course Completion</span>
               <ClipboardCheck size={18} color="#10B981" />
@@ -271,10 +339,18 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
               {avgCompletionDisplay}
             </div>
-            <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>Across all active tracks</div>
+            <div className="ta-row ta-between ta-mt4" style={{ fontSize: 11.5 }}>
+              <span style={{ color: "var(--text-2)" }}>Across all active tracks</span>
+              {setScreen && <ArrowUpRight size={13} color="var(--text-3)" />}
+            </div>
           </div>
 
-          <div className="ta-card" style={{ padding: 18 }}>
+          <div 
+            className="ta-card ta-card-hover" 
+            style={{ padding: 18, cursor: setScreen ? "pointer" : "default" }}
+            onClick={() => setScreen?.("compliance")}
+            title={setScreen ? "Click to view Compliance & Mandatory Training" : undefined}
+          >
             <div className="ta-row ta-between">
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Compliance Rate</span>
               <ShieldCheck size={18} color="#F59E0B" />
@@ -282,7 +358,10 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
             <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
               {complianceRateDisplay}
             </div>
-            <div style={{ fontSize: 11.5, color: "var(--success)", marginTop: 4 }}>Audit standing</div>
+            <div className="ta-row ta-between ta-mt4" style={{ fontSize: 11.5 }}>
+              <span style={{ color: "var(--success)" }}>Audit standing</span>
+              {setScreen && <ArrowUpRight size={13} color="var(--text-3)" />}
+            </div>
           </div>
 
           <div className="ta-card" style={{ padding: 18 }}>
@@ -297,7 +376,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
           </div>
         </div>
 
-        {/* Learner Selector Bar */}
+        {/* Learner Selector Bar with Department Filter */}
         {currentLearner && (
         <div className="ta-card" style={{ padding: 16, borderRadius: 10, background: "var(--surface-2)" }}>
           <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12 }}>
@@ -308,23 +387,61 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
                 style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", border: "2px solid var(--primary)" }}
               />
               <div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>{currentLearner.name}</div>
-                <div style={{ fontSize: 12, color: "var(--text-3)" }}>{currentLearner.email} • {currentLearner.status}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>
+                  {currentLearner.name}
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--text-3)", marginLeft: 8, padding: "2px 8px", background: "var(--surface-3)", borderRadius: 12 }}>
+                    {currentLearner.department}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{currentLearner.email} • {currentLearner.status}</div>
               </div>
             </div>
 
             <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-2)" }}>Inspect Learner:</span>
-              <select
-                className="ta-input"
-                style={{ minWidth: "min(200px, 100%)", flex: "1 1 auto", padding: "6px 12px", borderRadius: 8 }}
-                value={selectedLearnerId || currentLearner.id}
-                onChange={(e) => setSelectedLearnerId(e.target.value)}
-              >
-                {allLearners.map(l => (
-                  <option key={l.id} value={l.id}>{l.name} ({l.status})</option>
-                ))}
-              </select>
+              {departments.length > 2 && (
+                <div className="ta-row ta-gap6">
+                  <Filter size={14} color="var(--text-3)" />
+                  <select
+                    className="ta-input"
+                    style={{ padding: "6px 10px", fontSize: 12, borderRadius: 8 }}
+                    value={selectedDepartment}
+                    onChange={(e) => {
+                      setSelectedDepartment(e.target.value);
+                      setSelectedLearnerId(null);
+                    }}
+                  >
+                    <option value="all">All Departments ({realLearners.length})</option>
+                    {departments.filter(d => d !== "all").map(dept => (
+                      <option key={dept} value={dept}>{dept} ({realLearners.filter(l => l.department === dept).length})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="ta-row ta-gap6">
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text-2)" }}>Learner:</span>
+                <select
+                  className="ta-input"
+                  style={{ minWidth: "min(200px, 100%)", flex: "1 1 auto", padding: "6px 12px", borderRadius: 8 }}
+                  value={selectedLearnerId || currentLearner.id}
+                  onChange={(e) => setSelectedLearnerId(e.target.value)}
+                >
+                  {allLearners.map(l => (
+                    <option key={l.id} value={l.id}>{l.name} ({l.department} • {l.status})</option>
+                  ))}
+                </select>
+              </div>
+
+              {setScreen && (
+                <button
+                  className="ta-btn ta-btn-outline ta-btn-sm"
+                  style={{ padding: "6px 12px", fontSize: 12, borderRadius: 8, display: "inline-flex", alignItems: "center", gap: 5 }}
+                  onClick={() => setScreen("people")}
+                  title="Manage users in People screen"
+                >
+                  <UserCheck size={13} /> People Directory →
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -358,13 +475,25 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
                   {t.title.split(" Specialization")[0].split(" (")[0]}
                 </button>
               ))}
+              {setScreen && (
+                <button
+                  type="button"
+                  onClick={() => setScreen("paths")}
+                  className="ta-btn ta-btn-outline ta-btn-sm"
+                  style={{ fontSize: 12, padding: "5px 12px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 5 }}
+                >
+                  <BookOpen size={13} /> Manage Pathways →
+                </button>
+              )}
             </div>
           </div>
 
           {careerSteps.length === 0 && (
-            <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 16 }}>This pathway has no courses yet.</div>
+            <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 16 }}>
+              This pathway has no courses yet. {setScreen && <button className="ta-btn ta-btn-outline ta-btn-xs" style={{ marginLeft: 8 }} onClick={() => setScreen("paths")}>Add Courses in Learning Paths</button>}
+            </div>
           )}
-          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginTop: 20 }}>
+          <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginTop: 20 }}>
             {careerSteps.map((step, idx) => {
               const isActive = step.status === "in_progress";
               const tag = step.status === "completed" ? "Completed" : step.status === "in_progress" ? "In Progress" : step.status === "available" ? "Available" : "Locked";
@@ -378,32 +507,68 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
                   border: isActive ? "2px solid var(--primary, #2563EB)" : "1px solid var(--border)",
                   position: "relative",
                   boxShadow: isActive ? "0 4px 16px rgba(37, 99, 235, 0.15)" : "none",
-                  transition: "all 0.2s ease"
+                  transition: "all 0.2s ease",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between"
                 }}
               >
-                <div className="ta-row ta-between">
-                  <span style={{ fontSize: 11, fontWeight: 800, color: isActive ? "var(--primary, #2563EB)" : "var(--text-3)", letterSpacing: "0.05em" }}>
-                    STEP 0{idx + 1}
-                  </span>
-                  <Tag tone={step.status === "completed" ? "success" : isActive ? "primary" : "default"}>
-                    {tag}
-                  </Tag>
+                <div>
+                  <div className="ta-row ta-between">
+                    <span style={{ fontSize: 11, fontWeight: 800, color: isActive ? "var(--primary, #2563EB)" : "var(--text-3)", letterSpacing: "0.05em" }}>
+                      STEP 0{idx + 1}
+                    </span>
+                    <Tag tone={step.status === "completed" ? "success" : isActive ? "primary" : "default"}>
+                      {tag}
+                    </Tag>
+                  </div>
+
+                  <div style={{ fontSize: 15, fontWeight: 800, marginTop: 10, color: "var(--text)" }}>
+                    {step.title}
+                  </div>
+
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+                    {step.description}
+                  </div>
+
+                  <div className="ta-mt12">
+                    <ProgressBar value={step.progress} />
+                  </div>
+                  <div className="ta-row ta-between ta-mt8" style={{ fontSize: 11.5 }}>
+                    <span style={{ color: "var(--text-3)" }}>Course Progress</span>
+                    <span style={{ fontWeight: 800, color: step.progress === 100 ? "#10B981" : "var(--primary, #2563EB)" }}>{step.progress}%</span>
+                  </div>
                 </div>
 
-                <div style={{ fontSize: 15, fontWeight: 800, marginTop: 10, color: "var(--text)" }}>
-                  {step.title}
-                </div>
-
-                <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-                  {step.description}
-                </div>
-
-                <div className="ta-mt12">
-                  <ProgressBar value={step.progress} />
-                </div>
-                <div className="ta-row ta-between ta-mt8" style={{ fontSize: 11.5 }}>
-                  <span style={{ color: "var(--text-3)" }}>Course Progress</span>
-                  <span style={{ fontWeight: 800, color: step.progress === 100 ? "#10B981" : "var(--primary, #2563EB)" }}>{step.progress}%</span>
+                {/* Step Action Buttons */}
+                <div className="ta-row ta-gap8 ta-mt14" style={{ flexWrap: "wrap", borderTop: "1px solid var(--border)", paddingTop: 10 }}>
+                  {step.status !== "completed" && (
+                    <button
+                      className="ta-btn ta-btn-primary ta-btn-xs"
+                      style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
+                      disabled={assigningCourseId === step.id}
+                      onClick={() => {
+                        const stepCourse = (activeTrackObj.courses || []).find(c => c.id === step.id) || { id: step.id, title: step.title };
+                        handleAssignModule(stepCourse);
+                      }}
+                      title={`Assign "${step.title}" to ${currentLearner.name}`}
+                    >
+                      <PlusCircle size={12} /> {assigningCourseId === step.id ? "Assigning..." : "Assign to Learner"}
+                    </button>
+                  )}
+                  {setScreen && (
+                    <button
+                      className="ta-btn ta-btn-outline ta-btn-xs"
+                      style={{ fontSize: 11, padding: "4px 10px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
+                      onClick={() => {
+                        if (setSelectedCourseId) setSelectedCourseId(step.id);
+                        setScreen("content");
+                      }}
+                      title={`Open "${step.title}" in Course Content / Builder`}
+                    >
+                      <ExternalLink size={12} /> View Course
+                    </button>
+                  )}
                 </div>
               </div>
               );
@@ -416,12 +581,24 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
 
           {/* Skill Profile Breakdown */}
           <div className="ta-card" style={{ padding: 22 }}>
-            <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+            <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)", flexWrap: "wrap", gap: 8 }}>
               <div>
                 <div className="ta-title" style={{ fontSize: 16 }}>Skill Profile & Radar Assessment</div>
                 <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Real assessment scores by course category for {currentLearner.name}</div>
               </div>
-              <Tag tone="success">{currentLearner?.avgProgress ?? 0}% Readiness</Tag>
+              <div className="ta-row ta-gap8">
+                <Tag tone="success">{currentLearner?.avgProgress ?? 0}% Readiness</Tag>
+                {setScreen && (
+                  <button 
+                    className="ta-btn ta-btn-outline ta-btn-xs" 
+                    style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
+                    onClick={() => setScreen("assessments")}
+                    title="View Assessments Screen"
+                  >
+                    <ClipboardCheck size={12} /> Assessments →
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Visual Skill Matrix with Colored Progress Bars */}
@@ -490,6 +667,30 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
                       <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{c.text}</div>
                       <div style={{ fontSize: 11, color: c.done ? "var(--success)" : "var(--text-3)", marginTop: 2 }}>{c.score}</div>
                     </div>
+                    {!c.done && c.isCourseCompletion && (
+                      <button
+                        className="ta-btn ta-btn-primary ta-btn-xs"
+                        style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, flexShrink: 0 }}
+                        disabled={assigningCourseId === c.courseId}
+                        onClick={() => {
+                          const target = (activeTrackObj.courses || []).find(crs => crs.id === c.courseId) || { id: c.courseId, title: c.courseTitle };
+                          handleAssignModule(target);
+                        }}
+                        title={`Assign ${c.courseTitle} to ${currentLearner.name}`}
+                      >
+                        {assigningCourseId === c.courseId ? "Assigning..." : "Assign"}
+                      </button>
+                    )}
+                    {!c.done && !c.isCourseCompletion && setScreen && (
+                      <button
+                        className="ta-btn ta-btn-outline ta-btn-xs"
+                        style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, flexShrink: 0 }}
+                        onClick={() => setScreen("assessments")}
+                        title="Review or configure assessments"
+                      >
+                        Assessments →
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -499,9 +700,14 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
             <div className="ta-card" style={{ padding: 22, 
               background: "var(--surface-2)",
               border: "1px solid var(--border)" }}>
-              <div className="ta-row ta-gap8" style={{ color: "var(--primary, #2563EB)", fontWeight: 700, fontSize: 14 }}>
-                <Brain size={18} />
-                <span>Skill Growth Recommendation</span>
+              <div className="ta-row ta-between">
+                <div className="ta-row ta-gap8" style={{ color: "var(--primary, #2563EB)", fontWeight: 700, fontSize: 14 }}>
+                  <Brain size={18} />
+                  <span>Skill Growth Recommendation</span>
+                </div>
+                {targetCourse && (
+                  <Tag tone="primary">Target: {targetCourse.title}</Tag>
+                )}
               </div>
 
               <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 10, lineHeight: 1.55 }}>
@@ -523,10 +729,37 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
                 })()}
               </div>
 
+              {/* Course Selector Dropdown for Admin Custom Assignment */}
+              {(activeTrackObj.courses || []).length > 0 && (
+                <div className="ta-mt12" style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border)" }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)", marginBottom: 6 }}>
+                    Select Module to Assign:
+                  </div>
+                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                    <select
+                      className="ta-input"
+                      style={{ flex: "1 1 200px", padding: "6px 10px", fontSize: 12.5, borderRadius: 6 }}
+                      value={selectedCourseToAssign || (targetCourse?.id || "")}
+                      onChange={(e) => setSelectedCourseToAssign(e.target.value)}
+                    >
+                      {(activeTrackObj.courses || []).map((c, idx) => {
+                        const step = careerSteps[idx];
+                        const isRec = c.id === firstIncompleteCourse?.id;
+                        return (
+                          <option key={c.id} value={c.id}>
+                            {isRec ? "⭐ [Recommended] " : ""}{c.title} ({step?.isCompleted ? "Completed" : step?.progress ? `${step.progress}%` : "Not Started"})
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+              )}
+
               {assignSuccess && (
                 <div className="ta-card ta-mt12 anim-pop" style={{ background: "rgba(16, 185, 129, 0.1)", borderColor: "#10B981", padding: 10 }}>
                   <div className="ta-row ta-gap8" style={{ color: "#10B981", fontSize: 12.5, fontWeight: 600 }}>
-                    <CheckCircle2 size={15} /> Assigned "{activeTrackObj.courses[0]?.title || 'Recommended Module'}" to {currentLearner.name}'s path!
+                    <CheckCircle2 size={15} /> Assigned "{assignSuccess}" to {currentLearner.name}! Notification dispatched to learner.
                   </div>
                 </div>
               )}
@@ -534,9 +767,11 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
               <div className="ta-row ta-gap10 ta-mt16" style={{ flexWrap: "wrap" }}>
                 <button 
                   className="ta-btn ta-btn-primary ta-btn-sm"
-                  onClick={handleAssignModule}
+                  disabled={!targetCourse || assigningCourseId === targetCourse.id}
+                  onClick={() => handleAssignModule(targetCourse)}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
                 >
-                  Assign Recommended Module →
+                  <PlusCircle size={14} /> {assigningCourseId === targetCourse?.id ? "Assigning..." : `Assign "${targetCourse?.title || 'Recommended Module'}" →`}
                 </button>
                 <button 
                   className="ta-btn ta-btn-outline ta-btn-sm"
@@ -555,14 +790,45 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
         )}
 
         <div className="ta-card">
-          <div className="ta-row ta-gap8"><BarChart3 size={16} color="var(--primary)" /><div className="ta-title">Skill gaps by department</div></div>
+          <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+            <div className="ta-row ta-gap8">
+              <BarChart3 size={16} color="var(--primary)" />
+              <div className="ta-title">Skill gaps by department</div>
+            </div>
+            {selectedDepartment !== "all" && (
+              <button 
+                className="ta-btn ta-btn-outline ta-btn-xs"
+                style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6 }}
+                onClick={() => setSelectedDepartment("all")}
+              >
+                Clear Filter ({selectedDepartment})
+              </button>
+            )}
+          </div>
           <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
-            Real course-category completion, broken down by department - the lowest scores are the closest thing this data supports to "where the gaps are."
+            Real course-category completion, broken down by department. Click any department to filter the inspected learner profiles above.
           </div>
           <div className="ta-col ta-gap10 ta-mt12">
             {(wi.departmentBreakdown || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No department data yet.</div>}
             {(wi.departmentBreakdown || []).map((d) => (
-              <div key={d.department}>
+              <div 
+                key={d.department} 
+                className="ta-card-hover"
+                style={{ 
+                  padding: "8px 10px", 
+                  borderRadius: 6, 
+                  cursor: "pointer",
+                  background: selectedDepartment === d.department ? "var(--surface-3)" : "transparent",
+                  border: selectedDepartment === d.department ? "1px solid var(--primary)" : "1px solid transparent"
+                }}
+                onClick={() => {
+                  setSelectedDepartment(d.department);
+                  const firstInDept = realLearners.find(l => l.department === d.department);
+                  if (firstInDept) setSelectedLearnerId(firstInDept.id);
+                  showToast?.(`Filtered to ${d.department} department`);
+                }}
+                title={`Click to filter learners to ${d.department}`}
+              >
                 <div className="ta-row ta-between" style={{ fontSize: 12.5 }}>
                   <span style={{ fontWeight: 600 }}>{d.department}</span>
                   <span>{d.avgProgress}% avg ({d.count || d.learnerCount || 0} enrollments)</span>
@@ -574,7 +840,21 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
         </div>
 
         <div className="ta-card">
-          <div className="ta-row ta-gap8"><ClipboardCheck size={16} color="var(--primary)" /><div className="ta-title">Completion by course category</div></div>
+          <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 8 }}>
+            <div className="ta-row ta-gap8">
+              <ClipboardCheck size={16} color="var(--primary)" />
+              <div className="ta-title">Completion by course category</div>
+            </div>
+            {setScreen && (
+              <button 
+                className="ta-btn ta-btn-outline ta-btn-xs"
+                style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
+                onClick={() => setScreen("content")}
+              >
+                <BookOpen size={12} /> Manage Course Content →
+              </button>
+            )}
+          </div>
           <div className="ta-col ta-gap10 ta-mt12">
             {(wi.categoryBreakdown || []).length === 0 && <div style={{ fontSize: 12, color: "var(--text-3)" }}>No course activity yet.</div>}
             {(wi.categoryBreakdown || []).map((c) => (
