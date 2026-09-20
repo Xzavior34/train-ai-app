@@ -130,7 +130,8 @@ export default function App() {
   // sign-in gate, rather than inside either authenticated app shell.
   const [inviteToken, setInviteToken] = useState(() => {
     try {
-      return new URLSearchParams(window.location.search).get("invite") || null;
+      const params = new URLSearchParams(window.location.search);
+      return params.get("token") || params.get("invite") || params.get("invitation") || null;
     } catch {
       return null;
     }

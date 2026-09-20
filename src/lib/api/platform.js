@@ -2435,6 +2435,14 @@ export async function upsertOrgBranding(organizationId, { logoUrl, faviconUrl, p
   if (customCss !== undefined) patch.custom_css = customCss || null;
   if (!Object.keys(patch).length) return existing;
 
+  if (logoUrl !== undefined) {
+    try {
+      await supabase.from("organizations").update({ logo_url: logoUrl || null }).eq("id", organizationId);
+    } catch (e) {
+      console.warn("Sync logo to organizations table non-critical warning:", e);
+    }
+  }
+
   if (existing) {
     const { data, error } = await supabase
       .from("branding_settings")
