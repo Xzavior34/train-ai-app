@@ -738,47 +738,177 @@ export async function fetchOrgAICreditsSummary(organizationId) {
   }
 }
 
-// Per-learner consumption breakdown - a direct, RLS-scoped read of
-// ai_credit_transactions (aict_select_own policy already lets an org
-// admin see every row for their own organization_id), aggregated
-// client-side by user. No new RPC needed for this part.
-export async function fetchOrgAICreditUsageByLearner(organizationId) {
-  if (!supabase || !organizationId) return [];
-  const { data, error } = await supabase
-    .from("ai_credit_transactions")
-    .select("user_id, amount, transaction_type, created_at")
-    .eq("organization_id", organizationId)
-    .eq("transaction_type", "consumption")
-    .order("created_at", { ascending: false });
-  if (error) { console.warn("Org AI credit usage fetch warning:", error); return []; }
-  const rows = data || [];
+// Comprehensive Organization AI Credit Monitoring - retrieves all organization members
+// from user_profiles, their individual AI credit balances from ai_credit_accounts,
+// their consumed credits and operations from ai_credit_transactions, and calculates
+// how much credits they have left (both personal remaining and shared org pool available).
+export async function fetchOrgAllUsersAICreditMonitoring(organizationId) {
+  const emptyResult = {
+    orgSummary: { balance: 0, lifetime_credited: 0, lifetime_consumed: 0 },
+    users: [],
+    stats: {
+      totalMembers: 0,
+      orgPoolBalance: 0,
+      totalPersonalCredits: 0,
+      totalCombinedCredits: 0,
+      totalConsumed: 0,
+      activeConsumersCount: 0,
+      zeroUsageCount: 0,
+      depletedCount: 0,
+    },
+  };
 
-  const byUser = new Map();
-  for (const row of rows) {
-    if (!row.user_id) continue;
-    const existing = byUser.get(row.user_id) || { userId: row.user_id, totalConsumed: 0, lastUsedAt: null, eventCount: 0 };
-    // consumption rows are recorded as negative amounts (balance going
-    // down) in this ledger - flip sign for a human-readable "credits used".
-    existing.totalConsumed += Math.abs(row.amount || 0);
-    existing.eventCount += 1;
-    if (!existing.lastUsedAt || new Date(row.created_at) > new Date(existing.lastUsedAt)) {
-      existing.lastUsedAt = row.created_at;
+  if (!supabase || !organizationId) return emptyResult;
+
+  try {
+    // 1. Parallel fetch: Org credit summary, organization members, credit accounts, and transactions
+    const [summaryRes, profilesRes, accountsRes, txsRes] = await Promise.all([
+      fetchOrgAICreditsSummary(organizationId),
+      supabase
+        .from("user_profiles")
+        .select("id, display_name, avatar_url, role, last_active_at, department")
+        .eq("organization_id", organizationId)
+        .order("display_name", { ascending: true }),
+      supabase
+        .from("ai_credit_accounts")
+        .select("id, owner_user_id, balance, lifetime_credited, lifetime_consumed, account_type")
+        .eq("organization_id", organizationId),
+      supabase
+        .from("ai_credit_transactions")
+        .select("id, user_id, amount, transaction_type, reference_type, created_at, balance_after")
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false })
+        .limit(2000),
+    ]);
+
+    const orgSummary = summaryRes || { balance: 0, lifetime_credited: 0, lifetime_consumed: 0 };
+    const orgPoolBalance = orgSummary.balance || 0;
+    const profiles = profilesRes.data || [];
+    const accounts = accountsRes.data || [];
+    const txs = txsRes.data || [];
+
+    // Index credit accounts by owner_user_id
+    const accountByUserId = new Map();
+    for (const a of accounts) {
+      if (a.owner_user_id) accountByUserId.set(a.owner_user_id, a);
     }
-    byUser.set(row.user_id, existing);
+
+    // Index transactions and usage by user_id
+    const usageByUserId = new Map();
+    for (const t of txs) {
+      if (!t.user_id) continue;
+      const existing = usageByUserId.get(t.user_id) || {
+        totalConsumed: 0,
+        totalTopUp: 0,
+        eventCount: 0,
+        lastAiUsedAt: null,
+        operations: {},
+        recentTransactions: [],
+      };
+      if (t.transaction_type === "consumption") {
+        existing.totalConsumed += Math.abs(t.amount || 0);
+        existing.eventCount += 1;
+        const op = t.reference_type || "ai_operation";
+        existing.operations[op] = (existing.operations[op] || 0) + 1;
+        if (!existing.lastAiUsedAt || new Date(t.created_at) > new Date(existing.lastAiUsedAt)) {
+          existing.lastAiUsedAt = t.created_at;
+        }
+      } else {
+        existing.totalTopUp += Math.abs(t.amount || 0);
+      }
+      if (existing.recentTransactions.length < 8) {
+        existing.recentTransactions.push(t);
+      }
+      usageByUserId.set(t.user_id, existing);
+    }
+
+    // Build unified user monitoring records
+    const users = profiles.map((p) => {
+      const acc = accountByUserId.get(p.id);
+      const usage = usageByUserId.get(p.id) || {
+        totalConsumed: 0,
+        totalTopUp: 0,
+        eventCount: 0,
+        lastAiUsedAt: null,
+        operations: {},
+        recentTransactions: [],
+      };
+
+      const personalBalance = acc?.balance ?? 0;
+      const effectiveBalance = personalBalance + orgPoolBalance;
+      const totalConsumed = acc?.lifetime_consumed || usage.totalConsumed;
+
+      let status = "ready";
+      if (effectiveBalance === 0) {
+        status = "depleted";
+      } else if (personalBalance <= 2 && orgPoolBalance === 0) {
+        status = "low";
+      } else if (usage.totalConsumed > 0) {
+        status = "active";
+      }
+
+      return {
+        userId: p.id,
+        displayName: p.display_name || "Unnamed Member",
+        avatarUrl: p.avatar_url,
+        role: p.role || "learner",
+        department: p.department || null,
+        lastActiveAt: p.last_active_at,
+        personalBalance,
+        orgPoolBalance,
+        effectiveBalance,
+        lifetimeCredited: acc?.lifetime_credited ?? personalBalance,
+        totalConsumed,
+        eventCount: usage.eventCount,
+        lastAiUsedAt: usage.lastAiUsedAt,
+        lastUsedAt: usage.lastAiUsedAt,
+        operations: usage.operations,
+        recentTransactions: usage.recentTransactions,
+        status,
+        profile: {
+          id: p.id,
+          display_name: p.display_name,
+          avatar_url: p.avatar_url,
+          role: p.role,
+        },
+      };
+    });
+
+    // Default sorting: Most consumed first, then highest available balance, then name
+    users.sort((a, b) => {
+      if (b.totalConsumed !== a.totalConsumed) return b.totalConsumed - a.totalConsumed;
+      if (b.effectiveBalance !== a.effectiveBalance) return b.effectiveBalance - a.effectiveBalance;
+      return (a.displayName || "").localeCompare(b.displayName || "");
+    });
+
+    const totalPersonalCredits = users.reduce((sum, u) => sum + u.personalBalance, 0);
+    const totalConsumed = users.reduce((sum, u) => sum + u.totalConsumed, 0);
+    const activeConsumersCount = users.filter((u) => u.totalConsumed > 0).length;
+    const zeroUsageCount = users.filter((u) => u.totalConsumed === 0).length;
+    const depletedCount = users.filter((u) => u.effectiveBalance === 0).length;
+
+    const stats = {
+      totalMembers: users.length,
+      orgPoolBalance,
+      totalPersonalCredits,
+      totalCombinedCredits: totalPersonalCredits + orgPoolBalance,
+      totalConsumed,
+      activeConsumersCount,
+      zeroUsageCount,
+      depletedCount,
+    };
+
+    return { orgSummary, users, stats };
+  } catch (err) {
+    console.error("fetchOrgAllUsersAICreditMonitoring error:", err);
+    return emptyResult;
   }
+}
 
-  const userIds = Array.from(byUser.keys());
-  if (userIds.length === 0) return [];
-  const { data: profiles, error: profileErr } = await supabase
-    .from("user_profiles")
-    .select("id, display_name, avatar_url")
-    .in("id", userIds);
-  if (profileErr) console.warn("Org AI credit usage profile fetch warning:", profileErr);
-  const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
-
-  return Array.from(byUser.values())
-    .map((u) => ({ ...u, profile: profileMap.get(u.userId) || null }))
-    .sort((a, b) => b.totalConsumed - a.totalConsumed);
+// Retained for backward compatibility: returns the users list with both consumption and remaining balance data
+export async function fetchOrgAICreditUsageByLearner(organizationId) {
+  const res = await fetchOrgAllUsersAICreditMonitoring(organizationId);
+  return res.users;
 }
 
 // Simple, flat per-credit admin rate - NOT yet wired to the configurable
