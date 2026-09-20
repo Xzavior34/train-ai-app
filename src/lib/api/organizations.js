@@ -322,7 +322,16 @@ export async function fetchOrgPaymentGatewaySettings(organizationId) {
       .eq("id", organizationId)
       .maybeSingle();
     if (error || !data) return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
-    return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS, ...(data.settings?.payment_gateways || {}) };
+    const gw = data.settings?.payment_gateways || {};
+    return {
+      ...DEFAULT_PAYMENT_GATEWAY_SETTINGS,
+      ...gw,
+      // For security, never expose raw secret key to client after save
+      paystack_secret_key: "",
+      stripe_secret_key: "",
+      has_paystack_secret: Boolean(gw.paystack_secret_key),
+      has_stripe_secret: Boolean(gw.stripe_secret_key),
+    };
   } catch (e) {
     console.warn("Payment gateway settings fetch warning:", e);
     return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
@@ -338,9 +347,29 @@ export async function updateOrgPaymentGatewaySettings(organizationId, patch) {
       .eq("id", organizationId)
       .maybeSingle();
     if (fetchError) throw fetchError;
+
+    const existingGw = existing?.settings?.payment_gateways || {};
+    const cleanPatch = { ...patch };
+
+    // If secret keys are empty in patch (i.e. not changed), preserve existing saved secret keys
+    if (!cleanPatch.paystack_secret_key || !cleanPatch.paystack_secret_key.trim()) {
+      if (existingGw.paystack_secret_key) {
+        cleanPatch.paystack_secret_key = existingGw.paystack_secret_key;
+      } else {
+        delete cleanPatch.paystack_secret_key;
+      }
+    }
+    if (!cleanPatch.stripe_secret_key || !cleanPatch.stripe_secret_key.trim()) {
+      if (existingGw.stripe_secret_key) {
+        cleanPatch.stripe_secret_key = existingGw.stripe_secret_key;
+      } else {
+        delete cleanPatch.stripe_secret_key;
+      }
+    }
+
     const nextSettings = {
       ...(existing?.settings || {}),
-      payment_gateways: { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS, ...(existing?.settings?.payment_gateways || {}), ...patch },
+      payment_gateways: { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS, ...existingGw, ...cleanPatch },
     };
     const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
     if (error) throw error;

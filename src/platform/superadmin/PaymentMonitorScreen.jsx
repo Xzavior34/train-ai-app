@@ -1056,6 +1056,15 @@ export function PaymentMonitorScreen({ orgSelector, currentUserId }) {
                     )}
                   </div>
 
+                  {!modalEditMode && (
+                    <div>
+                      <label className="ta-label" style={{ fontSize: 11 }}>Paystack Secret Key</label>
+                      <div style={{ fontSize: 12, color: selectedOrgGateway.has_paystack_secret ? "var(--success)" : "var(--text-3)", fontWeight: 600 }}>
+                        {selectedOrgGateway.has_paystack_secret ? "•••••••••••••••• (Configured & Hidden)" : "Not configured"}
+                      </div>
+                    </div>
+                  )}
+
                   {modalEditMode && (
                     <div>
                       <label className="ta-label" style={{ fontSize: 11 }}>Paystack Secret Key (Optional Override)</label>
@@ -1107,6 +1116,15 @@ export function PaymentMonitorScreen({ orgSelector, currentUserId }) {
                       <code style={{ fontSize: 12 }}>{selectedOrgGateway.stripe_publishable_key || "Not configured"}</code>
                     )}
                   </div>
+
+                  {!modalEditMode && (
+                    <div>
+                      <label className="ta-label" style={{ fontSize: 11 }}>Stripe Secret Key</label>
+                      <div style={{ fontSize: 12, color: selectedOrgGateway.has_stripe_secret ? "var(--success)" : "var(--text-3)", fontWeight: 600 }}>
+                        {selectedOrgGateway.has_stripe_secret ? "•••••••••••••••• (Configured & Hidden)" : "Not configured"}
+                      </div>
+                    </div>
+                  )}
 
                   {modalEditMode && (
                     <div>

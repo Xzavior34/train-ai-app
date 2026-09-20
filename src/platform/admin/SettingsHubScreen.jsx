@@ -140,18 +140,16 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const [payoutCurrency, setPayoutCurrency] = useState("NGN");
   const [savingPaymentSettings, setSavingPaymentSettings] = useState(false);
   const [gatewayTestResult, setGatewayTestResult] = useState(null);
-  const [showPaystackSecret, setShowPaystackSecret] = useState(false);
-  const [showStripeSecret, setShowStripeSecret] = useState(false);
 
   useEffect(() => {
     if (paymentSettingsQuery.data) {
       setPreferredGateway(paymentSettingsQuery.data.preferred_gateway || "default");
       setGatewayEnvironment(paymentSettingsQuery.data.environment || "test");
       setPaystackPublicKey(paymentSettingsQuery.data.paystack_public_key || "");
-      setPaystackSecretKey(paymentSettingsQuery.data.paystack_secret_key || "");
+      setPaystackSecretKey(""); // Never populate raw secret key in state once saved
       setPaystackSubaccount(paymentSettingsQuery.data.paystack_subaccount_code || "");
       setStripePublishableKey(paymentSettingsQuery.data.stripe_publishable_key || "");
-      setStripeSecretKey(paymentSettingsQuery.data.stripe_secret_key || "");
+      setStripeSecretKey(""); // Never populate raw secret key in state once saved
       setStripeAccountId(paymentSettingsQuery.data.stripe_account_id || "");
       setBankName(paymentSettingsQuery.data.bank_name || "");
       setAccountNumber(paymentSettingsQuery.data.account_number || "");
@@ -650,27 +648,23 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     <div>
                       <div className="ta-row ta-between">
                         <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secret Key</div>
-                        {paymentSettingsQuery.data?.paystack_secret_key && (
-                          <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600 }}>✓ Saved in database</span>
+                        {paymentSettingsQuery.data?.has_paystack_secret && (
+                          <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                            <Lock size={11} /> Configured &amp; Hidden
+                          </span>
                         )}
                       </div>
-                      <div style={{ position: "relative", marginTop: 4 }}>
-                        <input
-                          type={showPaystackSecret ? "text" : "password"}
-                          className="ta-input"
-                          style={{ width: "100%", paddingRight: 32 }}
-                          placeholder={gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx..."}
-                          value={paystackSecretKey}
-                          onChange={(e) => setPaystackSecretKey(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 2 }}
-                          onClick={() => setShowPaystackSecret(!showPaystackSecret)}
-                          title={showPaystackSecret ? "Hide secret key" : "Show secret key"}
-                        >
-                          {showPaystackSecret ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
+                      <input
+                        type="password"
+                        className="ta-input ta-mt4"
+                        style={{ width: "100%" }}
+                        placeholder={paymentSettingsQuery.data?.has_paystack_secret ? "•••••••••••••••••••••••••••• (Leave blank to keep saved)" : (gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx...")}
+                        value={paystackSecretKey}
+                        onChange={(e) => setPaystackSecretKey(e.target.value)}
+                        autoComplete="new-password"
+                      />
+                      <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 3 }}>
+                        For security reasons, secret keys cannot be viewed once saved.
                       </div>
                     </div>
                   </div>
@@ -731,27 +725,23 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     <div>
                       <div className="ta-row ta-between">
                         <div style={{ fontSize: 11.5, color: "var(--text-2)" }}>Secret Key</div>
-                        {paymentSettingsQuery.data?.stripe_secret_key && (
-                          <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600 }}>✓ Saved in database</span>
+                        {paymentSettingsQuery.data?.has_stripe_secret && (
+                          <span style={{ fontSize: 10.5, color: "var(--success)", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                            <Lock size={11} /> Configured &amp; Hidden
+                          </span>
                         )}
                       </div>
-                      <div style={{ position: "relative", marginTop: 4 }}>
-                        <input
-                          type={showStripeSecret ? "text" : "password"}
-                          className="ta-input"
-                          style={{ width: "100%", paddingRight: 32 }}
-                          placeholder={gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx..."}
-                          value={stripeSecretKey}
-                          onChange={(e) => setStripeSecretKey(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 2 }}
-                          onClick={() => setShowStripeSecret(!showStripeSecret)}
-                          title={showStripeSecret ? "Hide secret key" : "Show secret key"}
-                        >
-                          {showStripeSecret ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
+                      <input
+                        type="password"
+                        className="ta-input ta-mt4"
+                        style={{ width: "100%" }}
+                        placeholder={paymentSettingsQuery.data?.has_stripe_secret ? "•••••••••••••••••••••••••••• (Leave blank to keep saved)" : (gatewayEnvironment === "test" ? "sk_test_xxxxxxxx..." : "sk_live_xxxxxxxx...")}
+                        value={stripeSecretKey}
+                        onChange={(e) => setStripeSecretKey(e.target.value)}
+                        autoComplete="new-password"
+                      />
+                      <div style={{ fontSize: 10, color: "var(--text-3)", marginTop: 3 }}>
+                        For security reasons, secret keys cannot be viewed once saved.
                       </div>
                     </div>
                   </div>
