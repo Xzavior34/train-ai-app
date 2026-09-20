@@ -54,9 +54,18 @@ Deno.serve(async (req: Request) => {
     const email = inv.email.trim().toLowerCase();
     const orgName = inv.organizations?.name || "Train AI";
 
-    // 2. Check if user exists in auth.users
-    const { data: userList } = await adminClient.auth.admin.listUsers();
-    let targetUser = userList?.users?.find((u) => u.email?.toLowerCase() === email);
+    // 2. Check if user exists in auth.users (paginated search)
+    let targetUser: any = null;
+    let page = 1;
+    const perPage = 50;
+    while (!targetUser) {
+      const { data: userPage } = await adminClient.auth.admin.listUsers({ page, perPage });
+      const users = userPage?.users || [];
+      if (users.length === 0) break;
+      targetUser = users.find((u) => u.email?.toLowerCase() === email);
+      if (users.length < perPage) break;
+      page++;
+    }
     let isNewUser = false;
 
     if (!targetUser) {
@@ -89,14 +98,28 @@ Deno.serve(async (req: Request) => {
       });
 
       if (createErr || !createdUser?.user) {
-        return new Response(JSON.stringify({ error: createErr?.message || "Failed to create user account." }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        // If creation failed because user already exists (e.g., created concurrently), attempt final lookup
+        if (createErr?.message?.toLowerCase().includes("already") || createErr?.message?.toLowerCase().includes("exists")) {
+          let retryPage = 1;
+          while (!targetUser) {
+            const { data: retryPageData } = await adminClient.auth.admin.listUsers({ page: retryPage, perPage: 50 });
+            const retryUsers = retryPageData?.users || [];
+            if (retryUsers.length === 0) break;
+            targetUser = retryUsers.find((u) => u.email?.toLowerCase() === email);
+            if (retryUsers.length < 50) break;
+            retryPage++;
+          }
+        }
+        if (!targetUser) {
+          return new Response(JSON.stringify({ error: createErr?.message || "Failed to create user account." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        targetUser = createdUser.user;
+        isNewUser = true;
       }
-
-      targetUser = createdUser.user;
-      isNewUser = true;
     }
 
     const userId = targetUser.id;
