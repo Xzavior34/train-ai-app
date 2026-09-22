@@ -164,41 +164,41 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
               </p>
             </div>
 
-            <div className="ta-hero-actions" style={{ flexWrap: "wrap", gap: 10 }}>
+            <div className="ta-hero-actions credits-hero-metrics">
               {/* Org Pool Card */}
-              <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 10, backdropFilter: "blur(10px)", textAlign: "center", background: "rgba(15, 23, 42, 0.55)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Org Pool Balance</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#60A5FA" }}>
+              <div className="tai-hero-subcard credits-subcard">
+                <div className="credits-subcard-title">Org Pool Balance</div>
+                <div className="credits-subcard-value" style={{ color: "#60A5FA" }}>
                   {monitoringQuery.loading ? "..." : (orgSummary.balance ?? 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 9.5, opacity: 0.7 }}>Shared Pool Remaining</div>
+                <div className="credits-subcard-sub">Shared Pool Remaining</div>
               </div>
 
               {/* Total Personal Credits Left across workforce */}
-              <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 10, backdropFilter: "blur(10px)", textAlign: "center", background: "rgba(15, 23, 42, 0.55)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Workforce Personal Credits</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>
+              <div className="tai-hero-subcard credits-subcard">
+                <div className="credits-subcard-title">Workforce Personal</div>
+                <div className="credits-subcard-value" style={{ color: "#34D399" }}>
                   {monitoringQuery.loading ? "..." : (stats.totalPersonalCredits ?? 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 9.5, opacity: 0.7 }}>Held Across {stats.totalMembers} Users</div>
+                <div className="credits-subcard-sub">Held Across {stats.totalMembers} Users</div>
               </div>
 
               {/* Combined Total Available */}
-              <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 10, backdropFilter: "blur(10px)", textAlign: "center", background: "rgba(15, 23, 42, 0.55)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Total AI Credits Left</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#FBBF24" }}>
+              <div className="tai-hero-subcard credits-subcard">
+                <div className="credits-subcard-title">Total Credits Left</div>
+                <div className="credits-subcard-value" style={{ color: "#FBBF24" }}>
                   {monitoringQuery.loading ? "..." : (stats.totalCombinedCredits ?? 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 9.5, opacity: 0.7 }}>Pool + Personal Remaining</div>
+                <div className="credits-subcard-sub">Pool + Personal Remaining</div>
               </div>
 
               {/* Total Consumed */}
-              <div className="tai-hero-subcard" style={{ padding: "10px 16px", borderRadius: 10, backdropFilter: "blur(10px)", textAlign: "center", background: "rgba(15, 23, 42, 0.55)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Consumed</div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: "#F87171" }}>
+              <div className="tai-hero-subcard credits-subcard">
+                <div className="credits-subcard-title">Total Consumed</div>
+                <div className="credits-subcard-value" style={{ color: "#F87171" }}>
                   {monitoringQuery.loading ? "..." : (stats.totalConsumed ?? 0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 9.5, opacity: 0.7 }}>{stats.activeConsumersCount} Active Consumers</div>
+                <div className="credits-subcard-sub">{stats.activeConsumersCount} Active Consumers</div>
               </div>
             </div>
           </div>
@@ -332,15 +332,16 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
               </div>
             </div>
 
-            <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+            <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center", width: "100%", maxWidth: "100%" }}>
               {/* Search Bar */}
-              <div className="ta-search" style={{ width: 220 }}>
+              <div className="ta-search" style={{ flex: "1 1 180px", minWidth: 140, maxWidth: "100%" }}>
                 <Search size={14} color="var(--text-3)" />
                 <input
                   type="text"
                   placeholder="Search by name or role..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  style={{ width: "100%" }}
                 />
               </div>
 
@@ -351,7 +352,7 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
                 style={{
                   padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)",
                   background: "var(--surface)", color: "var(--text)", fontSize: 12, fontWeight: 700,
-                  cursor: "pointer", outline: "none"
+                  cursor: "pointer", outline: "none", flex: "1 1 auto"
                 }}
               >
                 <option value="all">All Roles</option>
@@ -368,7 +369,7 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
                 style={{
                   padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border)",
                   background: "var(--surface)", color: "var(--text)", fontSize: 12, fontWeight: 700,
-                  cursor: "pointer", outline: "none"
+                  cursor: "pointer", outline: "none", flex: "1 1 auto"
                 }}
               >
                 <option value="consumed_desc">Sort: Most Credits Used</option>
@@ -384,7 +385,7 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
                 className="ta-btn ta-btn-outline"
                 onClick={() => monitoringQuery.refetch?.()}
                 title="Refresh ledger"
-                style={{ padding: "6px 10px" }}
+                style={{ padding: "6px 10px", flexShrink: 0 }}
               >
                 <RefreshCw size={13} className={monitoringQuery.loading ? "ta-spin" : ""} />
               </button>

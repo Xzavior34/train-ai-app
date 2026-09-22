@@ -327,7 +327,7 @@ export const TOKENS = `
 
   @media (max-width: 899px) {
     .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
-    .ta-search { display: none; }
+    .ta-topbar .ta-search { display: none; }
     /* The sidebar is an off-canvas drawer here (translateX(-100%) unless
        .mobile-open), so content must never be pushed over for it. */
     .ta-main, .ta-sidebar.ta-sidebar-minimized + .ta-main { margin-left: 0; }
