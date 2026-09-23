@@ -4,16 +4,19 @@ import {
   Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
   Award, ShieldCheck, ChevronRight, Activity, BarChart3, Target, BookOpen, Download,
-  ExternalLink, Eye, Filter, Sparkles, PlusCircle, ArrowUpRight
+  ExternalLink, Eye, Filter, Sparkles, PlusCircle, ArrowUpRight, Lock, Zap
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { orgHasFeature, minTierLabelFor, getTierDisplayName } from "../../lib/tierFeatures.js";
+import { fetchOrgFeatures } from "../../lib/api/organizations.js";
 import { 
   fetchWorkforceIntelligence, 
   fetchOrgMembers, 
   fetchOrgLearnerProgressOverview, 
   assignComplianceCourse, 
   fetchLearnerAssessmentScoresForCourses,
-  createInAppNotificationsForUsers
+  createInAppNotificationsForUsers,
+  fetchOrganizationById
 } from "../../lib/api/platform.js";
 import { 
   fetchPublishedLearningPaths, 
@@ -22,8 +25,13 @@ import {
   enrollInCourse
 } from "../../lib/api/learner.js";
 
-export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId, setScreen, setSelectedCourseId }) {
+export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId, setScreen, setSelectedCourseId, isPlatformOwner = false }) {
   const showToast = useContext(ToastContext);
+  const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
+  const featuresQuery = useSupabaseQuery(async () => (orgId ? fetchOrgFeatures(orgId) : null), [orgId]);
+  const orgTier = orgQuery.data?.subscription_tier || "starter";
+  const canUseWorkforce = isPlatformOwner || (featuresQuery.data ? !!featuresQuery.data.ai_intelligence_advanced : orgHasFeature(orgTier, "ai_intelligence_advanced"));
+
   const [selectedLearnerId, setSelectedLearnerId] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [assignSuccess, setAssignSuccess] = useState(null);
@@ -259,6 +267,40 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId,
       setAssigningCourseId(null);
     }
   };
+
+  if (orgId && !orgQuery.loading && !canUseWorkforce) {
+    return (
+      <div className="ta-fade">
+        <TopBar 
+          title="Workforce Intelligence & Growth" 
+          sub="Readiness analytics, promotion criteria, skill profiles, and career progression." 
+          orgSelector={orgSelector} 
+        />
+        <div className="ta-content">
+          <div className="ta-card" style={{ textAlign: "center", padding: "48px 24px", maxWidth: 640, margin: "20px auto" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Lock size={26} color="var(--primary)" />
+            </div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)" }}>
+              Workforce Intelligence is an {minTierLabelFor("ai_intelligence_advanced")} Feature
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 8, lineHeight: 1.5 }}>
+              Your organization is currently on the <strong>{getTierDisplayName(orgTier)}</strong> plan. Upgrade to <strong>{minTierLabelFor("ai_intelligence_advanced")}</strong> to unlock enterprise skill gap radars, promotion criteria checklists, department readiness analytics, and automated upskilling paths.
+            </div>
+            <div style={{ marginTop: 20, display: "flex", justifyContent: "center", gap: 10 }}>
+              <button
+                className="ta-btn ta-btn-primary"
+                onClick={() => setScreen?.("settings")}
+                style={{ padding: "10px 20px", display: "inline-flex", alignItems: "center", gap: 8 }}
+              >
+                <Zap size={14} /> Upgrade to {minTierLabelFor("ai_intelligence_advanced")}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ta-fade">

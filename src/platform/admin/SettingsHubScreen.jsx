@@ -6,7 +6,8 @@ import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockDat
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization, fetchOrgBranding, upsertOrgBranding, fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
-import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice, fetchOrgPaymentGatewaySettings, updateOrgPaymentGatewaySettings, testOrgPaymentGatewayConnection } from "../../lib/api/organizations.js";
+import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice, fetchOrgPaymentGatewaySettings, updateOrgPaymentGatewaySettings, testOrgPaymentGatewayConnection, fetchOrgFeatures } from "../../lib/api/organizations.js";
+import { orgHasFeature, minTierLabelFor, getTierDisplayName } from "../../lib/tierFeatures.js";
 import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
 import { getUserLocationCurrency, formatCurrencyAmount } from "../../lib/locationCurrency.js";
 
@@ -27,6 +28,10 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const [showMfaSetup, setShowMfaSetup] = useState(false);
   const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
   const org = orgQuery.data;
+  const orgTier = org?.subscription_tier || "starter";
+  const isPlatformOwner = profileQuery?.data?.platform_role === "platform_owner" || profileQuery?.data?.role === "super_admin";
+  const featuresQuery = useSupabaseQuery(async () => (orgId ? fetchOrgFeatures(orgId, ["custom_branding"]) : null), [orgId]);
+  const canCustomBrand = isPlatformOwner || (featuresQuery.data ? !!featuresQuery.data.custom_branding : orgHasFeature(orgTier, "custom_branding"));
   const [payingTier, setPayingTier] = useState(null);
   const [showPlanModal, setShowPlanModal] = useState(false);
   const seatsSummaryQuery = useSupabaseQuery(async () => (orgId ? fetchOrgSeatsSummary(orgId) : { purchased: 0, used: 0, available: 0 }), [orgId]);
@@ -381,6 +386,10 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
 
   async function handleSaveBranding() {
     if (!orgId) return;
+    if (!canCustomBrand) {
+      showToast(`Custom branding requires the ${minTierLabelFor("custom_branding")} plan or higher.`);
+      return;
+    }
     setSavingBrand(true);
     try {
       await upsertOrgBranding(orgId, {
@@ -404,6 +413,10 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
 
   async function handleResetBranding() {
     if (!orgId) return;
+    if (!canCustomBrand) {
+      showToast(`Custom branding requires the ${minTierLabelFor("custom_branding")} plan or higher.`);
+      return;
+    }
     setSavingBrand(true);
     try {
       await upsertOrgBranding(orgId, { primaryColor: null, secondaryColor: null, logoUrl: null });
@@ -1079,121 +1092,144 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                   {brandingQuery.loading && <RefreshCw size={14} style={{ color: "var(--text-3)", animation: "spin 1s linear infinite" }} />}
                 </div>
 
-                {/* Primary Brand Color */}
-                <div>
-                  <div className="ta-label" style={{ marginBottom: 8 }}>Primary Brand Color</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-                    {PRESET_COLORS.map(p => (
-                      <button
-                        key={p.color}
-                        type="button"
-                        title={p.name}
-                        onClick={() => handleBrandPrimaryChange(p.color)}
-                        style={{
-                          width: 28, height: 28, borderRadius: "50%", background: p.color, cursor: "pointer",
-                          border: brandPrimary === p.color ? "2.5px solid #fff" : "2px solid transparent",
-                          boxShadow: brandPrimary === p.color ? `0 0 0 2px ${p.color}` : "0 1px 3px rgba(0,0,0,0.2)",
-                          display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
-                          transform: brandPrimary === p.color ? "scale(1.15)" : "scale(1)", transition: "transform .15s",
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <input
-                      type="color"
-                      value={/^#[0-9a-fA-F]{6}$/.test(brandPrimary) ? brandPrimary : "#1D4ED8"}
-                      onChange={e => handleBrandPrimaryChange(e.target.value)}
-                      style={{ width: 40, height: 36, padding: 2, border: "1px solid var(--border)", borderRadius: 7, cursor: "pointer", flexShrink: 0 }}
-                    />
-                    <input
-                      className="ta-input"
-                      style={{ flex: 1, fontFamily: "monospace", fontSize: 13 }}
-                      placeholder="#1D4ED8"
-                      value={brandPrimary}
-                      onChange={e => handleBrandPrimaryChange(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Secondary / Accent Color */}
-                <div style={{ marginTop: 14 }}>
-                  <div className="ta-label" style={{ marginBottom: 8 }}>Accent / Secondary Color</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <input
-                      type="color"
-                      value={/^#[0-9a-fA-F]{6}$/.test(brandSecondary) ? brandSecondary : "#0EA5E9"}
-                      onChange={e => handleBrandSecondaryChange(e.target.value)}
-                      style={{ width: 40, height: 36, padding: 2, border: "1px solid var(--border)", borderRadius: 7, cursor: "pointer", flexShrink: 0 }}
-                    />
-                    <input
-                      className="ta-input"
-                      style={{ flex: 1, fontFamily: "monospace", fontSize: 13 }}
-                      placeholder="#0EA5E9"
-                      value={brandSecondary}
-                      onChange={e => handleBrandSecondaryChange(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Logo URL */}
-                <div style={{ marginTop: 14 }}>
-                  <div className="ta-label" style={{ marginBottom: 6 }}>Organization Logo URL <span style={{ fontWeight: 400, fontSize: 11, color: "var(--text-3)" }}>(optional — paste a public image URL)</span></div>
-                  <input
-                    className="ta-input"
-                    style={{ width: "100%", fontSize: 12.5 }}
-                    placeholder="https://your-org.com/logo.png"
-                    value={brandLogo}
-                    onChange={e => setBrandLogo(e.target.value)}
-                  />
-                  {brandLogo && (
-                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
-                      <img
-                        src={brandLogo}
-                        alt="Logo preview"
-                        style={{ width: 48, height: 48, borderRadius: 8, objectFit: "contain", background: "var(--surface-2)", border: "1px solid var(--border)", padding: 4 }}
-                        onError={e => { e.target.style.display = "none"; }}
-                      />
-                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>Logo preview</span>
+                {!canCustomBrand ? (
+                  <div style={{ textAlign: "center", padding: "32px 16px" }}>
+                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                      <Lock size={22} color="var(--primary)" />
                     </div>
-                  )}
-                </div>
-
-                {/* Live Preview strip */}
-                <div style={{ marginTop: 16, background: "var(--surface-2)", borderRadius: 10, padding: "12px 14px", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 7, background: brandPrimary, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 14, overflow: "hidden", flexShrink: 0 }}>
-                      {brandLogo ? <img src={brandLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} /> : (org?.name?.charAt(0) || "T")}
+                    <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
+                      Custom Branding is an {minTierLabelFor("custom_branding")} Feature
                     </div>
+                    <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 8, maxWidth: 440, margin: "8px auto 18px", lineHeight: 1.5 }}>
+                      Organizations on the <strong>{getTierDisplayName(orgTier)}</strong> plan use default Train AI colors and theme. Upgrade to <strong>{minTierLabelFor("custom_branding")}</strong> or <strong>Enterprise</strong> to customize brand colors, upload company logos, and personalize the interface for all learners.
+                    </div>
+                    <button
+                      className="ta-btn ta-btn-primary"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", fontSize: 13 }}
+                      onClick={() => setShowPlanModal(true)}
+                    >
+                      <Sparkles size={14} /> Upgrade to {minTierLabelFor("custom_branding")}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Primary Brand Color */}
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 12.5 }}>{org?.name || "Your Org"}</div>
-                      <div style={{ fontSize: 10, color: "var(--text-3)" }}>Live preview</div>
+                      <div className="ta-label" style={{ marginBottom: 8 }}>Primary Brand Color</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+                        {PRESET_COLORS.map(p => (
+                          <button
+                            key={p.color}
+                            type="button"
+                            title={p.name}
+                            onClick={() => handleBrandPrimaryChange(p.color)}
+                            style={{
+                              width: 28, height: 28, borderRadius: "50%", background: p.color, cursor: "pointer",
+                              border: brandPrimary === p.color ? "2.5px solid #fff" : "2px solid transparent",
+                              boxShadow: brandPrimary === p.color ? `0 0 0 2px ${p.color}` : "0 1px 3px rgba(0,0,0,0.2)",
+                              display: "flex", alignItems: "center", justifyContent: "center", color: "#fff",
+                              transform: brandPrimary === p.color ? "scale(1.15)" : "scale(1)", transition: "transform .15s",
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input
+                          type="color"
+                          value={/^#[0-9a-fA-F]{6}$/.test(brandPrimary) ? brandPrimary : "#1D4ED8"}
+                          onChange={e => handleBrandPrimaryChange(e.target.value)}
+                          style={{ width: 40, height: 36, padding: 2, border: "1px solid var(--border)", borderRadius: 7, cursor: "pointer", flexShrink: 0 }}
+                        />
+                        <input
+                          className="ta-input"
+                          style={{ flex: 1, fontFamily: "monospace", fontSize: 13 }}
+                          placeholder="#1D4ED8"
+                          value={brandPrimary}
+                          onChange={e => handleBrandPrimaryChange(e.target.value)}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <button style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecondary})`, color: "#fff", border: "none", padding: "5px 12px", borderRadius: 7, fontSize: 11.5, fontWeight: 700, cursor: "default" }}>
-                    Dashboard →
-                  </button>
-                </div>
 
-                {/* Save / Reset */}
-                <div className="ta-row ta-gap8 ta-mt16">
-                  <button
-                    className="ta-btn ta-btn-primary"
-                    style={{ flex: 2, height: 36, fontSize: 13, gap: 6, display: "flex", alignItems: "center", justifyContent: "center" }}
-                    onClick={handleSaveBranding}
-                    disabled={savingBrand}
-                  >
-                    {savingBrand ? <><RefreshCw size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</> : <><Save size={13} /> Save Branding</>}
-                  </button>
-                  <button
-                    className="ta-btn ta-btn-outline"
-                    style={{ flex: 1, height: 36, fontSize: 12 }}
-                    onClick={handleResetBranding}
-                    disabled={savingBrand}
-                  >
-                    Reset
-                  </button>
-                </div>
+                    {/* Secondary / Accent Color */}
+                    <div style={{ marginTop: 14 }}>
+                      <div className="ta-label" style={{ marginBottom: 8 }}>Accent / Secondary Color</div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input
+                          type="color"
+                          value={/^#[0-9a-fA-F]{6}$/.test(brandSecondary) ? brandSecondary : "#0EA5E9"}
+                          onChange={e => handleBrandSecondaryChange(e.target.value)}
+                          style={{ width: 40, height: 36, padding: 2, border: "1px solid var(--border)", borderRadius: 7, cursor: "pointer", flexShrink: 0 }}
+                        />
+                        <input
+                          className="ta-input"
+                          style={{ flex: 1, fontFamily: "monospace", fontSize: 13 }}
+                          placeholder="#0EA5E9"
+                          value={brandSecondary}
+                          onChange={e => handleBrandSecondaryChange(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Logo URL */}
+                    <div style={{ marginTop: 14 }}>
+                      <div className="ta-label" style={{ marginBottom: 6 }}>Organization Logo URL <span style={{ fontWeight: 400, fontSize: 11, color: "var(--text-3)" }}>(optional — paste a public image URL)</span></div>
+                      <input
+                        className="ta-input"
+                        style={{ width: "100%", fontSize: 12.5 }}
+                        placeholder="https://your-org.com/logo.png"
+                        value={brandLogo}
+                        onChange={e => setBrandLogo(e.target.value)}
+                      />
+                      {brandLogo && (
+                        <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                          <img
+                            src={brandLogo}
+                            alt="Logo preview"
+                            style={{ width: 48, height: 48, borderRadius: 8, objectFit: "contain", background: "var(--surface-2)", border: "1px solid var(--border)", padding: 4 }}
+                            onError={e => { e.target.style.display = "none"; }}
+                          />
+                          <span style={{ fontSize: 11, color: "var(--text-3)" }}>Logo preview</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live Preview strip */}
+                    <div style={{ marginTop: 16, background: "var(--surface-2)", borderRadius: 10, padding: "12px 14px", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: 7, background: brandPrimary, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 14, overflow: "hidden", flexShrink: 0 }}>
+                          {brandLogo ? <img src={brandLogo} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} /> : (org?.name?.charAt(0) || "T")}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 12.5 }}>{org?.name || "Your Org"}</div>
+                          <div style={{ fontSize: 10, color: "var(--text-3)" }}>Live preview</div>
+                        </div>
+                      </div>
+                      <button style={{ background: `linear-gradient(135deg, ${brandPrimary}, ${brandSecondary})`, color: "#fff", border: "none", padding: "5px 12px", borderRadius: 7, fontSize: 11.5, fontWeight: 700, cursor: "default" }}>
+                        Dashboard →
+                      </button>
+                    </div>
+
+                    {/* Save / Reset */}
+                    <div className="ta-row ta-gap8 ta-mt16">
+                      <button
+                        className="ta-btn ta-btn-primary"
+                        style={{ flex: 2, height: 36, fontSize: 13, gap: 6, display: "flex", alignItems: "center", justifyContent: "center" }}
+                        onClick={handleSaveBranding}
+                        disabled={savingBrand}
+                      >
+                        {savingBrand ? <><RefreshCw size={13} style={{ animation: "spin 1s linear infinite" }} /> Saving…</> : <><Save size={13} /> Save Branding</>}
+                      </button>
+                      <button
+                        className="ta-btn ta-btn-outline"
+                        style={{ flex: 1, height: 36, fontSize: 12 }}
+                        onClick={handleResetBranding}
+                        disabled={savingBrand}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="ta-card">

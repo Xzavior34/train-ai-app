@@ -188,8 +188,8 @@ export function PaymentSettingsScreen({ orgId, orgSelector, setScreen, userEmail
         <div className="ta-card" style={{ borderRadius: 12, border: "1px solid var(--border)", padding: 20, background: "var(--surface)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Sparkles size={18} color="var(--primary)" />
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
+                <CreditCard size={18} color="var(--primary)" />
               </div>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Step-by-Step Setup Guide &amp; Webhooks</h2>

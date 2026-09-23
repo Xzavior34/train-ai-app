@@ -12,22 +12,30 @@
 // respects platform-owner overrides. Keep this map in sync with
 // tier_default_feature() in the migration if either changes - that SQL
 // function is authoritative, this is a mirror for the fallback path only.
-const TIER_RANK = { free: 0, starter: 1, growth: 2, enterprise: 3 };
+const TIER_RANK = {
+  free: 0,
+  starter: 1,
+  basic: 1,
+  growth: 2,
+  intermediate: 2,
+  enterprise: 3,
+  advanced: 3,
+};
 
 const FEATURE_MIN_TIER = {
   manager_view: "growth",
   ai_intelligence_advanced: "growth",
   analytics_export: "growth",
   multi_department_breakdown: "growth",
+  custom_branding: "growth",
   sso: "enterprise",
   api_integrations: "enterprise",
-  integrations: "enterprise", // alias kept for the two call sites already using this key
-  custom_branding: "enterprise",
+  integrations: "enterprise", // alias kept for existing call sites
 };
 
 export function tierMeetsMinimum(tier, minTier) {
-  const rank = TIER_RANK[tier] ?? 0;
-  const minRank = TIER_RANK[minTier] ?? 0;
+  const rank = TIER_RANK[tier?.toLowerCase()] ?? 0;
+  const minRank = TIER_RANK[minTier?.toLowerCase()] ?? 0;
   return rank >= minRank;
 }
 
@@ -45,5 +53,14 @@ export function orgHasFeature(tier, feature) {
 export function minTierLabelFor(feature) {
   const minTier = FEATURE_MIN_TIER[feature];
   if (!minTier) return null;
-  return minTier[0].toUpperCase() + minTier.slice(1);
+  if (minTier === "growth") return "Intermediate";
+  if (minTier === "enterprise") return "Advanced";
+  return "Basic";
+}
+
+export function getTierDisplayName(tier = "starter") {
+  const t = (tier || "starter").toLowerCase();
+  if (t === "growth" || t === "intermediate") return "Intermediate";
+  if (t === "enterprise" || t === "advanced") return "Advanced";
+  return "Basic";
 }

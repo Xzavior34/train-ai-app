@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { TopBar, StatCard, Avatar, Tag, ProgressBar, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
-import { Users, Target, AlertTriangle, Gauge, PieChart, StickyNote, Download, CheckCircle2 } from "lucide-react";
+import { Users, Target, AlertTriangle, Gauge, PieChart, StickyNote, Download, CheckCircle2, Lock, Zap } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail, fetchNotesForDepartment, addDepartmentFeedbackNote, fetchManagerTeamCohorts, fetchManagerTeamCompliance } from "../../lib/api/platform.js";
+import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail, fetchNotesForDepartment, addDepartmentFeedbackNote, fetchManagerTeamCohorts, fetchManagerTeamCompliance, fetchOrganizationById } from "../../lib/api/platform.js";
+import { orgHasFeature, minTierLabelFor, getTierDisplayName } from "../../lib/tierFeatures.js";
+import { fetchOrgFeatures } from "../../lib/api/organizations.js";
 
 // "My Team" is scoped to this manager's real direct reports, not the whole
 // org - user_profiles.manager_id (added alongside the is_manager_of() RLS
@@ -12,17 +14,27 @@ import { fetchDirectReports, fetchTeamSkillSnapshot, fetchManagerSkillGapsDetail
 // showing org-wide data. If a manager has no reports linked yet (manager_id
 // is set by an admin on the report's own profile - there's no self-serve
 // way for a manager to claim reports from here), the table just says so.
-export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelector }) {
+export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelector, isPlatformOwner = false, setScreen }) {
   const showToast = React.useContext(ToastContext);
-  const reportsQuery = useSupabaseQuery(async () => (userId ? fetchDirectReports(userId, orgId) : []), [userId, orgId]);
+  const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
+  const featuresQuery = useSupabaseQuery(async () => (orgId ? fetchOrgFeatures(orgId, ["manager_view", "analytics_export"]) : null), [orgId]);
+  const orgTier = orgQuery.data?.subscription_tier || "starter";
+  const canUseManager = isPlatformOwner || (featuresQuery.data ? !!featuresQuery.data.manager_view : orgHasFeature(orgTier, "manager_view"));
+  const canExport = isPlatformOwner || (featuresQuery.data ? !!featuresQuery.data.analytics_export : orgHasFeature(orgTier, "analytics_export"));
+
+  const reportsQuery = useSupabaseQuery(async () => (userId && canUseManager ? fetchDirectReports(userId, orgId) : []), [userId, orgId, canUseManager]);
   const reports = reportsQuery.data || [];
-  const skillSnapshotQuery = useSupabaseQuery(async () => (userId ? fetchTeamSkillSnapshot(userId, orgId) : []), [userId, orgId]);
-  const skillGapsDetailQuery = useSupabaseQuery(async () => (userId ? fetchManagerSkillGapsDetail(userId, orgId) : []), [userId, orgId]);
-  const teamCohortsQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCohorts(userId, orgId) : []), [userId, orgId]);
-  const teamComplianceQuery = useSupabaseQuery(async () => (userId ? fetchManagerTeamCompliance(userId, orgId) : []), [userId, orgId]);
+  const skillSnapshotQuery = useSupabaseQuery(async () => (userId && canUseManager ? fetchTeamSkillSnapshot(userId, orgId) : []), [userId, orgId, canUseManager]);
+  const skillGapsDetailQuery = useSupabaseQuery(async () => (userId && canUseManager ? fetchManagerSkillGapsDetail(userId, orgId) : []), [userId, orgId, canUseManager]);
+  const teamCohortsQuery = useSupabaseQuery(async () => (userId && canUseManager ? fetchManagerTeamCohorts(userId, orgId) : []), [userId, orgId, canUseManager]);
+  const teamComplianceQuery = useSupabaseQuery(async () => (userId && canUseManager ? fetchManagerTeamCompliance(userId, orgId) : []), [userId, orgId, canUseManager]);
   const [expandedReportId, setExpandedReportId] = useState(null);
 
   function handleDownloadReport() {
+    if (!canExport) {
+      showToast(`Data download requires the ${minTierLabelFor("analytics_export")} plan or higher.`);
+      return;
+    }
     const rows = (reportsQuery.data || []).map((r) => ({
       name: r.name, email: r.email, enrolled: r.enrolled, completed: r.completed, overdue: r.overdue, lastActive: r.lastActive,
     }));
@@ -63,6 +75,42 @@ export function ManagerDashboardScreen({ userId, profileQuery, orgId, orgSelecto
     { label: "Overdue compliance items", value: reportsQuery.loading ? "..." : totalOverdue, icon: AlertTriangle },
     { label: "Team readiness score", value: readinessScore != null ? `${readinessScore}%` : (reports.length ? `${avgCompletion}%` : "N/A"), icon: Gauge },
   ];
+
+  if (orgId && !orgQuery.loading && !canUseManager) {
+    return (
+      <div className="ta-fade">
+        <TopBar
+          title={`My Team${profileQuery?.data?.display_name ? `: ${profileQuery.data.display_name}` : ""}`}
+          sub="Progress and compliance for your direct reports"
+          orgSelector={orgSelector}
+        />
+        <div className="ta-content">
+          <div className="ta-card" style={{ textAlign: "center", padding: "48px 24px", maxWidth: 640, margin: "20px auto" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(59, 130, 246, 0.12)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Lock size={26} color="var(--primary)" />
+            </div>
+            <div style={{ fontWeight: 800, fontSize: 18, color: "var(--text)" }}>
+              Manager View is an {minTierLabelFor("manager_view")} Feature
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 8, lineHeight: 1.5 }}>
+              Your organization is currently on the <strong>{getTierDisplayName(orgTier)}</strong> plan. Upgrade to <strong>{minTierLabelFor("manager_view")}</strong> or higher to unlock manager oversight, direct report tracking, team readiness scoring, and departmental analytics.
+            </div>
+            {setScreen && (
+              <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
+                <button
+                  className="ta-btn ta-btn-primary"
+                  onClick={() => setScreen("settings")}
+                  style={{ padding: "10px 20px", display: "inline-flex", alignItems: "center", gap: 8 }}
+                >
+                  <Zap size={14} /> Upgrade to {minTierLabelFor("manager_view")}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ta-fade">

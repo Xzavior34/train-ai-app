@@ -352,8 +352,8 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
 
               {workspace === "manager" && (
                 <>
-                  {screen === "dashboard" && <ManagerDashboardScreen userId={session?.user?.id} profileQuery={profileQuery} orgSelector={orgSelector} orgId={effectiveOrgId} />}
-                  {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} />}
+                  {screen === "dashboard" && <ManagerDashboardScreen userId={session?.user?.id} profileQuery={profileQuery} orgSelector={orgSelector} orgId={effectiveOrgId} isPlatformOwner={userRoles.includes("super_admin")} setScreen={setScreen} />}
+                  {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} isPlatformOwner={userRoles.includes("super_admin")} />}
                 </>
               )}
             </div>

@@ -10,7 +10,10 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchOrgAllUsersAICreditMonitoring,
   startOrgCreditsPurchasePayment, orgCreditUnitPrice,
+  fetchOrgFeatures,
 } from "../../lib/api/organizations.js";
+import { fetchOrganizationById } from "../../lib/api/platform.js";
+import { orgHasFeature, minTierLabelFor } from "../../lib/tierFeatures.js";
 import { getUserLocationCurrency } from "../../lib/locationCurrency.js";
 
 const OPERATION_LABELS = {
@@ -50,6 +53,11 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
   const users = monitoring.users || [];
   const stats = monitoring.stats;
   const orgSummary = monitoring.orgSummary;
+
+  const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
+  const featuresQuery = useSupabaseQuery(async () => (orgId ? fetchOrgFeatures(orgId, ["analytics_export"]) : null), [orgId]);
+  const orgTier = orgQuery.data?.subscription_tier || "starter";
+  const canExport = featuresQuery.data ? !!featuresQuery.data.analytics_export : orgHasFeature(orgTier, "analytics_export");
 
   // Local state for UI controls
   const userLoc = useMemo(() => getUserLocationCurrency(), []);
@@ -120,6 +128,10 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
 
   // Export filtered rows to CSV
   function handleExportCsv() {
+    if (!canExport) {
+      showToast?.(`Data downloads require the ${minTierLabelFor("analytics_export")} plan or higher.`);
+      return;
+    }
     if (!filteredUsers.length) {
       showToast?.("No member rows to export.");
       return;
@@ -155,7 +167,7 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(59, 130, 246, 0.2)", padding: "4px 10px", borderRadius: 999, fontSize: 11, fontWeight: 700, color: "#93C5FD", marginBottom: 8 }}>
-                <Sparkles size={12} />
+                <ShieldCheck size={12} />
                 <span>Workforce AI Governance</span>
               </div>
               <h1 className="ta-hero-title">Workforce AI Credits &amp; Balances</h1>

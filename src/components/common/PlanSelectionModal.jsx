@@ -153,7 +153,7 @@ export function PlanSelectionModal({
               >
                 {plan.popular && (
                   <div style={modalStyles.popularBadge}>
-                    <Sparkles size={12} style={{ marginRight: 4 }} /> MOST POPULAR
+                    ★ MOST POPULAR
                   </div>
                 )}
 

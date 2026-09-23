@@ -2,11 +2,17 @@ import React, { useContext, useState } from "react";
 import { TopBar, Tag, ToastContext, ProgressBar, StatCard, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import { ShieldCheck, RefreshCw, Download, AlertTriangle, CheckCircle2, Clock, Plus, X, Search, Trash2, Award, FileCheck } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail, fetchCohortsWithStats, fetchCourseEnrolledLearners, fetchCertificateRequests, approveCertificateRequest } from "../../lib/api/platform.js";
+import { fetchComplianceAssignments, refreshComplianceStatus, assignComplianceCourse, removeComplianceAssignment, fetchUsersInOrg, fetchCourses, fetchOrgLearnerProgressOverview, fetchTopCourses, fetchOrgSkillGapsDetail, fetchCohortsWithStats, fetchCourseEnrolledLearners, fetchCertificateRequests, approveCertificateRequest, fetchOrganizationById } from "../../lib/api/platform.js";
+import { orgHasFeature, minTierLabelFor } from "../../lib/tierFeatures.js";
+import { fetchOrgFeatures } from "../../lib/api/organizations.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 
 export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
+  const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
+  const featuresQuery = useSupabaseQuery(async () => (orgId ? fetchOrgFeatures(orgId, ["analytics_export"]) : null), [orgId]);
+  const orgTier = orgQuery.data?.subscription_tier || "starter";
+  const canExport = featuresQuery.data ? !!featuresQuery.data.analytics_export : orgHasFeature(orgTier, "analytics_export");
   const [filter, setFilter] = useState("all");
   const [mainTab, setMainTab] = useState("progress");
 
@@ -117,6 +123,14 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
   });
 
   function handleExportCompliance() {
+    if (!canExport) {
+      showToast(`Data downloads & audit reports require the ${minTierLabelFor("analytics_export")} plan or higher.`);
+      return;
+    }
+    if (!assignments.length) {
+      showToast("No compliance records to export.");
+      return;
+    }
     exportRowsAsCsv("compliance-audit-report.csv", assignments.map(a => ({
       courseTitle: a.title,
       department: a.department,

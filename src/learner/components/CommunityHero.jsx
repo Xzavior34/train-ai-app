@@ -50,7 +50,7 @@ export default function CommunityHero({ user, onCreatePost }) {
 
         <div className="tai-hero-subcard" style={{ textAlign: 'right', flexShrink: 0, padding: '10px 16px', borderRadius: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Sparkles size={14} color="var(--primary)" />
+            <Users size={14} color="var(--primary)" />
             <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)' }}>Train AI Community</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 600, marginTop: 2 }}>Share · Discuss · Learn</div>
