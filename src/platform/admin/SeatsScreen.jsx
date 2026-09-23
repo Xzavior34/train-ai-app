@@ -87,10 +87,20 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
   const [grantReason, setGrantReason] = useState("");
   const [grantSubmitting, setGrantSubmitting] = useState(false);
 
+  const orgTier = (org?.subscription_tier || "starter").toLowerCase();
+  const isBasicTier = orgTier === "starter" || orgTier === "basic";
+  const isIntermediateTier = orgTier === "growth" || orgTier === "intermediate";
+  const maxTierSeats = isBasicTier ? 50 : isIntermediateTier ? 150 : Infinity;
+
   async function handleBuy() {
     const qty = Number(quantity);
     if (!qty || qty <= 0) { showToast("Enter how many seats you need."); return; }
     if (!userEmail) { showToast("No billing email on your account - add one in Settings first."); return; }
+    if ((seats.purchased + qty) > maxTierSeats) {
+      const tierName = isIntermediateTier ? "Intermediate" : "Basic";
+      showToast(`The ${tierName} plan allows a maximum of ${maxTierSeats} seats (you have ${seats.purchased} purchased). Upgrade to expand your capacity.`);
+      return;
+    }
     setStarting(true);
     try {
       const res = await startSeatPurchasePayment({ orgId, seats: qty, email: userEmail, provider });
@@ -359,6 +369,11 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
                 Seats are added to your organization once the payment provider confirms the charge. Nothing is
                 granted before that confirmation lands.
               </div>
+              {maxTierSeats !== Infinity && (
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 6, background: "var(--surface-2)", padding: "6px 10px", borderRadius: 8, display: "inline-block" }}>
+                  Plan maximum: <strong>{maxTierSeats} seats</strong> ({seats.purchased} currently purchased).
+                </div>
+              )}
 
               <div className="ta-label ta-mt16">How many seats</div>
               <div className="ta-row ta-gap8 ta-mt6" style={{ flexWrap: "wrap" }}>
@@ -589,7 +604,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
 
               <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
                 <div className="ta-row ta-gap6" style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>
-                  <Sparkles size={13} color="var(--text-3)" /> Total Requests
+                  <Receipt size={13} color="var(--text-3)" /> Total Requests
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4 }}>
                   {creditRequestsQuery.loading ? "..." : creditRequests.length}
