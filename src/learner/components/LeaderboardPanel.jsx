@@ -392,7 +392,7 @@ export function LeaderboardPanel({
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>3rd Place Achiever</div>
               </div>
-              <div style={{ fontWeight: 900, fontSize: 14, color: "var(--primary)", background: "var(--primary-tint)", padding: "3px 10px", borderRadius: 999 }}>
+              <div style={{ fontWeight: 900, fontSize: 14, color: "#EA580C", background: "rgba(234, 88, 12, 0.16)", border: "1px solid rgba(234, 88, 12, 0.35)", padding: "4px 12px", borderRadius: 999 }}>
                 {third?.points?.toLocaleString() || 0} pts
               </div>
             </div>

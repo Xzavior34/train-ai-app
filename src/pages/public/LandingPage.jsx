@@ -6,7 +6,7 @@ import {
   Zap, Flame, Menu, Check,
   Activity, Gauge, Database, Home, Mail, Download, Wifi,
   Accessibility, Bell, Facebook, Twitter, Instagram, Linkedin, Search,
-  BarChart2, Sparkles, Armchair, HelpCircle, Palette
+  BarChart2, Star, Armchair, HelpCircle, Palette
 } from "lucide-react";
 import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
@@ -220,6 +220,10 @@ export default function LandingPage({ onNavigate }) {
 
   function handleNav(target) {
     setMobileMenuOpen(false);
+    if (target === "home") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     if (["about", "privacy", "terms", "cookie"].includes(target)) {
       setActiveModal(target);
       return;
@@ -1415,7 +1419,7 @@ export default function LandingPage({ onNavigate }) {
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px", textAlign: "center" }}>
           
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(37, 99, 235, 0.08)", border: "1px solid rgba(37, 99, 235, 0.2)", padding: "4px 12px", borderRadius: 20, marginBottom: 12 }}>
-            <Sparkles size={13} color="var(--primary, #2563EB)" />
+            <Zap size={13} color="var(--primary, #2563EB)" />
             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary, #2563EB)", letterSpacing: ".05em" }}>ORGANIZATION PLANS &amp; LICENSING</span>
           </div>
 
@@ -1549,7 +1553,7 @@ export default function LandingPage({ onNavigate }) {
               }}
             >
               <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg, #2563EB, #1D4ED8)", color: "#FFFFFF", padding: "3px 14px", borderRadius: 20, fontSize: 10.5, fontWeight: 800, letterSpacing: ".05em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}>
-                <Sparkles size={12} /> Most Popular
+                <Star size={12} /> Most Popular
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>

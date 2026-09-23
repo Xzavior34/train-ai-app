@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
-import { fetchMentorProfile, fetchCohortSessions, fetchMyManagedStudyGroups } from "../lib/api/schemaHelper.js";
+import {
+  fetchMentorProfile, fetchCohortSessions, fetchMyManagedStudyGroups,
+  fetchStudyGroups, fetchCommunityPosts, createCommunityPost, addPostComment,
+  togglePostReaction, deleteCommunityPost, createStudyGroup, joinStudyGroup,
+  leaveStudyGroup, fetchStudyGroupMembers, fetchStudyGroupMessages, fetchCommunityPeople
+} from "../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../lib/api/platform.js";
 import { fetchLeaderboard } from "../lib/api/learner.js";
 import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext } from "./components/PlatformUI.jsx";
@@ -40,6 +45,7 @@ import { CheckCircle2 } from "lucide-react";
 import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
 import { CommunityScreen } from "../learner/screens/CommunityScreen.jsx";
+import { StudyGroupScreen } from "../learner/screens/StudyGroupScreen.jsx";
 import { getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 import { initDynamicBranding, resetDynamicBranding } from "../lib/brandingHelper.js";
 
@@ -104,11 +110,19 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   const mentorCohortSessionsQuery = useSupabaseQuery(async () => (
     mentorFirstCohort?.id ? fetchCohortSessions(mentorFirstCohort.id) : []
   ), [mentorFirstCohort?.id]);
+  const allStudyGroupsQuery = useSupabaseQuery(async () => (
+    fetchStudyGroups(effectiveOrgId)
+  ), [effectiveOrgId]);
   const mentorStudyGroupsQuery = useSupabaseQuery(async () => (
-    mentorId ? fetchMyManagedStudyGroups(mentorId) : []
-  ), [mentorId]);
+    fetchMyManagedStudyGroups(session?.user?.id, effectiveOrgId)
+  ), [session?.user?.id, effectiveOrgId]);
+  const instructorPostsQuery = useSupabaseQuery(async () => (
+    fetchCommunityPosts(null, effectiveOrgId)
+  ), [effectiveOrgId]);
+  const communityPeopleQuery = useSupabaseQuery(async () => (
+    fetchCommunityPeople(session?.user?.id, 50, effectiveOrgId)
+  ), [session?.user?.id, effectiveOrgId]);
   const mentorLeaderboardQuery = useSupabaseQuery(async () => {
-    if (!effectiveOrgId) return [];
     return fetchLeaderboard(50, effectiveOrgId);
   }, [effectiveOrgId]);
 
@@ -127,6 +141,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   const [selectedCohortId, setSelectedCohortId] = useState(null);
   const [selectedLearnerForChat, setSelectedLearnerForChat] = useState(null);
   const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [screenParams, setScreenParams] = useState({});
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
   const screen = screenByWorkspace[workspace] || "dashboard";
@@ -134,7 +149,17 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
     setScreenByWorkspace(prev => ({ ...prev, [workspace]: s }));
   }
 
-  function navigateToScreen(targetScreen, targetWs = null, extraState = {}) {
+  function navigateToScreen(targetScreen, targetWsOrParams = null, extraState = {}) {
+    let targetWs = null;
+    let params = {};
+    if (typeof targetWsOrParams === "string") {
+      targetWs = targetWsOrParams;
+      params = extraState || {};
+    } else if (targetWsOrParams && typeof targetWsOrParams === "object") {
+      params = targetWsOrParams;
+    }
+    setScreenParams(params);
+
     // Normalize mentor screen keys to match render block expectations
     const MENTOR_KEY_MAP = {
       "mentor-dashboard": "dashboard",
@@ -145,16 +170,35 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
     const normalizedScreen = MENTOR_KEY_MAP[targetScreen] || targetScreen;
     let ws = targetWs;
     if (!ws) {
-      if (["mentor-dashboard", "schedule", "mentees", "messages", "learnerfeed", "mentor-analytics", "administrative", "mentor-settings"].includes(targetScreen)) {
+      if (workspace === "mentor" && [
+        "dashboard", "mentor-dashboard", "schedule", "mentees", "messages",
+        "learnerfeed", "mentor-analytics", "analytics", "administrative", "admin",
+        "mentor-settings", "settings", "studygroups", "studyGroup", "community",
+        "cohorts", "mentor-cohort-detail", "earnings", "assessments", "content", "leaderboard"
+      ].includes(targetScreen)) {
         ws = "mentor";
-      } else if (["manager-overview"].includes(targetScreen)) {
+      } else if (workspace === "admin" && [
+        "dashboard", "overview", "people", "content", "paths", "coursebuilder", "emails",
+        "payouts", "seats", "workforce", "credits", "courserevenue", "studygroups", "studyGroup",
+        "community", "analytics", "cohorts", "cohort-detail", "compliance", "leaderboard",
+        "assessments", "roleaccess", "integrations", "settings", "branding", "payment-settings"
+      ].includes(targetScreen)) {
+        ws = "admin";
+      } else if (workspace === "manager" && ["dashboard", "manager-overview", "workforce"].includes(targetScreen)) {
+        ws = "manager";
+      } else if ([
+        "mentor-dashboard", "schedule", "mentees", "messages", "learnerfeed",
+        "mentor-analytics", "administrative", "mentor-settings", "earnings"
+      ].includes(targetScreen)) {
+        ws = "mentor";
+      } else if (["manager-overview", "workforce"].includes(targetScreen)) {
         ws = "manager";
       } else {
-        ws = "admin";
+        ws = workspace || "admin";
       }
     }
-    if (extraState?.courseId !== undefined) {
-      setSelectedCourseId(extraState.courseId);
+    if (params?.courseId !== undefined) {
+      setSelectedCourseId(params.courseId);
     }
     setWorkspace(ws);
     setScreenByWorkspace(prev => ({ ...prev, [ws]: normalizedScreen }));
@@ -243,8 +287,29 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "workforce" && <WorkforceIntelligenceScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} />}
                   {screen === "credits" && <CreditsScreen orgId={effectiveOrgId} orgSelector={orgSelector} userEmail={session?.user?.email} />}
                   {screen === "courserevenue" && <CourseRevenueScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}
-                  {screen === "payment-settings" && <PaymentSettingsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} currentUserId={session?.user?.id} />}
-                  {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} />}
+                   {screen === "studygroups" && <AdminStudyGroupsScreen orgId={effectiveOrgId} orgSelector={orgSelector} push={(s, p) => navigateToScreen(s, p)} />}
+                  {screen === "studyGroup" && (
+                    <StudyGroupScreen
+                      params={screenParams}
+                      studyGroupsQuery={allStudyGroupsQuery}
+                      myGroupIdsQuery={{ data: (allStudyGroupsQuery.data || []).map((g) => g.id) }}
+                      joinStudyGroup={joinStudyGroup}
+                      leaveStudyGroup={leaveStudyGroup}
+                      createStudyGroup={createStudyGroup}
+                      fetchStudyGroupMembers={fetchStudyGroupMembers}
+                      fetchStudyGroupMessages={fetchStudyGroupMessages}
+                      fetchCommunityPosts={fetchCommunityPosts}
+                      createCommunityPost={createCommunityPost}
+                      addPostComment={addPostComment}
+                      togglePostReaction={togglePostReaction}
+                      deleteCommunityPost={deleteCommunityPost}
+                      orgId={effectiveOrgId}
+                      session={session}
+                      showToast={showToast}
+                      back={() => setScreen("studygroups")}
+                      push={(s, p) => navigateToScreen(s, p)}
+                    />
+                  )}
                   {screen === "analytics" && <AdminAnalyticsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
                   {screen === "cohorts" && (
                     <CohortsScreen
@@ -282,7 +347,29 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "assessments" && <AssessmentsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} scope="admin" />}
                   {screen === "roleaccess" && <OrgRoleAccessScreen orgId={effectiveOrgId} orgSelector={orgSelector} currentUserId={session?.user?.id} />}
                   {screen === "integrations" && <IntegrationsScreen orgId={effectiveOrgId} userId={session?.user?.id} orgSelector={orgSelector} setScreen={setScreen} isPlatformOwner={userRoles.includes("super_admin")} />}
-                  {(screen === "settings" || screen === "branding") && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} session={session} initialSection={screen === "branding" ? "branding" : "general"} />}
+                  {screen === "community" && (
+                    <CommunityScreen
+                      session={session}
+                      postsQuery={mentorCommunityPostsQuery}
+                      studyGroupsQuery={allStudyGroupsQuery}
+                      myGroupIdsQuery={{ data: (allStudyGroupsQuery.data || []).map((g) => g.id) }}
+                      communityPeopleQuery={mentorCommunityPeopleQuery}
+                      createCommunityPost={createCommunityPost}
+                      addPostComment={addPostComment}
+                      togglePostReaction={togglePostReaction}
+                      deleteCommunityPost={deleteCommunityPost}
+                      createStudyGroup={createStudyGroup}
+                      joinStudyGroup={joinStudyGroup}
+                      leaveStudyGroup={leaveStudyGroup}
+                      push={(s, p) => navigateToScreen(s, p)}
+                      back={() => setScreen("dashboard")}
+                      showToast={showToast}
+                      user={profileQuery?.data}
+                      orgId={effectiveOrgId}
+                      upcomingSessionsQuery={mentorCohortSessionsQuery}
+                    />
+                  )}
+                  {(screen === "settings" || screen === "branding" || screen === "payment-settings") && <SettingsHubScreen orgId={effectiveOrgId} profileQuery={profileQuery} orgSelector={orgSelector} setScreen={setScreen} userEmail={session?.user?.email} session={session} initialSection={screen === "branding" ? "branding" : screen === "payment-settings" ? "payment-settings" : "general"} />}
                 </>
               )}
 
@@ -311,7 +398,29 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                       setScreen={setScreen}
                     />
                   )}
-                  {screen === "studygroups" && <MentorStudyGroupsScreen mentorId={session?.user?.id} orgId={effectiveOrgId} orgSelector={orgSelector} />}
+                  {screen === "studygroups" && <MentorStudyGroupsScreen mentorId={session?.user?.id} orgId={effectiveOrgId} orgSelector={orgSelector} push={(s, p) => navigateToScreen(s, p)} />}
+                  {screen === "studyGroup" && (
+                    <StudyGroupScreen
+                      params={screenParams}
+                      studyGroupsQuery={allStudyGroupsQuery}
+                      myGroupIdsQuery={{ data: (allStudyGroupsQuery.data || []).map((g) => g.id) }}
+                      joinStudyGroup={joinStudyGroup}
+                      leaveStudyGroup={leaveStudyGroup}
+                      createStudyGroup={createStudyGroup}
+                      fetchStudyGroupMembers={fetchStudyGroupMembers}
+                      fetchStudyGroupMessages={fetchStudyGroupMessages}
+                      fetchCommunityPosts={fetchCommunityPosts}
+                      createCommunityPost={createCommunityPost}
+                      addPostComment={addPostComment}
+                      togglePostReaction={togglePostReaction}
+                      deleteCommunityPost={deleteCommunityPost}
+                      orgId={effectiveOrgId}
+                      session={session}
+                      showToast={showToast}
+                      back={() => setScreen("community")}
+                      push={(s, p) => navigateToScreen(s, p)}
+                    />
+                  )}
                   {screen === "leaderboard" && (
                     <LeaderboardScreen
                       back={() => setScreen("dashboard")}
@@ -336,13 +445,24 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                     <CommunityScreen
                       user={profileQuery?.data}
                       session={session}
+                      orgId={effectiveOrgId}
+                      params={screenParams}
                       push={(s, p) => navigateToScreen(s, p)}
                       back={() => setScreen("dashboard")}
                       showToast={showToast}
+                      postsQuery={instructorPostsQuery}
+                      createCommunityPost={createCommunityPost}
+                      addPostComment={addPostComment}
+                      togglePostReaction={togglePostReaction}
+                      deleteCommunityPost={deleteCommunityPost}
                       cohortMembershipQuery={{ data: { cohort: mentorFirstCohort }, loading: mentorCohortsForCommunityQuery.loading }}
                       cohortSessionsQuery={mentorCohortSessionsQuery}
-                      studyGroupsQuery={mentorStudyGroupsQuery}
-                      myGroupIdsQuery={{ data: (mentorStudyGroupsQuery.data || []).map((g) => g.id) }}
+                      studyGroupsQuery={allStudyGroupsQuery}
+                      myGroupIdsQuery={{ data: (allStudyGroupsQuery.data || []).map((g) => g.id) }}
+                      createStudyGroup={createStudyGroup}
+                      joinStudyGroup={joinStudyGroup}
+                      leaveStudyGroup={leaveStudyGroup}
+                      communityPeopleQuery={communityPeopleQuery}
                       leaderboardQuery={mentorLeaderboardQuery}
                       upcomingSessionsQuery={mentorCohortSessionsQuery}
                     />

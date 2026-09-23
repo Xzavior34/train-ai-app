@@ -198,12 +198,48 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               </div>
             </div>
 
+            {/* Top Instructors */}
+            <div className="ta-card">
+              <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
+                <div>
+                  <div className="ta-title">Top instructors</div>
+                  <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Highest-rated active instructors in your organization</div>
+                </div>
+                <span className="ta-body" style={{ fontSize: 12, cursor: "pointer", color: "var(--primary)", fontWeight: 700 }} onClick={() => setScreen("people")}>View all</span>
+              </div>
+              <div className="ta-mt16 anim-stagger">
+                {mentorsQuery.loading && <div className="ta-empty">Loading instructors...</div>}
+                {!mentorsQuery.loading && (mentorsQuery.data || []).length === 0 && (
+                  <div className="ta-empty">No active instructors registered yet.</div>
+                )}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+                  {(mentorsQuery.data || []).map((m) => (
+                    <div key={m.name} className="ta-row ta-between" style={{ padding: "12px 14px", background: "var(--surface-3)", borderRadius: 10, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10 }} onClick={() => setScreen("people")}>
+                      <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                        <Avatar
+                          src={m.avatar}
+                          initials={(m.name || "M").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                          size={36}
+                          style={{ borderRadius: 10, border: "1px solid var(--border)", flexShrink: 0 }}
+                        />
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</div>
+                          <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{m.sessions} session{m.sessions === 1 ? "" : "s"}</div>
+                        </div>
+                      </div>
+                      <Tag tone="success"><Star size={11} /> {typeof m.rating === "number" ? m.rating.toFixed(1) : m.rating}</Tag>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Real-time Activity Feed */}
             <div className="ta-card">
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title">Recent Activity Stream</div>
-                  <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Live enrollments &amp; completions</div>
+                  <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Live enrollments, completions &amp; audit actions</div>
                 </div>
                 <Tag tone="primary">Live</Tag>
               </div>
@@ -211,13 +247,18 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
                 {activityLogQuery.loading && <div className="ta-empty">Loading activity stream...</div>}
                 {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && (
-                  <div className="ta-empty" style={{ padding: "16px 8px" }}>No recent student activity recorded yet.</div>
+                  <div className="ta-empty" style={{ padding: "18px 12px", background: "var(--surface-2)", borderRadius: 10 }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: "var(--text)" }}>No recent activity recorded yet</div>
+                    <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
+                      Student completions, course enrollments, and admin activities will stream here live.
+                    </div>
+                  </div>
                 )}
                 {(activityLogQuery.data || []).map((l, idx) => {
                   const user = l.text?.includes(":") ? l.text.split(":")[1]?.trim() : l.text || "Learner";
                   const action = l.text?.includes(":") ? l.text.split(":")[0]?.trim() : "Activity update";
                   return (
-                    <div key={idx} className="ta-row ta-between" style={{ padding: "8px 10px", background: "var(--surface-3)", borderRadius: 10, border: "1px solid var(--border)" }}>
+                    <div key={idx} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 10, border: "1px solid var(--border)" }}>
                       <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: 1, marginRight: 10 }}>
                         <div style={{ width: 30, height: 30, borderRadius: 8, background: "var(--primary-tint)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
                           {(user || "U").charAt(0).toUpperCase()}
@@ -233,6 +274,8 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 })}
               </div>
             </div>
+
+            <AnalysisNotesCard authorId={profileQuery?.data?.id} organizationId={orgId} />
           </div>
 
           {/* Right Side Monitoring Panel */}
@@ -318,40 +361,6 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               </div>
             </div>
 
-            {/* Top Mentors */}
-            <div className="ta-card">
-              <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
-                <div>
-                  <div className="ta-title">Top instructors</div>
-                  <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Highest-rated active instructors in your org</div>
-                </div>
-                <Star size={16} color="var(--warning)" style={{ cursor: "pointer" }} onClick={() => setScreen("people")} />
-              </div>
-              <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {mentorsQuery.loading && <div className="ta-empty">Loading...</div>}
-                {!mentorsQuery.loading && (mentorsQuery.data || []).length === 0 && (
-                  <div className="ta-empty">No active instructors yet.</div>
-                )}
-                {(mentorsQuery.data || []).map((m, idx) => (
-                  <div key={m.name} className="ta-row ta-between" style={{ padding: "10px 12px", background: "var(--surface-3)", borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease", gap: 10, flexWrap: "wrap" }} onClick={() => setScreen("people")}>
-                    <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
-                      <Avatar
-                        src={m.avatar}
-                        initials={(m.name || "M").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
-                        size={32}
-                        style={{ borderRadius: 10, border: "1px solid var(--border)", flexShrink: 0 }}
-                      />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{m.name}</div>
-                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.sessions} session{m.sessions === 1 ? "" : "s"}</div>
-                      </div>
-                    </div>
-                    <Tag tone="success"><Star size={11} /> {typeof m.rating === "number" ? m.rating.toFixed(1) : m.rating}</Tag>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {/* Upcoming Sessions */}
             <div className="ta-card">
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
@@ -379,23 +388,6 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             </div>
           </div>
         </div>
-
-        <div className="ta-card">
-          <div className="ta-title">Activity Log</div>
-          <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Recent admin actions within your own organization.</div>
-          <div className="ta-col ta-gap8 ta-mt12">
-            {activityLogQuery.loading && <div className="ta-empty">Loading...</div>}
-            {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && <div className="ta-empty">No recorded activity yet.</div>}
-            {(activityLogQuery.data || []).map((a) => (
-              <div key={a.id} className="ta-row ta-between" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)", gap: 10 }}>
-                <span style={{ fontSize: 12.5, minWidth: 0, flex: 1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.3 }}>{a.text}</span>
-                <span style={{ fontSize: 11, color: "var(--text-3)", flexShrink: 0 }}>{a.time}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <AnalysisNotesCard authorId={profileQuery?.data?.id} organizationId={orgId} />
       </div>
     </div>
   );

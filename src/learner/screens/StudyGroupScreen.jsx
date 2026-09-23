@@ -3,10 +3,10 @@ import { TopBar, Avatar, Tag, initialsOf, timeAgo } from "../components/LearnerU
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   Users, Plus, ChevronRight, MessageSquare, X, Check, Lock, BookOpen,
-  Heart, MessageCircle, Send, Trash2, ShieldCheck, Sparkles, Clock,
+  Heart, MessageCircle, Send, Trash2, ShieldCheck, Clock,
   Search, ArrowLeft, Info, HelpCircle
 } from "lucide-react";
-
+import { supabase } from "../../lib/supabaseClient.js";
 // ============================================================================
 // Train AI 2.0 Study Group Screen
 // Matched 1:1 against Train AI 1.0 (StudyGroupCard.tsx & StudyGroupPage.tsx)
@@ -42,7 +42,8 @@ export function StudyGroupScreen({
   push,
   params = {},
 }) {
-  const [selectedGroupId, setSelectedGroupId] = useState(params?.groupId || null);
+  const initialGroupId = params?.groupId || params?.id || params?.studyGroupId || null;
+  const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId);
   const [activeTab, setActiveTab] = useState("posts"); // 'posts' | 'overview' | 'members'
   const [creating, setCreating] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
@@ -51,12 +52,13 @@ export function StudyGroupScreen({
   const [searchQuery, setSearchQuery] = useState("");
   const [joiningGroupId, setJoiningGroupId] = useState(null);
 
-  // Sync selectedGroupId with params.groupId on navigation changes
+  // Sync selectedGroupId with params on navigation changes
   React.useEffect(() => {
-    if (params?.groupId !== undefined) {
-      setSelectedGroupId(params.groupId || null);
+    const nextId = params?.groupId || params?.id || params?.studyGroupId;
+    if (nextId !== undefined) {
+      setSelectedGroupId(nextId || null);
     }
-  }, [params?.groupId]);
+  }, [params?.groupId, params?.id, params?.studyGroupId]);
 
   // Post composer state in Group Detail
   const [newPostContent, setNewPostContent] = useState("");
@@ -67,10 +69,25 @@ export function StudyGroupScreen({
 
   const groups = studyGroupsQuery.data || [];
   const myGroupIds = new Set(myGroupIdsQuery.data || []);
-  const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
+
+  const singleGroupQuery = useSupabaseQuery(
+    async () => {
+      if (!selectedGroupId || groups.some((g) => g.id === selectedGroupId)) return null;
+      if (!supabase) return null;
+      const { data } = await supabase
+        .from("study_groups")
+        .select("*, courses(title), study_group_members(count)")
+        .eq("id", selectedGroupId)
+        .maybeSingle();
+      return data;
+    },
+    [selectedGroupId, groups]
+  );
+  const selectedGroup = groups.find((g) => g.id === selectedGroupId) || singleGroupQuery.data || null;
 
   function handleBack() {
-    if (selectedGroupId && !params?.groupId) {
+    const passedId = params?.groupId || params?.id || params?.studyGroupId;
+    if (selectedGroupId && !passedId) {
       setSelectedGroupId(null);
     } else if (back) {
       back();
@@ -251,7 +268,7 @@ export function StudyGroupScreen({
   // -------------------------------------------------------------------
   // Render: GROUP DETAIL VIEW
   // -------------------------------------------------------------------
-  if (params?.groupId && studyGroupsQuery.loading && !selectedGroup) {
+  if (selectedGroupId && (studyGroupsQuery.loading || singleGroupQuery.loading) && !selectedGroup) {
     return (
       <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <TopBar title="Study Group" sub="Loading group details..." onBack={handleBack} />

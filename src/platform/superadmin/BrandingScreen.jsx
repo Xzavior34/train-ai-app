@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState, useCallback } from "react";
 import { TopBar, ToastContext, Tag } from "../components/PlatformUI.jsx";
 import {
   Building2, Palette, Check, Sun, Moon, Eye, Upload, RefreshCw,
-  Save, Sparkles, Globe, Image as ImageIcon
+  Save, Globe, Image as ImageIcon
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllOrganizations, fetchOrgBranding, upsertOrgBranding } from "../../lib/api/platform.js";
@@ -191,7 +191,7 @@ export function BrandingScreen({ orgSelector } = {}) {
           <div className="ta-hero-inner">
             <div className="ta-hero-text">
               <h1 className="ta-hero-title" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Sparkles size={22} style={{ flexShrink: 0 }} /> White-Label Brand Studio
+                <Palette size={22} style={{ flexShrink: 0 }} /> White-Label Brand Studio
               </h1>
               <p className="ta-hero-desc">
                 Every color, logo, and CSS override you set here propagates immediately to

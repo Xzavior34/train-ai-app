@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { TopBar, Tag, StatCard, exportRowsAsCsv, ToastContext } from "../components/PlatformUI.jsx";
-import { Download, Bot, TrendingUp, Lock, Target, Users, Sparkles } from "lucide-react";
+import { Download, Bot, TrendingUp, Lock, Target, Users, Zap, Award } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchOrgDashboardStats,
@@ -136,7 +136,7 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
           <StatCard stat={{
             label: "Quiz Generator usage",
             value: aiByFeatureQuery.data?.quiz ?? 0,
-            icon: Sparkles,
+            icon: Zap,
             sub: "Real AI-generated quizzes created - the honest proxy for credits used, since no separate credits-balance table exists",
           }} />
         </div>
@@ -222,7 +222,7 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
             </div>
             <div style={{ background: "var(--surface-2)", padding: "14px 16px", borderRadius: 10, borderLeft: "3px solid var(--success)" }}>
               <div className="ta-row ta-gap6" style={{ alignItems: "center", marginBottom: 6 }}>
-                <Sparkles size={13} color="var(--success)" />
+                <Award size={13} color="var(--success)" />
                 <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>Certificates issued</span>
               </div>
               <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text)" }}>{generalOverviewQuery.data?.certificatesIssued ?? 0}</div>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Check, X, Sparkles, Building2, ShieldCheck, ArrowRight, Zap, Layers, Users, Lock, HelpCircle } from "lucide-react";
+import { Check, X, Building2, ShieldCheck, ArrowRight, Zap, Layers, Users, Lock, HelpCircle } from "lucide-react";
 import { getUserLocationCurrency } from "../../lib/locationCurrency.js";
 
 export const PLAN_TIERS = {

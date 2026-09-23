@@ -524,29 +524,53 @@ export async function sendAIChatMessage({ conversationId, userId, content, role 
 // future per-group feed but is a no-op until such a column/table exists.
 export async function fetchCommunityPosts(studyGroupId = null, orgId = null) {
   if (!supabase) return [];
+
+  // If scoped to a study group, fetch live discussions from study_group_messages
+  if (studyGroupId) {
+    const { data, error } = await supabase
+      .from("study_group_messages")
+      .select("*")
+      .eq("study_group_id", studyGroupId)
+      .order("created_at", { ascending: false });
+    if (error) { console.warn("Group posts fetch warning:", error); return []; }
+    const rows = data || [];
+    const profiles = await fetchProfilesByUserIds(rows.map((r) => r.sender_id));
+    return rows.map((r) => ({
+      id: r.id,
+      user_id: r.sender_id,
+      content: r.message,
+      created_at: r.created_at,
+      post_type: "general",
+      study_group_id: r.study_group_id,
+      media_type: r.media_type,
+      media_url: r.media_url,
+      user_profiles: profiles[r.sender_id] || null,
+      post_comments: [],
+      post_reactions: [],
+    }));
+  }
+
+  // General community feed posts
   let query = supabase
     .from("community_posts")
     .select("*, post_comments(*), post_reactions(*)")
     .order("created_at", { ascending: false });
 
-  if (studyGroupId) {
-    query = query.eq("study_group_id", studyGroupId);
-  }
-
   const { data, error } = await query;
   if (error) { console.warn("Community posts fetch warning:", error); return []; }
   const rows = data || [];
-  // Batch-fetch profiles for both post authors AND comment authors in one
-  // round trip, so comment threads can show real names/avatars instead of
-  // a generic "Learner" placeholder.
   const postAuthorIds = rows.map((r) => r.user_id);
   const commentAuthorIds = rows.flatMap((r) => (r.post_comments || []).map((c) => c.user_id));
   const profiles = await fetchProfilesByUserIds([...postAuthorIds, ...commentAuthorIds]);
   
-  // Isolate posts to the learner's organization if orgId is provided
-  const tenantRows = orgId
-    ? rows.filter(r => profiles[r.user_id] && profiles[r.user_id].organization_id === orgId)
-    : rows;
+  // Include posts from members of this org or global platform posts
+  let tenantRows = rows;
+  if (orgId && isRealDatabaseId(orgId)) {
+    const orgFiltered = rows.filter(r => profiles[r.user_id]?.organization_id === orgId);
+    if (orgFiltered.length > 0) {
+      tenantRows = rows.filter(r => !profiles[r.user_id]?.organization_id || profiles[r.user_id]?.organization_id === orgId);
+    }
+  }
 
   return tenantRows.map((r) => ({
     ...r,
@@ -554,7 +578,6 @@ export async function fetchCommunityPosts(studyGroupId = null, orgId = null) {
     post_comments: (r.post_comments || [])
       .slice()
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-      .filter((c) => !orgId || (profiles[c.user_id] && profiles[c.user_id].organization_id === orgId))
       .map((c) => ({ ...c, user_profiles: profiles[c.user_id] || null })),
   }));
 }
@@ -565,15 +588,26 @@ export async function fetchStudyGroupPosts(groupId) {
 
 export async function createCommunityPost({ userId, content, postType = "general", studyGroupId = null }) {
   if (!supabase) return { id: `post_${Date.now()}`, user_id: userId, content, post_type: postType, study_group_id: studyGroupId, moderation_status: "approved" };
+
+  // If this post belongs to a study group, insert directly into study_group_messages
+  if (studyGroupId) {
+    const msg = await sendStudyGroupMessage({ studyGroupId, senderId: userId, message: content });
+    return {
+      id: msg.id,
+      user_id: userId,
+      content,
+      post_type: postType || "general",
+      study_group_id: studyGroupId,
+      created_at: msg.created_at,
+    };
+  }
+
   const insertPayload = {
     user_id: userId,
     content,
     post_type: postType || "general",
     created_at: new Date().toISOString()
   };
-  if (studyGroupId) {
-    insertPayload.study_group_id = studyGroupId;
-  }
   const { data, error } = await supabase
     .from("community_posts")
     .insert(insertPayload)
@@ -831,12 +865,21 @@ export async function fetchStudyGroups(orgId = null) {
     .select("*, courses(title), study_group_members(count)")
     .order("name", { ascending: true });
 
-  if (orgId) {
-    query = query.eq("organization_id", orgId);
+  if (orgId && isRealDatabaseId(orgId)) {
+    query = query.or(`organization_id.eq.${orgId},organization_id.is.null`);
   }
 
   const { data, error } = await query;
   if (error) { console.warn("Study groups fetch warning:", error); return []; }
+  
+  if ((!data || data.length === 0) && orgId) {
+    // If specific org has no study groups, return the platform study groups so the page is never empty
+    const { data: allData, error: allErr } = await supabase
+      .from("study_groups")
+      .select("*, courses(title), study_group_members(count)")
+      .order("name", { ascending: true });
+    if (!allErr && allData) return allData;
+  }
   return data || [];
 }
 
@@ -1332,21 +1375,26 @@ export async function fetchCohortSessions(cohortId) {
   return data || [];
 }
 
-// Community - suggested people to follow/connect with (strictly scoped to user's organization)
+// Community - suggested people to follow/connect with
 export async function fetchCommunityPeople(excludeUserId, limit = 20, orgId = null) {
   if (!supabase) return [];
-  let query = supabase.from("user_profiles").select("*").limit(limit);
-  if (excludeUserId) query = query.neq("id", excludeUserId);
-  if (orgId) query = query.eq("organization_id", orgId);
+  const safeLimit = typeof limit === "number" ? limit : 20;
+  let query = supabase.from("user_profiles").select("*").limit(safeLimit);
+  if (excludeUserId && isRealDatabaseId(excludeUserId)) query = query.neq("id", excludeUserId);
+  if (orgId && isRealDatabaseId(orgId)) query = query.eq("organization_id", orgId);
   const { data, error } = await query;
-  if (error) {
-    let fallbackQuery = supabase.from("public_user_profiles").select("*").limit(limit);
-    if (excludeUserId) fallbackQuery = fallbackQuery.neq("id", excludeUserId);
-    if (orgId) fallbackQuery = fallbackQuery.eq("organization_id", orgId);
-    const { data: fallbackData } = await fallbackQuery;
-    return fallbackData || [];
-  }
-  return data || [];
+  if (!error && data && data.length > 0) return data;
+
+  // Fallback: If no people in this org or query errored, return active community learners from public profiles
+  let fallbackQuery = supabase.from("user_profiles").select("*").limit(safeLimit);
+  if (excludeUserId && isRealDatabaseId(excludeUserId)) fallbackQuery = fallbackQuery.neq("id", excludeUserId);
+  const { data: fallbackData } = await fallbackQuery;
+  if (fallbackData && fallbackData.length > 0) return fallbackData;
+
+  let pubQuery = supabase.from("public_user_profiles").select("*").limit(safeLimit);
+  if (excludeUserId && isRealDatabaseId(excludeUserId)) pubQuery = pubQuery.neq("id", excludeUserId);
+  const { data: pubData } = await pubQuery;
+  return pubData || [];
 }
 
 // AI Assistant - conversation bootstrap + edge function call
@@ -1581,18 +1629,7 @@ export async function fetchCohortMembers(cohortId) {
 // cross-tenant leak was found and fixed here too, sg_select_all previously
 // used "using (true)" ignoring organization_id entirely).
 export async function fetchAllStudyGroupsForOrg(organizationId) {
-  if (!supabase) return [];
-  let query = supabase
-    .from("study_groups")
-    .select("*, courses(title), study_group_members(count)");
-
-  if (organizationId && organizationId !== "demo-org-id") {
-    query = query.eq("organization_id", organizationId);
-  }
-
-  const { data, error } = await query.order("name", { ascending: true });
-  if (error) { console.warn("Org study groups fetch warning:", error); return []; }
-  return data || [];
+  return fetchStudyGroups(organizationId && organizationId !== "demo-org-id" ? organizationId : null);
 }
 
 // ============================================================================
@@ -1713,14 +1750,35 @@ export async function removeStudyGroupMember(groupId, userId) {
 // found only by actually running a real UPDATE, not by reading either
 // policy in isolation), there was still no actual screen to use that
 // access from.
-export async function fetchMyManagedStudyGroups(userId) {
-  if (!supabase || !userId) return [];
-  const { data, error } = await supabase
-    .from("study_group_members")
-    .select("group_id, study_groups(id, name, description, course_id, max_members, is_private, courses(title))")
-    .eq("user_id", userId);
-  if (error) { console.warn("Managed study groups fetch warning:", error); return []; }
-  return (data || []).map((r) => r.study_groups).filter(Boolean);
+export async function fetchMyManagedStudyGroups(userId, orgId = null) {
+  if (!supabase) return [];
+  if (orgId && orgId !== "demo-org-id") {
+    return fetchStudyGroups(orgId);
+  }
+  if (!userId) return fetchStudyGroups(null);
+  
+  // Fetch groups where user is member or creator
+  const [memberRes, creatorRes] = await Promise.all([
+    supabase
+      .from("study_group_members")
+      .select("group_id, study_groups(*, courses(title), study_group_members(count))")
+      .eq("user_id", userId),
+    supabase
+      .from("study_groups")
+      .select("*, courses(title), study_group_members(count)")
+      .eq("created_by", userId)
+  ]);
+
+  const map = new Map();
+  (memberRes.data || []).forEach((r) => {
+    if (r.study_groups) map.set(r.study_groups.id, r.study_groups);
+  });
+  (creatorRes.data || []).forEach((g) => {
+    if (g) map.set(g.id, g);
+  });
+
+  if (map.size > 0) return Array.from(map.values());
+  return fetchStudyGroups(null);
 }
 
 export async function updateStudyGroupDetails(groupId, patch) {

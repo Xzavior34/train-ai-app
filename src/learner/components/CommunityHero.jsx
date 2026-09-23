@@ -1,5 +1,4 @@
-import React from 'react';
-import { Users, MessageSquare, Sparkles } from 'lucide-react';
+import { Users, MessageSquare } from 'lucide-react';
 import { Avatar, initialsOf } from '../components/LearnerUI.jsx';
 
 /**

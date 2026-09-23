@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext, useMemo, useRef } from "react";
 import { applyDynamicBranding } from "../../lib/brandingHelper.js";
 import { TopBar, ToastContext, Switch, Tag, setGlobalThemeDark, getStoredThemeDark } from "../components/PlatformUI.jsx";
-import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save, Palette, Eye, EyeOff, Sparkles, ArrowRight, Check } from "lucide-react";
+import { Lock, ShieldCheck, Moon, Database, Trash2, RefreshCw, Building2, Save, Palette, Eye, EyeOff, Zap, ArrowRight, Check } from "lucide-react";
 import { isMockDataEnabled, setMockDataEnabled, purgeAllMockData, restoreMockData, subscribeToMockDataChanges } from "../../lib/mockDataManager.js";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
@@ -17,11 +17,16 @@ import { getUserLocationCurrency, formatCurrencyAmount } from "../../lib/locatio
 export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen, userEmail, initialSection = "general" }) {
   const showToast = useContext(ToastContext);
   const brandingRef = useRef(null);
+  const paymentRef = useRef(null);
 
   useEffect(() => {
     if (initialSection === "branding" && brandingRef.current) {
       setTimeout(() => {
         brandingRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    } else if ((initialSection === "payment-settings" || initialSection === "payments") && paymentRef.current) {
+      setTimeout(() => {
+        paymentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 150);
     }
   }, [initialSection]);
@@ -604,7 +609,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                 </div>
               </div>
 
-              <div className="ta-card">
+              <div ref={paymentRef} className="ta-card">
                 <div className="ta-row ta-between">
                   <div className="ta-title">Payment Gateways & Direct Payouts</div>
                   <Tag tone={preferredGateway !== "default" || paystackPublicKey || stripePublishableKey || paystackSubaccount || stripeAccountId ? "success" : "neutral"}>
@@ -1108,7 +1113,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 18px", fontSize: 13 }}
                       onClick={() => setShowPlanModal(true)}
                     >
-                      <Sparkles size={14} /> Upgrade to {minTierLabelFor("custom_branding")}
+                      <Zap size={14} /> Upgrade to {minTierLabelFor("custom_branding")}
                     </button>
                   </div>
                 ) : (

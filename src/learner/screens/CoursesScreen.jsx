@@ -804,6 +804,28 @@ export function CoursesScreen({
                 </button>
               );
             })}
+            <button
+              onClick={() => push("learningPaths")}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 16px",
+                borderRadius: 8,
+                border: "1px solid var(--primary)",
+                background: "var(--primary-tint, rgba(37, 99, 235, 0.08))",
+                color: "var(--primary)",
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                marginLeft: "auto"
+              }}
+            >
+              <Compass size={14} />
+              <span>Learning Paths</span>
+              <ArrowRight size={12} />
+            </button>
           </div>
 
           {/* Search + Enrolled Toggle */}

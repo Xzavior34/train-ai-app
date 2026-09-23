@@ -52,7 +52,6 @@ export function LearnerFeedScreen({ mentorId, orgSelector }) {
   }));
 
   const pinnedCount = posts.filter((p) => p.is_pinned).length;
-  const studyGroupCount = posts.filter((p) => p.study_group_id != null).length;
 
   const filteredPosts = posts.filter((p) => {
     const matchesSearch =
@@ -60,7 +59,6 @@ export function LearnerFeedScreen({ mentorId, orgSelector }) {
       (p.content || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.user_profiles?.display_name || "").toLowerCase().includes(searchQuery.toLowerCase());
     if (filterTab === "pinned") return matchesSearch && p.is_pinned;
-    if (filterTab === "study_groups") return matchesSearch && p.study_group_id != null;
     return matchesSearch;
   });
 
@@ -163,7 +161,6 @@ export function LearnerFeedScreen({ mentorId, orgSelector }) {
               {[
                 { key: "all", label: `All Posts (${posts.length})` },
                 { key: "pinned", label: `Pinned (${pinnedCount})` },
-                { key: "study_groups", label: `Study Groups (${studyGroupCount})` },
               ].map((tab) => (
                 <button
                   key={tab.key}

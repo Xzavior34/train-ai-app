@@ -1278,6 +1278,38 @@ html, body {
   }
 }
 
+/* Universal laptop and desktop smooth horizontal scroll for tables */
+.ta-table-wrap, .tai-table-wrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-width: 100% !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(148, 163, 184, 0.5) transparent !important;
+}
+
+.ta-table-wrap::-webkit-scrollbar,
+.tai-table-wrap::-webkit-scrollbar {
+  height: 8px !important;
+  background: transparent !important;
+}
+
+.ta-table-wrap::-webkit-scrollbar-track,
+.tai-table-wrap::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-radius: 999px !important;
+}
+
+.ta-table-wrap::-webkit-scrollbar-thumb,
+.tai-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45) !important;
+  border-radius: 999px !important;
+}
+
+.ta-table-wrap::-webkit-scrollbar-thumb:hover,
+.tai-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--primary, #2563eb) !important;
+}
+
 /* Mobile & Small Screen Global Overrides (<= 768px) */
 @media (max-width: 768px) {
   /* Prevent horizontal screen blowouts */

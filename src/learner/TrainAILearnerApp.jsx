@@ -333,10 +333,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   // Assessments - distinct from AI Quiz Generator, tied to the course
   // currently open in CourseDetailScreen. Gated on screen === "courseDetail"
   // the same way aiConversationQuery above is gated on screen === "ai".
+  const currentCourseParamId = params?.id || params?.courseId;
   const assessmentQuery = useSupabaseQuery(async () => {
-    if (screen !== "courseDetail" || !params?.id || !isRealDatabaseId(params.id)) return null;
-    return fetchAssessmentForCourse(params.id);
-  }, [screen === "courseDetail", params?.id]);
+    if (screen !== "courseDetail" || !currentCourseParamId || !isRealDatabaseId(currentCourseParamId)) return null;
+    return fetchAssessmentForCourse(currentCourseParamId);
+  }, [screen === "courseDetail", currentCourseParamId]);
   const assessmentId = assessmentQuery.data?.id || null;
   const assessmentQuestionsQuery = useSupabaseQuery(async () => {
     if (!assessmentId) return [];
@@ -364,13 +365,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   // query real UUID columns and previously ran unconditionally for any
   // params.id, including mock course slugs.
   const certificateQuery = useSupabaseQuery(async () => {
-    if (screen !== "courseDetail" || !params?.id || !isRealDatabaseId(params.id)) return null;
-    return fetchCertificateForCourse(params.id);
-  }, [screen === "courseDetail", params?.id]);
+    if (screen !== "courseDetail" || !currentCourseParamId || !isRealDatabaseId(currentCourseParamId)) return null;
+    return fetchCertificateForCourse(currentCourseParamId);
+  }, [screen === "courseDetail", currentCourseParamId]);
   const myCertificateQuery = useSupabaseQuery(async () => {
-    if (!params?.id || !session?.user?.id || !isRealDatabaseId(params.id)) return null;
-    return fetchMyCertificateForCourse(params.id, session.user.id);
-  }, [params?.id, session?.user?.id]);
+    if (!currentCourseParamId || !session?.user?.id || !isRealDatabaseId(currentCourseParamId)) return null;
+    return fetchMyCertificateForCourse(currentCourseParamId, session.user.id);
+  }, [currentCourseParamId, session?.user?.id]);
 
   async function handleRequestCertificate() {
     if (!params?.id) return;
@@ -832,8 +833,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                 />
               )}
               {screen === "courseDetail" && (() => {
-                const ca = (complianceAssignmentsQuery.data || []).find(a => (a.course_id || a.courses?.id) === params.id);
-                const rawCourse = courseById(params.id);
+                const targetCourseId = params?.id || params?.courseId;
+                const ca = (complianceAssignmentsQuery.data || []).find(a => (a.course_id || a.courses?.id) === targetCourseId);
+                const rawCourse = courseById(targetCourseId);
                 const enrichedCourse = rawCourse ? {
                   ...rawCourse,
                   isCompliance: !!ca,
@@ -856,7 +858,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   params={params} setParams={setParams}
                   push={push} back={back} showToast={showToast}
                   enrollInCourse={enrollInCourse} enrollmentsQuery={enrollmentsQuery} handleEnroll={handleEnroll}
-                  myApplication={myApplicationForCourse(params.id)} handleRequestJoin={handleRequestJoin}
+                  myApplication={myApplicationForCourse(targetCourseId)} handleRequestJoin={handleRequestJoin}
                   addCourseNote={addCourseNote} postCourseDiscussionMessage={postCourseDiscussionMessage}
                   assessmentQuery={assessmentQuery} assessmentQuestionsQuery={assessmentQuestionsQuery}
                   myAssessmentAttemptQuery={myAssessmentAttemptQuery} handleSubmitAssessment={handleSubmitAssessment}
@@ -870,7 +872,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               })()}
               {screen === "lesson" && (
                 <LessonScreen
-                  course={courseById(params.id)}
+                  course={courseById(params?.id || params?.courseId)}
                   lessons={lessonsForCurrentCourse()}
                   lessonId={params.lessonId}
                   session={session}

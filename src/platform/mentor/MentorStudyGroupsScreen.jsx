@@ -19,7 +19,7 @@ const DEFAULT_GROUP_IMAGES = [
   "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&auto=format&fit=crop&q=80"
 ];
 
-export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
+export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector, push }) {
   const showToast = useContext(ToastContext);
   const [newGroupName, setNewGroupName] = useState("");
   const [creatingGroup, setCreatingGroup] = useState(false);
@@ -28,7 +28,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
   const [announcementText, setAnnouncementText] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
 
-  const groupsQuery = useSupabaseQuery(async () => (mentorId ? fetchMyManagedStudyGroups(mentorId) : []), [mentorId]);
+  const groupsQuery = useSupabaseQuery(async () => fetchMyManagedStudyGroups(mentorId, orgId), [mentorId, orgId]);
   const rawGroups = groupsQuery.data || [];
 
   // Fallback demo study groups so the UI is rich and interactive
@@ -56,7 +56,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
   const groups = rawGroups.length > 0 ? rawGroups.map((g, i) => ({
     ...g,
     image: DEFAULT_GROUP_IMAGES[i % DEFAULT_GROUP_IMAGES.length],
-    membersCount: g.members_count || 12,
+    membersCount: g.study_group_members?.[0]?.count ?? (g.members_count || 0),
     nextMeetup: "Every Wednesday @ 5:00 PM"
   })) : (isMockDataEnabled() ? defaultGroups : []);
 
@@ -222,15 +222,27 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                   <div style={{ fontSize: 18, fontWeight: 900, color: "var(--text)" }}>{activeGroup.name}</div>
                   <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Managed Study Circle Studio</div>
                 </div>
-                <a
-                  href="https://meet.google.com/new"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="ta-btn ta-btn-primary ta-btn-sm"
-                  style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}
-                >
-                  <Video size={13} /> Open Meet Room
-                </a>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  {push && (
+                    <button
+                      type="button"
+                      className="ta-btn ta-btn-outline ta-btn-sm"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 5 }}
+                      onClick={() => push("studyGroup", { groupId: activeGroup.id })}
+                    >
+                      <Users size={13} /> Open Full Workspace →
+                    </button>
+                  )}
+                  <a
+                    href="https://meet.google.com/new"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ta-btn ta-btn-primary ta-btn-sm"
+                    style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 5 }}
+                  >
+                    <Video size={13} /> Open Meet Room
+                  </a>
+                </div>
               </div>
 
               {/* Group Syllabus & Objectives */}

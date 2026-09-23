@@ -338,22 +338,82 @@ export async function fetchMyQuizAttempts(userId, limit = 10) {
 
 export async function fetchLeaderboard(limit = 50, orgId = null) {
   const targetOrgId = orgId === "a7768eb7-bd6b-448b-9e4f-d359578355b1" ? "58ebdb4d-8209-4e08-9ab3-8c5eee87b278" : orgId;
-  if (!supabase || !targetOrgId) return [];
-  try {
-    const { data, error } = await supabase.rpc("get_leaderboard_with_profiles", {
-      p_limit: limit,
-      p_org_id: targetOrgId
-    });
-    if (!error && data) return data;
-  } catch (e) {
-    console.warn("RPC leaderboard fetch warning:", e);
+  const validOrgId = targetOrgId && targetOrgId !== "demo-org-id" && isRealDatabaseId(targetOrgId) ? targetOrgId : null;
+  if (!supabase) return [];
+
+  if (validOrgId) {
+    try {
+      const { data, error } = await supabase.rpc("get_leaderboard_with_profiles", {
+        p_limit: limit,
+        p_org_id: validOrgId
+      });
+      if (!error && data && data.length > 0) return data;
+    } catch (e) {
+      console.warn("RPC leaderboard fetch warning:", e);
+    }
+    // Direct table query fallback scoped strictly to caller's organization
+    try {
+      const { data: stats, error: statsError } = await supabase
+        .from("user_gamification_stats")
+        .select("user_id, total_points, streak_days, current_level, lessons_completed, courses_completed, user_profiles!inner(id, display_name, avatar_url, role, organization_id)")
+        .eq("user_profiles.organization_id", validOrgId)
+        .order("total_points", { ascending: false })
+        .limit(limit);
+
+      if (!statsError && stats && stats.length > 0) {
+        return stats.map(s => {
+          const prof = s.user_profiles || {};
+          return {
+            user_id: s.user_id,
+            display_name: prof.display_name || "Learner",
+            avatar_url: prof.avatar_url || null,
+            role: prof.role || "Specialist",
+            school: "Active Batch",
+            cohort_name: "Active Batch",
+            total_points: s.total_points || 0,
+            streak: s.streak_days || 1,
+            completed_courses: s.courses_completed || 0,
+            badges_count: Math.max(1, Math.floor((s.total_points || 0) / 400)),
+          };
+        });
+      }
+    } catch (e) {
+      console.warn("Direct leaderboard query warning:", e);
+    }
+
+    // Resilient fallback for any organization with members but without prior gamification rows
+    try {
+      const { data: profiles, error: pErr } = await supabase
+        .from("user_profiles")
+        .select("id, display_name, avatar_url, role")
+        .eq("organization_id", validOrgId)
+        .order("display_name", { ascending: true })
+        .limit(limit);
+
+      if (!pErr && profiles && profiles.length > 0) {
+        return profiles.map((p) => ({
+          user_id: p.id,
+          display_name: p.display_name || "Learner",
+          avatar_url: p.avatar_url || null,
+          role: p.role || "Specialist",
+          school: "Active Batch",
+          cohort_name: "Active Batch",
+          total_points: 0,
+          streak: 1,
+          completed_courses: 0,
+          badges_count: 1,
+        }));
+      }
+    } catch (e) {
+      console.warn("User profiles leaderboard fallback warning:", e);
+    }
   }
-  // Direct table query fallback scoped strictly to caller's organization
+
+  // Platform-wide fallback so community is never empty/dead
   try {
     const { data: stats, error: statsError } = await supabase
       .from("user_gamification_stats")
-      .select("user_id, total_points, streak_days, current_level, lessons_completed, courses_completed, user_profiles!inner(id, display_name, avatar_url, role, organization_id)")
-      .eq("user_profiles.organization_id", targetOrgId)
+      .select("user_id, total_points, streak_days, current_level, lessons_completed, courses_completed, user_profiles(id, display_name, avatar_url, role)")
       .order("total_points", { ascending: false })
       .limit(limit);
 
@@ -375,34 +435,7 @@ export async function fetchLeaderboard(limit = 50, orgId = null) {
       });
     }
   } catch (e) {
-    console.warn("Direct leaderboard query warning:", e);
-  }
-
-  // Resilient fallback for any organization with members but without prior gamification rows
-  try {
-    const { data: profiles, error: pErr } = await supabase
-      .from("user_profiles")
-      .select("id, display_name, avatar_url, role")
-      .eq("organization_id", targetOrgId)
-      .order("display_name", { ascending: true })
-      .limit(limit);
-
-    if (!pErr && profiles && profiles.length > 0) {
-      return profiles.map((p) => ({
-        user_id: p.id,
-        display_name: p.display_name || "Learner",
-        avatar_url: p.avatar_url || null,
-        role: p.role || "Specialist",
-        school: "Active Batch",
-        cohort_name: "Active Batch",
-        total_points: 0,
-        streak: 1,
-        completed_courses: 0,
-        badges_count: 1,
-      }));
-    }
-  } catch (e) {
-    console.warn("User profiles leaderboard fallback warning:", e);
+    console.warn("Platform leaderboard query warning:", e);
   }
 
   return [];

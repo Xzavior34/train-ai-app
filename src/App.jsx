@@ -327,21 +327,6 @@ export default function App() {
     );
   }
 
-  // A password-reset email link click lands here with a real (temporary)
-  // session already established by Supabase - checked before every other
-  // gate below (including the normal !session -> AuthPage branch) since
-  // otherwise a signed-in-looking session would just drop the visitor
-  // straight into their dashboard with no prompt to actually set a new
-  // password, silently defeating the whole reset flow.
-  if (isPasswordRecovery) {
-    return (
-      <>
-        <OfflineIndicator mode={offlineMode} />
-        <AuthPage recoveryMode onCompletePasswordReset={completePasswordReset} />
-      </>
-    );
-  }
-
   // Invitation links are handled before every other boot gate (sign-in,
   // MFA, onboarding) since a brand-new invitee has no session, no MFA
   // factor and no onboarding state yet - none of those gates apply until
@@ -376,6 +361,12 @@ export default function App() {
     );
   }
 
+  // A password-reset email link click lands here with a real (temporary)
+  // session already established by Supabase - checked before every other
+  // gate below (including the normal !session -> AuthPage branch) since
+  // otherwise a signed-in-looking session would just drop the visitor
+  // straight into their dashboard with no prompt to actually set a new
+  // password, silently defeating the whole reset flow.
   if (isPasswordRecovery) {
     return (
       <>
@@ -420,7 +411,7 @@ export default function App() {
         <OfflineIndicator mode={offlineMode} />
         <LandingPage
           onNavigate={(target) =>
-            setPublicView(["signin", "signup", "courses", "mentors"].includes(target) ? "auth" : "landing")
+            setPublicView(["signin", "signup", "auth", "login", "register", "courses", "mentors"].includes(target) ? "auth" : "landing")
           }
         />
         <ConsentBanner session={session} />

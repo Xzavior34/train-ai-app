@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo } from "react";
 import { TopBar, ToastContext, Tag, Avatar, NavigationContext } from "../components/PlatformUI.jsx";
 import {
   Armchair, CreditCard, Users, Plus, Minus, RefreshCw, ShieldCheck, AlertTriangle,
-  Receipt, ArrowRight, UserPlus, Info, Zap, Check, X, Clock, Search, Send, Sparkles,
+  Receipt, ArrowRight, UserPlus, Info, Zap, Check, X, Clock, Search, Send,
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {

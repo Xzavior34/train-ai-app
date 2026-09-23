@@ -10,7 +10,7 @@ import { fetchAllStudyGroupsForOrg, fetchStudyGroupMembers, removeStudyGroupMemb
 // they'd joined. Org-scoped (a real cross-tenant leak in the underlying
 // RLS was found and fixed while building this - see
 // 0127_suspend_instructor_payouts.sql).
-export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
+export function AdminStudyGroupsScreen({ orgId, orgSelector, push }) {
   const showToast = useContext(ToastContext);
   const groupsQuery = useSupabaseQuery(async () => fetchAllStudyGroupsForOrg(orgId), [orgId]);
   const groups = groupsQuery.data || [];
@@ -116,7 +116,21 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
                       {isOpen && (
                         <tr>
                           <td colSpan={4} style={{ background: "var(--surface-3)", padding: 14 }}>
-                            <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>MEMBERS</div>
+                            <div className="ta-row ta-between" style={{ alignItems: "center", marginBottom: 8 }}>
+                              <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-2)" }}>MEMBERS</div>
+                              {push && (
+                                <button
+                                  className="ta-btn ta-btn-outline ta-btn-sm"
+                                  style={{ fontSize: 11, padding: "2px 8px" }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    push("studyGroup", { groupId: g.id });
+                                  }}
+                                >
+                                  Open Full Workspace →
+                                </button>
+                              )}
+                            </div>
                             {membersQuery.loading && <div className="ta-empty">Loading members...</div>}
                             {!membersQuery.loading && (membersQuery.data || []).length === 0 && <div className="ta-empty">No members yet.</div>}
                             <div className="ta-col ta-gap6">

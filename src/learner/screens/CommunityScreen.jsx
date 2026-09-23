@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import {
   Users, GraduationCap, Trophy, ChevronRight, Plus, Search, Heart, MessageCircle,
-  MessageSquare, Send, Pin, Trash2, ArrowLeft, Layers, Mail, Sparkles, Crown, Star,
+  MessageSquare, Send, Pin, Trash2, ArrowLeft, Layers, Mail, Crown, Star,
   Flame, Zap, Clock, Share2, X, BookOpen, UserCheck, Shield, TrendingUp,
   RefreshCw, CheckCircle2, MoreVertical, ExternalLink, Activity, Info, Award,
   Quote, Lock, Bookmark, Copy, Flag, EyeOff, Pencil, Check,
@@ -561,7 +561,7 @@ function PostCard({
                     setAiSummaryModalOpen(true);
                   }}
                 >
-                  <Sparkles size={14} /> Explain with AI
+                  <Zap size={14} /> Explain with AI
                 </button>
 
                 <div style={{ height: 1, background: "var(--border)", margin: "4px 0" }} />
@@ -644,7 +644,7 @@ function PostCard({
           >
             <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
               <div className="tai-row tai-gap8" style={{ fontWeight: 800, fontSize: 16, color: "var(--primary)" }}>
-                <Sparkles size={18} /> AI Content Summary
+                <Zap size={18} /> AI Content Summary
               </div>
               <button className="tai-iconbtn" onClick={() => setAiSummaryModalOpen(false)}>
                 <X size={16} />

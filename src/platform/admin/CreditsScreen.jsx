@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo } from "react";
 import { TopBar, Tag, Avatar, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import {
   CreditCard, Zap, Loader2, Search, TrendingUp, AlertTriangle,
-  Users, Sparkles, CheckCircle2, ShieldAlert, ArrowUpDown, ChevronDown,
+  Users, CheckCircle2, ShieldAlert, ArrowUpDown, ChevronDown,
   Download, Activity, Clock, Layers, Filter, Eye, X, RefreshCw
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
@@ -100,7 +100,7 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
         // Tab filtering
         if (activeTab === "active" && u.totalConsumed <= 0) return false;
         if (activeTab === "ready" && (u.totalConsumed > 0 || u.effectiveBalance === 0)) return false;
-        if (activeTab === "depleted" && u.effectiveBalance > 2) return false;
+        if (activeTab === "depleted" && u.effectiveBalance > 20) return false;
 
         // Role filtering
         if (roleFilter !== "all" && (u.role || "learner") !== roleFilter) return false;
@@ -428,7 +428,7 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
               className={`ta-tab ${activeTab === "depleted" ? "active" : ""}`}
               onClick={() => setActiveTab("depleted")}
             >
-              Low / Depleted (≤ 2 Credits) ({stats.depletedCount})
+              Low / Depleted (≤ 20 Credits) ({stats.depletedCount})
             </div>
           </div>
 
@@ -455,8 +455,8 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
 
           {/* Workforce Monitoring Data Table */}
           {!monitoringQuery.loading && filteredUsers.length > 0 && (
-            <div className="ta-table-wrap" style={{ overflowX: "auto", borderRadius: 12, border: "1px solid var(--border)" }}>
-              <table className="ta-table" style={{ width: "100%", borderCollapse: "collapse", minWidth: 840 }}>
+            <div className="ta-table-wrap" style={{ overflowX: "auto", borderRadius: 12, border: "1px solid var(--border)", WebkitOverflowScrolling: "touch" }}>
+              <table className="ta-table" style={{ width: "100%", borderCollapse: "collapse", minWidth: 960 }}>
                 <thead>
                   <tr style={{ background: "var(--surface-2)", textAlign: "left", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-3)" }}>
                     <th style={{ padding: "12px 16px" }}>Member</th>
@@ -477,7 +477,7 @@ export function CreditsScreen({ orgId, orgSelector, userEmail }) {
                       .toUpperCase();
 
                     const isDepleted = u.effectiveBalance === 0;
-                    const isLow = u.effectiveBalance > 0 && u.effectiveBalance <= 2;
+                    const isLow = u.effectiveBalance > 0 && u.effectiveBalance <= 20;
                     const hasSharedPool = u.orgPoolBalance > 0;
 
                     return (

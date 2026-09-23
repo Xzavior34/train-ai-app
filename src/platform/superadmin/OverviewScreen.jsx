@@ -4,7 +4,7 @@ import {
   Building2, Users, Layers, Activity, Download, Clock,
   Globe, TrendingUp, TrendingDown, Megaphone, ShieldCheck,
   Server, Database, ArrowUpRight, CheckCircle2, ChevronRight, Plus,
-  DollarSign, BarChart2, Radio, Play, Sparkles
+  DollarSign, BarChart2, Radio, Play
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {

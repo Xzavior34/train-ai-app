@@ -212,9 +212,10 @@ export function useLearnerData(session, screen, params) {
   }
 
   const courseLessonsQuery = useSupabaseQuery(async () => {
-    if (!params?.id || !["courseDetail", "lesson"].includes(screen)) return [];
-    return fetchLessonsForCourse(params.id);
-  }, [screen, params?.id]);
+    const courseId = params?.id || params?.courseId;
+    if (!courseId || !["courseDetail", "lesson"].includes(screen)) return [];
+    return fetchLessonsForCourse(courseId);
+  }, [screen, params?.id, params?.courseId]);
 
   const lessonIdsKey = (courseLessonsQuery.data || []).map(l => l.id).join(",");
   const lessonProgressQuery = useSupabaseQuery(async () => {
@@ -225,8 +226,8 @@ export function useLearnerData(session, screen, params) {
   function lessonsForCurrentCourse() {
     const raw = courseLessonsQuery.data || [];
     const progressByLessonId = new Map((lessonProgressQuery.data || []).map(p => [p.lesson_id, p]));
-    const currentCourse = courseById(params?.id);
-    const courseKey = params?.id || "";
+    const courseKey = params?.id || params?.courseId || "";
+    const currentCourse = courseById(courseKey);
 
     if (raw.length > 0) {
       const mapped = raw.map(l => ({

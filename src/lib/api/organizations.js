@@ -940,7 +940,7 @@ export async function fetchOrgAllUsersAICreditMonitoring(organizationId) {
     const totalConsumed = users.reduce((sum, u) => sum + u.totalConsumed, 0);
     const activeConsumersCount = users.filter((u) => u.totalConsumed > 0).length;
     const zeroUsageCount = users.filter((u) => u.totalConsumed === 0).length;
-    const depletedCount = users.filter((u) => u.effectiveBalance === 0).length;
+    const depletedCount = users.filter((u) => u.effectiveBalance <= 20).length;
 
     const stats = {
       totalMembers: users.length,
