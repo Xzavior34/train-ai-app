@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   ArrowRight, BookOpen, GraduationCap, ShieldCheck, CheckCircle2, X,
   Brain, Layers, ChevronDown, ClipboardList, UserPlus,
@@ -6,12 +6,13 @@ import {
   Zap, Flame, Menu, Check,
   Activity, Gauge, Database, Home, Mail, Download, Wifi,
   Accessibility, Bell, Facebook, Twitter, Instagram, Linkedin, Search,
-  BarChart2
+  BarChart2, Sparkles, Armchair, HelpCircle, Palette
 } from "lucide-react";
 import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
 import { PlanSelectionModal, PLAN_TIERS } from "../../components/common/PlanSelectionModal.jsx";
 import { resetDynamicBranding } from "../../lib/brandingHelper.js";
+import { getUserLocationCurrency } from "../../lib/locationCurrency.js";
 
 const TEAM_SIZE_OPTIONS = ["1–50", "51–200", "201–1,000", "1,000+"];
 
@@ -162,6 +163,8 @@ export default function LandingPage({ onNavigate }) {
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+  const userLoc = useMemo(() => getUserLocationCurrency(), []);
+  const [selectedCurrency, setSelectedCurrency] = useState(userLoc?.currency || "NGN");
 
   useEffect(() => {
     if (!activeModal && !demoModalOpen && !planModalOpen) return;
@@ -221,15 +224,15 @@ export default function LandingPage({ onNavigate }) {
       setActiveModal(target);
       return;
     }
-    if (["intelligence", "learners", "organisation", "faq", "how-it-works", "trust"].includes(target)) {
-      scrollToId(target);
+    if (["intelligence", "learners", "organisation", "pricing", "plans", "faq", "how-it-works", "trust"].includes(target)) {
+      scrollToId("pricing" === target || "plans" === target ? "pricing" : target);
       return;
     }
     if (target === "demo") {
       setDemoModalOpen(true);
       return;
     }
-    if (target === "pricing" || target === "plans") {
+    if (target === "plan-modal") {
       setPlanModalOpen(true);
       return;
     }
@@ -1406,7 +1409,338 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* =========================================================================
-          SECTION 7: ENTERPRISE TRUST & DATA SECURITY
+          SECTION 7: PRICING & ORGANIZATION PLANS
+          ========================================================================= */}
+      <section id="pricing" className="lp-bg-surface-1" style={{ width: "100%", padding: "60px 0" }}>
+        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px", textAlign: "center" }}>
+          
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(37, 99, 235, 0.08)", border: "1px solid rgba(37, 99, 235, 0.2)", padding: "4px 12px", borderRadius: 20, marginBottom: 12 }}>
+            <Sparkles size={13} color="var(--primary, #2563EB)" />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary, #2563EB)", letterSpacing: ".05em" }}>ORGANIZATION PLANS &amp; LICENSING</span>
+          </div>
+
+          <h2 className="lp-section-h2" style={{ fontSize: "clamp(26px, 3.2vw, 36px)", fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 auto 10px", maxWidth: 720 }}>
+            Simple, Transparent Plans Built for Scale
+          </h2>
+
+          <p style={{ fontSize: 15, color: "#64748B", maxWidth: 640, margin: "0 auto 28px", lineHeight: 1.5 }}>
+            Equip your workforce with 24/7 AI coaching, structured cohorts, and real-time skill intelligence with predictable monthly pricing.
+          </p>
+
+          {/* Currency Switcher Tabs */}
+          <div style={{ display: "inline-flex", background: "#FFFFFF", padding: "4px", borderRadius: 10, border: "1px solid #E2E8F0", marginBottom: 36, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+            {[
+              { code: "NGN", label: "🇳🇬 NGN (₦)" },
+              { code: "USD", label: "🇺🇸 USD ($)" },
+              { code: "GBP", label: "🇬🇧 GBP (£)" },
+              { code: "EUR", label: "🇪🇺 EUR (€)" },
+            ].map(c => (
+              <button
+                key={c.code}
+                onClick={() => setSelectedCurrency(c.code)}
+                style={{
+                  border: "none",
+                  background: selectedCurrency === c.code ? "var(--primary, #2563EB)" : "transparent",
+                  color: selectedCurrency === c.code ? "#FFFFFF" : "#64748B",
+                  padding: "6px 14px",
+                  borderRadius: 7,
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+
+          {/* 3 Pricing Cards Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))", gap: 20, textAlign: "left", alignItems: "stretch" }}>
+            
+            {/* Card 1: Basic Plan */}
+            <div
+              className="lp-card-hover"
+              style={{
+                background: "#FFFFFF",
+                borderRadius: 14,
+                border: "1px solid #E2E8F0",
+                padding: "28px 24px",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                boxShadow: "0 4px 20px -2px rgba(15, 23, 42, 0.04)"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#64748B", background: "#F1F5F9", padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", letterSpacing: ".04em" }}>
+                  Essential
+                </span>
+                <span style={{ fontSize: 11.5, color: "#64748B", fontWeight: 600 }}>Small Teams</span>
+              </div>
+
+              <h3 style={{ fontSize: 22, fontWeight: 900, color: "#0F172A", margin: "0 0 6px" }}>Basic Plan</h3>
+              <p style={{ fontSize: 12.5, color: "#64748B", margin: "0 0 16px", minHeight: 38, lineHeight: 1.45 }}>
+                For small businesses and training units starting structured AI tutoring &amp; cohort learning.
+              </p>
+
+              <div style={{ padding: "16px 0", borderTop: "1px solid #F1F5F9", borderBottom: "1px solid #F1F5F9", marginBottom: 18 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                  <span style={{ fontSize: 32, fontWeight: 900, color: "#0F172A", letterSpacing: "-0.03em" }}>
+                    {selectedCurrency === "NGN" ? "₦250k" : selectedCurrency === "GBP" ? "£190" : selectedCurrency === "EUR" ? "€220" : "$250"}
+                  </span>
+                  <span style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>/ month</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: "#2563EB", fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", gap: 5 }}>
+                  <Armchair size={13} /> 20 learner seats included • Max 50 seats
+                </div>
+              </div>
+
+              {/* Feature List */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#475569", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 2 }}>
+                  What's included:
+                </div>
+                {[
+                  { text: "1 Admin + 1 Instructor seat included", included: true },
+                  { text: "20 Learner seats included (expandable up to 50 max seats)", included: true },
+                  { text: "Additional seats at ₦15,000 / $15 per seat", included: true },
+                  { text: "220 Org AI credits (2,200 AI query interactions)", included: true },
+                  { text: "Course Builder & Cohort management", included: true },
+                  { text: "Org-wide progress & completion analytics", included: true },
+                  { text: "Default Train AI branding (no customisation)", included: true },
+                  { text: "Manager & team performance oversight", included: false },
+                  { text: "Workforce Intelligence & skill graphs", included: false },
+                  { text: "Data download & CSV audit exports", included: false },
+                ].map((f, idx) => (
+                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: f.included ? "#334155" : "#94A3B8" }}>
+                    {f.included ? (
+                      <Check size={15} color="#10B981" style={{ flexShrink: 0, marginTop: 2 }} />
+                    ) : (
+                      <X size={15} color="#CBD5E1" style={{ flexShrink: 0, marginTop: 2 }} />
+                    )}
+                    <span style={{ textDecoration: f.included ? "none" : "line-through" }}>{f.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                className="action-btn-outline"
+                style={{ width: "100%", padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                onClick={() => handleNav("signin")}
+              >
+                Get Started with Basic <ArrowRight size={14} />
+              </button>
+            </div>
+
+            {/* Card 2: Intermediate Plan (Featured) */}
+            <div
+              className="lp-card-hover"
+              style={{
+                background: "#FFFFFF",
+                borderRadius: 14,
+                border: "2px solid var(--primary, #2563EB)",
+                padding: "28px 24px",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                boxShadow: "0 12px 36px -4px rgba(37, 99, 235, 0.15)",
+                transform: "translateY(-4px)"
+              }}
+            >
+              <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(135deg, #2563EB, #1D4ED8)", color: "#FFFFFF", padding: "3px 14px", borderRadius: 20, fontSize: 10.5, fontWeight: 800, letterSpacing: ".05em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4, boxShadow: "0 2px 8px rgba(37,99,235,0.3)" }}>
+                <Sparkles size={12} /> Most Popular
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#2563EB", background: "#EFF6FF", padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", letterSpacing: ".04em" }}>
+                  Growth
+                </span>
+                <span style={{ fontSize: 11.5, color: "#64748B", fontWeight: 600 }}>Scaling Orgs</span>
+              </div>
+
+              <h3 style={{ fontSize: 22, fontWeight: 900, color: "#0F172A", margin: "0 0 6px" }}>Intermediate Plan</h3>
+              <p style={{ fontSize: 12.5, color: "#64748B", margin: "0 0 16px", minHeight: 38, lineHeight: 1.45 }}>
+                For scaling organizations needing manager visibility, skill intelligence, and custom white-label branding.
+              </p>
+
+              <div style={{ padding: "16px 0", borderTop: "1px solid #F1F5F9", borderBottom: "1px solid #F1F5F9", marginBottom: 18 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                  <span style={{ fontSize: 32, fontWeight: 900, color: "#0F172A", letterSpacing: "-0.03em" }}>
+                    {selectedCurrency === "NGN" ? "₦500k" : selectedCurrency === "GBP" ? "£400" : selectedCurrency === "EUR" ? "€440" : "$500"}
+                  </span>
+                  <span style={{ fontSize: 13, color: "#64748B", fontWeight: 600 }}>/ month</span>
+                </div>
+                <div style={{ fontSize: 11.5, color: "#2563EB", fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", gap: 5 }}>
+                  <Armchair size={13} /> 50 learner seats included • Max 150 seats
+                </div>
+              </div>
+
+              {/* Feature List */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#2563EB", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 2 }}>
+                  Everything in Basic, plus:
+                </div>
+                {[
+                  { text: "Multiple Admin & Instructor seats", included: true },
+                  { text: "50 Learner seats included (expandable up to 150 max seats)", included: true },
+                  { text: "Discounted additional seats at ₦10,000 / $10", included: true },
+                  { text: "400 Org AI credits (4,000 AI query interactions)", included: true },
+                  { text: "Manager View & Department Oversight Hub", included: true },
+                  { text: "Workforce Intelligence & AI Skill Graphs", included: true },
+                  { text: "Data download — CSV & PDF audit exports", included: true },
+                  { text: "Custom white-label branding & company logo", included: true },
+                  { text: "Priority Support & Live Cohort Sessions", included: true },
+                  { text: "API connection & Webhook linking", included: false },
+                ].map((f, idx) => (
+                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: f.included ? "#0F172A" : "#94A3B8", fontWeight: f.included ? 600 : 400 }}>
+                    {f.included ? (
+                      <Check size={15} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} />
+                    ) : (
+                      <X size={15} color="#CBD5E1" style={{ flexShrink: 0, marginTop: 2 }} />
+                    )}
+                    <span style={{ textDecoration: f.included ? "none" : "line-through" }}>{f.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                className="action-btn-primary"
+                style={{ width: "100%", padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, boxShadow: "0 4px 12px rgba(37,99,235,0.25)" }}
+                onClick={() => handleNav("signin")}
+              >
+                Get Started with Intermediate <ArrowRight size={14} />
+              </button>
+            </div>
+
+            {/* Card 3: Advanced / Enterprise Plan */}
+            <div
+              className="lp-card-hover"
+              style={{
+                background: "#0B1120",
+                color: "#FFFFFF",
+                borderRadius: 14,
+                border: "1px solid #1E293B",
+                padding: "28px 24px",
+                display: "flex",
+                flexDirection: "column",
+                position: "relative",
+                boxShadow: "0 8px 30px -4px rgba(15, 23, 42, 0.25)"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#38BDF8", background: "rgba(56, 189, 248, 0.12)", padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", letterSpacing: ".04em" }}>
+                  Enterprise
+                </span>
+                <span style={{ fontSize: 11.5, color: "#94A3B8", fontWeight: 600 }}>Large Scale</span>
+              </div>
+
+              <h3 style={{ fontSize: 22, fontWeight: 900, color: "#FFFFFF", margin: "0 0 6px" }}>Advanced Enterprise</h3>
+              <p style={{ fontSize: 12.5, color: "#94A3B8", margin: "0 0 16px", minHeight: 38, lineHeight: 1.45 }}>
+                Fully bespoke enterprise rollout with API integrations, SSO, and unlimited seat capacity.
+              </p>
+
+              <div style={{ padding: "16px 0", borderTop: "1px solid #1E293B", borderBottom: "1px solid #1E293B", marginBottom: 18 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+                  <span style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.02em" }}>
+                    Custom Pricing
+                  </span>
+                </div>
+                <div style={{ fontSize: 11.5, color: "#38BDF8", fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", gap: 5 }}>
+                  <Armchair size={13} /> 150 base seats included • Unlimited extra seats
+                </div>
+              </div>
+
+              {/* Feature List */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, marginBottom: 24 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#38BDF8", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 2 }}>
+                  Everything in Intermediate, plus:
+                </div>
+                {[
+                  { text: "Multiple Admin, Manager & Instructor seats", included: true },
+                  { text: "150 Base seats included + buy as many as needed", included: true },
+                  { text: "Unlimited expansion & custom volume", included: true },
+                  { text: "Custom tailored AI credits pool", included: true },
+                  { text: "API connection & Webhook integrations", included: true },
+                  { text: "Enterprise SSO (SAML 2.0, Okta, Azure AD)", included: true },
+                  { text: "Full custom white-label & custom domains", included: true },
+                  { text: "Dedicated Customer Success Manager & SLA", included: true },
+                  { text: "Custom security reviews & audit compliance", included: true },
+                ].map((f, idx) => (
+                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "#E2E8F0" }}>
+                    <Check size={15} color="#38BDF8" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span>{f.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                style={{
+                  width: "100%", padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: "#FFFFFF", color: "#0F172A", border: "none"
+                }}
+                onClick={() => handleNav("demo")}
+              >
+                Contact Sales Team <ArrowRight size={14} />
+              </button>
+            </div>
+
+          </div>
+
+          {/* Individual Learner / Public Org Notice Banner */}
+          <div
+            style={{
+              marginTop: 28,
+              background: "#FFFFFF",
+              border: "1px solid #E2E8F0",
+              borderRadius: 12,
+              padding: "16px 20px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 14,
+              textAlign: "left"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(37,99,235,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary, #2563EB)", flexShrink: 0 }}>
+                <GraduationCap size={18} />
+              </div>
+              <div>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: "#0F172A" }}>
+                  Joining as an Individual Learner?
+                </div>
+                <div style={{ fontSize: 12, color: "#64748B", marginTop: 2 }}>
+                  Join the <strong>Train AI Digital Training</strong> public organization for ₦15,000 / $15 per 15 credits (unpaid free trial starts with 2 credits).
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                className="action-btn-outline"
+                style={{ padding: "8px 14px", borderRadius: 6, fontSize: 12, fontWeight: 700 }}
+                onClick={() => handleNav("plan-modal")}
+              >
+                Compare All Features
+              </button>
+              <button
+                className="action-btn-primary"
+                style={{ padding: "8px 14px", borderRadius: 6, fontSize: 12, fontWeight: 700 }}
+                onClick={() => handleNav("signin")}
+              >
+                Join as Individual →
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 8: ENTERPRISE TRUST & DATA SECURITY
           ========================================================================= */}
       <section id="trust" className="lp-bg-surface-2" style={{ width: "100%" }}>
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "44px 20px 54px", textAlign: "left" }}>
