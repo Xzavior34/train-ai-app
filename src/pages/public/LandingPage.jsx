@@ -1617,43 +1617,42 @@ export default function LandingPage({ onNavigate }) {
             <div
               className="lp-card-hover"
               style={{
-                background: "#0B1120",
-                color: "#FFFFFF",
+                background: "#FFFFFF",
                 borderRadius: 14,
-                border: "1px solid #1E293B",
+                border: "1px solid #E2E8F0",
                 padding: "28px 24px",
                 display: "flex",
                 flexDirection: "column",
                 position: "relative",
-                boxShadow: "0 8px 30px -4px rgba(15, 23, 42, 0.25)"
+                boxShadow: "0 4px 20px -2px rgba(15, 23, 42, 0.06)"
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: "#38BDF8", background: "rgba(56, 189, 248, 0.12)", padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", letterSpacing: ".04em" }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: "#6366F1", background: "#EEF2FF", padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", letterSpacing: ".04em" }}>
                   Enterprise
                 </span>
-                <span style={{ fontSize: 11.5, color: "#94A3B8", fontWeight: 600 }}>Large Scale</span>
+                <span style={{ fontSize: 11.5, color: "#64748B", fontWeight: 600 }}>Large Scale</span>
               </div>
 
-              <h3 style={{ fontSize: 22, fontWeight: 900, color: "#FFFFFF", margin: "0 0 6px" }}>Advanced Enterprise</h3>
-              <p style={{ fontSize: 12.5, color: "#94A3B8", margin: "0 0 16px", minHeight: 38, lineHeight: 1.45 }}>
+              <h3 style={{ fontSize: 22, fontWeight: 900, color: "#0F172A", margin: "0 0 6px" }}>Advanced Enterprise</h3>
+              <p style={{ fontSize: 12.5, color: "#64748B", margin: "0 0 16px", minHeight: 38, lineHeight: 1.45 }}>
                 Fully bespoke enterprise rollout with API integrations, SSO, and unlimited seat capacity.
               </p>
 
-              <div style={{ padding: "16px 0", borderTop: "1px solid #1E293B", borderBottom: "1px solid #1E293B", marginBottom: 18 }}>
+              <div style={{ padding: "16px 0", borderTop: "1px solid #F1F5F9", borderBottom: "1px solid #F1F5F9", marginBottom: 18 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                  <span style={{ fontSize: 26, fontWeight: 900, color: "#FFFFFF", letterSpacing: "-0.02em" }}>
+                  <span style={{ fontSize: 26, fontWeight: 900, color: "#0F172A", letterSpacing: "-0.02em" }}>
                     Custom Pricing
                   </span>
                 </div>
-                <div style={{ fontSize: 11.5, color: "#38BDF8", fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", gap: 5 }}>
+                <div style={{ fontSize: 11.5, color: "#6366F1", fontWeight: 700, marginTop: 4, display: "flex", alignItems: "center", gap: 5 }}>
                   <Armchair size={13} /> 150 base seats included • Unlimited extra seats
                 </div>
               </div>
 
               {/* Feature List */}
               <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1, marginBottom: 24 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#38BDF8", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 2 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#6366F1", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 2 }}>
                   Everything in Intermediate, plus:
                 </div>
                 {[
@@ -1667,18 +1666,19 @@ export default function LandingPage({ onNavigate }) {
                   { text: "Dedicated Customer Success Manager & SLA", included: true },
                   { text: "Custom security reviews & audit compliance", included: true },
                 ].map((f, idx) => (
-                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "#E2E8F0" }}>
-                    <Check size={15} color="#38BDF8" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12.5, color: "#334155" }}>
+                    <Check size={15} color="#6366F1" style={{ flexShrink: 0, marginTop: 2 }} />
                     <span>{f.text}</span>
                   </div>
                 ))}
               </div>
 
               <button
+                className="action-btn-outline"
                 style={{
                   width: "100%", padding: "12px", borderRadius: 8, fontWeight: 700, fontSize: 13.5, cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                  background: "#FFFFFF", color: "#0F172A", border: "none"
+                  borderColor: "#6366F1", color: "#4F46E5"
                 }}
                 onClick={() => handleNav("demo")}
               >
