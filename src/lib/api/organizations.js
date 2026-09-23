@@ -454,12 +454,13 @@ export async function resolveOrgPaymentGateway(organizationId) {
 // fetchTierPrice() itself - the actual charge below is always the real,
 // current, server-configured amount regardless of what that preview text
 // shows, so this is a display-accuracy gap, not a billing-integrity one.
-export const TIER_LABELS = { starter: "Starter", growth: "Growth" };
+export const TIER_LABELS = { starter: "Basic", growth: "Intermediate", basic: "Basic", intermediate: "Intermediate", enterprise: "Advanced" };
 
 export async function fetchTierPrice(tier, currency = "USD") {
-  const fallback = tier === "growth"
-    ? { USD: 4500, NGN: 4500000, GBP: 3600, EUR: 4200 }
-    : { USD: 1500, NGN: 1500000, GBP: 1200, EUR: 1400 };
+  const isGrowth = tier === "growth" || tier === "intermediate";
+  const fallback = isGrowth
+    ? { USD: 50000, NGN: 50000000, GBP: 40000, EUR: 44000 }
+    : { USD: 25000, NGN: 25000000, GBP: 19000, EUR: 22000 };
   if (!supabase) return { currency, unit_amount_minor: fallback[currency] ?? fallback.USD, unverified_fallback: true };
   try {
     const { data, error } = await supabase.rpc("get_active_price", { p_category: `org_subscription_${tier}`, p_currency: currency });

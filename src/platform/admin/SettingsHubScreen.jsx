@@ -39,11 +39,15 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const SEAT_PRICE_DISPLAY = (seatPriceQuery.data?.unit_amount_minor || (locCurrency === "NGN" ? 1500000 : 1000)) / 100;
   const starterPriceQuery = useSupabaseQuery(async () => fetchTierPrice("starter", locCurrency), [locCurrency]);
   const growthPriceQuery = useSupabaseQuery(async () => fetchTierPrice("growth", locCurrency), [locCurrency]);
-  const starterAmount = (starterPriceQuery.data?.unit_amount_minor || (locCurrency === "NGN" ? 150000000 : 150000)) / 100;
-  const growthAmount = (growthPriceQuery.data?.unit_amount_minor || (locCurrency === "NGN" ? 450000000 : 450000)) / 100;
+  const starterAmount = (starterPriceQuery.data?.unit_amount_minor || (locCurrency === "NGN" ? 25000000 : 25000)) / 100;
+  const growthAmount = (growthPriceQuery.data?.unit_amount_minor || (locCurrency === "NGN" ? 50000000 : 50000)) / 100;
 
   function fmtTierPrice(amount) {
-    if (locCurrency === "NGN") return `₦${(amount / 1000000).toFixed(1)}M/mo`;
+    if (locCurrency === "NGN") {
+      if (amount >= 1000000) return `₦${(amount / 1000000).toFixed(1)}M/mo`;
+      if (amount >= 1000) return `₦${Math.round(amount / 1000)}k/mo`;
+      return `₦${Number(amount).toLocaleString()}/mo`;
+    }
     return `${userLoc.symbol}${Number(amount).toLocaleString()}/mo`;
   }
 
@@ -492,17 +496,17 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
 
                 {/* Plan Highlights Grid */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
-                  {/* Starter Box */}
+                  {/* Basic Box */}
                   <div style={{
                     padding: "12px", borderRadius: 8, border: `1.5px solid ${org?.subscription_tier === "starter" ? "var(--primary)" : "var(--border)"}`,
                     background: org?.subscription_tier === "starter" ? "rgba(37,99,235,0.06)" : "var(--surface-2)"
                   }}>
                     <div className="ta-row ta-between">
-                      <strong style={{ fontSize: 13 }}>Starter</strong>
+                      <strong style={{ fontSize: 13 }}>Basic</strong>
                       <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>{fmtTierPrice(starterAmount)}</span>
                     </div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
-                      Up to 100 learners • Course Builder • 10 AI credits/user • Org-wide analytics.
+                      20 learners included (1 Admin, 1 Instructor) • 220 org AI credits • Course Builder • Additional seats at ₦15k / $15.
                     </div>
                     <button
                       className={`ta-btn ${org?.subscription_tier === "starter" && org?.status === "active" ? "ta-btn-ghost" : "ta-btn-primary"} ta-mt10`}
@@ -510,22 +514,22 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       disabled={payingTier === "starter" || (org?.subscription_tier === "starter" && org?.status === "active")}
                       onClick={() => handleUpgrade("starter")}
                     >
-                      {org?.subscription_tier === "starter" && org?.status === "active" ? "Current Plan" : payingTier === "starter" ? "Redirecting..." : "Activate Starter"}
+                      {org?.subscription_tier === "starter" && org?.status === "active" ? "Current Plan" : payingTier === "starter" ? "Redirecting..." : "Activate Basic"}
                     </button>
                   </div>
 
-                  {/* Growth Box */}
+                  {/* Intermediate Box */}
                   <div style={{
                     padding: "12px", borderRadius: 8, border: `1.5px solid ${org?.subscription_tier === "growth" ? "var(--primary)" : "var(--border)"}`,
                     background: org?.subscription_tier === "growth" ? "rgba(37,99,235,0.06)" : "var(--surface-2)",
                     position: "relative"
                   }}>
                     <div className="ta-row ta-between">
-                      <strong style={{ fontSize: 13 }}>Growth</strong>
+                      <strong style={{ fontSize: 13 }}>Intermediate</strong>
                       <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>{fmtTierPrice(growthAmount)}</span>
                     </div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
-                      Up to 500 learners • Manager View • Advanced Skill Graphs • CSV/PDF Exports.
+                      30 learners included • Multiple Staff • 400 org AI credits • Manager View • Workforce Intelligence • Custom Branding.
                     </div>
                     <button
                       className={`ta-btn ${org?.subscription_tier === "growth" && org?.status === "active" ? "ta-btn-ghost" : "ta-btn-primary"} ta-mt10`}
@@ -533,7 +537,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       disabled={payingTier === "growth" || (org?.subscription_tier === "growth" && org?.status === "active")}
                       onClick={() => handleUpgrade("growth")}
                     >
-                      {org?.subscription_tier === "growth" && org?.status === "active" ? "Current Plan" : payingTier === "growth" ? "Redirecting..." : "Activate Growth"}
+                      {org?.subscription_tier === "growth" && org?.status === "active" ? "Current Plan" : payingTier === "growth" ? "Redirecting..." : "Activate Intermediate"}
                     </button>
                   </div>
                 </div>
