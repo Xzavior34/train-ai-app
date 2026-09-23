@@ -4,7 +4,7 @@ import {
   Brain, ClipboardCheck, AlertTriangle, Bot, 
   TrendingUp, CheckCircle2, Circle, ArrowRight, UserCheck, 
   Award, ShieldCheck, ChevronRight, Activity, BarChart3, Target, BookOpen, Download,
-  ExternalLink, Eye, Filter, Sparkles, PlusCircle, ArrowUpRight, Lock, Zap
+  ExternalLink, Eye, Filter, PlusCircle, ArrowUpRight, Lock, Zap
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { orgHasFeature, minTierLabelFor, getTierDisplayName } from "../../lib/tierFeatures.js";
@@ -317,23 +317,15 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId,
         {/* =========================================================================
             WORKFORCE INTELLIGENCE HERO BANNER
             ========================================================================= */}
-        <div className="ta-hero-banner anim-fluid-entrance">
+        {/* =========================================================================
+            WORKFORCE INTELLIGENCE HERO BANNER WITH INTEGRATED KPI METRIC CARDS
+            ========================================================================= */}
+        <div className="ta-hero-banner anim-fluid-entrance" style={{ borderRadius: 14, overflow: "hidden", padding: "20px 22px" }}>
           <div className="tai-glow-cobalt" />
-          <div className="ta-hero-inner">
+          <div className="ta-hero-inner" style={{ marginBottom: 18 }}>
             <div className="ta-hero-text">
-              <h1 className="ta-hero-title">Workforce Intelligence &amp; Skill Radar</h1>
-              <p className="ta-hero-desc">Map enterprise competencies, skill gaps, readiness trajectories, and automated upskilling paths.</p>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <span className="ta-tag ta-tag-success">
-                  <Brain size={12} /> {readinessDisplay} Enterprise Readiness
-                </span>
-                <span className="ta-tag ta-tag-info">
-                  <Target size={12} /> {allLearners.length} Active Profiles Tracked
-                </span>
-                <span className="ta-tag ta-tag-warning">
-                  <Activity size={12} /> {wi.aiUsageCount7d ?? 0} AI Queries (7d)
-                </span>
-              </div>
+              <h1 className="ta-hero-title" style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Workforce Intelligence &amp; Skill Radar</h1>
+              <p className="ta-hero-desc" style={{ marginTop: 6, fontSize: 13, color: "rgba(255, 255, 255, 0.85)" }}>Map enterprise competencies, skill gaps, readiness trajectories, and automated upskilling paths.</p>
             </div>
             <div className="ta-hero-actions">
               <button 
@@ -345,76 +337,104 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId,
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Top 4 KPI Metrics with Interactive Click-Throughs */}
-        <div className="ta-grid ta-grid-4 anim-stagger">
-          <div 
-            className="ta-card ta-card-hover" 
-            style={{ padding: 18, cursor: setScreen ? "pointer" : "default" }}
-            onClick={() => setScreen?.("analytics")}
-            title={setScreen ? "Click to view Enterprise Analytics" : undefined}
-          >
-            <div className="ta-row ta-between">
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Workforce Readiness</span>
-              <Brain size={18} color="var(--primary, #2563EB)" />
+          {/* Neatly & Visibly Displayed Integrated Hero Metric Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, position: "relative", zIndex: 1 }}>
+            <div 
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: 12,
+                padding: "14px 16px",
+                cursor: setScreen ? "pointer" : "default"
+              }}
+              onClick={() => setScreen?.("analytics")}
+              title={setScreen ? "Click to view Enterprise Analytics" : undefined}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "rgba(255, 255, 255, 0.8)", fontSize: 12, fontWeight: 600 }}>
+                <span>Workforce Readiness</span>
+                <Brain size={16} color="#60A5FA" />
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#FFFFFF", marginTop: 6 }}>
+                {readinessDisplay}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11.5, marginTop: 4, color: "#34D399" }}>
+                <span>Enterprise baseline</span>
+                {setScreen && <ArrowUpRight size={13} color="rgba(255, 255, 255, 0.6)" />}
+              </div>
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
-              {readinessDisplay}
-            </div>
-            <div className="ta-row ta-between ta-mt4" style={{ fontSize: 11.5 }}>
-              <span style={{ color: "var(--success)" }}>Enterprise baseline</span>
-              {setScreen && <ArrowUpRight size={13} color="var(--text-3)" />}
-            </div>
-          </div>
 
-          <div 
-            className="ta-card ta-card-hover" 
-            style={{ padding: 18, cursor: setScreen ? "pointer" : "default" }}
-            onClick={() => setScreen?.("compliance")}
-            title={setScreen ? "Click to view Course Compliance Tracker" : undefined}
-          >
-            <div className="ta-row ta-between">
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Avg Course Completion</span>
-              <ClipboardCheck size={18} color="#10B981" />
+            <div 
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: 12,
+                padding: "14px 16px",
+                cursor: setScreen ? "pointer" : "default"
+              }}
+              onClick={() => setScreen?.("compliance")}
+              title={setScreen ? "Click to view Course Compliance Tracker" : undefined}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "rgba(255, 255, 255, 0.8)", fontSize: 12, fontWeight: 600 }}>
+                <span>Avg Course Completion</span>
+                <ClipboardCheck size={16} color="#34D399" />
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#FFFFFF", marginTop: 6 }}>
+                {avgCompletionDisplay}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11.5, marginTop: 4, color: "rgba(255, 255, 255, 0.7)" }}>
+                <span>Across all active tracks</span>
+                {setScreen && <ArrowUpRight size={13} color="rgba(255, 255, 255, 0.6)" />}
+              </div>
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
-              {avgCompletionDisplay}
-            </div>
-            <div className="ta-row ta-between ta-mt4" style={{ fontSize: 11.5 }}>
-              <span style={{ color: "var(--text-2)" }}>Across all active tracks</span>
-              {setScreen && <ArrowUpRight size={13} color="var(--text-3)" />}
-            </div>
-          </div>
 
-          <div 
-            className="ta-card ta-card-hover" 
-            style={{ padding: 18, cursor: setScreen ? "pointer" : "default" }}
-            onClick={() => setScreen?.("compliance")}
-            title={setScreen ? "Click to view Compliance & Mandatory Training" : undefined}
-          >
-            <div className="ta-row ta-between">
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Compliance Rate</span>
-              <ShieldCheck size={18} color="#F59E0B" />
+            <div 
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: 12,
+                padding: "14px 16px",
+                cursor: setScreen ? "pointer" : "default"
+              }}
+              onClick={() => setScreen?.("compliance")}
+              title={setScreen ? "Click to view Compliance & Mandatory Training" : undefined}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "rgba(255, 255, 255, 0.8)", fontSize: 12, fontWeight: 600 }}>
+                <span>Compliance Rate</span>
+                <ShieldCheck size={16} color="#FBBF24" />
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#FFFFFF", marginTop: 6 }}>
+                {complianceRateDisplay}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11.5, marginTop: 4, color: "#34D399" }}>
+                <span>Audit standing</span>
+                {setScreen && <ArrowUpRight size={13} color="rgba(255, 255, 255, 0.6)" />}
+              </div>
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
-              {complianceRateDisplay}
-            </div>
-            <div className="ta-row ta-between ta-mt4" style={{ fontSize: 11.5 }}>
-              <span style={{ color: "var(--success)" }}>Audit standing</span>
-              {setScreen && <ArrowUpRight size={13} color="var(--text-3)" />}
-            </div>
-          </div>
 
-          <div className="ta-card" style={{ padding: 18 }}>
-            <div className="ta-row ta-between">
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>AI Coach Queries (7d)</span>
-              <Bot size={18} color="var(--primary-light, #3B82F6)" />
+            <div 
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: 12,
+                padding: "14px 16px"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "rgba(255, 255, 255, 0.8)", fontSize: 12, fontWeight: 600 }}>
+                <span>AI Coach Queries (7d)</span>
+                <Bot size={16} color="#93C5FD" />
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#FFFFFF", marginTop: 6 }}>
+                {wi.aiUsageCount7d ?? 0}
+              </div>
+              <div style={{ fontSize: 11.5, color: "#60A5FA", marginTop: 4 }}>
+                Active learning adoption
+              </div>
             </div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 8 }}>
-              {wi.aiUsageCount7d ?? 0}
-            </div>
-            <div style={{ fontSize: 11.5, color: "var(--primary)", marginTop: 4 }}>Active learning adoption</div>
           </div>
         </div>
 

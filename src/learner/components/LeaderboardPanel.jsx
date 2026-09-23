@@ -281,7 +281,7 @@ export function LeaderboardPanel({
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>2nd Place Contender</div>
               </div>
-              <div style={{ fontWeight: 900, fontSize: 14, color: "var(--primary)", background: "var(--primary-tint)", padding: "3px 10px", borderRadius: 999 }}>
+              <div style={{ fontWeight: 900, fontSize: 14, color: "#0284C7", background: "rgba(2, 132, 199, 0.16)", border: "1px solid rgba(2, 132, 199, 0.35)", padding: "4px 12px", borderRadius: 999 }}>
                 {second?.points?.toLocaleString() || 0} pts
               </div>
             </div>

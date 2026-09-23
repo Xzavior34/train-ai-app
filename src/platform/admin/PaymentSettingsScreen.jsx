@@ -4,7 +4,7 @@ import {
   CreditCard, ShieldCheck, CheckCircle2, AlertCircle, RefreshCw,
   Copy, Check, ExternalLink, Key, Landmark, HelpCircle,
   ArrowRight, Save, Lock, DollarSign, Wallet, CheckCheck,
-  ChevronDown, ChevronRight, Sparkles, Building2, Globe
+  ChevronDown, ChevronRight, Building2, Globe
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
@@ -189,7 +189,7 @@ export function PaymentSettingsScreen({ orgId, orgSelector, setScreen, userEmail
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>
-                <CreditCard size={18} color="var(--primary)" />
+                💳
               </div>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Step-by-Step Setup Guide &amp; Webhooks</h2>

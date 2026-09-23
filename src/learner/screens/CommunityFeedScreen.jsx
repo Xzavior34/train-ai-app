@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import {
-  MessageSquare, Heart, Send, Search, Filter, Sparkles, MessageCircle,
-  Share2, MoreVertical, Plus, CheckCircle2, User, Flame, BookOpen, Users, ArrowLeft
+  MessageSquare, Heart, Send, Search, Filter, MessageCircle,
+  Share2, MoreVertical, Plus, CheckCircle2, User, UserCheck, BookOpen, Users, ArrowLeft
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
@@ -137,7 +137,7 @@ export function CommunityFeedScreen({
   };
 
   return (
-    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <TopBar title="Community Feed" sub="Real-time discussions, questions, and insights" onBack={back} />
 
       {/* =========================================================================
@@ -167,10 +167,6 @@ export function CommunityFeedScreen({
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, position: "relative", zIndex: 1 }}>
           <div style={{ maxWidth: 560 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 999, background: "rgba(37, 99, 235, 0.25)", border: "1px solid rgba(59, 130, 246, 0.45)", fontSize: 11, fontWeight: 800, color: "#60A5FA", marginBottom: 10 }}>
-              <Flame size={13} color="#60A5FA" />
-              <span style={{ letterSpacing: "0.04em" }}>LIVE COMMUNITY FEED</span>
-            </div>
             <h1 className="tai-hero-title" style={{ margin: 0, fontSize: "clamp(20px, 2.4vw, 26px)", fontWeight: 800, color: "#FFFFFF", lineHeight: 1.25 }}>
               Connect, Learn & Share with Peers
             </h1>
@@ -227,13 +223,13 @@ export function CommunityFeedScreen({
         </div>
 
         {/* Community Stat Pills */}
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(255, 255, 255, 0.12)" }}>
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap", marginTop: 18, paddingTop: 14, borderTop: "1px solid rgba(255, 255, 255, 0.12)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
             <MessageCircle size={14} color="#60A5FA" />
             <strong style={{ color: "#FFFFFF" }}>{posts.length}</strong> Total Posts
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
-            <Sparkles size={14} color="#60A5FA" />
+            <UserCheck size={14} color="#60A5FA" />
             <strong style={{ color: "#FFFFFF" }}>Verified</strong> Instructors Active
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
@@ -361,26 +357,6 @@ export function CommunityFeedScreen({
               }}
             />
           </div>
-
-          {!composerOpen && (
-            <button
-              type="button"
-              className="tai-btn tai-btn-primary"
-              onClick={() => setComposerOpen(true)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "9px 16px",
-                borderRadius: 10,
-                fontSize: 13,
-                fontWeight: 600
-              }}
-            >
-              <Plus size={15} />
-              <span>New Post</span>
-            </button>
-          )}
         </div>
 
         {/* Tag pills */}
