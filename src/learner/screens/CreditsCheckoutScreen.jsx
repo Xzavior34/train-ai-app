@@ -6,16 +6,15 @@ import { requestCredits, fetchMyCreditRequests } from "../../lib/api/creditReque
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { getUserLocationCurrency } from "../../lib/locationCurrency.js";
 
-// Credit display note: 10 credits = 1 AI query (cosmetic multiplier applied
-// to make balances feel more generous while keeping the same real value).
-// Without payment: 20 credits (= 2 real queries). With payment packages below.
+// 1 credit = 10 AI Tutor queries / interview simulations / code analyses.
+// Free accounts receive 2 credits (20 queries). Paid packages below:
 const PACKAGES = [
   {
     id: "starter",
-    credits: 150,
+    credits: 15,
     label: "Personal Starter",
     tagline: "For individuals joining Train AI's digital training platform",
-    features: ["150 AI Neural Credits", "15 AI Tutor queries", "Automated Code Analysis", "Instant credit allocation", "Never expires"],
+    features: ["15 AI Neural Credits (150 Queries)", "150 AI Tutor Questions & Analyses", "Automated Code Analysis", "Instant credit allocation", "Never expires"],
     priceUSD: 15,
     priceNGN: 15000,
     priceGBP: 12,
@@ -23,11 +22,11 @@ const PACKAGES = [
   },
   {
     id: "pro",
-    credits: 2000,
+    credits: 200,
     label: "Pro",
     highlight: true,
     tagline: "Most popular for active career learners",
-    features: ["2,000 AI Neural Credits", "200 AI Tutor queries", "Full Mock Technical Interviews", "Live Project Feedback", "Priority AI model response", "Never expires"],
+    features: ["200 AI Neural Credits (2,000 Queries)", "2,000 AI Tutor Questions", "Full Mock Technical Interviews", "Live Project Feedback", "Priority AI model response", "Never expires"],
     priceUSD: 15,
     priceNGN: 22000,
     priceGBP: 12,
@@ -35,11 +34,11 @@ const PACKAGES = [
   },
   {
     id: "team",
-    credits: 6000,
+    credits: 600,
     label: "Power Learner",
     badge: "BEST VALUE",
     tagline: "Comprehensive career track mastery",
-    features: ["6,000 AI Neural Credits", "600 AI Tutor queries", "Unlimited Interview Simulations", "Deep Architectural Reviews", "Portfolio & Resume AI Polish", "Never expires"],
+    features: ["600 AI Neural Credits (6,000 Queries)", "6,000 AI Tutor Questions", "Unlimited Interview Simulations", "Deep Architectural Reviews", "Portfolio & Resume AI Polish", "Never expires"],
     priceUSD: 35,
     priceNGN: 50000,
     priceGBP: 28,

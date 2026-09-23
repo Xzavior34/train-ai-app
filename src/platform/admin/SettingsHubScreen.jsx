@@ -506,7 +506,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>{fmtTierPrice(starterAmount)}</span>
                     </div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
-                      20 learners included (1 Admin, 1 Instructor) • 220 org AI credits • Course Builder • Additional seats at ₦15k / $15.
+                      20 learners included (1 Admin, 1 Instructor) • 220 org AI credits (2,200 queries) • Course Builder • Additional seats at ₦15k / $15.
                     </div>
                     <button
                       className={`ta-btn ${org?.subscription_tier === "starter" && org?.status === "active" ? "ta-btn-ghost" : "ta-btn-primary"} ta-mt10`}
@@ -529,7 +529,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                       <span style={{ fontSize: 11, fontWeight: 700, color: "var(--primary)" }}>{fmtTierPrice(growthAmount)}</span>
                     </div>
                     <div style={{ fontSize: 11.5, color: "var(--text-2)", marginTop: 4 }}>
-                      30 learners included • Multiple Staff • 400 org AI credits • Manager View • Workforce Intelligence • Custom Branding.
+                      30 learners included • Multiple Staff • 400 org AI credits (4,000 queries) • Manager View • Workforce Intelligence • Custom Branding.
                     </div>
                     <button
                       className={`ta-btn ${org?.subscription_tier === "growth" && org?.status === "active" ? "ta-btn-ghost" : "ta-btn-primary"} ta-mt10`}
