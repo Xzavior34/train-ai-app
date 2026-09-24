@@ -1,6 +1,7 @@
 import { useAuth } from "../../lib/useAuth.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCurrentUserProfile } from "../../lib/api/platform.js";
+import { isRealDatabaseId } from "../../lib/mockDataManager.js";
 
 export function usePlatformData() {
   const { session } = useAuth();
@@ -9,7 +10,7 @@ export function usePlatformData() {
   }, [session?.user?.id]);
 
   const rawOrgId = profileQuery.data?.organization_id;
-  const orgId = (rawOrgId && rawOrgId !== "demo-org-id") ? rawOrgId : (rawOrgId || "demo-org-id");
+  const orgId = (rawOrgId && isRealDatabaseId(rawOrgId)) ? rawOrgId : null;
   const userRoles = ["admin"];
 
   return {

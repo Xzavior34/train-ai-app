@@ -14,9 +14,9 @@ export async function fetchCurrentUserProfile(userId) {
     try { saved = JSON.parse(localStorage.getItem("trainai_active_session_v1") || "null"); } catch { /* ignore */ }
     const role = saved?.user?.user_metadata?.role || saved?.role || "learner";
     return {
-      id: userId, organization_id: "demo-org-id", role,
-      display_name: role === "admin" ? "Demo Admin" : role === "mentor" ? "Demo Instructor" : role === "manager" ? "Demo Manager" : "Demo Learner",
-      manager_id: role === "learner" ? "demo-manager-id" : null,
+      id: userId, organization_id: null, role,
+      display_name: role === "admin" ? "Platform Administrator" : role === "mentor" ? "Lead Instructor" : role === "manager" ? "Operations Manager" : "Active Learner",
+      manager_id: null,
     };
   }
   let { data, error } = await supabase.from("user_profiles").select("*, organizations:organizations!user_profiles_organization_id_fkey(id, name, slug)").eq("id", userId).maybeSingle();

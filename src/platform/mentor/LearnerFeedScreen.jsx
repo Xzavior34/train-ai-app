@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import {
-  MessagesSquare, Search, Heart, MessageCircle, Pin, Trash2, Send, AlertTriangle
+  MessagesSquare, Search, Heart, MessageCircle, Pin, Trash2, Send
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
@@ -142,16 +142,6 @@ export function LearnerFeedScreen({ mentorId, orgSelector }) {
                 <div style={{ fontSize: 15, fontWeight: 900, color: "#FBBF24" }}>{pinnedCount}</div>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="ta-card" style={{ padding: "10px 14px", background: "var(--surface-2)", border: "1px solid var(--border)" }}>
-          <div className="ta-row ta-gap8" style={{ alignItems: "flex-start" }}>
-            <AlertTriangle size={14} color="var(--text-3)" style={{ marginTop: 2, flexShrink: 0 }} />
-            <span style={{ fontSize: 11.5, color: "var(--text-3)", lineHeight: 1.4 }}>
-              This feed is platform-wide (community posts aren't tied to a single organization in this app yet), so
-              it shows the same posts every instructor and learner sees elsewhere in Community.
-            </span>
           </div>
         </div>
 

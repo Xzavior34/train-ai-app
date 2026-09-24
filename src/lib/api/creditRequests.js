@@ -61,7 +61,7 @@ export async function requestCredits({ userId, organizationId, amount, reason })
   // Fallback / Demo storage
   const newLocal = {
     id: "req-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 6),
-    user_id: resolvedUserId || "demo-learner-user",
+    user_id: resolvedUserId || "guest-learner-user",
     organization_id: organizationId || null,
     amount: numAmount,
     reason: reason || null,
@@ -161,7 +161,7 @@ export async function fetchOrgCreditRequests(orgId) {
     if (!existingIds.has(item.id)) {
       list.push({
         ...item,
-        user: { id: item.user_id, display_name: "Learner (Demo)" },
+        user: { id: item.user_id, display_name: "Learner" },
       });
     }
   }

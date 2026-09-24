@@ -943,7 +943,8 @@ export function CoursesScreen({
                 setShowMyCoursesOnly(false);
                 setCourseSourceTab("all");
                 setCourseSearch("");
-                setSelectedCategory("all");
+                setSelectedPathId("all");
+                setCourseLevelFilter?.("all");
               }}
             >
               Browse All Courses →

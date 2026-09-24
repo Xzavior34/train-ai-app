@@ -99,6 +99,8 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
   const [selectedPackageId, setSelectedPackageId] = useState(PACKAGES[1].id);
   const currency = userLoc.currency;
   const provider = userLoc.provider;
+  const stripeAllowed = currency !== "NGN";
+  const paystackAllowed = currency === "NGN" || currency === "USD";
   const [email, setEmail] = useState(session?.user?.email || "");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");

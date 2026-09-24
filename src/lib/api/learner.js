@@ -1,40 +1,37 @@
 import { supabase } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { ACHIEVEMENT_CATALOG } from "../../learner/achievementCatalog.js";
+import { isRealDatabaseId } from "../mockDataManager.js";
 
 export async function fetchPublishedCourses(organizationId) {
-  if (!supabase) {
-    const now = new Date().toISOString();
-    return [
-      {
-        id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "An introduction to core AI concepts for the workplace.",
-        category: "AI", level: "beginner", duration_hours: 4, course_source: "internal", is_published: true, is_approved: true,
-        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
-      },
-      {
-        id: "demo-course-compliance-101", title: "Workplace Compliance 101", description: "Mandatory compliance training covering core policies.",
-        category: "Compliance", level: "beginner", duration_hours: 2, course_source: "internal", is_published: true, is_approved: true,
-        is_mandatory: true, price: 0, requires_approval: false, created_at: now,
-      },
-      {
-        id: "demo-course-external-leadership", title: "Leadership Essentials", description: "A curated external course on foundational leadership skills.",
-        category: "Leadership", level: "intermediate", duration_hours: 6, course_source: "external", is_published: true, is_approved: true,
-        is_mandatory: false, price: 0, requires_approval: false, created_at: now,
-      },
-    ];
-  }
-  if (!organizationId || organizationId === "demo-org-id") return [];
+  if (!supabase) return [];
   try {
-    let { data, error } = await supabase
+    const validOrgId = organizationId && organizationId !== "demo-org-id" && isRealDatabaseId(organizationId) ? organizationId : null;
+    let query = supabase
+      .from("courses")
+      .select("*")
+      .eq("is_published", true);
+
+    if (validOrgId) {
+      query = query.eq("organization_id", validOrgId);
+    }
+
+    let { data, error } = await query.order("created_at", { ascending: false });
+    if (!error && data && data.length > 0) {
+      return data;
+    }
+
+    // Fallback: If organization-specific query yielded 0 courses, fetch all published courses
+    const { data: allCourses, error: allErr } = await supabase
       .from("courses")
       .select("*")
       .eq("is_published", true)
-      .eq("organization_id", organizationId)
       .order("created_at", { ascending: false });
-    if (!error && data) {
-      return data;
+
+    if (!allErr && allCourses && allCourses.length > 0) {
+      return allCourses;
     }
-    return [];
+    return data || [];
   } catch (e) {
     console.warn("Could not fetch published courses:", e);
     return [];

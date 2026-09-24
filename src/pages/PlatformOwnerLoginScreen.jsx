@@ -28,7 +28,7 @@ export function PlatformOwnerLoginScreen({ onAuthenticated, initialEmail = "", o
     setLoading(true);
     try {
       if (!supabase) {
-        setError("Demo mode - no real database connected. Use the regular sign-in with a +admin email to preview the Owner dashboard instead.");
+        setError("Realtime database connection required. Please verify your credentials or network connection.");
         return;
       }
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
@@ -102,19 +102,6 @@ export function PlatformOwnerLoginScreen({ onAuthenticated, initialEmail = "", o
         <button type="submit" disabled={loading} className="owner-submit" style={{ width: "100%", padding: "11px 12px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, border: "none", cursor: loading ? "default" : "pointer", fontSize: 14 }}>
           {loading ? "Authenticating..." : "Sign in as Platform Owner"}
         </button>
-        {!hasRealProject && (
-          <>
-            <div style={{ textAlign: "center", fontSize: 11, color: "#94A3B8", margin: "16px 0" }}>Temporary, before database is connected</div>
-            <button
-              type="button"
-              onClick={() => onAuthenticated(null)}
-              className="owner-preview-btn"
-              style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#fff", color: "#0F172A", fontWeight: 700, border: "1px solid #0F172A", cursor: "pointer" }}
-            >
-              Preview Owner Dashboard (no database yet)
-            </button>
-          </>
-        )}
       </form>
     </div>
   );

@@ -350,10 +350,10 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
                   {screen === "community" && (
                     <CommunityScreen
                       session={session}
-                      postsQuery={mentorCommunityPostsQuery}
+                      postsQuery={instructorPostsQuery}
                       studyGroupsQuery={allStudyGroupsQuery}
                       myGroupIdsQuery={{ data: (allStudyGroupsQuery.data || []).map((g) => g.id) }}
-                      communityPeopleQuery={mentorCommunityPeopleQuery}
+                      communityPeopleQuery={communityPeopleQuery}
                       createCommunityPost={createCommunityPost}
                       addPostComment={addPostComment}
                       togglePostReaction={togglePostReaction}

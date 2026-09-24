@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo } from "react";
 import { TopBar, Tag, Avatar, ToastContext, exportRowsAsCsv } from "../components/PlatformUI.jsx";
 import {
   CreditCard, Zap, Loader2, Search, TrendingUp, AlertTriangle,
-  Users, CheckCircle2, ShieldAlert, ArrowUpDown, ChevronDown,
+  Users, CheckCircle2, ShieldAlert, ShieldCheck, ArrowUpDown, ChevronDown,
   Download, Activity, Clock, Layers, Filter, Eye, X, RefreshCw
 } from "lucide-react";
 import { PortalModal } from "../../components/common/PortalModal.jsx";

@@ -444,7 +444,7 @@ export default function LandingPage({ onNavigate }) {
               style={styles.requestDemoBtn}
               onClick={() => handleNav("demo")}
             >
-              Request demo
+              Request Access
             </button>
             <button
               className="action-btn-primary"
@@ -506,7 +506,7 @@ export default function LandingPage({ onNavigate }) {
                 style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13 }}
                 onClick={() => handleNav("demo")}
               >
-                Request a demo
+                Request Access
               </button>
             </div>
           </div>
@@ -553,7 +553,7 @@ export default function LandingPage({ onNavigate }) {
                   Start with your organisation <ArrowRight size={14} />
                 </button>
                 <button className="action-btn-outline" style={styles.requestDemoOutlineBtn} onClick={() => handleNav("demo")}>
-                  Request a demo
+                  Request Access
                 </button>
               </div>
 
@@ -1872,7 +1872,7 @@ export default function LandingPage({ onNavigate }) {
                 style={{ background: "transparent", color: "#FFFFFF", fontWeight: 600, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 13.5 }}
                 onClick={() => handleNav("demo")}
               >
-                Request a demo
+                Request Access
               </button>
             </div>
 
@@ -2015,7 +2015,7 @@ export default function LandingPage({ onNavigate }) {
           <div style={styles.modalCard} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div>
-                <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 }}>Request a Live Demo</h3>
+                <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 }}>Request Realtime Access</h3>
                 <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0" }}>Experience the workforce intelligence platform tailored to your team.</p>
               </div>
               <button style={styles.modalClose} onClick={() => setDemoModalOpen(false)} aria-label="Close">
@@ -2026,7 +2026,7 @@ export default function LandingPage({ onNavigate }) {
             {demoSubmitted ? (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 12, background: "#ECFDF5", color: "#059669", borderRadius: 8, fontWeight: 600, fontSize: 13 }}>
                 <CheckCircle2 size={16} />
-                <span>Thank you! We will reach out to schedule your demo shortly.</span>
+                <span>Thank you! We will reach out to set up your realtime access shortly.</span>
               </div>
             ) : (
               <form onSubmit={handleDemoSubmit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -2058,7 +2058,7 @@ export default function LandingPage({ onNavigate }) {
                   rows={2} style={styles.formTextarea}
                 />
                 <button type="submit" disabled={submitting} className="action-btn-primary" style={styles.modalSubmitBtn}>
-                  {submitting ? "Submitting..." : "Schedule Live Demo"} <ArrowRight size={13} />
+                  {submitting ? "Submitting..." : "Request Realtime Access"} <ArrowRight size={13} />
                 </button>
                 {demoError && <div style={{ fontSize: 11.5, color: "#EF4444", fontWeight: 600 }}>{demoError}</div>}
               </form>

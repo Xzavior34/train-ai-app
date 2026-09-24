@@ -13,7 +13,6 @@ import {
   fetchOrgCreditRequests, approveCreditRequest, denyCreditRequest, grantDirectCredits,
 } from "../../lib/api/creditRequests.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
-import { DEMO_MODE } from "../../lib/demoMode.js";
 
 const PROVIDER_META = [
   { key: "paystack", label: "Paystack", currency: "NGN", symbol: "₦", hint: "Cards & bank transfer (Nigeria)" },
@@ -229,7 +228,13 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
             <div className="ta-hero-actions">
               <button
                 className="ta-btn ta-btn-primary"
-                onClick={() => setBuyOpen(true)}
+                onClick={() => {
+                  setActiveTab("seats");
+                  setTimeout(() => {
+                    const el = document.getElementById("buy-seats-section");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }, 50);
+                }}
               >
                 <Plus size={15} /> Buy Seats
               </button>
@@ -360,7 +365,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
             </div>
 
             {/* ---- Buy seats ---- */}
-            <div className="ta-card">
+            <div className="ta-card" id="buy-seats-section">
               <div className="ta-row ta-gap8">
                 <CreditCard size={17} color="var(--primary)" />
                 <div style={{ fontWeight: 800, fontSize: 15 }}>Buy seats</div>
@@ -451,11 +456,6 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
               {!userEmail && (
                 <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 11.5, color: "var(--warning)" }}>
                   <Info size={13} /> No billing email is available for your account, so checkout can't be started.
-                </div>
-              )}
-              {DEMO_MODE && (
-                <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 11.5, color: "var(--text-3)" }}>
-                  <Info size={13} /> No database is connected, so checkout is unavailable in this preview.
                 </div>
               )}
             </div>

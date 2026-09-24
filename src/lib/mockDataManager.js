@@ -21,18 +21,10 @@ export function isRealDatabaseId(id) {
 }
 
 /**
- * Returns true if mock/demo data is enabled (defaults to true for prototyping until disabled by admin/owner).
- * Always returns false when Supabase database is connected.
+ * Always returns false - all operations are 100% realtime from the live database.
  */
 export function isMockDataEnabled() {
-  if (HAS_DATABASE) return false;
-  try {
-    const val = localStorage.getItem(STORAGE_KEY);
-    if (val === "false") return false;
-    return true;
-  } catch {
-    return true;
-  }
+  return false;
 }
 
 /**
