@@ -7,6 +7,7 @@ import {
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient.js";
+import { performGlobalSignOut } from "../../services/authService.js";
 import { DASHBOARD_META } from "../../lib/roleRouting.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCurrentUserProfile, fetchOrgMembers, fetchUsersInOrg, fetchCourses, fetchCohorts } from "../../lib/api/platform.js";
@@ -15,6 +16,7 @@ import { PortalModal } from "../../components/common/PortalModal.jsx";
 export const MobileMenuContext = React.createContext(() => {});
 export const ToastContext = React.createContext(() => {});
 export const NavigationContext = React.createContext(null);
+export const SignOutContext = React.createContext(null);
 
 export function getStoredThemeDark() {
   try {
@@ -742,7 +744,7 @@ export function BrandLogo({ height = 22, isMinimized = false, style = {} }) {
   );
 }
 
-export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher }) {
+export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, onSignOut }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_owner_sidebar_minimized") === "true");
   const [isDarkTheme, setIsDarkTheme] = useState(() => getStoredThemeDark());
 
@@ -877,13 +879,27 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
               {!isMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
             </div>
           )}
+
+          <div
+            className="ta-nav-item"
+            onClick={() => {
+              onClose();
+              if (onSignOut) onSignOut();
+              else performGlobalSignOut();
+            }}
+            title="Sign Out"
+            style={{ color: "var(--danger)", cursor: "pointer" }}
+          >
+            <LogOut size={16} />
+            {!isMinimized && <span>Sign Out</span>}
+          </div>
         </div>
       </aside>
     </>
   );
 }
 
-export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, userRoles = ["admin", "mentor", "super_admin"] }) {
+export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, userRoles = ["admin", "mentor", "super_admin"], onSignOut }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_sidebar_minimized") === "true");
   const [collapsedSections, setCollapsedSections] = useState({});
   const [isDarkTheme, setIsDarkTheme] = useState(() => getStoredThemeDark());
@@ -1074,6 +1090,20 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
               {!isMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
             </div>
           )}
+
+          <div
+            className="ta-nav-item"
+            onClick={() => {
+              onClose();
+              if (onSignOut) onSignOut();
+              else performGlobalSignOut();
+            }}
+            title="Sign Out"
+            style={{ color: "var(--danger)", cursor: "pointer" }}
+          >
+            <LogOut size={16} />
+            {!isMinimized && <span>Sign Out</span>}
+          </div>
         </div>
       </aside>
     </>
@@ -1194,7 +1224,9 @@ function SearchResultRow({ icon: Icon, name, detail, type, onClick }) {
 export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigate, onSignOut }) {
   const openMenu = useContext(MobileMenuContext);
   const navFromContext = useContext(NavigationContext);
+  const contextSignOut = useContext(SignOutContext);
   const handleNavigate = onNavigate || navFromContext;
+  const handleSignOut = onSignOut || contextSignOut || performGlobalSignOut;
   // Screens that pass their own `onNavigate` (almost always their workspace's
   // own `setScreen`) are known to stay inside a workspace that actually has a
   // "settings" screen. The bare NavigationContext fallback instead resolves
@@ -1410,7 +1442,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           {/* Sign Out Action */}
           <button
             className="ta-btn ta-btn-ghost ta-btn-sm ta-header-full-only"
-            onClick={onSignOut || (() => { localStorage.removeItem("trainai_active_session_v1"); window.location.reload(); })}
+            onClick={handleSignOut}
             title="Sign Out"
             aria-label="Sign out"
             style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center", gap: 6 }}
@@ -1482,11 +1514,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
                     style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--danger)" }}
                     onClick={() => {
                       setIsMoreMenuOpen(false);
-                      if (onSignOut) onSignOut();
-                      else {
-                        localStorage.removeItem("trainai_active_session_v1");
-                        window.location.reload();
-                      }
+                      handleSignOut();
                     }}
                   >
                     <LogOut size={16} />

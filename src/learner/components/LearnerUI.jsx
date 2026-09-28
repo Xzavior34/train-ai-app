@@ -5,6 +5,7 @@ import {
   Compass, ShieldCheck, LogOut, Search, Award, BarChart3, HelpCircle, Layers, Mail, Trophy, UserCheck, Radio, Star,
   PanelLeftClose, PanelLeftOpen, Video
 } from "lucide-react";
+import { performGlobalSignOut } from "../../services/authService.js";
 
 // Lets any screen's shared TopBar show a real unread-notifications bell
 // without threading unreadNotifs/push down through every screen's props.
@@ -834,18 +835,16 @@ export function LearnerHeader({
           />
         </div>
 
-        {/* Sign Out Button (Desktop only) */}
-        {onSignOut && (
-          <button
-            className="tai-iconbtn tai-desktop-only"
-            onClick={onSignOut}
-            title="Sign out"
-            style={{ color: "var(--danger)" }}
-            aria-label="Sign out"
-          >
-            <LogOut size={16} />
-          </button>
-        )}
+        {/* Sign Out Button */}
+        <button
+          className="tai-iconbtn"
+          onClick={onSignOut || performGlobalSignOut}
+          title="Sign out"
+          style={{ color: "var(--danger)" }}
+          aria-label="Sign out"
+        >
+          <LogOut size={16} />
+        </button>
       </div>
     </header>
   );
@@ -1041,17 +1040,15 @@ export function DesktopSidebar({
             {!isMinimized && <span>Admin Portal</span>}
           </div>
         )}
-        {onSignOut && (
-          <div
-            className="tai-sub-item"
-            onClick={onSignOut}
-            title="Sign Out"
-            style={{ color: "var(--danger)" }}
-          >
-            <LogOut size={16} />
-            {!isMinimized && <span>Sign Out</span>}
-          </div>
-        )}
+        <div
+          className="tai-sub-item"
+          onClick={onSignOut || performGlobalSignOut}
+          title="Sign Out"
+          style={{ color: "var(--danger)", cursor: "pointer" }}
+        >
+          <LogOut size={16} />
+          {!isMinimized && <span>Sign Out</span>}
+        </div>
       </div>
     </aside>
   );

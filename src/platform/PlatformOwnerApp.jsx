@@ -3,7 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { SUPABASE_PROJECTS, activeProject, getSupabaseClientForProject, setActiveSupabaseProject } from "../services/supabaseClient.js";
-import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext } from "./components/PlatformUI.jsx";
+import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, SignOutContext } from "./components/PlatformUI.jsx";
 import { OverviewScreen } from "./superadmin/OverviewScreen.jsx";
 import { OrganizationsScreen } from "./superadmin/OrganizationsScreen.jsx";
 import { OrgOnboardingWizard } from "./superadmin/OrgOnboardingWizard.jsx";
@@ -150,19 +150,21 @@ export default function PlatformOwnerApp({
   }, []);
 
   return (
-    <NavigationContext.Provider value={(target) => setScreen(target)}>
-      <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
-        <ToastContext.Provider value={showToast}>
-          <div className={`ta ${isDark ? "dark" : ""}`}>
-            <style>{TOKENS}</style>
-            <div className="ta-shell">
-              <OwnerSidebar
-                screen={screen}
-                setScreen={setScreen}
-                mobileOpen={mobileOpen}
-                onClose={() => setMobileOpen(false)}
-                onOpenDashboardSwitcher={() => setSwitcherOpen(true)}
-              />
+    <SignOutContext.Provider value={onSignOut}>
+      <NavigationContext.Provider value={(target) => setScreen(target)}>
+        <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
+          <ToastContext.Provider value={showToast}>
+            <div className={`ta ${isDark ? "dark" : ""}`}>
+              <style>{TOKENS}</style>
+              <div className="ta-shell">
+                <OwnerSidebar
+                  screen={screen}
+                  setScreen={setScreen}
+                  mobileOpen={mobileOpen}
+                  onClose={() => setMobileOpen(false)}
+                  onOpenDashboardSwitcher={() => setSwitcherOpen(true)}
+                  onSignOut={onSignOut}
+                />
 
               <div className="ta-main">
                 {screen === "overview" && <OverviewScreen orgSelector={orgSelector} />}
@@ -217,5 +219,6 @@ export default function PlatformOwnerApp({
         </ToastContext.Provider>
       </MobileMenuContext.Provider>
     </NavigationContext.Provider>
-  );
+  </SignOutContext.Provider>
+);
 }

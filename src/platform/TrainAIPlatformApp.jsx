@@ -4,7 +4,7 @@ import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { fetchMentorProfile, fetchCohortSessions, fetchMyManagedStudyGroups } from "../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../lib/api/platform.js";
 import { fetchLeaderboard } from "../lib/api/learner.js";
-import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext } from "./components/PlatformUI.jsx";
+import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, SignOutContext } from "./components/PlatformUI.jsx";
 import { OrgPaymentCallbackScreen } from "./OrgPaymentCallbackScreen.jsx";
 import { AdminDashboardScreen } from "./admin/AdminDashboardScreen.jsx";
 import { PeopleScreen } from "./admin/PeopleScreen.jsx";
@@ -55,7 +55,7 @@ function defaultWorkspaceForRoles(roles = []) {
 
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 
-export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboard, userRoles: userRolesProp, superAdminSelectedOrgId, setSuperAdminSelectedOrgId } = {}) {
+export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboard, userRoles: userRolesProp, superAdminSelectedOrgId, setSuperAdminSelectedOrgId, onSignOut } = {}) {
   const { session, profileQuery, orgId, userRoles: fallbackUserRoles } = usePlatformData();
   const userRoles = userRolesProp && userRolesProp.length ? userRolesProp : fallbackUserRoles;
 
@@ -194,22 +194,24 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   }
 
   return (
-    <NavigationContext.Provider value={navigateToScreen}>
-      <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
-        <ToastContext.Provider value={showToast}>
-          <div className={`ta ${isDark ? "dark" : ""}`}>
-            <style>{TOKENS}</style>
-            <div className="ta-shell">
-              <Sidebar
-                workspace={workspace}
-                setWorkspace={setWorkspace}
-                screen={screen}
-                setScreen={setScreen}
-                mobileOpen={mobileOpen}
-                onClose={() => setMobileOpen(false)}
-                onOpenDashboardSwitcher={() => setSwitcherOpen(true)}
-                userRoles={userRoles}
-              />
+    <SignOutContext.Provider value={onSignOut}>
+      <NavigationContext.Provider value={navigateToScreen}>
+        <MobileMenuContext.Provider value={() => setMobileOpen(true)}>
+          <ToastContext.Provider value={showToast}>
+            <div className={`ta ${isDark ? "dark" : ""}`}>
+              <style>{TOKENS}</style>
+              <div className="ta-shell">
+                <Sidebar
+                  workspace={workspace}
+                  setWorkspace={setWorkspace}
+                  screen={screen}
+                  setScreen={setScreen}
+                  mobileOpen={mobileOpen}
+                  onClose={() => setMobileOpen(false)}
+                  onOpenDashboardSwitcher={() => setSwitcherOpen(true)}
+                  userRoles={userRoles}
+                  onSignOut={onSignOut}
+                />
 
             <div className="ta-main">
               {workspace === "admin" && (
@@ -358,5 +360,6 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
       </ToastContext.Provider>
     </MobileMenuContext.Provider>
   </NavigationContext.Provider>
+</SignOutContext.Provider>
 );
 }

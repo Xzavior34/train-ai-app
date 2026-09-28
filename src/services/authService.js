@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient.js";
+import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS } from "./supabaseClient.js";
 import { isDemoAdminMarker, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 export async function fetchMyRoles() {
@@ -78,5 +78,56 @@ export async function saveMyPersonalization(userId, learningTracks, skillLevel) 
     } catch (e) {
       console.warn("Could not save user_personalization to database:", e);
     }
+  }
+}
+
+export async function performGlobalSignOut() {
+  try {
+    const promises = [];
+    if (supabase?.auth?.signOut) {
+      promises.push(supabase.auth.signOut().catch(() => {}));
+    }
+    for (const projKey of Object.values(SUPABASE_PROJECTS)) {
+      const client = getSupabaseClientForProject(projKey);
+      if (client?.auth?.signOut && client !== supabase) {
+        promises.push(client.auth.signOut().catch(() => {}));
+      }
+    }
+    await Promise.race([
+      Promise.all(promises),
+      new Promise((resolve) => setTimeout(resolve, 1200))
+    ]);
+  } catch (err) {
+    console.warn("Supabase sign out error:", err);
+  }
+
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        if (
+          key.startsWith("sb-") ||
+          key.includes("supabase") ||
+          key.startsWith("trainai_active") ||
+          key.startsWith("trainai_session") ||
+          key.startsWith("trainai_demo") ||
+          key === "trainai_active_session_v1" ||
+          key === "trainai_active_project_v1"
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+    sessionStorage.clear();
+  } catch (err) {
+    console.warn("Storage wipe error:", err);
+  }
+
+  try {
+    window.location.href = window.location.origin + "/";
+  } catch {
+    window.location.reload();
   }
 }
