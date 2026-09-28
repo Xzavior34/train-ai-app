@@ -66,7 +66,7 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
           {kpis.map((k) => <StatCard key={k.label} stat={k} />)}
         </div>
 
-        <div className="ta-grid ta-grid-2 ta-mt20">
+        <div className="ta-grid ta-grid-2">
           <div className="ta-card" style={{ borderRadius: 10 }}>
             <div className="ta-title">Compliance status breakdown</div>
             <div className="ta-col ta-gap12 ta-mt16">
@@ -104,7 +104,7 @@ export function HrDashboardScreen({ orgId, profileQuery }) {
           </div>
         </div>
 
-        <div className="ta-card ta-mt20" style={{ borderRadius: 10 }}>
+        <div className="ta-card" style={{ borderRadius: 10 }}>
           <div className="ta-row ta-gap10">
             <ShieldCheck size={16} color="var(--text-3)" />
             <span className="ta-body" style={{ fontSize: 12.5 }}>

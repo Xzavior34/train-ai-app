@@ -339,7 +339,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
 
         <div className="tai-col tai-gap20 anim-stagger">
           {filteredCourses.length === 0 && (
-            <div className="tai-card" style={{ textAlign: "center", padding: "48px 24px", borderRadius: 10 }}>
+            <div className="tai-card" style={{ textAlign: "center", padding: "clamp(32px, 5vw, 48px) 20px", borderRadius: 10 }}>
               <BookOpen size={36} color="var(--text-3)" style={{ margin: "0 auto 12px", opacity: 0.6 }} />
               <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>
                 {filterStatus === "completed" ? "No completed courses yet" : filterStatus === "in_progress" ? "No courses in progress" : "No enrolled courses yet"}

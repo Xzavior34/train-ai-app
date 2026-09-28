@@ -879,7 +879,7 @@ export function CoursesScreen({
           ========================================================================= */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
         {filteredCatalog.length === 0 ? (
-          <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "48px 24px", borderRadius: 10 }}>
+          <div className="tai-card" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "clamp(32px, 5vw, 48px) 20px", borderRadius: 10 }}>
             <div style={{ width: 60, height: 60, borderRadius: 10, background: "var(--primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
               <BookOpen size={26} color="var(--primary)" />
             </div>

@@ -301,7 +301,7 @@ export default class ErrorBoundary extends React.Component {
                   className="anim-fluid-entrance"
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
                     gap: 8,
                     paddingTop: 10
                   }}

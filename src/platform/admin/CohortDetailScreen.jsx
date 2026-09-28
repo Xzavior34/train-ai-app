@@ -155,11 +155,6 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
   return (
     <div className="ta-fade">
-      <div className="ta-content" style={{ paddingBottom: 0 }}>
-        <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={onBack}>
-          <ArrowLeft size={14} /> Back to cohorts
-        </button>
-      </div>
       <TopBar
         title={cohort?.name || "Cohort"}
         sub={cohort ? `${cohort.starts_at ? new Date(cohort.starts_at).toLocaleDateString() : "TBD"} to ${cohort.ends_at ? new Date(cohort.ends_at).toLocaleDateString() : "TBD"}` : "Loading..."}
@@ -167,6 +162,11 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
         onNavigate={setScreen}
       />
       <div className="ta-content">
+        <div style={{ marginBottom: 16 }}>
+          <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={onBack}>
+            <ArrowLeft size={14} /> Back to cohorts
+          </button>
+        </div>
         {detailQuery.loading && <div className="ta-empty">Loading cohort...</div>}
         {!detailQuery.loading && !cohort && <div className="ta-empty">Cohort not found.</div>}
         {cohort && !editingSettings && (

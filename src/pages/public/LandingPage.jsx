@@ -561,7 +561,7 @@ export default function LandingPage({ onNavigate }) {
             <div className="lp-hero-right" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
               
               {/* Authentic Photo */}
-              <div style={{ width: "100%", maxWidth: 360, marginBottom: -32, position: "relative", zIndex: 1 }}>
+              <div style={{ width: "100%", maxWidth: 360, marginBottom: 16, position: "relative", zIndex: 1 }}>
                 <img
                   src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80"
                   alt="Train AI Professional Team"

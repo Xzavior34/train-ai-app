@@ -223,7 +223,7 @@ export function NotificationsScreen({
           ========================================================================= */}
       <div className="tai-col tai-gap10 anim-stagger">
         {filteredNotifs.length === 0 ? (
-          <div className="tai-card tai-empty" style={{ padding: "48px 20px", textAlign: "center", borderRadius: 10 }}>
+          <div className="tai-card tai-empty" style={{ padding: "clamp(32px, 5vw, 48px) 20px", textAlign: "center", borderRadius: 10 }}>
             <div style={{ width: 52, height: 52, borderRadius: "50%", background: "var(--surface-2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
               <Bell size={22} color="var(--text-3)" />
             </div>

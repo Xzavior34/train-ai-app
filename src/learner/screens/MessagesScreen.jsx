@@ -199,7 +199,7 @@ export function MessagesScreen({
               <div className="tai-row tai-between" style={{ padding: "12px 18px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
                 <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
                   {isNarrow && (
-                    <button className="tai-iconbtn" style={{ marginLeft: -6 }} onClick={() => setActiveMentorThread(null)} aria-label="Back to conversations">
+                    <button className="tai-iconbtn" onClick={() => setActiveMentorThread(null)} aria-label="Back to conversations">
                       <ChevronLeft size={18} />
                     </button>
                   )}

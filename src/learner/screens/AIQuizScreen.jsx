@@ -597,7 +597,7 @@ export function AIQuizScreen({
                   style={{ height: 42, fontSize: 13.5, marginBottom: 14 }}
                 />
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12, marginBottom: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 16 }}>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2)", marginBottom: 6 }}>
                       Difficulty Level
