@@ -443,7 +443,7 @@ export function AIQuizScreen({
             }}
           >
             {coachMessagesLoading && coachMessages.length === 0 && (
-              <div className="tai-empty">Connecting with Train AI neural model...</div>
+              <div className="tai-empty">Connecting to Train AI coach...</div>
             )}
 
             {!coachMessagesLoading && coachMessages.length === 0 && (

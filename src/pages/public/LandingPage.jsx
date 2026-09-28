@@ -852,10 +852,10 @@ export default function LandingPage({ onNavigate }) {
                     <div style={{ width: 24, height: 24, borderRadius: 6, background: mobileLearnerTab === "ai" ? "#2563EB" : "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center", color: mobileLearnerTab === "ai" ? "#fff" : "#2563EB" }}>
                       <Zap size={13} />
                     </div>
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>AI Neural Coach</h3>
+                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>AI Coach</h3>
                   </div>
                   <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "ai" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "ai" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "ai" ? "Active Preview" : "24/7 Neural Tutor"}
+                    {mobileLearnerTab === "ai" ? "Active Preview" : "24/7 AI Coach"}
                   </span>
                 </div>
                 <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>

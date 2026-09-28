@@ -382,7 +382,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             {/* Right Column: AI Automation, Gamification & Leaderboard */}
             <div className="anim-stagger" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div className="ta-card">
-                <div className="ta-title">AI Neural Coach</div>
+                <div className="ta-title">AI Coach</div>
                 <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
                   Control whether learners in your organization get automated AI Coach replies.
                 </div>

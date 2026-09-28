@@ -595,7 +595,7 @@ export function ProfileScreen({
                     <Brain size={18} color="var(--primary)" />
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>AI Neural Credits</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>AI Credits</div>
                     <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{typeof credits === "number" ? credits : 10} credits available for code debugging & quiz generator</div>
                   </div>
                 </div>

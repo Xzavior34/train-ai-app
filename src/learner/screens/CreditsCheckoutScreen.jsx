@@ -176,7 +176,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
               <h1 className="tai-hero-title" style={{ fontSize: "clamp(20px, 2.5vw, 26px)", fontWeight: 900, letterSpacing: "-0.025em", margin: 0, lineHeight: 1.2, color: "#FFFFFF" }}>
-                {isCourseMode ? "Course Checkout" : "Buy AI Neural Credits"}
+                {isCourseMode ? "Course Checkout" : "Buy AI Credits"}
               </h1>
               <span style={{ background: "#2563EB", color: "#FFFFFF", padding: "2px 8px", borderRadius: 6, fontWeight: 800, fontSize: 11 }}>
                 Instant Access
@@ -404,7 +404,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
                           +{p.credits}
                         </div>
                         <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>
-                          AI Neural Credits
+                          AI Credits
                         </div>
                       </div>
                     </div>

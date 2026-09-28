@@ -786,7 +786,7 @@ export function LearnerHeader({
         </div>
 
         {/* AI Credits Pill */}
-        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Neural Credits">
+        <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Credits">
           <Plus size={13} color="#2563EB" />
           <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
         </div>
