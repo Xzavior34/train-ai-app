@@ -272,9 +272,12 @@ function DailyMotivationWidget() {
             color: "var(--primary)",
             border: "1px solid rgba(37, 99, 235, 0.25)",
             letterSpacing: "0.02em",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
           }}
         >
-          ✨ Daily Motivation
+          <Sparkles size={12} /> Daily Motivation
         </span>
       </div>
     </div>
@@ -902,7 +905,7 @@ function PostCard({
 
           {post.comments.length === 0 && (
             <div style={{ fontSize: 11.5, color: "var(--text-3)", textAlign: "center", padding: "4px 0" }}>
-              No comments yet — be the first to reply!
+              No comments yet. Be the first to share your thoughts.
             </div>
           )}
 
@@ -1522,8 +1525,8 @@ export function CommunityScreen({
 
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, color: "var(--text-3)", fontWeight: 700 }}>
-                        <span>❤️ {post.likes}</span>
-                        <span>💬 {post.comments?.length || 0}</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Heart size={12} /> {post.likes}</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><MessageSquare size={12} /> {post.comments?.length || 0}</span>
                       </div>
                       <ChevronRight size={15} color="var(--text-3)" />
                     </div>
@@ -1634,7 +1637,9 @@ export function CommunityScreen({
                       </div>
                     </div>
                     <div className="tai-row tai-between" style={{ alignItems: "center" }}>
-                      <span style={{ fontSize: 11.5, color: "var(--text-3)" }}>👥 {memberCount} members</span>
+                      <span style={{ fontSize: 11.5, color: "var(--text-3)", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                        <Users size={12} /> {memberCount} members
+                      </span>
                       <button
                         className={`tai-btn tai-btn-sm ${isMember ? "tai-btn-ghost" : "tai-btn-primary"}`}
                         style={{ padding: "4px 10px", fontSize: 11.5 }}

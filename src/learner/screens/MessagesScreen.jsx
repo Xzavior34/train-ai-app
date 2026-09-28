@@ -60,19 +60,6 @@ export function MessagesScreen({
             overflow: "hidden"
           }}
         >
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 180,
-            height: 180,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
-            pointerEvents: "none"
-          }}
-        />
-
         <div className="tai-row tai-between" style={{ position: "relative", zIndex: 1, flexWrap: "wrap", gap: 16, alignItems: "center" }}>
           <div style={{ minWidth: 0, flex: "1 1 300px" }}>
             <div className="tai-row tai-gap10" style={{ alignItems: "center", marginBottom: 6 }}>

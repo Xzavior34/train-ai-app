@@ -58,10 +58,10 @@ export const TOKENS = `
     --primary-light: #93C5FD;
     --primary-tint: rgba(59, 130, 246, 0.18);
     --text: #F8FAFC;
-    --text-2: #94A3B8;
-    --text-3: #64748B;
-    --border: rgba(255, 255, 255, 0.09);
-    --border-subtle: rgba(255, 255, 255, 0.05);
+    --text-2: #CBD5E1;
+    --text-3: #94A3B8;
+    --border: rgba(255, 255, 255, 0.12);
+    --border-subtle: rgba(255, 255, 255, 0.07);
     --success-bg: rgba(16, 185, 129, 0.18);
     --success-border: rgba(16, 185, 129, 0.35);
     --warning-bg: rgba(245, 158, 11, 0.18);
@@ -74,14 +74,14 @@ export const TOKENS = `
   /* Top Full-Width Learner Global Header */
   .tai-global-header {
     height: 54px; min-height: 54px; width: 100%; max-width: 100%;
-    background: var(--glass-elevated); backdrop-filter: var(--glass-blur-lg); -webkit-backdrop-filter: var(--glass-blur-lg);
-    border-bottom: 1px solid var(--glass-border);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; padding: 0 clamp(14px, 2vw, 24px);
-    position: sticky; top: 0; z-index: 60; box-shadow: var(--glass-shadow); box-sizing: border-box;
+    position: sticky; top: 0; z-index: 60; box-shadow: var(--shadow-card); box-sizing: border-box;
   }
   .tai-header-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
   .tai-header-brand { display: flex; align-items: center; gap: 8px; cursor: pointer; text-decoration: none; flex-shrink: 0; }
-  .tai-header-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(37,99,235,0.35); display: flex; align-items: center; justify-content: center; color: #fff; }
+  .tai-header-brand-mark { width: 28px; height: 28px; border-radius: 6px; background: #2563EB; display: flex; align-items: center; justify-content: center; color: #fff; }
   .tai-header-brand-name { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
   .tai-header-search {
     display: flex; align-items: center; gap: 6px;
@@ -196,11 +196,11 @@ export const TOKENS = `
     }
     .tai-group-header.active {
       color: var(--primary);
-      background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(59, 130, 246, 0.14) 100%);
+      background: var(--primary-tint);
     }
     .tai.dark .tai-group-header.active {
-      color: #60A5FA;
-      background: linear-gradient(135deg, rgba(37, 99, 235, 0.22) 0%, rgba(59, 130, 246, 0.30) 100%);
+      color: var(--primary);
+      background: var(--primary-tint);
     }
     .tai-sub-items {
       display: flex;
@@ -208,7 +208,7 @@ export const TOKENS = `
       gap: 2px;
       padding: 2px 0 4px 10px;
       margin-left: 8px;
-      border-left: 1.5px solid var(--glass-border);
+      border-left: 1.5px solid var(--border);
     }
     .tai-sub-item {
       display: flex;
@@ -224,21 +224,17 @@ export const TOKENS = `
       line-height: 1.35;
     }
     .tai-sub-item:hover {
-      background: var(--glass-surface);
+      background: var(--surface-2);
       color: var(--text);
-      transform: translateX(2px);
-      box-shadow: inset 0 1px 0 var(--glass-specular);
     }
     .tai-sub-item.active {
-      background: linear-gradient(135deg, rgba(37, 99, 235, 0.14) 0%, rgba(59, 130, 246, 0.20) 100%) !important;
-      color: #2563EB !important;
+      background: var(--primary-tint) !important;
+      color: var(--primary) !important;
       font-weight: 700;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 2px 8px rgba(37, 99, 235, 0.12);
     }
     .tai.dark .tai-sub-item.active {
-      background: linear-gradient(135deg, rgba(37, 99, 235, 0.28) 0%, rgba(59, 130, 246, 0.38) 100%) !important;
-      color: #60A5FA !important;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.3);
+      background: var(--primary-tint) !important;
+      color: var(--primary) !important;
     }
     .tai-badge {
       margin-left: auto;
@@ -316,11 +312,10 @@ export const TOKENS = `
   .tai-iconbtn:active { transform: scale(0.96); }
   
   .tai-card {
-    background: var(--glass-surface);
-    backdrop-filter: var(--glass-blur-md); -webkit-backdrop-filter: var(--glass-blur-md);
+    background: var(--surface);
     border-radius: var(--radius);
     padding: 20px;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--border);
     box-shadow: var(--shadow-card);
     transition: border-color .18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow .18s cubic-bezier(0.16, 1, 0.3, 1), transform .18s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
@@ -330,9 +325,8 @@ export const TOKENS = `
     box-sizing: border-box;
   }
   .tai.dark .tai-card {
-    background: var(--glass-surface);
-    backdrop-filter: var(--glass-blur-md); -webkit-backdrop-filter: var(--glass-blur-md);
-    border: 1px solid var(--glass-border);
+    background: var(--surface);
+    border: 1px solid var(--border);
     box-shadow: var(--shadow-card);
   }
   .tai-card-hover {
@@ -359,82 +353,75 @@ export const TOKENS = `
     background: #2563EB !important;
     color: #FFFFFF !important;
     border: 1px solid rgba(255, 255, 255, 0.20) !important;
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.32), 0 4px 14px -2px rgba(37, 99, 235, 0.40) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   }
   .tai-btn-primary:hover {
     background: #1D4ED8 !important;
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 6px 20px -2px rgba(37, 99, 235, 0.50) !important;
-    transform: translateY(-1.5px);
+    transform: translateY(-1px);
   }
-  .tai-btn-primary:active { background: #3730A3 !important; transform: translateY(1px) scale(.975); }
+  .tai-btn-primary:active { background: #1E40AF !important; transform: translateY(1px) scale(.98); }
   .tai-btn-ghost {
-    background: var(--glass-surface); color: var(--primary); font-weight: 700;
-    backdrop-filter: var(--glass-blur-sm); border: 1px solid var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-specular);
+    background: transparent; color: var(--primary); font-weight: 700;
+    border: 1px solid transparent;
   }
-  .tai-btn-ghost:hover { background: var(--glass-elevated); color: var(--primary-dark); border-color: rgba(59, 130, 246, 0.3); }
+  .tai-btn-ghost:hover { background: var(--surface-2); color: var(--primary-dark); }
   .tai-btn-ghost:active { transform: scale(.985); }
   .tai-btn-outline {
-    background: var(--glass-surface); backdrop-filter: var(--glass-blur-sm); -webkit-backdrop-filter: var(--glass-blur-sm);
-    border: 1px solid var(--glass-border); color: var(--text); font-weight: 600;
-    box-shadow: inset 0 1px 0 var(--glass-specular), var(--shadow-card);
+    background: var(--surface);
+    border: 1px solid var(--border); color: var(--text); font-weight: 600;
+    box-shadow: var(--shadow-card);
   }
-  .tai-btn-outline:hover { background: var(--glass-elevated); border-color: rgba(59, 130, 246, 0.3); box-shadow: var(--shadow-hover); transform: translateY(-1.5px); }
-  .tai-btn-outline:active { transform: translateY(1px) scale(.975); }
+  .tai-btn-outline:hover { background: var(--surface-2); border-color: rgba(59, 130, 246, 0.3); transform: translateY(-1px); }
+  .tai-btn-outline:active { transform: translateY(1px) scale(.98); }
   .tai-btn-sm { padding: 6px 12px; font-size:12px; border-radius:6px; }
   
   .tai-pill { padding:6px 12px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); }
   .tai-pill-active {
-    background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+    background: var(--primary);
     color:#fff;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 8px rgba(37, 99, 235, 0.35);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   }
   .tai-pill-inactive {
-    background: var(--glass-surface); backdrop-filter: var(--glass-blur-xs);
-    color: var(--text-2); border-color: var(--glass-border);
-    box-shadow: inset 0 1px 0 var(--glass-specular);
+    background: var(--surface);
+    color: var(--text-2); border-color: var(--border);
   }
-  .tai-pill-inactive:hover { background: var(--glass-elevated); color: var(--text); border-color: rgba(59, 130, 246, 0.3); }
+  .tai-pill-inactive:hover { background: var(--surface-2); color: var(--text); border-color: var(--border); }
   
   .tai-tag {
     padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight:700;
-    background: var(--glass-surface); backdrop-filter: blur(4px);
-    border: 1px solid var(--glass-border);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
     color: var(--primary); letter-spacing: 0.02em;
-    box-shadow: inset 0 1px 0 var(--glass-specular);
   }
   
   .tai-scrollx { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; -ms-overflow-style:none; scrollbar-width:none; }
   .tai-scrollx::-webkit-scrollbar { display:none; }
-  .tai-progress-track { width:100%; height:6px; border-radius:4px; background: var(--glass-border-subtle); overflow:hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+  .tai-progress-track { width:100%; height:6px; border-radius:4px; background: var(--border); overflow:hidden; }
   .tai-progress-fill {
     height:100%; border-radius:4px;
-    background: linear-gradient(90deg, #2563EB 0%, #3B82F6 100%);
-    box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+    background: var(--primary);
     transition: width .25s ease;
   }
   .tai-avatar {
-    border-radius:50%; background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 8px rgba(37, 99, 235, 0.3);
+    border-radius:50%; background: #2563EB;
     color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;
   }
-  .tai-divider { height:1px; background: var(--glass-border); border:none; margin: 12px 0; }
+  .tai-divider { height:1px; background: var(--border); border:none; margin: 12px 0; }
   
-  /* Full-width attached bottom navigation on mobile with dynamic expanding pill motion (Liquid Glass) */
+  /* Full-width attached bottom navigation on mobile with dynamic expanding pill motion */
   .tai-navbar {
     position: fixed; left: 0; right: 0; bottom: 0; width: 100vw; max-width: 100%;
-    background: var(--glass-elevated);
-    backdrop-filter: var(--glass-blur-lg); -webkit-backdrop-filter: var(--glass-blur-lg);
-    border-top: 1px solid var(--glass-border);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
     display: flex; justify-content: space-around; align-items: center;
     padding: 8px 14px max(10px, env(safe-area-inset-bottom)); z-index: 100;
-    box-shadow: 0 -6px 28px rgba(15, 23, 42, 0.08), inset 0 1px 0 0 var(--glass-specular);
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
     transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
   }
   .tai.dark .tai-navbar {
-    background: var(--glass-elevated);
-    border-top: 1px solid var(--glass-border);
-    box-shadow: 0 -8px 36px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 var(--glass-specular);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
   }
   .tai-navitem {
     display: flex; flex-direction: row; align-items: center; justify-content: center;
@@ -460,11 +447,11 @@ export const TOKENS = `
   }
   /* Active dynamic pill state */
   .tai-navitem.active {
-    background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
+    background: var(--primary);
     color: #FFFFFF;
     padding: 8px 18px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 16px rgba(37, 99, 235, 0.45);
-    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    transform: translateY(-1px);
   }
   .tai-navitem.active .tai-navitem-icon-wrap {
     transform: scale(1.05);

@@ -47,19 +47,6 @@ export function HomeScreen({
           boxSizing: "border-box"
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 220,
-            height: 220,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, transparent 70%)",
-            pointerEvents: "none"
-          }}
-        />
-
         <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
           
           {/* Top Row: Personalized Greeting + Live KPIs */}
@@ -398,7 +385,7 @@ export function HomeScreen({
                   return <div style={{ fontSize: 12, color: "var(--text-3)", padding: "8px 10px" }}>Loading…</div>;
                 }
                 if (bookmarkedCourses.length === 0) {
-                  return <div style={{ fontSize: 12, color: "var(--text-3)", padding: "8px 10px" }}>No saved bookmarks yet — bookmark a course to see it here.</div>;
+                  return <div style={{ fontSize: 12, color: "var(--text-3)", padding: "8px 10px" }}>No saved bookmarks yet. Bookmark a course to quickly access it here.</div>;
                 }
                 return bookmarkedCourses.slice(0, 3).map((item) => (
                   <div

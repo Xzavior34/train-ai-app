@@ -625,19 +625,6 @@ export function CoursesScreen({
             transition: "all 0.3s ease"
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              top: -40,
-              right: -40,
-              width: 180,
-              height: 180,
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%)",
-              pointerEvents: "none"
-            }}
-          />
-
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 24, alignItems: "center", position: "relative", zIndex: 1, width: "100%", boxSizing: "border-box" }}>
             
             {/* Left Column: Spotlight details */}

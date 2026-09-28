@@ -198,19 +198,6 @@ export function ProfileScreen({
         }}
       >
         {/* Subtle decorative glow in top corner */}
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 200,
-            height: 200,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, transparent 70%)",
-            pointerEvents: "none"
-          }}
-        />
-
         {/* Profile Identity Details (Stacked cleanly on Mobile, Flex Row on Desktop) */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, position: "relative", zIndex: 2 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "clamp(12px, 3vw, 20px)", flex: "1 1 260px", minWidth: 0, flexWrap: "wrap" }}>

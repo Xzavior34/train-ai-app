@@ -106,7 +106,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How is this different from a normal LMS?",
-    a: "Traditional LMS tools only measure passive video clicks and completion percentages. Train AI is an active Workforce Intelligence Operating System that maps dynamic team capability in real time, provides 24/7 AI tutoring, automated practice quizzes, and live cohort mentorship."
+    a: "Traditional LMS tools only measure passive video clicks and completion percentages. Train AI is an active enterprise capability platform that maps dynamic team capability in real time, provides 24/7 AI tutoring, automated practice quizzes, and live cohort mentorship."
   },
   {
     q: "What is the Workforce Readiness Score?",
@@ -118,7 +118,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What AI tools do learners get?",
-    a: "Learners have access to a 24/7 AI Neural Tutor for conversational Q&A and code debugging, an Adaptive Quiz Generator that builds personalized practice assessments, and AI Progress Summaries."
+    a: "Learners have access to a 24/7 Interactive AI Tutor for conversational Q&A and code debugging, an Adaptive Quiz Generator that builds personalized practice assessments, and AI Progress Summaries."
   },
   {
     q: "Which roles does the platform support?",
@@ -498,21 +498,19 @@ export default function LandingPage({ onNavigate }) {
       {/* =========================================================================
           SECTION 1: HERO SECTION
           ========================================================================= */}
-      <section className="lp-bg-hero ambient-mesh-glow" style={{ width: "100%", position: "relative", borderBottom: "1px solid #E2E8F0" }}>
+      <section className="lp-bg-hero" style={{ width: "100%", position: "relative", borderBottom: "1px solid #E2E8F0" }}>
         <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 64px" }}>
           <div className="lp-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 36, alignItems: "center" }}>
             
             {/* Left Column */}
             <div className="lp-hero-left" style={{ textAlign: "left" }}>
               
-              {/* Badge */}
+              {/* Eyebrow */}
               <div style={{
-                display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 6,
-                background: "#EFF6FF", border: "1px solid #C7D2FE",
-                color: "#2563EB", fontSize: 11, fontWeight: 700, marginBottom: 16, letterSpacing: ".02em"
+                fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
+                color: "#2563EB", marginBottom: 14
               }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#2563EB", display: "inline-block" }} />
-                <span>AI WORKFORCE INTELLIGENCE PLATFORM</span>
+                Enterprise Capability & Training Platform
               </div>
 
               {/* Headline */}
@@ -526,7 +524,7 @@ export default function LandingPage({ onNavigate }) {
 
               {/* Subtitle */}
               <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.55, margin: "0 0 22px", maxWidth: 500 }}>
-                Train AI turns learning activity into decision-ready intelligence about workforce readiness, skill coverage and team capability — so leaders know who is ready, who is stuck, and where the gaps are.
+                Train AI turns learning activity into decision-ready intelligence about workforce readiness, skill coverage and team capability so leaders know who is ready, who is stuck, and where critical gaps exist.
               </p>
 
               {/* Dual CTAs */}
@@ -539,30 +537,21 @@ export default function LandingPage({ onNavigate }) {
                 </button>
               </div>
 
-              {/* 3 Metric Badges */}
-              <div className="lp-hero-pills lp-hero-pill-wrap" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
-                  <Layers size={15} color="#2563EB" />
-                  <div>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Skill Graph</div>
-                    <div style={{ fontSize: 10.5, color: "#64748B" }}>Held • developing • missing</div>
-                  </div>
+              {/* Capability highlights */}
+              <div style={{ display: "flex", gap: 20, alignItems: "center", borderTop: "1px solid #E2E8F0", paddingTop: 18, marginTop: 4, flexWrap: "wrap" }}>
+                <div style={{ cursor: "pointer" }} onClick={() => scrollToId("intelligence")}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Skill Graph</div>
+                  <div style={{ fontSize: 11.5, color: "#64748B" }}>Verified capability mapping</div>
                 </div>
-
-                <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("intelligence")}>
-                  <Gauge size={15} color="#2563EB" />
-                  <div>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Readiness Score</div>
-                    <div style={{ fontSize: 10.5, color: "#64748B" }}>Team • function • org</div>
-                  </div>
+                <div style={{ width: 1, height: 26, background: "#E2E8F0" }} />
+                <div style={{ cursor: "pointer" }} onClick={() => scrollToId("intelligence")}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Readiness Score</div>
+                  <div style={{ fontSize: 11.5, color: "#64748B" }}>Real-time team metrics</div>
                 </div>
-
-                <div className="lp-pill-hover" style={styles.heroPill} onClick={() => scrollToId("learners")}>
-                  <Activity size={15} color="#2563EB" />
-                  <div>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: "#0F172A" }}>Live Signals</div>
-                    <div style={{ fontSize: 10.5, color: "#64748B" }}>Assessments • progress</div>
-                  </div>
+                <div style={{ width: 1, height: 26, background: "#E2E8F0" }} />
+                <div style={{ cursor: "pointer" }} onClick={() => scrollToId("learners")}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Live Telemetry</div>
+                  <div style={{ fontSize: 11.5, color: "#64748B" }}>Continuous progress tracking</div>
                 </div>
               </div>
 
@@ -715,7 +704,7 @@ export default function LandingPage({ onNavigate }) {
           </h2>
 
           <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 620, margin: "0 0 28px", lineHeight: 1.5 }}>
-            Available to admins and managers as an overview, the intelligence layer combines every available signal into outputs you can act on — never completion alone.
+            Available to admins and managers as an overview, the intelligence layer combines every available signal into outputs you can act on, never completion alone.
           </p>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
@@ -726,7 +715,7 @@ export default function LandingPage({ onNavigate }) {
               </div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>AI Skill Graph</h3>
               <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                A live view of capability across a learner, team or organisation — what skills exist, what is developing, where the gaps are, and how capability grows over time.
+                A live view of capability across a learner, team or organisation: what skills exist, what is developing, where the gaps are, and how capability grows over time.
               </p>
             </div>
 
@@ -1257,7 +1246,7 @@ export default function LandingPage({ onNavigate }) {
           </h2>
 
           <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 660, margin: "0 0 28px", lineHeight: 1.5 }}>
-            Instructors, managers and admins work in the same organisation app. Each person sees only the view their role allows — no separate dashboards to maintain.
+            Instructors, managers and admins work in the same organisation app. Each person sees only the view their role allows, eliminating separate dashboards to maintain.
           </p>
 
           {/* 3 Column Role Cards */}
@@ -1409,7 +1398,7 @@ export default function LandingPage({ onNavigate }) {
           </h2>
 
           <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 620, margin: "0 0 26px", lineHeight: 1.5 }}>
-            Permissions, privacy, auditability and data ownership are built in — not added later.
+            Permissions, privacy, auditability and data ownership are built directly into the core platform, not added later.
           </p>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>

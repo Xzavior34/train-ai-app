@@ -146,19 +146,6 @@ export function CommunityFeedScreen({
           overflow: "hidden"
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: -40,
-            right: -40,
-            width: 180,
-            height: 180,
-            background: "radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%)",
-            borderRadius: "50%",
-            pointerEvents: "none"
-          }}
-        />
-
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, position: "relative", zIndex: 1 }}>
           <div style={{ maxWidth: 560 }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 999, background: "rgba(37, 99, 235, 0.25)", border: "1px solid rgba(59, 130, 246, 0.45)", fontSize: 11, fontWeight: 800, color: "#60A5FA", marginBottom: 10 }}>

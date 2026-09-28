@@ -18,20 +18,6 @@ export default function CommunityHero({ user, onCreatePost }) {
         overflow: 'hidden',
       }}
     >
-      {/* Decorative radial glow — matches CohortScreen */}
-      <div
-        style={{
-          position: 'absolute',
-          top: -40,
-          right: -40,
-          width: 180,
-          height: 180,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }}
-      />
-
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
           <Avatar size={52} src={user?.avatarUrl} initials={initialsOf(user?.name || 'You')} />
