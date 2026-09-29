@@ -281,6 +281,160 @@ export async function updateOrgGamificationSettings(organizationId, patch) {
   }
 }
 
+<<<<<<< HEAD
+=======
+// Payment gateway & payout accounts for the organization.
+// Allows organizations to connect their Paystack Subaccount / API keys (for NGN/GHS/KES/ZAR),
+// Stripe Connected Account / API keys (for USD/EUR/GBP), or Direct Bank Settlement details
+// so that course revenues are settled directly into the organization's own account.
+export const DEFAULT_PAYMENT_GATEWAY_SETTINGS = {
+  preferred_gateway: "paystack", // "default" | "paystack" | "stripe" | "bank_transfer"
+  environment: "live", // "test" | "live"
+  paystack_public_key:
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_PAYSTACK_PUBLIC_KEY) ||
+    "pk_live_e0aba73a49d9ffd6a3d18f70392f5fff30d41d30",
+  paystack_secret_key:
+    (typeof import.meta !== "undefined" && import.meta.env?.PAYSTACK_SECRET_KEY) || "",
+  paystack_subaccount_code: "",
+  stripe_publishable_key:
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY) ||
+    "pk_live_51RT2PjCLDyMvhL5blPBYfPyUDRGCNSBwQm4Z4yJSL9TfeKpdEZRu75TrgqVZwhSX3XqLB5ynaXCNd0ZRu0jPemWD00y59JzP1p",
+  stripe_secret_key:
+    (typeof import.meta !== "undefined" && import.meta.env?.STRIPE_SECRET_KEY) || "",
+  stripe_account_id: "",
+  bank_name: "",
+  account_number: "",
+  account_name: "",
+  swift_code: "",
+  payout_currency: "NGN",
+};
+
+export async function fetchOrgPaymentGatewaySettings(organizationId) {
+  if (!supabase || !organizationId) return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
+  try {
+    const { data, error } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (error || !data) return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
+    const gw = data.settings?.payment_gateways || {};
+    return {
+      ...DEFAULT_PAYMENT_GATEWAY_SETTINGS,
+      ...gw,
+      // For security, never expose raw secret key to client after save
+      paystack_secret_key: "",
+      stripe_secret_key: "",
+      has_paystack_secret: Boolean(gw.paystack_secret_key),
+      has_stripe_secret: Boolean(gw.stripe_secret_key),
+    };
+  } catch (e) {
+    console.warn("Payment gateway settings fetch warning:", e);
+    return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
+  }
+}
+
+export async function updateOrgPaymentGatewaySettings(organizationId, patch) {
+  if (!supabase || !organizationId) return { success: false, error: "Not available in demo mode." };
+  try {
+    const { data: existing, error: fetchError } = await supabase
+      .from("organizations")
+      .select("settings")
+      .eq("id", organizationId)
+      .maybeSingle();
+    if (fetchError) throw fetchError;
+
+    const existingGw = existing?.settings?.payment_gateways || {};
+    const cleanPatch = { ...patch };
+
+    // If secret keys are empty in patch (i.e. not changed), preserve existing saved secret keys
+    if (!cleanPatch.paystack_secret_key || !cleanPatch.paystack_secret_key.trim()) {
+      if (existingGw.paystack_secret_key) {
+        cleanPatch.paystack_secret_key = existingGw.paystack_secret_key;
+      } else {
+        delete cleanPatch.paystack_secret_key;
+      }
+    }
+    if (!cleanPatch.stripe_secret_key || !cleanPatch.stripe_secret_key.trim()) {
+      if (existingGw.stripe_secret_key) {
+        cleanPatch.stripe_secret_key = existingGw.stripe_secret_key;
+      } else {
+        delete cleanPatch.stripe_secret_key;
+      }
+    }
+
+    const nextSettings = {
+      ...(existing?.settings || {}),
+      payment_gateways: { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS, ...existingGw, ...cleanPatch },
+    };
+    const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
+    if (error) throw error;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not save payment gateway settings." };
+  }
+}
+
+export function testOrgPaymentGatewayConnection({ provider, publicKey, secretKey, subaccountCode, accountId, environment = "test" }) {
+  if (provider === "paystack") {
+    const pubKey = (publicKey || "").trim();
+    const secKey = (secretKey || "").trim();
+    const subacc = (subaccountCode || "").trim();
+    if (!pubKey && !secKey && !subacc) {
+      return { success: false, message: "Please enter a Paystack Public Key, Secret Key, or Subaccount Code to test." };
+    }
+    const isTest = environment === "test";
+    const expectedPrefix = isTest ? "pk_test_" : "pk_live_";
+    const expectedSecPrefix = isTest ? "sk_test_" : "sk_live_";
+    if (pubKey && !pubKey.startsWith(expectedPrefix)) {
+      return { success: false, message: `Public key format mismatch. Expected prefix '${expectedPrefix}' for ${environment.toUpperCase()} mode.` };
+    }
+    if (secKey && !secKey.startsWith(expectedSecPrefix)) {
+      return { success: false, message: `Secret key format mismatch. Expected prefix '${expectedSecPrefix}' for ${environment.toUpperCase()} mode.` };
+    }
+    if (subacc && !subacc.startsWith("ACCT_")) {
+      return { success: false, message: "Subaccount code format warning. Subaccount codes usually start with 'ACCT_'." };
+    }
+    return { success: true, message: `✓ Valid Paystack ${environment.toUpperCase()} configuration format!` };
+  }
+
+  if (provider === "stripe") {
+    const pubKey = (publicKey || "").trim();
+    const secKey = (secretKey || "").trim();
+    const accId = (accountId || "").trim();
+    if (!pubKey && !secKey && !accId) {
+      return { success: false, message: "Please enter a Stripe Publishable Key, Secret Key, or Connected Account ID to test." };
+    }
+    const isTest = environment === "test";
+    const expectedPrefix = isTest ? "pk_test_" : "pk_live_";
+    const expectedSecPrefix = isTest ? "sk_test_" : "sk_live_";
+    if (pubKey && !pubKey.startsWith(expectedPrefix)) {
+      return { success: false, message: `Publishable key format mismatch. Expected prefix '${expectedPrefix}' for ${environment.toUpperCase()} mode.` };
+    }
+    if (secKey && !secKey.startsWith(expectedSecPrefix)) {
+      return { success: false, message: `Secret key format mismatch. Expected prefix '${expectedSecPrefix}' for ${environment.toUpperCase()} mode.` };
+    }
+    if (accId && !accId.startsWith("acct_")) {
+      return { success: false, message: "Stripe Account ID format warning. Connected Account IDs usually start with 'acct_'." };
+    }
+    return { success: true, message: `✓ Valid Stripe ${environment.toUpperCase()} configuration format!` };
+  }
+
+  return { success: false, message: "Unknown payment gateway provider." };
+}
+
+export async function resolveOrgPaymentGateway(organizationId) {
+  const settings = await fetchOrgPaymentGatewaySettings(organizationId);
+  return {
+    provider: settings.preferred_gateway || "default",
+    environment: settings.environment || "test",
+    hasPaystackCustomKeys: !!(settings.paystack_public_key || settings.paystack_secret_key || settings.paystack_subaccount_code),
+    hasStripeCustomKeys: !!(settings.stripe_publishable_key || settings.stripe_secret_key || settings.stripe_account_id),
+    settings,
+  };
+}
+
+>>>>>>> fb83e81 (feat: integrate OneSignal push notifications, live Paystack & Stripe gateway settings, full modern PWA manifest, SEO optimization, and Store specs)
 // Organization subscription payment - the real fix for "organizations have
 // to pay to see the admin dashboard." See 0114_organization_subscription_payment.sql
 // for the full design and its one honest trust-boundary caveat.

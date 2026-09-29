@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient.js";
+import {
+  initOneSignal,
+  loginOneSignalUser,
+  logoutOneSignalUser,
+  requestOneSignalPushPermission,
+  getOneSignalSubscriptionState,
+} from "../../lib/onesignal.js";
 
 // Same VAPID public key hardcoded in the reference app's
 // src/services/pushNotificationService.ts (safe to ship client-side by
@@ -65,17 +72,25 @@ export function usePushNotifications(userId) {
         return;
       }
       setPermission(Notification.permission);
+
+      // Initialize OneSignal Web Push SDK
+      await initOneSignal();
+      if (userId) {
+        await loginOneSignalUser(userId);
+      }
+
       try {
         const reg = await navigator.serviceWorker.getRegistration("/");
         const sub = reg ? await reg.pushManager.getSubscription() : null;
-        if (!cancelled) setSubscribed(!!sub);
+        const oneSignalSub = getOneSignalSubscriptionState();
+        if (!cancelled) setSubscribed(!!sub || oneSignalSub.optedIn);
       } catch {
         // Treat lookup failures as "not subscribed" - nothing to recover here.
       }
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [userId]);
 
   // Requests Notification permission, registers/finds the service worker,
   // creates (or reuses) a real Web Push subscription, and stores it in
@@ -86,9 +101,14 @@ export function usePushNotifications(userId) {
     if (!supported || !userId) return false;
     setBusy(true);
     try {
-      const perm = await Notification.requestPermission();
+      // Prompt for permission via OneSignal and browser API
+      const osGranted = await requestOneSignalPushPermission();
+      const perm = Notification.permission;
       setPermission(perm);
-      if (perm !== "granted") return false;
+      if (perm !== "granted" && !osGranted) return false;
+
+      // Associate user with OneSignal
+      await loginOneSignalUser(userId);
 
       const reg = await getRegistration();
       if (!reg) return false;
@@ -102,7 +122,16 @@ export function usePushNotifications(userId) {
       }
 
       const json = subscription.toJSON();
-      if (!supabase || !json?.endpoint || !json?.keys?.p256dh || !json?.keys?.auth) return false;
+      const oneSignalState = getOneSignalSubscriptionState();
+
+      if (!supabase || !json?.endpoint || !json?.keys?.p256dh || !json?.keys?.auth) {
+        // If Web Push keys missing but OneSignal is active, consider subscribed
+        if (oneSignalState.optedIn || osGranted) {
+          setSubscribed(true);
+          return true;
+        }
+        return false;
+      }
 
       // Avoid piling up duplicate rows for the same endpoint on repeat
       // clicks - no assumption made about a unique constraint existing on
@@ -121,9 +150,15 @@ export function usePushNotifications(userId) {
           p256dh: json.keys.p256dh,
           auth: json.keys.auth,
           user_agent: navigator.userAgent,
+          ...(oneSignalState.id ? { onesignal_id: oneSignalState.id } : {}),
         });
         if (error) {
           console.warn("Could not store push subscription:", error);
+          // Still succeed if OneSignal is active
+          if (oneSignalState.optedIn) {
+            setSubscribed(true);
+            return true;
+          }
           return false;
         }
       }
@@ -150,6 +185,8 @@ export function usePushNotifications(userId) {
           await supabase.from("push_subscriptions").delete().eq("user_id", userId).eq("endpoint", endpoint);
         }
       }
+      await logoutOneSignalUser();
+
       setSubscribed(false);
       return true;
     } catch (e) {
