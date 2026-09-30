@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../lib/useAuth.js";
+import { performGlobalSignOut } from "../services/authService.js";
 import { useLearnerData } from "./hooks/useLearnerData.js";
 import { TOKENS, BottomNav, DesktopSidebar, LearnerHeader, ScheduleView, timeAgo, NotificationBellContext } from "./components/LearnerUI.jsx";
 import { SearchBar } from "./components/SearchBar.jsx";
@@ -115,8 +116,10 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     try {
       if (onSignOut) await onSignOut();
       else if (signOut) await signOut();
-    } catch {}
-    localStorage.removeItem("trainai_active_session_v1");
+      else await performGlobalSignOut();
+    } catch {
+      await performGlobalSignOut();
+    }
   }
 
   const [screen, setScreen] = useState(initialScreenFromLocation);

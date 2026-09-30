@@ -296,33 +296,23 @@ export function useAuth() {
     }
 
     try {
-      const keysToRemove = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key) {
-          if (
-            key.startsWith("sb-") ||
-            key.includes("supabase") ||
-            key.startsWith("trainai_active") ||
-            key.startsWith("trainai_session") ||
-            key.startsWith("trainai_demo") ||
-            key === "trainai_active_session_v1" ||
-            key === "trainai_active_project_v1"
-          ) {
-            keysToRemove.push(key);
-          }
+      const preserveKeys = new Set(["trainai_theme", "trainai_dark_mode", "theme"]);
+      const allKeys = Object.keys(localStorage);
+      for (const k of allKeys) {
+        if (!preserveKeys.has(k)) {
+          localStorage.removeItem(k);
         }
       }
-      keysToRemove.forEach(k => localStorage.removeItem(k));
       sessionStorage.clear();
     } catch {}
 
     setSession(null);
 
     try {
-      window.location.href = window.location.origin + "/";
-    } catch {
+      window.location.href = "/";
       window.location.reload();
+    } catch {
+      window.location.replace("/");
     }
   }, []);
 
