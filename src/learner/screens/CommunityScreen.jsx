@@ -1468,7 +1468,19 @@ export function CommunityScreen({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {(viewAllPosts ? filteredPosts : filteredPosts.slice(0, 5)).map((post) => {
                 const isExpanded = expandedPostId === post.id;
-                const snippet = (post.content || "").replace(/#[#a-zA-Z0-9_@]+/g, "").trim();
+                const rawContent = (post.content || "").replace(/#[#a-zA-Z0-9_@]+/g, "").trim();
+                const contentLines = rawContent.split("\n").map(l => l.trim()).filter(Boolean);
+                const hasTitle = contentLines.length > 1 && contentLines[0].length < 80 && !contentLines[0].startsWith("http");
+                const postTitle = hasTitle ? contentLines[0] : null;
+                const postSnippet = hasTitle ? contentLines.slice(1).join(" ") : rawContent;
+
+                const typeBadgeStyles = {
+                  tip: { bg: "rgba(16, 185, 129, 0.12)", color: "#059669", border: "rgba(16, 185, 129, 0.25)" },
+                  question: { bg: "rgba(245, 158, 11, 0.12)", color: "#D97706", border: "rgba(245, 158, 11, 0.25)" },
+                  showcase: { bg: "rgba(124, 58, 237, 0.12)", color: "#7C3AED", border: "rgba(124, 58, 237, 0.25)" },
+                  general: { bg: "var(--primary-tint)", color: "var(--primary)", border: "rgba(37, 99, 235, 0.2)" },
+                };
+                const typeStyle = typeBadgeStyles[post.postType] || typeBadgeStyles.general;
 
                 if (isExpanded) {
                   return (
@@ -1496,10 +1508,11 @@ export function CommunityScreen({
                     key={post.id}
                     className="tai-card-hover"
                     style={{
-                      padding: "10px 14px",
-                      background: "var(--surface-2)",
+                      padding: "12px 14px",
+                      background: "var(--surface)",
                       border: "1px solid var(--border)",
                       borderRadius: 12,
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1509,40 +1522,59 @@ export function CommunityScreen({
                     }}
                     onClick={() => setExpandedPostId(post.id)}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
-                      <Avatar size={32} src={post.authorAvatar} initials={initialsOf(post.authorName)} />
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, minWidth: 0, flex: 1 }}>
+                      <Avatar size={34} src={post.authorAvatar} initials={initialsOf(post.authorName)} />
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 2 }}>
                           <span style={{ fontWeight: 800, fontSize: 13, color: "var(--text)" }}>{post.authorName}</span>
                           <span style={{ fontSize: 11, color: "var(--text-3)" }}>· {timeAgo(post.createdAt)}</span>
                           {post.postType && (
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 4, background: "var(--primary-tint)", color: "var(--primary)", textTransform: "lowercase" }}>
+                            <span
+                              style={{
+                                fontSize: 10,
+                                fontWeight: 800,
+                                padding: "1px 7px",
+                                borderRadius: 5,
+                                background: typeStyle.bg,
+                                color: typeStyle.color,
+                                border: `1px solid ${typeStyle.border}`,
+                                textTransform: "capitalize",
+                              }}
+                            >
                               {post.postType}
                             </span>
                           )}
                         </div>
+                        {postTitle && (
+                          <div style={{ fontWeight: 700, fontSize: 13, color: "var(--text)", lineHeight: 1.35, marginBottom: 2 }}>
+                            {postTitle}
+                          </div>
+                        )}
                         <div
                           style={{
-                            fontSize: 12.5,
+                            fontSize: 12,
                             color: "var(--text-2)",
-                            lineHeight: 1.35,
-                            marginTop: 2,
+                            lineHeight: 1.4,
                             display: "-webkit-box",
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: "vertical",
                             overflow: "hidden",
-                            wordBreak: "break-word"
+                            wordBreak: "break-word",
                           }}
                         >
-                          {snippet || post.content}
+                          {postSnippet}
                         </div>
                       </div>
                     </div>
 
                     <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11.5, color: "var(--text-3)", fontWeight: 700 }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><Heart size={12} /> {post.likes}</span>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><MessageSquare size={12} /> {post.comments?.length || 0}</span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: (post.likes > 0) ? "#EF4444" : "var(--text-3)" }}>
+                          <Heart size={12} fill={(post.likes > 0) ? "#EF4444" : "none"} /> {post.likes}
+                        </span>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <MessageSquare size={12} /> {post.comments?.length || 0}
+                        </span>
                       </div>
                       <ChevronRight size={15} color="var(--text-3)" />
                     </div>
@@ -1634,9 +1666,10 @@ export function CommunityScreen({
                     className="tai-card-hover"
                     style={{
                       padding: "14px",
-                      background: "var(--surface-2)",
+                      background: "var(--surface)",
                       borderRadius: 12,
                       border: "1px solid var(--border)",
+                      boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "space-between",
@@ -1726,8 +1759,9 @@ export function CommunityScreen({
                 style={{
                   padding: "16px 18px",
                   borderRadius: 14,
-                  background: "var(--surface-2)",
+                  background: "var(--surface)",
                   border: "1px solid var(--border)",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
                   display: "flex",
                   flexDirection: "column",
                   gap: 12,
@@ -1862,9 +1896,10 @@ export function CommunityScreen({
                   className="tai-card-hover"
                   style={{
                     padding: "14px",
-                    background: "var(--surface-2)",
+                    background: "var(--surface)",
                     borderRadius: 12,
                     border: "1px solid var(--border)",
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
                     textAlign: "center",
                     display: "flex",
                     flexDirection: "column",
