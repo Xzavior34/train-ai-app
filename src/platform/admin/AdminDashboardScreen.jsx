@@ -3,6 +3,7 @@ import { TopBar, StatCard, ProgressBar, Tag, ToastContext } from "../components/
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
 import { Plus, Users, Layers, BookOpen, Target, UserCheck, Mail, Flag, MoreHorizontal, AlertTriangle, ChevronRight, Star, CalendarClock, Lock, Radio, Brain, CheckCircle2, Zap } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { Skeleton, SkeletonCard } from "../../components/common/Skeleton.jsx";
 import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
 export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelector, isPlatformOwner }) {
@@ -114,7 +115,11 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
 
         {/* Primary 5-Card KPI Grid Composition */}
         {statsQuery.loading ? (
-          <div className="ta-empty">Loading organization stats...</div>
+          <div className="ta-grid ta-grid-5 anim-stagger">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <SkeletonCard key={i} height={100} />
+            ))}
+          </div>
         ) : (
           <div className="ta-grid ta-grid-5 anim-stagger">
             {orgStats.map(s => <StatCard key={s.label} stat={s} />)}
@@ -135,7 +140,12 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 <MoreHorizontal size={16} color="var(--text-3)" />
               </div>
               <div className="ta-col ta-gap10 ta-mt16 anim-stagger">
-                {tasksQuery.loading && <div className="ta-empty">Loading...</div>}
+                {tasksQuery.loading && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Skeleton height="40px" borderRadius="8px" />
+                    <Skeleton height="40px" borderRadius="8px" />
+                  </div>
+                )}
                 {!tasksQuery.loading && todaysTasks.length === 0 && (
                   <div className="ta-empty">Nothing needs your attention today.</div>
                 )}
@@ -156,8 +166,8 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                       onClick={() => setScreen(t.go)}
                     >
                       <div className="ta-row ta-gap12" style={{ minWidth: 0, flex: 1, marginRight: 10 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)", flexShrink: 0 }}>
-                          <Icon size={16} color="var(--primary)" />
+                        <div style={{ color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <Icon size={18} />
                         </div>
                         <span style={{ fontSize: 13.5, fontWeight: 600, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.35 }}>{t.label}</span>
                       </div>
@@ -183,7 +193,12 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 <span className="ta-body" style={{ fontSize: 12, cursor: "pointer", color: "var(--primary)", fontWeight: 700 }} onClick={() => setScreen("cohorts")}>All cohorts</span>
               </div>
               <div className="ta-col ta-gap16 ta-mt16 anim-stagger">
-                {cohortProgressQuery.loading && <div className="ta-empty">Loading...</div>}
+                {cohortProgressQuery.loading && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <Skeleton height="36px" borderRadius="8px" />
+                    <Skeleton height="36px" borderRadius="8px" />
+                  </div>
+                )}
                 {!cohortProgressQuery.loading && (cohortProgressQuery.data || []).length === 0 && (
                   <div className="ta-empty">No cohorts yet.</div>
                 )}
@@ -210,7 +225,12 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               </div>
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {activityLogQuery.loading && <div className="ta-empty">Loading activity stream...</div>}
+                {activityLogQuery.loading && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Skeleton height="42px" borderRadius="8px" />
+                    <Skeleton height="42px" borderRadius="8px" />
+                  </div>
+                )}
                 {!activityLogQuery.loading && (activityLogQuery.data || []).length === 0 && (
                   <div className="ta-empty" style={{ padding: "16px 8px" }}>No recent student activity recorded yet.</div>
                 )}
@@ -291,7 +311,12 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 <AlertTriangle size={16} color="var(--warning)" style={{ cursor: "pointer" }} onClick={() => setScreen("people")} />
               </div>
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {riskQuery.loading && <div className="ta-empty">Loading...</div>}
+                {riskQuery.loading && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Skeleton height="40px" borderRadius="8px" />
+                    <Skeleton height="40px" borderRadius="8px" />
+                  </div>
+                )}
                 {!riskQuery.loading && (riskQuery.data || []).length === 0 && (
                   <div className="ta-empty">No at-risk students right now.</div>
                 )}
@@ -329,7 +354,12 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 <Star size={16} color="var(--warning)" style={{ cursor: "pointer" }} onClick={() => setScreen("people")} />
               </div>
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {mentorsQuery.loading && <div className="ta-empty">Loading...</div>}
+                {mentorsQuery.loading && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Skeleton height="40px" borderRadius="8px" />
+                    <Skeleton height="40px" borderRadius="8px" />
+                  </div>
+                )}
                 {!mentorsQuery.loading && (mentorsQuery.data || []).length === 0 && (
                   <div className="ta-empty">No active instructors yet.</div>
                 )}
@@ -363,7 +393,11 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 <CalendarClock size={16} color="var(--text-3)" />
               </div>
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {sessionsQuery.loading && <div className="ta-empty">Loading...</div>}
+                {sessionsQuery.loading && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    <Skeleton height="36px" borderRadius="8px" />
+                  </div>
+                )}
                 {!sessionsQuery.loading && (sessionsQuery.data || []).length === 0 && (
                   <div className="ta-empty">No upcoming sessions scheduled.</div>
                 )}

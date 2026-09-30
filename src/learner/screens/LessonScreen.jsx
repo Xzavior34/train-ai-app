@@ -641,10 +641,10 @@ export function LessonScreen({
               {/* Quick AI Prompt Pills */}
               <div className="tai-scrollx tai-gap6" style={{ paddingBottom: 2, width: "100%", boxSizing: "border-box" }}>
                 {[
-                  "💡 Summarize chapter",
-                  "💻 Code example",
-                  "❓ Quiz me",
-                  "🔍 Vector trade-offs"
+                  "Summarize chapter",
+                  "Code example",
+                  "Quiz me",
+                  "Vector trade-offs"
                 ].map((prompt, idx) => (
                   <button
                     key={idx}

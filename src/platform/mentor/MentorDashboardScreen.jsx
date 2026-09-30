@@ -114,9 +114,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Active Learners</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Users size={18} />
-              </div>
+              <Users size={18} color="#2563EB" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{sessionsQuery.loading ? "…" : activeLearnerCount}</div>
             <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>
@@ -127,9 +125,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Active Cohorts</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Layers size={18} />
-              </div>
+              <Layers size={18} color="#10B981" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{activeCohortsQuery.loading ? "…" : String(activeCohorts.length).padStart(2, "0")}</div>
             <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>
@@ -140,9 +136,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Pending Sessions</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <CheckCircle2 size={18} />
-              </div>
+              <CheckCircle2 size={18} color="#F59E0B" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>
               {sessionsQuery.loading ? "…" : String(pendingSessionCount).padStart(2, "0")}
@@ -155,9 +149,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Session Completion</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <TrendingUp size={18} />
-              </div>
+              <TrendingUp size={18} color="#2563EB" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>
               {sessionsQuery.loading ? "…" : mentorSessions.length ? `${Math.round((mentorSessions.filter(s => s.status === "completed").length / mentorSessions.length) * 100)}%` : "100%"}
@@ -170,9 +162,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Instructor Rating</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Star size={18} />
-              </div>
+              <Star size={18} color="#F59E0B" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{sessionsQuery.loading ? "…" : (avgRating ?? "N/A")}</div>
             <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>
@@ -183,9 +173,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
           <div className="ta-card" style={{ padding: 18, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between" style={{ marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)" }}>Total Earnings</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <DollarSign size={18} />
-              </div>
+              <DollarSign size={18} color="#10B981" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>{earningsQuery.loading ? "…" : `$${totalEarnings.toFixed(2)}`}</div>
             <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--text-2)" }}>

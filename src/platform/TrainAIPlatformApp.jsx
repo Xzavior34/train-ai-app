@@ -24,6 +24,7 @@ import { AssessmentsScreen } from "./admin/AssessmentsScreen.jsx";
 import { ComplianceScreen } from "./admin/ComplianceScreen.jsx";
 import { IntegrationsScreen } from "./admin/IntegrationsScreen.jsx";
 import { SettingsHubScreen } from "./admin/SettingsHubScreen.jsx";
+import { DemoRequestsScreen } from "./superadmin/DemoRequestsScreen.jsx";
 import { MentorDashboardScreen } from "./mentor/MentorDashboardScreen.jsx";
 import { MentorStudyGroupsScreen } from "./mentor/MentorStudyGroupsScreen.jsx";
 import { MentorScheduleScreen } from "./mentor/MentorScheduleScreen.jsx";
@@ -217,6 +218,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
               {workspace === "admin" && (
                 <>
                   {screen === "dashboard" && <AdminDashboardScreen orgId={effectiveOrgId} profileQuery={profileQuery} setScreen={setScreen} orgSelector={orgSelector} isPlatformOwner={userRoles.includes("super_admin")} />}
+                  {screen === "demos" && <DemoRequestsScreen orgSelector={orgSelector} />}
                   {screen === "people" && <PeopleScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} currentUserId={session?.user?.id} />}
                   {screen === "content" && <ContentScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} selectedCourseId={selectedCourseId} setSelectedCourseId={setSelectedCourseId} currentUserId={session?.user?.id} />}
                   {screen === "paths" && <LearningPathsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} />}

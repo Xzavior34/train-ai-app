@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import {
   Building2, GraduationCap, ShieldCheck, LayoutDashboard, Users, BookOpen, BarChart3,
-  Layers, Plug, Briefcase, Settings, Calendar, MessageSquare, MessagesSquare, Map, Mail, Trophy, CheckSquare,
+  Layers, Plug, Briefcase, Settings, Calendar, CalendarCheck, MessageSquare, MessagesSquare, Map, Mail, Trophy, CheckSquare,
   Repeat, LogOut, Search, Bell, Menu, X, ArrowUpRight, ArrowDownRight, ChevronRight, ChevronDown, Flag, Palette, Rocket, Brain, LifeBuoy,
   Armchair,
   PanelLeftClose, PanelLeftOpen, Check, CheckCircle2, Sun, Moon, MoreVertical
@@ -731,8 +731,8 @@ export function StatCard({ stat }) {
         <div className="ta-row ta-between" style={{ gap: 8, alignItems: "center" }}>
           <span className="ta-label" style={{ minWidth: 0, fontSize: 12, fontWeight: 700, letterSpacing: "0.04em", lineHeight: 1.3, wordBreak: "break-word" }}>{stat.label}</span>
           {Icon && (
-            <div style={{ width: 36, height: 36, flexShrink: 0, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon size={18} color="var(--primary)" />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--primary)", flexShrink: 0 }}>
+              <Icon size={18} />
             </div>
           )}
         </div>
@@ -771,6 +771,7 @@ const ADMIN_NAV = [
     section: "Workspace",
     items: [
       { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { key: "demos", label: "Demo Requests", icon: CalendarCheck },
       { key: "workforce", label: "Workforce Intelligence", icon: Brain },
     ],
   },
@@ -836,6 +837,7 @@ const MENTOR_NAV = [
 
 export const SUPERADMIN_NAV = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
+  { key: "demos", label: "Demo Requests", icon: CalendarCheck },
   { key: "orgs", label: "Organizations", icon: Building2 },
   { key: "onboarding", label: "Org Onboarding", icon: Rocket },
   { key: "branding", label: "Branding", icon: Palette },

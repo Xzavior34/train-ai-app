@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Trophy, RefreshCw, Zap, Quote, Crown, Medal, Award } from "lucide-react";
+import { Trophy, RefreshCw, Zap, Quote, Crown, Medal, Award, Flame, BookOpen, Target } from "lucide-react";
 import { Avatar, initialsOf } from "./LearnerUI.jsx";
 import { SkeletonCard } from "../../components/common/Skeleton.jsx";
 
@@ -314,7 +314,9 @@ export function LeaderboardPanel({
                 <div style={{ fontWeight: 900, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 170 }}>
                   {first?.name || "-"}
                 </div>
-                <div style={{ fontSize: 11, color: "#D97706", fontWeight: 800 }}>🏆 Champion</div>
+                <div style={{ fontSize: 11, color: "#D97706", fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}>
+                  <Trophy size={12} color="#D97706" /> Champion
+                </div>
               </div>
               <div style={{ fontWeight: 900, fontSize: 15, color: "#D97706", background: "rgba(245, 158, 11, 0.16)", border: "1px solid rgba(245, 158, 11, 0.3)", padding: "4px 12px", borderRadius: 999 }}>
                 {first?.points?.toLocaleString() || 0} pts
@@ -501,13 +503,13 @@ export function LeaderboardPanel({
 
                 <div className="tai-row tai-gap10" style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, alignItems: "center" }}>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-                    🔥 {r.streak}d
+                    <Flame size={12} color="#EA580C" /> {r.streak}d
                   </span>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-                    📖 {r.lessonsCompleted}
+                    <BookOpen size={12} color="#2563EB" /> {r.lessonsCompleted}
                   </span>
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-                    🎯 {r.coursesCompleted}
+                    <Target size={12} color="#10B981" /> {r.coursesCompleted}
                   </span>
                 </div>
               </div>

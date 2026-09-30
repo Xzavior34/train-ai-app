@@ -399,7 +399,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
                   </div>
                 </div>
                 <button className="tai-btn tai-btn-primary" disabled={claimingBox} onClick={handleClaimBox} style={{ borderRadius: 8, padding: "8px 16px" }}>
-                  {claimingBox ? "Opening Box..." : "🎁 Open Mystery Box"}
+                  {claimingBox ? "Opening Box..." : <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Gift size={14} /> Open Mystery Box</span>}
                 </button>
               </div>
             </div>

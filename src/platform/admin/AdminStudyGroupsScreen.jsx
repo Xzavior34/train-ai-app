@@ -3,6 +3,7 @@ import { TopBar, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { Users, BookOpen, ChevronRight, Trash2 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAllStudyGroupsForOrg, fetchStudyGroupMembers, removeStudyGroupMember } from "../../lib/api/schemaHelper.js";
+import { Skeleton } from "../../components/common/Skeleton.jsx";
 
 // Admin-wide Study Groups - confirmed directly: "Admins should be able to
 // see and access all study groups." Previously there was no admin-facing
@@ -96,7 +97,18 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
                 <tr><th>Name</th><th>Linked course</th><th>Members</th><th>Visibility</th></tr>
               </thead>
               <tbody>
-                {groupsQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading study groups...</td></tr>}
+                {groupsQuery.loading && (
+                  <>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <tr key={i}>
+                        <td><Skeleton width="120px" height="16px" borderRadius="4px" /></td>
+                        <td><Skeleton width="140px" height="16px" borderRadius="4px" /></td>
+                        <td><Skeleton width="50px" height="16px" borderRadius="4px" /></td>
+                        <td><Skeleton width="60px" height="20px" borderRadius="4px" /></td>
+                      </tr>
+                    ))}
+                  </>
+                )}
                 {!groupsQuery.loading && groups.length === 0 && (
                   <tr><td colSpan={4} className="ta-empty">No study groups in this organization yet - learners create these themselves as they self-organize.</td></tr>
                 )}
@@ -117,7 +129,12 @@ export function AdminStudyGroupsScreen({ orgId, orgSelector }) {
                         <tr>
                           <td colSpan={4} style={{ background: "var(--surface-3)", padding: 14 }}>
                             <div style={{ fontSize: 11.5, fontWeight: 700, color: "var(--text-2)", marginBottom: 8 }}>MEMBERS</div>
-                            {membersQuery.loading && <div className="ta-empty">Loading members...</div>}
+                            {membersQuery.loading && (
+                              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                                <Skeleton height="24px" borderRadius="4px" />
+                                <Skeleton height="24px" borderRadius="4px" />
+                              </div>
+                            )}
                             {!membersQuery.loading && (membersQuery.data || []).length === 0 && <div className="ta-empty">No members yet.</div>}
                             <div className="ta-col ta-gap6">
                               {(membersQuery.data || []).map((m) => (

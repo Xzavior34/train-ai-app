@@ -13,6 +13,7 @@ import { TracksScreen } from "./superadmin/TracksScreen.jsx";
 import { EmailsScreen } from "./superadmin/EmailsScreen.jsx";
 import { AccessControlScreen } from "./superadmin/AccessControlScreen.jsx";
 import { SupportQueueScreen } from "./superadmin/SupportQueueScreen.jsx";
+import { DemoRequestsScreen } from "./superadmin/DemoRequestsScreen.jsx";
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 import { getAvailableDashboards, DASHBOARDS } from "../lib/roleRouting.js";
 
@@ -167,7 +168,8 @@ export default function PlatformOwnerApp({
                 />
 
               <div className="ta-main">
-                {screen === "overview" && <OverviewScreen orgSelector={orgSelector} />}
+                {screen === "overview" && <OverviewScreen orgSelector={orgSelector} onNavigate={(scr) => setScreen(scr)} />}
+                {screen === "demos" && <DemoRequestsScreen orgSelector={orgSelector} />}
                 {screen === "orgs" && (
                   <OrganizationsScreen
                     orgSelector={orgSelector}

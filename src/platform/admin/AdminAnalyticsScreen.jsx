@@ -13,6 +13,7 @@ import {
   fetchOrganizationById,
 } from "../../lib/api/platform.js";
 import { orgHasFeature, minTierLabelFor } from "../../lib/tierFeatures.js";
+import { Skeleton } from "../../components/common/Skeleton.jsx";
 import { fetchOrgFeatures } from "../../lib/api/organizations.js";
 
 export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatformOwner }) {
@@ -126,7 +127,13 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
                 </span>
               </div>
             )}
-            {trendQuery.loading && <div className="ta-empty">Loading trend...</div>}
+            {trendQuery.loading && (
+              <div style={{ height: 140, display: "flex", alignItems: "flex-end", gap: 10, marginTop: 16 }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} height={`${40 + (i % 3) * 30}px`} borderRadius="6px" style={{ flex: 1 }} />
+                ))}
+              </div>
+            )}
             {!trendQuery.loading && !trend.some(t => t.enrollments > 0) && (
               <div className="ta-empty">No enrollments recorded yet for this organization.</div>
             )}
@@ -152,14 +159,19 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
           <div className="ta-card">
             <div className="ta-label">Top courses</div>
             <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>By real enrollment count in your organization</div>
-            {topCoursesQuery.loading && <div className="ta-empty">Loading top courses...</div>}
+            {topCoursesQuery.loading && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+                <Skeleton height="28px" borderRadius="6px" />
+                <Skeleton height="28px" borderRadius="6px" />
+              </div>
+            )}
             {!topCoursesQuery.loading && topCourses.length === 0 && <div className="ta-empty">No enrollments yet.</div>}
             {!topCoursesQuery.loading && topCourses.length > 0 && (
               <div className="ta-col ta-gap10 ta-mt12">
                 {topCourses.map((c) => (
                   <div key={c.courseId} className="ta-row ta-between" style={{ fontSize: 12.5, gap: 10 }}>
                     <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.title}</span>
-                    <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.enrolled} enrolled - {c.completed} completed</span>
+                    <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.enrolled} enrolled • {c.completed} completed</span>
                   </div>
                 ))}
               </div>
@@ -168,14 +180,19 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
           <div className="ta-card">
             <div className="ta-label">Most active community</div>
             <div className="ta-body" style={{ marginTop: 4, marginBottom: 4 }}>Cohorts ranked by real posts and membership</div>
-            {activeCohortsQuery.loading && <div className="ta-empty">Loading community activity...</div>}
+            {activeCohortsQuery.loading && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 12 }}>
+                <Skeleton height="28px" borderRadius="6px" />
+                <Skeleton height="28px" borderRadius="6px" />
+              </div>
+            )}
             {!activeCohortsQuery.loading && activeCohorts.length === 0 && <div className="ta-empty">No cohort activity yet.</div>}
             {!activeCohortsQuery.loading && activeCohorts.length > 0 && (
               <div className="ta-col ta-gap10 ta-mt12">
                 {activeCohorts.map((c) => (
                   <div key={c.cohortId} className="ta-row ta-between" style={{ fontSize: 12.5, gap: 10 }}>
                     <span style={{ fontWeight: 600, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-                    <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.members} members - {c.posts} updates</span>
+                    <span style={{ flexShrink: 0, whiteSpace: "nowrap" }}>{c.members} members • {c.posts} updates</span>
                   </div>
                 ))}
               </div>

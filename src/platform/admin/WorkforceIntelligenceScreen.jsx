@@ -8,6 +8,7 @@ import {
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchWorkforceIntelligence, fetchOrgMembers, fetchOrgLearnerProgressOverview, assignComplianceCourse, fetchLearnerAssessmentScoresForCourses } from "../../lib/api/platform.js";
 import { fetchPublishedLearningPaths, fetchMyEnrollments, resolvePathProgress } from "../../lib/api/learner.js";
+import { Skeleton, SkeletonCard } from "../../components/common/Skeleton.jsx";
 
 export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId }) {
   const showToast = useContext(ToastContext);
@@ -213,8 +214,21 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
         orgSelector={orgSelector} 
       />
       
-      <div className="ta-content" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {wiQuery.loading && <div className="ta-card ta-empty">Loading workforce intelligence...</div>}
+        {wiQuery.loading && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="ta-hero-banner" style={{ minHeight: 140, display: "flex", alignItems: "center" }}>
+              <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+                <Skeleton width="45%" height="28px" borderRadius="8px" />
+                <Skeleton width="65%" height="16px" borderRadius="6px" />
+              </div>
+            </div>
+            <div className="ta-grid ta-grid-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonCard key={i} height={110} />
+              ))}
+            </div>
+          </div>
+        )}
         {!wiQuery.loading && (
         <>
         {/* =========================================================================
@@ -226,17 +240,6 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Workforce Intelligence &amp; Skill Radar</h1>
               <p className="ta-hero-desc">Map enterprise competencies, skill gaps, readiness trajectories, and automated upskilling paths.</p>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <span className="ta-tag ta-tag-success">
-                  <Brain size={12} /> {readinessDisplay} Enterprise Readiness
-                </span>
-                <span className="ta-tag ta-tag-info">
-                  <Target size={12} /> {allLearners.length} Active Profiles Tracked
-                </span>
-                <span className="ta-tag ta-tag-warning">
-                  <Activity size={12} /> {wi.aiUsageCount7d ?? 0} AI Queries (7d)
-                </span>
-              </div>
             </div>
             <div className="ta-hero-actions">
               <button 
@@ -592,6 +595,5 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
         )}
 
       </div>
-    </div>
-  );
-}
+    );
+  }

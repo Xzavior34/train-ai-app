@@ -2,8 +2,6 @@ import React from "react";
 import { Trophy } from "lucide-react";
 import { Avatar } from "../LearnerUI.jsx";
 
-const MEDALS = ["🥇", "🥈", "🥉"];
-
 // Compact leaderboard-position card. Reuses the same `fetchLeaderboard()` /
 // `get_leaderboard_with_profiles` RPC result the app already fetches
 // (`leaderboardQuery` in useLearnerData) - no second query, no new "weekly
@@ -46,8 +44,8 @@ export function WeeklyLeagueCard({ rows = [], loading }) {
   return (
     <div className="tai-card tai-mt12">
       <div className="tai-row tai-gap10">
-        <div className="tai-iconbtn" style={{ background: "#FDF4DC", border: "none", color: "#B8860B" }}>
-          <Trophy size={16} />
+        <div style={{ color: "#B8860B", display: "flex", alignItems: "center" }}>
+          <Trophy size={18} />
         </div>
         <div>
           <div className="tai-label">Leaderboard standing</div>
@@ -62,8 +60,8 @@ export function WeeklyLeagueCard({ rows = [], loading }) {
             className="tai-row tai-gap10"
             style={{ padding: "6px 8px", borderRadius: 10, background: r.you ? "var(--surface-2)" : "transparent" }}
           >
-            <span style={{ width: 22, textAlign: "center", fontSize: 13, fontWeight: 700, color: "var(--text-2)" }}>
-              {MEDALS[idx] || `#${r.rank}`}
+            <span style={{ width: 22, textAlign: "center", fontSize: 12, fontWeight: 700, color: idx === 0 ? "#D97706" : "var(--text-2)" }}>
+              #{r.rank}
             </span>
             <Avatar initials={r.initials} size={26} />
             <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: r.you ? 700 : 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

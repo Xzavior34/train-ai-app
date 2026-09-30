@@ -4,8 +4,9 @@ import {
   Building2, Users, Layers, Activity, Download, Clock,
   Globe, TrendingUp, TrendingDown, Megaphone, ShieldCheck,
   Server, Database, ArrowUpRight, CheckCircle2, ChevronRight, Plus,
-  DollarSign, BarChart2, Radio, Play
+  DollarSign, BarChart2, Radio, Play, CalendarCheck
 } from "lucide-react";
+import { Skeleton } from "../../components/common/Skeleton.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchPlatformOverviewStats,
@@ -112,6 +113,26 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
             </div>
 
             <div className="ta-hero-actions">
+              <button
+                className="ta-btn ta-btn-primary"
+                onClick={() => onNavigate?.("demos")}
+                style={{
+                  background: "#2563EB",
+                  color: "#FFFFFF",
+                  fontWeight: 700,
+                  height: 38,
+                  padding: "0 16px",
+                  borderRadius: 8,
+                  border: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  cursor: "pointer",
+                }}
+                title="View inbound institutional demo and appointment bookings"
+              >
+                <CalendarCheck size={15} /> Demo Requests
+              </button>
               <div className="tai-hero-subcard" style={{ padding: "8px 14px", borderRadius: 10, textAlign: "center" }}>
                 <div style={{ fontSize: 10.5, opacity: 0.8, fontWeight: 700 }}>Database Health</div>
                 <div style={{ fontSize: 15, fontWeight: 900, color: healthQuery.data?.ok ? "#10B981" : "#EF4444" }}>
@@ -135,9 +156,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Organizations</span>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Building2 size={18} />
-              </div>
+              <Building2 size={20} color="#2563EB" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
               {effectiveTotalOrgs}
@@ -156,9 +175,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Total Platform Users</span>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(37, 99, 235, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Users size={18} />
-              </div>
+              <Users size={20} color="#2563EB" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
               {effectiveTotalUsers.toLocaleString()}
@@ -175,9 +192,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Published Courses</span>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(16, 185, 129, 0.12)", color: "#059669", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Layers size={18} />
-              </div>
+              <Layers size={20} color="#059669" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
               {effectiveTotalCourses}
@@ -194,9 +209,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div className="ta-card" style={{ padding: "20px 22px", borderRadius: 10, background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Weekly Active Users (7d)</span>
-              <div style={{ width: 34, height: 34, borderRadius: 8, background: "rgba(245, 158, 11, 0.12)", color: "#D97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Activity size={18} />
-              </div>
+              <Activity size={20} color="#D97706" />
             </div>
             <div style={{ fontSize: 28, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
               {effectiveActiveInWeek.toLocaleString()}
@@ -363,7 +376,18 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {orgsQuery.loading && <tr><td colSpan={4} className="ta-empty">Loading organizations...</td></tr>}
+                  {orgsQuery.loading && (
+                    <>
+                      {Array.from({ length: 3 }).map((_, idx) => (
+                        <tr key={idx}>
+                          <td><Skeleton width="160px" height="16px" borderRadius="4px" /></td>
+                          <td><Skeleton width="70px" height="14px" borderRadius="4px" /></td>
+                          <td><Skeleton width="60px" height="20px" borderRadius="4px" /></td>
+                          <td><Skeleton width="50px" height="20px" borderRadius="4px" /></td>
+                        </tr>
+                      ))}
+                    </>
+                  )}
                   {orgsQuery.error && <tr><td colSpan={4} className="ta-empty">Couldn't load organizations: {orgsQuery.error}</td></tr>}
                   {!orgsQuery.loading && !orgsQuery.error && orgs.length === 0 && (
                     <tr><td colSpan={4} className="ta-empty">No organizations registered yet.</td></tr>
@@ -372,8 +396,8 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                     <tr key={o.id}>
                       <td>
                         <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--surface-3)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, color: "var(--primary)", flexShrink: 0 }}>
-                            <Building2 size={16} />
+                          <div style={{ color: "var(--primary)", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                            <Building2 size={18} />
                           </div>
                           <div style={{ minWidth: 0, overflow: "hidden" }}>
                             <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>

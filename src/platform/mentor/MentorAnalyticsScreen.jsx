@@ -95,9 +95,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Instructor Rating</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(245, 158, 11, 0.15)", color: "#F59E0B", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Star size={18} fill="#F59E0B" />
-              </div>
+              <Star size={20} color="#F59E0B" fill="#F59E0B" />
             </div>
             <div className="ta-row ta-gap8" style={{ alignItems: "baseline", marginTop: 10 }}>
               <span style={{ fontSize: 30, fontWeight: 900, color: "var(--text)", letterSpacing: "-0.02em" }}>{ratingVal}</span>
@@ -111,9 +109,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Teaching Sessions</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(59, 130, 246, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Calendar size={18} />
-              </div>
+              <Calendar size={20} color="#2563EB" />
             </div>
             <div style={{ fontSize: 30, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
               {sessionsQuery.loading ? "…" : sessions.length}
@@ -126,9 +122,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Learners Mentored</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(16, 185, 129, 0.12)", color: "#10B981", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Users size={18} />
-              </div>
+              <Users size={20} color="#10B981" />
             </div>
             <div style={{ fontSize: 30, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
               {sessionsQuery.loading ? "…" : menteesHelped}
@@ -141,9 +135,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
           <div className="ta-card" style={{ padding: "20px 22px", background: "var(--surface)", border: "1px solid var(--border)" }}>
             <div className="ta-row ta-between">
               <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Gross Earnings</span>
-              <div style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(37, 99, 235, 0.12)", color: "#2563EB", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <DollarSign size={18} />
-              </div>
+              <DollarSign size={20} color="#2563EB" />
             </div>
             <div style={{ fontSize: 30, fontWeight: 900, color: "var(--text)", marginTop: 10, letterSpacing: "-0.02em" }}>
               ${totalEarnings.toFixed(2)}
@@ -244,8 +236,8 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
         <div className="ta-card" style={{ padding: "22px 24px", background: "var(--surface)", border: "1px solid var(--border)" }}>
           <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
             <div className="ta-row ta-gap10">
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--primary-tint)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <MessageCircle size={18} color="var(--primary)" />
+              <div style={{ color: "var(--primary)", display: "flex", alignItems: "center" }}>
+                <MessageCircle size={20} />
               </div>
               <div>
                 <div className="ta-title" style={{ fontSize: 16, fontWeight: 800 }}>Recent Student Reviews &amp; Testimonials</div>
