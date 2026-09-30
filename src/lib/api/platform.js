@@ -2629,7 +2629,7 @@ export async function fetchBlockedSlotsForMentor(mentorId) {
   return (data || []).map(b => ({
     id: b.id,
     date: new Date(b.start_time).toLocaleDateString(),
-    range: b.end_time && new Date(b.end_time).getTime() - new Date(b.start_time).getTime() >= 23 * 60 * 60 * 1000 ? "All day" : `${new Date(b.start_time).toLocaleTimeString()} – ${new Date(b.end_time).toLocaleTimeString()}`,
+    range: b.end_time && new Date(b.end_time).getTime() - new Date(b.start_time).getTime() >= 23 * 60 * 60 * 1000 ? "All day" : `${new Date(b.start_time).toLocaleTimeString()} - ${new Date(b.end_time).toLocaleTimeString()}`,
     reason: b.reason || "",
   }));
 }

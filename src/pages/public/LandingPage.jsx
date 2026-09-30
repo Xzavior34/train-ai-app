@@ -11,7 +11,7 @@ import {
 import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
 
-const TEAM_SIZE_OPTIONS = ["1–50", "51–200", "201–1,000", "1,000+"];
+const TEAM_SIZE_OPTIONS = ["1-50", "51-200", "201-1,000", "1,000+"];
 const ORG_TYPE_OPTIONS = [
   "Academy / Educational Institution",
   "NGO / Non-Profit / Foundation",
@@ -46,7 +46,7 @@ const SECTORS_DATA = {
     icon: GraduationCap,
     title: "Empower faculty. Scale interactive AI curriculums.",
     desc: "Equip your instructors with automated quiz generation and cohort pacing while giving every enrolled student a 24/7 AI tutor and practical coding sandbox.",
-    image: "https://images.unsplash.com/photo-1524178272502-390466be8e45?w=900&auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=900&auto=format&fit=crop&q=80",
     features: [
       { title: "Cohort Pacing & Control", desc: "Organize students by semester, track assignment releases, and monitor milestone completions." },
       { title: "24/7 AI Teaching Assistant", desc: "Instant conceptual Q&A, code debugging, and adaptive practice tests for students." },
@@ -581,7 +581,7 @@ export default function LandingPage({ onNavigate }) {
 
               {/* Subtitle */}
               <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.55, margin: "0 0 22px", maxWidth: 510 }}>
-                Train AI unites adaptive AI tutoring, live cohort mentorship, and real-time skill telemetry in one platform — purpose-built for academic institutions, social impact programs, and forward-thinking enterprises.
+                Train AI unites adaptive AI tutoring, live cohort mentorship, and real-time skill telemetry in one platform, purpose-built for academic institutions, social impact programs, and forward-thinking enterprises.
               </p>
 
               {/* Dual CTAs */}
@@ -628,8 +628,9 @@ export default function LandingPage({ onNavigate }) {
                 {/* Image 1: Academy & Classroom setting */}
                 <div style={{ width: "72%", borderRadius: 10, overflow: "hidden", border: "1px solid #CBD5E1", boxShadow: "0 10px 28px rgba(15,23,42,0.08)" }}>
                   <img
-                    src="https://images.unsplash.com/photo-1524178272502-390466be8e45?w=800&auto=format&fit=crop&q=80"
+                    src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80"
                     alt="Active Academy Cohort"
+                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80"; }}
                     style={{ width: "100%", height: 210, objectFit: "cover", display: "block" }}
                   />
                   <div style={{ background: "#FFFFFF", padding: "8px 12px", borderTop: "1px solid #E2E8F0", textAlign: "left" }}>
@@ -643,6 +644,7 @@ export default function LandingPage({ onNavigate }) {
                   <img
                     src="https://images.unsplash.com/photo-1531545514256-b1400bc00f31?w=800&auto=format&fit=crop&q=80"
                     alt="Community Impact Workshop"
+                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80"; }}
                     style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }}
                   />
                   <div style={{ background: "#0F172A", padding: "8px 12px", color: "#FFFFFF", textAlign: "left" }}>
@@ -780,6 +782,7 @@ export default function LandingPage({ onNavigate }) {
                 <img
                   src={currentSector.image}
                   alt={currentSector.label}
+                  onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80"; }}
                   style={{ width: "100%", height: 320, objectFit: "cover", display: "block" }}
                 />
               </div>

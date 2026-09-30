@@ -238,14 +238,6 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
             <div className="ta-hero-text">
               <h1 className="ta-hero-title">Settings Hub &amp; Preferences</h1>
               <p className="ta-hero-desc">Manage organization profile, seat licenses, AI policies, security rules, and gamification toggles.</p>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <span className="ta-tag ta-tag-success">
-                  <Building2 size={13} /> {org?.name || "Sara Foundation Africa"}
-                </span>
-                <span className="ta-tag ta-tag-info">
-                  <ShieldCheck size={13} /> {(org?.subscription_tier || "Enterprise").toUpperCase()} Plan Active
-                </span>
-              </div>
             </div>
             <div className="ta-hero-actions">
               <button 

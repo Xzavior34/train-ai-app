@@ -113,7 +113,7 @@ export const MOCK_YOUTUBE_VIDEOS = {
     defaultVideoId: "gHGN6hs2gZY",
     lessons: {
       "l-figma-1": "gHGN6hs2gZY", // What Is Design Thinking? An Overview (AJ&Smart)
-      "l-figma-2": "c9Wg6Cb_YlU", // UI / UX Design Tutorial – Wireframe, Mockup & Design in Figma (freeCodeCamp)
+      "l-figma-2": "c9Wg6Cb_YlU", // UI / UX Design Tutorial - Wireframe, Mockup & Design in Figma (freeCodeCamp)
       "l-figma-3": "jk1T0CdLxwU", // Intro to Figma - Beginners guide to Figma Basics (Jesse Showalter)
       "l-figma-4": "HZuk6Wkx_Eg"  // Figma tutorial for Beginners: Complete Website (Flux Academy)
     }

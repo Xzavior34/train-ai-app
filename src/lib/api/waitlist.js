@@ -225,7 +225,7 @@ function readStoredAttribution() {
   }
 }
 
-export async function submitDemoRequest({ fullName, workEmail, companyName, teamSize, message, source = "landing_page" } = {}) {
+export async function submitDemoRequest({ fullName, workEmail, companyName, teamSize, message, source = "landing_page", status = "scheduled" } = {}) {
   const normalizedEmail = normalizeEmail(workEmail);
   if (!fullName?.trim() || !isValidEmail(normalizedEmail) || !companyName?.trim()) {
     return { success: false, error: "Please fill in your name, work email, and company." };
@@ -241,9 +241,68 @@ export async function submitDemoRequest({ fullName, workEmail, companyName, team
       team_size: teamSize || null,
       message: message?.trim() || null,
       source,
+      status: status || "scheduled",
       ...attribution,
     });
     if (error) throw error;
+
+    // Dual-write into organization_inquiries to ensure follow-up queue captures it
+    await supabase.from("organization_inquiries").insert({
+      full_name: fullName.trim(),
+      work_email: normalizedEmail,
+      company_name: companyName.trim(),
+      inquiry_type: "partnership",
+      message: `[Notification target: info@trainailtd.com & info@sarafoundationafrica.com]\n${message?.trim() || ""}`,
+      source,
+      status: "new",
+      ...attribution,
+    }).catch(() => {});
+
+    // Dispatch email notifications to team inboxes for immediate follow-up
+    const notificationSubject = `New Demo / Appointment Request: ${fullName.trim()} - ${companyName.trim()}`;
+    const notificationHtml = `
+      <div style="font-family: sans-serif; line-height: 1.5; color: #0F172A;">
+        <h2 style="color: #2563EB;">New Train AI Appointment & Demo Scheduled</h2>
+        <p>A new institutional demo request has been submitted for follow-up:</p>
+        <table style="width: 100%; max-width: 560px; border-collapse: collapse; margin-bottom: 20px;">
+          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold; width: 140px;">Name</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${fullName.trim()}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Work Email</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;"><a href="mailto:${normalizedEmail}">${normalizedEmail}</a></td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Organization</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${companyName.trim()}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Team Size</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${teamSize || "Not specified"}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Source</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${source}</td></tr>
+        </table>
+        <h3 style="font-size: 14px; margin-bottom: 6px;">Meeting & Schedule Details:</h3>
+        <pre style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 8px; font-size: 13px; white-space: pre-wrap; word-wrap: break-word;">${message || ""}</pre>
+        <p style="font-size: 12px; color: #64748B; margin-top: 18px;">
+          Follow-up notifications routed to: <strong>info@trainailtd.com</strong> and <strong>info@sarafoundationafrica.com</strong>
+        </p>
+      </div>
+    `;
+
+    // Trigger dispatch asynchronously without blocking the user response
+    Promise.allSettled([
+      supabase.functions.invoke("advanced-broadcast-email", {
+        body: {
+          action: "send",
+          recipient_group: "specific_email",
+          specific_email: "info@trainailtd.com",
+          subject: notificationSubject,
+          html_content: notificationHtml,
+        }
+      }),
+      supabase.functions.invoke("advanced-broadcast-email", {
+        body: {
+          action: "send",
+          recipient_group: "specific_email",
+          specific_email: "info@sarafoundationafrica.com",
+          subject: notificationSubject,
+          html_content: notificationHtml,
+        }
+      })
+    ]).catch((err) => {
+      console.warn("Notification dispatch warning:", err);
+    });
+
     return { success: true };
   } catch (error) {
     console.warn("Demo request submit warning:", error);

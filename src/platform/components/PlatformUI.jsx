@@ -1377,8 +1377,6 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchRef = useRef(null);
   const [isDarkTheme, setIsDarkTheme] = useState(() => getStoredThemeDark());
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const moreMenuRef = useRef(null);
 
   useEffect(() => {
     const syncTheme = () => {
@@ -1600,112 +1598,6 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
             <LogOut size={15} />
             <span>Sign Out</span>
           </button>
-
-          {/* Mobile-only "more" menu */}
-          <div ref={moreMenuRef} className="ta-header-mobile-only" style={{ position: "relative" }}>
-            <button
-              type="button"
-              style={{
-                width: 38,
-                height: 38,
-                padding: 0,
-                borderRadius: 10,
-                border: "1.5px solid var(--border)",
-                background: "var(--surface)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                color: "var(--text)"
-              }}
-              onClick={() => setIsMoreMenuOpen(v => !v)}
-              aria-label="More options"
-            >
-              <MoreVertical size={20} color="var(--text)" />
-            </button>
-            {isMoreMenuOpen && (
-              <>
-                <div
-                  style={{ position: "fixed", inset: 0, zIndex: 240 }}
-                  onClick={() => setIsMoreMenuOpen(false)}
-                />
-                <div
-                  className="ta-dropdown-card anim-slide-down"
-                  style={{
-                    position: "absolute",
-                    top: 46,
-                    right: 0,
-                    zIndex: 250
-                  }}
-                >
-                  <div
-                    className="ta-dropdown-item ta-row ta-gap8"
-                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
-                    onClick={() => {
-                      setIsMoreMenuOpen(false);
-                      openMenu?.();
-                    }}
-                  >
-                    <Menu size={16} />
-                    <span>Open Navigation</span>
-                  </div>
-                  <div
-                    className="ta-dropdown-item ta-row ta-gap8"
-                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
-                    onClick={() => {
-                      setIsMoreMenuOpen(false);
-                      setIsSearchOpen(true);
-                    }}
-                  >
-                    <Search size={16} />
-                    <span>Search Platform</span>
-                  </div>
-                  {right && (
-                    <div style={{ padding: "6px 4px 8px", borderBottom: "1px solid var(--border)", marginBottom: 4 }} onClick={() => setIsMoreMenuOpen(false)}>
-                      {right}
-                    </div>
-                  )}
-                  <div
-                    className="ta-dropdown-item ta-row ta-gap8"
-                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
-                    onClick={() => {
-                      const next = !isDarkTheme;
-                      setIsDarkTheme(next);
-                      setGlobalThemeDark(next);
-                      setIsMoreMenuOpen(false);
-                    }}
-                  >
-                    {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
-                    <span>{isDarkTheme ? "Switch to Light Mode" : "Switch to Dark Mode"}</span>
-                  </div>
-                  {canOpenOwnSettings && (
-                    <div
-                      className="ta-dropdown-item ta-row ta-gap8"
-                      style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
-                      onClick={() => {
-                        setIsMoreMenuOpen(false);
-                        onNavigate("settings");
-                      }}
-                    >
-                      <Settings size={16} />
-                      <span>Settings Hub</span>
-                    </div>
-                  )}
-                  <div
-                    className="ta-dropdown-item ta-row ta-gap8"
-                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--danger)" }}
-                    onClick={() => {
-                      setIsMoreMenuOpen(false);
-                      handleSignOut();
-                    }}
-                  >
-                    <LogOut size={16} />
-                    <span>Sign Out</span>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
         </div>
       </div>
 

@@ -272,7 +272,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
                             <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
-                              {c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "No start date"}{c.ends_at ? ` – ${new Date(c.ends_at).toLocaleDateString()}` : ""}
+                              {c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "No start date"}{c.ends_at ? ` - ${new Date(c.ends_at).toLocaleDateString()}` : ""}
                             </div>
                           </div>
                         </div>

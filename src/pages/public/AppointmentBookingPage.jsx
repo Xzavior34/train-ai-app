@@ -349,6 +349,25 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
           background: #F8FAFC;
           border-color: #94A3B8;
         }
+
+        /* Light theme protection for form controls */
+        .apt-input-field {
+          background-color: #FFFFFF !important;
+          background: #FFFFFF !important;
+          color: #0F172A !important;
+          -webkit-text-fill-color: #0F172A !important;
+          color-scheme: light !important;
+        }
+        .apt-input-field::placeholder {
+          color: #94A3B8 !important;
+          -webkit-text-fill-color: #94A3B8 !important;
+          opacity: 1 !important;
+        }
+        .apt-input-group {
+          background-color: #FFFFFF !important;
+          background: #FFFFFF !important;
+          color-scheme: light !important;
+        }
       `}</style>
 
       {/* Top Navigation Bar */}
@@ -364,15 +383,15 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
               <span style={{ fontSize: 13, fontWeight: 600, color: "#0F172A" }}>Back to Train AI</span>
             </button>
             <div style={{ height: 18, width: 1, background: "#E2E8F0" }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={styles.logoMark}>
-                <span style={{ color: "#fff", fontWeight: 900, fontSize: 13 }}>T</span>
-              </div>
-              <span style={{ fontSize: 14, fontWeight: 800, color: "#0F172A", letterSpacing: "-0.02em" }}>
-                Train AI
-              </span>
-              <span style={styles.schedulerBadge}>
-                Live Scheduler
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <img
+                src="/train-ai-logo.png"
+                alt="Train AI"
+                onError={(e) => { e.currentTarget.src = "/brand/train-ai-logo.png"; }}
+                style={{ height: 26, width: "auto", objectFit: "contain", display: "block" }}
+              />
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#64748B" }}>
+                Appointment Scheduler
               </span>
             </div>
           </div>
@@ -390,8 +409,8 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
           
           {/* Header Info */}
           <div style={{ marginBottom: 24, textAlign: "left" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "3px 10px", background: "#EFF6FF", color: "#1D4ED8", borderRadius: 6, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>
-              <Clock size={13} />
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#2563EB", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>
+              <Clock size={15} />
               <span>30-Minute Institutional Walkthrough</span>
             </div>
             <h1 style={{ fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 900, color: "#0F172A", letterSpacing: "-0.03em", margin: "0 0 6px" }}>
@@ -621,14 +640,15 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <label style={styles.inputLabel}>
                       Full Name <span style={{ color: "#EF4444" }}>*</span>
                     </label>
-                    <div style={styles.inputGroup}>
-                      <User size={15} color="#94A3B8" style={{ marginLeft: 10 }} />
+                    <div className="apt-input-group" style={styles.inputGroup}>
+                      <User size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
                       <input
                         required
                         type="text"
                         placeholder="e.g. Dr. Sarah Jenkins"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
+                        className="apt-input-field"
                         style={styles.textInput}
                       />
                     </div>
@@ -639,14 +659,15 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <label style={styles.inputLabel}>
                       Institutional / Work Email <span style={{ color: "#EF4444" }}>*</span>
                     </label>
-                    <div style={styles.inputGroup}>
-                      <Mail size={15} color="#94A3B8" style={{ marginLeft: 10 }} />
+                    <div className="apt-input-group" style={styles.inputGroup}>
+                      <Mail size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
                       <input
                         required
                         type="email"
                         placeholder="sarah@institution.edu or name@company.org"
                         value={workEmail}
                         onChange={(e) => setWorkEmail(e.target.value)}
+                        className="apt-input-field"
                         style={styles.textInput}
                       />
                     </div>
@@ -657,14 +678,15 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <label style={styles.inputLabel}>
                       Organization Name <span style={{ color: "#EF4444" }}>*</span>
                     </label>
-                    <div style={styles.inputGroup}>
-                      <Building2 size={15} color="#94A3B8" style={{ marginLeft: 10 }} />
+                    <div className="apt-input-group" style={styles.inputGroup}>
+                      <Building2 size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
                       <input
                         required
                         type="text"
                         placeholder="e.g. Westford Institute / Global Hope Foundation"
                         value={organizationName}
                         onChange={(e) => setOrganizationName(e.target.value)}
+                        className="apt-input-field"
                         style={styles.textInput}
                       />
                     </div>
@@ -677,6 +699,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                       <select
                         value={orgType}
                         onChange={(e) => setOrgType(e.target.value)}
+                        className="apt-input-field"
                         style={styles.selectInput}
                       >
                         {ORG_TYPE_OPTIONS.map((opt) => (
@@ -690,6 +713,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                       <select
                         value={teamSize}
                         onChange={(e) => setTeamSize(e.target.value)}
+                        className="apt-input-field"
                         style={styles.selectInput}
                       >
                         {TEAM_SIZE_OPTIONS.map((size) => (
@@ -709,6 +733,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                       placeholder="e.g. Semester cohort timeline, grant proposal needs, custom LMS integration..."
                       value={agendaNotes}
                       onChange={(e) => setAgendaNotes(e.target.value)}
+                      className="apt-input-field"
                       style={styles.textareaInput}
                     />
                   </div>
@@ -784,24 +809,6 @@ const styles = {
     padding: "4px 8px",
     borderRadius: 6
   },
-  logoMark: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    background: "#0F172A",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  schedulerBadge: {
-    fontSize: 11,
-    fontWeight: 700,
-    background: "#EFF6FF",
-    color: "#2563EB",
-    padding: "2px 7px",
-    borderRadius: 4,
-    border: "1px solid #DBEAFE"
-  },
   mainWrapper: {
     padding: "24px 18px"
   },
@@ -874,6 +881,7 @@ const styles = {
     border: "1px solid #CBD5E1",
     borderRadius: 6,
     background: "#FFFFFF",
+    backgroundColor: "#FFFFFF",
     overflow: "hidden"
   },
   textInput: {
@@ -882,6 +890,8 @@ const styles = {
     padding: "9px 10px",
     fontSize: 13,
     color: "#0F172A",
+    background: "#FFFFFF",
+    backgroundColor: "#FFFFFF",
     outline: "none",
     fontFamily: "inherit"
   },
@@ -893,6 +903,7 @@ const styles = {
     fontSize: 12.5,
     color: "#0F172A",
     background: "#FFFFFF",
+    backgroundColor: "#FFFFFF",
     outline: "none",
     fontFamily: "inherit"
   },
@@ -903,6 +914,8 @@ const styles = {
     padding: "8px 10px",
     fontSize: 12.5,
     color: "#0F172A",
+    background: "#FFFFFF",
+    backgroundColor: "#FFFFFF",
     outline: "none",
     boxSizing: "border-box",
     fontFamily: "inherit",
