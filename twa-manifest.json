@@ -1,5 +1,5 @@
 {
-  "packageId": "app.trainai.pwa",
+  "packageId": "com.trainailtd.twa",
   "host": "train-ai-app.vercel.app",
   "name": "Train AI",
   "launcherName": "Train AI",

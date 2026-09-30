@@ -5,9 +5,9 @@
     ],
     "target": {
       "namespace": "android_app",
-      "package_name": "app.trainai.pwa",
+      "package_name": "com.trainailtd.twa",
       "sha256_cert_fingerprints": [
-        "10:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00"
+        "05:F6:3A:9A:38:EA:F2:1F:53:FB:69:13:19:46:24:E5:89:64:14:6D:53:1F:B4:75:C2:7B:E2:67:AC:9D:A7:4A"
       ]
     }
   }
