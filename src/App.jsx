@@ -5,6 +5,7 @@ import PlatformOwnerApp from "./platform/PlatformOwnerApp.jsx";
 import { PlatformOwnerLoginScreen } from "./pages/PlatformOwnerLoginScreen.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import LandingPage from "./pages/public/LandingPage.jsx";
+import AppointmentBookingPage from "./pages/public/AppointmentBookingPage.jsx";
 import AuthPage from "./pages/auth/AuthPage.jsx";
 import MfaChallengeScreen from "./pages/auth/MfaChallengeScreen.jsx";
 import AcceptInvitationScreen from "./pages/auth/AcceptInvitationScreen.jsx";
@@ -151,7 +152,35 @@ export default function App() {
   // switching publicView to "auth" below.
   const [inviteAuthEmail, setInviteAuthEmail] = useState("");
 
-  const [publicView, setPublicView] = useState(() => (orgSlugParam ? "auth" : "landing")); // "landing" | "auth"
+  const [demoSectorParam, setDemoSectorParam] = useState("academies");
+  const [publicView, setPublicView] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") {
+        return "book-demo";
+      }
+    } catch {}
+    return orgSlugParam ? "auth" : "landing";
+  }); // "landing" | "auth" | "book-demo"
+
+  // Handle browser back/forward buttons smoothly
+  useEffect(() => {
+    function handlePopState() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") {
+          setPublicView("book-demo");
+        } else if (params.get("view") === "auth") {
+          setPublicView("auth");
+        } else if (!session) {
+          setPublicView("landing");
+        }
+      } catch {}
+    }
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [session]);
+
   const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [viewMode, setViewMode] = useState("learner");
@@ -346,8 +375,35 @@ export default function App() {
             authError={authError}
             initialEmail={inviteAuthEmail}
             onForgotPassword={sendPasswordReset}
-            onGoHome={() => setPublicView("landing")}
+            onGoHome={() => {
+              try { window.history.pushState({}, "", window.location.pathname); } catch {}
+              setPublicView("landing");
+            }}
             orgParam={orgSlugParam}
+          />
+          <ConsentBanner session={session} />
+        </>
+      );
+    }
+    if (publicView === "book-demo") {
+      return (
+        <>
+          <OfflineIndicator mode={offlineMode} />
+          <AppointmentBookingPage
+            initialSector={demoSectorParam}
+            onBack={() => {
+              try { window.history.pushState({}, "", window.location.pathname); } catch {}
+              setPublicView("landing");
+            }}
+            onNavigate={(target) => {
+              if (["signin", "signup"].includes(target)) {
+                try { window.history.pushState({}, "", "?view=auth"); } catch {}
+                setPublicView("auth");
+              } else {
+                try { window.history.pushState({}, "", window.location.pathname); } catch {}
+                setPublicView("landing");
+              }
+            }}
           />
           <ConsentBanner session={session} />
         </>
@@ -360,9 +416,19 @@ export default function App() {
       <>
         <OfflineIndicator mode={offlineMode} />
         <LandingPage
-          onNavigate={(target) =>
-            setPublicView(["signin", "signup", "courses", "mentors"].includes(target) ? "auth" : "landing")
-          }
+          onNavigate={(target, data) => {
+            if (["signin", "signup", "courses", "mentors"].includes(target)) {
+              try { window.history.pushState({}, "", "?view=auth"); } catch {}
+              setPublicView("auth");
+            } else if (target === "demo" || target === "book-demo") {
+              if (data?.sector) setDemoSectorParam(data.sector);
+              try { window.history.pushState({}, "", "?view=book-demo"); } catch {}
+              setPublicView("book-demo");
+            } else {
+              try { window.history.pushState({}, "", window.location.pathname); } catch {}
+              setPublicView("landing");
+            }
+          }}
         />
         <ConsentBanner session={session} />
       </>

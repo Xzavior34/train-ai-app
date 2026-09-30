@@ -6,7 +6,7 @@ import {
   Zap, Flame, Menu, Check,
   Activity, Gauge, Database, Home, Mail, Download, Wifi,
   Accessibility, Bell, Facebook, Twitter, Instagram, Linkedin, Search,
-  BarChart2, Heart, Award, Coins, FileText, Globe
+  BarChart2, Heart, Award, Coins, FileText, Globe, Calendar, Clock
 } from "lucide-react";
 import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
@@ -257,7 +257,7 @@ export default function LandingPage({ onNavigate }) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function handleNav(target) {
+  function handleNav(target, data) {
     setMobileMenuOpen(false);
     if (["about", "privacy", "terms", "cookie"].includes(target)) {
       setActiveModal(target);
@@ -267,11 +267,17 @@ export default function LandingPage({ onNavigate }) {
       scrollToId(target);
       return;
     }
-    if (target === "demo") {
-      setDemoModalOpen(true);
+    if (target === "demo" || target === "book-demo") {
+      if (typeof onNavigate === "function") {
+        onNavigate("book-demo", { sector: activeSector, ...data });
+      } else {
+        setDemoModalOpen(true);
+      }
       return;
     }
-    onNavigate(target);
+    if (typeof onNavigate === "function") {
+      onNavigate(target);
+    }
   }
 
   const currentSector = SECTORS_DATA[activeSector] || SECTORS_DATA.academies;
@@ -479,9 +485,9 @@ export default function LandingPage({ onNavigate }) {
             <button
               className="action-btn-outline lp-desktop-nav"
               style={styles.requestDemoBtn}
-              onClick={() => handleNav("demo")}
+              onClick={() => handleNav("book-demo")}
             >
-              Request Partnership
+              Book a Demo
             </button>
             <button
               className="action-btn-primary"
@@ -538,9 +544,9 @@ export default function LandingPage({ onNavigate }) {
               <button
                 className="action-btn-primary"
                 style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13 }}
-                onClick={() => handleNav("demo")}
+                onClick={() => handleNav("book-demo")}
               >
-                Request Partnership
+                Book a Demo
               </button>
             </div>
           </div>
@@ -583,8 +589,8 @@ export default function LandingPage({ onNavigate }) {
                 <button className="action-btn-primary" style={styles.startOrgBtn} onClick={() => handleNav("signin")}>
                   Start with your organization <ArrowRight size={14} />
                 </button>
-                <button className="action-btn-outline" style={styles.requestDemoOutlineBtn} onClick={() => handleNav("demo")}>
-                  Explore partnerships
+                <button className="action-btn-outline" style={styles.requestDemoOutlineBtn} onClick={() => handleNav("book-demo")}>
+                  Book a Demo
                 </button>
               </div>
 
@@ -760,8 +766,8 @@ export default function LandingPage({ onNavigate }) {
                 </div>
 
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button className="action-btn-primary" style={{ padding: "10px 18px", borderRadius: 8, fontWeight: 700, fontSize: 13 }} onClick={() => handleNav("demo")}>
-                    Request partnership for {currentSector.label.split(" ")[0]}
+                  <button className="action-btn-primary" style={{ padding: "10px 18px", borderRadius: 8, fontWeight: 700, fontSize: 13 }} onClick={() => handleNav("book-demo", { sector: activeSector })}>
+                    Book a {currentSector.label.split(" ")[0]} Demo
                   </button>
                   <button className="action-btn-outline" style={{ padding: "10px 16px", borderRadius: 8, fontWeight: 600, fontSize: 13 }} onClick={() => scrollToId("pricing")}>
                     View pricing options
@@ -828,8 +834,8 @@ export default function LandingPage({ onNavigate }) {
                 </div>
               </div>
 
-              <button className="action-btn-outline" style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13, textAlign: "center" }} onClick={() => handleNav("demo")}>
-                Request Academic Plan
+              <button className="action-btn-outline" style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13, textAlign: "center" }} onClick={() => handleNav("book-demo", { sector: "academies" })}>
+                Book Academic Consultation
               </button>
             </div>
 
@@ -862,8 +868,8 @@ export default function LandingPage({ onNavigate }) {
                 </div>
               </div>
 
-              <button className="action-btn-primary" style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13, textAlign: "center" }} onClick={() => handleNav("demo")}>
-                Apply for NGO Subsidies
+              <button className="action-btn-primary" style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13, textAlign: "center" }} onClick={() => handleNav("book-demo", { sector: "ngos" })}>
+                Book Grant Consultation
               </button>
             </div>
 
@@ -1425,9 +1431,9 @@ export default function LandingPage({ onNavigate }) {
               </button>
               <button
                 style={{ background: "rgba(255,255,255,0.08)", color: "#FFFFFF", fontWeight: 600, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer", fontSize: 13.5 }}
-                onClick={() => handleNav("demo")}
+                onClick={() => handleNav("book-demo")}
               >
-                Request Partnership
+                Book a Demo
               </button>
               <button
                 style={{ background: "transparent", color: "#CBD5E1", fontWeight: 600, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", cursor: "pointer", fontSize: 13.5 }}
@@ -1527,6 +1533,7 @@ export default function LandingPage({ onNavigate }) {
               <span className="lp-footer-link" onClick={() => { setActiveSector("ngos"); scrollToId("sectors"); }}>For NGOs &amp; Non-Profits</span>
               <span className="lp-footer-link" onClick={() => { setActiveSector("businesses"); scrollToId("sectors"); }}>For Businesses &amp; Teams</span>
               <span className="lp-footer-link" onClick={() => scrollToId("pricing")}>Partnership &amp; Pricing</span>
+              <span className="lp-footer-link" onClick={() => handleNav("book-demo")}>Book a Demo (Live Scheduler)</span>
             </div>
 
             {/* Platform column */}
@@ -1622,6 +1629,30 @@ export default function LandingPage({ onNavigate }) {
                 />
                 <button type="submit" disabled={submitting} className="action-btn-primary" style={styles.modalSubmitBtn}>
                   {submitting ? "Submitting..." : "Submit Inquiry"} <ArrowRight size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDemoModalOpen(false);
+                    handleNav("book-demo");
+                  }}
+                  style={{
+                    background: "#F8FAFC",
+                    border: "1px solid #CBD5E1",
+                    borderRadius: 6,
+                    padding: "8px 10px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: "#1D4ED8",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    marginTop: 4
+                  }}
+                >
+                  <Calendar size={13} color="#2563EB" /> Or Select Day &amp; Time on Live Scheduler
                 </button>
                 {demoError && <div style={{ fontSize: 11.5, color: "#EF4444", fontWeight: 600 }}>{demoError}</div>}
               </form>
