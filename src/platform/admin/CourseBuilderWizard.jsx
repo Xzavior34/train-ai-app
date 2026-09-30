@@ -160,7 +160,7 @@ export function CourseBuilderWizard({ isOpen, onClose, orgId, currentUserId, onC
           <div style={{ minWidth: 0 }}>
             <div className="ta-title" style={{ fontSize: 18 }}>Course Builder</div>
             <div style={{ fontSize: 12, color: "var(--text-2)" }}>
-              Step {step + 1} of {STEPS.length} — {STEPS[step].label}
+              Step {step + 1} of {STEPS.length}: {STEPS[step].label}
             </div>
           </div>
         </div>
@@ -287,7 +287,7 @@ export function CourseBuilderWizard({ isOpen, onClose, orgId, currentUserId, onC
         <div className="ta-mt16">
           <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
             Add lessons in the order learners take them. These are written to the real
-            lessons table on save — you can keep editing them later from Manage Course.
+            lessons table on save - you can keep editing them later from Manage Course.
             Leaving this empty creates the course shell only.
           </div>
 
@@ -421,7 +421,7 @@ export function CourseBuilderWizard({ isOpen, onClose, orgId, currentUserId, onC
 
           {namedLessons.length === 0 && (
             <div className="ta-mt12" style={{ fontSize: 12, color: "var(--warning)" }}>
-              This course has no lessons yet. That's fine — it will be created as a shell you can add lessons to from Manage Course.
+              This course has no lessons yet. That's fine - it will be created as a shell you can add lessons to from Manage Course.
             </div>
           )}
         </div>

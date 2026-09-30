@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo } from "react";
 import { TopBar, ToastContext, Tag, Avatar, NavigationContext } from "../components/PlatformUI.jsx";
 import {
   Armchair, CreditCard, Users, Plus, Minus, RefreshCw, ShieldCheck, AlertTriangle,
-  Receipt, ArrowRight, UserPlus, Info, Zap, Check, X, Clock, Search, Send, Sparkles,
+  Receipt, ArrowRight, UserPlus, Info, Zap, Check, X, Clock, Search, Send, Layers,
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
@@ -299,13 +299,13 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
                   </div>
                   <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, lineHeight: 1.5 }}>
                     {enforced
-                      ? "Seat checks run in the database, at the moment an invite is created and again when it is accepted — so this figure is the real constraint, not a display counter."
+                      ? "Seat checks run in the database, at the moment an invite is created and again when it is accepted - so this figure is the real constraint, not a display counter."
                       : `This organization's status is "${org?.status || "unknown"}". Seat purchases are only required once a plan goes active; until then the older ${org?.max_users ?? "member"} -user soft cap applies.`}
                   </div>
                   {shortfall > 0 && (
                     <div style={{ fontSize: 12.5, color: "var(--warning)", marginTop: 6, fontWeight: 600 }}>
                       {invites.length} invite{invites.length === 1 ? " is" : "s are"} outstanding but only {seats.available} seat
-                      {seats.available === 1 ? " is" : "s are"} free — {shortfall} of them will fail on acceptance unless you buy {shortfall} more.
+                      {seats.available === 1 ? " is" : "s are"} free - {shortfall} of them will fail on acceptance unless you buy {shortfall} more.
                     </div>
                   )}
                   <div className="ta-row ta-gap8 ta-mt12" style={{ flexWrap: "wrap" }}>
@@ -537,7 +537,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
 
               <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 14 }}>
                 <div className="ta-row ta-gap6" style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>
-                  <Sparkles size={13} color="var(--text-3)" /> Total Requests
+                  <Layers size={13} color="var(--text-3)" /> Total Requests
                 </div>
                 <div style={{ fontSize: 24, fontWeight: 800, marginTop: 4 }}>
                   {creditRequestsQuery.loading ? "..." : creditRequests.length}

@@ -222,7 +222,7 @@ export function PayoutsScreen({ orgId, orgSelector, setScreen, currentUserId }) 
               <div style={{ fontWeight: 800, fontSize: 15 }}>Who is allowed to withdraw</div>
             </div>
             <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
-              Earnings are always tracked regardless of this switch — being owed money and being allowed
+              Earnings are always tracked regardless of this switch - being owed money and being allowed
               to withdraw it are separate things. Suspending access stops withdrawals without erasing
               anything already earned.
             </div>

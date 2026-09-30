@@ -348,7 +348,7 @@ export const TOKENS = `
   .tai-title-sm { font-size:15px; font-weight:800; letter-spacing: -0.01em; color: var(--text); }
   .tai-body-text { font-size: 13px; color: var(--text-2); line-height:1.5; }
   
-  .tai-btn { border:none; cursor:pointer; border-radius: 8px; font-weight:600; font-size:13.5px; padding: 10px 16px;
+  .tai-btn { border:none; cursor:pointer; border-radius: 8px; font-weight:600; font-size:13px; padding: 8px 14px; min-height: 36px; white-space: nowrap; flex-shrink: 0;
     display:flex; align-items:center; justify-content:center; gap:6px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); user-select: none; }
   .tai-btn-primary {
     background: #2563EB !important;
@@ -374,7 +374,7 @@ export const TOKENS = `
   }
   .tai-btn-outline:hover { background: var(--surface-2); border-color: rgba(59, 130, 246, 0.3); transform: translateY(-1px); }
   .tai-btn-outline:active { transform: translateY(1px) scale(.98); }
-  .tai-btn-sm { padding: 6px 12px; font-size:12px; border-radius:6px; }
+  .tai-btn-sm { padding: 5px 10px; font-size:11.5px; min-height: 28px; border-radius:6px; }
   
   .tai-pill { padding:6px 12px; border-radius:6px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; border: 1px solid transparent; transition: all .16s cubic-bezier(0.16, 1, 0.3, 1); }
   .tai-pill-active {
@@ -512,7 +512,7 @@ export const TOKENS = `
     .tai-global-header { padding: 0 14px; height: 54px; width: 100%; max-width: 100%; box-sizing: border-box; }
     .tai-header-brand img, .tai-header-logo { height: 20px !important; }
     .tai-body { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
-    .tai-streak-pill, .tai-credits-pill { padding: 5px 8px; font-size: 11.5px; gap: 4px; }
+    .tai-streak-pill, .tai-credits-pill { padding: 4px 7px; font-size: 11px; gap: 3px; }
     .tai-header-right { gap: 6px; }
     .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
     .tai-card { padding: 14px 12px !important; border-radius: 10px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; overflow-wrap: break-word !important; }
@@ -780,8 +780,8 @@ export function LearnerHeader({
           <span>{user?.streak || 8} <span className="tai-pill-unit tai-desktop-only">days</span></span>
         </div>
 
-        {/* XP Pill */}
-        <div className="tai-credits-pill" onClick={() => go?.("leaderboard")} title="Total Earned XP">
+        {/* XP Pill - hidden on mobile screens to prevent header crowding */}
+        <div className="tai-credits-pill tai-desktop-only" onClick={() => go?.("leaderboard")} title="Total Earned XP">
           <Zap size={13} color="#F59E0B" />
           <span>{user?.totalPoints || 0} <span className="tai-pill-unit">XP</span></span>
         </div>
@@ -789,7 +789,7 @@ export function LearnerHeader({
         {/* AI Credits Pill */}
         <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Credits">
           <Plus size={13} color="#2563EB" />
-          <span>{typeof credits === "number" ? credits : 10} <span className="tai-pill-unit">credits</span></span>
+          <span>{typeof credits === "number" ? credits : 10}<span className="tai-pill-unit tai-desktop-only"> credits</span></span>
         </div>
 
         {/* Workspace Switcher Button (Desktop only) */}

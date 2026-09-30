@@ -20,10 +20,6 @@ export default function LoadingScreen({ message = "Preparing your workspace..." 
         }
       `}</style>
 
-      {/* Ambient background blur circles */}
-      <div style={styles.glowTop} />
-      <div style={styles.glowBottom} />
-
       <div style={styles.content}>
         {/* Brand Logo */}
         <div className="tai-loading-logo" style={styles.logoWrapper}>

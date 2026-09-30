@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Trophy, RefreshCw, Zap, Quote, Crown, Medal, Award } from "lucide-react";
 import { Avatar, initialsOf } from "./LearnerUI.jsx";
+import { SkeletonCard } from "../../components/common/Skeleton.jsx";
 
 const FALLBACK_AVATARS = [
   "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=140&auto=format&fit=crop&q=80",
@@ -254,7 +255,7 @@ export function LeaderboardPanel({
               </div>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
-                  {second?.name || "—"}
+                  {second?.name || "-"}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>2nd Place Contender</div>
               </div>
@@ -311,7 +312,7 @@ export function LeaderboardPanel({
               </div>
               <div>
                 <div style={{ fontWeight: 900, fontSize: 14, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 170 }}>
-                  {first?.name || "—"}
+                  {first?.name || "-"}
                 </div>
                 <div style={{ fontSize: 11, color: "#D97706", fontWeight: 800 }}>🏆 Champion</div>
               </div>
@@ -365,7 +366,7 @@ export function LeaderboardPanel({
               </div>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 13, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 160 }}>
-                  {third?.name || "—"}
+                  {third?.name || "-"}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>3rd Place Achiever</div>
               </div>
@@ -427,7 +428,7 @@ export function LeaderboardPanel({
             </div>
           ) : (
             <div style={{ fontSize: 11.5, fontWeight: 800, color: "#059669" }}>
-              ✨ Leading the board!
+              Leading the board!
             </div>
           )}
         </div>
@@ -453,14 +454,22 @@ export function LeaderboardPanel({
             "{dailyQuote.quote}"
           </div>
           <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, marginTop: 3 }}>
-            — {dailyQuote.author}
+            - {dailyQuote.author}
           </div>
         </div>
       </div>
 
       {/* 4. Ranked List (From #4 downwards) */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {restLearners.map((r) => (
+        {loading && learners.length === 0 ? (
+          <>
+            <SkeletonCard height={65} padding={12} />
+            <SkeletonCard height={65} padding={12} />
+            <SkeletonCard height={65} padding={12} />
+            <SkeletonCard height={65} padding={12} />
+          </>
+        ) : (
+          restLearners.map((r) => (
           <div
             key={r.id}
             className="tai-card tai-card-hover"
@@ -514,7 +523,8 @@ export function LeaderboardPanel({
               </div>
             </div>
           </div>
-        ))}
+        ))
+      )}
       </div>
     </div>
   );

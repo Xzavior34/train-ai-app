@@ -42,13 +42,13 @@ const SEGMENTS = [
 const TEMPLATES = [
   {
     name: "Welcome / kickoff",
-    subject: "Welcome aboard — here's how to get started",
+    subject: "Welcome aboard: here's how to get started",
     body: "Hi there,\n\nWelcome to the team's learning workspace. Your first courses are already waiting for you on your dashboard.\n\nStart with anything marked as required, and reach out if you get stuck.\n\nSee you in there.",
   },
   {
     name: "Nudge: falling behind",
     subject: "A quick nudge on your training",
-    body: "Hi there,\n\nWe noticed a couple of your assigned courses have slipped behind schedule. No problem — most of them take under an hour.\n\nJump back in whenever you have a window, and let us know if a deadline needs moving.",
+    body: "Hi there,\n\nWe noticed a couple of your assigned courses have slipped behind schedule. No problem - most of them take under an hour.\n\nJump back in whenever you have a window, and let us know if a deadline needs moving.",
   },
   {
     name: "New course announcement",
@@ -326,7 +326,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
                 </span>
                 {missingEmail > 0 && (
                   <span style={{ fontSize: 11.5, color: "var(--warning)" }}>
-                    {missingEmail} member{missingEmail === 1 ? "" : "s"} skipped — no email address on file
+                    {missingEmail} member{missingEmail === 1 ? "" : "s"} skipped - no email address on file
                   </span>
                 )}
                 {sendable.length > 0 && (
@@ -383,7 +383,7 @@ export function EmailCenterScreen({ orgId, orgSelector, setScreen, currentUserId
 
               {lastResult && (
                 <div className="ta-mt12" style={{ padding: "10px 12px", background: lastResult.failed.length ? "var(--warning-bg)" : "var(--success-bg)", color: lastResult.failed.length ? "var(--warning)" : "var(--success)", borderRadius: 8, fontSize: 12.5 }}>
-                  {lastResult.sent} sent{lastResult.failed.length ? ` • ${lastResult.failed.length} failed (${lastResult.failed.slice(0, 3).map((f) => f.email).join(", ")}${lastResult.failed.length > 3 ? "..." : ""})` : " — all delivered to the mail service"}
+                  {lastResult.sent} sent{lastResult.failed.length ? ` • ${lastResult.failed.length} failed (${lastResult.failed.slice(0, 3).map((f) => f.email).join(", ")}${lastResult.failed.length > 3 ? "..." : ""})` : " - all delivered to the mail service"}
                 </div>
               )}
 

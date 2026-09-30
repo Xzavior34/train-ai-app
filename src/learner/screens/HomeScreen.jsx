@@ -1,6 +1,7 @@
 import React from "react";
 import { Tag } from "../components/LearnerUI.jsx";
 import { AIRecommendationsCard } from "../components/AIRecommendationsCard.jsx";
+import { Skeleton, SkeletonCard } from "../../components/common/Skeleton.jsx";
 import {
   BookOpen, Users, ChevronRight, Zap,
   BarChart3, Bookmark,
@@ -160,11 +161,20 @@ export function HomeScreen({
                   gap: 12
                 }}
               >
-                <div>
+                <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: "#FFFFFF" }}>Explore Curated Courses</div>
                   <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>Browse verified certifications and learning paths.</div>
                 </div>
-                <button className="tai-btn tai-btn-primary" onClick={() => goTab("courses")} style={{ padding: "8px 14px", fontSize: 12 }}>
+                <button
+                  className="tai-btn tai-btn-primary"
+                  onClick={() => goTab("courses")}
+                  style={{
+                    padding: "8px 14px",
+                    fontSize: 12,
+                    whiteSpace: "nowrap",
+                    flexShrink: 0
+                  }}
+                >
                   Browse →
                 </button>
               </div>
@@ -233,9 +243,7 @@ export function HomeScreen({
           
           {/* Cohort Sprint & Milestone Card */}
           {cohortLoading ? (
-            <div className="tai-card tai-empty" style={{ padding: 24, fontSize: 13, borderRadius: 12 }}>
-              Loading cohort sprint data...
-            </div>
+            <SkeletonCard height={80} padding={16} />
           ) : !cohort ? (
             <div className="tai-card" style={{ padding: 16, borderRadius: 12, border: "1px solid var(--border)" }}>
               <div className="tai-row tai-gap10">
@@ -382,7 +390,12 @@ export function HomeScreen({
                 const bookmarkedCourseIds = new Set(bookmarksQuery?.data || []);
                 const bookmarkedCourses = (courses || []).filter((c) => bookmarkedCourseIds.has(c.id));
                 if (bookmarksQuery?.loading) {
-                  return <div style={{ fontSize: 12, color: "var(--text-3)", padding: "8px 10px" }}>Loading…</div>;
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <Skeleton height="36px" borderRadius="8px" />
+                      <Skeleton height="36px" borderRadius="8px" />
+                    </div>
+                  );
                 }
                 if (bookmarkedCourses.length === 0) {
                   return <div style={{ fontSize: 12, color: "var(--text-3)", padding: "8px 10px" }}>No saved bookmarks yet. Bookmark a course to quickly access it here.</div>;

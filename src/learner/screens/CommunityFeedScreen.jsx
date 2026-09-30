@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf } from "../components/LearnerUI.jsx";
 import {
-  MessageSquare, Heart, Send, Search, Filter, Sparkles, MessageCircle,
+  MessageSquare, Heart, Send, Search, Filter, MessageCircle,
   Share2, MoreVertical, Plus, CheckCircle2, User, Flame, BookOpen, Users, ArrowLeft
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
@@ -214,7 +214,7 @@ export function CommunityFeedScreen({
             <strong style={{ color: "#FFFFFF" }}>{posts.length}</strong> Total Posts
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>
-            <Sparkles size={14} color="#60A5FA" />
+            <BookOpen size={14} color="#60A5FA" />
             <strong style={{ color: "#FFFFFF" }}>Verified</strong> Instructors Active
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "rgba(255, 255, 255, 0.85)" }}>

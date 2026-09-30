@@ -812,7 +812,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           </td>
                           <td>
                             <span style={{ fontWeight: 600, fontSize: 12.5, color: "var(--text-3)" }}>
-                              {attendance != null ? `${attendance}%` : "—"}
+                              {attendance != null ? `${attendance}%` : "-"}
                             </span>
                           </td>
                           <td style={{ cursor: "pointer" }} onClick={() => setDetailMember(m)} title="Click to view detailed course breakdown & scores">

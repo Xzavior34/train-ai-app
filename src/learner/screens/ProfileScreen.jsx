@@ -400,7 +400,7 @@ export function ProfileScreen({
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Email Address</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.email || session?.user?.email || "—"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.email || session?.user?.email || "-"}</div>
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Current Organization</label>

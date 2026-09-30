@@ -663,13 +663,13 @@ export function AIQuizScreen({
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Trophy size={20} color="#F59E0B" />
-                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>{hasQuizAttempts ? `${recentQuizPoints} XP` : "—"}</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>{hasQuizAttempts ? `${recentQuizPoints} XP` : "-"}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Recent Quiz Points</div>
                   </div>
 
                   <div className="tai-card" style={{ padding: 18, borderRadius: 10 }}>
                     <Flame size={20} color="#EF4444" />
-                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>{practiceStreakDays != null ? `${practiceStreakDays} Day${practiceStreakDays === 1 ? "" : "s"}` : "—"}</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, marginTop: 8, color: "var(--text)" }}>{practiceStreakDays != null ? `${practiceStreakDays} Day${practiceStreakDays === 1 ? "" : "s"}` : "-"}</div>
                     <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Practice Streak</div>
                   </div>
                 </div>

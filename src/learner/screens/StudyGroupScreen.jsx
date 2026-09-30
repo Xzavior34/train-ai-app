@@ -3,7 +3,7 @@ import { TopBar, Avatar, Tag, initialsOf, timeAgo } from "../components/LearnerU
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   Users, Plus, ChevronRight, MessageSquare, X, Check, Lock, BookOpen,
-  Heart, MessageCircle, Send, Trash2, ShieldCheck, Sparkles, Clock,
+  Heart, MessageCircle, Send, Trash2, ShieldCheck, Clock,
   Search, ArrowLeft, Info, HelpCircle
 } from "lucide-react";
 

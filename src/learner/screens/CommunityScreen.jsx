@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from "react";
 import {
   Users, GraduationCap, Trophy, ChevronRight, Plus, Search, Heart, MessageCircle,
-  MessageSquare, Send, Pin, Trash2, ArrowLeft, Layers, Mail, Sparkles, Crown, Star,
+  MessageSquare, Send, Pin, Trash2, ArrowLeft, Layers, Mail, Crown, Star,
   Flame, Zap, Clock, Share2, X, BookOpen, UserCheck, Shield, TrendingUp,
   RefreshCw, CheckCircle2, MoreVertical, ExternalLink, Activity, Info, Award,
-  Quote, Lock, Bookmark, Copy, Flag, EyeOff, Pencil, Check,
+  Quote, Lock, Bookmark, Copy, Flag, EyeOff, Pencil, Check, Bot, Lightbulb,
 } from "lucide-react";
 import { Avatar, initialsOf, timeAgo, Tag } from "../components/LearnerUI.jsx";
 import { WeeklyLeagueCard } from "../components/retention/WeeklyLeagueCard.jsx";
@@ -12,6 +12,7 @@ import CommunityHero from "../components/CommunityHero.jsx";
 import { LeaderboardPanel } from "../components/LeaderboardPanel.jsx";
 import { fetchLeaderboardForPeriod } from "../../lib/api/learner.js";
 import { MessagesScreen } from "./MessagesScreen.jsx";
+import { SkeletonDiscussionItem } from "../../components/common/Skeleton.jsx";
 
 // ---------------------------------------------------------------------------
 // Train AI 2.0 Community Screen
@@ -256,7 +257,7 @@ function DailyMotivationWidget() {
             "{item.quote}"
           </p>
           <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", marginTop: 6 }}>
-            — {item.author}
+            - {item.author}
           </div>
         </div>
       </div>
@@ -277,7 +278,7 @@ function DailyMotivationWidget() {
             gap: 5,
           }}
         >
-          <Sparkles size={12} /> Daily Motivation
+          <Lightbulb size={12} /> Daily Motivation
         </span>
       </div>
     </div>
@@ -564,7 +565,7 @@ function PostCard({
                     setAiSummaryModalOpen(true);
                   }}
                 >
-                  <Sparkles size={14} /> Explain with AI
+                  <Bot size={14} /> Explain with AI
                 </button>
 
                 <div style={{ height: 1, background: "var(--border)", margin: "4px 0" }} />
@@ -647,7 +648,7 @@ function PostCard({
           >
             <div className="tai-row tai-between" style={{ marginBottom: 14 }}>
               <div className="tai-row tai-gap8" style={{ fontWeight: 800, fontSize: 16, color: "var(--primary)" }}>
-                <Sparkles size={18} /> AI Content Summary
+                <Bot size={18} /> AI Content Summary
               </div>
               <button className="tai-iconbtn" onClick={() => setAiSummaryModalOpen(false)}>
                 <X size={16} />
@@ -1294,7 +1295,7 @@ export function CommunityScreen({
   }, [leaderboardPeriod]);
   const leaderboardRows = leaderboardQuery.data || [];
   const myRankIndex = leaderboardRows.findIndex((r) => r.user_id === myId);
-  const myRankNumber = myRankIndex >= 0 ? myRankIndex + 1 : "—";
+  const myRankNumber = myRankIndex >= 0 ? myRankIndex + 1 : "-";
   const myPoints = gamificationStatsQuery.data?.total_points || 0;
   const myLevel = gamificationStatsQuery.data?.current_level || 1;
   const nextRankPoints = myRankIndex > 0 ? (leaderboardRows[myRankIndex - 1]?.total_points || myPoints) - myPoints : 0;
@@ -1448,8 +1449,11 @@ export function CommunityScreen({
 
             {/* High-Density Compact Discussions List */}
             {postsQuery.loading && (
-              <div style={{ padding: 24, textAlign: "center", color: "var(--text-3)", fontSize: 13 }}>
-                Loading discussions...
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 0" }}>
+                <SkeletonDiscussionItem />
+                <SkeletonDiscussionItem />
+                <SkeletonDiscussionItem />
+                <SkeletonDiscussionItem />
               </div>
             )}
 
@@ -1517,7 +1521,19 @@ export function CommunityScreen({
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: 12.5, color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
+                        <div
+                          style={{
+                            fontSize: 12.5,
+                            color: "var(--text-2)",
+                            lineHeight: 1.35,
+                            marginTop: 2,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            wordBreak: "break-word"
+                          }}
+                        >
                           {snippet || post.content}
                         </div>
                       </div>

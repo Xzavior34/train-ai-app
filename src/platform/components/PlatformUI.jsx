@@ -367,8 +367,8 @@ export const TOKENS = `
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 990; animation: fadeInScale .15s ease; backdrop-filter: blur(2px); }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
-    .ta-h1 { font-size: 14.5px !important; font-weight: 800 !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-    .ta-sub { display: block !important; font-size: 11px !important; color: var(--text-3) !important; margin-top: 1px !important; line-height: 1.2 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+    .ta-h1 { font-size: 15px !important; font-weight: 800 !important; line-height: 1.25 !important; white-space: normal !important; word-break: normal !important; overflow-wrap: anywhere !important; }
+    .ta-sub { display: block !important; font-size: 11.5px !important; color: var(--text-3) !important; margin-top: 2px !important; line-height: 1.3 !important; white-space: normal !important; word-break: normal !important; overflow-wrap: anywhere !important; }
     .ta-table-wrap .ta-table { min-width: 680px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
@@ -422,11 +422,12 @@ export const TOKENS = `
     .ta-topbar { padding: 0 14px; height: 56px; min-height: 56px; }
     .ta-content { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
     .ta-card { padding: 18px 16px; border-radius: 16px; width: 100%; box-sizing: border-box; }
-    .ta-h1 { font-size: 14.5px; }
-    .ta-btn { padding: 8px 14px; font-size: 12.5px; border-radius: 10px; }
+    .ta-h1 { font-size: 15px; }
+    .ta-btn { padding: 7px 13px !important; font-size: 12px !important; border-radius: 9px !important; white-space: nowrap !important; }
+    .ta-btn-sm { padding: 4px 9px !important; font-size: 11px !important; }
     .ta-grid, .ta-grid-5, .ta-grid-4, .ta-grid-3, .ta-grid-2 { grid-template-columns: 1fr !important; gap: 14px !important; width: 100% !important; }
   }
-  .ta-btn { border: none; cursor: pointer; border-radius: 12px; font-weight: 700; font-size: 13.5px; padding: 10px 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
+  .ta-btn { border: none; cursor: pointer; border-radius: 10px; font-weight: 700; font-size: 13px; padding: 8px 16px; min-height: 36px; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all .18s cubic-bezier(0.16, 1, 0.3, 1); font-family: var(--font); }
   .ta-btn:active { transform: scale(.96); }
   .ta-btn-primary { background: var(--grad); color: #fff; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32); }
   .ta-btn-primary:hover { box-shadow: 0 8px 22px -2px rgba(37, 99, 235,0.48); transform: translateY(-2px); }
@@ -434,7 +435,7 @@ export const TOKENS = `
   .ta-btn-outline:hover { background: var(--surface-2); border-color: rgba(59, 130, 246, 0.3); transform: translateY(-1px); }
   .ta-btn-ghost { background: var(--surface-2); color: var(--primary); font-weight: 700; }
   .ta-btn-ghost:hover { background: #DBEAFE; transform: translateY(-1px); }
-  .ta-btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 10px; }
+  .ta-btn-sm { padding: 5px 11px; font-size: 11.5px; min-height: 28px; border-radius: 8px; }
   .ta-btn-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-border); }
   
   /* Card surface for Platform - no backdrop-filter: this app is dense with

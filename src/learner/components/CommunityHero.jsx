@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, MessageSquare, Sparkles } from 'lucide-react';
+import { Users, MessageSquare } from 'lucide-react';
 import { Avatar, initialsOf } from '../components/LearnerUI.jsx';
 
 /**
@@ -13,30 +13,40 @@ export default function CommunityHero({ user, onCreatePost }) {
       className="tai-card tai-hero-card anim-fluid-entrance"
       style={{
         borderRadius: 14,
-        padding: 'clamp(18px, 2.5vw, 24px)',
+        padding: 'clamp(16px, 2.5vw, 22px)',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: 1 }}>
-          <Avatar size={52} src={user?.avatarUrl} initials={initialsOf(user?.name || 'You')} />
-          <div style={{ minWidth: 0 }}>
+      <div className="tai-hero-row" style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: '1 1 240px' }}>
+          <Avatar size={48} src={user?.avatarUrl} initials={initialsOf(user?.name || 'You')} />
+          <div style={{ minWidth: 0, flex: 1 }}>
             <h1
               className="tai-hero-title"
-              style={{ fontSize: 'clamp(18px, 2.2vw, 22px)', fontWeight: 900, letterSpacing: '-0.025em', margin: '0 0 3px', lineHeight: 1.2 }}
+              style={{
+                fontSize: 'clamp(18px, 2.2vw, 22px)',
+                fontWeight: 900,
+                letterSpacing: '-0.025em',
+                margin: '0 0 3px',
+                lineHeight: 1.25,
+                wordBreak: 'normal',
+                overflowWrap: 'break-word',
+                hyphens: 'none',
+                whiteSpace: 'normal',
+              }}
             >
               Community Hub
             </h1>
-            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, lineHeight: 1.45 }}>
+            <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, lineHeight: 1.45, wordBreak: 'normal', overflowWrap: 'break-word' }}>
               Connect, collaborate, share ideas, and grow together with your peers.
             </p>
           </div>
         </div>
 
-        <div className="tai-hero-subcard" style={{ textAlign: 'right', flexShrink: 0, padding: '10px 16px', borderRadius: 10 }}>
+        <div className="tai-hero-subcard" style={{ flexShrink: 0, padding: '9px 14px', borderRadius: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Sparkles size={14} color="var(--primary)" />
+            <Users size={14} color="var(--primary)" />
             <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--text)' }}>Train AI Community</span>
           </div>
           <div style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 600, marginTop: 2 }}>Share · Discuss · Learn</div>

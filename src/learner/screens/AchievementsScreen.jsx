@@ -279,7 +279,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
                 {(() => {
                   const rows = leaderboardQuery?.data || [];
                   const mine = rows.find(r => r.you || r.user_id === userId || r.id === userId);
-                  return mine?.rank ? `#${mine.rank}` : "—";
+                  return mine?.rank ? `#${mine.rank}` : "-";
                 })()}
               </div>
               <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Current Rank</div>
