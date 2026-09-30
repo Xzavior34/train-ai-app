@@ -1,5 +1,16 @@
-import { supabase } from "../supabaseClient.js";
+import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../supabaseClient.js";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "./payments.js";
+
+// demo_requests, organization_inquiries, and the get_booked_slots RPC all live
+// exclusively on the Organization DB (djikuoucsuhdiyrhsduz), never on the Sara
+// Foundation tenant. The exported `supabase` variable reflects the ACTIVE project
+// which changes depending on which user is signed in. A Sara Foundation user
+// visiting the public booking page would have activeProject = "sara_foundation"
+// and every insert would fail with "relation does not exist".
+// getDemoClient() always resolves to the Organization DB client specifically.
+function getDemoClient() {
+  return getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB) || supabase;
+}
 
 // Real backing tables/RPCs confirmed against the shared project's
 // integrations/supabase/types.ts (train-ai-ltd-main reference app):
@@ -266,7 +277,8 @@ export async function submitDemoRequest({
     if (orgType) insertPayload.org_type = orgType;
     if (timezone) insertPayload.timezone = timezone;
 
-    const { error } = await supabase.from("demo_requests").insert(insertPayload);
+    const db = getDemoClient();
+    const { error } = await db.from("demo_requests").insert(insertPayload);
 
     if (error) {
       // If the error is about unknown columns, fall back to inserting without scheduling columns
@@ -281,7 +293,7 @@ export async function submitDemoRequest({
           status: status || "scheduled",
           ...attribution,
         };
-        const { error: fallbackError } = await supabase.from("demo_requests").insert(fallbackPayload);
+        const { error: fallbackError } = await db.from("demo_requests").insert(fallbackPayload);
         if (fallbackError) throw fallbackError;
       } else {
         throw error;
@@ -289,7 +301,7 @@ export async function submitDemoRequest({
     }
 
     // Dual-write into organization_inquiries to ensure follow-up queue captures it
-    await supabase.from("organization_inquiries").insert({
+    await db.from("organization_inquiries").insert({
       full_name: fullName.trim(),
       work_email: normalizedEmail,
       company_name: companyName.trim(),
@@ -324,7 +336,7 @@ export async function submitDemoRequest({
 
     // Trigger dispatch asynchronously without blocking the user response
     Promise.allSettled([
-      supabase.functions.invoke("advanced-broadcast-email", {
+      db.functions.invoke("advanced-broadcast-email", {
         body: {
           action: "send",
           recipient_group: "specific_email",
@@ -333,7 +345,7 @@ export async function submitDemoRequest({
           html_content: notificationHtml,
         }
       }),
-      supabase.functions.invoke("advanced-broadcast-email", {
+      db.functions.invoke("advanced-broadcast-email", {
         body: {
           action: "send",
           recipient_group: "specific_email",
@@ -361,13 +373,14 @@ export async function submitDemoRequest({
  */
 export async function fetchBookedSlots({ fromDate, toDate } = {}) {
   const bookedSet = new Set();
-  if (!supabase) return bookedSet;
+  const db = getDemoClient();
+  if (!db) return bookedSet;
 
   try {
     const from = fromDate || new Date().toISOString().split("T")[0];
     const to = toDate || new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    const { data, error } = await supabase.rpc("get_booked_slots", {
+    const { data, error } = await db.rpc("get_booked_slots", {
       p_from_date: from,
       p_to_date: to,
     });

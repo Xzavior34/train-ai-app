@@ -55,17 +55,48 @@ function generateAvailableDates(count = 14) {
   return dates;
 }
 
-const TIME_SLOTS = [
-  "09:30 AM",
-  "10:00 AM",
-  "11:00 AM",
-  "11:30 AM",
-  "01:30 PM",
-  "02:00 PM",
-  "03:00 PM",
-  "04:00 PM",
-  "05:00 PM",
+// ─── Timezone-aware time slots ───────────────────────────────────────────────
+// All slots are defined in WAT (Africa/Lagos, UTC+1 year-round, no DST).
+// They are converted to the visitor's local timezone for display.
+// The canonical "key" stored in the DB is always the WAT time string.
+
+const HOST_TZ = "Africa/Lagos"; // UTC+1 WAT - Train AI headquarters
+
+// Raw slots in 24h format, in WAT (Africa/Lagos)
+const BASE_SLOTS_24H = [
+  "09:30", "10:00", "11:00", "11:30",
+  "13:30", "14:00", "15:00", "16:00", "17:00",
 ];
+
+/**
+ * For a given ISO date and the visitor's IANA timezone, returns an array of
+ * slot objects with local and host display strings.
+ * WAT = UTC+1 (fixed, no DST).
+ */
+function buildTimeSlotsForDate(dateIso, userTz) {
+  const WAT_OFFSET_MS = 60 * 60 * 1000; // +1h
+
+  return BASE_SLOTS_24H.map((time24) => {
+    const [h, m] = time24.split(":").map(Number);
+    // Treat the slot time as WAT: subtract offset to get UTC ms
+    const [y, mo, d] = dateIso.split("-").map(Number);
+    const utcMs = Date.UTC(y, mo - 1, d, h, m, 0) - WAT_OFFSET_MS;
+    const dt = new Date(utcMs);
+
+    const fmt = (tz) =>
+      dt.toLocaleTimeString("en-US", {
+        hour: "2-digit", minute: "2-digit", hour12: true, timeZone: tz,
+      });
+
+    const localDisplay = fmt(userTz || HOST_TZ);
+    const hostDisplay = fmt(HOST_TZ);
+    // Key stored in DB is always the WAT string (e.g. "09:30 AM")
+    const key = hostDisplay;
+    const sameZone = localDisplay === hostDisplay;
+
+    return { key, localDisplay, hostDisplay, sameZone, utcMs };
+  });
+}
 
 const ORG_TYPE_OPTIONS = [
   "Academy / Educational Institution",
@@ -95,12 +126,39 @@ function parseTimeSlot(timeStr) {
 export default function AppointmentBookingPage({ onBack, onNavigate, initialSector = "academies" }) {
   const availableDates = useMemo(() => generateAvailableDates(14), []);
 
-  const [selectedDate, setSelectedDate] = useState(availableDates[0] || null);
-  const [selectedTime, setSelectedTime] = useState("10:00 AM");
-
   const detectedTimezone = useMemo(() => {
     try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch { return "UTC"; }
   }, []);
+
+  // Build timezone-aware slots for the selected date
+  const [selectedDate, setSelectedDate] = useState(availableDates[0] || null);
+
+  const timeSlots = useMemo(() =>
+    buildTimeSlotsForDate(selectedDate?.iso || availableDates[0]?.iso || "2026-01-01", detectedTimezone),
+    [selectedDate, detectedTimezone]
+  );
+
+  // selectedTime stores the WAT key (e.g. "10:00 AM") for DB consistency
+  const [selectedTime, setSelectedTime] = useState(() => timeSlots[1]?.key || "10:00 AM");
+
+  // Detect timezone offset difference from WAT for the banner
+  const tzOffsetLabel = useMemo(() => {
+    try {
+      const watOffset = 60; // WAT = UTC+1 in minutes
+      const dt = new Date();
+      const localStr = dt.toLocaleTimeString("en-US", { timeZone: detectedTimezone, hour: "2-digit", minute: "2-digit", hour12: false });
+      const watStr = dt.toLocaleTimeString("en-US", { timeZone: HOST_TZ, hour: "2-digit", minute: "2-digit", hour12: false });
+      const [lh, lm] = localStr.split(":").map(Number);
+      const [wh, wm] = watStr.split(":").map(Number);
+      const diffMins = (lh * 60 + lm) - (wh * 60 + wm);
+      if (diffMins === 0) return null;
+      const sign = diffMins > 0 ? "+" : "-";
+      const abs = Math.abs(diffMins);
+      const h = Math.floor(abs / 60);
+      const m = abs % 60;
+      return `${sign}${h}${m ? `:${String(m).padStart(2, "0")}` : ""}h from WAT`;
+    } catch { return null; }
+  }, [detectedTimezone]);
 
   // Form state
   const [fullName, setFullName] = useState("");
@@ -120,7 +178,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [confirmedDetails, setConfirmedDetails] = useState(null);
 
-  // Booked slots from the database
+  // Booked slots from the database (keyed by WAT time)
   const [bookedSlots, setBookedSlots] = useState(new Set());
   const [slotsLoading, setSlotsLoading] = useState(true);
 
@@ -146,24 +204,23 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
   // Auto-skip to first available slot when date changes
   useEffect(() => {
     if (!selectedDate) return;
-    const firstAvailableTime = TIME_SLOTS.find(
-      (slot) => !bookedSlots.has(`${selectedDate.iso}|${slot}`)
-    );
-    if (firstAvailableTime && bookedSlots.has(`${selectedDate.iso}|${selectedTime}`)) {
-      setSelectedTime(firstAvailableTime || TIME_SLOTS[1]);
+    const slots = buildTimeSlotsForDate(selectedDate.iso, detectedTimezone);
+    const firstAvail = slots.find((s) => !bookedSlots.has(`${selectedDate.iso}|${s.key}`));
+    if (firstAvail && bookedSlots.has(`${selectedDate.iso}|${selectedTime}`)) {
+      setSelectedTime(firstAvail.key);
     }
   }, [selectedDate, bookedSlots]);
 
   const isSlotBooked = useCallback(
-    (dateIso, timeSlot) => bookedSlots.has(`${dateIso}|${timeSlot}`),
+    (dateIso, slotKey) => bookedSlots.has(`${dateIso}|${slotKey}`),
     [bookedSlots]
   );
 
-  // Count available slots for selected date
+  // Count available slots for selected date (uses WAT keys)
   const availableTimesForDate = useMemo(() => {
-    if (!selectedDate) return TIME_SLOTS.length;
-    return TIME_SLOTS.filter((slot) => !isSlotBooked(selectedDate.iso, slot)).length;
-  }, [selectedDate, isSlotBooked]);
+    if (!selectedDate) return BASE_SLOTS_24H.length;
+    return timeSlots.filter((s) => !isSlotBooked(selectedDate.iso, s.key)).length;
+  }, [selectedDate, timeSlots, isSlotBooked]);
 
   // ─── Submission ──────────────────────────────────────────────────────────
 
@@ -494,8 +551,9 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                   <div className="apt-dates-scroll">
                     {availableDates.map((item) => {
                       const isSelected = selectedDate?.iso === item.iso;
-                      const takenCount = TIME_SLOTS.filter((s) => isSlotBooked(item.iso, s)).length;
-                      const fullyBooked = takenCount === TIME_SLOTS.length;
+                      const slots = buildTimeSlotsForDate(item.iso, detectedTimezone);
+                      const takenCount = slots.filter((s) => isSlotBooked(item.iso, s.key)).length;
+                      const fullyBooked = takenCount === BASE_SLOTS_24H.length;
                       return (
                         <button
                           key={item.iso}
@@ -526,7 +584,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                           )}
                           {!fullyBooked && takenCount > 0 && !isSelected && (
                             <span style={{ marginTop: 3, fontSize: 9, fontWeight: 600, color: "#F59E0B" }}>
-                              {TIME_SLOTS.length - takenCount} left
+                              {BASE_SLOTS_24H.length - takenCount} left
                             </span>
                           )}
                         </button>
@@ -537,17 +595,28 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
 
                 {/* Step 2: Select Time */}
                 <div style={{ marginBottom: 22 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13.5, fontWeight: 800, color: "#0F172A" }}>
                       <Clock size={15} color="#2563EB" />
                       <span>2. Select Time</span>
                     </div>
                     <span style={{ fontSize: 11.5, color: "#64748B" }}>
                       {selectedDate && !slotsLoading
-                        ? `${availableTimesForDate} of ${TIME_SLOTS.length} slots open`
+                        ? `${availableTimesForDate} of ${BASE_SLOTS_24H.length} slots open`
                         : "30-min duration"}
                     </span>
                   </div>
+
+                  {/* Timezone notice when visitor is not in WAT */}
+                  {timeSlots[0] && !timeSlots[0].sameZone && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 7, marginBottom: 10, fontSize: 11.5, color: "#92400E" }}>
+                      <Globe size={13} color="#D97706" style={{ flexShrink: 0 }} />
+                      <span>
+                        Times shown in <strong>your local timezone ({detectedTimezone})</strong>.
+                        {tzOffsetLabel && <> WAT time shown in grey below each slot ({tzOffsetLabel}).</>}
+                      </span>
+                    </div>
+                  )}
 
                   {slotsLoading ? (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "24px 0", color: "#64748B", fontSize: 13 }}>
@@ -556,21 +625,28 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     </div>
                   ) : (
                     <div style={S.timesGrid}>
-                      {TIME_SLOTS.map((slot) => {
-                        const isSelected = selectedTime === slot;
-                        const booked = selectedDate ? isSlotBooked(selectedDate.iso, slot) : false;
+                      {timeSlots.map((slot) => {
+                        const isSelected = selectedTime === slot.key;
+                        const booked = selectedDate ? isSlotBooked(selectedDate.iso, slot.key) : false;
                         return (
                           <button
-                            key={slot}
+                            key={slot.key}
                             type="button"
                             className={`apt-time-btn ${isSelected && !booked ? "active" : ""} ${booked ? "booked" : ""}`}
-                            onClick={() => !booked && setSelectedTime(slot)}
+                            onClick={() => !booked && setSelectedTime(slot.key)}
                             disabled={booked}
-                            title={booked ? "This slot is already booked" : `Select ${slot}`}
+                            title={booked ? "This slot is already booked" : `Select ${slot.localDisplay}`}
                           >
-                            {isSelected && !booked && <CheckCircle2 size={12} />}
-                            {booked && <XCircle size={12} style={{ opacity: 0.5 }} />}
-                            <span>{slot}</span>
+                            <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, lineHeight: 1.2 }}>
+                              {isSelected && !booked && <CheckCircle2 size={11} style={{ marginBottom: 1 }} />}
+                              {booked && <XCircle size={11} style={{ opacity: 0.5, marginBottom: 1 }} />}
+                              <span style={{ fontWeight: 700 }}>{slot.localDisplay}</span>
+                              {!slot.sameZone && !booked && (
+                                <span style={{ fontSize: 9.5, fontWeight: 500, color: isSelected ? "rgba(255,255,255,0.75)" : "#94A3B8" }}>
+                                  {slot.hostDisplay} WAT
+                                </span>
+                              )}
+                            </span>
                           </button>
                         );
                       })}
@@ -617,9 +693,16 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                   <div style={{ fontSize: 12.5, color: "#475569", fontWeight: 600, display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
                     <Clock size={13} color="#2563EB" />
                     <span>
-                      {selectedDate && isSlotBooked(selectedDate.iso, selectedTime)
-                        ? <span style={{ color: "#EF4444" }}>{selectedTime} - Already booked, please choose another</span>
-                        : `${selectedTime} (${detectedTimezone})`}
+                      {(() => {
+                        const slot = timeSlots.find((s) => s.key === selectedTime);
+                        if (!slot) return `${selectedTime} (${detectedTimezone})`;
+                        if (selectedDate && isSlotBooked(selectedDate.iso, selectedTime)) {
+                          return <span style={{ color: "#EF4444" }}>{slot.localDisplay} - Already booked, choose another</span>;
+                        }
+                        return slot.sameZone
+                          ? `${slot.localDisplay} (${detectedTimezone})`
+                          : `${slot.localDisplay} your time (${slot.hostDisplay} WAT)`;
+                      })()}
                     </span>
                   </div>
                 </div>
