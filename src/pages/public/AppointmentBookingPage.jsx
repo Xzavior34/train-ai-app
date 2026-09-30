@@ -293,9 +293,10 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
       <style>{`
         .apt-date-btn {
           border: 1.5px solid #E2E8F0; background: #FFFFFF; color: #0F172A;
-          border-radius: 10px; padding: 10px 14px;
+          border-radius: 10px; padding: 10px 12px;
           display: flex; flex-direction: column; align-items: center; justify-content: center;
-          min-width: 76px; cursor: pointer; transition: all 0.15s ease; user-select: none;
+          min-width: 68px; flex-shrink: 0;
+          cursor: pointer; transition: all 0.15s ease; user-select: none;
         }
         .apt-date-btn:hover { border-color: #2563EB; background: #F8FAFF; }
         .apt-date-btn.active { border-color: #2563EB; background: #EFF6FF; color: #1D4ED8; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
@@ -303,16 +304,16 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
 
         .apt-time-btn {
           border: 1.5px solid #E2E8F0; background: #FFFFFF; color: #1E293B;
-          border-radius: 8px; padding: 10px 8px; font-size: 13px; font-weight: 600;
-          cursor: pointer; transition: all 0.15s ease;
-          display: flex; align-items: center; justify-content: center; gap: 5px;
+          border-radius: 8px; padding: 10px 6px; font-size: 13px; font-weight: 600;
+          cursor: pointer; transition: all 0.15s ease; min-width: 0;
+          display: flex; align-items: center; justify-content: center; gap: 4px;
           position: relative;
         }
         .apt-time-btn:hover:not(:disabled) { border-color: #2563EB; background: #F8FAFF; }
         .apt-time-btn.active { border-color: #2563EB; background: #2563EB; color: #FFFFFF; font-weight: 700; }
-        .apt-time-btn.booked { 
-          background: #F8FAFC; color: #94A3B8; border-color: #E2E8F0; 
-          cursor: not-allowed; text-decoration: line-through; 
+        .apt-time-btn.booked {
+          background: #F8FAFC; color: #94A3B8; border-color: #E2E8F0;
+          cursor: not-allowed; text-decoration: line-through;
         }
         .apt-time-btn.booked::after {
           content: 'Booked'; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
@@ -342,9 +343,25 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
         .apt-input-field::placeholder { color: #94A3B8 !important; -webkit-text-fill-color: #94A3B8 !important; opacity: 1 !important; }
         .apt-input-group { background-color: #FFFFFF !important; background: #FFFFFF !important; color-scheme: light !important; }
 
-        @media (max-width: 768px) {
+        .apt-dates-scroll {
+          display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin; scrollbar-color: #CBD5E1 transparent;
+        }
+        .apt-dates-scroll::-webkit-scrollbar { height: 4px; }
+        .apt-dates-scroll::-webkit-scrollbar-track { background: transparent; }
+        .apt-dates-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+        @media (max-width: 900px) {
           .booking-grid { flex-direction: column !important; }
-          .scheduler-panel, .form-panel { min-width: unset !important; }
+          .scheduler-panel, .form-panel {
+            flex: none !important; width: 100% !important;
+            box-sizing: border-box !important; min-width: 0 !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .apt-time-btn { font-size: 11.5px !important; padding: 8px 3px !important; }
+          .apt-date-btn { min-width: 60px !important; padding: 8px 8px !important; }
         }
       `}</style>
 
@@ -376,7 +393,6 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
 
       {/* Main */}
       <main style={S.main}>
-        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
 
           {/* Page title */}
           <div style={{ marginBottom: 24 }}>
@@ -475,7 +491,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <span style={{ fontSize: 11.5, color: "#64748B" }}>Upcoming weekdays only</span>
                   </div>
 
-                  <div style={S.datesScroll}>
+                  <div className="apt-dates-scroll">
                     {availableDates.map((item) => {
                       const isSelected = selectedDate?.iso === item.iso;
                       const takenCount = TIME_SLOTS.filter((s) => isSlotBooked(item.iso, s)).length;
@@ -693,7 +709,6 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
               </div>
             </div>
           )}
-        </div>
       </main>
 
       {/* Spinner keyframe */}
@@ -704,22 +719,21 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const S = {
-  outer: { minHeight: "100vh", background: "#F8FAFC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: "#0F172A", paddingBottom: 60 },
+  outer: { minHeight: "100vh", background: "#F8FAFC", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: "#0F172A", paddingBottom: 60, overflowX: "hidden" },
   header: { background: "#FFFFFF", borderBottom: "1px solid #E2E8F0", position: "sticky", top: 0, zIndex: 50 },
-  headerInner: { maxWidth: 1120, margin: "0 auto", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 },
+  headerInner: { maxWidth: 1120, margin: "0 auto", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 },
   backBtn: { display: "flex", alignItems: "center", gap: 7, background: "transparent", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 6 },
-  main: { maxWidth: 1120, margin: "0 auto", padding: "28px 18px 0" },
-  bookingGrid: { display: "flex", gap: 20, alignItems: "flex-start" },
-  schedulerPanel: { flex: "0 0 480px", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 14, padding: "22px 20px" },
-  formPanel: { flex: 1, background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 14, padding: "22px 20px" },
-  legend: { display: "flex", alignItems: "center", gap: 16, marginBottom: 14, padding: "8px 12px", background: "#F8FAFC", borderRadius: 8, flexWrap: "wrap" },
-  datesScroll: { display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8 },
+  main: { maxWidth: 1120, margin: "0 auto", padding: "24px 16px 0", boxSizing: "border-box", width: "100%" },
+  bookingGrid: { display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" },
+  schedulerPanel: { flex: "1 1 400px", minWidth: 0, background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 14, padding: "20px 18px", boxSizing: "border-box" },
+  formPanel: { flex: "1 1 340px", minWidth: 0, background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 14, padding: "20px 18px", boxSizing: "border-box" },
+  legend: { display: "flex", alignItems: "center", gap: 14, marginBottom: 14, padding: "8px 12px", background: "#F8FAFC", borderRadius: 8, flexWrap: "wrap" },
   timesGrid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 },
   coverBox: { background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: "14px 16px" },
   slotRecap: { background: "#EFF6FF", border: "1.5px solid #BFDBFE", borderRadius: 10, padding: "12px 14px", marginBottom: 16 },
   label: { display: "block", fontSize: 12.5, fontWeight: 700, color: "#374151", marginBottom: 5 },
   inputGroup: { display: "flex", alignItems: "center", border: "1.5px solid #E2E8F0", borderRadius: 8, overflow: "hidden", background: "#FFFFFF" },
-  textInput: { flex: 1, border: "none", outline: "none", padding: "10px 12px", fontSize: 13.5, background: "#FFFFFF" },
+  textInput: { flex: 1, border: "none", outline: "none", padding: "10px 12px", fontSize: 13.5, background: "#FFFFFF", minWidth: 0 },
   selectInput: { width: "100%", padding: "10px 12px", border: "1.5px solid #E2E8F0", borderRadius: 8, fontSize: 13, background: "#FFFFFF", cursor: "pointer" },
   textareaInput: { width: "100%", padding: "10px 12px", border: "1.5px solid #E2E8F0", borderRadius: 8, fontSize: 13, resize: "vertical", background: "#FFFFFF", boxSizing: "border-box" },
   errorBox: { display: "flex", alignItems: "flex-start", gap: 8, padding: "10px 12px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, color: "#991B1B", fontSize: 13, fontWeight: 500 },
@@ -728,3 +742,4 @@ const S = {
   confirmedBox: { display: "flex", flexDirection: "column", gap: 12, background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: "16px 18px" },
   confirmedRow: { display: "flex", alignItems: "flex-start", gap: 10 },
 };
+
