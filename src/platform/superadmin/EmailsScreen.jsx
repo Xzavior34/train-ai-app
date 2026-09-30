@@ -172,8 +172,16 @@ export function EmailsScreen() {
                 onChange={(e) => setChannels((c) => ({ ...c, in_app: e.target.checked }))}
               /> In-app notification{!needsSpecificEmail ? " (specific email only)" : ""}
             </label>
-            <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--text-3)" }} title="Push delivery isn't wired up yet">
-              <input type="checkbox" checked={false} disabled /> Push notification (coming soon)
+            <label
+              style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: needsSpecificEmail ? "var(--text-2)" : "var(--text-3)" }}
+              title={needsSpecificEmail ? "" : "Only available when sending to a specific email"}
+            >
+              <input
+                type="checkbox"
+                checked={needsSpecificEmail && channels.push}
+                disabled={!needsSpecificEmail}
+                onChange={(e) => setChannels((c) => ({ ...c, push: e.target.checked }))}
+              /> Device push notification{!needsSpecificEmail ? " (specific email only)" : ""}
             </label>
           </div>
 
