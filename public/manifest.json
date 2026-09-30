@@ -1,5 +1,5 @@
 {
-  "id": "https://train-ai-app.vercel.app/",
+  "id": "https://trainailtd.com/",
   "name": "Train AI - The AI Learning Infrastructure for Organisations",
   "short_name": "Train AI",
   "description": "Multi-tenant learning management system for organisations - structured courses, cohorts, analytics, AI coaching, and mentor support.",
@@ -23,7 +23,7 @@
     },
     {
       "platform": "webapp",
-      "url": "https://train-ai-app.vercel.app/manifest.json"
+      "url": "https://trainailtd.com/manifest.json"
     }
   ],
   "icons": [
@@ -149,10 +149,13 @@
   },
   "scope_extensions": [
     {
-      "origin": "https://trainai.app"
+      "origin": "https://trainailtd.com"
     },
     {
       "origin": "https://train-ai-app.vercel.app"
+    },
+    {
+      "origin": "https://trainai.app"
     }
   ],
   "launch_handler": {

@@ -1,6 +1,6 @@
 {
   "packageId": "com.trainailtd.twa",
-  "host": "train-ai-app.vercel.app",
+  "host": "trainailtd.com",
   "name": "Train AI",
   "launcherName": "Train AI",
   "display": "standalone",
@@ -11,10 +11,10 @@
   "backgroundColor": "#0B0E1A",
   "enableNotifications": true,
   "startUrl": "/",
-  "iconUrl": "https://train-ai-app.vercel.app/icon-512.png",
-  "maskableIconUrl": "https://train-ai-app.vercel.app/icon-512-maskable.png",
+  "iconUrl": "https://trainailtd.com/icon-512.png",
+  "maskableIconUrl": "https://trainailtd.com/icon-512-maskable.png",
   "splashScreenFadeOutDuration": 300,
-  "androidSplashScreenIconUrl": "https://train-ai-app.vercel.app/android-splash-icon.png",
+  "androidSplashScreenIconUrl": "https://trainailtd.com/android-splash-icon.png",
   "appVersionName": "1.0.0",
   "appVersionCode": 1,
   "minSdkVersion": 24,
@@ -27,14 +27,14 @@
     {
       "name": "My Courses",
       "shortName": "Courses",
-      "url": "https://train-ai-app.vercel.app/#courses",
-      "chosenIcon": "https://train-ai-app.vercel.app/icon-192.png"
+      "url": "https://trainailtd.com/#courses",
+      "chosenIcon": "https://trainailtd.com/icon-192.png"
     },
     {
       "name": "AI Tutor",
       "shortName": "AI Chat",
-      "url": "https://train-ai-app.vercel.app/#ai-tutor",
-      "chosenIcon": "https://train-ai-app.vercel.app/icon-192.png"
+      "url": "https://trainailtd.com/#ai-tutor",
+      "chosenIcon": "https://trainailtd.com/icon-192.png"
     }
   ],
   "generatorApp": "pwabuilder"
