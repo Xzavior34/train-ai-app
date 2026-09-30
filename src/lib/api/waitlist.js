@@ -225,16 +225,31 @@ function readStoredAttribution() {
   }
 }
 
-export async function submitDemoRequest({ fullName, workEmail, companyName, teamSize, message, source = "landing_page", status = "scheduled" } = {}) {
+export async function submitDemoRequest({
+  fullName,
+  workEmail,
+  companyName,
+  teamSize,
+  message,
+  source = "landing_page",
+  status = "scheduled",
+  scheduledDate = null,
+  scheduledTime = null,
+  orgType = null,
+  timezone = null,
+} = {}) {
   const normalizedEmail = normalizeEmail(workEmail);
   if (!fullName?.trim() || !isValidEmail(normalizedEmail) || !companyName?.trim()) {
     return { success: false, error: "Please fill in your name, work email, and company." };
   }
-  if (!supabase) return { success: true }; // demo mode. Nothing to persist
+
+  // Graceful demo-mode: if supabase client is not configured just succeed silently
+  if (!supabase) return { success: true };
 
   try {
     const attribution = readStoredAttribution();
-    const { error } = await supabase.from("demo_requests").insert({
+
+    const insertPayload = {
       full_name: fullName.trim(),
       work_email: normalizedEmail,
       company_name: companyName.trim(),
@@ -243,8 +258,35 @@ export async function submitDemoRequest({ fullName, workEmail, companyName, team
       source,
       status: status || "scheduled",
       ...attribution,
-    });
-    if (error) throw error;
+    };
+
+    // Only add scheduling fields if columns exist (graceful - no schema error if migration hasn't run yet)
+    if (scheduledDate) insertPayload.scheduled_date = scheduledDate;
+    if (scheduledTime) insertPayload.scheduled_time = scheduledTime;
+    if (orgType) insertPayload.org_type = orgType;
+    if (timezone) insertPayload.timezone = timezone;
+
+    const { error } = await supabase.from("demo_requests").insert(insertPayload);
+
+    if (error) {
+      // If the error is about unknown columns, fall back to inserting without scheduling columns
+      if (error.code === "42703" || (error.message?.includes("column") && error.message?.includes("does not exist"))) {
+        const fallbackPayload = {
+          full_name: fullName.trim(),
+          work_email: normalizedEmail,
+          company_name: companyName.trim(),
+          team_size: teamSize || null,
+          message: message?.trim() || null,
+          source,
+          status: status || "scheduled",
+          ...attribution,
+        };
+        const { error: fallbackError } = await supabase.from("demo_requests").insert(fallbackPayload);
+        if (fallbackError) throw fallbackError;
+      } else {
+        throw error;
+      }
+    }
 
     // Dual-write into organization_inquiries to ensure follow-up queue captures it
     await supabase.from("organization_inquiries").insert({
@@ -262,16 +304,17 @@ export async function submitDemoRequest({ fullName, workEmail, companyName, team
     const notificationSubject = `New Demo / Appointment Request: ${fullName.trim()} - ${companyName.trim()}`;
     const notificationHtml = `
       <div style="font-family: sans-serif; line-height: 1.5; color: #0F172A;">
-        <h2 style="color: #2563EB;">New Train AI Appointment & Demo Scheduled</h2>
+        <h2 style="color: #2563EB;">New Train AI Appointment &amp; Demo Scheduled</h2>
         <p>A new institutional demo request has been submitted for follow-up:</p>
         <table style="width: 100%; max-width: 560px; border-collapse: collapse; margin-bottom: 20px;">
           <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold; width: 140px;">Name</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${fullName.trim()}</td></tr>
           <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Work Email</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;"><a href="mailto:${normalizedEmail}">${normalizedEmail}</a></td></tr>
           <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Organization</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${companyName.trim()}</td></tr>
           <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Team Size</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${teamSize || "Not specified"}</td></tr>
+          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Scheduled</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${scheduledDate || "N/A"} at ${scheduledTime || "N/A"} (${timezone || "UTC"})</td></tr>
           <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Source</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${source}</td></tr>
         </table>
-        <h3 style="font-size: 14px; margin-bottom: 6px;">Meeting & Schedule Details:</h3>
+        <h3 style="font-size: 14px; margin-bottom: 6px;">Meeting &amp; Schedule Details:</h3>
         <pre style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 8px; font-size: 13px; white-space: pre-wrap; word-wrap: break-word;">${message || ""}</pre>
         <p style="font-size: 12px; color: #64748B; margin-top: 18px;">
           Follow-up notifications routed to: <strong>info@trainailtd.com</strong> and <strong>info@sarafoundationafrica.com</strong>
@@ -308,6 +351,45 @@ export async function submitDemoRequest({ fullName, workEmail, companyName, team
     console.warn("Demo request submit warning:", error);
     return { success: false, error: "Could not submit your request. Please try again." };
   }
+}
+
+/**
+ * Fetches already-booked demo slots for a given date range.
+ * Returns a Set of strings like "2026-10-01|10:00 AM" for O(1) lookup.
+ * Uses the get_booked_slots RPC (security definer, callable by anon).
+ * Falls back to an empty set if the RPC does not exist yet (migration not run).
+ */
+export async function fetchBookedSlots({ fromDate, toDate } = {}) {
+  const bookedSet = new Set();
+  if (!supabase) return bookedSet;
+
+  try {
+    const from = fromDate || new Date().toISOString().split("T")[0];
+    const to = toDate || new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    const { data, error } = await supabase.rpc("get_booked_slots", {
+      p_from_date: from,
+      p_to_date: to,
+    });
+
+    if (error) {
+      // Migration may not have run yet - silently return empty set
+      console.warn("get_booked_slots RPC not available:", error.message);
+      return bookedSet;
+    }
+
+    if (Array.isArray(data)) {
+      for (const row of data) {
+        if (row.scheduled_date && row.scheduled_time) {
+          bookedSet.add(`${row.scheduled_date}|${row.scheduled_time}`);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("fetchBookedSlots warning:", err);
+  }
+
+  return bookedSet;
 }
 
 // Organisation Inquiry - secondary B2B contact path, distinct from Book a
