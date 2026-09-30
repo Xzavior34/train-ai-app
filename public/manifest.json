@@ -1,5 +1,5 @@
 {
-  "id": "train-ai-pwa",
+  "id": "https://train-ai-app.vercel.app/",
   "name": "Train AI - The AI Learning Infrastructure for Organisations",
   "short_name": "Train AI",
   "description": "Multi-tenant learning management system for organisations - structured courses, cohorts, analytics, AI coaching, and mentor support.",
@@ -11,41 +11,59 @@
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
   "background_color": "#0B0E1A",
-  "theme_color": "#2563EB",
+  "theme_color": "#0B0E1A",
   "categories": ["education", "productivity", "business"],
-  "iarc_rating_id": "",
   "prefer_related_applications": false,
   "related_applications": [],
   "icons": [
     {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
       "src": "/train-ai-favicon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/train-ai-icon.png",
-      "sizes": "512x512",
+      "sizes": "1024x1024",
       "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/logo.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "purpose": "any"
     }
   ],
   "screenshots": [
     {
       "src": "/train-ai-logo.png",
-      "sizes": "1280x720",
+      "sizes": "934x311",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Train AI Dashboard"
     },
     {
       "src": "/train-ai-icon.png",
-      "sizes": "750x1334",
+      "sizes": "1024x1024",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Train AI Mobile Learning"
@@ -57,21 +75,18 @@
       "short_name": "Courses",
       "description": "View your enrolled learning courses",
       "url": "/#courses",
-      "icons": [{ "src": "/train-ai-favicon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "AI Tutor",
       "short_name": "AI Chat",
       "description": "Chat with your personalized AI Tutor",
       "url": "/#ai-tutor",
-      "icons": [{ "src": "/train-ai-favicon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ],
   "launch_handler": {
     "client_mode": ["navigate-existing", "auto"]
-  },
-  "edge_side_panel": {
-    "preferred_width": 400
   },
   "share_target": {
     "action": "/",
@@ -81,12 +96,5 @@
       "text": "text",
       "url": "url"
     }
-  },
-  "note_taking": {
-    "new_note_url": "/#notes"
-  },
-  "widgets": [],
-  "file_handlers": [],
-  "protocol_handlers": [],
-  "scope_extensions": []
+  }
 }

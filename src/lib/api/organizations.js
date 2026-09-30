@@ -281,8 +281,7 @@ export async function updateOrgGamificationSettings(organizationId, patch) {
   }
 }
 
-<<<<<<< HEAD
-=======
+
 // Payment gateway & payout accounts for the organization.
 // Allows organizations to connect their Paystack Subaccount / API keys (for NGN/GHS/KES/ZAR),
 // Stripe Connected Account / API keys (for USD/EUR/GBP), or Direct Bank Settlement details
@@ -434,7 +433,7 @@ export async function resolveOrgPaymentGateway(organizationId) {
   };
 }
 
->>>>>>> fb83e81 (feat: integrate OneSignal push notifications, live Paystack & Stripe gateway settings, full modern PWA manifest, SEO optimization, and Store specs)
+
 // Organization subscription payment - the real fix for "organizations have
 // to pay to see the admin dashboard." See 0114_organization_subscription_payment.sql
 // for the full design and its one honest trust-boundary caveat.
