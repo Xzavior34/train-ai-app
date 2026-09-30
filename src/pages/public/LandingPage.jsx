@@ -7,7 +7,7 @@ import {
   Activity, Gauge, Database, Home, Mail, Download, Wifi,
   Accessibility, Bell, Facebook, Twitter, Instagram, Linkedin, Search,
   BarChart2, Heart, Award, Coins, FileText, Globe, Calendar, Clock,
-  Send, Mic, MessageSquare, Star, Battery, Signal
+  Send, Mic, MessageSquare, Star, Battery, Signal, Play
 } from "lucide-react";
 import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";

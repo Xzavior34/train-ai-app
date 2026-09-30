@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
 import { registerOrganization, joinDefaultOrganization, attributeReferralSignupIfPending } from "../../lib/api/organizations.js";
+import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../../lib/authRateLimiter.js";
 
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "",
@@ -18,16 +19,42 @@ export default function AuthPage({
   const [sendingReset, setSendingReset] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showNewPasswordConfirm, setShowNewPasswordConfirm] = useState(false);
   const [resetError, setResetError] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [accountType, setAccountType] = useState("organization");
   const [orgName, setOrgName] = useState("");
   const [orgError, setOrgError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [breachWarning, setBreachWarning] = useState(false);
   const [checkingBreach, setCheckingBreach] = useState(false);
+
+  // Rate Limiting on Password attempts
+  const [rateLimit, setRateLimit] = useState(() => getRateLimitStatus(initialEmail));
+
+  // Sync rate limit whenever email input changes
+  useEffect(() => {
+    if (email) {
+      setRateLimit(getRateLimitStatus(email));
+    }
+  }, [email]);
+
+  // Live countdown timer for active lockout
+  useEffect(() => {
+    if (!rateLimit.isLocked) return;
+    const interval = setInterval(() => {
+      const current = getRateLimitStatus(email);
+      setRateLimit(current);
+      if (!current.isLocked) {
+        clearInterval(interval);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [rateLimit.isLocked, email]);
 
   function handlePasswordChange(value) {
     setPassword(value);
@@ -98,7 +125,14 @@ export default function AuthPage({
     setOrgError("");
     setSubmitting(true);
     if (mode === "signin") {
+      const currentLimit = getRateLimitStatus(email);
+      if (currentLimit.isLocked) {
+        setRateLimit(currentLimit);
+        setSubmitting(false);
+        return;
+      }
       await onSignIn(email, password);
+      setRateLimit(getRateLimitStatus(email));
     } else {
       const signupRole = "learner";
       const result = await onSignUp(email, password, signupRole, accountType);
@@ -222,21 +256,58 @@ export default function AuthPage({
                 <div style={styles.inputWrap}>
                   <Lock size={15} color="#94A3B8" style={styles.inputIcon} />
                   <input
-                    type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                    className="auth-input" style={styles.input} placeholder="At least 8 characters"
+                    type={showNewPassword ? "text" : "password"}
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="auth-input"
+                    style={{ ...styles.input, paddingRight: 40 }}
+                    placeholder="At least 8 characters"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    style={styles.eyeBtn}
+                    aria-label={showNewPassword ? "Hide password" : "Show password"}
+                    title={showNewPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
 
                 <label style={{ ...styles.label, marginTop: 14 }}>Confirm New Password</label>
                 <div style={styles.inputWrap}>
                   <Lock size={15} color="#94A3B8" style={styles.inputIcon} />
                   <input
-                    type="password" required value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                    className="auth-input" style={styles.input} placeholder="••••••••"
+                    type={showNewPasswordConfirm ? "text" : "password"}
+                    required
+                    value={newPasswordConfirm}
+                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                    className="auth-input"
+                    style={{ ...styles.input, paddingRight: 40 }}
+                    placeholder="••••••••"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPasswordConfirm(!showNewPasswordConfirm)}
+                    style={styles.eyeBtn}
+                    aria-label={showNewPasswordConfirm ? "Hide password" : "Show password"}
+                    title={showNewPasswordConfirm ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showNewPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
 
-                {resetError && <div style={styles.errorBox}>{resetError}</div>}
+                {resetError && (
+                  <div style={styles.errorBox}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <span>{resetError}</span>
+                    </div>
+                  </div>
+                )}
 
                 <button type="submit" disabled={resettingPassword} className="auth-submit" style={{ ...styles.submit, opacity: resettingPassword ? .75 : 1 }}>
                   {resettingPassword ? "Updating..." : "Update password"}
@@ -331,14 +402,36 @@ export default function AuthPage({
             <div style={styles.inputWrap}>
               <Lock size={15} color="#94A3B8" style={styles.inputIcon} />
               <input
-                type="password" required value={password} onChange={(e) => handlePasswordChange(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => handlePasswordChange(e.target.value)}
                 onBlur={mode === "signup" ? handlePasswordBlur : undefined}
-                className="auth-input" style={styles.input} placeholder="••••••••"
+                disabled={mode === "signin" && rateLimit.isLocked}
+                className="auth-input"
+                style={{
+                  ...styles.input,
+                  paddingRight: 40,
+                  backgroundColor: (mode === "signin" && rateLimit.isLocked) ? "#F8FAFC" : "#FFFFFF",
+                  cursor: (mode === "signin" && rateLimit.isLocked) ? "not-allowed" : "text"
+                }}
+                placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={mode === "signin" && rateLimit.isLocked}
+                style={styles.eyeBtn}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
 
             {mode === "signup" && checkingBreach && (
-              <div style={styles.breachChecking}>Checking password against known breaches…</div>
+              <div style={styles.breachChecking}>Checking password against known breaches...</div>
             )}
             {mode === "signup" && breachWarning && (
               <div style={styles.breachBox}>
@@ -347,12 +440,70 @@ export default function AuthPage({
               </div>
             )}
 
-            {authError && <div style={styles.errorBox}>{authError}</div>}
+            {/* Brute-force Protection / 10 Trials Lockout Banner */}
+            {mode === "signin" && rateLimit.isLocked && (
+              <div style={styles.lockedBox}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <ShieldAlert size={18} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#991B1B", marginBottom: 3 }}>
+                      Account Temporarily Locked
+                    </div>
+                    <div style={{ fontSize: 12, color: "#B91C1C", lineHeight: 1.45 }}>
+                      Too many failed password trials (10/10). To safeguard your account, sign-in attempts have been suspended.
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, fontSize: 12, fontWeight: 700, color: "#DC2626" }}>
+                      <Clock size={13} />
+                      <span>Cooldown remaining: {formatLockoutTime(rateLimit.remainingMs)}</span>
+                    </div>
+                    <div style={{ marginTop: 8, borderTop: "1px solid #FECACA", paddingTop: 8, fontSize: 12 }}>
+                      <span
+                        onClick={() => { setMode("forgot"); }}
+                        style={{ color: "#2563EB", fontWeight: 700, cursor: "pointer", textDecoration: "underline" }}
+                      >
+                        Forgot your password? Click here to reset it &rarr;
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            <button type="submit" disabled={submitting} className="auth-submit" style={{ ...styles.submit, opacity: submitting ? .75 : 1 }}>
-              {submitting ? "Processing..." : (
-                <>{mode === "signin" ? "Sign in" : "Create Account"} <ArrowRight size={15} /></>
-              )}
+            {/* Standard Error State (when not locked) */}
+            {authError && (!rateLimit.isLocked || mode !== "signin") && (
+              <div style={styles.errorBox}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1 }}>
+                    <div>{authError}</div>
+                    {mode === "signin" && rateLimit.attempts > 0 && !rateLimit.isLocked && (
+                      <div style={{ fontSize: 11.5, color: "#B91C1C", marginTop: 4, fontWeight: 600 }}>
+                        Trial {rateLimit.attempts} of {MAX_PASSWORD_TRIALS} failed. (Account locks after {MAX_PASSWORD_TRIALS} failed trials).
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting || (mode === "signin" && rateLimit.isLocked)}
+              className="auth-submit"
+              style={{
+                ...styles.submit,
+                opacity: (submitting || (mode === "signin" && rateLimit.isLocked)) ? 0.7 : 1,
+                background: (mode === "signin" && rateLimit.isLocked) ? "#94A3B8" : "#2563EB",
+                cursor: (mode === "signin" && rateLimit.isLocked) ? "not-allowed" : "pointer"
+              }}
+            >
+              {submitting
+                ? "Processing..."
+                : (mode === "signin" && rateLimit.isLocked)
+                  ? `Locked (${formatLockoutTime(rateLimit.remainingMs)})`
+                  : (
+                    <>{mode === "signin" ? "Sign in" : "Create Account"} <ArrowRight size={15} /></>
+                  )}
             </button>
 
             <div style={styles.switchRow}>
@@ -388,9 +539,19 @@ const styles = {
     fontSize: 13.5, color: "#0F172A", boxSizing: "border-box", transition: "border-color .15s ease, box-shadow .15s ease",
     background: "#FFFFFF"
   },
+  eyeBtn: {
+    position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+    background: "transparent", border: "none", cursor: "pointer", padding: "6px",
+    display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8",
+    transition: "color .15s ease"
+  },
   errorBox: {
     background: "#FEF2F2", color: "#EF4444", fontSize: 12.5, padding: "10px 12px", borderRadius: 8,
     marginTop: 12, lineHeight: 1.4, fontWeight: 600, border: "1px solid #FECACA",
+  },
+  lockedBox: {
+    background: "#FFF1F2", color: "#991B1B", fontSize: 12.5, padding: "12px 14px", borderRadius: 8,
+    marginTop: 14, lineHeight: 1.45, border: "1.5px solid #FECDD3",
   },
   breachChecking: { fontSize: 11.5, color: "#94A3B8", marginTop: 8 },
   breachBox: {

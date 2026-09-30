@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase, resolveProjectForSignIn, resolveProjectForSignUp, fallbackProjectForSignIn, setActiveSupabaseProject, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../services/supabaseClient.js";
 import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../lib/roleRouting.js";
+import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime } from "../lib/authRateLimiter.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1";
 
@@ -123,6 +124,15 @@ export function useAuth() {
   const signIn = useCallback(async (email, password) => {
     setAuthError(null);
 
+    // Enforce 10-trial rate limiting before attempting sign in
+    const rateLimit = getRateLimitStatus(email);
+    if (rateLimit.isLocked) {
+      const timeStr = formatLockoutTime(rateLimit.remainingMs);
+      const lockMsg = `Account temporarily locked due to 10 failed password trials. Please wait ${timeStr} or reset your password.`;
+      setAuthError(lockMsg);
+      return { data: null, error: new Error(lockMsg), isRateLimited: true, remainingMs: rateLimit.remainingMs };
+    }
+
     // Two Supabase projects:
     // @sarafoundationafrica.com -> Sierra Foundation dedicated project
     // Everything else -> Train AI Shared Multi-Tenant Database
@@ -166,13 +176,25 @@ export function useAuth() {
         return { data: null, error: new Error(message) };
       }
       if (supaRes?.data?.session) {
+        resetPasswordRateLimit(email);
         setSession(supaRes.data.session);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
         return { data: supaRes.data, error: null };
       }
-      const message = supaRes?.error?.message || "Sign in failed. Check your email and password and try again.";
+      
+      // Password rejected or invalid credentials: track failed attempt
+      const updatedLimit = recordFailedPasswordAttempt(email);
+      let message;
+      if (updatedLimit.isLocked) {
+        const timeStr = formatLockoutTime(updatedLimit.remainingMs);
+        message = `Account temporarily locked due to 10 failed password trials. Please wait ${timeStr} or reset your password.`;
+      } else if (updatedLimit.remainingAttempts <= 5) {
+        message = `Invalid email or password. You have ${updatedLimit.remainingAttempts} attempt(s) remaining before a 15-minute temporary lockout.`;
+      } else {
+        message = supaRes?.error?.message || "Invalid email or password. Check your credentials and try again.";
+      }
       setAuthError(message);
-      return { data: null, error: supaRes?.error || new Error(message) };
+      return { data: null, error: supaRes?.error || new Error(message), rateLimit: updatedLimit };
     }
 
     // Demo mode only (no Supabase project configured for this environment).

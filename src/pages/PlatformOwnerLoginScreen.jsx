@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Eye, EyeOff, ShieldAlert, AlertCircle, Clock } from "lucide-react";
 import { SUPABASE_PROJECTS, setActiveSupabaseProject, getSupabaseClientForProject } from "../services/supabaseClient.js";
+import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../lib/authRateLimiter.js";
 
 // Platform Owner's separate login entry point - PRD Section 10: "The
 // platform owner view is for Train AI internal operations... not login
@@ -22,31 +24,50 @@ import { SUPABASE_PROJECTS, setActiveSupabaseProject, getSupabaseClientForProjec
 export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Rate Limiting on Password attempts
+  const [rateLimit, setRateLimit] = useState(() => getRateLimitStatus(email));
 
   useEffect(() => {
     setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
   }, []);
 
-  // "Let access super admin temporary by typing url/admin for now before
-  // database" - before a real database is connected, there's nothing real
-  // to authenticate against or protect, so a direct preview here is safe,
-  // not a security shortcut around real data. The moment a real Digital
-  // Training project is connected, this button disappears entirely and
-  // the real email/password + super_admin check below becomes the only
-  // way in - this is the deliberately temporary bridge Philip's task list
-  // describes, not a permanent alternate door.
-  // Authenticates directly against the Train AI Shared project (where
-  // Platform Owner and Super Admin accounts live in the shared database)
-  // and explicitly rejects any account that isn't confirmed super_admin
-  // after signing in, rather than silently falling through to a Learner
-  // or Organisation dashboard.
+  // Sync rate limit when email changes
+  useEffect(() => {
+    if (email) {
+      setRateLimit(getRateLimitStatus(email));
+    }
+  }, [email]);
+
+  // Live countdown timer for active lockout
+  useEffect(() => {
+    if (!rateLimit.isLocked) return;
+    const interval = setInterval(() => {
+      const current = getRateLimitStatus(email);
+      setRateLimit(current);
+      if (!current.isLocked) {
+        clearInterval(interval);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [rateLimit.isLocked, email]);
+
   const hasRealProject = !!getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
 
   async function handleSignIn(e) {
     e.preventDefault();
     setError("");
+
+    // Enforce 10-trial rate limiting before attempting sign in
+    const currentLimit = getRateLimitStatus(email);
+    if (currentLimit.isLocked) {
+      setRateLimit(currentLimit);
+      return;
+    }
+
     setLoading(true);
     try {
       setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
@@ -57,20 +78,25 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
       }
       const { data, error: signInError } = await client.auth.signInWithPassword({ email: email.trim(), password });
       if (signInError || !data?.session) {
-        setError("Invalid credentials.");
+        const updated = recordFailedPasswordAttempt(email);
+        setRateLimit(updated);
+        if (updated.isLocked) {
+          setError(`Account temporarily locked due to 10 failed password trials. Please wait ${formatLockoutTime(updated.remainingMs)}.`);
+        } else if (updated.remainingAttempts <= 5) {
+          setError(`Invalid credentials. You have ${updated.remainingAttempts} attempt(s) remaining before a 15-minute temporary lockout.`);
+        } else {
+          setError("Invalid credentials.");
+        }
         return;
       }
       const { data: roles } = await client.from("user_roles").select("role").eq("user_id", data.session.user.id);
       const isSuperAdmin = (roles || []).some((r) => r.role === "super_admin");
       if (!isSuperAdmin) {
-        // Deliberately rejected here, not routed to Learner/Organisation -
-        // this portal is Platform Owner only, per Section 10. A real
-        // organization or learner account signing in here (even
-        // correctly) should not land anywhere at all.
         await client.auth.signOut();
         setError("This account does not have Platform Owner access.");
         return;
       }
+      resetPasswordRateLimit(email);
       onAuthenticated(data.session);
     } catch (err) {
       setError(err?.message || "Could not sign in.");
@@ -107,14 +133,77 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
           style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 12, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box" }}
         />
         <label style={{ fontSize: 12, fontWeight: 600 }}>Password</label>
-        <input
-          type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-          className="owner-input"
-          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 16, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box" }}
-        />
-        {error && <div style={{ fontSize: 12.5, color: "#DC2626", marginBottom: 12 }}>{error}</div>}
-        <button type="submit" disabled={loading} className="owner-submit" style={{ width: "100%", padding: "10px 12px", borderRadius: 8, background: "#0F172A", color: "#fff", fontWeight: 700, border: "none", cursor: loading ? "default" : "pointer" }}>
-          {loading ? "Signing in..." : "Sign in"}
+        <div style={{ position: "relative", width: "100%", marginTop: 4, marginBottom: 16 }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={rateLimit.isLocked}
+            className="owner-input"
+            style={{
+              width: "100%", padding: "10px 38px 10px 12px", borderRadius: 8,
+              border: "1px solid #E5E7EB", boxSizing: "border-box",
+              backgroundColor: rateLimit.isLocked ? "#F8FAFC" : "#FFFFFF",
+              cursor: rateLimit.isLocked ? "not-allowed" : "text"
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            disabled={rateLimit.isLocked}
+            style={{
+              position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+              background: "transparent", border: "none", cursor: "pointer", padding: "6px",
+              display: "flex", alignItems: "center", justifyContent: "center", color: "#94A3B8"
+            }}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            title={showPassword ? "Hide password" : "Show password"}
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+
+        {/* Lockout Box */}
+        {rateLimit.isLocked && (
+          <div style={{ background: "#FFF1F2", border: "1.5px solid #FECDD3", borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <ShieldAlert size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#991B1B" }}>Account Locked</div>
+                <div style={{ fontSize: 12, color: "#B91C1C", marginTop: 2 }}>
+                  10 failed password trials. Cooldown remaining: <strong>{formatLockoutTime(rateLimit.remainingMs)}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && !rateLimit.isLocked && (
+          <div style={{ background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: 8, padding: "10px 12px", marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 8 }}>
+            <AlertCircle size={15} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div style={{ fontSize: 12.5, color: "#DC2626", fontWeight: 600 }}>{error}</div>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading || rateLimit.isLocked}
+          className="owner-submit"
+          style={{
+            width: "100%", padding: "10px 12px", borderRadius: 8,
+            background: rateLimit.isLocked ? "#64748B" : "#0F172A", color: "#fff",
+            fontWeight: 700, border: "none",
+            cursor: (loading || rateLimit.isLocked) ? "not-allowed" : "pointer"
+          }}
+        >
+          {loading
+            ? "Signing in..."
+            : rateLimit.isLocked
+              ? `Locked (${formatLockoutTime(rateLimit.remainingMs)})`
+              : "Sign in"}
         </button>
         {!hasRealProject && (
           <>
