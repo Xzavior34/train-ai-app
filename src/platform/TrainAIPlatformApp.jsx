@@ -4,7 +4,7 @@ import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { fetchMentorProfile, fetchCohortSessions, fetchMyManagedStudyGroups } from "../lib/api/schemaHelper.js";
 import { fetchMentorActiveCohorts } from "../lib/api/platform.js";
 import { fetchLeaderboard } from "../lib/api/learner.js";
-import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, SignOutContext } from "./components/PlatformUI.jsx";
+import { TOKENS, Sidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, SignOutContext, PlatformMobileBottomNav } from "./components/PlatformUI.jsx";
 import { OrgPaymentCallbackScreen } from "./OrgPaymentCallbackScreen.jsx";
 import { AdminDashboardScreen } from "./admin/AdminDashboardScreen.jsx";
 import { PeopleScreen } from "./admin/PeopleScreen.jsx";
@@ -324,6 +324,13 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
               )}
             </div>
           </div>
+
+          <PlatformMobileBottomNav
+            workspace={workspace}
+            screen={screen}
+            setScreen={setScreen}
+            openMenu={() => setMobileOpen(true)}
+          />
 
           {toast && (
             // Not `.tai-toast` - that class is only styled by LearnerUI's

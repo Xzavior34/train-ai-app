@@ -49,38 +49,18 @@ export default function CommunityHero({ user, onCreatePost }) {
           </div>
 
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 2 }}>
-              <h1
-                className="tai-community-hero-title"
-                style={{
-                  fontSize: 'clamp(17px, 2.2vw, 21px)',
-                  fontWeight: 900,
-                  letterSpacing: '-0.025em',
-                  margin: 0,
-                  lineHeight: 1.25,
-                }}
-              >
-                Community Hub
-              </h1>
-              <span
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 800,
-                  padding: '2px 8px',
-                  borderRadius: 999,
-                  background: 'var(--primary-tint)',
-                  color: 'var(--primary)',
-                  border: '1px solid rgba(37, 99, 235, 0.2)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
-                Active Peer Network
-              </span>
-            </div>
+            <h1
+              className="tai-community-hero-title"
+              style={{
+                fontSize: 'clamp(17px, 2.2vw, 21px)',
+                fontWeight: 900,
+                letterSpacing: '-0.025em',
+                margin: '0 0 2px',
+                lineHeight: 1.25,
+              }}
+            >
+              Community Hub
+            </h1>
             <p
               className="tai-community-hero-desc"
               style={{

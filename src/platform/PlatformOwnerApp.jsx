@@ -3,7 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
 import { SUPABASE_PROJECTS, activeProject, getSupabaseClientForProject, setActiveSupabaseProject } from "../services/supabaseClient.js";
-import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, SignOutContext } from "./components/PlatformUI.jsx";
+import { TOKENS, OwnerSidebar, DashboardSwitcher, MobileMenuContext, ToastContext, NavigationContext, SignOutContext, PlatformMobileBottomNav } from "./components/PlatformUI.jsx";
 import { OverviewScreen } from "./superadmin/OverviewScreen.jsx";
 import { OrganizationsScreen } from "./superadmin/OrganizationsScreen.jsx";
 import { OrgOnboardingWizard } from "./superadmin/OrgOnboardingWizard.jsx";
@@ -199,6 +199,13 @@ export default function PlatformOwnerApp({
                 {screen === "access" && <AccessControlScreen orgSelector={orgSelector} />}
               </div>
             </div>
+
+            <PlatformMobileBottomNav
+              isOwner={true}
+              screen={screen}
+              setScreen={setScreen}
+              openMenu={() => setMobileOpen(true)}
+            />
 
             {toast && (
               <div className="anim-pop" style={{ position: "fixed", left: "50%", bottom: 24, transform: "translateX(-50%)", maxWidth: "calc(100vw - 32px)", zIndex: 999, background: "var(--text)", color: "#fff", padding: "10px 16px", borderRadius: 8, display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, boxShadow: "0 12px 32px -4px rgba(15,23,42,0.35)", boxSizing: "border-box" }}>

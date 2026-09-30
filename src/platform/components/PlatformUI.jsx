@@ -253,6 +253,7 @@ export const TOKENS = `
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }
+    .ta-bottom-nav { display: none !important; }
   }
   .ta-hero-banner {
     border-radius: 20px;
@@ -328,7 +329,23 @@ export const TOKENS = `
   }
 
   @media (max-width: 899px) {
-    .ta-menu-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; flex-shrink: 0; }
+    .ta-menu-btn {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 38px !important;
+      height: 38px !important;
+      border-radius: 10px !important;
+      background: var(--surface) !important;
+      border: 1.5px solid var(--border) !important;
+      color: var(--text) !important;
+      cursor: pointer !important;
+      flex-shrink: 0 !important;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+      transition: all .15s ease !important;
+    }
+    .ta-menu-btn:hover { background: var(--surface-2) !important; }
+    .ta-menu-btn svg { color: var(--text) !important; stroke: var(--text) !important; }
     .ta-search { display: none; }
     /* The sidebar is an off-canvas drawer here (translateX(-100%) unless
        .mobile-open), so content must never be pushed over for it. */
@@ -350,20 +367,49 @@ export const TOKENS = `
     .ta-topbar-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .ta-profile-pill { padding: 3px !important; }
     .ta-content { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
-    .ta-sidebar {
-      position: fixed; top: 0; left: 0; z-index: 1000;
-      width: min(280px, 85vw) !important;
-      transform: translateX(-100%); transition: transform .22s ease;
-      box-shadow: 6px 0 28px rgba(15,23,42,.22);
+    .ta-sidebar,
+    .ta-sidebar.ta-sidebar-minimized {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      z-index: 1000 !important;
+      width: min(300px, 86vw) !important;
+      transform: translateX(-100%) !important;
+      transition: transform .22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      box-shadow: 6px 0 28px rgba(15,23,42,.22) !important;
     }
-    .ta-sidebar.mobile-open { transform: translateX(0); }
+    .ta-sidebar.mobile-open,
+    .ta-sidebar.ta-sidebar-minimized.mobile-open {
+      transform: translateX(0) !important;
+    }
+    .ta-sidebar.ta-sidebar-minimized .ta-brand-name,
+    .ta-sidebar.ta-sidebar-minimized .ta-brand-tag,
+    .ta-sidebar.ta-sidebar-minimized .ta-nav-section-title,
+    .ta-sidebar.ta-sidebar-minimized .ta-group-header span,
+    .ta-sidebar.ta-sidebar-minimized .ta-group-header svg,
+    .ta-sidebar.ta-sidebar-minimized .ta-nav-item span,
+    .ta-sidebar.ta-sidebar-minimized .ta-ws-item span,
+    .ta-sidebar.ta-sidebar-minimized .ta-nav-item svg:last-child {
+      display: inline !important;
+    }
+    .ta-sidebar.ta-sidebar-minimized .ta-nav-item,
+    .ta-sidebar.ta-sidebar-minimized .ta-ws-item {
+      justify-content: flex-start !important;
+      padding: 10px 14px !important;
+    }
+    .ta-sidebar.ta-sidebar-minimized .ta-brand {
+      justify-content: flex-start !important;
+      padding: 16px 14px !important;
+    }
     .ta-sidebar .ta-toggle-btn { display: none !important; }
     .ta-sidebar-close {
       display: flex !important; align-items: center; justify-content: center;
-      width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface-2); cursor: pointer; color: var(--text);
+      width: 36px; height: 36px; border-radius: 9px; border: 1.5px solid var(--border); background: var(--surface-2); cursor: pointer; color: var(--text) !important;
       transition: all .15s ease;
     }
-    .ta-sidebar-close:hover { background: var(--surface-3); color: var(--danger); }
+    .ta-sidebar-close:hover { background: var(--surface-3); color: var(--danger) !important; }
+    .ta-sidebar-close svg { color: var(--text) !important; stroke: var(--text) !important; }
     .ta-scrim { position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 990; animation: fadeInScale .15s ease; backdrop-filter: blur(2px); }
     .ta-profile-pill-name { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ta-org-selector { display: none !important; }
@@ -371,6 +417,92 @@ export const TOKENS = `
     .ta-sub { display: block !important; font-size: 11.5px !important; color: var(--text-3) !important; margin-top: 2px !important; line-height: 1.3 !important; white-space: normal !important; word-break: normal !important; overflow-wrap: anywhere !important; }
     .ta-table-wrap .ta-table { min-width: 680px; }
     .ta-grid-5, .ta-grid-4, .ta-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+    /* Dropdown card - avoid mobile full-width squash */
+    .ta-dropdown-card {
+      width: 230px !important;
+      min-width: 230px !important;
+      max-width: calc(100vw - 28px) !important;
+      padding: 8px 6px !important;
+      border-radius: 12px !important;
+      box-sizing: border-box !important;
+      background: var(--surface) !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: 0 14px 36px -8px rgba(15, 23, 42, 0.3) !important;
+    }
+    .ta-dropdown-item {
+      white-space: nowrap !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+    }
+
+    /* Fixed mobile bottom navigation for platform / admin view */
+    .ta-bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      max-width: 100%;
+      height: 60px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex !important;
+      justify-content: space-around;
+      align-items: center;
+      padding: 4px 6px max(6px, env(safe-area-inset-bottom));
+      z-index: 950;
+      box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.08);
+      box-sizing: border-box;
+    }
+    .ta.dark .ta-bottom-nav, html.dark .ta-bottom-nav {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 22px rgba(0, 0, 0, 0.5);
+    }
+    .ta-bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      height: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-3);
+      cursor: pointer;
+      padding: 4px 0;
+      gap: 2px;
+      transition: color 0.18s ease, transform 0.18s ease;
+      font-family: var(--font);
+    }
+    .ta-bottom-nav-item:active {
+      transform: scale(0.94);
+    }
+    .ta-bottom-nav-item.active {
+      color: var(--primary);
+    }
+    .ta-bottom-nav-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      transition: background 0.18s ease;
+    }
+    .ta-bottom-nav-item.active .ta-bottom-nav-icon {
+      background: var(--primary-tint);
+    }
+    .ta-bottom-nav-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1;
+      white-space: nowrap;
+    }
 
     /* Clean mobile scrolling for tabs and filter pills */
     .ta-tabs, .ta-pills-row {
@@ -421,7 +553,7 @@ export const TOKENS = `
   @media (max-width: 640px) {
     .ta-topbar { padding: 0 14px; height: 56px; min-height: 56px; }
     .ta-content { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); width: 100%; box-sizing: border-box; }
-    .ta-card { padding: 18px 16px; border-radius: 16px; width: 100%; box-sizing: border-box; }
+    .ta-card:not(.ta-dropdown-card) { padding: 18px 16px; border-radius: 16px; width: 100%; box-sizing: border-box; }
     .ta-h1 { font-size: 15px; }
     .ta-btn { padding: 7px 13px !important; font-size: 12px !important; border-radius: 9px !important; white-space: nowrap !important; }
     .ta-btn-sm { padding: 4px 9px !important; font-size: 11px !important; }
@@ -767,6 +899,8 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
     });
   };
 
+  const effectiveMinimized = isMinimized && !mobileOpen;
+
   return (
     <>
       {mobileOpen && (
@@ -775,19 +909,19 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
           onClick={onClose}
         />
       )}
-      <aside className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
-        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 12px" : "0 2px 14px", flexShrink: 0 }}>
+      <aside className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${effectiveMinimized ? "ta-sidebar-minimized" : ""}`}>
+        <div className="ta-row ta-between" style={{ padding: effectiveMinimized ? "0 0 12px" : "0 2px 14px", flexShrink: 0 }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
-            <BrandLogo height={22} isMinimized={isMinimized} />
-            {!isMinimized && (
+            <BrandLogo height={22} isMinimized={effectiveMinimized} />
+            {!effectiveMinimized && (
               <span className="ta-brand-tag" style={{ marginLeft: "auto", background: "linear-gradient(135deg, #F59E0B, #EF4444)", color: "#FFFFFF" }}>OWNER</span>
             )}
           </div>
-          <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
+          <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} color="var(--text)" /></button>
         </div>
 
         {/* Quick Search Shortcut in Sidebar */}
-        {!isMinimized ? (
+        {!effectiveMinimized ? (
           <div
             className="ta-sidebar-search-btn"
             style={{
@@ -826,7 +960,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
         )}
 
         <div className="ta-sidebar-nav">
-          {!isMinimized && <div className="ta-nav-section-title">Platform Owner</div>}
+          {!effectiveMinimized && <div className="ta-nav-section-title">Platform Owner</div>}
           {SUPERADMIN_NAV.map(s => {
             const Icon = s.icon;
             const isActive = screen === s.key;
@@ -857,7 +991,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
             style={{ cursor: "pointer" }}
           >
             {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
-            {!isMinimized && <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>}
+            {!effectiveMinimized && <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>}
           </div>
 
           <button
@@ -877,7 +1011,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
             >
               <Repeat size={16} />
               <span>Switch Dashboard</span>
-              {!isMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
+              {!effectiveMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
             </div>
           )}
 
@@ -892,7 +1026,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
             style={{ color: "var(--danger)", cursor: "pointer" }}
           >
             <LogOut size={16} />
-            {!isMinimized && <span>Sign Out</span>}
+            {!effectiveMinimized && <span>Sign Out</span>}
           </div>
         </div>
       </aside>
@@ -936,6 +1070,8 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
     });
   };
 
+  const effectiveMinimized = isMinimized && !mobileOpen;
+
   return (
     <>
       {mobileOpen && (
@@ -944,17 +1080,17 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           onClick={onClose}
         />
       )}
-      <aside className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${isMinimized ? "ta-sidebar-minimized" : ""}`}>
-        <div className="ta-row ta-between" style={{ padding: isMinimized ? "0 0 12px" : "0 2px 14px", flexShrink: 0 }}>
+      <aside className={`ta-sidebar ${mobileOpen ? "mobile-open" : ""} ${effectiveMinimized ? "ta-sidebar-minimized" : ""}`}>
+        <div className="ta-row ta-between" style={{ padding: effectiveMinimized ? "0 0 12px" : "0 2px 14px", flexShrink: 0 }}>
           <div className="ta-brand" style={{ padding: 0, display: "flex", alignItems: "center", gap: 10 }}>
-            <BrandLogo height={22} isMinimized={isMinimized} />
-            {!isMinimized && <span className="ta-brand-tag" style={{ marginLeft: "auto" }}>PRO</span>}
+            <BrandLogo height={22} isMinimized={effectiveMinimized} />
+            {!effectiveMinimized && <span className="ta-brand-tag" style={{ marginLeft: "auto" }}>PRO</span>}
           </div>
-          <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} /></button>
+          <button className="ta-sidebar-close" onClick={onClose} aria-label="Close menu"><X size={20} color="var(--text)" /></button>
         </div>
 
         {/* Quick Search Shortcut in Sidebar */}
-        {!isMinimized ? (
+        {!effectiveMinimized ? (
           <div
             className="ta-sidebar-search-btn"
             style={{
@@ -993,7 +1129,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
         )}
 
         <div className="ta-sidebar-nav">
-          {!isMinimized && <div className="ta-nav-section-title">Workspaces</div>}
+          {!effectiveMinimized && <div className="ta-nav-section-title">Workspaces</div>}
           <div className="ta-workspace-card">
             {allowedWorkspaces.map(w => {
               const Icon = w.icon;
@@ -1015,11 +1151,11 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
           </div>
 
           {navSections.map(group => {
-            const isGroupCollapsed = !isMinimized && !!collapsedSections[group.section];
+            const isGroupCollapsed = !effectiveMinimized && !!collapsedSections[group.section];
             const hasActiveItem = group.items.some(i => i.key === screen);
             return (
               <div key={group.section} className="ta-nav-group">
-                {group.section !== "Navigation" && !isMinimized ? (
+                {group.section !== "Navigation" && !effectiveMinimized ? (
                   <div
                     className={`ta-group-header ${hasActiveItem ? "has-active" : ""}`}
                     onClick={() => toggleSection(group.section)}
@@ -1029,7 +1165,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
                     {isGroupCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
                   </div>
                 ) : (
-                  !isMinimized && <div className="ta-nav-section-title">{group.section}</div>
+                  !effectiveMinimized && <div className="ta-nav-section-title">{group.section}</div>
                 )}
                 {!isGroupCollapsed && (
                   <div className="ta-group-items">
@@ -1068,7 +1204,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
             style={{ cursor: "pointer" }}
           >
             {isDarkTheme ? <Sun size={16} color="#FBBF24" /> : <Moon size={16} color="var(--text-2)" />}
-            {!isMinimized && <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>}
+            {!effectiveMinimized && <span>{isDarkTheme ? "Light Theme" : "Dark Theme"}</span>}
           </div>
 
           <button
@@ -1088,7 +1224,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
             >
               <Repeat size={16} />
               <span>Switch Dashboard</span>
-              {!isMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
+              {!effectiveMinimized && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
             </div>
           )}
 
@@ -1103,7 +1239,7 @@ export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen
             style={{ color: "var(--danger)", cursor: "pointer" }}
           >
             <LogOut size={16} />
-            {!isMinimized && <span>Sign Out</span>}
+            {!effectiveMinimized && <span>Sign Out</span>}
           </div>
         </div>
       </aside>
@@ -1345,7 +1481,20 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
     <>
       <div className="ta-topbar">
         <div className="ta-topbar-left">
-          <button className="ta-menu-btn" onClick={openMenu} aria-label="Open menu"><Menu size={20} /></button>
+          <button
+            type="button"
+            className="ta-menu-btn"
+            onClick={openMenu}
+            aria-label="Open menu"
+            style={{
+              color: "var(--text)",
+              background: "var(--surface)",
+              border: "1.5px solid var(--border)",
+              boxShadow: "0 1px 3px rgba(15,23,42,0.06)"
+            }}
+          >
+            <Menu size={22} color="var(--text)" strokeWidth={2.3} />
+          </button>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div className="ta-h1">{title}</div>
             {sub && <div className="ta-sub">{sub}</div>}
@@ -1455,11 +1604,24 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
           {/* Mobile-only "more" menu */}
           <div ref={moreMenuRef} className="ta-header-mobile-only" style={{ position: "relative" }}>
             <button
-              style={{ width: 38, height: 38, padding: 0, borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              type="button"
+              style={{
+                width: 38,
+                height: 38,
+                padding: 0,
+                borderRadius: 10,
+                border: "1.5px solid var(--border)",
+                background: "var(--surface)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: "var(--text)"
+              }}
               onClick={() => setIsMoreMenuOpen(v => !v)}
               aria-label="More options"
             >
-              <MoreVertical size={18} color="var(--text-2)" />
+              <MoreVertical size={20} color="var(--text)" />
             </button>
             {isMoreMenuOpen && (
               <>
@@ -1467,7 +1629,26 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
                   style={{ position: "fixed", inset: 0, zIndex: 240 }}
                   onClick={() => setIsMoreMenuOpen(false)}
                 />
-                <div className="ta-card anim-slide-down" style={{ position: "absolute", top: 46, right: 0, width: 230, padding: "8px 6px", zIndex: 250, border: "1px solid var(--border)", background: "var(--surface)", boxShadow: "0 14px 36px -8px rgba(15,23,42,0.3)" }}>
+                <div
+                  className="ta-dropdown-card anim-slide-down"
+                  style={{
+                    position: "absolute",
+                    top: 46,
+                    right: 0,
+                    zIndex: 250
+                  }}
+                >
+                  <div
+                    className="ta-dropdown-item ta-row ta-gap8"
+                    style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
+                    onClick={() => {
+                      setIsMoreMenuOpen(false);
+                      openMenu?.();
+                    }}
+                  >
+                    <Menu size={16} />
+                    <span>Open Navigation</span>
+                  </div>
                   <div
                     className="ta-dropdown-item ta-row ta-gap8"
                     style={{ padding: "10px 12px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 600 }}
@@ -1671,3 +1852,70 @@ export function exportRowsAsCsv(filename, rows) {
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
+
+export function PlatformMobileBottomNav({ workspace = "admin", screen, setScreen, openMenu, isOwner = false }) {
+  let items = [];
+
+  if (isOwner) {
+    items = [
+      { key: "overview", label: "Overview", icon: LayoutDashboard },
+      { key: "orgs", label: "Orgs", icon: Building2 },
+      { key: "tracks", label: "Tracks", icon: BookOpen },
+      { key: "settings", label: "Settings", icon: Settings },
+      { key: "menu", label: "More", icon: Menu, isMenu: true },
+    ];
+  } else if (workspace === "mentor") {
+    items = [
+      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { key: "mentees", label: "Mentees", icon: Users },
+      { key: "schedule", label: "Schedule", icon: Calendar },
+      { key: "messages", label: "Messages", icon: MessageSquare },
+      { key: "menu", label: "More", icon: Menu, isMenu: true },
+    ];
+  } else if (workspace === "manager") {
+    items = [
+      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { key: "workforce", label: "Workforce", icon: Briefcase },
+      { key: "menu", label: "More", icon: Menu, isMenu: true },
+    ];
+  } else {
+    // Admin workspace
+    items = [
+      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { key: "people", label: "People", icon: Users },
+      { key: "content", label: "Courses", icon: BookOpen },
+      { key: "cohorts", label: "Cohorts", icon: GraduationCap },
+      { key: "menu", label: "More", icon: Menu, isMenu: true },
+    ];
+  }
+
+  return (
+    <nav className="ta-bottom-nav" aria-label="Platform Mobile Navigation">
+      {items.map((item) => {
+        const Icon = item.icon;
+        const isActive = !item.isMenu && screen === item.key;
+        return (
+          <button
+            key={item.key}
+            type="button"
+            className={`ta-bottom-nav-item ${isActive ? "active" : ""}`}
+            onClick={() => {
+              if (item.isMenu) {
+                openMenu?.();
+              } else {
+                setScreen?.(item.key);
+              }
+            }}
+            aria-label={item.label}
+          >
+            <div className="ta-bottom-nav-icon">
+              <Icon size={19} strokeWidth={isActive ? 2.5 : 1.9} />
+            </div>
+            <span className="ta-bottom-nav-label">{item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+

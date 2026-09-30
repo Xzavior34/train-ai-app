@@ -227,16 +227,6 @@ export function AIQuizScreen({
               </div>
             )}
 
-            <button
-              className="tai-btn tai-btn-outline tai-btn-sm"
-              onClick={onRequestCredits}
-              style={{
-                borderRadius: 8, fontWeight: 700, fontSize: 12,
-                display: "inline-flex", alignItems: "center", gap: 5
-              }}
-            >
-              Request Credits
-            </button>
 
             <button
               className="tai-btn tai-btn-primary tai-btn-sm"
