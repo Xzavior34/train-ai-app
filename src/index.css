@@ -97,6 +97,8 @@ html.dark, body.dark, .dark {
 
 html {
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   font-family: var(--font-sans);
   width: 100%;
   min-height: 100%;
@@ -108,6 +110,8 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   color: var(--text);
   background: var(--bg-app);
   width: 100%;
@@ -118,6 +122,12 @@ body {
   overflow-x: clip;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
+}
+
+button, a, nav, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 #root {
