@@ -18,6 +18,7 @@ import {
   createInvitation,
 } from "../src/lib/api/platform.js";
 
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ANON_KEY;
 

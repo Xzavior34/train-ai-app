@@ -44,19 +44,29 @@ const DEFAULT_ORG_DB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 const DEFAULT_SARA_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const DEFAULT_SARA_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6Implb2JnZ3J0eGV5Ynh2bHdweHZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzMyNjM1NywiZXhwIjoyMTAyOTAyMzU3fQ.uDCs11c1ti9xGopgIcrVAGALgvjrhYSLMZyu5A_F-_Y";
 
+function getEnvVal(key) {
+  if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env[key]) {
+    return import.meta.env[key];
+  }
+  if (typeof process !== "undefined" && process.env && process.env[key]) {
+    return process.env[key];
+  }
+  return "";
+}
+
 function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = [], fallbackKeyEnvs = [], defaultUrl = "", defaultKey = "") {
-  let url = (import.meta.env[primaryUrlEnv] || "").trim();
-  let anonKey = (import.meta.env[primaryKeyEnv] || "").trim();
+  let url = (getEnvVal(primaryUrlEnv) || "").trim();
+  let anonKey = (getEnvVal(primaryKeyEnv) || "").trim();
 
   if (!url) {
     for (const fb of (Array.isArray(fallbackUrlEnvs) ? fallbackUrlEnvs : [fallbackUrlEnvs])) {
-      const val = (import.meta.env[fb] || "").trim();
+      const val = (getEnvVal(fb) || "").trim();
       if (val) { url = val; break; }
     }
   }
   if (!anonKey) {
     for (const fb of (Array.isArray(fallbackKeyEnvs) ? fallbackKeyEnvs : [fallbackKeyEnvs])) {
-      const val = (import.meta.env[fb] || "").trim();
+      const val = (getEnvVal(fb) || "").trim();
       if (val) { anonKey = val; break; }
     }
   }
