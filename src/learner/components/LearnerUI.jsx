@@ -502,16 +502,16 @@ export const TOKENS = `
      RESPONSIVE MEDIA QUERIES (AT END OF STYLESHEET TO GUARANTEE CASCADE)
      ========================================================================= */
   @media (min-width: 900px) {
-    .tai-toast { bottom: 32px; }
+    .tai-toast { bottom: 24px; }
     .tai-navbar { display: none !important; }
-    .tai-body { padding: 28px clamp(24px, 2.5vw, 40px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+    .tai-body { padding: 20px clamp(16px, 2.2vw, 32px) 24px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
   }
   @media (max-width: 899px) {
     .tai-header-search { display: none; }
     .tai-desktop-only { display: none !important; }
-    .tai-global-header { padding: 0 14px; height: 54px; width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-global-header { padding: 0 14px; height: 52px; width: 100%; max-width: 100%; box-sizing: border-box; }
     .tai-header-brand img, .tai-header-logo { height: 20px !important; }
-    .tai-body { padding: 14px 14px calc(88px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
+    .tai-body { padding: 14px 12px calc(76px + env(safe-area-inset-bottom)); width: 100%; max-width: 100%; box-sizing: border-box; }
     .tai-streak-pill, .tai-credits-pill { padding: 4px 7px; font-size: 11px; gap: 3px; }
     .tai-header-right { gap: 6px; }
     .tai-dashboard-grid { display: flex !important; flex-direction: column !important; gap: 14px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }

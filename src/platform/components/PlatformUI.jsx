@@ -247,21 +247,22 @@ export const TOKENS = `
   .ta-topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .ta-search { display:flex; align-items:center; gap:8px; background: var(--surface-3); border: 1px solid var(--border); border-radius: 10px; padding: 6px 12px; width: clamp(140px, 15vw, 210px); color: var(--text-3); font-size: 12.5px; transition: all .15s ease; flex-shrink: 0; }
   .ta-search:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); background: #fff; }
-  .ta-content { padding: 22px clamp(14px, 2vw, 32px) 72px; max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+  .ta-content { padding: 18px clamp(14px, 2vw, 28px) calc(76px + env(safe-area-inset-bottom)); max-width: 1560px; margin: 0 auto; width: 100%; box-sizing: border-box; }
   .ta-h1 { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); line-height: 1.2; }
   .ta-sub { font-size: 11.5px; color: var(--text-2); margin: 2px 0 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
   @media (min-width: 900px) {
     .ta-menu-btn, .ta-sidebar-close { display: none !important; }
     .ta-header-mobile-only { display: none !important; }
     .ta-bottom-nav { display: none !important; }
+    .ta-content { padding: 20px clamp(16px, 2.2vw, 32px) 24px; }
   }
   .ta-hero-banner {
-    border-radius: 20px;
-    background: linear-gradient(135deg, rgba(15,23,42,0.94) 0%, rgba(30,27,75,0.88) 100%);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(15,23,42,0.96) 0%, rgba(30,27,75,0.92) 100%);
     color: #FFFFFF;
-    padding: clamp(22px, 2.2vw, 30px) clamp(24px, 2.5vw, 34px);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
-    border: 1px solid rgba(59, 130, 246, 0.4);
+    padding: clamp(18px, 1.8vw, 24px) clamp(20px, 2vw, 28px);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+    border: 1px solid rgba(59, 130, 246, 0.35);
     position: relative;
     overflow: hidden;
     width: 100%;
