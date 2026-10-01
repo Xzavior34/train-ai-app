@@ -70,17 +70,28 @@ export default function App() {
     }
     let cancelled = false;
     setMfaGate("checking");
+    const mfaTimeout = setTimeout(() => {
+      if (!cancelled) setMfaGate("clear");
+    }, 2500);
+
     getAuthenticatorAssuranceLevel()
       .then(({ currentLevel, nextLevel }) => {
         if (cancelled) return;
+        clearTimeout(mfaTimeout);
         setMfaGate(currentLevel === "aal1" && nextLevel === "aal2" ? "required" : "clear");
       })
       .catch(() => {
         // Fail open on transient errors so a user is never trapped outside
         // their own account because an AAL lookup hiccuped.
-        if (!cancelled) setMfaGate("clear");
+        if (!cancelled) {
+          clearTimeout(mfaTimeout);
+          setMfaGate("clear");
+        }
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      clearTimeout(mfaTimeout);
+    };
   }, [loading, session?.user?.id, isDemoMode]);
 
   // Apply persisted accessibility and theme preferences immediately on boot

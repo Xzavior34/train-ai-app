@@ -1,6 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 export default function LoadingScreen({ message = "Preparing your workspace..." }) {
+  const [showRecovery, setShowRecovery] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowRecovery(true);
+    }, 4500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleClearCache = () => {
+    if (typeof window !== "undefined") {
+      if (typeof window.__trainai_clear_cache_and_reload === "function") {
+        window.__trainai_clear_cache_and_reload(true);
+      } else {
+        try {
+          if ("caches" in window) {
+            caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+          }
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+          }
+          sessionStorage.clear();
+        } catch {}
+        window.location.replace("/?_nocache=" + Date.now());
+      }
+    }
+  };
+
   return (
     <div style={styles.container}>
       <style>{`
@@ -39,6 +67,39 @@ export default function LoadingScreen({ message = "Preparing your workspace..." 
         <div style={styles.message}>
           {message}
         </div>
+
+        {/* Fail-safe cache clear action if loading exceeds expected duration */}
+        {showRecovery && (
+          <div style={{ marginTop: 24, textAlign: "center", animation: "fadeIn 0.3s ease" }}>
+            <p style={{ fontSize: 12, color: "#94A3B8", margin: "0 0 8px" }}>
+              Taking longer than usual?
+            </p>
+            <button
+              onClick={handleClearCache}
+              style={{
+                background: "rgba(37, 99, 235, 0.1)",
+                color: "#2563EB",
+                border: "1px solid rgba(37, 99, 235, 0.3)",
+                padding: "6px 14px",
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.15s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#2563EB";
+                e.currentTarget.style.color = "#FFFFFF";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(37, 99, 235, 0.1)";
+                e.currentTarget.style.color = "#2563EB";
+              }}
+            >
+              Clear Cache &amp; Refresh
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

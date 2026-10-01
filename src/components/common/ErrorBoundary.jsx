@@ -20,6 +20,33 @@ export default class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error("ErrorBoundary caught an error:", error, errorInfo);
     this.setState({ errorInfo });
+
+    // Auto-recover from chunk loading / stale cache errors
+    const errorMsg = String(error?.message || error || "").toLowerCase();
+    const isChunkOrCacheIssue =
+      errorMsg.includes("failed to fetch dynamically imported module") ||
+      errorMsg.includes("loading chunk") ||
+      errorMsg.includes("unexpected token '<'") ||
+      errorMsg.includes("mime type") ||
+      errorMsg.includes("importing a module script failed");
+
+    if (isChunkOrCacheIssue && typeof window !== "undefined") {
+      const lastReload = sessionStorage.getItem("trainai_eb_reload_ts");
+      const now = Date.now();
+      if (!lastReload || now - parseInt(lastReload, 10) > 20000) {
+        sessionStorage.setItem("trainai_eb_reload_ts", String(now));
+        if (typeof window.__trainai_clear_cache_and_reload === "function") {
+          window.__trainai_clear_cache_and_reload(false);
+        } else {
+          try {
+            if ("caches" in window) {
+              caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+            }
+          } catch {}
+          window.location.replace(window.location.pathname + "?_nocache=" + now);
+        }
+      }
+    }
   }
 
   handleResetState = () => {
@@ -44,15 +71,23 @@ export default class ErrorBoundary extends React.Component {
     }
   };
 
-  handleHardReset = () => {
-    if (window.confirm("This will clear temporary browser cache and reload the application. Continue?")) {
+  handleHardReset = async () => {
+    if (window.confirm("This will clear all temporary browser cache, service workers, and reload the application. Continue?")) {
       try {
+        if ("caches" in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map((n) => caches.delete(n)));
+        }
+        if ("serviceWorker" in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((r) => r.unregister()));
+        }
         localStorage.clear();
         sessionStorage.clear();
       } catch (e) {
         console.error("Failed to clear storage:", e);
       }
-      window.location.href = "/";
+      window.location.replace("/?_reset=" + Date.now());
     }
   };
 

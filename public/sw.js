@@ -1,31 +1,17 @@
-// Hand-written service worker (no vite-plugin-pwa/workbox - deliberately, see
-// project notes on avoiding new build-tool deps where possible). Originally
-// added just for push notifications; this pass adds real offline resilience
-// on top of the same file without touching the push/notificationclick
-// handlers below, which usePushNotifications.js already depends on.
-//
+// Hand-written service worker (no vite-plugin-pwa/workbox)
 // Strategy:
-//  - Navigation requests (HTML page loads): network-first, falling back to
-//    the cached app shell, and finally to a static offline.html page if
-//    nothing is cached yet (e.g. very first visit was interrupted).
-//  - Same-origin static assets (JS/CSS bundle files, images, fonts, the
-//    manifest): cache-first, so a repeat visit loads instantly and keeps
-//    working offline, with a background revalidation fetch to keep the
-//    cache fresh for next time.
-//  - Cross-origin requests (Supabase REST/Auth/Storage/Functions calls,
-//    any CDN) are left completely alone - intercepting and caching live API
-//    responses would risk serving stale data as if it were current, which
-//    is worse than just letting those requests fail naturally when offline.
-const CACHE_NAME = "trainai-pwa-v2";
+//  - Navigation requests (HTML page loads): Network-first with cached shell fallback
+//  - Static assets (JS/CSS/images/fonts): Cache-first / Network-first, NEVER return HTML for JS/CSS assets
+//  - Cross-origin requests: passed through untouched
+//  - Push notifications: Web Push & OneSignal support
+
+const CACHE_NAME = "trainai-pwa-v3";
 const OFFLINE_URL = "/offline.html";
 const ASSETS_TO_CACHE = ["/", "/index.html", "/manifest.json", OFFLINE_URL];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Individually tolerant of a single missing asset (e.g. offline.html
-      // not deployed yet) instead of cache.addAll(), which rejects the
-      // whole batch if any one request 404s.
       return Promise.all(
         ASSETS_TO_CACHE.map((url) => cache.add(url).catch(() => {}))
       );
@@ -45,6 +31,19 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data) {
+    if (event.data.type === "SKIP_WAITING") {
+      self.skipWaiting();
+    }
+    if (event.data.type === "CLEAR_CACHE") {
+      caches.keys().then((keys) => {
+        return Promise.all(keys.map((k) => caches.delete(k)));
+      });
+    }
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -55,8 +54,8 @@ self.addEventListener("fetch", (event) => {
   } catch {
     return;
   }
-  // Only handle same-origin requests - everything else (Supabase, fonts CDN,
-  // etc.) passes straight through to the network untouched.
+
+  // Only handle same-origin requests - everything else (Supabase, CDN, etc.) passes straight through
   if (url.origin !== self.location.origin) return;
 
   const isNavigation =
@@ -82,32 +81,45 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for static assets: JS/CSS bundle files, images, fonts, the
-  // manifest, etc.
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Revalidate in the background so the next load picks up changes,
-        // without making this load wait on the network.
-        fetch(request)
+  // Static assets: JS/CSS bundle files, images, fonts, manifest
+  // Note: NEVER return OFFLINE_URL (HTML) for JS/CSS assets, as doing so causes fatal script MIME/syntax errors and blank screens!
+  const isHashedAsset = url.pathname.startsWith("/assets/");
+
+  if (isHashedAsset) {
+    // Hashed immutable assets: Cache-first
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(request)
           .then((networkResponse) => {
             if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, networkResponse));
+              const copy = networkResponse.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
             }
+            return networkResponse;
           })
-          .catch(() => {/* offline - cached copy already served below */});
-        return cachedResponse;
-      }
-      return fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const copy = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match(OFFLINE_URL));
-    })
+          .catch(() => new Response("Asset not available offline", { status: 404, statusText: "Not Found", headers: { "Content-Type": "text/plain" } }));
+      })
+    );
+    return;
+  }
+
+  // Non-hashed assets (e.g. /manifest.json, /logo.png, etc.): Network-first with cache fallback
+  event.respondWith(
+    fetch(request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const copy = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          return new Response("Resource unavailable offline", { status: 503, statusText: "Unavailable", headers: { "Content-Type": "text/plain" } });
+        });
+      })
   );
 });
 
