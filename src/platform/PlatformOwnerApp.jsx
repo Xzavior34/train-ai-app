@@ -192,7 +192,7 @@ export default function PlatformOwnerApp({
                     orgSelector={orgSelector}
                     activeProject={activeProject}
                     projectSessionStatus={projectSessionStatus}
-                    onSwitchProject={(key) => { setActiveSupabaseProject(key); setSuperAdminSelectedOrgId(""); window.location.reload(); }}
+                    onSwitchProject={(key) => { setActiveSupabaseProject(key); setSelectedOrgId(""); window.location.reload(); }}
                   />
                 )}
                 {screen === "tracks" && <TracksScreen orgSelector={orgSelector} />}

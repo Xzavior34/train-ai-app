@@ -30,6 +30,12 @@ export function CohortScreen({
 
   const resolvedCohort = propCohort || fallbackCohortQuery.data?.cohort || cohortMembershipQuery?.data?.cohort || null;
 
+  const activityTodayQuery = useSupabaseQuery(async () => {
+    if (!resolvedCohort?.id) return 0;
+    return fetchCohortActivityToday(resolvedCohort.id);
+  }, [resolvedCohort?.id]);
+  const activityToday = activityTodayQuery?.data || 0;
+
   if (cohortMembershipQuery?.loading && fallbackCohortQuery?.loading && !resolvedCohort) {
     return (
       <div>
