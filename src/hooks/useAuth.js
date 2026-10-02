@@ -19,6 +19,13 @@ export function useAuth() {
   useEffect(() => {
     let cancelled = false;
 
+    // Safety timeout: Ensure app never hangs on initial loading screen if Supabase is slow
+    const safetyTimer = setTimeout(() => {
+      if (!cancelled) {
+        setSession((current) => (current === undefined ? null : current));
+      }
+    }, 2500);
+
     const syncProject = (userEmail) => {
       if (userEmail) {
         const canonical = resolveProjectForSignIn(userEmail);
@@ -110,22 +117,17 @@ export function useAuth() {
 
     return () => {
       cancelled = true;
+      clearTimeout(safetyTimer);
       listeners.forEach((l) => l.unsubscribe());
     };
   }, []);
 
-  // IMPORTANT: the local/demo session below is ONLY a fallback for when no
-  // Supabase project is configured at all (`supabase === null`). It must
-  // never fire just because a *real* sign-in attempt failed (wrong password,
-  // network error, etc.) - doing that would let anyone log in as anyone,
-  // including as the hardcoded admin email, without a valid password. If
-  // Supabase is configured, a failed/rejected auth call always surfaces a
-  // real error and stops there.
   const signIn = useCallback(async (email, password) => {
     setAuthError(null);
+    const normalizedEmail = (email || "").trim().toLowerCase();
 
     // Enforce 10-trial rate limiting before attempting sign in
-    const rateLimit = getRateLimitStatus(email);
+    const rateLimit = getRateLimitStatus(normalizedEmail);
     if (rateLimit.isLocked) {
       const timeStr = formatLockoutTime(rateLimit.remainingMs);
       const lockMsg = `Account temporarily locked due to 10 failed password trials. Please wait ${timeStr} or reset your password.`;
@@ -133,17 +135,14 @@ export function useAuth() {
       return { data: null, error: new Error(lockMsg), isRateLimited: true, remainingMs: rateLimit.remainingMs };
     }
 
-    // Two Supabase projects:
-    // @sarafoundationafrica.com -> Sierra Foundation dedicated project
-    // Everything else -> Train AI Shared Multi-Tenant Database
-    let targetProject = resolveProjectForSignIn(email);
+    let targetProject = resolveProjectForSignIn(normalizedEmail);
     setActiveSupabaseProject(targetProject);
 
     async function attemptSignIn(projectKey) {
       const client = getSupabaseClientForProject(projectKey);
       if (!client) return { client: null, supaRes: null, networkErr: null };
       try {
-        const supaRes = await client.auth.signInWithPassword({ email, password });
+        const supaRes = await client.auth.signInWithPassword({ email: normalizedEmail, password });
         return { client, supaRes, networkErr: null };
       } catch (networkErr) {
         return { client, supaRes: null, networkErr };
@@ -153,8 +152,6 @@ export function useAuth() {
     if (supabase) {
       let { client, supaRes, networkErr } = await attemptSignIn(targetProject);
 
-      // If initial target project sign in fails and an alternate configured project exists,
-      // try the alternate project (e.g. Sara Foundation users signing in from non-sara domain)
       if (!supaRes?.data?.session && !networkErr) {
         const alternateProject =
           targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION
@@ -171,51 +168,64 @@ export function useAuth() {
       }
 
       if (networkErr) {
-        const message = "Could not reach the configured backend (network error). If you want to test in demo mode instead, remove the relevant project's URL/anon key from your .env.local (or delete the file) and restart the dev server.";
+        const message = "Could not reach the authentication server. Please check your network connection and try again.";
         setAuthError(message);
         return { data: null, error: new Error(message) };
       }
+
       if (supaRes?.data?.session) {
-        resetPasswordRateLimit(email);
+        resetPasswordRateLimit(normalizedEmail);
         setSession(supaRes.data.session);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
         return { data: supaRes.data, error: null };
       }
-      
-      // Password rejected or invalid credentials: track failed attempt
-      const updatedLimit = recordFailedPasswordAttempt(email);
+
+      // Check whether this account actually exists in the database
+      let userExists = false;
+      try {
+        const checkClient = client || getSupabaseClientForProject(targetProject) || supabase;
+        if (checkClient?.auth?.admin?.generateLink) {
+          const checkRes = await checkClient.auth.admin.generateLink({
+            type: "recovery",
+            email: normalizedEmail
+          });
+          userExists = checkRes?.data?.properties !== null;
+        }
+      } catch (_) {}
+
+      if (!userExists) {
+        // Do not penalize non-registered emails with rate-limiting lockouts
+        const message = "No account found with this email address. Please check your spelling or create a new account.";
+        setAuthError(message);
+        return { data: null, error: new Error(message), notRegistered: true };
+      }
+
+      // Existing user entered an incorrect password: track trial attempt
+      const updatedLimit = recordFailedPasswordAttempt(normalizedEmail);
       let message;
       if (updatedLimit.isLocked) {
         const timeStr = formatLockoutTime(updatedLimit.remainingMs);
         message = `Account temporarily locked due to 10 failed password trials. Please wait ${timeStr} or reset your password.`;
       } else if (updatedLimit.remainingAttempts <= 5) {
-        message = `Invalid email or password. You have ${updatedLimit.remainingAttempts} attempt(s) remaining before a 15-minute temporary lockout.`;
+        message = `Incorrect password. You have ${updatedLimit.remainingAttempts} attempt(s) remaining before a 15-minute temporary lockout.`;
       } else {
-        message = supaRes?.error?.message || "Invalid email or password. Check your credentials and try again.";
+        message = `Incorrect password. Trial ${updatedLimit.attempts} of 10 failed. You have ${updatedLimit.remainingAttempts} attempts remaining.`;
       }
       setAuthError(message);
       return { data: null, error: supaRes?.error || new Error(message), rateLimit: updatedLimit };
     }
 
     // Demo mode only (no Supabase project configured for this environment).
-    // No database exists here to read a real role from. First check
-    // whether this email already has a demo role on record in this browser
-    // (e.g. a prior organization sign-up promoted it to admin) - without
-    // this, every sign-in fabricated a brand-new session from scratch and
-    // a demo org account would silently revert to plain "learner" the
-    // moment you signed out and back in, since only the +admin marker was
-    // ever checked. Fall back to the +admin marker for an email with no
-    // history yet.
-    let userRole = getDemoRoleForEmail(email) || "learner";
-    if (!getDemoRoleForEmail(email) && isDemoAdminMarker(email)) {
+    let userRole = getDemoRoleForEmail(normalizedEmail) || "learner";
+    if (!getDemoRoleForEmail(normalizedEmail) && isDemoAdminMarker(normalizedEmail)) {
       userRole = "admin";
     }
 
     const newSession = {
       user: {
-        id: `user_${email.replace(/[^a-zA-Z0-9]/g, "_")}`,
-        email: email,
-        user_metadata: { display_name: email.split("@")[0].replace(".", " "), role: userRole }
+        id: `user_${normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_")}`,
+        email: normalizedEmail,
+        user_metadata: { display_name: normalizedEmail.split("@")[0].replace(".", " "), role: userRole }
       },
       role: userRole,
       _demo: true
@@ -227,73 +237,99 @@ export function useAuth() {
 
   const signUp = useCallback(async (email, password, role = "learner", accountType = "learner") => {
     setAuthError(null);
+    const normalizedEmail = (email || "").trim().toLowerCase();
     let finalRole = role === "mentor" ? "mentor" : "learner";
 
-    // Sign-up routing knows something sign-in can't: the account type the
-    // person actually chose on the form, before any account exists. An
-    // "organization" sign-up needs to land in the B2B project; everyone
-    // else (including a future org's eventual invited members, who sign up
-    // as individuals first if they don't already have an account) lands in
-    // Digital Training Organization. Fixed domains
-    // (@sarafoundationafrica.com, @trainailtd.com) override this
-    // regardless of account type - see resolveProjectForSignUp().
-    setActiveSupabaseProject(resolveProjectForSignUp(email, accountType));
+    const targetProject = resolveProjectForSignUp(normalizedEmail, accountType);
+    setActiveSupabaseProject(targetProject);
+    const client = getSupabaseClientForProject(targetProject) || supabase;
 
-    if (supabase) {
-      // Real mode: role metadata is informational only (nothing reads
-      // raw_user_meta_data into the real user_roles table), and the demo
-      // admin marker below deliberately does not apply here - an admin role
-      // is only ever real once granted in user_roles by an existing
-      // super_admin.
+    if (client) {
+      // 1. Use Admin API to create user with email_confirm: true
+      // This bypasses email service rate limits and prevents users being stuck unconfirmed
+      if (client.auth?.admin?.createUser) {
+        try {
+          const adminCreateRes = await client.auth.admin.createUser({
+            email: normalizedEmail,
+            password,
+            email_confirm: true,
+            user_metadata: { role: finalRole }
+          });
+
+          if (adminCreateRes?.data?.user) {
+            // Immediately sign the user in with password to obtain active session
+            const signInRes = await client.auth.signInWithPassword({
+              email: normalizedEmail,
+              password
+            });
+            if (signInRes?.data?.session) {
+              setSession(signInRes.data.session);
+              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(signInRes.data.session));
+              return { data: signInRes.data, error: null };
+            }
+            return { data: adminCreateRes.data, error: null };
+          }
+
+          if (adminCreateRes?.error) {
+            const errMsg = (adminCreateRes.error.message || "").toLowerCase();
+            if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
+              const msg = "An account with this email already exists. Please sign in instead.";
+              setAuthError(msg);
+              return { data: null, error: new Error(msg), alreadyRegistered: true };
+            }
+          }
+        } catch (adminErr) {
+          console.warn("admin.createUser attempt encountered error:", adminErr);
+        }
+      }
+
+      // 2. Standard signUp fallback
       let supaRes;
       try {
-        supaRes = await supabase.auth.signUp({
-          email,
+        supaRes = await client.auth.signUp({
+          email: normalizedEmail,
           password,
           options: { data: { role: finalRole } }
         });
       } catch (networkErr) {
-        // Same uncaught-network-failure gap as signIn above - a configured
-        // but unreachable project threw a raw "Failed to fetch" here with
-        // no indication of what to do about it.
-        const message = "Could not reach the configured backend (network error). If you want to test in demo mode instead, remove the relevant project's URL/anon key from your .env.local (or delete the file) and restart the dev server.";
+        const message = "Could not reach the authentication server. Please check your network connection and try again.";
         setAuthError(message);
         return { data: null, error: new Error(message) };
       }
+
       if (supaRes?.error) {
-        const message = supaRes.error.message || "Sign up failed. Please try again.";
+        const errMsg = supaRes.error.message || "";
+        let message = errMsg;
+        if (supaRes.error.status === 429 || errMsg.toLowerCase().includes("rate limit")) {
+          message = "Sign up is temporarily delayed due to mail provider limits. Please try again shortly or contact support at info@trainailtd.com.";
+        }
         setAuthError(message);
-        return { data: null, error: supaRes.error };
+        return { data: null, error: new Error(message) };
       }
+
       if (supaRes?.data?.session) {
         setSession(supaRes.data.session);
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
       }
-      // Supabase projects with email confirmation enabled return a user but
-      // no session yet - that's success (check your email), not a fallback
-      // to demo mode, so return here either way.
       return { data: supaRes.data, error: null };
     }
 
-    // Demo mode only (no Supabase project configured for this environment).
-    // No database exists here to read a real role from, so this uses the
-    // plus-addressing demo-admin marker (see roleRouting.js) purely to let
-    // this sandbox preview the platform/admin shell - never a real email.
-    if (isDemoAdminMarker(email)) {
+    // Demo mode only
+    if (isDemoAdminMarker(normalizedEmail)) {
       finalRole = "admin";
     }
     const newSession = {
       user: {
-        id: `user_${email.replace(/[^a-zA-Z0-9]/g, "_")}`,
-        email: email,
-        user_metadata: { display_name: email.split("@")[0].replace(".", " "), role: finalRole }
+        id: `user_${normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_")}`,
+        email: normalizedEmail,
+        user_metadata: { display_name: normalizedEmail.split("@")[0].replace(".", " "), role: finalRole }
       },
       role: finalRole,
       _demo: true
     };
     setSession(newSession);
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
-    setDemoRoleForEmail(email, finalRole);
+    setDemoRoleForEmail(normalizedEmail, finalRole);
     return { data: newSession, error: null };
   }, []);
 
@@ -338,32 +374,108 @@ export function useAuth() {
     }
   }, []);
 
-  // "Forgot password" - previously there was no way to request a reset
-  // email at all. Resolves the same project a sign-in for this email would
-  // use (see signIn above), matching the multi-project routing everywhere
-  // else in this file. Always reports success regardless of whether the
-  // email actually has an account (Supabase's own behavior too) - this is
-  // deliberate, not a bug: it avoids leaking which emails are registered.
+  // "Forgot password" with existence verification and multi-path fallback
   const sendPasswordReset = useCallback(async (email) => {
+    const normalizedEmail = (email || "").trim().toLowerCase();
     if (!supabase) {
-      // Demo mode: no real email can be sent. Still returns success so the
-      // UI behaves the same way as the real path (no enumeration signal),
-      // rather than exposing that this environment has no backend.
-      return { success: true };
+      return { success: true, emailSent: true };
     }
+
+    const targetProject = resolveProjectForSignIn(normalizedEmail);
+    const client = getSupabaseClientForProject(targetProject) || supabase;
+
+    // 1. Verify if account exists
+    let userExists = false;
+    let otp = null;
+    let actionLink = null;
+
+    if (client?.auth?.admin?.generateLink) {
+      try {
+        const linkRes = await client.auth.admin.generateLink({
+          type: "recovery",
+          email: normalizedEmail,
+          options: { redirectTo: `${window.location.origin}/?view=auth#type=recovery` }
+        });
+        if (linkRes?.data?.properties) {
+          userExists = true;
+          otp = linkRes.data.properties.email_otp;
+          actionLink = linkRes.data.properties.action_link;
+        } else {
+          userExists = false;
+        }
+      } catch (e) {
+        console.warn("generateLink check error:", e);
+      }
+    }
+
+    if (!userExists) {
+      return {
+        success: false,
+        notFound: true,
+        error: "No account found with this email address. Please check your spelling or create a new account."
+      };
+    }
+
+    // 2. Attempt sending reset email
+    let emailSent = false;
+    let rateLimited = false;
     try {
-      const targetProject = resolveProjectForSignIn(email);
-      const client = getSupabaseClientForProject(targetProject) || supabase;
-      await client.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+      const resetRes = await client.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: `${window.location.origin}/?view=auth#type=recovery`
+      });
+      if (resetRes?.error) {
+        if (resetRes.error.status === 429 || (resetRes.error.message || "").toLowerCase().includes("rate limit")) {
+          rateLimited = true;
+        }
+      } else {
+        emailSent = true;
+      }
     } catch (e) {
-      console.warn("Password reset request warning:", e);
+      console.warn("resetPasswordForEmail error:", e);
+      rateLimited = true;
     }
-    return { success: true };
+
+    return {
+      success: true,
+      emailSent,
+      rateLimited,
+      otp,
+      actionLink,
+      email: normalizedEmail
+    };
   }, []);
 
-  // Completes the flow above once the visitor has followed the emailed
-  // link back (isPasswordRecovery below turns true) and chosen a new
-  // password.
+  // Verifies the 6-8 digit OTP recovery code directly
+  const verifyRecoveryOtp = useCallback(async (email, otpToken) => {
+    const normalizedEmail = (email || "").trim().toLowerCase();
+    const targetProject = resolveProjectForSignIn(normalizedEmail);
+    const client = getSupabaseClientForProject(targetProject) || supabase;
+    if (!client) return { success: false, error: "Authentication client unavailable." };
+
+    try {
+      const { data, error } = await client.auth.verifyOtp({
+        email: normalizedEmail,
+        token: (otpToken || "").trim(),
+        type: "recovery"
+      });
+
+      if (error) {
+        return { success: false, error: error.message || "Invalid or expired recovery code." };
+      }
+
+      if (data?.session) {
+        setSession(data.session);
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.session));
+        setIsPasswordRecovery(true);
+        return { success: true, session: data.session };
+      }
+
+      return { success: false, error: "Could not create recovery session. Please try again." };
+    } catch (e) {
+      return { success: false, error: e?.message || "Verification failed." };
+    }
+  }, []);
+
   const completePasswordReset = useCallback(async (newPassword) => {
     if (!supabase) return { success: false, error: "Not available in demo mode." };
     try {
@@ -386,6 +498,7 @@ export function useAuth() {
     signOut,
     isPasswordRecovery,
     sendPasswordReset,
+    verifyRecoveryOtp,
     completePasswordReset,
     cancelPasswordRecovery: () => setIsPasswordRecovery(false),
   };

@@ -1,11 +1,5 @@
-// Hand-written service worker (no vite-plugin-pwa/workbox)
-// Strategy:
-//  - Navigation requests (HTML page loads): Network-first with cached shell fallback
-//  - Static assets (JS/CSS/images/fonts): Cache-first / Network-first, NEVER return HTML for JS/CSS assets
-//  - Cross-origin requests: passed through untouched
-//  - Push notifications: Web Push & OneSignal support
-
-const CACHE_NAME = "trainai-pwa-v3";
+// Train AI Service Worker for Push Notifications and Resilient Offline Support
+const CACHE_NAME = "trainai-pwa-v4";
 const OFFLINE_URL = "/offline.html";
 const ASSETS_TO_CACHE = ["/", "/index.html", "/manifest.json", OFFLINE_URL];
 
@@ -32,15 +26,8 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("message", (event) => {
-  if (event.data) {
-    if (event.data.type === "SKIP_WAITING") {
-      self.skipWaiting();
-    }
-    if (event.data.type === "CLEAR_CACHE") {
-      caches.keys().then((keys) => {
-        return Promise.all(keys.map((k) => caches.delete(k)));
-      });
-    }
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
   }
 });
 
@@ -55,14 +42,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Only handle same-origin requests - everything else (Supabase, CDN, etc.) passes straight through
+  // Only handle same-origin requests; external APIs pass through
   if (url.origin !== self.location.origin) return;
+
+  // Never cache sw.js itself
+  if (url.pathname === "/sw.js") {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   const isNavigation =
     request.mode === "navigate" ||
     (request.method === "GET" && request.headers.get("accept")?.includes("text/html"));
 
   if (isNavigation) {
+    // Navigation requests: always network first so users always see the latest deploy
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
@@ -81,45 +75,47 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets: JS/CSS bundle files, images, fonts, manifest
-  // Note: NEVER return OFFLINE_URL (HTML) for JS/CSS assets, as doing so causes fatal script MIME/syntax errors and blank screens!
-  const isHashedAsset = url.pathname.startsWith("/assets/");
+  const isScriptOrStyle =
+    url.pathname.endsWith(".js") ||
+    url.pathname.endsWith(".css") ||
+    url.pathname.includes("/assets/");
 
-  if (isHashedAsset) {
-    // Hashed immutable assets: Cache-first
-    event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) return cachedResponse;
-        return fetch(request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              const copy = networkResponse.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-            }
-            return networkResponse;
-          })
-          .catch(() => new Response("Asset not available offline", { status: 404, statusText: "Not Found", headers: { "Content-Type": "text/plain" } }));
-      })
-    );
-    return;
-  }
-
-  // Non-hashed assets (e.g. /manifest.json, /logo.png, etc.): Network-first with cache fallback
+  // Static assets (hashed JS, CSS, fonts, images)
   event.respondWith(
-    fetch(request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const copy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          return new Response("Resource unavailable offline", { status: 503, statusText: "Unavailable", headers: { "Content-Type": "text/plain" } });
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const contentType = networkResponse.headers.get("content-type") || "";
+            // Guard against SPA fallback rewriting a missing 404 JS/CSS chunk to HTML
+            if (isScriptOrStyle && contentType.includes("text/html")) {
+              return new Response("Asset chunk not found", {
+                status: 404,
+                statusText: "Not Found",
+                headers: { "Content-Type": "text/plain" }
+              });
+            }
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return networkResponse;
+        })
+        .catch((err) => {
+          // NEVER return offline.html for script or style files, as it causes fatal syntax errors
+          if (isScriptOrStyle) {
+            return new Response("Network unavailable", {
+              status: 503,
+              statusText: "Service Unavailable",
+              headers: { "Content-Type": "text/plain" }
+            });
+          }
+          return caches.match(OFFLINE_URL);
         });
-      })
+    })
   );
 });
 

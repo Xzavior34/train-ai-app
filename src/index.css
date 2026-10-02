@@ -59,6 +59,20 @@
   --shadow-elevated: var(--glass-shadow-elevated);
 }
 
+/* Ensure clean white background on form inputs across all browsers and devices */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+  box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+  -webkit-text-fill-color: #0F172A !important;
+  caret-color: #0F172A !important;
+  background-color: #FFFFFF !important;
+}
+
 html.dark, body.dark, .dark {
   --bg-app: #0B0F19;
   --surface: #111827;

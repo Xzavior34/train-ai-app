@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock, KeyRound, HelpCircle, RefreshCw } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
 import { registerOrganization, joinDefaultOrganization, attributeReferralSignupIfPending } from "../../lib/api/organizations.js";
 import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../../lib/authRateLimiter.js";
 
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "",
-  onForgotPassword, recoveryMode = false, onCompletePasswordReset,
+  onForgotPassword, onVerifyRecoveryOtp, recoveryMode = false, onCompletePasswordReset,
   onGoHome, orgParam = ""
 }) {
   const [mode, setMode] = useState("signin");
@@ -15,14 +15,6 @@ export default function AuthPage({
     if (recoveryMode) setMode("recovery");
   }, [recoveryMode]);
 
-  const [resetEmailSent, setResetEmailSent] = useState(false);
-  const [sendingReset, setSendingReset] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showNewPasswordConfirm, setShowNewPasswordConfirm] = useState(false);
-  const [resetError, setResetError] = useState("");
-  const [resettingPassword, setResettingPassword] = useState(false);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +24,24 @@ export default function AuthPage({
   const [submitting, setSubmitting] = useState(false);
   const [breachWarning, setBreachWarning] = useState(false);
   const [checkingBreach, setCheckingBreach] = useState(false);
+
+  // Forgot password & OTP verification states
+  const [sendingReset, setSendingReset] = useState(false);
+  const [forgotResult, setForgotResult] = useState(null);
+  const [forgotError, setForgotError] = useState("");
+  const [recoveryOtpInput, setRecoveryOtpInput] = useState("");
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [showOtpManualInput, setShowOtpManualInput] = useState(false);
+
+  // Set new password (recovery mode) states
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showNewPasswordConfirm, setShowNewPasswordConfirm] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Rate Limiting on Password attempts
   const [rateLimit, setRateLimit] = useState(() => getRateLimitStatus(initialEmail));
@@ -75,18 +85,52 @@ export default function AuthPage({
   }
 
   async function handleForgotPasswordSubmit(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!email.trim() || sendingReset) return;
+    setForgotError("");
+    setForgotResult(null);
+    setOtpError("");
     setSendingReset(true);
     try {
-      await onForgotPassword?.(email.trim());
+      const result = await onForgotPassword?.(email.trim());
+      if (result?.notFound) {
+        setForgotError(result.error || "No account found with this email address. Please check your spelling or create an account.");
+      } else if (result?.success) {
+        setForgotResult(result);
+        if (result.otp) {
+          setRecoveryOtpInput(result.otp);
+        }
+      } else {
+        setForgotError(result?.error || "Could not process password reset. Please try again or contact support at info@trainailtd.com.");
+      }
+    } catch (err) {
+      setForgotError(err?.message || "An unexpected error occurred. Please try again.");
     } finally {
       setSendingReset(false);
-      setResetEmailSent(true);
     }
   }
 
-  const [resetSuccess, setResetSuccess] = useState(false);
+  async function handleVerifyRecoveryOtp(tokenToVerify) {
+    const token = (tokenToVerify || recoveryOtpInput || "").trim();
+    if (!token) {
+      setOtpError("Please enter your verification code.");
+      return;
+    }
+    setOtpError("");
+    setVerifyingOtp(true);
+    try {
+      const res = await onVerifyRecoveryOtp?.(email.trim(), token);
+      if (res?.success) {
+        setMode("recovery");
+      } else {
+        setOtpError(res?.error || "Invalid or expired recovery code. Please check the code and try again.");
+      }
+    } catch (err) {
+      setOtpError(err?.message || "Verification failed. Please try again.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  }
 
   async function handleSetNewPasswordSubmit(e) {
     e.preventDefault();
@@ -96,14 +140,14 @@ export default function AuthPage({
       return;
     }
     if (newPassword !== newPasswordConfirm) {
-      setResetError("Passwords don't match.");
+      setResetError("Passwords do not match.");
       return;
     }
     setResettingPassword(true);
     try {
       const result = await onCompletePasswordReset?.(newPassword);
       if (!result?.success) {
-        setResetError(result?.error || "Could not update your password. The reset link may have expired - request a new one.");
+        setResetError(result?.error || "Could not update your password. The reset link or code may have expired. Please request a new one.");
       } else {
         setResetSuccess(true);
         setTimeout(() => {
@@ -119,11 +163,12 @@ export default function AuthPage({
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
     if (mode === "signup" && accountType === "organization" && orgName.trim().length < 2) {
-      setOrgError("Enter your organization's name to continue.");
+      setOrgError("Enter your organization name to continue.");
       return;
     }
     setOrgError("");
     setSubmitting(true);
+
     if (mode === "signin") {
       const currentLimit = getRateLimitStatus(email);
       if (currentLimit.isLocked) {
@@ -144,7 +189,7 @@ export default function AuthPage({
       if (accountType === "organization" && !result?.error) {
         const orgResult = await registerOrganization(orgName);
         if (!orgResult.success) {
-          setOrgError(orgResult.error || "Account created, but we couldn't register your organization. You can try again from Settings.");
+          setOrgError(orgResult.error || "Account created, but we could not register your organization. You can complete this from Settings.");
         } else {
           window.location.reload();
           return;
@@ -156,12 +201,33 @@ export default function AuthPage({
     setSubmitting(false);
   }
 
+  const isEmailNotFound = authError && (authError.includes("No account found") || authError.includes("create a new account"));
+
   return (
     <div style={styles.outer}>
       <style>{`
         @keyframes authFadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
         .auth-card { animation: authFadeUp .2s ease; }
-        .auth-input:focus { outline: none; border-color: #2563EB !important; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+        .auth-input {
+          background-color: #FFFFFF !important;
+          color: #0F172A !important;
+        }
+        .auth-input:focus {
+          outline: none;
+          border-color: #2563EB !important;
+          box-shadow: 0 0 0 2px rgba(37,99,235,.15);
+        }
+        .auth-input:-webkit-autofill,
+        .auth-input:-webkit-autofill:hover, 
+        .auth-input:-webkit-autofill:focus, 
+        .auth-input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+          box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+          -webkit-text-fill-color: #0F172A !important;
+          caret-color: #0F172A !important;
+          background-color: #FFFFFF !important;
+          color: #0F172A !important;
+        }
         .auth-submit:hover { background-color: #1D4ED8 !important; }
         .auth-switch:hover { text-decoration: underline; }
         .role-picker-card { transition: border-color .15s ease, background-color .15s ease; }
@@ -187,7 +253,7 @@ export default function AuthPage({
             style={{ fontSize: 12, color: "#64748B", fontWeight: 600, cursor: "pointer" }}
             className="auth-switch"
           >
-            ← Back to website
+            &larr; Back to website
           </span>
         </div>
 
@@ -200,41 +266,218 @@ export default function AuthPage({
           </div>
         )}
 
+        {/* ================================================================ */}
+        {/* MODE: FORGOT PASSWORD                                            */}
+        {/* ================================================================ */}
         {mode === "forgot" && (
           <>
             <h1 style={styles.h1}>Reset your password</h1>
-            {resetEmailSent ? (
+
+            {/* Error box when account does not exist or general failure */}
+            {forgotError && (
+              <div style={styles.errorBox}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600 }}>{forgotError}</div>
+                    {forgotError.includes("No account found") && (
+                      <div style={{ marginTop: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => { setMode("signup"); setForgotError(""); }}
+                          style={{
+                            background: "#2563EB",
+                            color: "#FFFFFF",
+                            border: "none",
+                            borderRadius: 6,
+                            padding: "6px 12px",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4
+                          }}
+                        >
+                          <span>Sign up for a new account</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* State: Reset requested successfully */}
+            {forgotResult && (
+              <div style={{ marginTop: 12 }}>
+                {forgotResult.emailSent && (
+                  <div style={{ padding: "14px", background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <CheckCircle2 size={18} color="#16A34A" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <div style={{ fontSize: 12.5, color: "#166534", lineHeight: 1.45 }}>
+                        <strong>Email Sent:</strong> We have dispatched a password reset link to <strong>{forgotResult.email}</strong>. Please check your inbox and spam folder.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Instant Recovery Code Fallback (When rate limited or email delayed) */}
+                {(forgotResult.rateLimited || forgotResult.otp) && (
+                  <div style={{ padding: "14px", background: "#EFF6FF", border: "1.5px solid #BFDBFE", borderRadius: 8, marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
+                      <KeyRound size={18} color="#2563EB" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1E40AF" }}>
+                          {forgotResult.rateLimited ? "Instant Recovery Code Ready" : "Email Delayed? Use Instant Code"}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#3B82F6", lineHeight: 1.4, marginTop: 2 }}>
+                          {forgotResult.rateLimited
+                            ? "Mail provider rate limit active. Use your instant verification code below to set a new password right away:"
+                            : "If your email is delayed, you can reset your password immediately with this one-time code:"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {forgotResult.otp && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "10px", background: "#FFFFFF", borderRadius: 6, border: "1px dashed #93C5FD", marginBottom: 10 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".05em" }}>Your Code:</span>
+                        <span style={{ fontSize: 20, fontWeight: 900, color: "#1E3A8A", letterSpacing: "3px", fontFamily: "monospace" }}>
+                          {forgotResult.otp}
+                        </span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={verifyingOtp}
+                      onClick={() => handleVerifyRecoveryOtp(forgotResult.otp)}
+                      style={{
+                        width: "100%",
+                        padding: "9px 14px",
+                        background: "#2563EB",
+                        color: "#FFFFFF",
+                        border: "none",
+                        borderRadius: 6,
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6
+                      }}
+                    >
+                      {verifyingOtp ? "Verifying..." : "Verify Code & Set New Password"}
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {/* Manual OTP entry accordion */}
+                <div style={{ marginTop: 10, textAlign: "center" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowOtpManualInput(!showOtpManualInput)}
+                    style={{ background: "transparent", border: "none", color: "#64748B", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
+                  >
+                    {showOtpManualInput ? "Hide code entry" : "Have a code from an earlier email? Enter it here"}
+                  </button>
+                </div>
+
+                {showOtpManualInput && (
+                  <div style={{ marginTop: 12, padding: "12px", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8 }}>
+                    <label style={styles.label}>Enter 6 to 8 Digit Recovery Code</label>
+                    <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+                      <input
+                        type="text"
+                        value={recoveryOtpInput}
+                        onChange={(e) => { setRecoveryOtpInput(e.target.value); setOtpError(""); }}
+                        placeholder="12345678"
+                        className="auth-input"
+                        style={{ ...styles.input, paddingLeft: 12, textAlign: "center", letterSpacing: "2px", fontWeight: 700 }}
+                      />
+                      <button
+                        type="button"
+                        disabled={verifyingOtp || !recoveryOtpInput.trim()}
+                        onClick={() => handleVerifyRecoveryOtp()}
+                        style={{
+                          padding: "0 16px",
+                          background: "#2563EB",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: 8,
+                          fontWeight: 700,
+                          fontSize: 13,
+                          cursor: "pointer",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {verifyingOtp ? "Verifying..." : "Verify"}
+                      </button>
+                    </div>
+                    {otpError && (
+                      <div style={{ color: "#DC2626", fontSize: 11.5, marginTop: 6, fontWeight: 600 }}>
+                        {otpError}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Support Fallback Link */}
+                <div style={{ marginTop: 14, textAlign: "center", fontSize: 11.5, color: "#64748B" }}>
+                  Need direct assistance? Contact our team at <a href="mailto:info@trainailtd.com" style={{ color: "#2563EB", fontWeight: 700 }}>info@trainailtd.com</a>
+                </div>
+
+                <div style={styles.switchRow}>
+                  <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); setForgotResult(null); }}>
+                    Back to sign in
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Initial Forgot Password Form */}
+            {!forgotResult && (
               <>
                 <p style={styles.sub}>
-                  <CheckCircle2 size={15} color="#16A34A" style={{ verticalAlign: -2, marginRight: 6 }} />
-                  If an account exists for <strong>{email}</strong>, we've sent a link to reset your password. Check your inbox.
+                  Enter the email address registered on your account. We will send you a reset link or provide an instant recovery code.
                 </p>
-                <div style={styles.switchRow}>
-                  <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); setResetEmailSent(false); }}>Back to sign in</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <p style={styles.sub}>Enter the email address on your account and we'll send you a link to reset your password.</p>
                 <label style={styles.label}>Email Address</label>
                 <div style={styles.inputWrap}>
                   <Mail size={15} color="#94A3B8" style={styles.inputIcon} />
                   <input
-                    type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                    className="auth-input" style={styles.input} placeholder="you@example.com"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setForgotError(""); }}
+                    className="auth-input"
+                    style={styles.input}
+                    placeholder="you@example.com"
                   />
                 </div>
-                <button type="submit" disabled={sendingReset} className="auth-submit" style={{ ...styles.submit, opacity: sendingReset ? .75 : 1 }}>
-                  {sendingReset ? "Sending..." : "Send reset link"}
+                <button
+                  type="submit"
+                  disabled={sendingReset}
+                  className="auth-submit"
+                  style={{ ...styles.submit, opacity: sendingReset ? 0.75 : 1 }}
+                >
+                  {sendingReset ? "Checking account..." : "Send reset link"}
                 </button>
                 <div style={styles.switchRow}>
-                  <span className="auth-switch" style={styles.switchLink} onClick={() => setMode("signin")}>Back to sign in</span>
+                  <span className="auth-switch" style={styles.switchLink} onClick={() => setMode("signin")}>
+                    Back to sign in
+                  </span>
                 </div>
               </>
             )}
           </>
         )}
 
+        {/* ================================================================ */}
+        {/* MODE: SET NEW PASSWORD (RECOVERY MODE)                           */}
+        {/* ================================================================ */}
         {mode === "recovery" && (
           <>
             <h1 style={styles.h1}>Choose a new password</h1>
@@ -250,7 +493,7 @@ export default function AuthPage({
               </div>
             ) : (
               <>
-                <p style={styles.sub}>You followed a password reset link. Set a new password for your account below.</p>
+                <p style={styles.sub}>Your identity has been verified. Set a new password for your account below.</p>
 
                 <label style={styles.label}>New Password</label>
                 <div style={styles.inputWrap}>
@@ -309,17 +552,27 @@ export default function AuthPage({
                   </div>
                 )}
 
-                <button type="submit" disabled={resettingPassword} className="auth-submit" style={{ ...styles.submit, opacity: resettingPassword ? .75 : 1 }}>
+                <button
+                  type="submit"
+                  disabled={resettingPassword}
+                  className="auth-submit"
+                  style={{ ...styles.submit, opacity: resettingPassword ? 0.75 : 1 }}
+                >
                   {resettingPassword ? "Updating..." : "Update password"}
                 </button>
                 <div style={styles.switchRow}>
-                  <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); window.location.replace(window.location.pathname); }}>Back to sign in</span>
+                  <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); window.location.replace(window.location.pathname); }}>
+                    Back to sign in
+                  </span>
                 </div>
               </>
             )}
           </>
         )}
 
+        {/* ================================================================ */}
+        {/* MODE: SIGN IN & SIGN UP                                          */}
+        {/* ================================================================ */}
         {(mode === "signin" || mode === "signup") && (
           <>
             <h1 style={styles.h1}>{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
@@ -344,7 +597,7 @@ export default function AuthPage({
                     <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
                   </div>
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
-                    Workforce readiness, team cohorts, and org-wide reporting. You become the organization's admin.
+                    Workforce readiness, team cohorts, and org-wide reporting. You become the organization admin.
                   </span>
                 </div>
 
@@ -369,9 +622,12 @@ export default function AuthPage({
                     <div style={styles.inputWrap}>
                       <Building2 size={15} color="#94A3B8" style={styles.inputIcon} />
                       <input
-                        type="text" value={orgName}
+                        type="text"
+                        value={orgName}
                         onChange={(e) => { setOrgName(e.target.value); if (orgError) setOrgError(""); }}
-                        className="auth-input" style={styles.input} placeholder="Acme Corporation"
+                        className="auth-input"
+                        style={styles.input}
+                        placeholder="Acme Corporation"
                       />
                     </div>
                     {orgError && <div style={{ ...styles.breachBox, marginTop: 8 }}><ShieldAlert size={14} style={{ flexShrink: 0, marginTop: 1 }} /><span>{orgError}</span></div>}
@@ -388,8 +644,13 @@ export default function AuthPage({
             <div style={styles.inputWrap}>
               <Mail size={15} color="#94A3B8" style={styles.inputIcon} />
               <input
-                type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                className="auth-input" style={styles.input} placeholder="you@example.com"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="auth-input"
+                style={styles.input}
+                placeholder="you@example.com"
               />
             </div>
 
@@ -469,8 +730,42 @@ export default function AuthPage({
               </div>
             )}
 
-            {/* Standard Error State (when not locked) */}
-            {authError && (!rateLimit.isLocked || mode !== "signin") && (
+            {/* Non-existent Account Helper Alert */}
+            {mode === "signin" && isEmailNotFound && (
+              <div style={styles.errorBox}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600 }}>{authError}</div>
+                    <div style={{ marginTop: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => { setMode("signup"); }}
+                        style={{
+                          background: "#2563EB",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "6px 12px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        <span>Create account with {email}</span>
+                        <ArrowRight size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Standard Error State (when not locked and not emailNotFound) */}
+            {authError && !isEmailNotFound && (!rateLimit.isLocked || mode !== "signin") && (
               <div style={styles.errorBox}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                   <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />

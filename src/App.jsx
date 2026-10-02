@@ -21,7 +21,7 @@ import { getAuthenticatorAssuranceLevel } from "./lib/api/mfa.js";
 export default function App() {
   const {
     session, loading, authError, signIn, signUp, signOut, isDemoMode,
-    isPasswordRecovery, sendPasswordReset, completePasswordReset,
+    isPasswordRecovery, sendPasswordReset, verifyRecoveryOtp, completePasswordReset,
   } = useAuth();
 
   // Platform Owner's separate login - PRD Section 10: "not login from
@@ -386,6 +386,7 @@ export default function App() {
             authError={authError}
             initialEmail={inviteAuthEmail}
             onForgotPassword={sendPasswordReset}
+            onVerifyRecoveryOtp={verifyRecoveryOtp}
             onGoHome={() => {
               try { window.history.pushState({}, "", window.location.pathname); } catch {}
               setPublicView("landing");
