@@ -33,8 +33,15 @@
           } catch (err) {}
         }
 
-        // 2. Version enforcement & stale cache eviction
-        var APP_VER = "20261002_v8";
+        // 2. Break iOS Safari BFCache (Back-Forward Cache snapshot)
+        window.addEventListener("pageshow", function(event) {
+          if (event.persisted) {
+            window.location.reload();
+          }
+        });
+
+        // 3. Version enforcement & automatic fresh network fetch
+        var APP_VER = "20261002_v9";
         var PREV_VER = "";
         try { PREV_VER = localStorage.getItem("tai_app_ver"); } catch(e) {}
 
@@ -54,9 +61,16 @@
               });
             } catch(e) {}
           }
+          // If the visitor was holding an old cached page without the current version query param,
+          // refresh once with a clean version param to force the browser HTTP cache to fetch new assets.
+          if (!window.location.search.includes("_v=")) {
+            var sep = window.location.search ? "&" : "?";
+            window.location.replace(window.location.pathname + window.location.search + sep + "_v=" + APP_VER);
+            return;
+          }
         }
 
-        // 3. Early Top-Level Error Trapping for stale chunks and HTML 404 responses
+        // 4. Early Top-Level Error Trapping for stale chunks and HTML 404 responses
         function triggerHardRecovery(source) {
           var key = "tai_recov_" + APP_VER;
           var count = 0;
@@ -67,10 +81,12 @@
               caches.keys().then(function(names) {
                 return Promise.all(names.map(function(n) { return caches.delete(n); }));
               }).finally(function() {
-                window.location.replace(window.location.pathname + "?_bust=" + Date.now());
+                var sep = window.location.search ? "&" : "?";
+                window.location.replace(window.location.pathname + window.location.search + sep + "_bust=" + Date.now());
               });
             } else {
-              window.location.replace(window.location.pathname + "?_bust=" + Date.now());
+              var sep = window.location.search ? "&" : "?";
+              window.location.replace(window.location.pathname + window.location.search + sep + "_bust=" + Date.now());
             }
           }
         }
@@ -106,7 +122,7 @@
           }
         });
 
-        // 4. Register SW immediately with updateViaCache: 'none'
+        // 5. Register SW without controllerchange reload to prevent WebKit abort
         if ("serviceWorker" in navigator) {
           if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
             navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
@@ -124,14 +140,6 @@
                 });
               })
               .catch(function() {});
-
-            var isRefreshing = false;
-            navigator.serviceWorker.addEventListener("controllerchange", function() {
-              if (!isRefreshing) {
-                isRefreshing = true;
-                window.location.reload();
-              }
-            });
           }
         }
       })();
@@ -141,7 +149,7 @@
     <meta name="keywords" content="Train AI, LMS, learning management system, AI coaching, courses, cohorts, workforce intelligence, online learning, enterprise training" />
     <meta name="author" content="Train AI Ltd" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://trainai.app/" />
+    <link rel="canonical" href="https://www.trainailtd.com/" />
 
     <!-- Brand Color & System Scheme -->
     <meta name="theme-color" content="#2563EB" media="(prefers-color-scheme: light)" />
@@ -150,18 +158,18 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://trainai.app/" />
+    <meta property="og:url" content="https://www.trainailtd.com/" />
     <meta property="og:title" content="Train AI - The AI Learning Infrastructure for Organisations" />
     <meta property="og:description" content="Multi-tenant learning management system for organisations: structured courses, cohorts, analytics, AI coaching, and mentor support." />
-    <meta property="og:image" content="https://trainai.app/logo.png" />
+    <meta property="og:image" content="https://www.trainailtd.com/logo.png" />
     <meta property="og:site_name" content="Train AI" />
 
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://trainai.app/" />
+    <meta name="twitter:url" content="https://www.trainailtd.com/" />
     <meta name="twitter:title" content="Train AI - The AI Learning Infrastructure for Organisations" />
     <meta name="twitter:description" content="Multi-tenant learning management system with AI coaching, structured courses, and cohort analytics." />
-    <meta name="twitter:image" content="https://trainai.app/logo.png" />
+    <meta name="twitter:image" content="https://www.trainailtd.com/logo.png" />
 
     <!-- iOS / Apple Store Web App Metadata -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -191,7 +199,7 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Train AI",
-      "url": "https://trainai.app/",
+      "url": "https://www.trainailtd.com/",
       "description": "Multi-tenant AI-powered learning management infrastructure for organisations.",
       "applicationCategory": "EducationalApplication",
       "operatingSystem": "All",
@@ -202,7 +210,7 @@
       "author": {
         "@type": "Organization",
         "name": "Train AI Ltd",
-        "url": "https://trainai.app/"
+        "url": "https://www.trainailtd.com/"
       }
     }
     </script>
