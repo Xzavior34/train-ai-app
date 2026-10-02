@@ -668,10 +668,10 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <span>What we will cover in your demo:</span>
                   </div>
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "#475569", lineHeight: 1.6 }}>
-                    <li>Tailored walkthrough for your sector (Academies, NGOs, or Businesses).</li>
-                    <li>Live look at cohort scheduling, AI-assisted quizzes, and AI tutor.</li>
-                    <li>Grant reporting and telemetry exports (CSV/PDF) or enterprise skill graph.</li>
-                    <li>Licensing options, academic volume discounts, or subsidized seat programs.</li>
+                    <li>A walkthrough shaped around your organisation and learning model.</li>
+                    <li>Course, cohort, community, learner and instructor management.</li>
+                    <li>AI learning support, skill-gap tracking and readiness insights.</li>
+                    <li>The most appropriate platform tier and implementation approach.</li>
                   </ul>
                 </div>
               </div>
@@ -825,4 +825,3 @@ const S = {
   confirmedBox: { display: "flex", flexDirection: "column", gap: 12, background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 10, padding: "16px 18px" },
   confirmedRow: { display: "flex", alignItems: "flex-start", gap: 10 },
 };
-

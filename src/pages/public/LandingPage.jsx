@@ -1,1894 +1,321 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  ArrowRight, BookOpen, GraduationCap, ShieldCheck, CheckCircle2, X,
-  Brain, Layers, ChevronDown, ClipboardList, UserPlus,
-  Building2, Users, Target, TrendingUp, Lock, BarChart3,
-  Zap, Flame, Menu, Check,
-  Activity, Gauge, Database, Home, Mail, Download, Wifi,
-  Accessibility, Bell, Facebook, Twitter, Instagram, Linkedin, Search,
-  BarChart2, Heart, Award, Coins, FileText, Globe, Calendar, Clock,
-  Send, Mic, MessageSquare, Star, Battery, Signal, Play
+  ArrowRight, BarChart3, BookOpen, Brain, Building2, Check, ChevronDown,
+  GraduationCap, Heart, Instagram, Layers, Lock, Mail, Menu, MessageSquare, Target,
+  UserCog, Users, X,
 } from "lucide-react";
-import { submitDemoRequest, captureAttributionFromURL } from "../../lib/api/waitlist.js";
+import { captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
 
-const TEAM_SIZE_OPTIONS = ["1-50", "51-200", "201-1,000", "1,000+"];
-const ORG_TYPE_OPTIONS = [
-  "Academy / Educational Institution",
-  "NGO / Non-Profit / Foundation",
-  "Business / Enterprise",
-  "Independent Mentor / Instructor"
+const LEARNER_FEATURES = [
+  [BookOpen, "Structured learning", "Complete assigned courses and follow a clear learning path without losing track of the next step."],
+  [Users, "Cohorts and study groups", "Learn with a community, take part in cohort activity, and collaborate in focused study groups."],
+  [MessageSquare, "Instructor connection", "Receive guidance and communicate directly with instructors inside the learning environment."],
+  [Brain, "AI learning support", "Use the AI coach for course support and assessment preparation, with insights tailored to individual progress."],
 ];
 
-const LEGAL_CONTENT = {
-  about: {
-    title: "About Us",
-    body: "Train AI is an institutional learning and capability platform serving academies, non-profit organizations, and modern businesses. We unite adaptive AI tutoring, structured cohort management, and verifiable skill telemetry in one unified system."
-  },
-  privacy: {
-    title: "Privacy Policy",
-    body: "Our Privacy Policy ensures your organization's data remains strictly confidential and isolated. We process minimal telemetry required to deliver adaptive pathways, track skills, and issue certified credentials. We never sell personal data or use proprietary institutional data to train public foundation models."
-  },
-  terms: {
-    title: "Terms of Service",
-    body: "Train AI terms govern organizational workspaces, role-based licensing, and institutional agreements. All accounts, certifications, and compliance logs are auditable under enterprise and non-profit SLAs. Questions: hello@trainailtd.com."
-  },
-  cookie: {
-    title: "Cookie Policy",
-    body: "We use strictly necessary session cookies to maintain secure authentication and role isolation. Optional analytics cookies remain disabled until explicit user consent is provided. Questions: hello@trainailtd.com."
-  }
-};
-
-const SECTORS_DATA = {
-  academies: {
-    key: "academies",
-    label: "Academies & Higher Ed",
-    badge: "Higher Ed, Colleges & Bootcamps",
-    icon: GraduationCap,
-    title: "Empower faculty. Scale interactive AI curriculums.",
-    desc: "Equip your instructors with automated quiz generation and cohort pacing while giving every enrolled student a 24/7 AI tutor and practical coding sandbox.",
-    image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=900&auto=format&fit=crop&q=80",
-    features: [
-      { title: "Cohort Pacing & Control", desc: "Organize students by semester, track assignment releases, and monitor milestone completions." },
-      { title: "24/7 AI Teaching Assistant", desc: "Instant conceptual Q&A, code debugging, and adaptive practice tests for students." },
-      { title: "Accredited Certifications", desc: "Issue tamper-proof certificates branded with your institution's seal and verification hashes." },
-    ],
-    pricingModel: "Tiered per-student or per-cohort term licensing with academic volume discounts up to 40%."
-  },
-  ngos: {
-    key: "ngos",
-    label: "NGOs & Social Impact",
-    badge: "Non-Profits, Foundations & CSR",
-    icon: Heart,
-    title: "Bridge the digital divide with verified outcomes.",
-    desc: "Deliver workforce-ready skills in underserved communities with low-bandwidth mobile access, sponsored cohorts, and transparent telemetry ready for grant reporting.",
-    image: "https://images.unsplash.com/photo-1531545514256-b1400bc00f31?w=900&auto=format&fit=crop&q=80",
-    features: [
-      { title: "Grant & Donor Reporting", desc: "Export verified skill acquisition and completion metrics for donor transparency and board audits." },
-      { title: "Low-Bandwidth Mobile Mode", desc: "Fast, reliable performance on modest smartphones and limited internet connections." },
-      { title: "Sponsored Cohort Pools", desc: "Allocate subsidized seat blocks funded by philanthropic grants or corporate partnerships." },
-    ],
-    pricingModel: "Subsidized non-profit licensing, grant-funded sponsor tiers, and fee waivers for grassroots programs."
-  },
-  businesses: {
-    key: "businesses",
-    label: "Businesses & Enterprises",
-    badge: "Corporate Teams & Growing Companies",
-    icon: Building2,
-    title: "Move beyond passive video clicks to verified capability.",
-    desc: "Map your workforce capability in real time with AI skill graphs, identify team skill gaps before project deadlines, and deliver targeted upskilling tracks.",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=900&auto=format&fit=crop&q=80",
-    features: [
-      { title: "Workforce Readiness Score", desc: "Single live capability metric per team, department, and company based on active tasks." },
-      { title: "Dynamic AI Skill Graph", desc: "Topological map of verified talent, emerging skills, and critical organizational gaps." },
-      { title: "Enterprise Security & SSO", desc: "Multi-tenant data isolation with PostgreSQL RLS, Okta/Azure SSO, and append-only audit logs." },
-    ],
-    pricingModel: "Flexible monthly or annual active seat licensing with pay-as-you-grow scaling and dedicated SLAs."
-  }
-};
-
-const HOW_WE_BUILD_IT = [
-  {
-    icon: Target,
-    title: "Readiness over completion",
-    desc: "A finished course is not capability. We measure real comprehension, assessment scores, and practical execution."
-  },
-  {
-    icon: Gauge,
-    title: "Intelligence over reporting",
-    desc: "Dashboards power proactive decisions, forecasting capability gaps before they impact outcomes."
-  },
-  {
-    icon: Building2,
-    title: "Multi-sector architecture",
-    desc: "Engineered specifically for academies, non-profits, and enterprises with isolated tenant data."
-  },
-  {
-    icon: Activity,
-    title: "Every signal counts",
-    desc: "Live assessments, instructor feedback, AI queries, and milestone completions enrich live capability."
-  }
+const ORGANISATION_FEATURES = [
+  [Layers, "End-to-end learning management", "Manage courses, cohorts, learners, communities and instructors from one operational workspace."],
+  [BarChart3, "Performance and impact visibility", "Follow cohort performance and connect learning activity to outcomes that programme and business teams can use."],
+  [Target, "Workforce intelligence", "Identify skill gaps, monitor readiness scores and see where teams or learners need additional development."],
+  [UserCog, "Manager and instructor oversight", "Give managers useful AI summaries and comment logs while instructors manage delivery and learner support."],
 ];
 
-const TRUST_FEATURES = [
+const AUDIENCES = [
+  [GraduationCap, "Academies and training providers", "Move physical or fragmented training online, coordinate instructors and cohorts, and understand learner progress in one place."],
+  [Heart, "Foundations and social-impact organisations", "Manage learning communities and cohorts end to end, while measuring participation, development and programme impact centrally."],
+  [Building2, "Businesses and enterprise teams", "Develop people against organisational needs and use skill-gap and readiness information to guide workforce decisions."],
+];
+
+const PRICING_TIERS = [
   {
-    icon: Lock,
-    title: "Secure tenant separation",
-    desc: "Row-level policies keep every organization's learners, courses and results strictly isolated."
+    name: "Basic",
+    description: "A focused starting point for organisations bringing structured learning, learners and cohorts into one system.",
+    features: ["Course and learner management", "Cohort learning", "Community participation", "Core progress visibility"],
   },
   {
-    icon: ClipboardList,
-    title: "Audit logging",
-    desc: "Administrative actions are recorded in an append-only trail for institutional and compliance review."
+    name: "Intermediate",
+    description: "For organisations that need deeper learning support, administration and visibility across active programmes.",
+    features: ["Expanded programme management", "AI-supported learner development", "Instructor management", "Performance and impact insights"],
   },
   {
-    icon: Download,
-    title: "Export & grant reports",
-    desc: "One-click CSV exports for grant reporting, academic records, and board presentations."
+    name: "Enterprise",
+    description: "A configurable engagement for organisations with more complex access, reporting and integration requirements.",
+    features: ["Custom configuration", "Workforce intelligence", "Manager-level visibility", "Single sign-on options"],
   },
-  {
-    icon: Wifi,
-    title: "Low-bandwidth ready",
-    desc: "Lightweight payload built for mobile-first access across emerging regions and campus networks."
-  },
-  {
-    icon: Accessibility,
-    title: "Accessible interface",
-    desc: "High-contrast readability, keyboard navigation, and semantic structure across all screens."
-  },
-  {
-    icon: Bell,
-    title: "Reliable notifications",
-    desc: "Session reminders, assignment alerts, and mentor nudges delivered by email and in-app."
-  }
 ];
 
 const FAQ_ITEMS = [
-  {
-    q: "Who is Train AI built for?",
-    a: "Train AI is purpose-built for three key sectors: educational academies (universities, colleges, bootcamps), non-profit organizations & impact foundations (community upskilling, grant-backed initiatives), and businesses (enterprise capability and workforce upskilling)."
-  },
-  {
-    q: "How does the payment and licensing structure work?",
-    a: "We offer tailored structures for each sector: Academies receive term/semester licensing with academic discounts (up to 40% off); NGOs and Non-Profits receive subsidized grant-aligned rates or sponsored seat blocks; Businesses use flexible monthly or annual seat-based models with volume tiers."
-  },
-  {
-    q: "How do academies use Train AI for their courses?",
-    a: "Academies use Train AI as their digital cohort engine. Instructors schedule live sessions, curate custom curricula, set adaptive practice quizzes, and monitor student comprehension. Students get 24/7 AI tutor support for homework help and code debugging."
-  },
-  {
-    q: "Can NGOs and non-profits use Train AI for grant reporting?",
-    a: "Yes. Train AI includes dedicated impact telemetry. You can generate transparent, exportable reports detailing enrolled learners, modules completed, verified skills acquired, and employment readiness scores to present to donors and grant boards."
-  },
-  {
-    q: "Does Train AI work on low-speed internet connections?",
-    a: "Yes. The platform is engineered to be mobile-first and low-bandwidth friendly, ensuring learners in bandwidth-constrained regions or on mobile data plans can complete courses, quizzes, and discussions seamlessly."
-  },
-  {
-    q: "How is Train AI different from a traditional LMS?",
-    a: "Traditional LMS tools only track passive video clicks. Train AI actively measures real capability through an AI Skill Graph, continuous readiness scoring, automated adaptive quizzes, live cohort mentorship, and 24/7 personalized AI tutoring."
-  },
-  {
-    q: "Are certificates officially branded with our organization's identity?",
-    a: "Yes. Every academy, NGO, or enterprise can customize certificates with their official logo, custom signature, accreditation details, and cryptographic verification IDs."
-  },
-  {
-    q: "Is our institutional data secure and private?",
-    a: "Absolutely. Every organization operates inside a dedicated, isolated tenant protected by PostgreSQL Row-Level Security (RLS). Your curriculum and learner data are never used to train public foundation models."
-  }
+  ["What is Train AI?", "Train AI is an AI learning and development platform that brings learning delivery, cohort and community management, learner support, administration and measurable outcomes into one system."],
+  ["Who is the platform for?", "Train AI is designed for academies and training providers, foundations and social-impact organisations, and businesses developing their workforce."],
+  ["What do learners get?", "Learners can complete structured courses, join cohorts and study groups, communicate with instructors, take part in leaderboards, use an AI coach for learning and assessment preparation, and receive personalised insights."],
+  ["What can organisations manage?", "Organisations can manage learners, courses, cohorts, communities and instructors, monitor cohort performance, track skill gaps and readiness, and give managers access to AI summaries and administrative comment logs."],
+  ["How does pricing work?", "Train AI uses three standard tiers: Basic, Intermediate and a customisable Enterprise tier. The right tier and commercial terms are discussed during a product demo based on the organisation's requirements."],
+  ["Can we start with a trial?", "Train AI does not promote an open public trial. Where a trial is appropriate, it is agreed after a product demo and is limited to a maximum of one month."],
 ];
 
-export default function LandingPage({ onNavigate }) {
-  useEffect(() => { captureAttributionFromURL(); }, []);
-  useEffect(() => {
-    const ref = new URLSearchParams(window.location.search).get("ref");
-    if (ref) trackReferralClickIfPresent(ref);
-  }, []);
+const LEGAL_CONTENT = {
+  about: ["About Train AI", "Train AI is an AI learning and development platform for organisations. It centralises learning delivery, cohort and community management, learner support, administration and outcome visibility so development can be managed from one place."],
+  privacy: ["Privacy Policy", "Train AI uses organisational and learner data to provide the platform's learning, administration and reporting services. Access is controlled by role and organisation. For privacy enquiries, contact info@trainailtd.com."],
+  terms: ["Terms of Service", "Use of Train AI is governed by the agreement associated with an organisation's selected plan and implementation. For commercial or contractual enquiries, contact info@trainailtd.com."],
+  cookie: ["Cookie Policy", "Train AI uses necessary browser storage for secure sessions and essential platform functions. Optional analytics and marketing storage are controlled through the site's consent preferences."],
+};
 
-  const [activeSector, setActiveSector] = useState("academies"); // "academies" | "ngos" | "businesses"
-  const [mobileLearnerTab, setMobileLearnerTab] = useState("home"); // "home" | "courses" | "ai" | "community"
-  const [pollVoted, setPollVoted] = useState(false);
-  const [selectedPollOption, setSelectedPollOption] = useState(0);
-
-  const [demoName, setDemoName] = useState("");
-  const [demoEmail, setDemoEmail] = useState("");
-  const [demoCompany, setDemoCompany] = useState("");
-  const [demoOrgType, setDemoOrgType] = useState(ORG_TYPE_OPTIONS[0]);
-  const [demoTeamSize, setDemoTeamSize] = useState(TEAM_SIZE_OPTIONS[0]);
-  const [demoMessage, setDemoMessage] = useState("");
-  const [demoSubmitted, setDemoSubmitted] = useState(false);
-  const [demoError, setDemoError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const [activeModal, setActiveModal] = useState(null);
-  const [openFaq, setOpenFaq] = useState(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [demoModalOpen, setDemoModalOpen] = useState(false);
-  const [newsletterEmail, setNewsletterEmail] = useState("");
-  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
-
-  // Sticky header that reveals when scrolling up and hides when scrolling down
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const lastScrollYRef = useRef(0);
-
-  useEffect(() => {
-    function handleScroll() {
-      const currentY = window.scrollY;
-      setIsScrolled(currentY > 20);
-      if (currentY <= 60) {
-        setHeaderVisible(true);
-      } else if (currentY < lastScrollYRef.current - 4) {
-        // User scrolled UP: reveal header immediately
-        setHeaderVisible(true);
-      } else if (currentY > lastScrollYRef.current + 8 && !mobileMenuOpen) {
-        // User scrolled DOWN: hide header
-        setHeaderVisible(false);
-      }
-      lastScrollYRef.current = currentY;
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [mobileMenuOpen]);
-
-  useEffect(() => {
-    if (!activeModal && !demoModalOpen) return;
-    function handleKeyDown(e) {
-      if (e.key === "Escape") {
-        setActiveModal(null);
-        setDemoModalOpen(false);
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [activeModal, demoModalOpen]);
-
-  async function handleDemoSubmit(e) {
-    e.preventDefault();
-    if (submitting) return;
-    setSubmitting(true);
-    setDemoError("");
-    try {
-      const result = await submitDemoRequest({
-        fullName: demoName,
-        workEmail: demoEmail,
-        companyName: `[${demoOrgType}] ${demoCompany}`,
-        teamSize: demoTeamSize,
-        message: demoMessage,
-        source: `landing_page_${activeSector}`,
-      });
-      if (!result.success) {
-        setDemoError(result.error || "Could not submit your request. Please try again.");
-        return;
-      }
-      setDemoSubmitted(true);
-    } catch (err) {
-      console.warn("Demo request failed:", err);
-      setDemoError("Something went wrong. Please try again, or email info@trainailtd.com.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  function handleNewsletterSubmit(e) {
-    e.preventDefault();
-    if (!newsletterEmail.trim()) return;
-    setNewsletterSubscribed(true);
-    setNewsletterEmail("");
-  }
-
-  function scrollToId(id) {
-    setMobileMenuOpen(false);
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function handleNav(target, data) {
-    setMobileMenuOpen(false);
-    if (["about", "privacy", "terms", "cookie"].includes(target)) {
-      setActiveModal(target);
-      return;
-    }
-    if (["sectors", "pricing", "intelligence", "learners", "organisation", "faq", "how-it-works", "trust"].includes(target)) {
-      scrollToId(target);
-      return;
-    }
-    if (target === "demo" || target === "book-demo") {
-      if (typeof onNavigate === "function") {
-        onNavigate("book-demo", { sector: activeSector, ...data });
-      } else {
-        setDemoModalOpen(true);
-      }
-      return;
-    }
-    if (typeof onNavigate === "function") {
-      onNavigate(target);
-    }
-  }
-
-  const currentSector = SECTORS_DATA[activeSector] || SECTORS_DATA.academies;
-
+function FeatureList({ features }) {
   return (
-    <div style={styles.outer}>
-      <style>{`
-        .lp-card-hover {
-          transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
-        }
-        .lp-card-hover:hover {
-          border-color: #94A3B8 !important;
-          box-shadow: 0 6px 20px -2px rgba(15, 23, 42, 0.08);
-          transform: translateY(-2px);
-        }
-
-        .lp-step-card {
-          transition: border-color .15s ease, box-shadow .15s ease;
-        }
-        .lp-step-card:hover {
-          border-color: #CBD5E1 !important;
-          box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
-        }
-
-        .lp-nav-link {
-          transition: color .14s ease;
-          cursor: pointer;
-          color: #475569;
-          font-weight: 600;
-          font-size: 13.5px;
-        }
-        .lp-nav-link:hover {
-          color: #2563EB !important;
-        }
-
-        .action-btn-primary {
-          background: #2563EB;
-          color: #FFFFFF;
-          transition: background-color .14s ease, transform .14s ease;
-          cursor: pointer;
-        }
-        .action-btn-primary:hover {
-          background: #1D4ED8;
-        }
-        .action-btn-primary:active {
-          transform: scale(.98);
-        }
-
-        .action-btn-outline {
-          background: #FFFFFF;
-          color: #0F172A;
-          border: 1px solid #CBD5E1;
-          transition: background-color .14s ease, border-color .14s ease;
-          cursor: pointer;
-        }
-        .action-btn-outline:hover {
-          background: #F8FAFC;
-          border-color: #94A3B8;
-        }
-
-        /* Sector Tab Switcher */
-        .sector-tab-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 18px;
-          border-radius: 8px;
-          font-size: 13.5px;
-          font-weight: 700;
-          border: 1.5px solid transparent;
-          background: transparent;
-          color: #64748B;
-          cursor: pointer;
-          transition: all 0.18s ease;
-        }
-        .sector-tab-btn:hover {
-          color: #0F172A;
-          background: rgba(15, 23, 42, 0.04);
-        }
-        .sector-tab-btn.active {
-          background: #FFFFFF;
-          color: #2563EB;
-          border-color: #CBD5E1;
-          box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
-        }
-
-        .lp-footer-link {
-          color: #94A3B8;
-          text-decoration: none;
-          font-size: 13px;
-          transition: color .14s ease;
-          cursor: pointer;
-        }
-        .lp-footer-link:hover {
-          color: #FFFFFF !important;
-        }
-
-        .lp-social-btn {
-          width: 32px;
-          height: 32px;
-          border-radius: 6px;
-          background: #1E293B;
-          border: 1px solid #334155;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #94A3B8;
-          transition: background-color .14s ease, color .14s ease;
-          cursor: pointer;
-        }
-        .lp-social-btn:hover {
-          background: #2563EB;
-          color: #FFFFFF;
-          border-color: #2563EB;
-        }
-
-        /* Interactive Phone Nav Pill Tabs */
-        .phone-nav-item {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          padding: 4px 8px;
-          border-radius: 6px;
-          font-size: 9.5px;
-          font-weight: 700;
-          color: #64748B;
-          cursor: pointer;
-          transition: background-color .14s ease, color .14s ease;
-        }
-        .phone-nav-item.active {
-          background: #2563EB;
-          color: #FFFFFF !important;
-        }
-
-        /* Section Background Utilities */
-        .lp-bg-hero { background-color: #FFFFFF; }
-        .lp-bg-surface-1 {
-          background-color: #F8FAFC;
-          border-top: 1px solid #E2E8F0;
-          border-bottom: 1px solid #E2E8F0;
-        }
-        .lp-bg-surface-2 { background-color: #FFFFFF; }
-        .lp-bg-surface-tint {
-          background-color: #F1F5F9;
-          border-top: 1px solid #E2E8F0;
-          border-bottom: 1px solid #E2E8F0;
-        }
-
-        /* Responsive layout */
-        @media (max-width: 960px) {
-          .lp-desktop-nav { display: none !important; }
-          .lp-mobile-menu-btn { display: flex !important; }
-          .lp-hero-grid { grid-template-columns: 1fr !important; gap: 36px !important; text-align: center !important; }
-          .lp-hero-left { margin: 0 auto !important; max-width: 600px !important; }
-          .lp-hero-ctas { justify-content: center !important; }
-          .lp-hero-right { justify-content: center !important; }
-          .lp-learner-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-          .sector-detail-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
-        }
-        @media (min-width: 961px) {
-          .lp-mobile-drawer { display: none !important; }
-          .lp-mobile-menu-btn { display: none !important; }
-        }
-        @media (max-width: 640px) {
-          .lp-hero-h1 { font-size: 32px !important; line-height: 1.15 !important; }
-          .lp-section-h2 { font-size: 23px !important; line-height: 1.2 !important; }
-          .lp-section-inner { padding: 34px 16px !important; }
-          .lp-hero-ctas { flex-direction: column !important; width: 100% !important; }
-          .lp-hero-ctas > button { width: 100% !important; justify-content: center !important; }
-          .sector-tabs-container { flex-direction: column !important; width: 100% !important; }
-          .sector-tab-btn { width: 100% !important; justify-content: center !important; }
-        }
-      `}</style>
-
-      {/* =========================================================================
-          STICKY HEADER
-          ========================================================================= */}
-      <header
-        style={{
-          ...styles.header,
-          transform: headerVisible ? "translateY(0)" : "translateY(-100%)",
-          transition: "transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, background-color 0.22s ease",
-          boxShadow: isScrolled ? "0 4px 20px -2px rgba(15, 23, 42, 0.08)" : "none",
-          backgroundColor: isScrolled ? "rgba(255, 255, 255, 0.98)" : "#FFFFFF",
-          backdropFilter: isScrolled ? "blur(12px)" : "none",
-        }}
-      >
-        <div style={styles.headerInner}>
-          
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", flexShrink: 0 }} onClick={() => handleNav("home")}>
-            <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 24, width: "auto", objectFit: "contain", display: "block" }} />
-          </div>
-
-          {/* Center Navigation Links */}
-          <nav className="lp-desktop-nav" style={{ display: "flex", gap: 22, alignItems: "center" }}>
-            <span className="lp-nav-link" onClick={() => scrollToId("sectors")}>Solutions</span>
-            <span className="lp-nav-link" onClick={() => scrollToId("pricing")}>Partnerships &amp; Pricing</span>
-            <span className="lp-nav-link" onClick={() => scrollToId("intelligence")}>Platform</span>
-            <span className="lp-nav-link" onClick={() => scrollToId("learners")}>Learner App</span>
-            <span className="lp-nav-link" onClick={() => scrollToId("faq")}>FAQ</span>
-          </nav>
-
-          {/* Action CTAs */}
-          <div className="lp-header-actions" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button
-              className="lp-signin-btn lp-desktop-nav"
-              style={styles.signInBtn}
-              onClick={() => handleNav("signin")}
-            >
-              Sign In
-            </button>
-            <button
-              className="action-btn-outline lp-desktop-nav"
-              style={styles.requestDemoBtn}
-              onClick={() => handleNav("book-demo")}
-            >
-              Book a Demo
-            </button>
-            <button
-              className="action-btn-primary"
-              style={styles.getStartedBtn}
-              onClick={() => handleNav("signin")}
-            >
-              Get Started
-            </button>
-
-            {/* Mobile Hamburger Button */}
-            <button
-              className="lp-mobile-menu-btn"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{
-                width: 36, height: 36, borderRadius: 8, border: "1.5px solid #CBD5E1",
-                background: "#F8FAFC", display: "none", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: "#0F172A"
-              }}
-              aria-label="Toggle Mobile Navigation"
-            >
-              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
-          </div>
-
-        </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div
-            className="lp-mobile-drawer anim-fluid-entrance"
-            style={{
-              background: "#FFFFFF",
-              borderTop: "1px solid #E2E8F0",
-              padding: "16px 20px 24px",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-              boxShadow: "0 16px 40px -10px rgba(15, 23, 42, 0.12)"
-            }}
-          >
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => scrollToId("sectors")}>Sector Solutions</span>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => scrollToId("pricing")}>Partnerships &amp; Pricing</span>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => scrollToId("intelligence")}>Platform Architecture</span>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => scrollToId("learners")}>Learner App</span>
-            <span className="lp-nav-link" style={{ fontSize: 14, fontWeight: 700 }} onClick={() => scrollToId("faq")}>FAQ</span>
-            <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              <button
-                className="action-btn-outline"
-                style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13 }}
-                onClick={() => handleNav("signin")}
-              >
-                Sign In
-              </button>
-              <button
-                className="action-btn-primary"
-                style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13 }}
-                onClick={() => handleNav("book-demo")}
-              >
-                Book a Demo
-              </button>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* =========================================================================
-          SECTION 1: HERO SECTION
-          ========================================================================= */}
-      <section className="lp-bg-hero" style={{ width: "100%", position: "relative", borderBottom: "1px solid #E2E8F0" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 64px" }}>
-          <div className="lp-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.08fr 0.92fr", gap: 36, alignItems: "center" }}>
-            
-            {/* Left Column */}
-            <div className="lp-hero-left" style={{ textAlign: "left" }}>
-              
-              {/* Eyebrow */}
-              <div style={{
-                fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em",
-                color: "#2563EB", marginBottom: 12, display: "inline-flex", alignItems: "center", gap: 6
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#2563EB" }} />
-                AI Learning &amp; Capability Platform
-              </div>
-
-              {/* Headline */}
-              <h1 className="lp-hero-h1" style={{ fontSize: "clamp(34px, 4.2vw, 54px)", fontWeight: 900, letterSpacing: "-0.035em", color: "#0F172A", margin: "0 0 16px", lineHeight: 1.1 }}>
-                Empowering academies,<br />
-                NGOs, and businesses<br />
-                <span style={{ color: "#2563EB" }}>to build real skills.</span>
-              </h1>
-
-              {/* Subtitle */}
-              <p style={{ fontSize: 15, color: "#475569", lineHeight: 1.55, margin: "0 0 22px", maxWidth: 510 }}>
-                Train AI unites adaptive AI tutoring, live cohort mentorship, and real-time skill telemetry in one platform, purpose-built for academic institutions, social impact programs, and forward-thinking enterprises.
-              </p>
-
-              {/* Dual CTAs */}
-              <div className="lp-hero-ctas" style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
-                <button className="action-btn-primary" style={styles.startOrgBtn} onClick={() => handleNav("signin")}>
-                  Start with your organization <ArrowRight size={14} />
-                </button>
-                <button className="action-btn-outline" style={styles.requestDemoOutlineBtn} onClick={() => handleNav("book-demo")}>
-                  Book a Demo
-                </button>
-              </div>
-
-              {/* Sector Pills */}
-              <div style={{ display: "flex", gap: 14, alignItems: "center", borderTop: "1px solid #E2E8F0", paddingTop: 18, marginTop: 4, flexWrap: "wrap" }}>
-                <div style={{ cursor: "pointer" }} onClick={() => { setActiveSector("academies"); scrollToId("sectors"); }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 5 }}>
-                    <GraduationCap size={15} color="#2563EB" /> Academies
-                  </div>
-                  <div style={{ fontSize: 11.5, color: "#64748B" }}>Cohort curriculum delivery</div>
-                </div>
-                <div style={{ width: 1, height: 26, background: "#E2E8F0" }} />
-                <div style={{ cursor: "pointer" }} onClick={() => { setActiveSector("ngos"); scrollToId("sectors"); }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 5 }}>
-                    <Heart size={15} color="#E11D48" /> NGOs &amp; Impact
-                  </div>
-                  <div style={{ fontSize: 11.5, color: "#64748B" }}>Grant &amp; community telemetry</div>
-                </div>
-                <div style={{ width: 1, height: 26, background: "#E2E8F0" }} />
-                <div style={{ cursor: "pointer" }} onClick={() => { setActiveSector("businesses"); scrollToId("sectors"); }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#0F172A", display: "flex", alignItems: "center", gap: 5 }}>
-                    <Building2 size={15} color="#2563EB" /> Enterprises
-                  </div>
-                  <div style={{ fontSize: 11.5, color: "#64748B" }}>Workforce skill graphs</div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right Column: Editorial Multi-Image Composition */}
-            <div className="lp-hero-right" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-              
-              {/* Asymmetric Imagery Duo */}
-              <div style={{ position: "relative", width: "100%", maxWidth: 440, minHeight: 330 }}>
-                {/* Image 1: Academy & Classroom setting */}
-                <div style={{ width: "72%", borderRadius: 10, overflow: "hidden", border: "1px solid #CBD5E1", boxShadow: "0 10px 28px rgba(15,23,42,0.08)" }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80"
-                    alt="Active Academy Cohort"
-                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80"; }}
-                    style={{ width: "100%", height: 210, objectFit: "cover", display: "block" }}
-                  />
-                  <div style={{ background: "#FFFFFF", padding: "8px 12px", borderTop: "1px solid #E2E8F0", textAlign: "left" }}>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: "#2563EB", textTransform: "uppercase" }}>Academies &amp; Bootcamps</span>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#0F172A" }}>Structured cohort learning with 24/7 AI tutor</div>
-                  </div>
-                </div>
-
-                {/* Image 2: NGO & Community Tech Session */}
-                <div style={{ position: "absolute", right: 0, bottom: 10, width: "62%", borderRadius: 10, overflow: "hidden", border: "1px solid #CBD5E1", boxShadow: "0 14px 34px rgba(15,23,42,0.12)" }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1531545514256-b1400bc00f31?w=800&auto=format&fit=crop&q=80"
-                    alt="Community Impact Workshop"
-                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80"; }}
-                    style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }}
-                  />
-                  <div style={{ background: "#0F172A", padding: "8px 12px", color: "#FFFFFF", textAlign: "left" }}>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: "#34D399", textTransform: "uppercase" }}>Social Impact &amp; Grants</span>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF" }}>Subsidized programs with verified outcomes</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Verified Sector Telemetry Floating Pill */}
-              <div style={{
-                marginTop: 18, width: "100%", maxWidth: 440,
-                background: "#FFFFFF", borderRadius: 8, padding: "10px 14px",
-                border: "1px solid #CBD5E1", boxShadow: "0 4px 16px rgba(15,23,42,0.06)",
-                display: "flex", justifyContent: "space-between", alignItems: "center", boxSizing: "border-box"
-              }}>
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontSize: 15, fontWeight: 900, color: "#0F172A" }}>94%</div>
-                  <div style={{ fontSize: 10.5, color: "#64748B", fontWeight: 600 }}>Cohort completion</div>
-                </div>
-                <div style={{ width: 1, height: 22, background: "#E2E8F0" }} />
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontSize: 15, fontWeight: 900, color: "#2563EB" }}>1,400+</div>
-                  <div style={{ fontSize: 10.5, color: "#64748B", fontWeight: 600 }}>Impact learners certified</div>
-                </div>
-                <div style={{ width: 1, height: 22, background: "#E2E8F0" }} />
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontSize: 15, fontWeight: 900, color: "#16A34A" }}>Real-time</div>
-                  <div style={{ fontSize: 10.5, color: "#64748B", fontWeight: 600 }}>Grant &amp; skill telemetry</div>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 2: SECTOR SOLUTIONS (ACADEMIES, NGOS, BUSINESSES)
-          ========================================================================= */}
-      <section id="sectors" className="lp-bg-surface-1" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 60px", textAlign: "left" }}>
-          
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#2563EB", letterSpacing: ".06em" }}>SOLUTIONS BY SECTOR</span>
-            <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "6px 0 8px" }}>
-              Built for your specific mission
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 620, margin: "0 auto" }}>
-              Select your organization type to see how Train AI adapts to your curriculum, community, or company.
-            </p>
-          </div>
-
-          {/* Interactive Sector Switcher Controls */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
-            <div className="sector-tabs-container" style={{
-              display: "inline-flex", background: "#F1F5F9", padding: 4, borderRadius: 10, border: "1px solid #E2E8F0", gap: 4
-            }}>
-              {Object.values(SECTORS_DATA).map(sector => {
-                const Icon = sector.icon;
-                const isActive = activeSector === sector.key;
-                return (
-                  <button
-                    key={sector.key}
-                    type="button"
-                    className={`sector-tab-btn ${isActive ? "active" : ""}`}
-                    onClick={() => setActiveSector(sector.key)}
-                  >
-                    <Icon size={16} color={isActive ? "#2563EB" : "#64748B"} />
-                    <span>{sector.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Dynamic Sector Deep-Dive Card */}
-          <div style={{
-            background: "#FFFFFF", borderRadius: 12, border: "1px solid #CBD5E1",
-            padding: "clamp(24px, 3vw, 36px)", boxShadow: "0 8px 24px -4px rgba(15, 23, 42, 0.06)"
-          }}>
-            <div className="sector-detail-grid" style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 36, alignItems: "center" }}>
-              
-              {/* Left Content */}
-              <div>
-                <span style={{
-                  fontSize: 10.5, fontWeight: 800, color: "#2563EB", background: "#EFF6FF",
-                  padding: "3px 8px", borderRadius: 6, display: "inline-block", marginBottom: 12
-                }}>
-                  {currentSector.badge}
-                </span>
-
-                <h3 style={{ fontSize: "clamp(22px, 2.5vw, 28px)", fontWeight: 900, color: "#0F172A", margin: "0 0 10px", lineHeight: 1.25 }}>
-                  {currentSector.title}
-                </h3>
-
-                <p style={{ fontSize: 14.5, color: "#475569", lineHeight: 1.55, margin: "0 0 20px" }}>
-                  {currentSector.desc}
-                </p>
-
-                {/* 3 Capabilities */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
-                  {currentSector.features.map(f => (
-                    <div key={f.title} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <Check size={16} color="#2563EB" strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 2 }} />
-                      <div>
-                        <div style={{ fontSize: 13.5, fontWeight: 800, color: "#0F172A" }}>{f.title}</div>
-                        <div style={{ fontSize: 12.5, color: "#64748B", lineHeight: 1.4 }}>{f.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Sector Payment / Partnership Note */}
-                <div style={{ background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8, padding: "10px 14px", marginBottom: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "#0F172A", marginBottom: 2 }}>PRICING &amp; PARTNERSHIP STRUCTURE</div>
-                  <div style={{ fontSize: 12.5, color: "#475569" }}>{currentSector.pricingModel}</div>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button className="action-btn-primary" style={{ padding: "10px 18px", borderRadius: 8, fontWeight: 700, fontSize: 13 }} onClick={() => handleNav("book-demo", { sector: activeSector })}>
-                    Book a {currentSector.label.split(" ")[0]} Demo
-                  </button>
-                  <button className="action-btn-outline" style={{ padding: "10px 16px", borderRadius: 8, fontWeight: 600, fontSize: 13 }} onClick={() => scrollToId("pricing")}>
-                    View pricing options
-                  </button>
-                </div>
-              </div>
-
-              {/* Right Photo */}
-              <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid #CBD5E1" }}>
-                <img
-                  src={currentSector.image}
-                  alt={currentSector.label}
-                  onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80"; }}
-                  style={{ width: "100%", height: 320, objectFit: "cover", display: "block" }}
-                />
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 3: PARTNERSHIP & PRICING MODELS
-          ========================================================================= */}
-      <section id="pricing" className="lp-bg-surface-2" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "50px 20px 64px", textAlign: "left" }}>
-          
-          <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#2563EB", letterSpacing: ".06em" }}>TRANSPARENT LICENSING</span>
-            <h2 className="lp-section-h2" style={{ fontSize: 32, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "6px 0 8px" }}>
-              Tailored partnership &amp; pricing structures
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 640, margin: "0 auto" }}>
-              Whether you are an accredited academy, a grant-funded non-profit, or a scaling tech company, our licensing adapts to your operating model.
-            </p>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
-            
-            {/* Model 1: Academies */}
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", borderRadius: 10, border: "1.5px solid #CBD5E1", padding: "26px 22px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: "#2563EB", background: "#EFF6FF", padding: "3px 8px", borderRadius: 6 }}>
-                    ACADEMIC LICENSING
-                  </span>
-                  <GraduationCap size={18} color="#2563EB" />
-                </div>
-                <h3 style={{ fontSize: 20, fontWeight: 900, color: "#0F172A", margin: "0 0 4px" }}>Institutional Cohort</h3>
-                <p style={{ fontSize: 13, color: "#64748B", margin: "0 0 16px", lineHeight: 1.45 }}>
-                  Term and semester licensing built for colleges, bootcamps, and technical schools.
-                </p>
-
-                <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: 14, marginBottom: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>WHAT'S INCLUDED:</div>
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 7, fontSize: 12.5, color: "#334155" }}>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Per-student semester or annual licensing</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Faculty cohort management &amp; pacing controls</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>24/7 AI tutor &amp; automated adaptive quizzes</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Academic discount volume rates (up to 40% off)</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Institutional seal branding &amp; credentials</span></li>
-                  </ul>
-                </div>
-              </div>
-
-              <button className="action-btn-outline" style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13, textAlign: "center" }} onClick={() => handleNav("book-demo", { sector: "academies" })}>
-                Book Academic Consultation
-              </button>
-            </div>
-
-            {/* Model 2: NGOs & Impact */}
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", borderRadius: 10, border: "2px solid #2563EB", padding: "26px 22px", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
-              <div style={{ position: "absolute", top: -11, right: 18, background: "#2563EB", color: "#FFFFFF", fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 999, textTransform: "uppercase" }}>
-                COMMUNITY IMPACT
-              </div>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: "#E11D48", background: "#FFE4E6", padding: "3px 8px", borderRadius: 6 }}>
-                    GRANT &amp; IMPACT SUBSIDIES
-                  </span>
-                  <Heart size={18} color="#E11D48" />
-                </div>
-                <h3 style={{ fontSize: 20, fontWeight: 900, color: "#0F172A", margin: "0 0 4px" }}>Sponsored Programs</h3>
-                <p style={{ fontSize: 13, color: "#64748B", margin: "0 0 16px", lineHeight: 1.45 }}>
-                  Subsidized access for non-profits, philanthropic foundations, and community upskilling.
-                </p>
-
-                <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: 14, marginBottom: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>WHAT'S INCLUDED:</div>
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 7, fontSize: 12.5, color: "#334155" }}>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#16A34A" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Subsidized pricing &amp; donor-matched grant seats</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#16A34A" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Exportable impact telemetry for donor reporting</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#16A34A" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Low-bandwidth mobile delivery for emerging regions</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#16A34A" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Dedicated community cohort facilitator onboarding</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#16A34A" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Full curriculum catalog &amp; career pathways</span></li>
-                  </ul>
-                </div>
-              </div>
-
-              <button className="action-btn-primary" style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13, textAlign: "center" }} onClick={() => handleNav("book-demo", { sector: "ngos" })}>
-                Book Grant Consultation
-              </button>
-            </div>
-
-            {/* Model 3: Businesses */}
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", borderRadius: 10, border: "1.5px solid #CBD5E1", padding: "26px 22px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: "#0F172A", background: "#F1F5F9", padding: "3px 8px", borderRadius: 6 }}>
-                    ENTERPRISE SCALE
-                  </span>
-                  <Building2 size={18} color="#0F172A" />
-                </div>
-                <h3 style={{ fontSize: 20, fontWeight: 900, color: "#0F172A", margin: "0 0 4px" }}>Workforce Intelligence</h3>
-                <p style={{ fontSize: 13, color: "#64748B", margin: "0 0 16px", lineHeight: 1.45 }}>
-                  Scalable seat-based licensing for corporate talent mapping and compliance.
-                </p>
-
-                <div style={{ borderTop: "1px solid #E2E8F0", paddingTop: 14, marginBottom: 16 }}>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#0F172A", marginBottom: 8 }}>WHAT'S INCLUDED:</div>
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 7, fontSize: 12.5, color: "#334155" }}>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Active seat licensing (monthly or annual billing)</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Full Workforce Intelligence &amp; live AI Skill Graph</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>SSO (SAML, Okta, Azure AD) &amp; tenant isolation</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Compliance tracking &amp; audit export logs</span></li>
-                    <li style={{ display: "flex", gap: 6 }}><Check size={14} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} /> <span>Priority SLA &amp; dedicated customer success</span></li>
-                  </ul>
-                </div>
-              </div>
-
-              <button className="action-btn-outline" style={{ width: "100%", padding: "10px", borderRadius: 8, fontWeight: 700, fontSize: 13, textAlign: "center" }} onClick={() => handleNav("signin")}>
-                Start Business Trial
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 4: THE INTELLIGENCE & TELEMETRY LAYER
-          ========================================================================= */}
-      <section id="intelligence" className="lp-bg-surface-1" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 58px", textAlign: "left" }}>
-          
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#2563EB", letterSpacing: ".06em" }}>THE INTELLIGENCE LAYER</span>
-          </div>
-
-          <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
-            Understand capability in real time
-          </h2>
-
-          <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 620, margin: "0 0 28px", lineHeight: 1.5 }}>
-            Whether managing university cohorts, community upskilling cohorts, or corporate teams, the intelligence layer combines active signals into decisions you can act on.
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
-            
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <Brain size={24} color="#2563EB" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Dynamic Skill Graph</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                A live view of skill coverage across learners, classes, or departments: what skills exist, what is developing, and where critical gaps remain.
-              </p>
-            </div>
-
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <Gauge size={24} color="#2563EB" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Readiness &amp; Impact Index</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                A unified execution indicator per cohort, function, or grant initiative, answering who is ready to execute and who needs immediate mentorship.
-              </p>
-            </div>
-
-            <div className="lp-card-hover" style={{ background: "#FFFFFF", padding: "20px 20px", borderRadius: 10, border: "1px solid #E2E8F0" }}>
-              <BarChart3 size={24} color="#2563EB" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>Actionable Telemetry</h3>
-              <p style={{ fontSize: 13, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Summary dashboards built for leaders, academic deans, and NGO directors: exportable talent metrics, velocity trends, and audit records.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 5: THE LEARNER APP (INTERACTIVE DEMO)
-          ========================================================================= */}
-      <section id="learners" className="lp-bg-surface-tint" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 20px 52px" }}>
-          
-          <div style={{ textAlign: "left", marginBottom: 6 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#2563EB", letterSpacing: ".06em" }}>THE LEARNER EXPERIENCE</span>
-          </div>
-
-          <h2 className="lp-section-h2" style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 6px", textAlign: "left" }}>
-            Four focused spaces. Zero clutter.
-          </h2>
-
-          <p style={{ fontSize: 14, color: "#64748B", maxWidth: 620, margin: "0 0 20px", lineHeight: 1.5, textAlign: "left" }}>
-            Every learner gets a dedicated workspace: Home, Courses, AI Coach, and Community. Tap the tabs or phone buttons to preview live.
-          </p>
-
-          <div className="lp-learner-grid" style={{ display: "grid", gridTemplateColumns: "1.25fr 0.75fr", gap: 20, alignItems: "stretch" }}>
-            
-            {/* Left Side: Interactive Tab Stack */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "space-between" }}>
-              
-              {/* Tab 1: Home */}
-              <div
-                className="lp-card-hover"
-                onClick={() => setMobileLearnerTab("home")}
-                style={{
-                  background: mobileLearnerTab === "home" ? "#EFF6FF" : "#FFFFFF",
-                  padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "home" ? "2px solid #2563EB" : "1px solid #E2E8F0",
-                  cursor: "pointer"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Home size={16} color={mobileLearnerTab === "home" ? "#2563EB" : "#64748B"} />
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Home Workspace</h3>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "home" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "home" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "home" ? "Active" : "Personalized"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>
-                  Sprint milestones, career roadmap, active cohorts, and daily study streaks.
-                </p>
-              </div>
-
-              {/* Tab 2: Courses */}
-              <div
-                className="lp-card-hover"
-                onClick={() => setMobileLearnerTab("courses")}
-                style={{
-                  background: mobileLearnerTab === "courses" ? "#EFF6FF" : "#FFFFFF",
-                  padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "courses" ? "2px solid #2563EB" : "1px solid #E2E8F0",
-                  cursor: "pointer"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <BookOpen size={16} color={mobileLearnerTab === "courses" ? "#2563EB" : "#64748B"} />
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Curriculum &amp; Masterclasses</h3>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "courses" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "courses" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "courses" ? "Active" : "Catalog"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>
-                  Technical courses, assigned cohort modules, video previews, and practice assignments.
-                </p>
-              </div>
-
-              {/* Tab 3: AI Coach */}
-              <div
-                className="lp-card-hover"
-                onClick={() => setMobileLearnerTab("ai")}
-                style={{
-                  background: mobileLearnerTab === "ai" ? "#EFF6FF" : "#FFFFFF",
-                  padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "ai" ? "2px solid #2563EB" : "1px solid #E2E8F0",
-                  cursor: "pointer"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Zap size={16} color={mobileLearnerTab === "ai" ? "#2563EB" : "#64748B"} />
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>24/7 AI Tutor &amp; Quiz Arena</h3>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "ai" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "ai" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "ai" ? "Active" : "Adaptive"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>
-                  Interactive code debugging assistant and real-time adaptive practice quizzes.
-                </p>
-              </div>
-
-              {/* Tab 4: Community */}
-              <div
-                className="lp-card-hover"
-                onClick={() => setMobileLearnerTab("community")}
-                style={{
-                  background: mobileLearnerTab === "community" ? "#EFF6FF" : "#FFFFFF",
-                  padding: "12px 14px", borderRadius: 8,
-                  border: mobileLearnerTab === "community" ? "2px solid #2563EB" : "1px solid #E2E8F0",
-                  cursor: "pointer"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Users size={16} color={mobileLearnerTab === "community" ? "#2563EB" : "#64748B"} />
-                    <h3 style={{ fontSize: 14, fontWeight: 700, color: "#0F172A", margin: 0 }}>Community Hub</h3>
-                  </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: mobileLearnerTab === "community" ? "#2563EB" : "#64748B", background: mobileLearnerTab === "community" ? "rgba(37,99,235,0.12)" : "#F1F5F9", padding: "1px 6px", borderRadius: 4 }}>
-                    {mobileLearnerTab === "community" ? "Active" : "Peer Network"}
-                  </span>
-                </div>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0", lineHeight: 1.4 }}>
-                  Pinned announcements, peer Q&amp;A discussions, study groups, and live voting polls.
-                </p>
-              </div>
-
-              {/* Bottom Feature Badges */}
-              <div style={{ background: "#FFFFFF", borderRadius: 8, padding: "8px 12px", border: "1px solid #E2E8F0", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#334155" }}>
-                  <Flame size={12} color="#EA580C" /> Daily Streaks
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#2563EB" }}>
-                  <Target size={12} color="#2563EB" /> Adaptive Quizzes
-                </span>
-                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#16A34A" }}>
-                  <CheckCircle2 size={12} color="#16A34A" /> Micro-Credentials
-                </span>
-              </div>
-
-            </div>
-
-            {/* Right Side: Authentic Smartphone Preview */}
-            <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-              <div style={{
-                width: 290, height: 535, background: "#0B0F17", borderRadius: 40,
-                padding: "8px 8px 10px", border: "3px solid #1E293B", position: "relative",
-                display: "flex", flexDirection: "column", boxSizing: "border-box",
-                boxShadow: "0 22px 45px -10px rgba(0, 0, 0, 0.45), inset 0 0 0 1px #334155"
-              }}>
-                {/* Dynamic Island Notch */}
-                <div style={{
-                  position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)",
-                  width: 82, height: 18, background: "#000000", borderRadius: 12,
-                  zIndex: 40, display: "flex", alignItems: "center", justifyContent: "flex-end", paddingRight: 8
-                }}>
-                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#1E293B", border: "1px solid #0F172A" }} />
-                </div>
-
-                {/* Inner Screen */}
-                <div style={{
-                  flex: 1, background: "#F8FAFC", borderRadius: 32, overflow: "hidden",
-                  display: "flex", flexDirection: "column", position: "relative",
-                  boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.06)"
-                }}>
-                  {/* Phone Status Bar */}
-                  <div style={{
-                    padding: "6px 14px 2px", display: "flex", justifyContent: "space-between",
-                    alignItems: "center", background: "#FFFFFF", fontSize: 9.5, fontWeight: 800, color: "#0F172A",
-                    zIndex: 10
-                  }}>
-                    <span>9:41</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                      <div style={{ display: "flex", alignItems: "flex-end", gap: 1, height: 8 }}>
-                        <div style={{ width: 2, height: 3, background: "#0F172A", borderRadius: 1 }} />
-                        <div style={{ width: 2, height: 5, background: "#0F172A", borderRadius: 1 }} />
-                        <div style={{ width: 2, height: 7, background: "#0F172A", borderRadius: 1 }} />
-                        <div style={{ width: 2, height: 8, background: "#0F172A", borderRadius: 1 }} />
-                      </div>
-                      <Wifi size={10} color="#0F172A" />
-                      <div style={{ width: 15, height: 8, border: "1.2px solid #0F172A", borderRadius: 2, padding: 0.5, display: "flex", alignItems: "center" }}>
-                        <div style={{ width: "80%", height: "100%", background: "#0F172A", borderRadius: 1 }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Authentic Learner Header (tai-global-header) */}
-                  <div style={{
-                    padding: "6px 10px", display: "flex", justifyContent: "space-between",
-                    alignItems: "center", background: "#FFFFFF", borderBottom: "1px solid #F1F5F9",
-                    zIndex: 10
-                  }}>
-                    <img src="/train-ai-logo.png" alt="TRAIN.AI" style={{ height: 13, width: "auto" }} />
-                    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 2, background: "#FFF7ED", border: "1px solid #FFEDD5", padding: "1px 5px", borderRadius: 4, fontSize: 8.5, fontWeight: 700, color: "#EA580C" }}>
-                        <Flame size={9} color="#EA580C" /> 5d
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 2, background: "#EEF2FF", border: "1px solid #E0E7FF", padding: "1px 5px", borderRadius: 4, fontSize: 8.5, fontWeight: 700, color: "#2563EB" }}>
-                        <Coins size={8.5} color="#2563EB" /> 120
-                      </div>
-                      <div style={{ width: 18, height: 18, borderRadius: "50%", background: "#2563EB", color: "#fff", fontSize: 8.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        A
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Body Screen View */}
-                  <div style={{ flex: 1, overflowY: "auto", padding: "8px 9px", textAlign: "left", display: "flex", flexDirection: "column", gap: 6 }}>
-                    {mobileLearnerTab === "home" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {/* Authentic Hero Card */}
-                        <div style={{ background: "#0F172A", borderRadius: 10, padding: "10px", color: "#FFFFFF" }}>
-                          <div style={{ fontSize: 9.5, color: "#94A3B8" }}>Welcome back,</div>
-                          <div style={{ fontSize: 13, fontWeight: 900 }}>Alex Rivera</div>
-                          <div style={{ fontSize: 8, fontWeight: 700, color: "#60A5FA", background: "rgba(59,130,246,0.18)", padding: "1.5px 6px", borderRadius: 4, display: "inline-block", marginTop: 3 }}>
-                            AI &amp; Data Engineering Track
-                          </div>
-                          <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 6, padding: "5px 7px", marginTop: 6, border: "1px solid rgba(255,255,255,0.1)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 8, fontWeight: 700, marginBottom: 3 }}>
-                              <span style={{ color: "#E2E8F0" }}>Milestone Progress</span>
-                              <span style={{ color: "#34D399" }}>78% Ready</span>
-                            </div>
-                            <div style={{ height: 3.5, borderRadius: 2, background: "rgba(255,255,255,0.15)", overflow: "hidden" }}>
-                              <div style={{ width: "78%", height: "100%", background: "#10B981", borderRadius: 2 }} />
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 7.5, color: "#94A3B8", marginTop: 4 }}>
-                              <span>Sprint 2 of 4</span>
-                              <span>Day 18 of 45</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Continue Active Course Card */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 9, border: "1px solid #E2E8F0", padding: "8px 9px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 7.5, fontWeight: 800, color: "#2563EB", letterSpacing: ".04em" }}>ACTIVE COURSE</span>
-                            <span style={{ fontSize: 7.5, color: "#64748B" }}>Lesson 4 of 12</span>
-                          </div>
-                          <div style={{ fontSize: 9.5, fontWeight: 800, color: "#0F172A", marginTop: 2 }}>
-                            Production RAG &amp; Vector Systems
-                          </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                            <button style={{ background: "#2563EB", color: "#FFFFFF", border: "none", borderRadius: 5, padding: "3.5px 8px", fontSize: 8.5, fontWeight: 700, display: "flex", alignItems: "center", gap: 3, cursor: "pointer" }}>
-                              <Play size={8} fill="#fff" /> Resume Lesson
-                            </button>
-                            <span style={{ fontSize: 7.5, color: "#16A34A", fontWeight: 700 }}>45% Done</span>
-                          </div>
-                        </div>
-
-                        {/* Daily Goal Card */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 9, border: "1px solid #E2E8F0", padding: "7px 9px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div>
-                            <div style={{ fontSize: 9, fontWeight: 700, color: "#0F172A" }}>Daily AI Practice Quiz</div>
-                            <div style={{ fontSize: 7.5, color: "#64748B" }}>4 of 5 lessons completed today</div>
-                          </div>
-                          <span style={{ fontSize: 8, fontWeight: 700, color: "#16A34A", background: "#DCFCE7", padding: "2px 6px", borderRadius: 4 }}>
-                            +25 XP
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {mobileLearnerTab === "courses" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {/* Search Bar */}
-                        <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 6, padding: "5px 8px", display: "flex", alignItems: "center", gap: 5, fontSize: 8.5, color: "#94A3B8" }}>
-                          <Search size={10} color="#94A3B8" />
-                          <span>Search curriculum &amp; labs...</span>
-                        </div>
-
-                        {/* Filter Chips */}
-                        <div style={{ display: "flex", gap: 4 }}>
-                          <span style={{ fontSize: 7.5, fontWeight: 700, background: "#2563EB", color: "#FFFFFF", padding: "2px 6px", borderRadius: 999 }}>All</span>
-                          <span style={{ fontSize: 7.5, fontWeight: 600, background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#64748B", padding: "2px 6px", borderRadius: 999 }}>AI &amp; ML</span>
-                          <span style={{ fontSize: 7.5, fontWeight: 600, background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#64748B", padding: "2px 6px", borderRadius: 999 }}>Data</span>
-                          <span style={{ fontSize: 7.5, fontWeight: 600, background: "#FFFFFF", border: "1px solid #E2E8F0", color: "#64748B", padding: "2px 6px", borderRadius: 999 }}>Cloud</span>
-                        </div>
-
-                        {/* Course Card 1 */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "8px 9px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 7.5, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 5px", borderRadius: 3 }}>ACCREDITED</span>
-                            <div style={{ display: "flex", alignItems: "center", gap: 2, fontSize: 7.5, fontWeight: 700, color: "#EA580C" }}>
-                              <Star size={8} fill="#EA580C" color="#EA580C" /> 4.9
-                            </div>
-                          </div>
-                          <div style={{ fontSize: 9.5, fontWeight: 800, color: "#0F172A", marginTop: 3 }}>
-                            Full-Stack AI Application Engineering
-                          </div>
-                          <div style={{ fontSize: 7.5, color: "#64748B", marginTop: 1 }}>
-                            8 modules • 14 practical labs • Capstone
-                          </div>
-                          <div style={{ height: 3, background: "#F1F5F9", borderRadius: 2, marginTop: 6, overflow: "hidden" }}>
-                            <div style={{ width: "75%", height: "100%", background: "#2563EB", borderRadius: 2 }} />
-                          </div>
-                        </div>
-
-                        {/* Course Card 2 */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "8px 9px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 7.5, fontWeight: 700, color: "#16A34A", background: "#DCFCE7", padding: "1px 5px", borderRadius: 3 }}>NEW MODULE</span>
-                            <span style={{ fontSize: 7.5, color: "#64748B" }}>4 Modules</span>
-                          </div>
-                          <div style={{ fontSize: 9.5, fontWeight: 800, color: "#0F172A", marginTop: 3 }}>
-                            Enterprise LLM Fine-Tuning &amp; Eval
-                          </div>
-                          <div style={{ fontSize: 7.5, color: "#64748B", marginTop: 1 }}>
-                            Direct model alignment with LoRA &amp; RLAIF
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {mobileLearnerTab === "ai" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6, height: "100%" }}>
-                        {/* Header Banner */}
-                        <div style={{ background: "#0F172A", borderRadius: 8, padding: "7px 9px", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div>
-                            <div style={{ fontSize: 10, fontWeight: 800 }}>Train AI Learning Coach</div>
-                            <div style={{ fontSize: 7.5, color: "#94A3B8" }}>24/7 Context-Aware Tutor</div>
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 7.5, color: "#34D399" }}>
-                            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#34D399" }} /> Online
-                          </div>
-                        </div>
-
-                        {/* User Message */}
-                        <div style={{ alignSelf: "flex-end", maxWidth: "88%", background: "#2563EB", color: "#FFFFFF", borderRadius: "8px 8px 2px 8px", padding: "5px 8px", fontSize: 8 }}>
-                          How do I optimize vector embeddings retrieval for low latency?
-                        </div>
-
-                        {/* AI Tutor Message */}
-                        <div style={{ alignSelf: "flex-start", maxWidth: "92%", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "8px 8px 8px 2px", padding: "6px 8px", fontSize: 8, color: "#1E293B" }}>
-                          Use HNSW indexing with cosine distance and scalar quantization:
-                          <div style={{ background: "#0F172A", color: "#38BDF8", borderRadius: 4, padding: "4px 6px", fontFamily: "monospace", fontSize: 7.5, margin: "4px 0" }}>
-                            const res = await index.query(&#123; topK: 5 &#125;);
-                          </div>
-                          This reduces p99 retrieval to 12ms.
-                        </div>
-
-                        {/* Chat Input Bar */}
-                        <div style={{ background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: 6, padding: "4px 6px", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-                          <span style={{ fontSize: 8, color: "#94A3B8" }}>Ask AI Coach anything...</span>
-                          <button style={{ width: 18, height: 18, borderRadius: "50%", background: "#2563EB", border: "none", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                            <Send size={8} color="#fff" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {mobileLearnerTab === "community" && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                        {/* Pinned Banner */}
-                        <div style={{ background: "#0F172A", borderRadius: 8, padding: "7px 9px", color: "#FFFFFF" }}>
-                          <div style={{ fontSize: 7.5, fontWeight: 700, color: "#60A5FA" }}>AI &amp; DATA COHORT #4</div>
-                          <div style={{ fontSize: 10, fontWeight: 800 }}>Cohort Community Hub</div>
-                        </div>
-
-                        {/* Faculty Announcement */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "7px 8px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 3 }}>
-                            <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#0F172A", color: "#fff", fontSize: 7.5, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              MV
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 8, fontWeight: 700, color: "#0F172A" }}>
-                                Dr. Marcus Vance <span style={{ color: "#2563EB", fontWeight: 600 }}>• Lead Faculty</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div style={{ fontSize: 8, color: "#334155", lineHeight: 1.35 }}>
-                            Live architecture review tomorrow at 3:00 PM GMT. Have your lab repos ready.
-                          </div>
-                        </div>
-
-                        {/* Peer Discussion Item */}
-                        <div style={{ background: "#FFFFFF", borderRadius: 8, border: "1px solid #E2E8F0", padding: "7px 8px" }}>
-                          <div style={{ fontSize: 7.5, fontWeight: 700, color: "#2563EB", marginBottom: 1 }}>DISCUSSION</div>
-                          <div style={{ fontSize: 8.5, fontWeight: 700, color: "#0F172A" }}>
-                            Best practices for prompt caching
-                          </div>
-                          <div style={{ fontSize: 7.5, color: "#64748B", marginTop: 2 }}>
-                            14 replies • 28 upvotes
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Authentic Bottom Navigation Bar (tai-navbar with active dynamic capsule pill) */}
-                  <div style={{
-                    height: 38, background: "#FFFFFF", borderTop: "1px solid #E2E8F0",
-                    display: "flex", alignItems: "center", justifyContent: "space-around",
-                    padding: "0 6px", zIndex: 10
-                  }}>
-                    <div
-                      onClick={() => setMobileLearnerTab("home")}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 4,
-                        background: mobileLearnerTab === "home" ? "#2563EB" : "transparent",
-                        color: mobileLearnerTab === "home" ? "#FFFFFF" : "#64748B",
-                        padding: mobileLearnerTab === "home" ? "4px 9px" : "4px 6px",
-                        borderRadius: 999, fontSize: 8.5, fontWeight: 800, cursor: "pointer",
-                        boxShadow: mobileLearnerTab === "home" ? "0 2px 6px rgba(37,99,235,0.3)" : "none",
-                        transition: "all .16s ease"
-                      }}
-                    >
-                      <Home size={10} strokeWidth={mobileLearnerTab === "home" ? 2.5 : 1.8} />
-                      {mobileLearnerTab === "home" && <span>Home</span>}
-                    </div>
-
-                    <div
-                      onClick={() => setMobileLearnerTab("courses")}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 4,
-                        background: mobileLearnerTab === "courses" ? "#2563EB" : "transparent",
-                        color: mobileLearnerTab === "courses" ? "#FFFFFF" : "#64748B",
-                        padding: mobileLearnerTab === "courses" ? "4px 9px" : "4px 6px",
-                        borderRadius: 999, fontSize: 8.5, fontWeight: 800, cursor: "pointer",
-                        boxShadow: mobileLearnerTab === "courses" ? "0 2px 6px rgba(37,99,235,0.3)" : "none",
-                        transition: "all .16s ease"
-                      }}
-                    >
-                      <BookOpen size={10} strokeWidth={mobileLearnerTab === "courses" ? 2.5 : 1.8} />
-                      {mobileLearnerTab === "courses" && <span>Courses</span>}
-                    </div>
-
-                    <div
-                      onClick={() => setMobileLearnerTab("ai")}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 4,
-                        background: mobileLearnerTab === "ai" ? "#2563EB" : "transparent",
-                        color: mobileLearnerTab === "ai" ? "#FFFFFF" : "#64748B",
-                        padding: mobileLearnerTab === "ai" ? "4px 9px" : "4px 6px",
-                        borderRadius: 999, fontSize: 8.5, fontWeight: 800, cursor: "pointer",
-                        boxShadow: mobileLearnerTab === "ai" ? "0 2px 6px rgba(37,99,235,0.3)" : "none",
-                        transition: "all .16s ease"
-                      }}
-                    >
-                      <Zap size={10} strokeWidth={mobileLearnerTab === "ai" ? 2.5 : 1.8} />
-                      {mobileLearnerTab === "ai" && <span>AI Coach</span>}
-                    </div>
-
-                    <div
-                      onClick={() => setMobileLearnerTab("community")}
-                      style={{
-                        display: "flex", alignItems: "center", gap: 4,
-                        background: mobileLearnerTab === "community" ? "#2563EB" : "transparent",
-                        color: mobileLearnerTab === "community" ? "#FFFFFF" : "#64748B",
-                        padding: mobileLearnerTab === "community" ? "4px 9px" : "4px 6px",
-                        borderRadius: 999, fontSize: 8.5, fontWeight: 800, cursor: "pointer",
-                        boxShadow: mobileLearnerTab === "community" ? "0 2px 6px rgba(37,99,235,0.3)" : "none",
-                        transition: "all .16s ease"
-                      }}
-                    >
-                      <Users size={10} strokeWidth={mobileLearnerTab === "community" ? 2.5 : 1.8} />
-                      {mobileLearnerTab === "community" && <span>Social</span>}
-                    </div>
-                  </div>
-
-                  {/* Phone Home Indicator Bar */}
-                  <div style={{ height: 8, background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <div style={{ width: 68, height: 2.5, borderRadius: 2, background: "#0F172A" }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 6: HOW IT WORKS
-          ========================================================================= */}
-      <section id="how-it-works" className="lp-bg-surface-2" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "48px 20px 58px", textAlign: "center" }}>
-          
-          <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 6px" }}>
-            How It Works
-          </h2>
-          <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 520, margin: "0 auto 30px" }}>
-            From onboarding cohorts to measurable capability and certified outcomes
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, textAlign: "left" }}>
-            
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <UserPlus size={22} color="#2563EB" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>1. Launch Your Cohort</h3>
-              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Invite students, community learners, or employees. Group them into classes or cohorts with role-based access.
-              </p>
-            </div>
-
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <BookOpen size={22} color="#2563EB" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>2. Deliver &amp; Coach</h3>
-              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Assign verified curriculum tracks and let learners practice with 24/7 AI tutor guidance and faculty feedback.
-              </p>
-            </div>
-
-            <div className="lp-step-card" style={{ background: "#FFFFFF", borderRadius: 10, padding: "22px 18px", border: "1px solid #E2E8F0" }}>
-              <Award size={22} color="#2563EB" style={{ marginBottom: 12 }} />
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: "0 0 6px" }}>3. Certify &amp; Report</h3>
-              <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.5 }}>
-                Issue verified institutional credentials and export live readiness scores for academic boards, donors, or executives.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 7: TRUST, SECURITY & LOW BANDWIDTH
-          ========================================================================= */}
-      <section id="trust" className="lp-bg-surface-1" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 1180, margin: "0 auto", padding: "44px 20px 54px", textAlign: "left" }}>
-          
-          <div style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#2563EB", letterSpacing: ".06em" }}>INSTITUTIONAL TRUST</span>
-          </div>
-
-          <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.03em", color: "#0F172A", margin: "0 0 8px" }}>
-            Trust and accessibility built in
-          </h2>
-
-          <p style={{ fontSize: 14.5, color: "#64748B", maxWidth: 620, margin: "0 0 26px", lineHeight: 1.5 }}>
-            Data isolation, privacy compliance, auditability, and low-bandwidth delivery are foundational to Train AI.
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
-            {TRUST_FEATURES.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div key={item.title} className="lp-card-hover" style={{ background: "#FFFFFF", padding: "18px 18px", borderRadius: 8, border: "1px solid #E2E8F0" }}>
-                  <Icon size={20} color="#2563EB" style={{ marginBottom: 10 }} />
-                  <h3 style={{ fontSize: 15, fontWeight: 800, color: "#0F172A", margin: "0 0 4px" }}>{item.title}</h3>
-                  <p style={{ fontSize: 12.5, color: "#64748B", margin: 0, lineHeight: 1.45 }}>{item.desc}</p>
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 8: FAQ ACCORDION
-          ========================================================================= */}
-      <section id="faq" className="lp-bg-surface-2" style={{ width: "100%" }}>
-        <div className="lp-section-inner" style={{ maxWidth: 820, margin: "0 auto", padding: "48px 20px 60px", textAlign: "left" }}>
-          
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <h2 className="lp-section-h2" style={{ fontSize: 30, fontWeight: 900, letterSpacing: "-0.035em", color: "#0F172A", margin: "0 0 6px" }}>
-              Frequently Asked Questions
-            </h2>
-            <p style={{ fontSize: 14.5, color: "#64748B", margin: 0 }}>
-              Everything you need to know about Train AI for academies, NGOs, and businesses.
-            </p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {FAQ_ITEMS.map((item, i) => {
-              const isOpen = openFaq === i;
-              return (
-                <div
-                  key={item.q}
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #E2E8F0",
-                    borderRadius: 10,
-                    padding: "2px 18px",
-                    boxShadow: isOpen ? "0 2px 8px rgba(15, 23, 42, 0.04)" : "none"
-                  }}
-                >
-                  <button
-                    type="button"
-                    style={{
-                      width: "100%", border: "none", background: "transparent", cursor: "pointer",
-                      padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "space-between",
-                      gap: 10, fontSize: 14.5, fontWeight: 700, color: "#0F172A", textAlign: "left"
-                    }}
-                    onClick={() => setOpenFaq(isOpen ? null : i)}
-                    aria-expanded={isOpen}
-                  >
-                    <span>{item.q}</span>
-                    <ChevronDown
-                      size={16}
-                      color="#64748B"
-                      style={{
-                        transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                        transition: "transform 0.2s ease",
-                        flexShrink: 0
-                      }}
-                    />
-                  </button>
-                  {isOpen && <p style={{ margin: "0 0 14px", fontSize: 13, color: "#475569", lineHeight: 1.55 }}>{item.a}</p>}
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 9: PRE-FOOTER CTA
-          ========================================================================= */}
-      <section style={{ width: "100%", background: "#FFFFFF", padding: "36px 20px" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-          <div style={{
-            background: "#0F172A",
-            borderRadius: 12, padding: "44px 24px", textAlign: "center", color: "#FFFFFF"
-          }}>
-            <h2 style={{ fontSize: "clamp(24px, 3.2vw, 36px)", fontWeight: 900, letterSpacing: "-0.035em", margin: "0 0 12px", color: "#FFFFFF", lineHeight: 1.2 }}>
-              Ready to elevate how your organization learns?
-            </h2>
-            
-            <p style={{ fontSize: 14.5, color: "#CBD5E1", maxWidth: 620, margin: "0 auto 24px", lineHeight: 1.55 }}>
-              Join academic institutions, non-profit foundations, and growing enterprises building verified skills with Train AI.
-            </p>
-
-            <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
-              <button
-                className="action-btn-primary"
-                style={{ padding: "10px 22px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13.5, display: "inline-flex", alignItems: "center", gap: 6 }}
-                onClick={() => handleNav("signin")}
-              >
-                Get Started <ArrowRight size={14} />
-              </button>
-              <button
-                style={{ background: "rgba(255,255,255,0.08)", color: "#FFFFFF", fontWeight: 600, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.25)", cursor: "pointer", fontSize: 13.5 }}
-                onClick={() => handleNav("book-demo")}
-              >
-                Book a Demo
-              </button>
-              <button
-                style={{ background: "transparent", color: "#CBD5E1", fontWeight: 600, padding: "10px 18px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.18)", cursor: "pointer", fontSize: 13.5 }}
-                onClick={() => handleNav("signin")}
-              >
-                Sign In
-              </button>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap", fontSize: 11.5, color: "#94A3B8", fontWeight: 600 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <CheckCircle2 size={13} color="#34D399" /> Academic Disounts
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <CheckCircle2 size={13} color="#34D399" /> Subsidized NGO Plans
-              </span>
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                <CheckCircle2 size={13} color="#34D399" /> Enterprise SLAs
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          SECTION 10: DARK FOOTER
-          ========================================================================= */}
-      <footer style={{ background: "#0B1120", color: "#FFFFFF", paddingTop: 36, paddingBottom: 28, borderTop: "1px solid #1E293B" }}>
-        <div style={{ maxWidth: 1180, margin: "0 auto", padding: "0 20px" }}>
-          
-          {/* Newsletter Box */}
-          <div style={{
-            background: "#111827", borderRadius: 10, padding: "24px 20px",
-            border: "1px solid #1E293B", textAlign: "center", marginBottom: 36
-          }}>
-            <h3 style={{ fontSize: 17, fontWeight: 800, color: "#FFFFFF", margin: "0 0 4px" }}>
-              Stay Updated with Train AI
-            </h3>
-            <p style={{ fontSize: 12.5, color: "#94A3B8", margin: "0 0 14px" }}>
-              Receive updates on academic tracks, NGO grants, and platform feature releases.
-            </p>
-
-            {newsletterSubscribed ? (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", background: "rgba(16,185,129,0.15)", color: "#34D399", borderRadius: 6, fontWeight: 600, fontSize: 12.5 }}>
-                <CheckCircle2 size={15} />
-                <span>Thank you for subscribing! We will keep you updated.</span>
-              </div>
-            ) : (
-              <form onSubmit={handleNewsletterSubmit} style={{ display: "flex", maxWidth: 400, margin: "0 auto", gap: 6, flexWrap: "wrap" }}>
-                <input
-                  type="email"
-                  required
-                  placeholder="Enter your institutional email"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  style={{
-                    flex: 1, minWidth: 170, padding: "8px 12px", borderRadius: 6,
-                    border: "1px solid #334155", background: "#0B1120", color: "#FFFFFF",
-                    fontSize: 12.5, outline: "none"
-                  }}
-                />
-                <button
-                  type="submit"
-                  className="action-btn-primary"
-                  style={{
-                    border: "none", padding: "8px 16px", borderRadius: 6, fontWeight: 700, fontSize: 12.5,
-                    cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 5
-                  }}
-                >
-                  <Mail size={13} /> Subscribe
-                </button>
-              </form>
-            )}
-          </div>
-
-          {/* Footer Navigation Columns */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 24, marginBottom: 32, textAlign: "left" }}>
-            
-            {/* Brand column */}
-            <div>
-              <img src="/logo-dark.png" alt="Train AI" style={{ height: 22, width: "auto", objectFit: "contain", display: "block", marginBottom: 10 }} />
-              <p style={{ fontSize: 12, color: "#94A3B8", lineHeight: 1.5, margin: "0 0 14px", maxWidth: 260 }}>
-                AI-powered learning and capability platform for academies, NGOs, and businesses.
-              </p>
-              <div style={{ display: "flex", gap: 6 }}>
-                <div className="lp-social-btn" aria-label="Facebook"><Facebook size={14} /></div>
-                <div className="lp-social-btn" aria-label="Twitter"><Twitter size={14} /></div>
-                <div className="lp-social-btn" aria-label="Instagram"><Instagram size={14} /></div>
-                <div className="lp-social-btn" aria-label="LinkedIn"><Linkedin size={14} /></div>
-              </div>
-            </div>
-
-            {/* Sector column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", marginBottom: 1 }}>Sectors</div>
-              <span className="lp-footer-link" onClick={() => { setActiveSector("academies"); scrollToId("sectors"); }}>For Academies &amp; Higher Ed</span>
-              <span className="lp-footer-link" onClick={() => { setActiveSector("ngos"); scrollToId("sectors"); }}>For NGOs &amp; Non-Profits</span>
-              <span className="lp-footer-link" onClick={() => { setActiveSector("businesses"); scrollToId("sectors"); }}>For Businesses &amp; Teams</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("pricing")}>Partnership &amp; Pricing</span>
-              <span className="lp-footer-link" onClick={() => handleNav("book-demo")}>Book a Demo (Live Scheduler)</span>
-            </div>
-
-            {/* Platform column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", marginBottom: 1 }}>Platform</div>
-              <span className="lp-footer-link" onClick={() => scrollToId("intelligence")}>Intelligence Layer</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("learners")}>Learner App</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("how-it-works")}>Cohort Architecture</span>
-              <span className="lp-footer-link" onClick={() => scrollToId("trust")}>Data Security</span>
-            </div>
-
-            {/* Legal column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#FFFFFF", marginBottom: 1 }}>Organization</div>
-              <span className="lp-footer-link" onClick={() => handleNav("about")}>About Us</span>
-              <span className="lp-footer-link" onClick={() => handleNav("privacy")}>Privacy Policy</span>
-              <span className="lp-footer-link" onClick={() => handleNav("terms")}>Terms of Service</span>
-              <span className="lp-footer-link" onClick={() => handleNav("cookie")}>Cookie Policy</span>
-            </div>
-
-          </div>
-
-          {/* Bottom Copyright */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, paddingTop: 16, borderTop: "1px solid #1E293B", fontSize: 11.5, color: "#64748B" }}>
-            <div>
-              © 2025 Train AI Ltd. All rights reserved. Headquartered in London, United Kingdom.
-            </div>
-            <div style={{ display: "flex", gap: 14 }}>
-              <span className="lp-footer-link" onClick={() => handleNav("about")}>About Us</span>
-              <span className="lp-footer-link" onClick={() => handleNav("privacy")}>Privacy Policy</span>
-              <span className="lp-footer-link" onClick={() => handleNav("terms")}>Terms of Service</span>
-            </div>
-          </div>
-
-        </div>
-      </footer>
-
-      {/* Partnership & Demo Inquiry Modal */}
-      {demoModalOpen && (
-        <div style={styles.modalOverlay} onClick={() => setDemoModalOpen(false)} role="presentation">
-          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div>
-                <h3 style={{ fontSize: 17, fontWeight: 800, color: "#0F172A", margin: 0 }}>Request Partnership or Demo</h3>
-                <p style={{ fontSize: 12, color: "#64748B", margin: "2px 0 0" }}>Tailored for academies, NGOs, and enterprise employers.</p>
-              </div>
-              <button style={styles.modalClose} onClick={() => setDemoModalOpen(false)} aria-label="Close">
-                <X size={16} />
-              </button>
-            </div>
-
-            {demoSubmitted ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: 12, background: "#ECFDF5", color: "#059669", borderRadius: 8, fontWeight: 600, fontSize: 13 }}>
-                <CheckCircle2 size={16} />
-                <span>Thank you! Our institutional partnerships team will contact you shortly.</span>
-              </div>
-            ) : (
-              <form onSubmit={handleDemoSubmit} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <input
-                    required placeholder="Full name" value={demoName} onChange={(e) => setDemoName(e.target.value)}
-                    style={styles.formInput}
-                  />
-                  <input
-                    required placeholder="Organization name" value={demoCompany} onChange={(e) => setDemoCompany(e.target.value)}
-                    style={styles.formInput}
-                  />
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <input
-                    type="email" required placeholder="Work / institutional email" value={demoEmail} onChange={(e) => setDemoEmail(e.target.value)}
-                    style={styles.formInput}
-                  />
-                  <select
-                    value={demoOrgType} onChange={(e) => setDemoOrgType(e.target.value)}
-                    style={styles.formInput}
-                  >
-                    {ORG_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 8 }}>
-                  <select
-                    value={demoTeamSize} onChange={(e) => setDemoTeamSize(e.target.value)}
-                    style={styles.formInput}
-                  >
-                    {TEAM_SIZE_OPTIONS.map((t) => <option key={t} value={t}>{t} learners / team size</option>)}
-                  </select>
-                </div>
-                <textarea
-                  placeholder="Tell us about your cohort, curriculum goals, or grant timeline (optional)"
-                  value={demoMessage} onChange={(e) => setDemoMessage(e.target.value)}
-                  rows={2} style={styles.formTextarea}
-                />
-                <button type="submit" disabled={submitting} className="action-btn-primary" style={styles.modalSubmitBtn}>
-                  {submitting ? "Submitting..." : "Submit Inquiry"} <ArrowRight size={13} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDemoModalOpen(false);
-                    handleNav("book-demo");
-                  }}
-                  style={{
-                    background: "#F8FAFC",
-                    border: "1px solid #CBD5E1",
-                    borderRadius: 6,
-                    padding: "8px 10px",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "#1D4ED8",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    marginTop: 4
-                  }}
-                >
-                  <Calendar size={13} color="#2563EB" /> Or Select Day &amp; Time on Live Scheduler
-                </button>
-                {demoError && <div style={{ fontSize: 11.5, color: "#EF4444", fontWeight: 600 }}>{demoError}</div>}
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Legal Content Modal */}
-      {activeModal && (
-        <div style={styles.modalOverlay} onClick={() => setActiveModal(null)} role="presentation">
-          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: "#0F172A", margin: 0 }}>{LEGAL_CONTENT[activeModal].title}</h3>
-              <button style={styles.modalClose} onClick={() => setActiveModal(null)} aria-label="Close">
-                <X size={15} />
-              </button>
-            </div>
-            <p style={{ fontSize: 12.5, color: "#475569", lineHeight: 1.55, margin: 0 }}>{LEGAL_CONTENT[activeModal].body}</p>
-          </div>
-        </div>
-      )}
-
+    <div className="lp-feature-list">
+      {features.map(([Icon, title, description]) => (
+        <article key={title} className="lp-feature-row">
+          <Icon size={20} aria-hidden="true" />
+          <div><h4>{title}</h4><p>{description}</p></div>
+        </article>
+      ))}
     </div>
   );
 }
 
-const styles = {
-  outer: { minHeight: "100vh", background: "#FFFFFF", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", overflowX: "hidden" },
-  header: { background: "#FFFFFF", borderBottom: "1px solid #E2E8F0", position: "sticky", top: 0, zIndex: 60 },
-  headerInner: { maxWidth: 1180, margin: "0 auto", padding: "10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" },
-  signInBtn: { border: "none", background: "transparent", padding: "6px 10px", fontWeight: 600, fontSize: 13, cursor: "pointer", color: "#334155" },
-  requestDemoBtn: { padding: "6px 12px", borderRadius: 6, fontWeight: 600, fontSize: 12.5, cursor: "pointer" },
-  getStartedBtn: { border: "none", padding: "6px 14px", borderRadius: 6, fontWeight: 700, fontSize: 12.5, cursor: "pointer" },
-  startOrgBtn: { border: "none", padding: "10px 18px", borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 },
-  requestDemoOutlineBtn: { padding: "10px 18px", borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: "pointer" },
-  modalOverlay: { position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 100 },
-  modalCard: { background: "#FFFFFF", borderRadius: 8, padding: 20, maxWidth: 460, width: "100%", maxHeight: "85vh", overflowY: "auto", border: "1px solid #E2E8F0", boxShadow: "0 8px 30px rgba(15,23,42,0.2)" },
-  modalClose: { border: "none", background: "#F1F5F9", borderRadius: 6, padding: 5, cursor: "pointer", display: "flex", color: "#64748B" },
-  formInput: { width: "100%", border: "1px solid #E2E8F0", padding: "8px 10px", fontSize: 12, borderRadius: 6, outline: "none", boxSizing: "border-box", color: "#0F172A", background: "#FFFFFF" },
-  formTextarea: { width: "100%", border: "1px solid #E2E8F0", padding: "8px 10px", fontSize: 12, borderRadius: 6, outline: "none", boxSizing: "border-box", color: "#0F172A", resize: "vertical", fontFamily: "inherit", background: "#FFFFFF" },
-  modalSubmitBtn: { border: "none", padding: "10px 16px", borderRadius: 6, fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }
-};
+export default function LandingPage({ onNavigate }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
+  const [legalModal, setLegalModal] = useState(null);
+
+  useEffect(() => {
+    captureAttributionFromURL();
+    const referral = new URLSearchParams(window.location.search).get("ref");
+    if (referral) trackReferralClickIfPresent(referral);
+  }, []);
+
+  useEffect(() => {
+    if (!legalModal) return;
+    const closeOnEscape = (event) => event.key === "Escape" && setLegalModal(null);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [legalModal]);
+
+  function navigate(target, data) {
+    setMenuOpen(false);
+    if (typeof onNavigate === "function") return onNavigate(target, data);
+    window.location.href = target === "book-demo" ? "/?view=book-demo" : "/?view=auth";
+  }
+
+  function scrollToSection(id) {
+    setMenuOpen(false);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  return (
+    <div className="lp-page">
+      <style>{landingStyles}</style>
+
+      <header className="lp-header">
+        <div className="lp-header-inner">
+          <button className="lp-logo-button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Train AI home">
+            <img src="/train-ai-logo.png" alt="Train AI" />
+          </button>
+          <nav className="lp-nav" aria-label="Main navigation">
+            <button onClick={() => scrollToSection("platform")}>Platform</button>
+            <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
+            <button onClick={() => scrollToSection("pricing")}>Pricing</button>
+            <button onClick={() => scrollToSection("faq")}>FAQ</button>
+          </nav>
+          <div className="lp-header-actions">
+            <button className="lp-text-button" onClick={() => navigate("signin")}>Sign in</button>
+            <button className="lp-primary-button lp-small-button" onClick={() => navigate("book-demo")}>Book a demo</button>
+          </div>
+          <button className="lp-menu-button" onClick={() => setMenuOpen((value) => !value)} aria-label="Toggle navigation" aria-expanded={menuOpen}>
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+        {menuOpen && (
+          <div className="lp-mobile-nav">
+            <button onClick={() => scrollToSection("platform")}>Platform</button>
+            <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
+            <button onClick={() => scrollToSection("pricing")}>Pricing</button>
+            <button onClick={() => scrollToSection("faq")}>FAQ</button>
+            <button onClick={() => navigate("signin")}>Sign in</button>
+            <button className="lp-primary-button" onClick={() => navigate("book-demo")}>Book a demo</button>
+          </div>
+        )}
+      </header>
+
+      <main>
+        <section className="lp-hero">
+          <div className="lp-shell lp-hero-grid">
+            <div className="lp-hero-copy">
+              <p className="lp-kicker">AI learning and development platform</p>
+              <h1>Manage learning. Support people. Measure what changes.</h1>
+              <p className="lp-hero-description">Train AI gives organisations one place to deliver courses, run cohorts and learning communities, support learners and instructors, and understand development outcomes.</p>
+              <div className="lp-hero-actions">
+                <button className="lp-primary-button" onClick={() => navigate("book-demo")}>Book a personalised demo <ArrowRight size={17} /></button>
+                <button className="lp-secondary-button" onClick={() => scrollToSection("platform")}>See the platform</button>
+              </div>
+              <p className="lp-sales-note">Built for organisational customers. Commercial terms are discussed after a product demo.</p>
+            </div>
+            <figure className="lp-hero-figure">
+              <img src="/images/train-ai-diverse-learners.jpg" alt="A diverse group of adult learners collaborating around a laptop" />
+              <figcaption><strong>One connected learning operation</strong><span>Courses · Cohorts · Community · Intelligence</span></figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <section id="platform" className="lp-section">
+          <div className="lp-shell">
+            <div className="lp-section-heading lp-heading-split">
+              <p className="lp-kicker">The platform</p>
+              <h2>Learning delivery and development intelligence belong in the same system.</h2>
+              <p>Train AI connects the day-to-day work of learning, including courses, cohorts, communities and support, with the information organisations need to improve programmes and develop people.</p>
+            </div>
+            <div className="lp-two-column-feature">
+              <div className="lp-feature-column">
+                <div className="lp-column-title"><span>For learners</span><h3>A clear place to learn, practise and stay connected.</h3></div>
+                <FeatureList features={LEARNER_FEATURES} />
+              </div>
+              <div className="lp-feature-column lp-feature-column-dark">
+                <div className="lp-column-title"><span>For organisations</span><h3>Visibility across the full development process.</h3></div>
+                <FeatureList features={ORGANISATION_FEATURES} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="lp-section lp-outcomes-section">
+          <div className="lp-shell lp-outcomes-grid">
+            <div><p className="lp-kicker">From activity to outcomes</p><h2>Know what is happening across learning, not just who logged in.</h2></div>
+            <div className="lp-outcome-copy">
+              <p>Bring course progress, cohort performance, instructor activity, learner development and community participation into one operational view.</p>
+              <p>Use skill-gap information, readiness scores, AI summaries and manager notes to decide where support or further development is needed.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="organisations" className="lp-section">
+          <div className="lp-shell">
+            <div className="lp-section-heading">
+              <p className="lp-kicker">Who Train AI is for</p>
+              <h2>One platform, applied to different learning operations.</h2>
+              <p>The core platform stays consistent. Implementation is shaped around how each organisation delivers learning and measures development.</p>
+            </div>
+            <div className="lp-photo-ribbon" aria-label="Learning and collaboration in practice">
+              <figure className="lp-photo-ribbon-item lp-photo-ribbon-item-muted">
+                <img src="/images/train-ai-women-tech.jpg" alt="A diverse group of women taking part in a workplace discussion" loading="lazy" />
+              </figure>
+              <figure className="lp-photo-ribbon-item lp-photo-ribbon-item-main">
+                <img src="/images/train-ai-white-team.jpg" alt="A team taking part in a collaborative planning workshop" loading="lazy" />
+                <figcaption>Learning works better when delivery, support and community stay connected.</figcaption>
+              </figure>
+              <figure className="lp-photo-ribbon-item lp-photo-ribbon-item-muted">
+                <img src="/images/train-ai-diverse-team.jpg" alt="A mixed workplace team participating in a meeting" loading="lazy" />
+              </figure>
+            </div>
+            <div className="lp-audience-list">
+              {AUDIENCES.map(([Icon, title, description], index) => (
+                <article key={title} className="lp-audience-row">
+                  <span className="lp-audience-number">0{index + 1}</span><Icon size={24} aria-hidden="true" /><h3>{title}</h3><p>{description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="lp-section lp-pricing-section">
+          <div className="lp-shell">
+            <div className="lp-section-heading lp-heading-split">
+              <p className="lp-kicker">Standard pricing structure</p>
+              <h2>Three tiers. The same framework for every organisation type.</h2>
+              <p>We first understand the intended use, demonstrate the platform and then confirm the appropriate tier and commercial terms.</p>
+            </div>
+            <div className="lp-pricing-table">
+              {PRICING_TIERS.map((tier, index) => (
+                <article key={tier.name} className="lp-pricing-tier">
+                  <div className="lp-tier-heading"><span>0{index + 1}</span><h3>{tier.name}</h3></div>
+                  <p>{tier.description}</p>
+                  <ul>{tier.features.map((feature) => <li key={feature}><Check size={16} />{feature}</li>)}</ul>
+                  <button className={index === 2 ? "lp-primary-button" : "lp-secondary-button"} onClick={() => navigate("book-demo", { sector: tier.name.toLowerCase() })}>Discuss {tier.name} <ArrowRight size={16} /></button>
+                </article>
+              ))}
+            </div>
+            <p className="lp-pricing-note">Exact feature allocation, implementation scope and pricing are confirmed during the product-demo process.</p>
+          </div>
+        </section>
+
+        <section className="lp-section lp-demo-section">
+          <div className="lp-shell lp-demo-grid">
+            <div><p className="lp-kicker">A useful first conversation</p><h2>See Train AI against your real learning operation.</h2></div>
+            <div><p>A personalised demo lets us understand your learners, delivery model and reporting needs before discussing configuration or commercial terms.</p><button className="lp-primary-button lp-light-button" onClick={() => navigate("book-demo")}>Choose a demo time <ArrowRight size={17} /></button></div>
+          </div>
+        </section>
+
+        <section id="faq" className="lp-section">
+          <div className="lp-shell lp-faq-grid">
+            <div className="lp-faq-intro"><p className="lp-kicker">Frequently asked questions</p><h2>Straight answers about the platform.</h2><p>For questions specific to your organisation, book a product demo and we will address them in context.</p></div>
+            <div className="lp-faq-list">
+              {FAQ_ITEMS.map(([question, answer], index) => {
+                const isOpen = openFaq === index;
+                return <div className="lp-faq-item" key={question}><button onClick={() => setOpenFaq(isOpen ? null : index)} aria-expanded={isOpen}><span>{question}</span><ChevronDown size={19} style={{ transform: isOpen ? "rotate(180deg)" : "none" }} /></button>{isOpen && <p>{answer}</p>}</div>;
+              })}
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="lp-footer">
+        <div className="lp-shell">
+          <div className="lp-footer-main">
+            <div className="lp-footer-brand">
+              <img src="/train-ai-logo.png" alt="Train AI" />
+              <p>AI learning and development for organisations.</p>
+              <span>Deliver learning, support people and understand development outcomes from one connected platform.</span>
+            </div>
+            <div className="lp-footer-column">
+              <h3>Platform</h3>
+              <button onClick={() => scrollToSection("platform")}>For learners</button>
+              <button onClick={() => scrollToSection("platform")}>For organisations</button>
+              <button onClick={() => scrollToSection("pricing")}>Pricing tiers</button>
+              <button onClick={() => navigate("book-demo")}>Book a demo</button>
+            </div>
+            <div className="lp-footer-column">
+              <h3>Company</h3>
+              <button onClick={() => setLegalModal("about")}>About Train AI</button>
+              <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
+              <button onClick={() => scrollToSection("faq")}>Frequently asked questions</button>
+              <button onClick={() => navigate("signin")}>Customer sign in</button>
+            </div>
+            <div className="lp-footer-column lp-footer-contact">
+              <h3>Contact</h3>
+              <a href="mailto:info@trainailtd.com"><Mail size={16} />info@trainailtd.com</a>
+              <a href="https://www.instagram.com/trainailtd/" target="_blank" rel="noreferrer"><Instagram size={16} />Instagram <span>@trainailtd</span></a>
+              <button className="lp-footer-demo-link" onClick={() => navigate("book-demo")}>Schedule a product conversation <ArrowRight size={14} /></button>
+            </div>
+          </div>
+          <div className="lp-footer-bottom"><span>© 2026 Train AI Ltd. All rights reserved.</span><div><button onClick={() => setLegalModal("privacy")}>Privacy</button><button onClick={() => setLegalModal("terms")}>Terms</button><button onClick={() => setLegalModal("cookie")}>Cookies</button></div></div>
+        </div>
+      </footer>
+
+      {legalModal && (
+        <div className="lp-modal-overlay" onClick={() => setLegalModal(null)} role="presentation">
+          <div className="lp-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="legal-title">
+            <button className="lp-modal-close" onClick={() => setLegalModal(null)} aria-label="Close"><X size={18} /></button><Lock size={22} />
+            <h2 id="legal-title">{LEGAL_CONTENT[legalModal][0]}</h2><p>{LEGAL_CONTENT[legalModal][1]}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const landingStyles = `
+  :root{--lp-blue:#2459d3;--lp-blue-dark:#1945ad;--lp-ink:#101828;--lp-muted:#536174;--lp-line:#d9e0e8;--lp-soft:#f4f7fa;--lp-white:#fff}
+  .lp-page{min-height:100vh;background:#fff;color:var(--lp-ink);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.lp-page *{box-sizing:border-box}.lp-page button{font:inherit}.lp-shell{width:min(1160px,calc(100% - 40px));margin:0 auto}
+  .lp-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);border-bottom:1px solid var(--lp-line);backdrop-filter:blur(10px)}.lp-header-inner{width:min(1160px,calc(100% - 40px));height:70px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:30px}.lp-logo-button{border:0;background:transparent;padding:0;cursor:pointer}.lp-logo-button img{display:block;width:auto;height:34px}.lp-nav{display:flex;align-items:center;gap:30px;margin-left:auto}.lp-nav button,.lp-text-button,.lp-footer button{border:0;background:transparent;color:#354154;padding:6px 0;cursor:pointer;font-size:14px;font-weight:600}.lp-nav button:hover,.lp-text-button:hover{color:var(--lp-blue)}.lp-header-actions{display:flex;align-items:center;gap:16px}
+  .lp-primary-button,.lp-secondary-button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:6px;padding:11px 18px;border:1px solid transparent;cursor:pointer;font-weight:750;font-size:14px;transition:.15s ease}.lp-primary-button{color:#fff;background:var(--lp-blue)}.lp-primary-button:hover{background:var(--lp-blue-dark)}.lp-secondary-button{color:var(--lp-ink);background:#fff;border-color:#bfc8d4}.lp-secondary-button:hover{border-color:#7f8b9b;background:#f8fafc}.lp-small-button{min-height:38px;padding:8px 14px}.lp-menu-button{display:none;border:0;background:transparent;color:var(--lp-ink);padding:7px;cursor:pointer}.lp-mobile-nav{display:none}
+  .lp-hero{padding:72px 0 78px;border-bottom:1px solid var(--lp-line)}.lp-hero-grid{display:grid;grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);align-items:center;gap:64px}.lp-kicker{margin:0 0 18px;color:var(--lp-blue);text-transform:uppercase;letter-spacing:.13em;font-size:12px;font-weight:800}.lp-hero h1{max-width:690px;margin:0;font-size:clamp(44px,5.4vw,70px);line-height:1.01;letter-spacing:-.052em;font-weight:790}.lp-hero-description{max-width:620px;margin:26px 0 0;color:var(--lp-muted);font-size:18px;line-height:1.65}.lp-hero-actions{display:flex;flex-wrap:wrap;gap:11px;margin-top:30px}.lp-sales-note{margin:17px 0 0;color:#6b7686;font-size:12.5px}.lp-hero-figure{margin:0}.lp-hero-figure img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;object-position:center;border-radius:4px}.lp-hero-figure figcaption{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--lp-line)}.lp-hero-figure strong{font-size:13px}.lp-hero-figure span{color:var(--lp-muted);font-size:12px;text-align:right}
+  .lp-section{padding:88px 0;scroll-margin-top:70px}.lp-section-heading{max-width:760px;margin-bottom:46px}.lp-section-heading h2,.lp-outcomes-grid h2,.lp-demo-grid h2,.lp-faq-intro h2{margin:0;font-size:clamp(32px,4vw,50px);line-height:1.08;letter-spacing:-.04em;font-weight:760}.lp-section-heading>p:last-child,.lp-faq-intro>p:last-child{margin:20px 0 0;max-width:680px;color:var(--lp-muted);font-size:16px;line-height:1.65}.lp-heading-split{max-width:none;display:grid;grid-template-columns:1fr 1fr;column-gap:70px}.lp-heading-split .lp-kicker{grid-column:1/-1}.lp-heading-split>p:last-child{margin:2px 0 0}
+  .lp-two-column-feature{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--lp-line)}.lp-feature-column{padding:38px}.lp-feature-column-dark{background:#132038;color:#fff}.lp-column-title{padding-bottom:28px;border-bottom:1px solid var(--lp-line)}.lp-feature-column-dark .lp-column-title{border-color:#344159}.lp-column-title span{color:var(--lp-blue);font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:800}.lp-feature-column-dark .lp-column-title span{color:#91b2ff}.lp-column-title h3{margin:10px 0 0;max-width:480px;font-size:27px;line-height:1.25;letter-spacing:-.025em}.lp-feature-list{display:grid}.lp-feature-row{display:grid;grid-template-columns:26px 1fr;gap:15px;padding:24px 0;border-bottom:1px solid var(--lp-line)}.lp-feature-row:last-child{border-bottom:0;padding-bottom:0}.lp-feature-column-dark .lp-feature-row{border-color:#344159}.lp-feature-row svg{color:var(--lp-blue);margin-top:2px}.lp-feature-column-dark .lp-feature-row svg{color:#91b2ff}.lp-feature-row h4{margin:0 0 6px;font-size:16px}.lp-feature-row p{margin:0;color:var(--lp-muted);font-size:14px;line-height:1.6}.lp-feature-column-dark .lp-feature-row p{color:#bdc8d9}
+  .lp-outcomes-section{position:relative;overflow:hidden}.lp-outcomes-section::after{content:"";position:absolute;inset:0 0 0 56%;background:linear-gradient(90deg,var(--lp-soft),rgba(244,247,250,.78)),url("/images/train-ai-professional.jpg") center 42%/cover;opacity:.14;pointer-events:none}.lp-outcomes-section .lp-shell{position:relative;z-index:1}.lp-outcomes-section,.lp-pricing-section{background-color:var(--lp-soft);border-block:1px solid var(--lp-line)}.lp-outcomes-grid{display:grid;grid-template-columns:1fr 1fr;gap:90px}.lp-outcome-copy{padding-top:32px}.lp-outcome-copy p{margin:0 0 22px;color:#3e4b5d;font-size:17px;line-height:1.72}.lp-photo-ribbon{display:grid;grid-template-columns:.7fr 1.25fr .7fr;align-items:end;gap:12px;margin:-8px 0 48px}.lp-photo-ribbon-item{position:relative;margin:0;overflow:hidden;background:#e9eef4}.lp-photo-ribbon-item img{display:block;width:100%;height:220px;object-fit:cover}.lp-photo-ribbon-item-muted img{height:172px;filter:grayscale(1);opacity:.58}.lp-photo-ribbon-item-main figcaption{position:absolute;right:0;bottom:0;max-width:340px;padding:14px 16px;color:#fff;background:rgba(15,23,40,.86);font-size:12px;line-height:1.5}.lp-audience-list{border-top:1px solid var(--lp-line)}.lp-audience-row{display:grid;grid-template-columns:50px 38px minmax(210px,.65fr) 1fr;align-items:start;gap:24px;padding:30px 0;border-bottom:1px solid var(--lp-line)}.lp-audience-number{color:#8b96a5;font-size:12px;font-weight:700}.lp-audience-row svg{color:var(--lp-blue)}.lp-audience-row h3{margin:0;font-size:20px;letter-spacing:-.02em}.lp-audience-row p{margin:0;color:var(--lp-muted);font-size:15px;line-height:1.65}
+  .lp-pricing-table{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--lp-line);background:#fff}.lp-pricing-tier{display:flex;flex-direction:column;min-height:480px;padding:30px;border-right:1px solid var(--lp-line)}.lp-pricing-tier:last-child{border-right:0;background:#132038;color:#fff}.lp-tier-heading{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier:last-child .lp-tier-heading{border-color:#344159}.lp-tier-heading span{color:#8894a4;font-size:12px}.lp-tier-heading h3{margin:0;font-size:27px}.lp-pricing-tier>p{min-height:96px;margin:24px 0;color:var(--lp-muted);font-size:14px;line-height:1.62}.lp-pricing-tier:last-child>p{color:#bdc8d9}.lp-pricing-tier ul{display:grid;gap:14px;padding:0;margin:0 0 30px;list-style:none}.lp-pricing-tier li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;line-height:1.45}.lp-pricing-tier li svg{flex:0 0 auto;color:var(--lp-blue)}.lp-pricing-tier:last-child li svg{color:#91b2ff}.lp-pricing-tier button{margin-top:auto;align-self:flex-start}.lp-pricing-note{margin:18px 0 0;color:#6b7686;font-size:12.5px}
+  .lp-demo-section{color:#fff;background:var(--lp-blue)}.lp-demo-grid{display:grid;grid-template-columns:1fr .8fr;gap:90px;align-items:end}.lp-demo-section .lp-kicker{color:#c8d7ff}.lp-demo-grid p:not(.lp-kicker){margin:0 0 24px;color:#e2e9fb;font-size:16px;line-height:1.7}.lp-light-button{color:var(--lp-blue-dark);background:#fff}.lp-light-button:hover{color:#fff;background:#132038}.lp-faq-grid{display:grid;grid-template-columns:.72fr 1fr;gap:90px}.lp-faq-list{border-top:1px solid var(--lp-line)}.lp-faq-item{border-bottom:1px solid var(--lp-line)}.lp-faq-item button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 0;border:0;background:transparent;color:var(--lp-ink);text-align:left;cursor:pointer;font-weight:700}.lp-faq-item button svg{color:#687486;transition:transform .16s}.lp-faq-item p{margin:-4px 36px 22px 0;color:var(--lp-muted);font-size:14px;line-height:1.68}
+  .lp-footer{padding:58px 0 24px;color:#fff;background:#0f1728}.lp-footer-main{display:grid;grid-template-columns:1.55fr repeat(3,1fr);gap:60px;padding-bottom:46px}.lp-footer-brand img{display:block;height:36px;width:auto;filter:brightness(0) invert(1)}.lp-footer-brand p{margin:18px 0 10px;color:#fff;font-size:15px;font-weight:700}.lp-footer-brand span{display:block;max-width:320px;color:#9eabba;font-size:13px;line-height:1.65}.lp-footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:12px}.lp-footer-column h3{margin:0 0 7px;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.11em}.lp-footer-column button,.lp-footer-column a{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:#b9c4d3;padding:0;text-align:left;text-decoration:none;cursor:pointer;font-size:13px;font-weight:500;line-height:1.5}.lp-footer-column button:hover,.lp-footer-column a:hover{color:#fff}.lp-footer-contact a span{color:#8290a3}.lp-footer-column .lp-footer-demo-link{margin-top:8px;color:#fff;font-weight:700}.lp-footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:30px;padding-top:22px;border-top:1px solid #2d394d;color:#8793a5;font-size:12px}.lp-footer-bottom>div{display:flex;flex-wrap:wrap;gap:24px}.lp-footer button{color:#d7deea}.lp-footer-bottom button{border:0;background:transparent;padding:0;color:#8793a5;cursor:pointer;font-size:12px;font-weight:500}.lp-footer-bottom button:hover{color:#fff}.lp-modal-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(15,23,40,.68)}.lp-modal{position:relative;width:min(520px,100%);padding:34px;background:#fff;border:1px solid var(--lp-line);border-radius:6px}.lp-modal>svg{color:var(--lp-blue)}.lp-modal h2{margin:14px 0 10px;font-size:24px}.lp-modal p{margin:0;color:var(--lp-muted);line-height:1.7}.lp-modal-close{position:absolute;top:14px;right:14px;border:0;background:transparent;cursor:pointer;color:#687486}
+  @media(max-width:900px){.lp-nav,.lp-header-actions{display:none}.lp-menu-button{display:inline-flex}.lp-mobile-nav{display:grid;gap:3px;padding:8px 20px 18px;border-top:1px solid var(--lp-line);background:#fff}.lp-mobile-nav>button:not(.lp-primary-button){border:0;background:transparent;padding:12px 0;text-align:left;color:var(--lp-ink);font-weight:650}.lp-hero-grid,.lp-heading-split,.lp-outcomes-grid,.lp-demo-grid,.lp-faq-grid{grid-template-columns:1fr;gap:34px}.lp-hero-copy{max-width:720px}.lp-two-column-feature,.lp-pricing-table{grid-template-columns:1fr}.lp-photo-ribbon{grid-template-columns:.8fr 1.2fr}.lp-photo-ribbon-item:last-child{display:none}.lp-feature-column-dark{border-top:1px solid var(--lp-line)}.lp-pricing-tier{min-height:auto;border-right:0;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier:last-child{border-bottom:0}.lp-pricing-tier>p{min-height:0}.lp-pricing-tier button{margin-top:12px}.lp-footer-main{grid-template-columns:1.4fr 1fr 1fr;gap:38px}.lp-footer-contact{grid-column:2/4}}
+  @media(max-width:640px){.lp-shell,.lp-header-inner{width:min(100% - 28px,1160px)}.lp-header-inner{height:62px}.lp-logo-button img{height:28px}.lp-hero{padding:48px 0 54px}.lp-hero h1{font-size:clamp(40px,13vw,56px)}.lp-hero-description{font-size:16px}.lp-hero-actions{display:grid}.lp-hero-actions button{width:100%}.lp-sales-note{line-height:1.55}.lp-hero-figure figcaption{display:grid;gap:5px}.lp-hero-figure span{text-align:left}.lp-section{padding:64px 0}.lp-section-heading{margin-bottom:32px}.lp-outcomes-section::after{inset:45% 0 0 0;opacity:.1}.lp-photo-ribbon{grid-template-columns:1fr;margin-top:0}.lp-photo-ribbon-item-muted{display:none}.lp-photo-ribbon-item-main img{height:230px}.lp-photo-ribbon-item-main figcaption{position:relative;max-width:none}.lp-feature-column{padding:26px 22px}.lp-audience-row{grid-template-columns:32px 28px 1fr;gap:14px}.lp-audience-row p{grid-column:3}.lp-pricing-tier{padding:26px 22px}.lp-footer-main{grid-template-columns:1fr 1fr;gap:36px 24px}.lp-footer-brand,.lp-footer-contact{grid-column:1/-1}.lp-footer-bottom{align-items:flex-start;flex-direction:column}.lp-footer-bottom>div{gap:16px}}
+  @media(prefers-reduced-motion:reduce){.lp-page *{scroll-behavior:auto!important;transition:none!important}}
+`;

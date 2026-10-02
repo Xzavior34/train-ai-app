@@ -300,17 +300,24 @@ export async function submitDemoRequest({
       }
     }
 
-    // Dual-write into organization_inquiries to ensure follow-up queue captures it
-    await db.from("organization_inquiries").insert({
-      full_name: fullName.trim(),
-      work_email: normalizedEmail,
-      company_name: companyName.trim(),
-      inquiry_type: "partnership",
-      message: `[Notification target: info@trainailtd.com & info@sarafoundationafrica.com]\n${message?.trim() || ""}`,
-      source,
-      status: "new",
-      ...attribution,
-    }).catch(() => {});
+    // Keep the secondary follow-up queue best-effort. Supabase query builders
+    // are PromiseLike but do not expose Promise.prototype.catch(), so calling
+    // .catch() directly here made an otherwise successful booking appear to
+    // fail in the browser.
+    try {
+      await db.from("organization_inquiries").insert({
+        full_name: fullName.trim(),
+        work_email: normalizedEmail,
+        company_name: companyName.trim(),
+        inquiry_type: "partnership",
+        message: `[Notification target: info@trainailtd.com & info@sarafoundationafrica.com]\n${message?.trim() || ""}`,
+        source,
+        status: "new",
+        ...attribution,
+      });
+    } catch (secondaryError) {
+      console.warn("Organization inquiry follow-up warning:", secondaryError);
+    }
 
     // Dispatch email notifications to team inboxes for immediate follow-up
     const notificationSubject = `New Demo / Appointment Request: ${fullName.trim()} - ${companyName.trim()}`;
