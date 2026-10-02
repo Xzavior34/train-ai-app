@@ -26,18 +26,14 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-// train-ai-app has no vite-plugin-pwa/workbox build step (deliberately not
-// adding one here - see task notes), but a static public/sw.js already
-// exists in this repo with real "push" and "notificationclick" listeners;
-// nothing in the app was registering it before this hook. Registering a
-// plain static file via the native Service Worker API needs no new
-// dependency, so that's what this does.
+// Push is isolated to OneSignal's /onesignal/ scope. Never register a worker
+// at the site root: old root workers caused stale and blank landing pages on
+// browsers that had visited earlier deployments.
 async function getRegistration() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null;
   try {
-    const existing = await navigator.serviceWorker.getRegistration("/");
-    if (existing) return existing;
-    return await navigator.serviceWorker.register("/sw.js");
+    await initOneSignal();
+    return await navigator.serviceWorker.getRegistration("/onesignal/");
   } catch (e) {
     console.warn("Service worker registration failed:", e);
     return null;
@@ -80,7 +76,7 @@ export function usePushNotifications(userId) {
       }
 
       try {
-        const reg = await navigator.serviceWorker.getRegistration("/");
+        const reg = await navigator.serviceWorker.getRegistration("/onesignal/");
         const sub = reg ? await reg.pushManager.getSubscription() : null;
         const oneSignalSub = getOneSignalSubscriptionState();
         if (!cancelled) setSubscribed(!!sub || oneSignalSub.optedIn);

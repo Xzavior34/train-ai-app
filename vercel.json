@@ -47,7 +47,7 @@
       "headers": [
         { "key": "Content-Type", "value": "text/html; charset=utf-8" },
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate, max-age=0" },
-        { "key": "Clear-Site-Data", "value": "\"cache\"" },
+        { "key": "Clear-Site-Data", "value": "\"cache\", \"storage\"" },
         { "key": "Pragma", "value": "no-cache" },
         { "key": "Expires", "value": "0" }
       ]

@@ -163,28 +163,19 @@
           }
         });
 
-        // Keep exactly one non-caching worker at the root. A newly activated
-        // worker announces its version so open tabs reload once onto the newest
-        // hashed assets. OneSignal uses a separate, narrower scope.
+        // Retire every legacy root worker. A root worker on trainailtd.com was
+        // able to outlive deployments and keep serving an old or blank shell.
+        // OneSignal is deliberately kept at its narrower /onesignal/ scope.
         if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.addEventListener("message", function(event) {
-            var data = event.data || {};
-            if (data.type !== "TRAINAI_SW_ACTIVATED" || !data.version) return;
-            var seen = "";
-            try { seen = sessionStorage.getItem("tai_sw_version") || ""; } catch (e) {}
-            if (seen === data.version) return;
-            try { sessionStorage.setItem("tai_sw_version", data.version); } catch (e) {}
-            reloadWithFreshUrl();
-          });
-
-          // Start the update from the document head. Waiting for window.load
-          // leaves a broken/slow JS bundle in control for too long on mobile.
-          navigator.serviceWorker.register("/sw.js", {
-            scope: "/",
-            updateViaCache: "none"
-          })
-            .then(function(registration) { return registration.update(); })
-            .catch(function(error) { console.warn("Service worker update failed", error); });
+          navigator.serviceWorker.getRegistrations()
+            .then(function(registrations) {
+              return Promise.all(registrations.map(function(registration) {
+                var scopePath = "/";
+                try { scopePath = new URL(registration.scope).pathname; } catch (e) {}
+                return scopePath === "/" ? registration.unregister() : false;
+              }));
+            })
+            .catch(function(error) { console.warn("Legacy worker cleanup failed", error); });
         }
       })();
     </script>
