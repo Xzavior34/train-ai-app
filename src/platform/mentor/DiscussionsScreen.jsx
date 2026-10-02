@@ -88,11 +88,12 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
   })) : (isMockDataEnabled() ? defaultDiscussions : []);
 
   const filteredDiscussions = allDiscussions.filter(d => {
+    const q = (searchQuery || "").toLowerCase();
     const matchesSearch = searchQuery === "" ||
-      d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.mentee.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.course.toLowerCase().includes(searchQuery.toLowerCase());
+      (d.title || "").toLowerCase().includes(q) ||
+      (d.description || "").toLowerCase().includes(q) ||
+      (d.mentee || "").toLowerCase().includes(q) ||
+      (d.course || "").toLowerCase().includes(q);
     
     if (filterTab === "open") return matchesSearch && !d.resolved;
     if (filterTab === "resolved") return matchesSearch && d.resolved;

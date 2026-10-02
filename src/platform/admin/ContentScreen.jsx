@@ -779,7 +779,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                         <td style={{ fontSize: 12.5 }}>{a.created_at ? new Date(a.created_at).toLocaleDateString() : "N/A"}</td>
                         <td>
                           <Tag tone={a.status === "approved" ? "success" : a.status === "rejected" ? "danger" : "warning"}>
-                            {a.status.toUpperCase()}
+                            {(a.status || "pending").toUpperCase()}
                           </Tag>
                         </td>
                         <td>

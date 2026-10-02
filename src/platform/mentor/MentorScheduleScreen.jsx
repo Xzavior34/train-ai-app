@@ -318,7 +318,9 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
                         <span className="ta-row ta-gap4">
                           <Clock size={13} color="var(--primary)" />
                           {(() => {
+                            if (!s.scheduled_at) return "Time to be scheduled";
                             const d = new Date(s.scheduled_at);
+                            if (isNaN(d.getTime())) return "Time to be scheduled";
                             return `${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })} · ${d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })} (${s.duration_minutes || 30}m)`;
                           })()}
                         </span>
@@ -328,7 +330,7 @@ export function MentorScheduleScreen({ mentorId, orgSelector }) {
 
                   <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center" }}>
                     <Tag tone={s.status === "completed" ? "success" : s.status === "cancelled" ? "danger" : s.status === "requested" ? "warning" : "primary"}>
-                      {s.status.toUpperCase()}
+                      {(s.status || "requested").toUpperCase()}
                     </Tag>
 
                     {s.status === "requested" && (

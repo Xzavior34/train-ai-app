@@ -640,17 +640,17 @@ export default function AuthPage({
               </div>
             )}
 
-            <label style={styles.label}>Email Address</label>
+            <label style={styles.label}>{mode === "signin" ? "Email or Username" : "Email Address"}</label>
             <div style={styles.inputWrap}>
               <Mail size={15} color="#94A3B8" style={styles.inputIcon} />
               <input
-                type="email"
+                type={mode === "signin" ? "text" : "email"}
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="auth-input"
                 style={styles.input}
-                placeholder="you@example.com"
+                placeholder={mode === "signin" ? "you@example.com or username" : "you@example.com"}
               />
             </div>
 

@@ -24,77 +24,9 @@ const COURSE_UNIQUE_THUMBNAILS = {
 export function MyProgressScreen({ user = {}, courses = [], push, back, session, showToast }) {
   const [filterStatus, setFilterStatus] = useState("all"); // "all" | "in_progress" | "completed"
 
-  const ENROLLED_COURSES_DETAILED = [
-    {
-      id: "course-figma-ai",
-      title: "Master Design Systems in Figma with Generative AI",
-      category: "Design & UX",
-      instructor: "Astrid Larsson",
-      instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-      totalLessons: 24,
-      completedLessons: 11,
-      totalHours: 18,
-      hoursSpent: 8.2,
-      progress: 46,
-      status: "in_progress",
-      lastActive: "Today at 10:15 AM",
-      nextLesson: "Module 3: Semantic Color Tokens & Figma Variables",
-      coverImageUrl: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80"
-    },
-    {
-      id: "course-fullstack-ai",
-      title: "Full-Stack AI Application Engineering & LLM APIs",
-      category: "AI & Engineering",
-      instructor: "Dr. Elena Vance",
-      instructorAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80",
-      totalLessons: 32,
-      completedLessons: 6,
-      totalHours: 24,
-      hoursSpent: 4.5,
-      progress: 19,
-      status: "in_progress",
-      lastActive: "Yesterday",
-      nextLesson: "Module 2: Structured Outputs & Function Calling in Node.js",
-      coverImageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
-    },
-    {
-      id: "course-foundations",
-      title: "AI Product Management & Strategy Foundations",
-      category: "Product & Strategy",
-      instructor: "Marcus Wright",
-      instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-      totalLessons: 16,
-      completedLessons: 16,
-      totalHours: 12,
-      hoursSpent: 12.0,
-      progress: 100,
-      status: "completed",
-      completedDate: "August 10, 2026",
-      certificateId: "TAI-PM-2026-4412",
-      coverImageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80"
-    }
-  ];
-
-  const WEEKLY_BREAKDOWN = [
-    { day: "Mon", hours: 2.5, heightPct: 75 },
-    { day: "Tue", hours: 1.8, heightPct: 54 },
-    { day: "Wed", hours: 4.2, heightPct: 100, active: true },
-    { day: "Thu", hours: 2.1, heightPct: 63 },
-    { day: "Fri", hours: 3.0, heightPct: 88 },
-    { day: "Sat", hours: 1.2, heightPct: 36 },
-    { day: "Sun", hours: 1.8, heightPct: 54 },
-  ];
-
-  const SKILLS_OVERVIEW = [
-    { name: "Design Tokens & Variables", mastery: 92, status: "Proficient" },
-    { name: "Prompt Engineering & RAG", mastery: 85, status: "Advanced" },
-    { name: "Full-Stack AI Integrations", mastery: 74, status: "Intermediate" },
-    { name: "Spatial Interface Design", mastery: 68, status: "In Progress" },
-  ];
-
   const enrolledFromDb = (courses || [])
     .filter(c => c.enrolled || c.progress > 0)
-    .map((c, idx) => {
+    .map((c) => {
       const isDone = (c.progress || 0) >= 100;
       return {
         id: c.id,
@@ -114,9 +46,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
       };
     });
 
-  const allProgressCourses = enrolledFromDb.length > 0
-    ? enrolledFromDb
-    : (isMockDataEnabled() ? ENROLLED_COURSES_DETAILED : []);
+  const allProgressCourses = enrolledFromDb;
 
   const filteredCourses = allProgressCourses.filter(c => {
     if (filterStatus === "in_progress") return c.status === "in_progress";
@@ -127,14 +57,37 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
   const inProgressCount = allProgressCourses.filter(c => c.status === "in_progress").length;
   const completedCount = allProgressCourses.filter(c => c.status === "completed").length;
 
+  // Derive category mastery dynamically
+  const categoriesMap = {};
+  (courses || []).forEach(c => {
+    const cat = c.category || "General";
+    if (!categoriesMap[cat]) {
+      categoriesMap[cat] = { totalProgress: 0, count: 0 };
+    }
+    categoriesMap[cat].totalProgress += (c.progress || 0);
+    categoriesMap[cat].count += 1;
+  });
+
+  const dynamicSkills = Object.entries(categoriesMap).map(([name, data]) => {
+    const avg = Math.round(data.totalProgress / (data.count || 1));
+    const status = avg >= 90 ? "Expert" : avg >= 75 ? "Proficient" : avg >= 40 ? "Intermediate" : avg > 0 ? "In Progress" : "Not Started";
+    return { name, mastery: avg, status };
+  });
+
+  const skillsOverview = dynamicSkills.length > 0 ? dynamicSkills : [
+    { name: "Curriculum Track", mastery: user.mastery || 0, status: (user.mastery || 0) >= 70 ? "Proficient" : "In Progress" }
+  ];
+
+  const weeklyDone = user.weeklyDone || 0;
+  const weeklyGoal = user.weeklyGoal || 5;
+  const weeklyPct = weeklyGoal > 0 ? Math.min(100, Math.round((weeklyDone / weeklyGoal) * 100)) : 0;
+  const weeklyRemaining = Math.max(0, weeklyGoal - weeklyDone);
+
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       
       {/* =========================================================================
           HERO BANNER: My Learning Journey & Weekly Milestone
-          ========================================================================= */}
-      {/* =========================================================================
-          HERO BANNER: My Learning Journey & Weekly Milestone (Adaptive Liquid Glass)
           ========================================================================= */}
       <div
         className="tai-card tai-hero-card anim-fluid-entrance"
@@ -151,13 +104,13 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
               My Learning Progress
             </h1>
             <p className="tai-hero-desc" style={{ fontSize: 13, margin: 0, maxWidth: 620, lineHeight: 1.45 }}>
-              16.6 study hours logged across {inProgressCount} active courses this week.
+              {user.totalHours || 0} study hours logged across {inProgressCount} active course{inProgressCount === 1 ? "" : "s"}.
             </p>
           </div>
 
           <div className="tai-hero-subcard" style={{ textAlign: "right", flexShrink: 0, padding: "10px 16px", borderRadius: 10 }}>
-            <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>17 / 20 Lessons Done</div>
-            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>85% Sprint Met</div>
+            <div style={{ fontSize: 18, fontWeight: 900, color: "#34D399" }}>{weeklyDone} / {weeklyGoal} Lessons Done</div>
+            <div style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 600 }}>{weeklyPct}% Sprint Met</div>
           </div>
         </div>
 
@@ -167,13 +120,13 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           padding: "12px 16px", borderRadius: 10
         }}>
           <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
-            <span>Weekly Sprint Progress (85% Target Met)</span>
+            <span>Weekly Sprint Progress ({weeklyPct}% Target Met)</span>
             <span style={{ color: "#34D399", fontSize: 12, fontWeight: 700 }}>
-              3 of 20 lessons remaining
+              {weeklyRemaining} of {weeklyGoal} lessons remaining
             </span>
           </div>
           <div style={{ height: 8, borderRadius: 99, background: "var(--surface-3)", overflow: "hidden" }}>
-            <div style={{ width: "85%", height: "100%", background: "#10B981", borderRadius: 99, transition: "width 0.4s ease" }} />
+            <div style={{ width: `${weeklyPct}%`, height: "100%", background: "#10B981", borderRadius: 99, transition: "width 0.4s ease" }} />
           </div>
         </div>
       </div>
@@ -212,7 +165,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
               <Clock size={18} color="#F59E0B" />
             </div>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>24.7 hrs</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{user.totalHours || 0} hrs</div>
               <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Total Learning Time</div>
             </div>
           </div>
@@ -224,7 +177,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
               <Flame size={18} color="#3B82F6" />
             </div>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{user.streak || 8} Days</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{user.streak || 0} Days</div>
               <div style={{ fontSize: 12, color: "var(--text-3)", fontWeight: 600 }}>Active Study Streak</div>
             </div>
           </div>
@@ -236,41 +189,35 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
           ========================================================================= */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap: 20 }}>
 
-        {/* Weekly Learning Bar Chart */}
+        {/* Study Time Overview Card */}
         <div className="tai-card" style={{ padding: 22, borderRadius: 10 }}>
           <div className="tai-row tai-between" style={{ marginBottom: 16 }}>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 800, margin: "0 0 2px", color: "var(--text)" }}>
-                Study Time Distribution
+                Study Time Overview
               </h3>
               <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>
-                Daily hours logged over the last 7 days
+                {user.totalHours || 0} total learning hours logged
               </div>
             </div>
             <span className="tai-tag" style={{ background: "rgba(16, 185, 129, 0.1)", color: "#10B981", fontWeight: 700 }}>
-              +38% vs Avg
+              Active
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", height: 150, padding: "16px 8px 8px", background: "var(--surface-3)", borderRadius: 10 }}>
-            {WEEKLY_BREAKDOWN.map((d, i) => (
-              <div key={d.day} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flex: 1 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)" }}>{d.hours}h</span>
-                <div
-                  style={{
-                    width: "45%",
-                    maxWidth: 32,
-                    height: `${d.heightPct}%`,
-                    background: d.active ? "#2563EB" : "var(--primary-tint)",
-                    borderRadius: "6px 6px 0 0",
-                    transition: "height 0.3s ease"
-                  }}
-                />
-                <span style={{ fontSize: 11.5, fontWeight: d.active ? 800 : 600, color: d.active ? "var(--primary)" : "var(--text-3)" }}>
-                  {d.day}
-                </span>
-              </div>
-            ))}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-3)", padding: "14px 16px", borderRadius: 8 }}>
+              <span style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>Weekly Completed Lessons</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>{weeklyDone} / {weeklyGoal}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-3)", padding: "14px 16px", borderRadius: 8 }}>
+              <span style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>Total Curriculum Lessons Done</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>{user.lessonsCompleted || 0}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-3)", padding: "14px 16px", borderRadius: 8 }}>
+              <span style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>Overall Curriculum Mastery</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "var(--primary)" }}>{user.mastery || 0}%</span>
+            </div>
           </div>
         </div>
 
@@ -282,16 +229,16 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
                 Target Skills Mastery
               </h3>
               <div style={{ fontSize: 12.5, color: "var(--text-3)" }}>
-                Evaluated from assessments &amp; projects
+                Evaluated from enrolled courses &amp; tracks
               </div>
             </div>
             <span className="tai-tag" style={{ background: "rgba(37, 99, 235, 0.1)", color: "var(--primary)", fontWeight: 700 }}>
-              Level 2
+              Level {user.level || 1}
             </span>
           </div>
 
           <div className="tai-col tai-gap14">
-            {SKILLS_OVERVIEW.map(skill => (
+            {skillsOverview.map(skill => (
               <div key={skill.name}>
                 <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 5 }}>
                   <span style={{ color: "var(--text)" }}>{skill.name}</span>

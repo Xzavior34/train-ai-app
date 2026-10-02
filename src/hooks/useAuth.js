@@ -33,15 +33,21 @@ export function useAuth() {
     (async () => {
       let resolvedSession = null;
 
+      const fetchSessionWithTimeout = async (client) => {
+        if (!client) return null;
+        try {
+          const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 2500));
+          const sessionPromise = client.auth.getSession().then(({ data }) => data?.session || null).catch(() => null);
+          return await Promise.race([sessionPromise, timeoutPromise]);
+        } catch {
+          return null;
+        }
+      };
+
       // 1. First probe primary project client
       const primaryClient = supabase || getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
       if (primaryClient) {
-        try {
-          const { data } = await primaryClient.auth.getSession();
-          if (data?.session) {
-            resolvedSession = data.session;
-          }
-        } catch {}
+        resolvedSession = await fetchSessionWithTimeout(primaryClient);
       }
 
       // 2. If not found on primary, probe alternate project client
@@ -49,13 +55,8 @@ export function useAuth() {
         for (const projKey of [SUPABASE_PROJECTS.ORGANIZATION_DB, SUPABASE_PROJECTS.SARA_FOUNDATION]) {
           const client = getSupabaseClientForProject(projKey);
           if (client && client !== primaryClient) {
-            try {
-              const { data } = await client.auth.getSession();
-              if (data?.session) {
-                resolvedSession = data.session;
-                break;
-              }
-            } catch {}
+            resolvedSession = await fetchSessionWithTimeout(client);
+            if (resolvedSession) break;
           }
         }
       }
@@ -116,7 +117,8 @@ export function useAuth() {
 
   const signIn = useCallback(async (email, password) => {
     setAuthError(null);
-    const normalizedEmail = (email || "").trim().toLowerCase();
+    const rawInput = (email || "").trim();
+    const normalizedEmail = rawInput.toLowerCase();
 
     // Enforce 10-trial rate limiting before attempting sign in
     const rateLimit = getRateLimitStatus(normalizedEmail);
@@ -127,14 +129,23 @@ export function useAuth() {
       return { data: null, error: new Error(lockMsg), isRateLimited: true, remainingMs: rateLimit.remainingMs };
     }
 
-    let targetProject = resolveProjectForSignIn(normalizedEmail);
+    const candidateEmails = [rawInput];
+    if (!rawInput.includes("@") && rawInput.length > 0) {
+      candidateEmails.push(`${rawInput}@gmail.com`);
+      candidateEmails.push(`${rawInput}@sarafoundation.org`);
+      candidateEmails.push(`${rawInput}@sarafoundationafrica.com`);
+      candidateEmails.push(`${rawInput}@yahoo.com`);
+      candidateEmails.push(`${rawInput}@outlook.com`);
+    }
+
+    let targetProject = resolveProjectForSignIn(rawInput);
     setActiveSupabaseProject(targetProject);
 
-    async function attemptSignIn(projectKey) {
+    async function attemptSignIn(projectKey, loginEmail) {
       const client = getSupabaseClientForProject(projectKey);
       if (!client) return { client: null, supaRes: null, networkErr: null };
       try {
-        const supaRes = await client.auth.signInWithPassword({ email: normalizedEmail, password });
+        const supaRes = await client.auth.signInWithPassword({ email: loginEmail, password });
         return { client, supaRes, networkErr: null };
       } catch (networkErr) {
         return { client, supaRes: null, networkErr };
@@ -142,38 +153,53 @@ export function useAuth() {
     }
 
     if (supabase) {
-      let { client, supaRes, networkErr } = await attemptSignIn(targetProject);
+      let activeClient = null;
+      let activeSupaRes = null;
+      let lastNetworkErr = null;
+      let successfulProject = targetProject;
 
-      if (!supaRes?.data?.session && !networkErr) {
-        const alternateProject =
-          targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION
-            ? SUPABASE_PROJECTS.ORGANIZATION_DB
-            : SUPABASE_PROJECTS.SARA_FOUNDATION;
-        const altAttempt = await attemptSignIn(alternateProject);
-        if (altAttempt.supaRes?.data?.session) {
-          targetProject = alternateProject;
-          setActiveSupabaseProject(alternateProject);
-          client = altAttempt.client;
-          supaRes = altAttempt.supaRes;
-          networkErr = altAttempt.networkErr;
+      const projectOrder = [
+        targetProject,
+        fallbackProjectForSignIn(targetProject) || (targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION ? SUPABASE_PROJECTS.ORGANIZATION_DB : SUPABASE_PROJECTS.SARA_FOUNDATION)
+      ].filter(Boolean);
+
+      // Try candidate projects and candidate email formats
+      for (const proj of projectOrder) {
+        for (const candidateEmail of candidateEmails) {
+          const { client, supaRes, networkErr } = await attemptSignIn(proj, candidateEmail);
+          if (networkErr) {
+            lastNetworkErr = networkErr;
+          }
+          if (supaRes?.data?.session) {
+            activeClient = client;
+            activeSupaRes = supaRes;
+            successfulProject = proj;
+            lastNetworkErr = null;
+            break;
+          }
+          if (supaRes) {
+            activeSupaRes = supaRes;
+          }
         }
+        if (activeSupaRes?.data?.session) break;
       }
 
-      if (networkErr) {
+      if (lastNetworkErr && !activeSupaRes?.data?.session) {
         const message = "Could not reach the authentication server. Please check your network connection and try again.";
         setAuthError(message);
         return { data: null, error: new Error(message) };
       }
 
-      if (supaRes?.data?.session) {
+      if (activeSupaRes?.data?.session) {
+        setActiveSupabaseProject(successfulProject);
         resetPasswordRateLimit(normalizedEmail);
-        setSession(supaRes.data.session);
-        safeStorage.setItem(AUTH_STORAGE_KEY, supaRes.data.session);
-        return { data: supaRes.data, error: null };
+        setSession(activeSupaRes.data.session);
+        safeStorage.setItem(AUTH_STORAGE_KEY, activeSupaRes.data.session);
+        return { data: activeSupaRes.data, error: null };
       }
 
       // Handle authentication error from Supabase
-      const supaErr = supaRes?.error;
+      const supaErr = activeSupaRes?.error;
       const supaErrMsg = (supaErr?.message || "").trim();
 
       // Check if project configuration / connection issue (e.g., 401 Invalid API key)
@@ -183,7 +209,7 @@ export function useAuth() {
         return { data: null, error: supaErr || new Error(message) };
       }
 
-      // Existing user entered an incorrect password: track trial attempt
+      // Track failed password attempt
       const updatedLimit = recordFailedPasswordAttempt(normalizedEmail);
       let message;
       if (updatedLimit.isLocked) {
@@ -361,12 +387,13 @@ export function useAuth() {
 
   // "Forgot password" with existence verification and multi-path fallback
   const sendPasswordReset = useCallback(async (email) => {
-    const normalizedEmail = (email || "").trim().toLowerCase();
+    const rawInput = (email || "").trim();
+    const normalizedEmail = rawInput.toLowerCase();
     if (!supabase) {
       return { success: true, emailSent: true };
     }
 
-    const targetProject = resolveProjectForSignIn(normalizedEmail);
+    const targetProject = resolveProjectForSignIn(rawInput);
     const client = getSupabaseClientForProject(targetProject) || supabase;
 
     let otp = null;
@@ -469,8 +496,31 @@ export function useAuth() {
   const completePasswordReset = useCallback(async (newPassword) => {
     if (!supabase) return { success: false, error: "Not available in demo mode." };
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) return { success: false, error: error.message };
+      let lastError = null;
+      // 1. Try currently active primary client
+      if (supabase?.auth?.updateUser) {
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (!error) {
+          setIsPasswordRecovery(false);
+          return { success: true };
+        }
+        lastError = error;
+      }
+
+      // 2. If primary failed or session is on alternate project, try other project clients
+      for (const projKey of [SUPABASE_PROJECTS.ORGANIZATION_DB, SUPABASE_PROJECTS.SARA_FOUNDATION]) {
+        const client = getSupabaseClientForProject(projKey);
+        if (client && client !== supabase && client?.auth?.updateUser) {
+          const { error } = await client.auth.updateUser({ password: newPassword });
+          if (!error) {
+            setIsPasswordRecovery(false);
+            return { success: true };
+          }
+          lastError = error;
+        }
+      }
+
+      if (lastError) return { success: false, error: lastError.message || "Could not update your password." };
       setIsPasswordRecovery(false);
       return { success: true };
     } catch (e) {

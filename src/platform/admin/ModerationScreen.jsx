@@ -33,22 +33,26 @@ export function ModerationScreen({ orgSelector, setScreen, orgId, currentUserId 
   const [insightsManual, setInsightsManual] = useState(false);
 
   useEffect(() => {
-    fetchOrgAISettings().then((res) => { if (res && res.manual_mode !== undefined) setCoachManual(res.manual_mode); });
-    fetchOrgAIInsightsSettings().then((res) => { if (res && res.manual_mode !== undefined) setInsightsManual(res.manual_mode); });
-  }, []);
+    if (orgId) {
+      fetchOrgAISettings(orgId).then((res) => { if (res && res.manual_mode !== undefined) setCoachManual(res.manual_mode); });
+      fetchOrgAIInsightsSettings(orgId).then((res) => { if (res && res.manual_mode !== undefined) setInsightsManual(res.manual_mode); });
+    }
+  }, [orgId]);
 
   const handleToggleCoachManual = async () => {
+    if (!orgId) return;
     const next = !coachManual;
     setCoachManual(next);
-    const res = await updateOrgAISettings(next);
+    const res = await updateOrgAISettings(orgId, { manual_mode: next });
     if (res.success) showToast(`AI Coach manual mode ${next ? "enabled" : "disabled"}`);
     else { setCoachManual(!next); showToast(res.error || "Failed to update AI settings"); }
   };
 
   const handleToggleInsightsManual = async () => {
+    if (!orgId) return;
     const next = !insightsManual;
     setInsightsManual(next);
-    const res = await updateOrgAIInsightsSettings(next);
+    const res = await updateOrgAIInsightsSettings(orgId, { manual_mode: next });
     if (res.success) showToast(`AI Insights manual mode ${next ? "enabled" : "disabled"}`);
     else { setInsightsManual(!next); showToast(res.error || "Failed to update AI settings"); }
   };

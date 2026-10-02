@@ -1447,9 +1447,9 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
   const totalRealResults = studentResults.length + courseResults.length + cohortResults.length;
 
   const navResults = searchValue.trim() === "" ? [] : SEARCH_DATABASE.filter(item =>
-    item.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-    item.detail.toLowerCase().includes(searchValue.toLowerCase()) ||
-    item.type.toLowerCase().includes(searchValue.toLowerCase())
+    (item.name || "").toLowerCase().includes(searchValue.toLowerCase()) ||
+    (item.detail || "").toLowerCase().includes(searchValue.toLowerCase()) ||
+    (item.type || "").toLowerCase().includes(searchValue.toLowerCase())
   );
 
   function handleSelectResult(item) {
@@ -1462,7 +1462,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
 
   useEffect(() => {
     function handleKeyDown(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      if ((e.metaKey || e.ctrlKey) && (e.key || "").toLowerCase() === "k") {
         e.preventDefault();
         setIsSearchOpen(prev => !prev);
       }

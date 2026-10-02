@@ -1094,7 +1094,7 @@ export function LessonScreen({
                   {/* Lessons List in Module */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {moduleLessons
-                      .filter(l => !curriculumSearch || l.title.toLowerCase().includes(curriculumSearch.toLowerCase()))
+                      .filter(l => !curriculumSearch || (l.title || "").toLowerCase().includes((curriculumSearch || "").toLowerCase()))
                       .map((les) => {
                         const isCurrent = les.id === lesson?.id;
                         const isDone = completedLessonIds?.has(`${course?.id}-${les.id}`);

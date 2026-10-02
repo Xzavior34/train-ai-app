@@ -86,7 +86,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
   const filteredMentees = allMentees.filter(m => {
     const courseText = (m.courses || []).join(" ").toLowerCase();
     const matchesSearch = searchQuery === "" ||
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (m.name || m.display_name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       courseText.includes(searchQuery.toLowerCase());
     const matchesRisk = riskFilter === "all" || m.risk === riskFilter;
     return matchesSearch && matchesRisk;
@@ -224,8 +224,8 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                               onError={(e) => { e.target.style.display = "none"; }}
                             />
                             <div>
-                              <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.name}</div>
-                              <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.email || `${m.name.toLowerCase().replace(/\s+/g, ".")}@trainai.co`}</div>
+                              <div style={{ fontWeight: 700, fontSize: 13.5 }}>{m.name || "Learner"}</div>
+                              <div style={{ fontSize: 11, color: "var(--text-3)" }}>{m.email || (m.name ? `${m.name.toLowerCase().replace(/\s+/g, ".")}@trainai.co` : "learner@trainai.co")}</div>
                             </div>
                           </div>
                         </td>

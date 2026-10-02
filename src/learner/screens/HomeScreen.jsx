@@ -13,10 +13,11 @@ export function HomeScreen({
   session, push, goTab, goToMyCourses, cohort = null, cohortLoading = false,
   achievements = [], showToast,
   learningPathsQuery, pathEnrollmentsQuery,
-  complianceAssignmentsQuery, bookmarksQuery
+  complianceAssignmentsQuery, bookmarksQuery, myCertificatesQuery,
+  cohortMembersQuery, cohortCoursesQuery
 }) {
   const enrolledCourses = (courses || []).filter(c => c.enrolled);
-  const continueCourse = enrolledCourses.find(c => c.progress < 100) || enrolledCourses[0] || null;
+  const continueCourse = enrolledCourses.find(c => (c.progress || 0) < 100) || enrolledCourses[0] || null;
 
   // Active Enrolled Learning Pathway (Admin Assigned / Enrolled)
   const enrolledPathIds = new Set(
@@ -30,6 +31,9 @@ export function HomeScreen({
 
   const completedCourses = enrolledCourses.filter(c => (c.progress || 0) >= 100);
   const userFirstName = (user?.name || "Learner").split(" ")[0];
+  const certificatesCount = myCertificatesQuery?.data?.length ?? user.certificatesCount ?? completedCourses.length;
+  const lessonsDoneCount = user.lessonsCompleted ?? enrolledCourses.reduce((s, c) => s + (c.progress > 0 ? Math.round(((c.progress || 0) / 100) * (c.lessons || 4)) : 0), 0);
+  const totalHoursCount = user.totalHours ?? Math.round(enrolledCourses.reduce((sum, c) => sum + (((c.progress || 0) / 100) * (c.hours || 4)), 0) * 10) / 10;
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -267,45 +271,57 @@ export function HomeScreen({
               width: "100%",
               boxSizing: "border-box"
             }}>
-              <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 12 }}>
-                <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Users size={17} color="var(--primary)" />
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", lineHeight: 1.35, wordBreak: "break-word" }}>
-                      {cohort?.name || "Q1 Onboarding Cohort"}
+              {(() => {
+                const assignedList = cohortCoursesQuery?.data || [];
+                const assignedCompleted = assignedList.filter(c => (c.courses?.progress || 0) >= 100).length;
+                const milestonePct = assignedList.length > 0 
+                  ? Math.round((assignedCompleted / assignedList.length) * 100)
+                  : (user.mastery || 0);
+                const peersCount = cohortMembersQuery?.data?.length || 1;
+                return (
+                  <>
+                    <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 12 }}>
+                      <div className="tai-row tai-gap10" style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <Users size={17} color="var(--primary)" />
+                        </div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)", lineHeight: 1.35, wordBreak: "break-word" }}>
+                            {cohort?.name || "Active Batch"}
+                          </div>
+                          <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>
+                            {cohort?.description || "Collaborative cohort workspace"}
+                          </div>
+                        </div>
+                      </div>
+                      <Tag tone="primary">{milestonePct >= 100 ? "Completed" : "Active"}</Tag>
                     </div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>
-                      Sprint 5 of 12
+
+                    <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
+                      <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
+                        <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
+                        <span style={{ color: "var(--primary)" }}>{milestonePct}% Completed</span>
+                      </div>
+                      <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{ width: `${milestonePct}%`, height: "100%", background: "var(--primary, #2563EB)", borderRadius: 3, transition: "width 0.4s ease" }} />
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <Tag tone="primary">Sprint 5</Tag>
-              </div>
 
-              <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
-                <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
-                  <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
-                  <span style={{ color: "var(--primary)" }}>42% Completed</span>
-                </div>
-                <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ width: "42%", height: "100%", background: "var(--primary, #2563EB)", borderRadius: 3 }} />
-                </div>
-              </div>
-
-              <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-                <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
-                  68 enrolled peers • Next: Tomorrow 10:00 AM
-                </div>
-                <button
-                  className="tai-btn tai-btn-primary tai-btn-sm"
-                  style={{ padding: "6px 14px", fontSize: 12, fontWeight: 700, flexShrink: 0, borderRadius: 6 }}
-                  onClick={() => push("cohort")}
-                >
-                  Enter Cohort Space →
-                </button>
-              </div>
+                    <div className="tai-row tai-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                      <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>
+                        {peersCount} {peersCount === 1 ? "enrolled peer" : "enrolled peers"}
+                      </div>
+                      <button
+                        className="tai-btn tai-btn-primary tai-btn-sm"
+                        style={{ padding: "6px 14px", fontSize: 12, fontWeight: 700, flexShrink: 0, borderRadius: 6 }}
+                        onClick={() => push("cohort")}
+                      >
+                        Enter Cohort Space →
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
           {/* =========================================================================
@@ -335,15 +351,15 @@ export function HomeScreen({
               </div>
               <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Certificates Earned</div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: "#059669", marginTop: 2 }}>{completedCourses.length}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: "#059669", marginTop: 2 }}>{certificatesCount}</div>
               </div>
               <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Lessons Done</div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: "#059669", marginTop: 2 }}>{user?.completedLessonsCount || 4} Lessons</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: "#059669", marginTop: 2 }}>{lessonsDoneCount} Lessons</div>
               </div>
               <div style={{ background: "var(--surface-3)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Total Hours</div>
-                <div style={{ fontSize: 17, fontWeight: 900, color: "var(--primary)", marginTop: 2 }}>14.5 Hrs</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: "var(--primary)", marginTop: 2 }}>{totalHoursCount} Hrs</div>
               </div>
             </div>
 

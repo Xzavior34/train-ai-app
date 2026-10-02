@@ -14,7 +14,7 @@ import {
   fetchOrCreateMyReferralLink, fetchMyReferralStats,
   fetchMyComplianceAssignments, fetchMyCertificates, fetchMyFeedbackNotes
 } from "../../lib/api/learner.js";
-import { fetchCurrentUserProfile } from "../../lib/api/platform.js";
+import { fetchCurrentUserProfile, fetchOrganizationById } from "../../lib/api/platform.js";
 import { fetchMyPersonalization } from "../../services/authService.js";
 import {
   fetchCommunityPosts,
@@ -92,32 +92,11 @@ export function useLearnerData(session, screen, params) {
     return fetchMyStreakActivity(session.user.id, 14);
   }, [session?.user?.id, screen === "achievements"]);
 
-  const user = {
-    email: userProfileQuery.data?.email || session?.user?.email || "",
-    name: userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner",
-    initials: initialsOf(userProfileQuery.data?.display_name || session?.user?.user_metadata?.display_name || session?.user?.email),
-    avatarUrl: userProfileQuery.data?.avatar_url || null,
-    location: userProfileQuery.data?.school || userProfileQuery.data?.department || "Member",
-    role: "Learner",
-    level: gamificationStatsQuery.data?.current_level || Math.floor((gamificationStatsQuery.data?.total_points || 0) / 500) + 1 || 1,
-    totalPoints: gamificationStatsQuery.data?.total_points || 0,
-    streak: gamificationStatsQuery.data?.streak_days || 1,
-    streakFreezes: gamificationStatsQuery.data?.streak_freezes_available || 1,
-    lessonsCompleted: gamificationStatsQuery.data?.lessons_completed || 0,
-    coursesCompleted: gamificationStatsQuery.data?.courses_completed || 0,
-    sessionsCompleted: gamificationStatsQuery.data?.sessions_completed || 0,
-    weeklyGoal: userProfileQuery.data?.weekly_lesson_goal || 5,
-    weeklyDone: (gamificationStatsQuery.data?.lessons_completed || 0) % (userProfileQuery.data?.weekly_lesson_goal || 5),
-    // Real `updated_at` column on `user_gamification_stats` - touched every
-    // time points/streak/lessons are written (lesson complete, quiz, daily
-    // reward claim, etc.), so it doubles as a "last learning activity"
-    // signal for the retention nudges without needing a second query.
-    lastActiveAt: gamificationStatsQuery.data?.updated_at || null,
-    track: personalizationQuery.data?.learning_tracks?.[0] || "Data & AI",
-    skillLevel: personalizationQuery.data?.skill_level || "beginner",
-    mastery: Math.min(100, Math.round(((gamificationStatsQuery.data?.lessons_completed || 0) * 10) / 2)),
-    accuracy: 85,
-  };
+  const orgId = userProfileQuery.data?.organization_id || null;
+  const orgQuery = useSupabaseQuery(async () => {
+    if (!orgId) return null;
+    return fetchOrganizationById(orgId);
+  }, [orgId]);
 
   const leaderboardQuery = useSupabaseQuery(async () => {
     if (!session) return [];
@@ -133,15 +112,13 @@ export function useLearnerData(session, screen, params) {
       cohort_name: r.cohort_name || "Active Batch",
       points: r.total_points || 0,
       total_points: r.total_points || 0,
-      streak: r.streak_days || r.streak || 1,
+      streak: r.streak_days || r.streak || 0,
       level: r.current_level || 1,
       completed_courses: r.completed_courses || 0,
       badges_count: r.badges_count || 1,
       you: r.user_id === session?.user?.id,
     }));
   }, [session?.user?.id]);
-
-  const orgId = userProfileQuery.data?.organization_id || null;
   const coursesQuery = useSupabaseQuery(async () => fetchPublishedCourses(orgId), [orgId]);
   const enrollmentsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
@@ -476,6 +453,45 @@ export function useLearnerData(session, screen, params) {
 
     return Array.from(merged.values());
   })();
+
+  const enrolledCoursesList = (courses || []).filter(c => c.enrolled);
+  const completedCoursesCount = enrolledCoursesList.filter(c => (c.progress || 0) >= 100).length;
+  const totalHoursSpent = Math.round(enrolledCoursesList.reduce((sum, c) => sum + (((c.progress || 0) / 100) * (c.hours || 4)), 0) * 10) / 10;
+  const computedLessonsDone = enrolledCoursesList.reduce((s, c) => s + (c.progress > 0 ? Math.round(((c.progress || 0) / 100) * (c.lessons || 4)) : 0), 0);
+  const realLessonsDone = (gamificationStatsQuery.data?.lessons_completed != null && gamificationStatsQuery.data.lessons_completed > 0)
+    ? gamificationStatsQuery.data.lessons_completed
+    : computedLessonsDone;
+
+  const user = {
+    email: userProfileQuery.data?.email || session?.user?.email || "",
+    name: userProfileQuery.data?.display_name || session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner",
+    initials: initialsOf(userProfileQuery.data?.display_name || session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.display_name || session?.user?.email),
+    avatarUrl: userProfileQuery.data?.avatar_url || null,
+    location: userProfileQuery.data?.school || userProfileQuery.data?.department || "Member",
+    organization: orgQuery.data?.name || (orgId ? "Sara Foundation" : "Train AI"),
+    organizationId: orgId,
+    role: userProfileQuery.data?.role || "Learner",
+    level: gamificationStatsQuery.data?.current_level || Math.floor((gamificationStatsQuery.data?.total_points || 0) / 500) + 1 || 1,
+    totalPoints: gamificationStatsQuery.data?.total_points || (realLessonsDone * 50) || 0,
+    streak: gamificationStatsQuery.data?.streak_days || 0,
+    streakFreezes: gamificationStatsQuery.data?.streak_freezes_available || 0,
+    lessonsCompleted: realLessonsDone,
+    coursesCompleted: (gamificationStatsQuery.data?.courses_completed != null && gamificationStatsQuery.data.courses_completed > 0)
+      ? gamificationStatsQuery.data.courses_completed
+      : completedCoursesCount,
+    sessionsCompleted: gamificationStatsQuery.data?.sessions_completed || 0,
+    totalHours: totalHoursSpent,
+    certificatesCount: (myCertificatesQuery?.data && myCertificatesQuery.data.length) ? myCertificatesQuery.data.length : completedCoursesCount,
+    weeklyGoal: userProfileQuery.data?.weekly_lesson_goal || 5,
+    weeklyDone: (realLessonsDone) % (userProfileQuery.data?.weekly_lesson_goal || 5),
+    lastActiveAt: gamificationStatsQuery.data?.updated_at || null,
+    track: personalizationQuery.data?.learning_tracks?.[0] || "Data & AI",
+    skillLevel: personalizationQuery.data?.skill_level || "beginner",
+    mastery: enrolledCoursesList.length > 0
+      ? Math.round(enrolledCoursesList.reduce((s, c) => s + (c.progress || 0), 0) / enrolledCoursesList.length)
+      : Math.min(100, Math.round((realLessonsDone * 10) / 2)),
+    accuracy: 85,
+  };
 
   function courseById(id) {
     if (!id) return courses[0] || (mockEnabled ? DEFAULT_FALLBACK_COURSES[0] : undefined);

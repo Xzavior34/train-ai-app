@@ -20,6 +20,7 @@ import { MessagesScreen } from "./screens/MessagesScreen.jsx";
 import { NotificationsScreen } from "./screens/NotificationsScreen.jsx";
 import { ProfileScreen } from "./screens/ProfileScreen.jsx";
 import { AchievementsScreen } from "./screens/AchievementsScreen.jsx";
+import { MyProgressScreen } from "./screens/MyProgressScreen.jsx";
 import { LeaderboardScreen } from "./screens/LeaderboardScreen.jsx";
 import { CreditsCheckoutScreen } from "./screens/CreditsCheckoutScreen.jsx";
 import { PaymentCallbackScreen } from "./screens/PaymentCallbackScreen.jsx";
@@ -974,7 +975,17 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   feedbackNotes={feedbackNotesQuery.data || []}
                 />
               )}
-              {(screen === "achievements" || screen === "myProgress") && (
+              {screen === "myProgress" && (
+                <MyProgressScreen
+                  user={user}
+                  courses={courses}
+                  push={push}
+                  back={back}
+                  session={session}
+                  showToast={showToast}
+                />
+              )}
+              {screen === "achievements" && (
                 <AchievementsScreen
                   user={user}
                   courses={courses}
@@ -982,6 +993,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   streakActivity={streakActivityQuery.data || []}
                   leaderboardQuery={leaderboardQuery}
                   complianceAssignmentsQuery={complianceAssignmentsQuery}
+                  myCertificates={myCertificatesQuery.data || []}
                   back={back}
                   session={session} showToast={showToast}
                   credits={credits} consumeCredit={consumeCredit} onBuyCredits={() => push("creditsCheckout", { mode: "credits" })}

@@ -86,7 +86,7 @@ export function MentorMessagesScreen({ userId, mentorId, orgSelector, selectedLe
   }, [activeMessages.length]);
 
   const filteredContacts = contacts.filter(c =>
-    c.name.toLowerCase().includes(searchLearner.toLowerCase())
+    (c.name || c.display_name || c.email || "").toLowerCase().includes((searchLearner || "").toLowerCase())
   );
 
   async function handleSendMessage() {

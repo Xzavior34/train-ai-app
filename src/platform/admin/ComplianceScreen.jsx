@@ -120,7 +120,7 @@ export function ComplianceScreen({ orgId, orgSelector, setScreen, currentUserId 
   const [expandedCourseId, setExpandedCourseId] = useState(null);
 
   const orgUsers = orgUsersQuery.data || [];
-  const filteredLearners = orgUsers.filter(u => u.name.toLowerCase().includes(learnerSearch.toLowerCase()));
+  const filteredLearners = orgUsers.filter(u => (u.name || u.display_name || u.email || "").toLowerCase().includes((learnerSearch || "").toLowerCase()));
 
   function toggleLearner(id) {
     setSelectedLearnerIds(prev => {

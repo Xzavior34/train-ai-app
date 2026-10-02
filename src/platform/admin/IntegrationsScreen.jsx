@@ -39,6 +39,30 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
   const [events, setEvents] = useState([]);
   const [creating, setCreating] = useState(false);
 
+  const [connectorStates, setConnectorStates] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`trainai_connectors_${orgId}`);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      "Slack Notifications": true,
+      "Zapier Automations": true,
+      "Discord Community Bot": false,
+      "Custom Event Webhooks": true,
+    };
+  });
+
+  const handleToggleConnector = (connName) => {
+    setConnectorStates((prev) => {
+      const next = { ...prev, [connName]: !prev[connName] };
+      try {
+        localStorage.setItem(`trainai_connectors_${orgId}`, JSON.stringify(next));
+      } catch {}
+      showToast(`${connName} ${next[connName] ? "connected & active" : "disconnected"}`);
+      return next;
+    });
+  };
+
   function toggleEvent(ev) {
     setEvents((prev) => prev.includes(ev) ? prev.filter((e) => e !== ev) : [...prev, ev]);
   }
@@ -155,34 +179,37 @@ export function IntegrationsScreen({ orgId, userId, orgSelector, setScreen, isPl
         {/* Pre-built Enterprise Connectors Catalog */}
         <div className="anim-stagger" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(260px, 100%), 1fr))", gap: 16 }}>
           {[
-            { name: "Slack Notifications", category: "Communication", desc: "Push real-time cohort milestones & completion alerts into team channels.", icon: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80", status: "Connected", enabled: true },
-            { name: "Zapier Automations", category: "Workflow", desc: "Sync enrolled learners and assessment outcomes with 5,000+ business apps.", icon: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&auto=format&fit=crop&q=80", status: "Active", enabled: true },
-            { name: "Discord Community Bot", category: "Community", desc: "Manage role gated channels and sync cohort study pod discussions.", icon: "https://images.unsplash.com/photo-1614680376593-902f749f7ffc?w=100&auto=format&fit=crop&q=80", status: "Configured", enabled: false },
-            { name: "Custom Event Webhooks", category: "Developer API", desc: "Stream raw JSON payloads for all student and instructor platform lifecycle events.", icon: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100&auto=format&fit=crop&q=80", status: "Custom", enabled: true },
-          ].map((conn, idx) => (
-            <div key={idx} className="ta-card ta-card-hover" style={{ borderRadius: 10, padding: 18, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div className="ta-row ta-between">
-                  <div className="ta-row ta-gap10">
-                    <img src={conn.icon} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: 14 }}>{conn.name}</div>
-                      <div style={{ fontSize: 11, color: "var(--text-3)" }}>{conn.category}</div>
+            { name: "Slack Notifications", category: "Communication", desc: "Push real-time cohort milestones & completion alerts into team channels.", icon: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80" },
+            { name: "Zapier Automations", category: "Workflow", desc: "Sync enrolled learners and assessment outcomes with 5,000+ business apps.", icon: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&auto=format&fit=crop&q=80" },
+            { name: "Discord Community Bot", category: "Community", desc: "Manage role gated channels and sync cohort study pod discussions.", icon: "https://images.unsplash.com/photo-1614680376593-902f749f7ffc?w=100&auto=format&fit=crop&q=80" },
+            { name: "Custom Event Webhooks", category: "Developer API", desc: "Stream raw JSON payloads for all student and instructor platform lifecycle events.", icon: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100&auto=format&fit=crop&q=80" },
+          ].map((conn, idx) => {
+            const isEnabled = !!connectorStates[conn.name];
+            return (
+              <div key={idx} className="ta-card ta-card-hover" style={{ borderRadius: 10, padding: 18, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                <div>
+                  <div className="ta-row ta-between">
+                    <div className="ta-row ta-gap10">
+                      <img src={conn.icon} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: 14 }}>{conn.name}</div>
+                        <div style={{ fontSize: 11, color: "var(--text-3)" }}>{conn.category}</div>
+                      </div>
                     </div>
+                    <Tag tone={isEnabled ? "success" : "default"}>{isEnabled ? "Active" : "Disabled"}</Tag>
                   </div>
-                  <Tag tone={conn.enabled ? "success" : "default"}>{conn.status}</Tag>
+                  <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 12, lineHeight: 1.45 }}>
+                    {conn.desc}
+                  </div>
                 </div>
-                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 12, lineHeight: 1.45 }}>
-                  {conn.desc}
-                </div>
-              </div>
 
-              <div className="ta-row ta-between" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Realtime Sync</span>
-                <Switch on={conn.enabled} onChange={() => showToast(`${conn.name} settings toggled.`)} />
+                <div className="ta-row ta-between" style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
+                  <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Realtime Sync</span>
+                  <Switch on={isEnabled} onChange={() => handleToggleConnector(conn.name)} />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {integrationsQuery.loading && <div className="ta-empty">Loading integrations...</div>}
