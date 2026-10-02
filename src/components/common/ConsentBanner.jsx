@@ -24,7 +24,9 @@ function readStored() {
 }
 
 function writeStored(choices, synced) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: POLICY_VERSION, choices, ts: Date.now(), synced }));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: POLICY_VERSION, choices, ts: Date.now(), synced }));
+  } catch {}
 }
 
 function MiniSwitch({ on, onChange, disabled }) {

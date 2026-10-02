@@ -2,16 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase, resolveProjectForSignIn, resolveProjectForSignUp, fallbackProjectForSignIn, setActiveSupabaseProject, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../services/supabaseClient.js";
 import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../lib/roleRouting.js";
 import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime } from "../lib/authRateLimiter.js";
+import { safeStorage } from "../lib/storage.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1";
 
 export function useAuth() {
   const [session, setSession] = useState(() => {
-    const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (saved) {
-      try { return JSON.parse(saved); } catch {}
-    }
-    return undefined;
+    return safeStorage.getJSON(AUTH_STORAGE_KEY, undefined);
   });
   const [authError, setAuthError] = useState(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
@@ -68,17 +65,12 @@ export function useAuth() {
       if (resolvedSession) {
         syncProject(resolvedSession.user?.email);
         setSession(resolvedSession);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(resolvedSession));
+        safeStorage.setItem(AUTH_STORAGE_KEY, resolvedSession);
       } else {
-        const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            syncProject(parsed?.user?.email);
-            setSession(parsed);
-          } catch {
-            setSession(null);
-          }
+        const parsed = safeStorage.getJSON(AUTH_STORAGE_KEY);
+        if (parsed) {
+          syncProject(parsed?.user?.email);
+          setSession(parsed);
         } else {
           setSession(null);
         }
@@ -102,11 +94,11 @@ export function useAuth() {
           }
           if (event === "SIGNED_OUT") {
             setSession(null);
-            localStorage.removeItem(AUTH_STORAGE_KEY);
+            safeStorage.removeItem(AUTH_STORAGE_KEY);
           } else if (newSession) {
             syncProject(newSession.user?.email);
             setSession(newSession);
-            localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
+            safeStorage.setItem(AUTH_STORAGE_KEY, newSession);
           }
         });
         if (listener?.subscription) {
@@ -176,7 +168,7 @@ export function useAuth() {
       if (supaRes?.data?.session) {
         resetPasswordRateLimit(normalizedEmail);
         setSession(supaRes.data.session);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
+        safeStorage.setItem(AUTH_STORAGE_KEY, supaRes.data.session);
         return { data: supaRes.data, error: null };
       }
 
@@ -231,7 +223,7 @@ export function useAuth() {
       _demo: true
     };
     setSession(newSession);
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
+    safeStorage.setItem(AUTH_STORAGE_KEY, newSession);
     return { data: newSession, error: null };
   }, []);
 
@@ -264,7 +256,7 @@ export function useAuth() {
             });
             if (signInRes?.data?.session) {
               setSession(signInRes.data.session);
-              localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(signInRes.data.session));
+              safeStorage.setItem(AUTH_STORAGE_KEY, signInRes.data.session);
               return { data: signInRes.data, error: null };
             }
             return { data: adminCreateRes.data, error: null };
@@ -309,7 +301,7 @@ export function useAuth() {
 
       if (supaRes?.data?.session) {
         setSession(supaRes.data.session);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(supaRes.data.session));
+        safeStorage.setItem(AUTH_STORAGE_KEY, supaRes.data.session);
       }
       return { data: supaRes.data, error: null };
     }
@@ -328,7 +320,7 @@ export function useAuth() {
       _demo: true
     };
     setSession(newSession);
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newSession));
+    safeStorage.setItem(AUTH_STORAGE_KEY, newSession);
     setDemoRoleForEmail(normalizedEmail, finalRole);
     return { data: newSession, error: null };
   }, []);
@@ -465,7 +457,7 @@ export function useAuth() {
 
       if (data?.session) {
         setSession(data.session);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.session));
+        safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
         setIsPasswordRecovery(true);
         return { success: true, session: data.session };
       }

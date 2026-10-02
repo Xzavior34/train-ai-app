@@ -1,5 +1,6 @@
 import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS } from "./supabaseClient.js";
 import { isDemoAdminMarker, isPlatformOwnerEmail } from "../lib/roleRouting.js";
+import { safeStorage } from "../lib/storage.js";
 
 export async function fetchMyRoles() {
   let email = "";
@@ -10,10 +11,9 @@ export async function fetchMyRoles() {
     } catch {}
   }
 
-  const saved = localStorage.getItem("trainai_active_session_v1");
-  if (saved) {
+  const parsed = safeStorage.getJSON("trainai_active_session_v1");
+  if (parsed) {
     try {
-      const parsed = JSON.parse(saved);
       if (!email) email = parsed.user?.email || "";
       if (parsed._demo) {
         const demoRole = parsed.user?.user_metadata?.role || parsed.role;
@@ -58,13 +58,13 @@ export async function fetchMyPersonalization() {
     }
   }
 
-  const saved = localStorage.getItem("trainai_personalization_v1");
-  return saved ? JSON.parse(saved) : { learning_tracks: ["Data & AI"], skill_level: "beginner" };
+  const saved = safeStorage.getJSON("trainai_personalization_v1");
+  return saved || { learning_tracks: ["Data & AI"], skill_level: "beginner" };
 }
 
 export async function saveMyPersonalization(userId, learningTracks, skillLevel) {
   const localPayload = { user_id: userId, learning_tracks: learningTracks, skill_level: skillLevel, updated_at: new Date().toISOString() };
-  localStorage.setItem("trainai_personalization_v1", JSON.stringify(localPayload));
+  safeStorage.setItem("trainai_personalization_v1", localPayload);
   if (supabase) {
     try {
       // `data` is a NOT NULL jsonb column on user_personalization with no
