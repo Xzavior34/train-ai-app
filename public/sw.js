@@ -2,10 +2,10 @@
 // It intentionally has no fetch handler: navigation and hashed assets always
 // come directly from the network/browser HTTP cache according to Vercel's
 // response headers. Its only jobs are legacy-cache migration and native push.
-const WORKER_VERSION = "2026-10-02-v11";
+const WORKER_VERSION = "2026-10-02-v12";
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (event) => {
