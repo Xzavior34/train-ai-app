@@ -1,8 +1,8 @@
 // Train AI root service worker.
-// It intentionally has no fetch handler: navigation and hashed assets always
-// come directly from the network/browser HTTP cache according to Vercel's
-// response headers. Its only jobs are legacy-cache migration and native push.
-const WORKER_VERSION = "2026-10-02-v12";
+// It never stores application responses. Page navigations are forced to the
+// network with `cache: "no-store"` so a previously cached response for the
+// exact `/` URL cannot survive while query-string URLs load correctly.
+const WORKER_VERSION = "2026-10-02-v13";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
@@ -31,6 +31,32 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
+});
+
+// A poisoned HTTP/CacheStorage entry for exactly `/` caused some Android
+// browsers to keep displaying a retired build even though versioned URLs were
+// current. Intercept navigations only; hashed JS/CSS and API requests continue
+// to use their normal browser/Vercel caching rules.
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET" || request.mode !== "navigate") return;
+
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return;
+  }
+  if (url.origin !== self.location.origin || url.pathname === "/refresh.html") return;
+
+  event.respondWith(
+    fetch(new Request(request, { cache: "no-store" })).catch(() =>
+      new Response(
+        "<!doctype html><html><head><meta name=\"viewport\" content=\"width=device-width\"><title>Train AI</title></head><body style=\"font-family:sans-serif;padding:32px;text-align:center\"><h1>You are offline</h1><p>Reconnect, then reload Train AI.</p></body></html>",
+        { status: 503, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } }
+      )
+    )
+  );
 });
 
 // Native Web Push listeners.
