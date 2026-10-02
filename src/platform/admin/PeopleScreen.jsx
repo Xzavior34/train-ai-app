@@ -4,8 +4,10 @@ import {
   UserPlus, Search, X, Download, Trash2, FileText, ArrowUpRight, ArrowDownRight,
   Minus, Award, Eye, Pencil, ShieldCheck, Layers, UserMinus, RefreshCw, Link2,
   BookOpen, GraduationCap, MoreHorizontal, Save, CheckCircle2,
-  Mail, TrendingUp, AlertTriangle,
+  Mail, TrendingUp, AlertTriangle, Sparkles,
 } from "lucide-react";
+import { CERTIFICATE_THEMES } from "../../components/certificates/certificateThemes.js";
+import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
   fetchOrgMembers, fetchPendingInvitations, createInvitation, revokeInvitation,
@@ -460,6 +462,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const [tab, setTab] = useState("all");
   const [certModalUser, setCertModalUser] = useState(null);
   const [certTitle, setCertTitle] = useState("");
+  const [certThemeId, setCertThemeId] = useState("cyber_neon");
   const [certFileUrl, setCertFileUrl] = useState("");
   const [issuingCert, setIssuingCert] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -1432,31 +1435,99 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
       <PortalModal
         isOpen={Boolean(certModalUser)}
         onClose={() => setCertModalUser(null)}
-        maxWidth={500}
+        maxWidth={720}
         zIndex={9999}
       >
         {certModalUser && (
-          <>
-            <div className="ta-row ta-between">
-              <div className="ta-title" style={{ fontSize: 18 }}>Issue Certificate to {certModalUser.display_name || "Member"}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="ta-row ta-between" style={{ alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Award size={20} color="var(--primary)" />
+                <div className="ta-title" style={{ fontSize: 18 }}>Issue Certificate to {certModalUser.display_name || "Member"}</div>
+              </div>
               <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setCertModalUser(null)}><X size={16} /></button>
             </div>
-            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4 }}>
-              Issues a direct verified credential to this member's portfolio.
+            
+            <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+              Issues a direct, verified credential to this member's official learning transcript.
             </div>
-            <div className="ta-label ta-mt16">Certificate Title</div>
-            <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} placeholder="e.g. Outstanding Contribution Award" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} autoFocus />
-            <div className="ta-label ta-mt16">Upload Certificate Document (Optional)</div>
-            <div className="ta-mt6">
-              <FileUploadZone
-                bucket="uploads"
-                pathPrefix={`certificates/${certModalUser.user_id || certModalUser.id}`}
-                accept="application/pdf,image/*"
-                onUploaded={(url) => setCertFileUrl(url)}
-                label="Drag and drop certificate PDF or image, or click to browse"
-              />
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, alignItems: "start" }}>
+              
+              {/* Left Column: Form Controls */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div>
+                  <div className="ta-label">Certificate Title</div>
+                  <input
+                    className="ta-input ta-mt4"
+                    style={{ width: "100%", boxSizing: "border-box" }}
+                    placeholder="e.g. AI Prompt Engineering Certification"
+                    value={certTitle}
+                    onChange={(e) => setCertTitle(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <div className="ta-label">Choose Template Style</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 4 }}>
+                    {Object.values(CERTIFICATE_THEMES).map((th) => {
+                      const isSelected = certThemeId === th.id;
+                      return (
+                        <div
+                          key={th.id}
+                          onClick={() => setCertThemeId(th.id)}
+                          style={{
+                            padding: "8px 10px",
+                            borderRadius: 8,
+                            border: isSelected ? "2px solid var(--primary)" : "1px solid var(--border)",
+                            background: isSelected ? "var(--surface-3)" : "var(--surface)",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6
+                          }}
+                        >
+                          <div style={{ width: 10, height: 10, borderRadius: "50%", background: th.accentColor }} />
+                          <span style={{ fontSize: 11.5, fontWeight: isSelected ? 800 : 600, color: "var(--text)" }}>{th.name.split("/")[0]}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="ta-label">Upload Certificate Document (Optional)</div>
+                  <div className="ta-mt4">
+                    <FileUploadZone
+                      bucket="uploads"
+                      pathPrefix={`certificates/${certModalUser.user_id || certModalUser.id}`}
+                      accept="application/pdf,image/*"
+                      onUploaded={(url) => setCertFileUrl(url)}
+                      label="Upload PDF or image document (optional)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Live Mini Preview */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Live Preview</div>
+                <div style={{ border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden", background: "var(--surface-2)" }}>
+                  <CertificateDocument
+                    template={{ template_text: { themeId: certThemeId, title: certTitle || "Certificate of Achievement" } }}
+                    recipientName={certModalUser.display_name || "Learner"}
+                    courseTitle={certTitle || "Professional Capability & Excellence"}
+                    issueDate="October 2026"
+                    credentialNumber={`TAI-CERT-${new Date().getFullYear()}`}
+                    isLivePreview={true}
+                  />
+                </div>
+              </div>
+
             </div>
-            <div className="ta-row ta-gap10 ta-mt20" style={{ justifyContent: "flex-end" }}>
+
+            <div className="ta-row ta-gap10 ta-mt12" style={{ justifyContent: "flex-end", borderTop: "1px solid var(--border)", paddingTop: 14 }}>
               <button className="ta-btn ta-btn-outline" onClick={() => setCertModalUser(null)}>Cancel</button>
               <button
                 className="ta-btn ta-btn-primary"
@@ -1466,7 +1537,10 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   try {
                     const result = await issueCertificateDirectly(certModalUser.user_id || certModalUser.id, orgId, certTitle.trim(), null, certFileUrl || null);
                     if (!result.success) showToast(result.error);
-                    else { showToast(`Certificate issued to ${certModalUser.display_name}.`); setCertModalUser(null); }
+                    else {
+                      showToast(`Certificate issued to ${certModalUser.display_name}.`);
+                      setCertModalUser(null);
+                    }
                   } finally {
                     setIssuingCert(false);
                   }
@@ -1475,7 +1549,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 {issuingCert ? "Issuing..." : "Issue Certificate"}
               </button>
             </div>
-          </>
+          </div>
         )}
       </PortalModal>
     </div>

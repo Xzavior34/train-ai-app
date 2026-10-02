@@ -1262,7 +1262,7 @@ export async function fetchMyCertificates(userId) {
   if (!supabase || !userId) return [];
   const { data, error } = await supabase
     .from("certificates")
-    .select("*, courses(title)")
+    .select("*, courses(title, category, instructor, cover_image_url), certificate_templates(*)")
     .eq("user_id", userId)
     .eq("status", "issued")
     .order("issued_at", { ascending: false });

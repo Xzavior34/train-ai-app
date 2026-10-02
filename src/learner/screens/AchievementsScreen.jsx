@@ -10,6 +10,8 @@ import {
 import { fetchMyMysteryBoxes, claimMysteryBox } from "../../lib/api/schemaHelper.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
+import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
+import { CERTIFICATE_THEMES } from "../../components/certificates/certificateThemes.js";
 
 function iconForCategory(category) {
   if (category === "streak") return Flame;
@@ -78,6 +80,8 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
         issueDate: cert.issued_at ? formatDate(cert.issued_at) : "Recently",
         credentialId: cert.certificate_number || cert.id?.slice(0, 16) || `TAI-CERT-${new Date().getFullYear()}`,
         grade: "Verified Completion",
+        scorePct: cert.score_pct || 100,
+        template: cert.certificate_templates || null,
         instructor: cert.courses?.instructor || user.organization || "Sara Foundation",
         skills: [cert.courses?.category || "Core Curriculum", "Applied Mastery"],
         verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${cert.certificate_number || cert.id}`,
@@ -92,6 +96,8 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
       issueDate: formatDate(new Date().toISOString()),
       credentialId: `TAI-CERT-${new Date().getFullYear()}-${(c.id || "").slice(-4).toUpperCase() || "1001"}`,
       grade: "100% Complete",
+      scorePct: 100,
+      template: null,
       instructor: c.instructor || user.organization || "Sara Foundation",
       skills: [c.category || "General", "Track Completion"],
       verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/verify/TAI-${c.id}`,
@@ -648,72 +654,81 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
       <PortalModal
         isOpen={Boolean(selectedCertificate)}
         onClose={() => setSelectedCertificate(null)}
-        maxWidth={700}
+        maxWidth={840}
         zIndex={9999}
       >
         {selectedCertificate && (
-          <>
-            <div className="tai-row tai-between" style={{ marginBottom: 20, gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "var(--primary-light, #60A5FA)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-                OFFICIAL CERTIFICATE OF COMPLETION
-              </span>
-              <button onClick={() => setSelectedCertificate(null)} style={{ background: "transparent", border: "none", color: "var(--text-3)", cursor: "pointer" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="tai-row tai-between" style={{ gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Award size={18} color="var(--primary)" />
+                <span style={{ fontSize: 13, fontWeight: 900, color: "var(--text)", textTransform: "uppercase", letterSpacing: ".04em" }}>
+                  Verified Certificate of Achievement
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedCertificate(null)}
+                style={{ background: "transparent", border: "none", color: "var(--text-3)", cursor: "pointer", padding: 4 }}
+              >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ textAlign: "center", padding: "10px 20px 20px" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".04em" }}>This certifies that</div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: "var(--text)", margin: "8px 0" }}>
-                {session?.user?.user_metadata?.full_name || session?.user?.email || "Learner"}
-              </div>
-              <div style={{ fontSize: 13, color: "var(--text-2)" }}>has successfully mastered the comprehensive curriculum for</div>
-              
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--primary-light, #60A5FA)", margin: "14px 0 6px" }}>
-                {selectedCertificate.title}
-              </h2>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>
-                {selectedCertificate.specialization}
-              </div>
-
-              <div style={{ display: "inline-block", background: "var(--surface-2)", padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 800, color: "var(--text)", marginTop: 14 }}>
-                Grade: {selectedCertificate.grade}
-              </div>
-
-              <div className="tai-row tai-between" style={{ marginTop: 28, paddingTop: 20, borderTop: "1px dashed var(--border)", fontSize: 12, color: "var(--text-3)", textAlign: "left", flexWrap: "wrap", gap: 12 }}>
-                <div>
-                  <div>Instructor: <strong style={{ color: "var(--text)" }}>{selectedCertificate.instructor}</strong></div>
-                  <div>Issued: <strong style={{ color: "var(--text)" }}>{selectedCertificate.issueDate}</strong></div>
-                </div>
-                <div style={{ textAlign: "right" }}>
-                  <div>Credential ID: <strong style={{ color: "var(--text)" }}>{selectedCertificate.credentialId}</strong></div>
-                  <div>Verified by: <strong style={{ color: "var(--text)" }}>Train AI Academic Authority</strong></div>
-                </div>
-              </div>
+            {/* Render High-Fidelity Creative Certificate Document */}
+            <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--border)" }}>
+              <CertificateDocument
+                certificate={selectedCertificate}
+                template={selectedCertificate.template}
+                recipientName={session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "Learner"}
+                courseTitle={selectedCertificate.title}
+                issueDate={selectedCertificate.issueDate}
+                credentialNumber={selectedCertificate.credentialId}
+                scorePct={selectedCertificate.scorePct}
+                verificationUrl={selectedCertificate.verificationUrl}
+              />
             </div>
 
-            <div className="tai-row tai-between" style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 10 }}>
-              <button
-                className="tai-btn tai-btn-outline"
-                onClick={() => {
-                  navigator.clipboard?.writeText(selectedCertificate.verificationUrl);
-                  showToast?.("Verification link copied!");
-                }}
-              >
-                <Share2 size={15} /> Copy Verification Link
-              </button>
+            {/* Bottom Actions Toolbar */}
+            <div className="tai-row tai-between" style={{ marginTop: 8, paddingTop: 14, borderTop: "1px solid var(--border)", flexWrap: "wrap", gap: 10 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="tai-btn tai-btn-outline tai-btn-sm"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(selectedCertificate.verificationUrl);
+                    showToast?.("Verification link copied to clipboard!");
+                  }}
+                  style={{ borderRadius: 8, fontWeight: 700 }}
+                >
+                  <Share2 size={14} /> Copy Verification Link
+                </button>
+
+                <button
+                  type="button"
+                  className="tai-btn tai-btn-outline tai-btn-sm"
+                  onClick={() => {
+                    const text = `I just earned my verified certificate in "${selectedCertificate.title}" on Train AI with Sara Foundation! 🎓`;
+                    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(selectedCertificate.verificationUrl)}`;
+                    window.open(url, "_blank");
+                  }}
+                  style={{ borderRadius: 8, fontWeight: 700 }}
+                >
+                  Share to Socials
+                </button>
+              </div>
 
               <button
-                className="tai-btn tai-btn-primary"
+                type="button"
+                className="tai-btn tai-btn-primary tai-btn-sm"
                 onClick={() => {
-                  showToast?.("Downloading Official PDF Certificate...");
-                  setTimeout(() => showToast?.("Certificate saved to your Downloads!"), 1200);
+                  window.print();
                 }}
+                style={{ borderRadius: 8, fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 6 }}
               >
-                <Download size={15} /> Download PDF Certificate
+                <Download size={14} /> Print / Download PDF
               </button>
             </div>
-          </>
+          </div>
         )}
       </PortalModal>
 

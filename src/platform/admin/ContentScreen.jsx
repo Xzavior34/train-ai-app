@@ -6,6 +6,8 @@ import { fetchCourses, updateCourse, deleteCourse, replaceCourseLessons, fetchCo
 import { fetchCertificateForCourse } from "../../lib/api/learner.js";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { CourseBuilderWizard } from "./CourseBuilderWizard.jsx";
+import { OrgCertificateStudio } from "../../components/certificates/OrgCertificateStudio.jsx";
+import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
 
 function GradingRow({ attempt, currentUserId, onOverride }) {
   const [editing, setEditing] = useState(false);
@@ -942,44 +944,29 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 needs approval) and review pending requests. */}
             {activeTab === "certificates" && (
               <div className="ta-col ta-gap16">
-                <div className="ta-card">
-                  <div style={{ fontWeight: 700, fontSize: 16 }}>Certificate Settings</div>
-                  <div className="ta-row ta-gap12 ta-mt12" style={{ flexWrap: "wrap" }}>
-                    <div>
-                      <div className="ta-label">Title</div>
-                      <input className="ta-input ta-mt8" value={certTitle} onChange={(e) => setCertTitle(e.target.value)} placeholder="Certificate of Completion" />
-                    </div>
-                    <div>
-                      <div className="ta-label">Passing score (%)</div>
-                      <input className="ta-input ta-mt8" style={{ width: 90 }} type="number" min={0} max={100} value={certPassingScore} onChange={(e) => setCertPassingScore(e.target.value)} />
-                    </div>
-                    <div>
-                      <div className="ta-label">Approval</div>
-                      <div className="ta-row ta-gap8 ta-mt8">
-                        <Switch on={certRequiresApproval} onChange={() => setCertRequiresApproval((v) => !v)} />
-                        <span style={{ fontSize: 12 }}>{certRequiresApproval ? "Requires admin approval" : "Issued instantly on passing"}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    className="ta-btn ta-btn-primary ta-mt12"
-                    onClick={async () => {
-                      const result = await upsertCertificateTemplate({
-                        courseId: activeCourse.id, organizationId: orgId, title: certTitle,
-                        passingScorePct: Number(certPassingScore) || 70, requiresApproval: certRequiresApproval,
-                      }, currentUserId);
-                      showToast(result.success ? "Certificate settings saved." : (result.error || "Could not save."));
-                      if (result.success) certRequestsQuery.refetch();
-                    }}
-                  >
-                    Save certificate settings
-                  </button>
-                </div>
+                {/* Visual Creative Studio for Certificate Templates */}
+                <OrgCertificateStudio
+                  course={activeCourse}
+                  initialTemplate={certTemplateQuery.data}
+                  showToast={showToast}
+                  onSave={async (payload) => {
+                    const result = await upsertCertificateTemplate({
+                      courseId: activeCourse.id,
+                      organizationId: orgId,
+                      title: payload.title,
+                      passingScorePct: payload.passingScorePct,
+                      requiresApproval: payload.requiresApproval,
+                      templateText: payload.templateText,
+                    }, currentUserId);
+                    if (result.success) certTemplateQuery.refetch();
+                    return result;
+                  }}
+                />
 
-                <div className="ta-card">
-                  <div style={{ fontWeight: 700, fontSize: 16 }}>Give Certificate Directly</div>
-                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
-                    Upload and assign a certificate to a specific learner enrolled in this course - independent of the request/approve flow above.
+                <div className="ta-card" style={{ marginTop: 8 }}>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Give Certificate Directly</div>
+                  <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 2 }}>
+                    Upload and assign a certificate to a specific learner enrolled in this course - independent of the assessment flow.
                   </div>
                   <div className="ta-label ta-mt12">Learner</div>
                   <select className="ta-input ta-mt8" value={assignLearnerId} onChange={(e) => setAssignLearnerId(e.target.value)}>
@@ -1023,7 +1010,7 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 </div>
 
                 <div className="ta-card">
-                  <div style={{ fontWeight: 700, fontSize: 16 }}>Certificate Requests</div>
+                  <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Certificate Requests &amp; Review Queue</div>
                   <div className="ta-table-wrap ta-mt12">
                     <table className="ta-table">
                       <thead><tr><th>Learner</th><th>Score</th><th>Status</th><th>Requested</th><th>Action</th></tr></thead>

@@ -3,6 +3,7 @@ import { supabase, resolveProjectForSignIn, resolveProjectForSignUp, fallbackPro
 import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../lib/roleRouting.js";
 import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime } from "../lib/authRateLimiter.js";
 import { safeStorage } from "../lib/storage.js";
+import { getCanonicalDomain, CANONICAL_DOMAIN, sendPasswordResetViaResendDirect } from "../services/emailService.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1";
 
@@ -385,7 +386,7 @@ export function useAuth() {
     }
   }, []);
 
-  // "Forgot password" with existence verification and multi-path fallback
+  // "Forgot password" with Resend integration and canonical trainailtd.com recovery routing
   const sendPasswordReset = useCallback(async (email) => {
     const rawInput = (email || "").trim();
     const normalizedEmail = rawInput.toLowerCase();
@@ -396,60 +397,109 @@ export function useAuth() {
     const targetProject = resolveProjectForSignIn(rawInput);
     const client = getSupabaseClientForProject(targetProject) || supabase;
 
+    const domainOrigin = getCanonicalDomain();
+    const targetRedirectUrl = `${domainOrigin}/?view=auth#type=recovery`;
+
     let otp = null;
     let actionLink = null;
+    let emailSent = false;
+    let rateLimited = false;
 
-    // Fast-path OTP extraction if admin generateLink happens to be available
+    // 1. Primary: Try dedicated send-password-reset Edge Function (dispatches via Resend with trainailtd.com branding)
+    if (client?.functions?.invoke) {
+      try {
+        const { data: edgeData, error: edgeErr } = await client.functions.invoke("send-password-reset", {
+          body: {
+            email: normalizedEmail,
+            redirectTo: targetRedirectUrl
+          }
+        });
+
+        if (!edgeErr && edgeData?.success) {
+          return {
+            success: true,
+            emailSent: edgeData.emailSent ?? true,
+            rateLimited: false,
+            otp: edgeData.otp || null,
+            actionLink: edgeData.actionLink || null,
+            email: normalizedEmail,
+            viaResend: true
+          };
+        }
+
+        if (edgeData?.notFound) {
+          return {
+            success: false,
+            notFound: true,
+            error: edgeData.error || "No account found with this email address. Please check your spelling or create a new account."
+          };
+        }
+      } catch (edgeInvocationErr) {
+        console.info("send-password-reset edge function notice:", edgeInvocationErr);
+      }
+    }
+
+    // 2. Admin generateLink extraction if service/admin API is accessible
     if (client?.auth?.admin?.generateLink) {
       try {
         const linkRes = await client.auth.admin.generateLink({
           type: "recovery",
           email: normalizedEmail,
-          options: { redirectTo: `${window.location.origin}/?view=auth#type=recovery` }
+          options: { redirectTo: targetRedirectUrl }
         });
         if (linkRes?.data?.properties) {
           otp = linkRes.data.properties.email_otp;
           actionLink = linkRes.data.properties.action_link;
+
+          // Attempt direct Resend dispatch if client key exists
+          const resendDirect = await sendPasswordResetViaResendDirect({
+            email: normalizedEmail,
+            resetUrl: actionLink || targetRedirectUrl,
+            otpCode: otp
+          });
+          if (resendDirect?.success) {
+            emailSent = true;
+          }
         }
       } catch (e) {
-        console.warn("generateLink check note:", e);
+        console.warn("generateLink fallback notice:", e);
       }
     }
 
-    // 2. Standard public password reset for email
-    let emailSent = false;
-    let rateLimited = false;
-    try {
-      const resetRes = await client.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: `${window.location.origin}/?view=auth#type=recovery`
-      });
-      if (resetRes?.error) {
-        const errMsg = (resetRes.error.message || "").toLowerCase();
-        if (resetRes.error.status === 429 || errMsg.includes("rate limit")) {
-          rateLimited = true;
-        } else if (errMsg.includes("not found")) {
-          return {
-            success: false,
-            notFound: true,
-            error: "No account found with this email address. Please check your spelling or create a new account."
-          };
-        } else if (resetRes.error.status === 401 || errMsg.includes("invalid api key")) {
-          return {
-            success: false,
-            error: "Authentication service connection error (Invalid API Key). Please contact system administrators."
-          };
+    // 3. Fallback: Supabase standard password reset
+    if (!emailSent) {
+      try {
+        const resetRes = await client.auth.resetPasswordForEmail(normalizedEmail, {
+          redirectTo: targetRedirectUrl
+        });
+        if (resetRes?.error) {
+          const errMsg = (resetRes.error.message || "").toLowerCase();
+          if (resetRes.error.status === 429 || errMsg.includes("rate limit")) {
+            rateLimited = true;
+          } else if (errMsg.includes("not found")) {
+            return {
+              success: false,
+              notFound: true,
+              error: "No account found with this email address. Please check your spelling or create a new account."
+            };
+          } else if (resetRes.error.status === 401 || errMsg.includes("invalid api key")) {
+            return {
+              success: false,
+              error: "Authentication service connection error (Invalid API Key). Please contact support at info@trainailtd.com."
+            };
+          } else {
+            return {
+              success: false,
+              error: resetRes.error.message || "Failed to send reset link."
+            };
+          }
         } else {
-          return {
-            success: false,
-            error: resetRes.error.message || "Failed to send reset link."
-          };
+          emailSent = true;
         }
-      } else {
-        emailSent = true;
+      } catch (e) {
+        console.warn("resetPasswordForEmail fallback error:", e);
+        rateLimited = true;
       }
-    } catch (e) {
-      console.warn("resetPasswordForEmail error:", e);
-      rateLimited = true;
     }
 
     return {
