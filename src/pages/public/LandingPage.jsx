@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { captureAttributionFromURL } from "../../lib/api/waitlist.js";
 import { trackReferralClickIfPresent } from "../../lib/api/organizations.js";
+import PlatformScreensTour from "./PlatformScreensTour.jsx";
 
 const LEARNER_FEATURES = [
   [BookOpen, "Structured learning", "Complete assigned courses and follow a clear learning path without losing track of the next step."],
@@ -92,6 +93,8 @@ export default function LandingPage({ onNavigate }) {
     const revealTargets = page.querySelectorAll([
       ".lp-section-heading",
       ".lp-two-column-feature",
+      ".lp-screens-section",
+      ".pst-carousel-container",
       ".lp-outcomes-grid",
       ".lp-photo-ribbon",
       ".lp-audience-row",
@@ -150,6 +153,7 @@ export default function LandingPage({ onNavigate }) {
           </button>
           <nav className="lp-nav" aria-label="Main navigation">
             <button onClick={() => scrollToSection("platform")}>Platform</button>
+            <button onClick={() => scrollToSection("screens")}>Have a look</button>
             <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
             <button onClick={() => scrollToSection("pricing")}>Pricing</button>
             <button onClick={() => scrollToSection("faq")}>FAQ</button>
@@ -165,6 +169,7 @@ export default function LandingPage({ onNavigate }) {
         {menuOpen && (
           <div className="lp-mobile-nav">
             <button onClick={() => scrollToSection("platform")}>Platform</button>
+            <button onClick={() => scrollToSection("screens")}>Have a look</button>
             <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
             <button onClick={() => scrollToSection("pricing")}>Pricing</button>
             <button onClick={() => scrollToSection("faq")}>FAQ</button>
@@ -213,6 +218,8 @@ export default function LandingPage({ onNavigate }) {
             </div>
           </div>
         </section>
+
+        <PlatformScreensTour />
 
         <section className="lp-section lp-outcomes-section">
           <div className="lp-shell lp-outcomes-grid">
@@ -304,6 +311,7 @@ export default function LandingPage({ onNavigate }) {
             </div>
             <div className="lp-footer-column">
               <h3>Platform</h3>
+              <button onClick={() => scrollToSection("screens")}>Have a look</button>
               <button onClick={() => scrollToSection("platform")}>For learners</button>
               <button onClick={() => scrollToSection("platform")}>For organisations</button>
               <button onClick={() => scrollToSection("pricing")}>Pricing tiers</button>
