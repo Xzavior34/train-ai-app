@@ -55,66 +55,75 @@
           } catch (err) {}
         }
 
-        // 2. Break mobile BFCache snapshot
+        // Break mobile BFCache snapshots so returning to the app cannot restore
+        // a document that references assets from an older deployment.
         window.addEventListener("pageshow", function(event) {
           if (event.persisted) {
             window.location.reload();
           }
         });
 
-        // 3. Version enforcement & CacheStorage cleanup
-        var APP_VER = "20261002_v10";
-        var PREV_VER = "";
-        try { PREV_VER = localStorage.getItem("tai_app_ver"); } catch(e) {}
+        var recoveryInProgress = false;
 
-        if (PREV_VER !== APP_VER) {
-          try { localStorage.setItem("tai_app_ver", APP_VER); } catch(e) {}
-          if ("caches" in window) {
-            try {
-              caches.keys().then(function(names) {
-                for (var i = 0; i < names.length; i++) {
-                  caches.delete(names[i]);
-                }
-              });
-            } catch(e) {}
-          }
-        }
-
-        // 4. Actively unregister all existing service workers to ensure direct network requests
-        if ("serviceWorker" in navigator) {
+        function reloadWithFreshUrl() {
+          var next;
           try {
-            navigator.serviceWorker.getRegistrations().then(function(regs) {
-              for (var i = 0; i < regs.length; i++) {
-                regs[i].unregister();
-              }
-            }).catch(function() {});
-          } catch(e) {}
+            next = new URL(window.location.href);
+            next.searchParams.set("_refresh", String(Date.now()));
+            // Keep all existing parameters (invites, payments and org links).
+            window.location.replace(next.toString());
+          } catch (e) {
+            window.location.reload();
+          }
         }
 
-        // 5. Early Top-Level Error Trapping for stale chunks and HTML 404 responses
-        function triggerHardRecovery(source) {
-          var key = "tai_recov_" + APP_VER;
-          var count = 0;
-          try { count = parseInt(sessionStorage.getItem(key) || "0", 10); } catch(e) {}
-          if (count < 2) {
-            try { sessionStorage.setItem(key, String(count + 1)); } catch(e) {}
-            if ("caches" in window) {
-              try {
-                caches.keys().then(function(names) {
-                  for (var i = 0; i < names.length; i++) { caches.delete(names[i]); }
-                }).finally(function() {
-                  window.location.replace(window.location.pathname + "?_bust=" + Date.now());
-                });
-                return;
-              } catch(e) {}
-            }
-            window.location.replace(window.location.pathname + "?_bust=" + Date.now());
+        // One recovery implementation is shared by the initial loader, React's
+        // loading screen and the error boundary. Crucially, reload only starts
+        // after the worker and CacheStorage cleanup has completed.
+        window.__trainai_clear_cache_and_reload = function() {
+          if (recoveryInProgress) return Promise.resolve();
+          recoveryInProgress = true;
+          var jobs = [];
+
+          if ("serviceWorker" in navigator) {
+            jobs.push(
+              navigator.serviceWorker.getRegistrations()
+                .then(function(registrations) {
+                  return Promise.all(registrations.map(function(registration) {
+                    return registration.unregister();
+                  }));
+                })
+                .catch(function() {})
+            );
           }
+          if ("caches" in window) {
+            jobs.push(
+              caches.keys()
+                .then(function(names) {
+                  return Promise.all(names.map(function(name) { return caches.delete(name); }));
+                })
+                .catch(function() {})
+            );
+          }
+
+          return Promise.all(jobs).then(reloadWithFreshUrl, reloadWithFreshUrl);
+        };
+        // Backward-compatible name used by the pre-React loader in earlier builds.
+        window.__tai_clear_cache_and_reload = window.__trainai_clear_cache_and_reload;
+
+        function triggerHardRecovery() {
+          var now = Date.now();
+          var lastRecovery = 0;
+          try { lastRecovery = parseInt(sessionStorage.getItem("tai_asset_recovery") || "0", 10); } catch (e) {}
+          if (recoveryInProgress || (lastRecovery && now - lastRecovery < 60000)) return;
+          try { sessionStorage.setItem("tai_asset_recovery", String(now)); } catch (e) {}
+          window.__trainai_clear_cache_and_reload();
         }
 
         window.addEventListener("vite:preloadError", function(e) {
           console.warn("Vite preload error, recovering...", e);
-          triggerHardRecovery("preloadError");
+          if (e && typeof e.preventDefault === "function") e.preventDefault();
+          triggerHardRecovery();
         });
 
         window.addEventListener("error", function(e) {
@@ -126,7 +135,7 @@
             msg.indexOf("failed to fetch") !== -1 ||
             msg.indexOf("mime type") !== -1
           ) {
-            triggerHardRecovery("syntaxOrChunkError");
+            triggerHardRecovery();
             return;
           }
 
@@ -150,9 +159,30 @@
             reason.indexOf("failed to fetch") !== -1 ||
             reason.indexOf("mime type") !== -1
           ) {
-            triggerHardRecovery("unhandledRejection");
+            triggerHardRecovery();
           }
         });
+
+        // Keep exactly one non-caching worker at the root. A newly activated
+        // worker announces its version so open tabs reload once onto the newest
+        // hashed assets. OneSignal uses a separate, narrower scope.
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.addEventListener("message", function(event) {
+            var data = event.data || {};
+            if (data.type !== "TRAINAI_SW_ACTIVATED" || !data.version) return;
+            var seen = "";
+            try { seen = sessionStorage.getItem("tai_sw_version") || ""; } catch (e) {}
+            if (seen === data.version) return;
+            try { sessionStorage.setItem("tai_sw_version", data.version); } catch (e) {}
+            reloadWithFreshUrl();
+          });
+
+          window.addEventListener("load", function() {
+            navigator.serviceWorker.register("/sw.js", { scope: "/" })
+              .then(function(registration) { return registration.update(); })
+              .catch(function(error) { console.warn("Service worker update failed", error); });
+          });
+        }
       })();
     </script>
 
@@ -242,23 +272,6 @@
       </div>
     </div>
     <script>
-      window.__tai_clear_cache_and_reload = function() {
-        try {
-          if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(regs) {
-              for (var r of regs) { r.unregister(); }
-            });
-          }
-          if ("caches" in window) {
-            caches.keys().then(function(names) {
-              for (var n of names) { caches.delete(n); }
-            });
-          }
-          sessionStorage.clear();
-        } catch (e) {}
-        window.location.replace(window.location.pathname + "?_bust=" + Date.now());
-      };
-
       setTimeout(function() {
         var helper = document.getElementById("tai-slow-load-helper");
         if (helper && document.getElementById("tai-initial-loader")) {

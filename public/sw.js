@@ -1,5 +1,8 @@
-// Train AI Service Worker
-// Version: 2026-10-02-v10 (Zero-cache network-first with aggressive cache purging & self-unregistration)
+// Train AI root service worker.
+// It intentionally has no fetch handler: navigation and hashed assets always
+// come directly from the network/browser HTTP cache according to Vercel's
+// response headers. Its only jobs are legacy-cache migration and native push.
+const WORKER_VERSION = "2026-10-02-v11";
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -7,15 +10,20 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    // Purge every cache bucket to ensure no user remains trapped on stale assets
-    caches.keys().then((keys) => {
-      return Promise.all(keys.map((key) => caches.delete(key)));
-    }).then(() => {
-      // Unregister this service worker so clients operate on direct clean network
-      return self.registration.unregister();
-    }).then(() => {
-      return self.clients.claim();
-    })
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys
+          .filter((key) => key.startsWith("trainai-pwa-"))
+          .map((key) => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
+      .then(() => self.clients.matchAll({ type: "window", includeUncontrolled: true }))
+      .then((clients) => {
+        clients.forEach((client) => client.postMessage({
+          type: "TRAINAI_SW_ACTIVATED",
+          version: WORKER_VERSION,
+        }));
+      })
   );
 });
 
@@ -25,13 +33,7 @@ self.addEventListener("message", (event) => {
   }
 });
 
-// Pass all fetch requests directly through to the network without caching
-// This eliminates stale index.html and stale chunk crashes permanently
-self.addEventListener("fetch", (event) => {
-  return;
-});
-
-// Push notification listeners (retained for Web Push)
+// Native Web Push listeners.
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : { title: "Train AI Notification", body: "You have an update!" };
   const options = {

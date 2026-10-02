@@ -33,9 +33,12 @@ export async function initOneSignal() {
           enable: false, // We render custom UI triggers in ProfileScreen
         },
         serviceWorkerParam: {
-          scope: "/",
+          // Keep OneSignal isolated from the root application worker. Two
+          // different worker scripts registered at "/" replace one another
+          // and previously produced device-dependent stale/blank pages.
+          scope: "/onesignal/",
         },
-        serviceWorkerPath: "OneSignalSDKWorker.js",
+        serviceWorkerPath: "/onesignal/OneSignalSDKWorker.js",
       });
 
       isInitialized = true;
