@@ -10,7 +10,7 @@
 
     <script>
       (function() {
-        // 1. Safe storage shim in case iOS Safari Private Browsing throws on localStorage
+        // 1. Safe storage shims in case mobile browser (Samsung Internet Secret Mode, iOS Safari Private) throws on storage
         try {
           var testKey = "__tai_test__";
           window.localStorage.setItem(testKey, testKey);
@@ -33,15 +33,37 @@
           } catch (err) {}
         }
 
-        // 2. Break iOS Safari BFCache (Back-Forward Cache snapshot)
+        try {
+          var testSKey = "__tai_test_s__";
+          window.sessionStorage.setItem(testSKey, testSKey);
+          window.sessionStorage.removeItem(testSKey);
+        } catch (e) {
+          var memSStore = {};
+          try {
+            Object.defineProperty(window, "sessionStorage", {
+              value: {
+                getItem: function(k) { return memSStore[k] || null; },
+                setItem: function(k, v) { memSStore[k] = String(v); },
+                removeItem: function(k) { delete memSStore[k]; },
+                clear: function() { memSStore = {}; },
+                key: function(i) { return Object.keys(memSStore)[i] || null; },
+                get length() { return Object.keys(memSStore).length; }
+              },
+              writable: true,
+              configurable: true
+            });
+          } catch (err) {}
+        }
+
+        // 2. Break mobile BFCache snapshot
         window.addEventListener("pageshow", function(event) {
           if (event.persisted) {
             window.location.reload();
           }
         });
 
-        // 3. Version enforcement & automatic fresh network fetch
-        var APP_VER = "20261002_v9";
+        // 3. Version enforcement & CacheStorage cleanup
+        var APP_VER = "20261002_v10";
         var PREV_VER = "";
         try { PREV_VER = localStorage.getItem("tai_app_ver"); } catch(e) {}
 
@@ -50,27 +72,26 @@
           if ("caches" in window) {
             try {
               caches.keys().then(function(names) {
-                return Promise.all(names.map(function(n) { return caches.delete(n); }));
+                for (var i = 0; i < names.length; i++) {
+                  caches.delete(names[i]);
+                }
               });
             } catch(e) {}
-          }
-          if ("serviceWorker" in navigator) {
-            try {
-              navigator.serviceWorker.getRegistrations().then(function(regs) {
-                regs.forEach(function(r) { r.update(); });
-              });
-            } catch(e) {}
-          }
-          // If the visitor was holding an old cached page without the current version query param,
-          // refresh once with a clean version param to force the browser HTTP cache to fetch new assets.
-          if (!window.location.search.includes("_v=")) {
-            var sep = window.location.search ? "&" : "?";
-            window.location.replace(window.location.pathname + window.location.search + sep + "_v=" + APP_VER);
-            return;
           }
         }
 
-        // 4. Early Top-Level Error Trapping for stale chunks and HTML 404 responses
+        // 4. Actively unregister all existing service workers to ensure direct network requests
+        if ("serviceWorker" in navigator) {
+          try {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+              for (var i = 0; i < regs.length; i++) {
+                regs[i].unregister();
+              }
+            }).catch(function() {});
+          } catch(e) {}
+        }
+
+        // 5. Early Top-Level Error Trapping for stale chunks and HTML 404 responses
         function triggerHardRecovery(source) {
           var key = "tai_recov_" + APP_VER;
           var count = 0;
@@ -78,16 +99,16 @@
           if (count < 2) {
             try { sessionStorage.setItem(key, String(count + 1)); } catch(e) {}
             if ("caches" in window) {
-              caches.keys().then(function(names) {
-                return Promise.all(names.map(function(n) { return caches.delete(n); }));
-              }).finally(function() {
-                var sep = window.location.search ? "&" : "?";
-                window.location.replace(window.location.pathname + window.location.search + sep + "_bust=" + Date.now());
-              });
-            } else {
-              var sep = window.location.search ? "&" : "?";
-              window.location.replace(window.location.pathname + window.location.search + sep + "_bust=" + Date.now());
+              try {
+                caches.keys().then(function(names) {
+                  for (var i = 0; i < names.length; i++) { caches.delete(names[i]); }
+                }).finally(function() {
+                  window.location.replace(window.location.pathname + "?_bust=" + Date.now());
+                });
+                return;
+              } catch(e) {}
             }
+            window.location.replace(window.location.pathname + "?_bust=" + Date.now());
           }
         }
 
@@ -106,6 +127,17 @@
             msg.indexOf("mime type") !== -1
           ) {
             triggerHardRecovery("syntaxOrChunkError");
+            return;
+          }
+
+          // Mobile error visibility fallback
+          var loader = document.getElementById("tai-initial-loader");
+          if (loader && !document.getElementById("tai-fatal-error-box")) {
+            var box = document.createElement("div");
+            box.id = "tai-fatal-error-box";
+            box.style.cssText = "margin-top: 20px; padding: 14px 18px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 320px; text-align: left;";
+            box.innerHTML = "<div style='font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 4px;'>Train AI Notice</div><div style='font-size: 11.5px; color: #64748B; margin-bottom: 12px;'>A browser cache conflict was detected on this device.</div><button onclick='window.__tai_clear_cache_and_reload()' style='background: #2563EB; color: #FFFFFF; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; width: 100%;'>Tap to Clear Cache & Refresh</button>";
+            loader.appendChild(box);
           }
         });
 
@@ -121,27 +153,6 @@
             triggerHardRecovery("unhandledRejection");
           }
         });
-
-        // 5. Register SW without controllerchange reload to prevent WebKit abort
-        if ("serviceWorker" in navigator) {
-          if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
-            navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
-              .then(function(reg) {
-                reg.update().catch(function() {});
-                reg.addEventListener("updatefound", function() {
-                  var inst = reg.installing;
-                  if (inst) {
-                    inst.addEventListener("statechange", function() {
-                      if (inst.state === "installed" && navigator.serviceWorker.controller) {
-                        inst.postMessage({ type: "SKIP_WAITING" });
-                      }
-                    });
-                  }
-                });
-              })
-              .catch(function() {});
-          }
-        }
       })();
     </script>
 

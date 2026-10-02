@@ -1,5 +1,5 @@
 // Train AI Service Worker
-// Version: 2026-10-02-v9 (Zero-cache network-first with aggressive cache purging)
+// Version: 2026-10-02-v10 (Zero-cache network-first with aggressive cache purging & self-unregistration)
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -10,6 +10,9 @@ self.addEventListener("activate", (event) => {
     // Purge every cache bucket to ensure no user remains trapped on stale assets
     caches.keys().then((keys) => {
       return Promise.all(keys.map((key) => caches.delete(key)));
+    }).then(() => {
+      // Unregister this service worker so clients operate on direct clean network
+      return self.registration.unregister();
     }).then(() => {
       return self.clients.claim();
     })

@@ -31,10 +31,15 @@ export default class ErrorBoundary extends React.Component {
       errorMsg.includes("importing a module script failed");
 
     if (isChunkOrCacheIssue && typeof window !== "undefined") {
-      const lastReload = sessionStorage.getItem("trainai_eb_reload_ts");
+      let lastReload = null;
+      try {
+        lastReload = sessionStorage.getItem("trainai_eb_reload_ts");
+      } catch (_) {}
       const now = Date.now();
       if (!lastReload || now - parseInt(lastReload, 10) > 20000) {
-        sessionStorage.setItem("trainai_eb_reload_ts", String(now));
+        try {
+          sessionStorage.setItem("trainai_eb_reload_ts", String(now));
+        } catch (_) {}
         if (typeof window.__trainai_clear_cache_and_reload === "function") {
           window.__trainai_clear_cache_and_reload(false);
         } else {
@@ -42,7 +47,7 @@ export default class ErrorBoundary extends React.Component {
             if ("caches" in window) {
               caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
             }
-          } catch {}
+          } catch (_) {}
           window.location.replace(window.location.pathname + "?_nocache=" + now);
         }
       }
