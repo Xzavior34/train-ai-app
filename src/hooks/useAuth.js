@@ -172,24 +172,15 @@ export function useAuth() {
         return { data: supaRes.data, error: null };
       }
 
-      // Check whether this account actually exists in the database
-      let userExists = false;
-      try {
-        const checkClient = client || getSupabaseClientForProject(targetProject) || supabase;
-        if (checkClient?.auth?.admin?.generateLink) {
-          const checkRes = await checkClient.auth.admin.generateLink({
-            type: "recovery",
-            email: normalizedEmail
-          });
-          userExists = checkRes?.data?.properties !== null;
-        }
-      } catch (_) {}
+      // Handle authentication error from Supabase
+      const supaErr = supaRes?.error;
+      const supaErrMsg = (supaErr?.message || "").trim();
 
-      if (!userExists) {
-        // Do not penalize non-registered emails with rate-limiting lockouts
-        const message = "No account found with this email address. Please check your spelling or create a new account.";
+      // Check if project configuration / connection issue (e.g., 401 Invalid API key)
+      if (supaErr?.status === 401 || supaErrMsg.toLowerCase().includes("invalid api key")) {
+        const message = "Authentication service connection error (Invalid API Key). Please contact system administrators.";
         setAuthError(message);
-        return { data: null, error: new Error(message), notRegistered: true };
+        return { data: null, error: supaErr || new Error(message) };
       }
 
       // Existing user entered an incorrect password: track trial attempt
@@ -198,13 +189,15 @@ export function useAuth() {
       if (updatedLimit.isLocked) {
         const timeStr = formatLockoutTime(updatedLimit.remainingMs);
         message = `Account temporarily locked due to 10 failed password trials. Please wait ${timeStr} or reset your password.`;
+      } else if (supaErrMsg && !supaErrMsg.toLowerCase().includes("invalid login credentials")) {
+        message = supaErrMsg;
       } else if (updatedLimit.remainingAttempts <= 5) {
-        message = `Incorrect password. You have ${updatedLimit.remainingAttempts} attempt(s) remaining before a 15-minute temporary lockout.`;
+        message = `Incorrect email or password. You have ${updatedLimit.remainingAttempts} attempt(s) remaining before a 15-minute temporary lockout.`;
       } else {
-        message = `Incorrect password. Trial ${updatedLimit.attempts} of 10 failed. You have ${updatedLimit.remainingAttempts} attempts remaining.`;
+        message = "Incorrect email or password. Please check your credentials and try again.";
       }
       setAuthError(message);
-      return { data: null, error: supaRes?.error || new Error(message), rateLimit: updatedLimit };
+      return { data: null, error: supaErr || new Error(message), rateLimit: updatedLimit };
     }
 
     // Demo mode only (no Supabase project configured for this environment).
@@ -376,11 +369,10 @@ export function useAuth() {
     const targetProject = resolveProjectForSignIn(normalizedEmail);
     const client = getSupabaseClientForProject(targetProject) || supabase;
 
-    // 1. Verify if account exists
-    let userExists = false;
     let otp = null;
     let actionLink = null;
 
+    // Fast-path OTP extraction if admin generateLink happens to be available
     if (client?.auth?.admin?.generateLink) {
       try {
         const linkRes = await client.auth.admin.generateLink({
@@ -389,26 +381,15 @@ export function useAuth() {
           options: { redirectTo: `${window.location.origin}/?view=auth#type=recovery` }
         });
         if (linkRes?.data?.properties) {
-          userExists = true;
           otp = linkRes.data.properties.email_otp;
           actionLink = linkRes.data.properties.action_link;
-        } else {
-          userExists = false;
         }
       } catch (e) {
-        console.warn("generateLink check error:", e);
+        console.warn("generateLink check note:", e);
       }
     }
 
-    if (!userExists) {
-      return {
-        success: false,
-        notFound: true,
-        error: "No account found with this email address. Please check your spelling or create a new account."
-      };
-    }
-
-    // 2. Attempt sending reset email
+    // 2. Standard public password reset for email
     let emailSent = false;
     let rateLimited = false;
     try {
@@ -416,8 +397,25 @@ export function useAuth() {
         redirectTo: `${window.location.origin}/?view=auth#type=recovery`
       });
       if (resetRes?.error) {
-        if (resetRes.error.status === 429 || (resetRes.error.message || "").toLowerCase().includes("rate limit")) {
+        const errMsg = (resetRes.error.message || "").toLowerCase();
+        if (resetRes.error.status === 429 || errMsg.includes("rate limit")) {
           rateLimited = true;
+        } else if (errMsg.includes("not found")) {
+          return {
+            success: false,
+            notFound: true,
+            error: "No account found with this email address. Please check your spelling or create a new account."
+          };
+        } else if (resetRes.error.status === 401 || errMsg.includes("invalid api key")) {
+          return {
+            success: false,
+            error: "Authentication service connection error (Invalid API Key). Please contact system administrators."
+          };
+        } else {
+          return {
+            success: false,
+            error: resetRes.error.message || "Failed to send reset link."
+          };
         }
       } else {
         emailSent = true;
