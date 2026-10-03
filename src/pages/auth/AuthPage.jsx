@@ -626,17 +626,6 @@ export default function AuthPage({
                   </div>
                 )}
 
-                {forgotResult.rateLimited && !forgotResult.otp && (
-                  <div style={{ padding: "14px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, marginBottom: 14 }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                      <Clock size={18} color="#C2410C" style={{ flexShrink: 0, marginTop: 1 }} />
-                      <div style={{ fontSize: 12.5, color: "#9A3412", lineHeight: 1.45 }}>
-                        <strong>Too many reset emails were requested recently.</strong> No recovery code was created. Please wait a few minutes before resending, or enter a valid code from an earlier email below.
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 <button
                   type="submit"
                   disabled={resettingPassword}
