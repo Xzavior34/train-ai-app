@@ -42,6 +42,19 @@ export default function AuthPage({
   const [resetError, setResetError] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [recoveryLinkError, setRecoveryLinkError] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+    const description = params.get("error_description") || hashParams.get("error_description");
+    const code = params.get("error_code") || hashParams.get("error_code");
+    if (description || code) {
+      setRecoveryLinkError(
+        decodeURIComponent((description || "This password reset link is invalid or has expired.").replace(/\+/g, " "))
+      );
+    }
+  }, []);
 
   // Rate Limiting on Password attempts
   const [rateLimit, setRateLimit] = useState(() => getRateLimitStatus(initialEmail));
@@ -323,6 +336,17 @@ export default function AuthPage({
                   </div>
                 )}
 
+                {!forgotResult.emailSent && !forgotResult.otp && (
+                  <div style={{ padding: "14px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <Clock size={18} color="#C2410C" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <div style={{ fontSize: 12.5, color: "#9A3412", lineHeight: 1.45 }}>
+                        <strong>Email delivery is delayed.</strong> Wait a minute, check spam, then use the resend button below. You can also enter a recovery code from an earlier email.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Instant Recovery Code Fallback (When rate limited or email delayed) */}
                 {(forgotResult.rateLimited || forgotResult.otp) && (
                   <div style={{ padding: "14px", background: "#EFF6FF", border: "1.5px solid #BFDBFE", borderRadius: 8, marginBottom: 14 }}>
@@ -383,6 +407,24 @@ export default function AuthPage({
                     style={{ background: "transparent", border: "none", color: "#64748B", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
                   >
                     {showOtpManualInput ? "Hide code entry" : "Have a code from an earlier email? Enter it here"}
+                  </button>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>
+                  <button
+                    type="button"
+                    disabled={sendingReset}
+                    onClick={handleForgotPasswordSubmit}
+                    style={{ ...styles.secondaryButton, opacity: sendingReset ? 0.7 : 1 }}
+                  >
+                    <RefreshCw size={14} /> {sendingReset ? "Sending..." : "Resend email"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotResult(null); setForgotError(""); setShowOtpManualInput(false); }}
+                    style={styles.secondaryButton}
+                  >
+                    Use another email
                   </button>
                 </div>
 
@@ -481,7 +523,28 @@ export default function AuthPage({
         {mode === "recovery" && (
           <>
             <h1 style={styles.h1}>Choose a new password</h1>
-            {resetSuccess ? (
+            {recoveryLinkError ? (
+              <div style={{ textAlign: "center", padding: "10px 0" }}>
+                <AlertCircle size={40} color="#DC2626" style={{ margin: "0 auto 12px" }} />
+                <p style={{ ...styles.sub, color: "#991B1B", fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+                  This reset link cannot be used
+                </p>
+                <p style={{ ...styles.sub, fontSize: 12.5 }}>
+                  {recoveryLinkError} Password reset links can only be used once and may expire.
+                </p>
+                <button
+                  type="button"
+                  className="auth-submit"
+                  style={styles.submit}
+                  onClick={() => { setRecoveryLinkError(""); setMode("forgot"); }}
+                >
+                  Request a new reset link
+                </button>
+                <div style={styles.switchRow}>
+                  <span className="auth-switch" style={styles.switchLink} onClick={() => setMode("signin")}>Back to sign in</span>
+                </div>
+              </div>
+            ) : resetSuccess ? (
               <div style={{ textAlign: "center", padding: "16px 0" }}>
                 <CheckCircle2 size={40} color="#16A34A" style={{ margin: "0 auto 12px" }} />
                 <p style={{ ...styles.sub, color: "#16A34A", fontWeight: 700, fontSize: 14 }}>
@@ -857,6 +920,11 @@ const styles = {
     width: "100%", marginTop: 20, border: "none", borderRadius: 8, padding: "11px 16px", fontWeight: 700, fontSize: 14,
     color: "#FFFFFF", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
     background: "#2563EB", transition: "background-color .15s ease",
+  },
+  secondaryButton: {
+    minHeight: 38, border: "1px solid #CBD5E1", borderRadius: 8, padding: "8px 10px",
+    background: "#FFFFFF", color: "#334155", cursor: "pointer", fontWeight: 700,
+    fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
   },
   switchRow: { textAlign: "center", marginTop: 16, fontSize: 13, color: "#64748B" },
   switchLink: { color: "#2563EB", fontWeight: 700, cursor: "pointer" },

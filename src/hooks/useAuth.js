@@ -91,7 +91,14 @@ export function useAuth() {
     // Check if landing directly on recovery URL from email link
     const hash = window.location.hash || "";
     const search = window.location.search || "";
-    if (hash.includes("type=recovery") || hash.includes("type%3Drecovery") || search.includes("type=recovery")) {
+    if (
+      hash.includes("type=recovery") ||
+      hash.includes("type%3Drecovery") ||
+      search.includes("type=recovery") ||
+      search.includes("recovery=1") ||
+      search.includes("error_code=") ||
+      hash.includes("error_code=")
+    ) {
       setIsPasswordRecovery(true);
     }
 
@@ -408,7 +415,9 @@ export function useAuth() {
     const client = getSupabaseClientForProject(targetProject) || supabase;
 
     const domainOrigin = getCanonicalDomain();
-    const targetRedirectUrl = `${domainOrigin}/?view=auth#type=recovery`;
+    // Supabase appends its own token fragment. Keep our recovery marker in the
+    // query string so it cannot be overwritten by that fragment.
+    const targetRedirectUrl = `${domainOrigin}/?view=auth&recovery=1`;
 
     let otp = null;
     let actionLink = null;
