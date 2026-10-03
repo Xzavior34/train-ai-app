@@ -174,14 +174,12 @@ export function resolveProjectForSignUp(email = "", accountType = "learner") {
  * Sign-in routing:
  * - @sarafoundationafrica.com, @sarafoundation.org, sarafoundation domains, and usernames
  *   -> Train AI 2.0 / Sara Foundation Dedicated Database (jeobggrtxeybxvlwpxvn)
- * - All other accounts (individuals, organizations, platform owners) -> Train AI 2.0 / Organization Database (djikuoucsuhdiyrhsduz)
+ * - Existing learners of every email domain live primarily in the Sara project.
+ *   The sign-in flow still falls back to the organization database for newer
+ *   organization and platform accounts.
  */
 export function resolveProjectForSignIn(email = "") {
-  const normalized = email.trim().toLowerCase();
-  if (normalized.endsWith("@sarafoundationafrica.com") || normalized.endsWith("@sarafoundation.org")) {
-    return SUPABASE_PROJECTS.SARA_FOUNDATION;
-  }
-  return SUPABASE_PROJECTS.ORGANIZATION_DB;
+  return SUPABASE_PROJECTS.SARA_FOUNDATION;
 }
 
 export function fallbackProjectForSignIn(triedProjectKey) {

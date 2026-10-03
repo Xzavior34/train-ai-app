@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase, resolveProjectForSignIn, resolveProjectForSignUp, fallbackProjectForSignIn, setActiveSupabaseProject, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../services/supabaseClient.js";
+import { supabase, resolveProjectForSignIn, resolveProjectForSignUp, setActiveSupabaseProject, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../services/supabaseClient.js";
 import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../lib/roleRouting.js";
 import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime } from "../lib/authRateLimiter.js";
 import { safeStorage } from "../lib/storage.js";
@@ -33,6 +33,7 @@ export function useAuth() {
 
     (async () => {
       let resolvedSession = null;
+      let resolvedProject = null;
 
       const fetchSessionWithTimeout = async (client) => {
         if (!client) return null;
@@ -49,6 +50,11 @@ export function useAuth() {
       const primaryClient = supabase || getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
       if (primaryClient) {
         resolvedSession = await fetchSessionWithTimeout(primaryClient);
+        if (resolvedSession) {
+          resolvedProject = Object.values(SUPABASE_PROJECTS).find(
+            (projectKey) => getSupabaseClientForProject(projectKey) === primaryClient
+          ) || null;
+        }
       }
 
       // 2. If not found on primary, probe alternate project client
@@ -57,7 +63,10 @@ export function useAuth() {
           const client = getSupabaseClientForProject(projKey);
           if (client && client !== primaryClient) {
             resolvedSession = await fetchSessionWithTimeout(client);
-            if (resolvedSession) break;
+            if (resolvedSession) {
+              resolvedProject = projKey;
+              break;
+            }
           }
         }
       }
@@ -65,7 +74,7 @@ export function useAuth() {
       if (cancelled) return;
 
       if (resolvedSession) {
-        syncProject(resolvedSession.user?.email);
+        setActiveSupabaseProject(resolvedProject || resolveProjectForSignIn(resolvedSession.user?.email));
         setSession(resolvedSession);
         safeStorage.setItem(AUTH_STORAGE_KEY, resolvedSession);
       } else {
@@ -98,7 +107,11 @@ export function useAuth() {
             setSession(null);
             safeStorage.removeItem(AUTH_STORAGE_KEY);
           } else if (newSession) {
-            syncProject(newSession.user?.email);
+            // The client that emitted the session is authoritative. Many existing
+            // learners use public email domains but live in the Sara project, so
+            // inferring the database from the email address sends them to the
+            // wrong data store immediately after a successful login.
+            setActiveSupabaseProject(projKey);
             setSession(newSession);
             safeStorage.setItem(AUTH_STORAGE_KEY, newSession);
           }
@@ -159,10 +172,7 @@ export function useAuth() {
       let lastNetworkErr = null;
       let successfulProject = targetProject;
 
-      const projectOrder = [
-        targetProject,
-        fallbackProjectForSignIn(targetProject) || (targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION ? SUPABASE_PROJECTS.ORGANIZATION_DB : SUPABASE_PROJECTS.SARA_FOUNDATION)
-      ].filter(Boolean);
+      const projectOrder = [SUPABASE_PROJECTS.SARA_FOUNDATION, SUPABASE_PROJECTS.ORGANIZATION_DB];
 
       // Try candidate projects and candidate email formats
       for (const proj of projectOrder) {
