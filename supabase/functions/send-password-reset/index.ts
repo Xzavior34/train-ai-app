@@ -19,6 +19,7 @@ const corsHeaders = {
 };
 
 const CANONICAL_DOMAIN = "https://trainailtd.com";
+const ALLOWED_REDIRECT_HOSTS = new Set(["trainailtd.com", "www.trainailtd.com"]);
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -123,9 +124,20 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Email address is required." }, 400);
     }
     const normalizedEmail = rawEmail.toLowerCase();
+    if (!/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(normalizedEmail)) {
+      return jsonResponse({ error: "Enter a valid email address." }, 400);
+    }
 
     // Use requested redirect or fallback to canonical trainailtd.com recovery URL
-    const redirectTo = body.redirectTo || `${CANONICAL_DOMAIN}/?view=auth#type=recovery`;
+    let redirectTo = `${CANONICAL_DOMAIN}/?view=auth&recovery=1`;
+    try {
+      const requestedRedirect = new URL(body.redirectTo || redirectTo);
+      if (requestedRedirect.protocol === "https:" && ALLOWED_REDIRECT_HOSTS.has(requestedRedirect.hostname)) {
+        redirectTo = requestedRedirect.toString();
+      }
+    } catch {
+      // Keep the canonical recovery URL.
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
@@ -155,11 +167,8 @@ Deno.serve(async (req) => {
     if (linkError) {
       const errMsg = (linkError.message || "").toLowerCase();
       if (errMsg.includes("not found") || errMsg.includes("user not found")) {
-        return jsonResponse({
-          success: false,
-          notFound: true,
-          error: "No account found with this email address. Please check your spelling or sign up for a new account."
-        }, 404);
+        // Do not disclose whether an account exists.
+        return jsonResponse({ success: true, emailSent: true, email: normalizedEmail });
       }
       return jsonResponse({
         success: false,
@@ -241,18 +250,22 @@ Deno.serve(async (req) => {
         console.warn("Resend network error:", err);
       }
     } else {
-      console.info("RESEND_API_KEY is not configured in environment. Returning generated recovery OTP and link.");
+      resendErrorMsg = "Transactional email provider is not configured.";
+    }
+
+    if (!emailDispatched) {
+      return jsonResponse({
+        success: false,
+        emailSent: false,
+        error: "Password reset email could not be delivered. Please try again shortly or contact support.",
+      }, 503);
     }
 
     return jsonResponse({
       success: true,
-      emailSent: emailDispatched,
-      resendConfigured: !!resendApiKey,
-      otp: otpCode,
-      actionLink,
+      emailSent: true,
       email: normalizedEmail,
-      warning: resendErrorMsg ? `Email dispatch notice: ${resendErrorMsg}` : undefined,
-      message: "Password reset instructions have been generated."
+      message: "Password reset instructions have been sent."
     });
 
   } catch (error: unknown) {
