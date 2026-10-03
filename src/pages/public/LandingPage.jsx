@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ArrowRight, BarChart3, BookOpen, Brain, Building2, Check, ChevronDown,
-  GraduationCap, Heart, Instagram, Layers, Lock, Mail, Menu, MessageSquare, Target,
+  ChevronLeft, ChevronRight, GraduationCap, Heart, Instagram, Layers, Lock, Mail, Menu, MessageSquare, Target,
   UserCog, Users, X,
 } from "lucide-react";
 import { captureAttributionFromURL } from "../../lib/api/waitlist.js";
@@ -32,17 +32,17 @@ const PRICING_TIERS = [
   {
     name: "Basic",
     description: "A focused starting point for organisations bringing structured learning, learners and cohorts into one system.",
-    features: ["Course and learner management", "Cohort learning", "Community participation", "Core progress visibility"],
+    features: ["Course and learner management", "Cohort learning & study groups", "Community participation & feed", "Core progress & completion tracking"],
   },
   {
     name: "Intermediate",
     description: "For organisations that need deeper learning support, administration and visibility across active programmes.",
-    features: ["Expanded programme management", "AI-supported learner development", "Instructor management", "Performance and impact insights"],
+    features: ["Expanded programme & cohort management", "AI-supported learner development (AI Coach)", "Instructor management & moderation", "Performance, skill gaps & impact insights"],
   },
   {
-    name: "Enterprise",
-    description: "A configurable engagement for organisations with more complex access, reporting and integration requirements.",
-    features: ["Custom configuration", "Workforce intelligence", "Manager-level visibility", "Single sign-on options"],
+    name: "Customizable Enterprise",
+    description: "A configurable engagement for enterprises, foundations and institutions with advanced security, custom branding, and integrations.",
+    features: ["Custom branding & multi-cohort structure", "Workforce intelligence & readiness scores", "Single Sign-On (SSO / SAML / OAuth)", "Dedicated support & custom LMS integrations"],
   },
 ];
 
@@ -51,8 +51,8 @@ const FAQ_ITEMS = [
   ["Who is the platform for?", "Train AI is designed for academies and training providers, foundations and social-impact organisations, and businesses developing their workforce."],
   ["What do learners get?", "Learners can complete structured courses, join cohorts and study groups, communicate with instructors, take part in leaderboards, use an AI coach for learning and assessment preparation, and receive personalised insights."],
   ["What can organisations manage?", "Organisations can manage learners, courses, cohorts, communities and instructors, monitor cohort performance, track skill gaps and readiness, and give managers access to AI summaries and administrative comment logs."],
-  ["How does pricing work?", "Train AI uses three standard tiers: Basic, Intermediate and a customisable Enterprise tier. The right tier and commercial terms are discussed during a product demo based on the organisation's requirements."],
-  ["Can we start with a trial?", "Train AI does not promote an open public trial. Where a trial is appropriate, it is agreed after a product demo and is limited to a maximum of one month."],
+  ["How does pricing work?", "Train AI uses three standard tiers: Basic, Intermediate and Customizable Enterprise (with SSO). The right tier and commercial terms are discussed during a product demo based on your organisation's requirements."],
+  ["How do we get started?", "Click 'Book a Demo' to schedule a live 30-minute institutional walkthrough. We will demonstrate the platform and align on configuration, cohort setup, and deployment timeline."],
 ];
 
 const LEGAL_CONTENT = {
@@ -79,6 +79,22 @@ export default function LandingPage({ onNavigate }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [legalModal, setLegalModal] = useState(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  const showcasePhotos = [
+    { src: "/images/train-ai-diverse-learners.jpg", title: "Enterprise & Foundation Cohorts", caption: "Multi-racial teams collaborating across AI and technical training tracks." },
+    { src: "/images/train-ai-women-tech.jpg", title: "Women in Technology Programs", caption: "Community-driven learning tracks with peer accountability and mentor reviews." },
+    { src: "/images/train-ai-diverse-team.jpg", title: "Workforce & NGO Development", caption: "Structured development cohorts measuring skills, readiness, and impact." },
+    { src: "/images/train-ai-white-team.jpg", title: "Collaborative Planning Sprints", caption: "Instructor-led sessions and hands-on portfolio milestones." },
+  ];
+
+  const handlePrevPhoto = () => {
+    setPhotoIndex((curr) => (curr === 0 ? showcasePhotos.length - 1 : curr - 1));
+  };
+
+  const handleNextPhoto = () => {
+    setPhotoIndex((curr) => (curr === showcasePhotos.length - 1 ? 0 : curr + 1));
+  };
 
   useEffect(() => {
     captureAttributionFromURL();
@@ -238,18 +254,51 @@ export default function LandingPage({ onNavigate }) {
               <h2>One platform, applied to different learning operations.</h2>
               <p>The core platform stays consistent. Implementation is shaped around how each organisation delivers learning and measures development.</p>
             </div>
-            <div className="lp-photo-ribbon" aria-label="Learning and collaboration in practice">
-              <figure className="lp-photo-ribbon-item lp-photo-ribbon-item-muted">
-                <img src="/images/train-ai-women-tech.jpg" alt="A diverse group of women taking part in a workplace discussion" loading="lazy" />
-              </figure>
-              <figure className="lp-photo-ribbon-item lp-photo-ribbon-item-main">
-                <img src="/images/train-ai-white-team.jpg" alt="A team taking part in a collaborative planning workshop" loading="lazy" />
-                <figcaption>Learning works better when delivery, support and community stay connected.</figcaption>
-              </figure>
-              <figure className="lp-photo-ribbon-item lp-photo-ribbon-item-muted">
-                <img src="/images/train-ai-diverse-team.jpg" alt="A mixed workplace team participating in a meeting" loading="lazy" />
-              </figure>
+
+            {/* Foundation Showcase with Interactive Scrolling Arrows */}
+            <div className="lp-showcase-container" aria-label="Learning and collaboration in practice">
+              <div className="lp-showcase-frame">
+                <img
+                  src={showcasePhotos[photoIndex].src}
+                  alt={showcasePhotos[photoIndex].title}
+                  className="lp-showcase-img"
+                  loading="lazy"
+                />
+                <div className="lp-showcase-overlay">
+                  <div className="lp-showcase-text">
+                    <strong>{showcasePhotos[photoIndex].title}</strong>
+                    <span>{showcasePhotos[photoIndex].caption}</span>
+                  </div>
+                  <div className="lp-showcase-controls">
+                    <button
+                      className="lp-showcase-arrow"
+                      onClick={handlePrevPhoto}
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <div className="lp-showcase-dots">
+                      {showcasePhotos.map((_, idx) => (
+                        <button
+                          key={idx}
+                          className={`lp-showcase-dot ${idx === photoIndex ? "active" : ""}`}
+                          onClick={() => setPhotoIndex(idx)}
+                          aria-label={`Slide ${idx + 1}`}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      className="lp-showcase-arrow"
+                      onClick={handleNextPhoto}
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
+
             <div className="lp-audience-list">
               {AUDIENCES.map(([Icon, title, description], index) => (
                 <article key={title} className="lp-audience-row">
@@ -356,12 +405,13 @@ const landingStyles = `
   .lp-section{padding:88px 0;scroll-margin-top:70px}.lp-section-heading{max-width:760px;margin-bottom:46px}.lp-section-heading h2,.lp-outcomes-grid h2,.lp-demo-grid h2,.lp-faq-intro h2{margin:0;font-size:clamp(32px,4vw,50px);line-height:1.08;letter-spacing:-.04em;font-weight:760}.lp-section-heading>p:last-child,.lp-faq-intro>p:last-child{margin:20px 0 0;max-width:680px;color:var(--lp-muted);font-size:16px;line-height:1.65}.lp-heading-split{max-width:none;display:grid;grid-template-columns:1fr 1fr;column-gap:70px}.lp-heading-split .lp-kicker{grid-column:1/-1}.lp-heading-split>p:last-child{margin:2px 0 0}
   .lp-two-column-feature{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--lp-line)}.lp-feature-column{padding:38px}.lp-feature-column-dark{background:#132038;color:#fff}.lp-column-title{padding-bottom:28px;border-bottom:1px solid var(--lp-line)}.lp-feature-column-dark .lp-column-title{border-color:#344159}.lp-column-title span{color:var(--lp-blue);font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:800}.lp-feature-column-dark .lp-column-title span{color:#91b2ff}.lp-column-title h3{margin:10px 0 0;max-width:480px;font-size:27px;line-height:1.25;letter-spacing:-.025em}.lp-feature-list{display:grid}.lp-feature-row{display:grid;grid-template-columns:26px 1fr;gap:15px;padding:24px 0;border-bottom:1px solid var(--lp-line)}.lp-feature-row:last-child{border-bottom:0;padding-bottom:0}.lp-feature-column-dark .lp-feature-row{border-color:#344159}.lp-feature-row svg{color:var(--lp-blue);margin-top:2px}.lp-feature-column-dark .lp-feature-row svg{color:#91b2ff}.lp-feature-row h4{margin:0 0 6px;font-size:16px}.lp-feature-row p{margin:0;color:var(--lp-muted);font-size:14px;line-height:1.6}.lp-feature-column-dark .lp-feature-row p{color:#bdc8d9}
   .lp-outcomes-section{position:relative;overflow:hidden}.lp-outcomes-section::after{content:"";position:absolute;inset:0 0 0 56%;background:linear-gradient(90deg,var(--lp-soft),rgba(244,247,250,.78)),url("/images/train-ai-professional.jpg") center 42%/cover;opacity:.14;pointer-events:none}.lp-outcomes-section .lp-shell{position:relative;z-index:1}.lp-outcomes-section,.lp-pricing-section{background-color:var(--lp-soft);border-block:1px solid var(--lp-line)}.lp-outcomes-grid{display:grid;grid-template-columns:1fr 1fr;gap:90px}.lp-outcome-copy{padding-top:32px}.lp-outcome-copy p{margin:0 0 22px;color:#3e4b5d;font-size:17px;line-height:1.72}.lp-photo-ribbon{display:grid;grid-template-columns:.7fr 1.25fr .7fr;align-items:end;gap:12px;margin:-8px 0 48px}.lp-photo-ribbon-item{position:relative;margin:0;overflow:hidden;background:#e9eef4}.lp-photo-ribbon-item img{display:block;width:100%;height:220px;object-fit:cover}.lp-photo-ribbon-item-muted img{height:172px;filter:grayscale(1);opacity:.58}.lp-photo-ribbon-item-main figcaption{position:absolute;right:0;bottom:0;max-width:340px;padding:14px 16px;color:#fff;background:rgba(15,23,40,.86);font-size:12px;line-height:1.5}.lp-audience-list{border-top:1px solid var(--lp-line)}.lp-audience-row{display:grid;grid-template-columns:50px 38px minmax(210px,.65fr) 1fr;align-items:start;gap:24px;padding:30px 0;border-bottom:1px solid var(--lp-line)}.lp-audience-number{color:#8b96a5;font-size:12px;font-weight:700}.lp-audience-row svg{color:var(--lp-blue)}.lp-audience-row h3{margin:0;font-size:20px;letter-spacing:-.02em}.lp-audience-row p{margin:0;color:var(--lp-muted);font-size:15px;line-height:1.65}
+  .lp-showcase-container{margin:-8px 0 48px;width:100%}.lp-showcase-frame{position:relative;width:100%;height:380px;border-radius:12px;overflow:hidden;background:#101828;border:1px solid var(--lp-line);box-shadow:0 10px 30px rgba(0,0,0,.08)}.lp-showcase-img{width:100%;height:100%;object-fit:cover;object-position:center;transition:transform .5s ease,opacity .4s ease}.lp-showcase-overlay{position:absolute;inset:auto 0 0 0;background:linear-gradient(180deg,transparent 0%,rgba(15,23,40,.92) 100%);padding:24px 28px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px}.lp-showcase-text strong{display:block;color:#fff;font-size:18px;font-weight:750;margin-bottom:4px}.lp-showcase-text span{display:block;color:#cbd5e1;font-size:13.5px;max-width:540px;line-height:1.5}.lp-showcase-controls{display:flex;align-items:center;gap:12px;flex-shrink:0}.lp-showcase-arrow{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s ease;backdrop-filter:blur(6px)}.lp-showcase-arrow:hover{background:var(--lp-blue);border-color:var(--lp-blue);transform:scale(1.08)}.lp-showcase-dots{display:flex;align-items:center;gap:6px}.lp-showcase-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.4);border:0;padding:0;cursor:pointer;transition:all .2s ease}.lp-showcase-dot.active{width:22px;border-radius:4px;background:#38bdf8}
   .lp-pricing-table{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--lp-line);background:#fff}.lp-pricing-tier{display:flex;flex-direction:column;min-height:480px;padding:30px;border-right:1px solid var(--lp-line)}.lp-pricing-tier:last-child{border-right:0;background:#132038;color:#fff}.lp-tier-heading{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier:last-child .lp-tier-heading{border-color:#344159}.lp-tier-heading span{color:#8894a4;font-size:12px}.lp-tier-heading h3{margin:0;font-size:27px}.lp-pricing-tier>p{min-height:96px;margin:24px 0;color:var(--lp-muted);font-size:14px;line-height:1.62}.lp-pricing-tier:last-child>p{color:#bdc8d9}.lp-pricing-tier ul{display:grid;gap:14px;padding:0;margin:0 0 30px;list-style:none}.lp-pricing-tier li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;line-height:1.45}.lp-pricing-tier li svg{flex:0 0 auto;color:var(--lp-blue)}.lp-pricing-tier:last-child li svg{color:#91b2ff}.lp-pricing-tier button{margin-top:auto;align-self:flex-start}.lp-pricing-note{margin:18px 0 0;color:#6b7686;font-size:12.5px}
   .lp-demo-section{color:#fff;background:var(--lp-blue)}.lp-demo-grid{display:grid;grid-template-columns:1fr .8fr;gap:90px;align-items:end}.lp-demo-section .lp-kicker{color:#c8d7ff}.lp-demo-grid p:not(.lp-kicker){margin:0 0 24px;color:#e2e9fb;font-size:16px;line-height:1.7}.lp-light-button{color:var(--lp-blue-dark);background:#fff}.lp-light-button:hover{color:#fff;background:#132038}.lp-faq-grid{display:grid;grid-template-columns:.72fr 1fr;gap:90px}.lp-faq-list{border-top:1px solid var(--lp-line)}.lp-faq-item{border-bottom:1px solid var(--lp-line)}.lp-faq-item button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 0;border:0;background:transparent;color:var(--lp-ink);text-align:left;cursor:pointer;font-weight:700;transition:color .2s ease}.lp-faq-item button:hover{color:var(--lp-blue)}.lp-faq-item button svg{color:#687486;transition:transform .2s ease}.lp-faq-item p{margin:-4px 36px 22px 0;color:var(--lp-muted);font-size:14px;line-height:1.68;animation:lp-answer-in .28s ease both}
   .lp-footer{padding:58px 0 24px;color:#fff;background:#0f1728}.lp-footer-main{display:grid;grid-template-columns:1.55fr repeat(3,1fr);gap:60px;padding-bottom:46px}.lp-footer-brand img{display:block;height:36px;width:auto;filter:brightness(0) invert(1)}.lp-footer-brand p{margin:18px 0 10px;color:#fff;font-size:15px;font-weight:700}.lp-footer-brand span{display:block;max-width:320px;color:#9eabba;font-size:13px;line-height:1.65}.lp-footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:12px}.lp-footer-column h3{margin:0 0 7px;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:.11em}.lp-footer-column button,.lp-footer-column a{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:#b9c4d3;padding:0;text-align:left;text-decoration:none;cursor:pointer;font-size:13px;font-weight:500;line-height:1.5}.lp-footer-column button:hover,.lp-footer-column a:hover{color:#fff}.lp-footer-contact a span{color:#8290a3}.lp-footer-column .lp-footer-demo-link{margin-top:8px;color:#fff;font-weight:700}.lp-footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:30px;padding-top:22px;border-top:1px solid #2d394d;color:#8793a5;font-size:12px}.lp-footer-bottom>div{display:flex;flex-wrap:wrap;gap:24px}.lp-footer button{color:#d7deea}.lp-footer-bottom button{border:0;background:transparent;padding:0;color:#8793a5;cursor:pointer;font-size:12px;font-weight:500}.lp-footer-bottom button:hover{color:#fff}.lp-modal-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(15,23,40,.68)}.lp-modal{position:relative;width:min(520px,100%);padding:34px;background:#fff;border:1px solid var(--lp-line);border-radius:6px}.lp-modal>svg{color:var(--lp-blue)}.lp-modal h2{margin:14px 0 10px;font-size:24px}.lp-modal p{margin:0;color:var(--lp-muted);line-height:1.7}.lp-modal-close{position:absolute;top:14px;right:14px;border:0;background:transparent;cursor:pointer;color:#687486}
   .lp-motion-ready .lp-hero-copy{animation:lp-hero-copy-in .72s cubic-bezier(.2,.7,.2,1) both}.lp-motion-ready .lp-hero-figure{animation:lp-hero-visual-in .82s .1s cubic-bezier(.2,.7,.2,1) both}.lp-motion-ready .lp-reveal{opacity:0;transform:translateY(26px);transition:opacity .62s ease,transform .62s cubic-bezier(.2,.7,.2,1)}.lp-motion-ready .lp-reveal.lp-reveal-visible{opacity:1;transform:none}.lp-motion-ready .lp-audience-row:nth-child(2),.lp-motion-ready .lp-pricing-tier:nth-child(2){transition-delay:.08s}.lp-motion-ready .lp-audience-row:nth-child(3),.lp-motion-ready .lp-pricing-tier:nth-child(3){transition-delay:.16s}
   @keyframes lp-hero-copy-in{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}@keyframes lp-hero-visual-in{from{opacity:0;transform:translateX(28px) scale(.985)}to{opacity:1;transform:none}}@keyframes lp-answer-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
-  @media(max-width:900px){.lp-nav,.lp-header-actions{display:none}.lp-menu-button{display:inline-flex}.lp-mobile-nav{display:grid;gap:3px;padding:8px 20px 18px;border-top:1px solid var(--lp-line);background:#fff;animation:lp-mobile-menu-in .24s ease both}.lp-mobile-nav>button:not(.lp-primary-button){border:0;background:transparent;padding:12px 0;text-align:left;color:var(--lp-ink);font-weight:650}.lp-hero-grid,.lp-heading-split,.lp-outcomes-grid,.lp-demo-grid,.lp-faq-grid{grid-template-columns:1fr;gap:34px}.lp-hero-copy{max-width:720px}.lp-two-column-feature,.lp-pricing-table{grid-template-columns:1fr}.lp-photo-ribbon{grid-template-columns:.8fr 1.2fr}.lp-photo-ribbon-item:last-child{display:none}.lp-feature-column-dark{border-top:1px solid var(--lp-line)}.lp-pricing-tier{min-height:auto;border-right:0;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier:last-child{border-bottom:0}.lp-pricing-tier>p{min-height:0}.lp-pricing-tier button{margin-top:12px}.lp-footer-main{grid-template-columns:1.4fr 1fr 1fr;gap:38px}.lp-footer-contact{grid-column:2/4}}@keyframes lp-mobile-menu-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-  @media(max-width:640px){.lp-shell,.lp-header-inner{width:min(100% - 28px,1160px)}.lp-header-inner{height:58px}.lp-logo-button img{height:21px}.lp-menu-button{padding:6px}.lp-hero{padding:38px 0 46px}.lp-hero-grid{gap:30px}.lp-kicker{margin-bottom:13px;font-size:10.5px;letter-spacing:.12em}.lp-hero h1{font-size:clamp(34px,9.6vw,42px);line-height:1.06;letter-spacing:-.043em}.lp-hero-description{margin-top:19px;font-size:15px;line-height:1.58}.lp-hero-actions{display:grid;gap:9px;margin-top:24px}.lp-hero-actions button{width:100%;min-height:42px}.lp-sales-note{margin-top:14px;font-size:11.5px;line-height:1.5}.lp-hero-figure figcaption{display:grid;gap:4px;padding:11px 0}.lp-hero-figure strong{font-size:12px}.lp-hero-figure span{font-size:11px;text-align:left}.lp-section{padding:52px 0}.lp-section-heading{margin-bottom:28px}.lp-section-heading h2,.lp-outcomes-grid h2,.lp-demo-grid h2,.lp-faq-intro h2{font-size:clamp(27px,7.6vw,34px);line-height:1.12;letter-spacing:-.035em}.lp-section-heading>p:last-child,.lp-faq-intro>p:last-child{margin-top:15px;font-size:14.5px;line-height:1.58}.lp-heading-split>p:last-child{margin-top:0}.lp-outcomes-section::after{inset:48% 0 0 0;opacity:.08}.lp-outcomes-grid{gap:24px}.lp-outcome-copy{padding-top:0}.lp-outcome-copy p{margin-bottom:16px;font-size:15px;line-height:1.62}.lp-photo-ribbon{grid-template-columns:1fr;margin:0 0 34px}.lp-photo-ribbon-item-muted{display:none}.lp-photo-ribbon-item-main img{height:210px}.lp-photo-ribbon-item-main figcaption{position:relative;max-width:none;padding:12px 14px;font-size:11.5px}.lp-feature-column{padding:24px 20px}.lp-column-title{padding-bottom:22px}.lp-column-title h3{font-size:22px;line-height:1.28}.lp-feature-row{grid-template-columns:23px 1fr;gap:12px;padding:19px 0}.lp-feature-row h4{font-size:15px}.lp-feature-row p{font-size:13.5px;line-height:1.55}.lp-audience-row{grid-template-columns:26px 24px 1fr;gap:11px;padding:24px 0}.lp-audience-row h3{font-size:17px;line-height:1.3}.lp-audience-row p{grid-column:3;font-size:13.5px;line-height:1.58}.lp-pricing-tier{padding:24px 20px}.lp-tier-heading h3{font-size:23px}.lp-pricing-tier>p{margin:20px 0;font-size:13.5px}.lp-pricing-tier li{font-size:13px}.lp-demo-grid{gap:24px}.lp-demo-grid p:not(.lp-kicker){font-size:14.5px;line-height:1.6}.lp-faq-grid{gap:28px}.lp-faq-item button{padding:18px 0;font-size:14px}.lp-faq-item p{font-size:13.5px;line-height:1.6}.lp-footer{padding-top:46px}.lp-footer-main{grid-template-columns:1fr 1fr;gap:32px 20px}.lp-footer-brand,.lp-footer-contact{grid-column:1/-1}.lp-footer-brand img{height:29px}.lp-footer-bottom{align-items:flex-start;flex-direction:column}.lp-footer-bottom>div{gap:16px}.lp-modal{padding:28px 22px}.lp-modal h2{font-size:22px}}
+  @media(max-width:900px){.lp-nav,.lp-header-actions{display:none}.lp-menu-button{display:inline-flex}.lp-mobile-nav{display:grid;gap:3px;padding:8px 20px 18px;border-top:1px solid var(--lp-line);background:#fff;animation:lp-mobile-menu-in .24s ease both}.lp-mobile-nav>button:not(.lp-primary-button){border:0;background:transparent;padding:12px 0;text-align:left;color:var(--lp-ink);font-weight:650}.lp-hero-grid,.lp-heading-split,.lp-outcomes-grid,.lp-demo-grid,.lp-faq-grid{grid-template-columns:1fr;gap:34px}.lp-hero-copy{max-width:720px}.lp-two-column-feature,.lp-pricing-table{grid-template-columns:1fr}.lp-showcase-frame{height:300px}.lp-showcase-overlay{flex-direction:column;align-items:flex-start;gap:14px}.lp-feature-column-dark{border-top:1px solid var(--lp-line)}.lp-pricing-tier{min-height:auto;border-right:0;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier:last-child{border-bottom:0}.lp-pricing-tier>p{min-height:0}.lp-pricing-tier button{margin-top:12px}.lp-footer-main{grid-template-columns:1.4fr 1fr 1fr;gap:38px}.lp-footer-contact{grid-column:2/4}}@keyframes lp-mobile-menu-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  @media(max-width:640px){.lp-shell,.lp-header-inner{width:min(100% - 28px,1160px)}.lp-header-inner{height:58px}.lp-logo-button img{height:21px}.lp-menu-button{padding:6px}.lp-hero{padding:38px 0 46px}.lp-hero-grid{gap:30px}.lp-kicker{margin-bottom:13px;font-size:10.5px;letter-spacing:.12em}.lp-hero h1{font-size:clamp(34px,9.6vw,42px);line-height:1.06;letter-spacing:-.043em}.lp-hero-description{margin-top:19px;font-size:15px;line-height:1.58}.lp-hero-actions{display:grid;gap:9px;margin-top:24px}.lp-hero-actions button{width:100%;min-height:42px}.lp-sales-note{margin-top:14px;font-size:11.5px;line-height:1.5}.lp-hero-figure figcaption{display:grid;gap:4px;padding:11px 0}.lp-hero-figure strong{font-size:12px}.lp-hero-figure span{font-size:11px;text-align:left}.lp-section{padding:52px 0}.lp-section-heading{margin-bottom:28px}.lp-section-heading h2,.lp-outcomes-grid h2,.lp-demo-grid h2,.lp-faq-intro h2{font-size:clamp(27px,7.6vw,34px);line-height:1.12;letter-spacing:-.035em}.lp-section-heading>p:last-child,.lp-faq-intro>p:last-child{margin-top:15px;font-size:14.5px;line-height:1.58}.lp-heading-split>p:last-child{margin-top:0}.lp-outcomes-section::after{inset:48% 0 0 0;opacity:.08}.lp-outcomes-grid{gap:24px}.lp-outcome-copy{padding-top:0}.lp-outcome-copy p{margin-bottom:16px;font-size:15px;line-height:1.62}.lp-showcase-frame{height:240px}.lp-showcase-text strong{font-size:15px}.lp-showcase-text span{font-size:12px}.lp-feature-column{padding:24px 20px}.lp-column-title{padding-bottom:22px}.lp-column-title h3{font-size:22px;line-height:1.28}.lp-feature-row{grid-template-columns:23px 1fr;gap:12px;padding:19px 0}.lp-feature-row h4{font-size:15px}.lp-feature-row p{font-size:13.5px;line-height:1.55}.lp-audience-row{grid-template-columns:26px 24px 1fr;gap:11px;padding:24px 0}.lp-audience-row h3{font-size:17px;line-height:1.3}.lp-audience-row p{grid-column:3;font-size:13.5px;line-height:1.58}.lp-pricing-tier{padding:24px 20px}.lp-tier-heading h3{font-size:23px}.lp-pricing-tier>p{margin:20px 0;font-size:13.5px}.lp-pricing-tier li{font-size:13px}.lp-demo-grid{gap:24px}.lp-demo-grid p:not(.lp-kicker){font-size:14.5px;line-height:1.6}.lp-faq-grid{gap:28px}.lp-faq-item button{padding:18px 0;font-size:14px}.lp-faq-item p{font-size:13.5px;line-height:1.6}.lp-footer{padding-top:46px}.lp-footer-main{grid-template-columns:1fr 1fr;gap:32px 20px}.lp-footer-brand,.lp-footer-contact{grid-column:1/-1}.lp-footer-brand img{height:29px}.lp-footer-bottom{align-items:flex-start;flex-direction:column}.lp-footer-bottom>div{gap:16px}.lp-modal{padding:28px 22px}.lp-modal h2{font-size:22px}}
   @media(prefers-reduced-motion:reduce){.lp-page *{scroll-behavior:auto!important;transition:none!important;animation:none!important}.lp-motion-ready .lp-reveal{opacity:1!important;transform:none!important}}
 `;

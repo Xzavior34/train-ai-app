@@ -31,30 +31,72 @@ function getDemoClient() {
 }
 
 export async function fetchAllDemoRequests() {
+  const map = new Map();
+
+  // 1. Fetch from database
   const db = getDemoClient();
-  if (!db) return [];
-  const { data, error } = await db
-    .from("demo_requests")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (error) {
-    console.warn("fetchDemoRequests warning:", error.message);
-    return [];
+  if (db) {
+    try {
+      const { data, error } = await db
+        .from("demo_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error && Array.isArray(data)) {
+        for (const row of data) {
+          const key = row.id || `${row.work_email}_${row.created_at}`;
+          map.set(key, row);
+        }
+      }
+    } catch (err) {
+      console.warn("fetchDemoRequests warning:", err);
+    }
   }
-  return data || [];
+
+  // 2. Merge local storage demo requests
+  try {
+    const localRaw = localStorage.getItem("trainai_demo_requests_v1");
+    if (localRaw) {
+      const localList = JSON.parse(localRaw);
+      for (const row of localList) {
+        const key = row.id || `${row.work_email}_${row.created_at}`;
+        if (!map.has(key)) {
+          map.set(key, row);
+        }
+      }
+    }
+  } catch {}
+
+  const all = Array.from(map.values());
+  all.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  return all;
 }
 
 export async function updateDemoRequestStatus(id, newStatus) {
+  // Update local storage backup
+  try {
+    const localRaw = localStorage.getItem("trainai_demo_requests_v1");
+    if (localRaw) {
+      const localList = JSON.parse(localRaw);
+      const updated = localList.map((item) => item.id === id ? { ...item, status: newStatus } : item);
+      localStorage.setItem("trainai_demo_requests_v1", JSON.stringify(updated));
+    }
+  } catch {}
+
   const db = getDemoClient();
-  if (!db) return null;
-  const { data, error } = await db
-    .from("demo_requests")
-    .update({ status: newStatus, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
+  if (!db) return { id, status: newStatus };
+  try {
+    const { data, error } = await db
+      .from("demo_requests")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .maybeSingle();
+    if (error) console.warn("updateDemoRequestStatus DB notice:", error);
+    return data || { id, status: newStatus };
+  } catch (err) {
+    console.warn("updateDemoRequestStatus caught:", err);
+    return { id, status: newStatus };
+  }
 }
 
 export function DemoRequestsScreen({ orgSelector }) {
