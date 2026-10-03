@@ -336,7 +336,7 @@ export default function AuthPage({
                   </div>
                 )}
 
-                {!forgotResult.emailSent && !forgotResult.otp && (
+                {!forgotResult.emailSent && !forgotResult.otp && !forgotResult.rateLimited && (
                   <div style={{ padding: "14px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, marginBottom: 14 }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                       <Clock size={18} color="#C2410C" style={{ flexShrink: 0, marginTop: 1 }} />
@@ -347,19 +347,19 @@ export default function AuthPage({
                   </div>
                 )}
 
-                {/* Instant Recovery Code Fallback (When rate limited or email delayed) */}
-                {(forgotResult.rateLimited || forgotResult.otp) && (
+                {/* Instant recovery is only available when the server actually
+                    returned a one-time code. Never claim that a code exists
+                    merely because the mail provider is rate-limited. */}
+                {forgotResult.otp && (
                   <div style={{ padding: "14px", background: "#EFF6FF", border: "1.5px solid #BFDBFE", borderRadius: 8, marginBottom: 14 }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
                       <KeyRound size={18} color="#2563EB" style={{ flexShrink: 0, marginTop: 1 }} />
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#1E40AF" }}>
-                          {forgotResult.rateLimited ? "Instant Recovery Code Ready" : "Email Delayed? Use Instant Code"}
+                          Instant recovery code ready
                         </div>
                         <div style={{ fontSize: 12, color: "#3B82F6", lineHeight: 1.4, marginTop: 2 }}>
-                          {forgotResult.rateLimited
-                            ? "Mail provider rate limit active. Use your instant verification code below to set a new password right away:"
-                            : "If your email is delayed, you can reset your password immediately with this one-time code:"}
+                          If your email is delayed, you can reset your password immediately with this one-time code:
                         </div>
                       </div>
                     </div>
@@ -621,6 +621,17 @@ export default function AuthPage({
                             <RefreshCw size={14} /> Request a new reset email
                           </button>
                         )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {forgotResult.rateLimited && !forgotResult.otp && (
+                  <div style={{ padding: "14px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <Clock size={18} color="#C2410C" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <div style={{ fontSize: 12.5, color: "#9A3412", lineHeight: 1.45 }}>
+                        <strong>Too many reset emails were requested recently.</strong> No recovery code was created. Please wait a few minutes before resending, or enter a valid code from an earlier email below.
                       </div>
                     </div>
                   </div>
