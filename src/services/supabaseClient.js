@@ -39,41 +39,14 @@ function isValidHttpUrl(string) {
 }
 
 const DEFAULT_ORG_DB_URL = "https://djikuoucsuhdiyrhsduz.supabase.co";
-const DEFAULT_ORG_DB_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqaWt1b3Vjc3VoZGl5cmhzZHV6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTQ2MjMwNSwiZXhwIjoyMTA1MDM4MzA1fQ.Nz1OWlBcnw4wW3dLtKqjgSmOvQ4FI5YUl-3Knt9JqOY";
+const DEFAULT_ORG_DB_ANON_KEY = "sb_publishable_mZQWX6ByDTehCprpYsP85g_1NCE0NIx";
 
 const DEFAULT_SARA_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const DEFAULT_SARA_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6Implb2JnZ3J0eGV5Ynh2bHdweHZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzMyNjM1NywiZXhwIjoyMTAyOTAyMzU3fQ.uDCs11c1ti9xGopgIcrVAGALgvjrhYSLMZyu5A_F-_Y";
+const DEFAULT_SARA_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
 
-function getEnvVal(key) {
-  if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
-  }
-  if (typeof process !== "undefined" && process.env && process.env[key]) {
-    return process.env[key];
-  }
-  return "";
-}
-
-function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = [], fallbackKeyEnvs = [], defaultUrl = "", defaultKey = "") {
-  let url = (getEnvVal(primaryUrlEnv) || "").trim();
-  let anonKey = (getEnvVal(primaryKeyEnv) || "").trim();
-
-  if (!url) {
-    for (const fb of (Array.isArray(fallbackUrlEnvs) ? fallbackUrlEnvs : [fallbackUrlEnvs])) {
-      const val = (getEnvVal(fb) || "").trim();
-      if (val) { url = val; break; }
-    }
-  }
-  if (!anonKey) {
-    for (const fb of (Array.isArray(fallbackKeyEnvs) ? fallbackKeyEnvs : [fallbackKeyEnvs])) {
-      const val = (getEnvVal(fb) || "").trim();
-      if (val) { anonKey = val; break; }
-    }
-  }
-
-  url = normalizeSupabaseUrl(url);
-  if (!url && defaultUrl) url = normalizeSupabaseUrl(defaultUrl);
-  if (!anonKey && defaultKey) anonKey = defaultKey;
+function buildClient(projectUrl, publishableKey) {
+  const url = normalizeSupabaseUrl(projectUrl);
+  const anonKey = (publishableKey || "").trim();
 
   const isValidUrl = isValidHttpUrl(url);
   const isPlaceholderKey =
@@ -87,7 +60,7 @@ function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = [], fallbac
     try {
       client = createClient(url, anonKey);
     } catch (e) {
-      console.warn(`Failed to initialize Supabase client for ${primaryUrlEnv}:`, e);
+      console.warn("Failed to initialize Supabase client:", e);
       client = null;
     }
   }
@@ -96,20 +69,12 @@ function buildClient(primaryUrlEnv, primaryKeyEnv, fallbackUrlEnvs = [], fallbac
 
 // 1. Train AI 2.0 / Sara Foundation - dedicated project (jeobggrtxeybxvlwpxvn)
 const sara = buildClient(
-  "VITE_SUPABASE_SARA_URL",
-  "VITE_SUPABASE_SARA_ANON_KEY",
-  ["VITE_SUPABASE_URL"],
-  ["VITE_SUPABASE_ANON_KEY"],
   DEFAULT_SARA_URL,
   DEFAULT_SARA_ANON_KEY
 );
 
 // 2. Train AI 2.0 / Organization Database - central platform & tenant project (djikuoucsuhdiyrhsduz)
 const orgDb = buildClient(
-  "VITE_SUPABASE_ORGANIZATION_URL",
-  "VITE_SUPABASE_ORGANIZATION_ANON_KEY",
-  ["VITE_SUPABASE_SHARED_URL", "VITE_SUPABASE_B2B_URL", "VITE_SUPABASE_DIGITAL_TRAINING_URL"],
-  ["VITE_SUPABASE_SHARED_ANON_KEY", "VITE_SUPABASE_B2B_ANON_KEY", "VITE_SUPABASE_DIGITAL_TRAINING_ANON_KEY"],
   DEFAULT_ORG_DB_URL,
   DEFAULT_ORG_DB_ANON_KEY
 );
@@ -198,7 +163,11 @@ export function setActiveSupabaseProject(projectKey) {
  *   -> Train AI 2.0 / Organization Database (djikuoucsuhdiyrhsduz)
  */
 export function resolveProjectForSignUp(email = "", accountType = "learner") {
-  return SUPABASE_PROJECTS.SARA_FOUNDATION;
+  const normalized = email.trim().toLowerCase();
+  if (normalized.endsWith("@sarafoundationafrica.com") || normalized.endsWith("@sarafoundation.org")) {
+    return SUPABASE_PROJECTS.SARA_FOUNDATION;
+  }
+  return SUPABASE_PROJECTS.ORGANIZATION_DB;
 }
 
 /**
@@ -208,7 +177,11 @@ export function resolveProjectForSignUp(email = "", accountType = "learner") {
  * - All other accounts (individuals, organizations, platform owners) -> Train AI 2.0 / Organization Database (djikuoucsuhdiyrhsduz)
  */
 export function resolveProjectForSignIn(email = "") {
-  return SUPABASE_PROJECTS.SARA_FOUNDATION;
+  const normalized = email.trim().toLowerCase();
+  if (normalized.endsWith("@sarafoundationafrica.com") || normalized.endsWith("@sarafoundation.org")) {
+    return SUPABASE_PROJECTS.SARA_FOUNDATION;
+  }
+  return SUPABASE_PROJECTS.ORGANIZATION_DB;
 }
 
 export function fallbackProjectForSignIn(triedProjectKey) {
