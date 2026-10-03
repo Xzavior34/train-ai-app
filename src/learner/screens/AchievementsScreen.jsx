@@ -12,6 +12,7 @@ import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
 import { CERTIFICATE_THEMES } from "../../components/certificates/certificateThemes.js";
+import { getCanonicalDomain } from "../../services/emailService.js";
 
 function iconForCategory(category) {
   if (category === "streak") return Flame;
@@ -84,7 +85,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
         template: cert.certificate_templates || null,
         instructor: cert.courses?.instructor || user.organization || "Sara Foundation",
         skills: [cert.courses?.category || "Core Curriculum", "Applied Mastery"],
-        verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${cert.certificate_number || cert.id}`,
+        verificationUrl: `${getCanonicalDomain()}/verify/${cert.certificate_number || cert.id}`,
         bannerImage: cert.courses?.coverImageUrl || cert.courses?.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
       }));
     }
@@ -100,7 +101,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
       template: null,
       instructor: c.instructor || user.organization || "Sara Foundation",
       skills: [c.category || "General", "Track Completion"],
-      verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/verify/TAI-${c.id}`,
+      verificationUrl: `${getCanonicalDomain()}/verify/TAI-${c.id}`,
       bannerImage: c.coverImageUrl || c.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
     }));
   })();

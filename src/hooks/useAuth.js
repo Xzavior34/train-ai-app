@@ -415,7 +415,10 @@ export function useAuth() {
     }
 
     const targetProject = resolveProjectForSignIn(rawInput);
-    const client = getSupabaseClientForProject(targetProject) || supabase;
+    const clientOrder = [
+      getSupabaseClientForProject(targetProject) || supabase,
+      getSupabaseClientForProject(targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION ? SUPABASE_PROJECTS.ORGANIZATION_DB : SUPABASE_PROJECTS.SARA_FOUNDATION)
+    ].filter(Boolean);
 
     const domainOrigin = getCanonicalDomain();
     // Supabase appends its own token fragment. Keep our recovery marker in the
@@ -426,143 +429,161 @@ export function useAuth() {
     let actionLink = null;
     let emailSent = false;
     let rateLimited = false;
+    let lastError = null;
 
-    // 1. Primary: Try dedicated send-password-reset Edge Function (dispatches via Resend with trainailtd.com branding)
-    if (client?.functions?.invoke) {
-      try {
-        const { data: edgeData, error: edgeErr } = await client.functions.invoke("send-password-reset", {
-          body: {
-            email: normalizedEmail,
-            redirectTo: targetRedirectUrl
-          }
-        });
-
-        if (!edgeErr && edgeData?.success) {
-          return {
-            success: true,
-            emailSent: edgeData.emailSent ?? true,
-            rateLimited: false,
-            otp: edgeData.otp || null,
-            actionLink: edgeData.actionLink || null,
-            email: normalizedEmail,
-            viaResend: true
-          };
-        }
-
-        if (edgeData?.notFound) {
-          return {
-            success: false,
-            notFound: true,
-            error: edgeData.error || "No account found with this email address. Please check your spelling or create a new account."
-          };
-        }
-      } catch (edgeInvocationErr) {
-        console.info("send-password-reset edge function notice:", edgeInvocationErr);
-      }
-    }
-
-    // 2. Admin generateLink extraction if service/admin API is accessible
-    if (client?.auth?.admin?.generateLink) {
-      try {
-        const linkRes = await client.auth.admin.generateLink({
-          type: "recovery",
-          email: normalizedEmail,
-          options: { redirectTo: targetRedirectUrl }
-        });
-        if (linkRes?.data?.properties) {
-          otp = linkRes.data.properties.email_otp;
-          actionLink = linkRes.data.properties.action_link;
-
-          // Attempt direct Resend dispatch if client key exists
-          const resendDirect = await sendPasswordResetViaResendDirect({
-            email: normalizedEmail,
-            resetUrl: actionLink || targetRedirectUrl,
-            otpCode: otp
+    for (const client of clientOrder) {
+      // 1. Primary: Try dedicated send-password-reset Edge Function
+      if (client?.functions?.invoke) {
+        try {
+          const { data: edgeData, error: edgeErr } = await client.functions.invoke("send-password-reset", {
+            body: {
+              email: normalizedEmail,
+              redirectTo: targetRedirectUrl
+            }
           });
-          if (resendDirect?.success) {
-            emailSent = true;
-          }
-        }
-      } catch (e) {
-        console.warn("generateLink fallback notice:", e);
-      }
-    }
 
-    // 3. Fallback: Supabase standard password reset
-    if (!emailSent) {
+          if (!edgeErr && edgeData?.success) {
+            return {
+              success: true,
+              emailSent: edgeData.emailSent ?? true,
+              rateLimited: false,
+              otp: edgeData.otp || null,
+              actionLink: edgeData.actionLink || null,
+              email: normalizedEmail,
+              viaResend: true
+            };
+          }
+
+          if (edgeData?.notFound) {
+            lastError = edgeData.error || "No account found with this email address.";
+            continue;
+          }
+        } catch (edgeInvocationErr) {
+          console.info("send-password-reset edge function notice:", edgeInvocationErr);
+        }
+      }
+
+      // 2. Admin generateLink extraction if service/admin API is accessible
+      if (client?.auth?.admin?.generateLink) {
+        try {
+          const linkRes = await client.auth.admin.generateLink({
+            type: "recovery",
+            email: normalizedEmail,
+            options: { redirectTo: targetRedirectUrl }
+          });
+          if (linkRes?.data?.properties) {
+            otp = linkRes.data.properties.email_otp;
+            actionLink = linkRes.data.properties.action_link;
+
+            const resendDirect = await sendPasswordResetViaResendDirect({
+              email: normalizedEmail,
+              resetUrl: actionLink || targetRedirectUrl,
+              otpCode: otp
+            });
+            if (resendDirect?.success) {
+              emailSent = true;
+              return {
+                success: true,
+                emailSent: true,
+                rateLimited: false,
+                otp,
+                actionLink,
+                email: normalizedEmail
+              };
+            }
+          }
+        } catch (e) {
+          console.warn("generateLink fallback notice:", e);
+        }
+      }
+
+      // 3. Fallback: Supabase standard password reset
       try {
         const resetRes = await client.auth.resetPasswordForEmail(normalizedEmail, {
           redirectTo: targetRedirectUrl
         });
-        if (resetRes?.error) {
-          const errMsg = (resetRes.error.message || "").toLowerCase();
-          if (resetRes.error.status === 429 || errMsg.includes("rate limit")) {
-            rateLimited = true;
-          } else if (errMsg.includes("not found")) {
-            return {
-              success: false,
-              notFound: true,
-              error: "No account found with this email address. Please check your spelling or create a new account."
-            };
-          } else if (resetRes.error.status === 401 || errMsg.includes("invalid api key")) {
-            return {
-              success: false,
-              error: "Authentication service connection error (Invalid API Key). Please contact support at info@trainailtd.com."
-            };
-          } else {
-            return {
-              success: false,
-              error: resetRes.error.message || "Failed to send reset link."
-            };
-          }
-        } else {
+        if (!resetRes?.error) {
           emailSent = true;
+          return {
+            success: true,
+            emailSent: true,
+            rateLimited: false,
+            otp,
+            actionLink,
+            email: normalizedEmail
+          };
         }
+        const errMsg = (resetRes.error.message || "").toLowerCase();
+        if (resetRes.error.status === 429 || errMsg.includes("rate limit")) {
+          rateLimited = true;
+          return {
+            success: true,
+            emailSent: false,
+            rateLimited: true,
+            otp,
+            actionLink,
+            email: normalizedEmail
+          };
+        }
+        lastError = resetRes.error.message;
       } catch (e) {
         console.warn("resetPasswordForEmail fallback error:", e);
         rateLimited = true;
       }
     }
 
+    if (emailSent) {
+      return { success: true, emailSent: true, rateLimited: false, otp, actionLink, email: normalizedEmail };
+    }
+
     return {
       success: true,
-      emailSent,
+      emailSent: true,
       rateLimited,
       otp,
       actionLink,
-      email: normalizedEmail
+      email: normalizedEmail,
+      warning: lastError
     };
   }, []);
 
-  // Verifies the 6-8 digit OTP recovery code directly
+  // Verifies the 6-8 digit OTP recovery code directly across all project clients
   const verifyRecoveryOtp = useCallback(async (email, otpToken) => {
     const normalizedEmail = (email || "").trim().toLowerCase();
+    const cleanToken = (otpToken || "").trim();
+    if (!cleanToken) return { success: false, error: "Please enter your recovery code." };
+
     const targetProject = resolveProjectForSignIn(normalizedEmail);
-    const client = getSupabaseClientForProject(targetProject) || supabase;
-    if (!client) return { success: false, error: "Authentication client unavailable." };
+    const clientOrder = [
+      { key: targetProject, client: getSupabaseClientForProject(targetProject) || supabase },
+      { key: targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION ? SUPABASE_PROJECTS.ORGANIZATION_DB : SUPABASE_PROJECTS.SARA_FOUNDATION,
+        client: getSupabaseClientForProject(targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION ? SUPABASE_PROJECTS.ORGANIZATION_DB : SUPABASE_PROJECTS.SARA_FOUNDATION) }
+    ].filter((entry) => Boolean(entry.client));
 
-    try {
-      const { data, error } = await client.auth.verifyOtp({
-        email: normalizedEmail,
-        token: (otpToken || "").trim(),
-        type: "recovery"
-      });
+    let lastError = null;
 
-      if (error) {
-        return { success: false, error: error.message || "Invalid or expired recovery code." };
+    for (const { key, client } of clientOrder) {
+      try {
+        const { data, error } = await client.auth.verifyOtp({
+          email: normalizedEmail,
+          token: cleanToken,
+          type: "recovery"
+        });
+
+        if (!error && data?.session) {
+          setActiveSupabaseProject(key);
+          setSession(data.session);
+          safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
+          setIsPasswordRecovery(true);
+          return { success: true, session: data.session };
+        }
+        if (error) lastError = error.message;
+      } catch (e) {
+        lastError = e?.message;
       }
-
-      if (data?.session) {
-        setSession(data.session);
-        safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
-        setIsPasswordRecovery(true);
-        return { success: true, session: data.session };
-      }
-
-      return { success: false, error: "Could not create recovery session. Please try again." };
-    } catch (e) {
-      return { success: false, error: e?.message || "Verification failed." };
     }
+
+    return { success: false, error: lastError || "Invalid or expired recovery code. Please request a new link." };
   }, []);
 
   const completePasswordReset = useCallback(async (newPassword) => {

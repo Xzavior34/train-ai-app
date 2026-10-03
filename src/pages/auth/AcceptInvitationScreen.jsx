@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowRight, Building2, User, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { validateInvitationToken, acceptInvitation } from "../../lib/api/invitations.js";
+import { getCanonicalDomain } from "../../services/emailService.js";
 
 // Rendered instead of the whole app whenever the URL has a `?invite=TOKEN`
 // param on boot (there's no router here, so App.jsx detects that query
@@ -258,7 +259,7 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
                   Permanent Workspace Access
                 </div>
                 <div style={{ fontSize: 12.5, color: "#10142A", wordBreak: "break-all", background: "#FFFFFF", padding: "8px 10px", borderRadius: 6, border: "1px solid #E2E8F0" }}>
-                  {typeof window !== "undefined" ? `${window.location.origin}/?org=${invitation.organization_slug || invitation.organization_id}` : ""}
+                  {`${getCanonicalDomain()}/?org=${invitation.organization_slug || invitation.organization_id}`}
                 </div>
                 <div style={{ fontSize: 11.5, color: "#656C86", lineHeight: 1.4 }}>
                   Bookmark this permanent link to return directly to your {invitation.organization_name} workspace at any time.

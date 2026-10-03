@@ -11,6 +11,7 @@ import {
   fetchStudyGroupMessages, sendStudyGroupMessage,
 } from "../../lib/api/schemaHelper.js";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
+import { getCanonicalDomain } from "../../services/emailService.js";
 
 const DEFAULT_GROUP_IMAGES = [
   "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=80",
@@ -273,7 +274,7 @@ export function MentorStudyGroupsScreen({ mentorId, orgId, orgSelector }) {
                         showToast("Create a real study group first to get a shareable link.");
                         return;
                       }
-                      const link = `${window.location.origin}${window.location.pathname}?screen=studygroups&groupId=${activeGroup.id}`;
+                      const link = `${getCanonicalDomain()}/?screen=studygroups&groupId=${activeGroup.id}`;
                       try {
                         await navigator.clipboard.writeText(link);
                         showToast("Invite link copied to clipboard!");

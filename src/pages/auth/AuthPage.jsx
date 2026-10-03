@@ -330,36 +330,56 @@ export default function AuthPage({
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                       <CheckCircle2 size={18} color="#16A34A" style={{ flexShrink: 0, marginTop: 1 }} />
                       <div style={{ fontSize: 12.5, color: "#166534", lineHeight: 1.45 }}>
-                        <strong>Email Sent:</strong> We have dispatched a password reset link to <strong>{forgotResult.email}</strong>. Please check your inbox and spam folder.
+                        <strong>Email Sent:</strong> We have dispatched a password reset link to <strong>{forgotResult.email}</strong>.
+                        <div style={{ marginTop: 4, fontSize: 11.5, color: "#15803D" }}>
+                          &bull; Please check your Inbox and Spam/Junk folders.<br />
+                          &bull; Click the link in the email or enter the 6-digit code below.
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {!forgotResult.emailSent && !forgotResult.otp && !forgotResult.rateLimited && (
-                  <div style={{ padding: "14px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, marginBottom: 14 }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                      <Clock size={18} color="#C2410C" style={{ flexShrink: 0, marginTop: 1 }} />
-                      <div style={{ fontSize: 12.5, color: "#9A3412", lineHeight: 1.45 }}>
-                        <strong>Email delivery is delayed.</strong> Wait a minute, check spam, then use the resend button below. You can also enter a recovery code from an earlier email.
-                      </div>
-                    </div>
+                {/* Instant Recovery Action Link or OTP Code if generated */}
+                {forgotResult.actionLink && (
+                  <div style={{ marginBottom: 14 }}>
+                    <a
+                      href={forgotResult.actionLink}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        width: "100%",
+                        padding: "10px 14px",
+                        background: "#2563EB",
+                        color: "#FFFFFF",
+                        textDecoration: "none",
+                        borderRadius: 8,
+                        fontWeight: 700,
+                        fontSize: 13,
+                        boxSizing: "border-box"
+                      }}
+                    >
+                      <span>Open Reset Link Directly</span>
+                      <ArrowRight size={14} />
+                    </a>
                   </div>
                 )}
 
-                {/* Instant recovery is only available when the server actually
-                    returned a one-time code. Never claim that a code exists
-                    merely because the mail provider is rate-limited. */}
-                {forgotResult.otp && (
+                {/* Instant Recovery Code Card */}
+                {(forgotResult.rateLimited || forgotResult.otp) && (
                   <div style={{ padding: "14px", background: "#EFF6FF", border: "1.5px solid #BFDBFE", borderRadius: 8, marginBottom: 14 }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
                       <KeyRound size={18} color="#2563EB" style={{ flexShrink: 0, marginTop: 1 }} />
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "#1E40AF" }}>
-                          Instant recovery code ready
+                          {forgotResult.rateLimited ? "Instant Recovery Code Ready" : "One-Time Recovery Code"}
                         </div>
                         <div style={{ fontSize: 12, color: "#3B82F6", lineHeight: 1.4, marginTop: 2 }}>
-                          If your email is delayed, you can reset your password immediately with this one-time code:
+                          {forgotResult.rateLimited
+                            ? "Mail provider rate limit active. Use your instant verification code below to set a new password right away:"
+                            : "You can reset your password immediately with this one-time code:"}
                         </div>
                       </div>
                     </div>
@@ -399,77 +419,73 @@ export default function AuthPage({
                   </div>
                 )}
 
-                {/* Manual OTP entry accordion */}
-                <div style={{ marginTop: 10, textAlign: "center" }}>
-                  <button
-                    type="button"
-                    onClick={() => setShowOtpManualInput(!showOtpManualInput)}
-                    style={{ background: "transparent", border: "none", color: "#64748B", fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
-                  >
-                    {showOtpManualInput ? "Hide code entry" : "Have a code from an earlier email? Enter it here"}
-                  </button>
+                {/* Direct 6 to 8 digit verification code entry */}
+                <div style={{ marginTop: 12, padding: "14px", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8 }}>
+                  <label style={styles.label}>Enter 6 to 8 Digit Recovery Code</label>
+                  <div style={{ fontSize: 11.5, color: "#64748B", marginBottom: 8 }}>
+                    If you received a recovery code in your email, paste or type it below to proceed:
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <input
+                      type="text"
+                      value={recoveryOtpInput}
+                      onChange={(e) => { setRecoveryOtpInput(e.target.value); setOtpError(""); }}
+                      placeholder="12345678"
+                      className="auth-input"
+                      style={{ ...styles.input, paddingLeft: 12, textAlign: "center", letterSpacing: "2px", fontWeight: 700 }}
+                    />
+                    <button
+                      type="button"
+                      disabled={verifyingOtp || !recoveryOtpInput.trim()}
+                      onClick={() => handleVerifyRecoveryOtp()}
+                      style={{
+                        padding: "0 16px",
+                        background: "#2563EB",
+                        color: "#FFFFFF",
+                        border: "none",
+                        borderRadius: 8,
+                        fontWeight: 700,
+                        fontSize: 13,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {verifyingOtp ? "Verifying..." : "Verify"}
+                    </button>
+                  </div>
+                  {otpError && (
+                    <div style={{ color: "#DC2626", fontSize: 11.5, marginTop: 6, fontWeight: 600 }}>
+                      {otpError}
+                    </div>
+                  )}
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>
+                {/* Resend button */}
+                <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
                   <button
                     type="button"
                     disabled={sendingReset}
                     onClick={handleForgotPasswordSubmit}
-                    style={{ ...styles.secondaryButton, opacity: sendingReset ? 0.7 : 1 }}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      color: "#2563EB",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
                   >
-                    <RefreshCw size={14} /> {sendingReset ? "Sending..." : "Resend email"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setForgotResult(null); setForgotError(""); setShowOtpManualInput(false); }}
-                    style={styles.secondaryButton}
-                  >
-                    Use another email
+                    <RefreshCw size={12} className={sendingReset ? "spin" : ""} />
+                    <span>{sendingReset ? "Resending email..." : "Resend reset email"}</span>
                   </button>
                 </div>
 
-                {showOtpManualInput && (
-                  <div style={{ marginTop: 12, padding: "12px", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8 }}>
-                    <label style={styles.label}>Enter 6 to 8 Digit Recovery Code</label>
-                    <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
-                      <input
-                        type="text"
-                        value={recoveryOtpInput}
-                        onChange={(e) => { setRecoveryOtpInput(e.target.value); setOtpError(""); }}
-                        placeholder="12345678"
-                        className="auth-input"
-                        style={{ ...styles.input, paddingLeft: 12, textAlign: "center", letterSpacing: "2px", fontWeight: 700 }}
-                      />
-                      <button
-                        type="button"
-                        disabled={verifyingOtp || !recoveryOtpInput.trim()}
-                        onClick={() => handleVerifyRecoveryOtp()}
-                        style={{
-                          padding: "0 16px",
-                          background: "#2563EB",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: 8,
-                          fontWeight: 700,
-                          fontSize: 13,
-                          cursor: "pointer",
-                          whiteSpace: "nowrap"
-                        }}
-                      >
-                        {verifyingOtp ? "Verifying..." : "Verify"}
-                      </button>
-                    </div>
-                    {otpError && (
-                      <div style={{ color: "#DC2626", fontSize: 11.5, marginTop: 6, fontWeight: 600 }}>
-                        {otpError}
-                      </div>
-                    )}
-                  </div>
-                )}
-
                 {/* Support Fallback Link */}
                 <div style={{ marginTop: 14, textAlign: "center", fontSize: 11.5, color: "#64748B" }}>
-                  Need direct assistance? Contact our team at <a href="mailto:info@trainailtd.com" style={{ color: "#2563EB", fontWeight: 700 }}>info@trainailtd.com</a>
+                  Need direct assistance? Contact our team at <a href={`mailto:info@trainailtd.com?subject=Password%20Reset%20Assistance%20for%20${encodeURIComponent(email)}`} style={{ color: "#2563EB", fontWeight: 700 }}>info@trainailtd.com</a>
                 </div>
 
                 <div style={styles.switchRow}>

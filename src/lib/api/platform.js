@@ -2,6 +2,7 @@ import { supabase, activeProject } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { isRealDatabaseId } from "../mockDataManager.js";
 import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
+import { getCanonicalDomain, sendInvitationViaResendDirect } from "../../services/emailService.js";
 
 // Admin-scoped queries. RLS (up_select_org_admin in 0006_rls_policies.sql)
 // restricts these to members of the caller's own organization automatically
@@ -930,13 +931,7 @@ export async function createInvitation({ email, role = "learner", organizationId
     if (result && !result.success) throw new Error(result.error || "Invitation failed");
     edgeFunctionOk = true;
   } catch (edgeErr) {
-    // Fallback: call the same create_user_invitation() DB function directly
-    // (GRANT EXECUTE ... TO authenticated) - no email gets sent (e.g. if
-    // RESEND_API_KEY isn't configured on this deployment), but the
-    // invitation row + secure token are created identically, so the invite
-    // link this app generates (see PeopleScreen/AcceptInvitationScreen)
-    // still works end to end.
-    console.warn("invite-user edge function unavailable, falling back to create_user_invitation RPC:", edgeErr);
+    console.warn("invite-user edge function unavailable, falling back to create_user_invitation RPC with direct Resend mailer:", edgeErr);
     const { data: rpcResult, error: rpcError } = await supabase.rpc("create_user_invitation", {
       p_email: trimmedEmail,
       p_organization_id: organizationId,
@@ -960,10 +955,24 @@ export async function createInvitation({ email, role = "learner", organizationId
     .limit(1)
     .maybeSingle();
   if (fetchErr) throw fetchErr;
+
+  // Dispatch via Resend if edge function was skipped
+  if (!edgeFunctionOk && row?.token) {
+    const inviteUrl = `${getCanonicalDomain()}/?invite=${row.token}`;
+    let orgName = "Train AI";
+    try {
+      const { data: orgData } = await supabase.from("organizations").select("name").eq("id", organizationId).maybeSingle();
+      if (orgData?.name) orgName = orgData.name;
+    } catch {}
+    sendInvitationViaResendDirect({
+      email: trimmedEmail,
+      orgName,
+      role,
+      inviteUrl
+    }).catch((e) => console.info("Direct Resend invite dispatch note:", e));
+  }
+
   return row;
-  // (edgeFunctionOk is intentionally unused beyond documenting intent in
-  // case a future caller wants to distinguish "emailed" vs "created only".)
-  void edgeFunctionOk;
 }
 
 export async function revokeInvitation(invitationId) {
@@ -4322,7 +4331,7 @@ export async function resendInvitation(invitation) {
 // AcceptInvitationScreen from.
 export function buildInvitationLink(invitation) {
   if (!invitation?.token) return null;
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const origin = getCanonicalDomain();
   return `${origin}/?invite=${invitation.token}`;
 }
 
