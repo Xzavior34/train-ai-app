@@ -462,6 +462,15 @@ export function useLearnerData(session, screen, params) {
     ? gamificationStatsQuery.data.lessons_completed
     : computedLessonsDone;
 
+  // This query must be initialized before the user summary reads it below.
+  // Referencing a later const works neither during the initial render nor in
+  // minified production builds because it is still in JavaScript's temporal
+  // dead zone.
+  const myCertificatesQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return [];
+    return fetchMyCertificates(session.user.id);
+  }, [session?.user?.id]);
+
   const user = {
     email: userProfileQuery.data?.email || session?.user?.email || "",
     name: userProfileQuery.data?.display_name || session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner",
@@ -816,11 +825,6 @@ export function useLearnerData(session, screen, params) {
   const complianceAssignmentsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
     return fetchMyComplianceAssignments(session.user.id);
-  }, [session?.user?.id]);
-
-  const myCertificatesQuery = useSupabaseQuery(async () => {
-    if (!session?.user?.id) return [];
-    return fetchMyCertificates(session.user.id);
   }, [session?.user?.id]);
 
   const feedbackNotesQuery = useSupabaseQuery(async () => {
