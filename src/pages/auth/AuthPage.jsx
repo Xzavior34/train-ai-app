@@ -610,7 +610,18 @@ export default function AuthPage({
                   <div style={styles.errorBox}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                       <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
-                      <span>{resetError}</span>
+                      <div style={{ flex: 1 }}>
+                        <span>{resetError}</span>
+                        {(resetError.toLowerCase().includes("session") || resetError.toLowerCase().includes("expired")) && (
+                          <button
+                            type="button"
+                            onClick={() => { setResetError(""); setMode("forgot"); }}
+                            style={{ ...styles.secondaryButton, width: "100%", marginTop: 10, borderColor: "#FCA5A5", color: "#B91C1C" }}
+                          >
+                            <RefreshCw size={14} /> Request a new reset email
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

@@ -44,7 +44,7 @@ const DEFAULT_ORG_DB_ANON_KEY = "sb_publishable_mZQWX6ByDTehCprpYsP85g_1NCE0NIx"
 const DEFAULT_SARA_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const DEFAULT_SARA_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
 
-function buildClient(projectUrl, publishableKey) {
+function buildClient(projectUrl, publishableKey, authOptions = {}) {
   const url = normalizeSupabaseUrl(projectUrl);
   const anonKey = (publishableKey || "").trim();
 
@@ -58,7 +58,7 @@ function buildClient(projectUrl, publishableKey) {
   let client = null;
   if (configured) {
     try {
-      client = createClient(url, anonKey);
+      client = createClient(url, anonKey, { auth: authOptions });
     } catch (e) {
       console.warn("Failed to initialize Supabase client:", e);
       client = null;
@@ -68,15 +68,28 @@ function buildClient(projectUrl, publishableKey) {
 }
 
 // 1. Train AI 2.0 / Sara Foundation - dedicated project (jeobggrtxeybxvlwpxvn)
+const isRecoveryRedirect = (() => {
+  try {
+    const locationValue = `${window.location.search || ""}${window.location.hash || ""}`;
+    return locationValue.includes("recovery=1") || locationValue.includes("type=recovery") || locationValue.includes("error_code=");
+  } catch {
+    return false;
+  }
+})();
+
 const sara = buildClient(
   DEFAULT_SARA_URL,
-  DEFAULT_SARA_ANON_KEY
+  DEFAULT_SARA_ANON_KEY,
+  { detectSessionInUrl: true }
 );
 
 // 2. Train AI 2.0 / Organization Database - central platform & tenant project (djikuoucsuhdiyrhsduz)
 const orgDb = buildClient(
   DEFAULT_ORG_DB_URL,
-  DEFAULT_ORG_DB_ANON_KEY
+  DEFAULT_ORG_DB_ANON_KEY,
+  // Both clients parsing the same recovery URL races: one removes the token
+  // before the issuing project can establish its session.
+  { detectSessionInUrl: !isRecoveryRedirect }
 );
 
 const CLIENTS_BY_PROJECT = {

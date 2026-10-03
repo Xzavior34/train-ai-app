@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase, resolveProjectForSignIn, resolveProjectForSignUp, setActiveSupabaseProject, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../services/supabaseClient.js";
 import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../lib/roleRouting.js";
 import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime } from "../lib/authRateLimiter.js";
@@ -13,6 +13,7 @@ export function useAuth() {
   });
   const [authError, setAuthError] = useState(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const recoveryProjectRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,6 +109,8 @@ export function useAuth() {
       if (client?.auth?.onAuthStateChange) {
         const { data: listener } = client.auth.onAuthStateChange((event, newSession) => {
           if (event === "PASSWORD_RECOVERY") {
+            recoveryProjectRef.current = projKey;
+            setActiveSupabaseProject(projKey);
             setIsPasswordRecovery(true);
           }
           if (event === "SIGNED_OUT") {
@@ -566,22 +569,23 @@ export function useAuth() {
     if (!supabase) return { success: false, error: "Not available in demo mode." };
     try {
       let lastError = null;
-      // 1. Try currently active primary client
-      if (supabase?.auth?.updateUser) {
-        const { error } = await supabase.auth.updateUser({ password: newPassword });
-        if (!error) {
-          setIsPasswordRecovery(false);
-          return { success: true };
-        }
-        lastError = error;
-      }
+      const orderedProjects = [
+        recoveryProjectRef.current,
+        SUPABASE_PROJECTS.SARA_FOUNDATION,
+        SUPABASE_PROJECTS.ORGANIZATION_DB,
+      ].filter((value, index, values) => value && values.indexOf(value) === index);
 
-      // 2. If primary failed or session is on alternate project, try other project clients
-      for (const projKey of [SUPABASE_PROJECTS.ORGANIZATION_DB, SUPABASE_PROJECTS.SARA_FOUNDATION]) {
+      for (const projKey of orderedProjects) {
         const client = getSupabaseClientForProject(projKey);
-        if (client && client !== supabase && client?.auth?.updateUser) {
+        if (client?.auth?.updateUser) {
+          const { data: sessionData } = await client.auth.getSession();
+          if (!sessionData?.session) {
+            lastError = new Error("Auth session missing");
+            continue;
+          }
           const { error } = await client.auth.updateUser({ password: newPassword });
           if (!error) {
+            recoveryProjectRef.current = null;
             setIsPasswordRecovery(false);
             return { success: true };
           }
@@ -589,7 +593,12 @@ export function useAuth() {
         }
       }
 
-      if (lastError) return { success: false, error: lastError.message || "Could not update your password." };
+      if (lastError) {
+        const message = (lastError.message || "").toLowerCase().includes("session missing")
+          ? "Your secure reset session is missing or has expired. Please request a new reset email and open only the newest link."
+          : lastError.message || "Could not update your password.";
+        return { success: false, error: message, sessionMissing: message.includes("session is missing") };
+      }
       setIsPasswordRecovery(false);
       return { success: true };
     } catch (e) {
