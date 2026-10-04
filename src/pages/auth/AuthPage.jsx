@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock, KeyRound, HelpCircle, RefreshCw } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
-import { registerOrganization, joinDefaultOrganization, attributeReferralSignupIfPending } from "../../lib/api/organizations.js";
+import {
+  registerOrganization,
+  joinDefaultOrganization,
+  attributeReferralSignupIfPending,
+  joinOrganizationByReferral,
+  getPendingOrganizationJoin,
+  fetchOrganizationPublicInfo
+} from "../../lib/api/organizations.js";
 import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../../lib/authRateLimiter.js";
 
 export default function AuthPage({
@@ -55,6 +62,22 @@ export default function AuthPage({
       );
     }
   }, []);
+
+  // Organization Referral & Join Link target info
+  const [targetOrgTarget, setTargetOrgTarget] = useState(() => {
+    return orgParam || getPendingOrganizationJoin()?.orgIdOrSlug || "";
+  });
+  const [orgInfo, setOrgInfo] = useState(null);
+
+  useEffect(() => {
+    const target = orgParam || getPendingOrganizationJoin()?.orgIdOrSlug || "";
+    setTargetOrgTarget(target);
+    if (target) {
+      fetchOrganizationPublicInfo(target).then((info) => {
+        if (info) setOrgInfo(info);
+      }).catch(() => {});
+    }
+  }, [orgParam]);
 
   // Rate Limiting on Password attempts
   const [rateLimit, setRateLimit] = useState(() => getRateLimitStatus(initialEmail));
@@ -189,8 +212,11 @@ export default function AuthPage({
         setSubmitting(false);
         return;
       }
-      await onSignIn(email, password);
+      const signInRes = await onSignIn(email, password);
       setRateLimit(getRateLimitStatus(email));
+      if (!signInRes?.error && targetOrgTarget) {
+        await joinOrganizationByReferral(targetOrgTarget, "learner").catch(() => {});
+      }
     } else {
       const signupRole = "learner";
       const result = await onSignUp(email, password, signupRole, accountType);
@@ -208,7 +234,11 @@ export default function AuthPage({
           return;
         }
       } else if (accountType === "learner" && !result?.error) {
-        joinDefaultOrganization().catch(() => {});
+        if (targetOrgTarget) {
+          await joinOrganizationByReferral(targetOrgTarget, "learner").catch(() => {});
+        } else {
+          joinDefaultOrganization().catch(() => {});
+        }
       }
     }
     setSubmitting(false);
@@ -270,11 +300,36 @@ export default function AuthPage({
           </span>
         </div>
 
-        {orgParam && (
-          <div style={{ padding: "10px 12px", background: "#EFF6FF", border: "1px solid #BFDBFE", borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-            <Building2 size={16} color="#2563EB" />
-            <div style={{ fontSize: 12.5, color: "#1E40AF", fontWeight: 600 }}>
-              Organization Workspace Portal ({orgParam})
+        {targetOrgTarget && (
+          <div style={{
+            padding: "12px 14px",
+            background: "#EFF6FF",
+            border: "1.5px solid #BFDBFE",
+            borderRadius: 10,
+            marginBottom: 18,
+            display: "flex",
+            alignItems: "center",
+            gap: 10
+          }}>
+            <div style={{
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: "#DBEAFE",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0
+            }}>
+              <Building2 size={18} color="#2563EB" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, color: "#1E40AF", fontWeight: 700, lineHeight: 1.3 }}>
+                Joining {orgInfo?.name || targetOrgTarget}
+              </div>
+              <div style={{ fontSize: 11.5, color: "#3B82F6", lineHeight: 1.35, marginTop: 2 }}>
+                {mode === "signup" ? "Sign up to automatically access your team's assigned courses and cohorts." : "Sign in to access your organization workspace."}
+              </div>
             </div>
           </div>
         )}

@@ -4,11 +4,12 @@ import {
   UserPlus, Search, X, Download, Trash2, FileText, ArrowUpRight, ArrowDownRight,
   Minus, Award, Eye, Pencil, ShieldCheck, Layers, UserMinus, RefreshCw, Link2,
   BookOpen, GraduationCap, MoreHorizontal, Save, CheckCircle2,
-  Mail, TrendingUp, AlertTriangle, Sparkles,
+  Mail, TrendingUp, AlertTriangle, Sparkles, Copy, Check, QrCode, Share2, Users, ExternalLink,
 } from "lucide-react";
 import { CERTIFICATE_THEMES } from "../../components/certificates/certificateThemes.js";
 import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { getOrganizationJoinUrl } from "../../lib/api/organizations.js";
 import {
   fetchOrgMembers, fetchPendingInvitations, createInvitation, revokeInvitation,
   updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly,
@@ -455,6 +456,187 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
 }
 
 /* ==========================================================================
+   Organization Shareable Join & Referral Link Card
+   ========================================================================= */
+export function OrganizationReferralCard({ orgId, showToast }) {
+  const [copied, setCopied] = useState(false);
+  const [copiedMsg, setCopiedMsg] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+
+  const joinUrl = getOrganizationJoinUrl(orgId || "demo-org-id");
+  const msgTemplate = `Hi everyone! Please click this link to join our organization workspace on Train AI and access all assigned courses and learning paths: ${joinUrl}`;
+
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(joinUrl);
+      setCopied(true);
+      if (showToast) showToast("Organization join link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      window.prompt("Copy this organization join link:", joinUrl);
+    }
+  }
+
+  async function handleCopyMessage() {
+    try {
+      await navigator.clipboard.writeText(msgTemplate);
+      setCopiedMsg(true);
+      if (showToast) showToast("Invite message template copied!");
+      setTimeout(() => setCopiedMsg(false), 2500);
+    } catch {
+      window.prompt("Copy this invite message:", msgTemplate);
+    }
+  }
+
+  return (
+    <div
+      style={{
+        padding: "16px 20px",
+        background: "linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(59,130,246,0.02) 100%)",
+        border: "1.5px solid rgba(37,99,235,0.22)",
+        borderRadius: 12,
+        marginBottom: 16,
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+      }}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 8,
+            background: "#EFF6FF", color: "#2563EB",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0
+          }}>
+            <Share2 size={18} />
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 13.5, fontWeight: 800, color: "var(--text)" }}>
+                Organization Shareable Invite &amp; Referral Link
+              </span>
+              <span style={{
+                fontSize: 10, fontWeight: 700, color: "#2563EB",
+                background: "#EFF6FF", padding: "2px 7px", borderRadius: 4,
+                textTransform: "uppercase", letterSpacing: ".04em"
+              }}>
+                Automated Join
+              </span>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2, lineHeight: 1.4 }}>
+              Share this single link with your team, cohort, or students. Anyone who signs up or logs in automatically joins your organization workspace without adding emails one by one.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{
+          flex: "1 1 280px",
+          display: "flex",
+          alignItems: "center",
+          background: "var(--bg-card, #FFFFFF)",
+          border: "1px solid var(--border)",
+          borderRadius: 8,
+          padding: "6px 12px",
+          minWidth: 0
+        }}>
+          <Link2 size={14} color="#64748B" style={{ flexShrink: 0, marginRight: 8 }} />
+          <span style={{
+            fontSize: 12.5,
+            fontFamily: "monospace",
+            color: "#2563EB",
+            fontWeight: 600,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: 1
+          }}>
+            {joinUrl}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          className="ta-btn ta-btn-primary ta-btn-sm"
+          onClick={handleCopyLink}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700 }}
+        >
+          {copied ? <Check size={14} color="#FFFFFF" /> : <Copy size={14} />}
+          {copied ? "Copied!" : "Copy Link"}
+        </button>
+
+        <button
+          type="button"
+          className="ta-btn ta-btn-outline ta-btn-sm"
+          onClick={handleCopyMessage}
+          title="Copy ready-made WhatsApp or Slack invite message"
+          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+        >
+          {copiedMsg ? <Check size={14} color="#16A34A" /> : <Mail size={14} />}
+          {copiedMsg ? "Message Copied!" : "Copy Message"}
+        </button>
+
+        <button
+          type="button"
+          className="ta-btn ta-btn-outline ta-btn-sm"
+          onClick={() => setShowQr(true)}
+          title="Display QR code for in-person workshops"
+          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+        >
+          <QrCode size={14} /> QR Code
+        </button>
+      </div>
+
+      {showQr && (
+        <PortalModal isOpen={showQr} onClose={() => setShowQr(false)} maxWidth={360} zIndex={10000}>
+          <div style={{ textAlign: "center", padding: "10px 0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ fontWeight: 800, fontSize: 16 }}>Organization QR Code</div>
+              <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setShowQr(false)}><X size={16} /></button>
+            </div>
+            <p style={{ fontSize: 12.5, color: "var(--text-2)", marginBottom: 16 }}>
+              Scan with any mobile camera to sign up and join your organization workspace automatically.
+            </p>
+            <div style={{
+              display: "inline-block",
+              padding: 16,
+              background: "#FFFFFF",
+              borderRadius: 12,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              border: "1px solid #E2E8F0"
+            }}>
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(joinUrl)}`}
+                alt="Organization Invite QR Code"
+                style={{ width: 220, height: 220, display: "block" }}
+              />
+            </div>
+            <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "center" }}>
+              <button
+                type="button"
+                className="ta-btn ta-btn-primary ta-btn-sm"
+                onClick={handleCopyLink}
+              >
+                <Copy size={13} /> {copied ? "Link Copied!" : "Copy Link"}
+              </button>
+              <button
+                type="button"
+                className="ta-btn ta-btn-outline ta-btn-sm"
+                onClick={() => setShowQr(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </PortalModal>
+      )}
+    </div>
+  );
+}
+
+/* ==========================================================================
    Screen
    ========================================================================= */
 export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
@@ -466,6 +648,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const [certFileUrl, setCertFileUrl] = useState("");
   const [issuingCert, setIssuingCert] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteModalTab, setInviteModalTab] = useState("link"); // "link" | "single" | "bulk"
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkEmails, setBulkEmails] = useState("");
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
@@ -663,6 +846,9 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 <div style={{ fontSize: 11, color: "var(--primary)", marginTop: 2 }}>Members with points on the board</div>
               </div>
             </div>
+
+            {/* Organization Shareable Invite & Referral Link Card */}
+            <OrganizationReferralCard orgId={orgId} showToast={showToast} />
 
             <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
@@ -1076,146 +1262,80 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         )}
 
         {tab === "invites" && (
-          <div className="ta-card">
-            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginBottom: 14 }}>
-              <Mail size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} />
-              Resending cancels the stale invite and issues a fresh 7-day token, which is what actually
-              re-sends the email. Copy link is the fallback for when email delivery isn't configured.
-            </div>
-            <div className="ta-table-wrap">
-            <table className="ta-table">
-              <thead><tr><th>Email</th><th>Role</th><th>Sent</th><th>Expires</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
-              <tbody>
-                {invitationsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading invitations...</td></tr>}
-                {!invitationsQuery.loading && invitations.length === 0 && <tr><td colSpan={5} className="ta-empty">No pending invitations.</td></tr>}
-                {invitations.map(i => (
-                  <tr key={i.id}>
-                    <td style={{ overflowWrap: "anywhere" }}>{i.email}</td>
-                    <td><Tag>{ROLE_LABEL[i.role] || i.role}</Tag></td>
-                    <td>{new Date(i.created_at).toLocaleDateString()}</td>
-                    <td>
-                      {i.expires_at
-                        ? <span style={{ color: new Date(i.expires_at) < new Date() ? "var(--danger)" : "var(--text-2)" }}>
-                            {new Date(i.expires_at).toLocaleDateString()}
-                          </span>
-                        : "N/A"}
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      <div className="ta-row ta-gap6" style={{ justifyContent: "flex-end", flexWrap: "wrap" }}>
-                        <button
-                          className="ta-btn ta-btn-outline ta-btn-sm"
-                          disabled={invitingBusy === i.id}
-                          title="Cancel this invite and send a fresh one"
-                          onClick={async () => {
-                            setInvitingBusy(i.id);
-                            try {
-                              const res = await resendInvitation(i);
-                              showToast(res.success ? `Invitation resent to ${i.email}.` : res.error);
-                              invitationsQuery.refetch();
-                            } finally {
-                              setInvitingBusy(null);
-                            }
-                          }}
-                        >
-                          <RefreshCw size={13} /> {invitingBusy === i.id ? "Sending..." : "Resend"}
-                        </button>
-                        <button
-                          className="ta-btn ta-btn-outline ta-btn-sm"
-                          title="Copy the invite link to share directly"
-                          onClick={async () => {
-                            const link = buildInvitationLink(i);
-                            if (!link) { showToast("This invitation has no token to link to."); return; }
-                            try {
-                              await navigator.clipboard.writeText(link);
-                              showToast("Invite link copied to your clipboard.");
-                            } catch {
-                              window.prompt("Copy this invite link:", link);
-                            }
-                          }}
-                        >
-                          <Link2 size={13} /> Copy link
-                        </button>
-                        <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={async () => {
-                          await revokeInvitation(i.id);
-                          invitationsQuery.refetch();
-                          showToast("Invitation revoked.");
-                        }}>Revoke</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-          </div>
-        )}
+          <div className="ta-col ta-gap16">
+            <OrganizationReferralCard orgId={orgId} showToast={showToast} />
 
-        {tab === "dsar" && (
-          <div className="ta-card">
-            <div className="ta-row ta-between" style={{ marginBottom: 16, gap: 10, flexWrap: "wrap" }}>
-              <div style={{ fontSize: 12.5, color: "var(--text-2)" }}>
-                <FileText size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} />
-                GDPR data-subject-access requests submitted by learners (export, erasure & rectification). Platform-wide. Not filtered by organization.
+            <div className="ta-card">
+              <div style={{ fontSize: 12.5, color: "var(--text-2)", marginBottom: 14 }}>
+                <Mail size={13} style={{ verticalAlign: "-2px", marginRight: 5 }} />
+                Resending cancels the stale invite and issues a fresh 7-day token, which is what actually
+                re-sends the email. Copy link is the fallback for when email delivery isn't configured.
               </div>
-              <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={() => dsarQuery.refetch()}>Refresh</button>
-            </div>
-            <div className="ta-table-wrap">
-            <table className="ta-table">
-              <thead><tr><th>User / Email</th><th>Type</th><th>Status</th><th>Requested</th><th>Actions</th></tr></thead>
-              <tbody>
-                {dsarQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading data requests...</td></tr>}
-                {!dsarQuery.loading && dsarRequests.length === 0 && <tr><td colSpan={5} className="ta-empty">No data requests submitted yet.</td></tr>}
-                {dsarRequests.map(r => (
-                  <tr key={r.id}>
-                    <td><span style={{ fontWeight: 600, overflowWrap: "anywhere" }}>{r.email || r.user_id}</span></td>
-                    <td><Tag>{r.request_type}</Tag></td>
-                    <td><Tag tone={r.status === "pending" ? "warning" : r.status === "completed" ? "success" : "danger"}>{r.status}</Tag></td>
-                    <td>{r.requested_at ? new Date(r.requested_at).toLocaleDateString() : "N/A"}</td>
-                    <td>
-                      {r.status !== "pending" ? (
-                        <span style={{ fontSize: 12, color: "var(--text-2)" }}>Resolved</span>
-                      ) : (
-                        <div className="ta-row ta-gap6" style={{ flexWrap: "wrap" }}>
-                          {r.request_type === "export" && (
-                            <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={async () => {
+              <div className="ta-table-wrap">
+              <table className="ta-table">
+                <thead><tr><th>Email</th><th>Role</th><th>Sent</th><th>Expires</th><th style={{ textAlign: "right" }}>Actions</th></tr></thead>
+                <tbody>
+                  {invitationsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading invitations...</td></tr>}
+                  {!invitationsQuery.loading && invitations.length === 0 && <tr><td colSpan={5} className="ta-empty">No pending invitations.</td></tr>}
+                  {invitations.map(i => (
+                    <tr key={i.id}>
+                      <td style={{ overflowWrap: "anywhere" }}>{i.email}</td>
+                      <td><Tag>{ROLE_LABEL[i.role] || i.role}</Tag></td>
+                      <td>{new Date(i.created_at).toLocaleDateString()}</td>
+                      <td>
+                        {i.expires_at
+                          ? <span style={{ color: new Date(i.expires_at) < new Date() ? "var(--danger)" : "var(--text-2)" }}>
+                              {new Date(i.expires_at).toLocaleDateString()}
+                            </span>
+                          : "N/A"}
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        <div className="ta-row ta-gap6" style={{ justifyContent: "flex-end", flexWrap: "wrap" }}>
+                          <button
+                            className="ta-btn ta-btn-outline ta-btn-sm"
+                            disabled={invitingBusy === i.id}
+                            title="Cancel this invite and send a fresh one"
+                            onClick={async () => {
+                              setInvitingBusy(i.id);
                               try {
-                                await downloadUserDataExport(r.user_id, r.email || r.user_id);
-                                await updateDSARRequestStatus(r.id, "completed");
-                                dsarQuery.refetch();
-                                showToast(`Export downloaded for ${r.email || r.user_id}`);
-                              } catch (e) {
-                                showToast(e?.message || "Could not complete this export request");
+                                const res = await resendInvitation(i);
+                                showToast(res.success ? `Invitation resent to ${i.email}.` : res.error);
+                                invitationsQuery.refetch();
+                              } finally {
+                                setInvitingBusy(null);
                               }
-                            }}><Download size={13} /> Export</button>
-                          )}
-                          {r.request_type === "erasure" && (
-                            <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={async () => {
-                              // deleteUserCascade is destructive & immediate - only ever run
-                              // from here, by an admin, after they've reviewed the request,
-                              // never directly from learner-facing UI.
-                              if (!window.confirm(`Permanently erase all data for ${r.email || r.user_id}? This cannot be undone.`)) return;
+                            }}
+                          >
+                            <RefreshCw size={13} /> {invitingBusy === i.id ? "Sending..." : "Resend"}
+                          </button>
+                          <button
+                            className="ta-btn ta-btn-outline ta-btn-sm"
+                            title="Copy the invite link to share directly"
+                            onClick={async () => {
+                              const link = buildInvitationLink(i);
+                              if (!link) { showToast("This invitation has no token to link to."); return; }
                               try {
-                                const res = await deleteUserCascade(r.user_id);
-                                await updateDSARRequestStatus(r.id, res.success ? "completed" : "failed", res.success ? undefined : JSON.stringify(res.details));
-                                dsarQuery.refetch();
-                                showToast(res.success ? `Data erased for ${r.email || r.user_id}` : "Erasure partially failed. Check logs");
-                              } catch (e) {
-                                showToast(e?.message || "Could not complete this erasure request");
+                                await navigator.clipboard.writeText(link);
+                                showToast("Invite link copied to your clipboard.");
+                              } catch {
+                                window.prompt("Copy this invite link:", link);
                               }
-                            }}><Trash2 size={13} /> Erase data</button>
-                          )}
-                          <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={async () => {
-                            await updateDSARRequestStatus(r.id, "rejected");
-                            dsarQuery.refetch();
-                            showToast("Request dismissed.");
-                          }}><X size={13} /> Dismiss</button>
+                            }}
+                          >
+                            <Link2 size={13} /> Copy link
+                          </button>
+                          <button className="ta-btn ta-btn-danger ta-btn-sm" onClick={async () => {
+                            await revokeInvitation(i.id);
+                            invitationsQuery.refetch();
+                            showToast("Invitation revoked.");
+                          }}>Revoke</button>
                         </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              </div>
             </div>
           </div>
         )}
@@ -1223,22 +1343,82 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         <PortalModal
           isOpen={inviteOpen}
           onClose={() => setInviteOpen(false)}
-          maxWidth={540}
+          maxWidth={580}
           zIndex={9999}
         >
-          <div className="ta-row ta-between">
-            <div className="ta-title" style={{ fontSize: 18 }}>{bulkMode ? "Bulk Invite Users" : "Invite New User"}</div>
-            <div className="ta-row ta-gap8">
-              <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setBulkMode((v) => !v)}>
-                {bulkMode ? "Single invite" : "Bulk invite"}
-              </button>
-              <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setInviteOpen(false)}><X size={16} /></button>
+          <div className="ta-row ta-between" style={{ marginBottom: 14 }}>
+            <div>
+              <div className="ta-title" style={{ fontSize: 18 }}>Invite &amp; Add Members</div>
+              <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>
+                Share an automated join link or invite users directly by email
+              </div>
             </div>
+            <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setInviteOpen(false)}><X size={16} /></button>
           </div>
-          {!bulkMode ? (
+
+          <div style={{
+            display: "flex",
+            gap: 6,
+            background: "var(--bg-card, #F8FAFC)",
+            padding: 4,
+            borderRadius: 8,
+            border: "1px solid var(--border)",
+            marginBottom: 16
+          }}>
+            {[
+              { id: "link", label: "Shareable Link (Recommended)" },
+              { id: "single", label: "Single Email" },
+              { id: "bulk", label: "Bulk / CSV" }
+            ].map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setInviteModalTab(t.id)}
+                style={{
+                  flex: 1,
+                  padding: "6px 10px",
+                  fontSize: 12,
+                  fontWeight: inviteModalTab === t.id ? 700 : 500,
+                  color: inviteModalTab === t.id ? "#2563EB" : "var(--text-2)",
+                  background: inviteModalTab === t.id ? "var(--bg, #FFFFFF)" : "transparent",
+                  borderRadius: 6,
+                  border: inviteModalTab === t.id ? "1px solid rgba(37,99,235,0.2)" : "1px solid transparent",
+                  boxShadow: inviteModalTab === t.id ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {inviteModalTab === "link" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{
+                padding: "12px 14px",
+                background: "rgba(37,99,235,0.05)",
+                border: "1px solid rgba(37,99,235,0.18)",
+                borderRadius: 8,
+                fontSize: 12.5,
+                color: "var(--text-2)",
+                lineHeight: 1.5
+              }}>
+                <strong style={{ color: "#2563EB" }}>Zero email management:</strong> Share this referral join link with your cohort, team, or class. When anyone registers or signs in using this link, they are automatically placed into your workspace with immediate access to assigned courses.
+              </div>
+
+              <OrganizationReferralCard orgId={orgId} showToast={showToast} />
+
+              <div className="ta-row ta-gap10" style={{ justifyContent: "flex-end", marginTop: 6 }}>
+                <button className="ta-btn ta-btn-primary" onClick={() => setInviteOpen(false)}>Done</button>
+              </div>
+            </div>
+          )}
+
+          {inviteModalTab === "single" && (
             <>
-              <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 6, marginBottom: 14 }}>
-                Invite a new member to join your organization workspace.
+              <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 4, marginBottom: 14 }}>
+                Send a direct email invitation to a specific colleague or student.
               </p>
               <div className="ta-grid ta-grid-2 ta-mt12">
                 <div>
@@ -1267,9 +1447,11 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 }}>Send Invitation</button>
               </div>
             </>
-          ) : (
+          )}
+
+          {inviteModalTab === "bulk" && (
             <>
-              <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 8 }}>
+              <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
                 Enter one email per line. Each user receives an automated onboarding invitation.
               </div>
               <textarea className="ta-input ta-mt10" rows={5} placeholder={"jane@company.com\nbob@company.com\n..."} value={bulkEmails} onChange={(e) => setBulkEmails(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }} />
@@ -1298,7 +1480,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                       }
                     }
                     setBulkSubmitting(false);
-                    setInviteOpen(false); setBulkEmails(""); setBulkMode(false);
+                    setInviteOpen(false); setBulkEmails("");
                     invitationsQuery.refetch();
                     showToast(`${succeeded} invitation${succeeded === 1 ? "" : "s"} sent${failed > 0 ? `, ${failed} failed` : ""}.`);
                   }}
@@ -1325,7 +1507,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                       const result = await bulkImportUsers(rows, orgId, null);
                       showToast(`${result.succeeded.length} invited${result.failed.length > 0 ? `, ${result.failed.length} failed (${result.failed.slice(0, 3).map((f) => f.email).join(", ")}${result.failed.length > 3 ? "..." : ""})` : ""}.`);
                       invitationsQuery.refetch();
-                      setInviteOpen(false); setBulkMode(false);
+                      setInviteOpen(false);
                     } finally {
                       setBulkSubmitting(false);
                       e.target.value = "";

@@ -2,7 +2,8 @@ import { supabase, activeProject } from "../supabaseClient.js";
 import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { isRealDatabaseId } from "../mockDataManager.js";
 import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
-import { getCanonicalDomain, sendInvitationViaResendDirect } from "../../services/emailService.js";
+import { getCanonicalDomain, sendInvitationViaResendDirect, sendMigrationPasswordResetViaResend } from "../../services/emailService.js";
+
 
 // Admin-scoped queries. RLS (up_select_org_admin in 0006_rls_policies.sql)
 // restricts these to members of the caller's own organization automatically
@@ -1840,6 +1841,90 @@ export async function removeCohortLearnerCourse(id) {
   if (error) throw error;
 }
 
+// Bulk assigns courses or tracks to cohort learners (e.g. for incoming cohort of 20+ learners).
+// Maps courses matching track category (Code, No-Code, Entrepreneurship) or a specific course to userIds.
+export async function batchAssignTrackCoursesToCohort({ cohortId, userIds, courseIds, trackCategory, assignedBy }) {
+  if (!supabase) return { success: true, count: (userIds || []).length };
+  if (!cohortId || !Array.isArray(userIds) || !userIds.length) {
+    return { success: false, error: "Missing cohort ID or target users." };
+  }
+
+  try {
+    let targetCourseIds = courseIds || [];
+
+    // If a track category is provided, find all courses matching the category
+    if (trackCategory && (!targetCourseIds || !targetCourseIds.length)) {
+      const { data: catCourses } = await supabase
+        .from("courses")
+        .select("id, title, category")
+        .ilike("category", `%${trackCategory}%`);
+      if (catCourses && catCourses.length) {
+        targetCourseIds = catCourses.map((c) => c.id);
+      }
+    }
+
+    // If still no courses found, fetch all available courses to assign the primary ones
+    if (!targetCourseIds || !targetCourseIds.length) {
+      const { data: allCourses } = await supabase.from("courses").select("id").limit(3);
+      if (allCourses && allCourses.length) {
+        targetCourseIds = allCourses.map((c) => c.id);
+      }
+    }
+
+    if (!targetCourseIds.length) {
+      return { success: false, error: "No courses found to assign." };
+    }
+
+    // Check existing assignments to avoid duplicates
+    const { data: existing } = await supabase
+      .from("cohort_learner_courses")
+      .select("user_id, course_id")
+      .eq("cohort_id", cohortId);
+
+    const existingSet = new Set((existing || []).map((e) => `${e.user_id}:${e.course_id}`));
+
+    const rowsToInsert = [];
+    const enrollmentsToUpsert = [];
+
+    for (const uId of userIds) {
+      for (const cId of targetCourseIds) {
+        if (!existingSet.has(`${uId}:${cId}`)) {
+          rowsToInsert.push({
+            cohort_id: cohortId,
+            user_id: uId,
+            course_id: cId,
+            assigned_by: assignedBy || null,
+          });
+          enrollmentsToUpsert.push({
+            user_id: uId,
+            course_id: cId,
+            status: "enrolled",
+            progress_percentage: 0,
+          });
+        }
+      }
+    }
+
+    if (rowsToInsert.length > 0) {
+      const { error: insertErr } = await supabase.from("cohort_learner_courses").insert(rowsToInsert);
+      if (insertErr) console.warn("batchAssignTrackCoursesToCohort insert warning:", insertErr);
+
+      // Also ensure course_enrollments exists so learners see it on their dashboard
+      try {
+        await supabase.from("course_enrollments").upsert(enrollmentsToUpsert, { onConflict: "user_id,course_id", ignoreDuplicates: true });
+      } catch (e) {
+        console.warn("batch enrollments upsert note:", e);
+      }
+    }
+
+    return { success: true, count: rowsToInsert.length, totalAssigned: userIds.length * targetCourseIds.length };
+  } catch (err) {
+    console.error("batchAssignTrackCoursesToCohort error:", err);
+    return { success: false, error: err?.message || "Could not complete bulk track course assignment." };
+  }
+}
+
+
 // cohort_resources - real columns confirmed against
 // supabase/migrations/0007_missing_schema.sql: id, cohort_id (FK -> cohorts,
 // on delete cascade), created_by (NOT NULL, FK -> user_profiles(id) - same
@@ -2240,30 +2325,90 @@ export async function createInAppNotificationsForUsers(userIds, { title, message
    ========================================================================= */
 
 export async function fetchLearningTracksSummary() {
+  const CANONICAL_TRACKS = [
+    { id: "Code", name: "Code (AI & Software)", keywords: ["code", "python", "software", "developer", "engineering", "programming"] },
+    { id: "No-Code", name: "No-Code (Automation & AI)", keywords: ["no-code", "automation", "prompt", "workflow", "design", "tools"] },
+    { id: "Entrepreneurship", name: "Entrepreneurship (Business & Product)", keywords: ["entrepreneurship", "business", "product", "startup", "leadership", "management"] },
+  ];
+
   if (!supabase) {
     const projData = DEMO_PROJECT_DATA[activeProject] || DEMO_PROJECT_DATA.digital_training;
-    return projData.tracks;
+    return projData.tracks || CANONICAL_TRACKS.map(t => ({ id: t.id, name: t.name, courses: 2, learners: 12, courseTitles: [`${t.id} Fundamentals`, `Advanced ${t.id}`] }));
   }
-  const { data: courses, error } = await supabase.from("courses").select("id, title, category").not("category", "is", null);
-  if (error) throw error;
+
+  const { data: courses, error } = await supabase.from("courses").select("id, title, category");
+  if (error) {
+    console.warn("fetchLearningTracksSummary courses fetch warning:", error);
+  }
+
+  const allCourses = courses || [];
   const byCategory = {};
-  for (const c of courses || []) {
-    if (!byCategory[c.category]) byCategory[c.category] = [];
-    byCategory[c.category].push(c);
+
+  // Initialize canonical tracks
+  CANONICAL_TRACKS.forEach(ct => {
+    byCategory[ct.id] = { name: ct.name, courses: [] };
+  });
+
+  for (const c of allCourses) {
+    const cat = (c.category || "").trim();
+    const title = (c.title || "").toLowerCase();
+    let assigned = false;
+
+    // Direct match to canonical
+    for (const ct of CANONICAL_TRACKS) {
+      if (cat.toLowerCase() === ct.id.toLowerCase() || ct.keywords.some(k => cat.toLowerCase().includes(k) || title.includes(k))) {
+        byCategory[ct.id].courses.push(c);
+        assigned = true;
+        break;
+      }
+    }
+
+    if (!assigned) {
+      if (!byCategory[cat || "General AI"]) {
+        byCategory[cat || "General AI"] = { name: cat || "General AI", courses: [] };
+      }
+      byCategory[cat || "General AI"].courses.push(c);
+    }
   }
-  const rows = await Promise.all(Object.entries(byCategory).map(async ([name, categoryCourses]) => {
-    const courseIds = categoryCourses.map((c) => c.id);
-    const { count } = await supabase.from("course_enrollments").select("id", { count: "exact", head: true }).in("course_id", courseIds);
+
+  const rows = await Promise.all(Object.entries(byCategory).map(async ([trackId, trackData]) => {
+    const courseIds = trackData.courses.map((c) => c.id);
+    let count = 0;
+    if (courseIds.length > 0) {
+      try {
+        const { count: enrollCount } = await supabase.from("course_enrollments").select("id", { count: "exact", head: true }).in("course_id", courseIds);
+        count = enrollCount || 0;
+      } catch (e) {
+        console.warn("track count note:", e);
+      }
+    }
     return {
-      id: name,
-      name,
+      id: trackId,
+      name: trackData.name,
       courses: courseIds.length,
-      learners: count || 0,
-      courseTitles: categoryCourses.map((c) => c.title).filter(Boolean),
+      learners: count,
+      courseTitles: trackData.courses.map((c) => c.title).filter(Boolean),
     };
   }));
+
   return rows;
 }
+
+/**
+ * Triggers a 2.0 Migration & Password Reset email for legacy users via Resend.
+ */
+export async function triggerMigrationPasswordReset({ email, displayName, userId }) {
+  if (!email) return { success: false, error: "Email address is required." };
+  try {
+    const domain = getCanonicalDomain();
+    const resetUrl = `${domain}/?view=auth&recovery=1&email=${encodeURIComponent(email)}`;
+    const result = await sendMigrationPasswordResetViaResend({ email, displayName, resetUrl });
+    return { success: true, ...result };
+  } catch (err) {
+    return { success: false, error: err?.message || "Could not trigger password reset email." };
+  }
+}
+
 
 export async function fetchSaraEmails() {
   if (!supabase) return [];

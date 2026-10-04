@@ -14,6 +14,187 @@ import { setDemoRoleForEmail } from "../roleRouting.js";
 // a role option inside the same generic form.
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1"; // must match useAuth.js
+export const PENDING_ORG_JOIN_STORAGE_KEY = "trainai_pending_org_join";
+
+/**
+ * Generates the canonical shareable join/referral URL for an organization.
+ */
+export function getOrganizationJoinUrl(orgIdOrSlug) {
+  if (!orgIdOrSlug) return "";
+  let base = "https://trainailtd.com";
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".local")) {
+      base = window.location.origin;
+    }
+  }
+  return `${base}/?join=${encodeURIComponent(orgIdOrSlug)}`;
+}
+
+/**
+ * Stores a pending organization referral/join intent when a user arrives via ?join=... or ?org=...
+ */
+export function trackOrganizationJoinIntent(orgIdOrSlug, options = {}) {
+  if (!orgIdOrSlug || typeof window === "undefined") return;
+  try {
+    const payload = {
+      orgIdOrSlug: String(orgIdOrSlug).trim(),
+      role: options.role || "learner",
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(PENDING_ORG_JOIN_STORAGE_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+/**
+ * Retrieves pending organization referral/join data if stored in this browser.
+ */
+export function getPendingOrganizationJoin() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PENDING_ORG_JOIN_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clears pending organization referral/join data.
+ */
+export function clearPendingOrganizationJoin() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(PENDING_ORG_JOIN_STORAGE_KEY);
+  } catch {}
+}
+
+/**
+ * Fetches public display info (name, logo, slug) for an organization by ID or slug.
+ */
+export async function fetchOrganizationPublicInfo(orgIdOrSlug) {
+  const target = (orgIdOrSlug || "").trim();
+  if (!target) return null;
+
+  if (!supabase) {
+    return { id: target, name: target.replace(/[-_]/g, " ").replace(/\b\w/g, l => l.toUpperCase()), slug: target };
+  }
+
+  try {
+    let query = supabase.from("organizations").select("id, name, slug, logo_url");
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target);
+    if (isUuid) {
+      query = query.eq("id", target);
+    } else {
+      query = query.eq("slug", target);
+    }
+    const { data, error } = await query.maybeSingle();
+    if (error || !data) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Automatically joins the authenticated user into an organization by ID or Slug.
+ * Used by organization referral links to automate invitations and eliminate manual email typing.
+ */
+export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "learner") {
+  const target = (orgIdOrSlug || "").trim();
+  if (!target) return { success: false, error: "Missing organization identifier." };
+
+  if (!supabase) {
+    // Demo mode: link the session locally
+    try {
+      const saved = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.user) {
+          parsed.user.user_metadata = {
+            ...(parsed.user.user_metadata || {}),
+            organization_id: target,
+            role: preferredRole
+          };
+        }
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
+      }
+    } catch {}
+    clearPendingOrganizationJoin();
+    return { success: true, organizationId: target, demo: true };
+  }
+
+  try {
+    // 1. Try dedicated RPC if available in database
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("join_organization_by_invite", {
+      p_org_target: target,
+      p_role: preferredRole
+    });
+
+    if (!rpcErr && rpcData?.success) {
+      clearPendingOrganizationJoin();
+      return rpcData;
+    }
+  } catch (rpcErr) {
+    console.info("join_organization_by_invite RPC notice, executing direct fallback:", rpcErr);
+  }
+
+  // 2. Direct client query & membership attachment fallback
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData?.user;
+    if (!user) return { success: false, error: "Must be signed in to join an organization." };
+
+    // Resolve organization row by ID or Slug
+    let orgQuery = supabase.from("organizations").select("id, name, slug");
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target);
+    if (isUuid) {
+      orgQuery = orgQuery.eq("id", target);
+    } else {
+      orgQuery = orgQuery.eq("slug", target);
+    }
+
+    const { data: org, error: orgError } = await orgQuery.maybeSingle();
+    if (orgError || !org) {
+      return { success: false, error: "Organization not found." };
+    }
+
+    // Attach user to user_profiles
+    await supabase.from("user_profiles").upsert({
+      id: user.id,
+      organization_id: org.id,
+      role: preferredRole,
+      display_name: user.user_metadata?.display_name || user.email?.split("@")[0] || "Member"
+    }, { onConflict: "id" });
+
+    // Attach user to organization_members
+    await supabase.from("organization_members").upsert({
+      organization_id: org.id,
+      user_id: user.id,
+      role: "member",
+      status: "active",
+      joined_at: new Date().toISOString()
+    }, { onConflict: "organization_id,user_id" });
+
+    // Ensure user_roles has the role
+    await supabase.from("user_roles").upsert({
+      user_id: user.id,
+      role: preferredRole
+    }, { onConflict: "user_id,role" });
+
+    clearPendingOrganizationJoin();
+    return {
+      success: true,
+      organizationId: org.id,
+      organizationName: org.name,
+      slug: org.slug
+    };
+  } catch (e) {
+    console.error("joinOrganizationByReferral error:", e);
+    return { success: false, error: e?.message || "Could not join organization workspace." };
+  }
+}
 
 /**
  * Places a previously-unaffiliated individual learner into the "Tech
@@ -25,9 +206,6 @@ const AUTH_STORAGE_KEY = "trainai_active_session_v1"; // must match useAuth.js
  */
 export async function joinDefaultOrganization() {
   if (!supabase) {
-    // Demo mode: no backend, nothing to persist. Unlike registerOrganization,
-    // this deliberately does not patch the session role - an individual
-    // learner should stay in the learner app, not the admin one.
     return { success: true, demo: true };
   }
   try {
