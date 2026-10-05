@@ -27,3 +27,11 @@ enabled = false
 
 [auth.external.apple]
 enabled = false
+
+# Payment providers cannot attach a Supabase user JWT to webhook requests.
+# Authenticity is verified inside each function with the provider signature.
+[functions.paystack-webhook]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false

@@ -26,6 +26,7 @@ import { CreditsCheckoutScreen } from "./screens/CreditsCheckoutScreen.jsx";
 import { PaymentCallbackScreen } from "./screens/PaymentCallbackScreen.jsx";
 import { useCredits } from "./hooks/useCredits.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
+import { supabase } from "../lib/supabaseClient.js";
 import { enrollInCourse, markLessonComplete, addCourseNote, postCourseDiscussionMessage, addLessonNote, markNotificationRead, submitQuizAnswers, fetchSafeQuizQuestions, awardAIQuizCompletionPoints, requestCourseApplication, fetchMyCourseApplications,
   fetchAssessmentForCourse, fetchSafeAssessmentQuestions, fetchMyAssessmentAttempt, submitAssessmentAttempt,
   fetchCertificateForCourse, fetchMyCertificateForCourse, requestCertificate,
@@ -523,7 +524,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       // Integration), used as the real session link instead of inventing a
       // throwaway one when a learner or the instructor books a session.
       meetingUrl: m.personal_meeting_url || m.meeting_url || "",
-      name: m.name || m.user_profiles?.display_name || (m.title?.includes("Marketing") ? "Inem Emmanuel" : m.title?.includes("Data") ? "Loveth Omokaro" : m.title?.includes("Full-Stack") ? "Olumide Shode" : "Sara Foundation"),
+      name: m.name || m.user_profiles?.display_name || (m.title?.includes("Marketing") ? "Inem Emmanuel" : m.title?.includes("Data") ? "Loveth Omokaro" : m.title?.includes("Full-Stack") ? "Olumide Shode" : "Train AI Mentor"),
       avatar: m.avatar || m.user_profiles?.avatar_url || m.avatar_url || null,
       title: m.title || "Instructor",
       tagline: m.tagline || "",
@@ -661,6 +662,19 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   const applicationsQuery = useSupabaseQuery(async () => {
     if (!session?.user?.id) return [];
     return fetchMyCourseApplications(session.user.id);
+  }, [session?.user?.id]);
+  useEffect(() => {
+    if (!supabase || !session?.user?.id) return;
+    const channel = supabase
+      .channel(`learner_course_applications_${session.user.id}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "course_applications",
+        filter: `user_id=eq.${session.user.id}`,
+      }, () => applicationsQuery.refetch())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [session?.user?.id]);
   function myApplicationForCourse(courseId) {
     return (applicationsQuery.data || []).find(a => a.course_id === courseId) || null;

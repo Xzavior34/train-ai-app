@@ -82,7 +82,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
         grade: "Verified Completion",
         scorePct: cert.score_pct || 100,
         template: cert.certificate_templates || null,
-        instructor: cert.courses?.instructor || user.organization || "Sara Foundation",
+        instructor: cert.courses?.instructor || user.organization || "Train AI",
         skills: [cert.courses?.category || "Core Curriculum", "Applied Mastery"],
         verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${cert.certificate_number || cert.id}`,
         bannerImage: cert.courses?.coverImageUrl || cert.courses?.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
@@ -98,7 +98,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
       grade: "100% Complete",
       scorePct: 100,
       template: null,
-      instructor: c.instructor || user.organization || "Sara Foundation",
+      instructor: c.instructor || user.organization || "Train AI",
       skills: [c.category || "General", "Track Completion"],
       verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/verify/TAI-${c.id}`,
       bannerImage: c.coverImageUrl || c.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
@@ -707,7 +707,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
                   type="button"
                   className="tai-btn tai-btn-outline tai-btn-sm"
                   onClick={() => {
-                    const text = `I just earned my verified certificate in "${selectedCertificate.title}" on Train AI with Sara Foundation! 🎓`;
+                    const text = `I just earned my verified certificate in "${selectedCertificate.title}" on Train AI! 🎓`;
                     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(selectedCertificate.verificationUrl)}`;
                     window.open(url, "_blank");
                   }}

@@ -3,7 +3,7 @@ import { supabase, resolveProjectForSignIn, resolveProjectForSignUp, setActiveSu
 import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../lib/roleRouting.js";
 import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime } from "../lib/authRateLimiter.js";
 import { safeStorage } from "../lib/storage.js";
-import { getCanonicalDomain, CANONICAL_DOMAIN, sendPasswordResetViaResendDirect } from "../services/emailService.js";
+import { getCanonicalDomain, CANONICAL_DOMAIN } from "../services/emailService.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1";
 
@@ -36,6 +36,40 @@ export function useAuth() {
       let resolvedSession = null;
       let resolvedProject = null;
 
+      // Consume password-recovery tokens ourselves so the correct Supabase
+      // project owns the session. With two projects, automatic URL parsing is
+      // inherently racy and previously produced "Auth session missing".
+      const hashParams = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const recoveryType = hashParams.get("type");
+      if (accessToken && refreshToken && recoveryType === "recovery") {
+        try {
+          const payloadPart = accessToken.split(".")[1] || "";
+          const padded = payloadPart.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(payloadPart.length / 4) * 4, "=");
+          const payload = JSON.parse(window.atob(padded));
+          const issuer = String(payload?.iss || "");
+          const tokenProject = issuer.includes("djikuoucsuhdiyrhsduz")
+            ? SUPABASE_PROJECTS.ORGANIZATION_DB
+            : issuer.includes("jeobggrtxeybxvlwpxvn")
+              ? SUPABASE_PROJECTS.SARA_FOUNDATION
+              : null;
+          const tokenClient = tokenProject ? getSupabaseClientForProject(tokenProject) : null;
+          if (tokenClient) {
+            const { data, error } = await tokenClient.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+            if (!error && data?.session) {
+              resolvedSession = data.session;
+              resolvedProject = tokenProject;
+              recoveryProjectRef.current = tokenProject;
+              setIsPasswordRecovery(true);
+              window.history.replaceState({}, document.title, "/?view=auth&recovery=1");
+            }
+          }
+        } catch (error) {
+          console.warn("Could not establish password recovery session:", error);
+        }
+      }
+
       const fetchSessionWithTimeout = async (client) => {
         if (!client) return null;
         try {
@@ -49,7 +83,7 @@ export function useAuth() {
 
       // 1. First probe primary project client
       const primaryClient = supabase || getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
-      if (primaryClient) {
+      if (!resolvedSession && primaryClient) {
         resolvedSession = await fetchSessionWithTimeout(primaryClient);
         if (resolvedSession) {
           resolvedProject = Object.values(SUPABASE_PROJECTS).find(
@@ -277,45 +311,8 @@ export function useAuth() {
     const client = getSupabaseClientForProject(targetProject) || supabase;
 
     if (client) {
-      // 1. Use Admin API to create user with email_confirm: true
-      // This bypasses email service rate limits and prevents users being stuck unconfirmed
-      if (client.auth?.admin?.createUser) {
-        try {
-          const adminCreateRes = await client.auth.admin.createUser({
-            email: normalizedEmail,
-            password,
-            email_confirm: true,
-            user_metadata: { role: finalRole }
-          });
-
-          if (adminCreateRes?.data?.user) {
-            // Immediately sign the user in with password to obtain active session
-            const signInRes = await client.auth.signInWithPassword({
-              email: normalizedEmail,
-              password
-            });
-            if (signInRes?.data?.session) {
-              setSession(signInRes.data.session);
-              safeStorage.setItem(AUTH_STORAGE_KEY, signInRes.data.session);
-              return { data: signInRes.data, error: null };
-            }
-            return { data: adminCreateRes.data, error: null };
-          }
-
-          if (adminCreateRes?.error) {
-            const errMsg = (adminCreateRes.error.message || "").toLowerCase();
-            if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
-              const msg = "An account with this email already exists. Please sign in instead.";
-              setAuthError(msg);
-              return { data: null, error: new Error(msg), alreadyRegistered: true };
-            }
-          }
-        } catch (adminErr) {
-          console.warn("admin.createUser attempt encountered error:", adminErr);
-        }
-      }
-
-      // 2. Standard signUp fallback
+      // Browser clients must use the public sign-up endpoint. Admin user
+      // creation belongs exclusively in a protected Edge Function.
       let supaRes;
       try {
         supaRes = await client.auth.signUp({
@@ -414,8 +411,12 @@ export function useAuth() {
       return { success: true, emailSent: true };
     }
 
-    const targetProject = resolveProjectForSignIn(rawInput);
-    const client = getSupabaseClientForProject(targetProject) || supabase;
+    // A signed-out reset request cannot know which of the two Supabase
+    // projects owns the account, so recovery must cover both projects.
+    const resetClients = [
+      getSupabaseClientForProject(SUPABASE_PROJECTS.SARA_FOUNDATION),
+      getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB),
+    ].filter((client, index, clients) => client && clients.indexOf(client) === index);
 
     const domainOrigin = getCanonicalDomain();
     // Supabase appends its own token fragment. Keep our recovery marker in the
@@ -427,107 +428,41 @@ export function useAuth() {
     let emailSent = false;
     let rateLimited = false;
 
-    // 1. Primary: Try dedicated send-password-reset Edge Function (dispatches via Resend with trainailtd.com branding)
-    if (client?.functions?.invoke) {
-      try {
-        const { data: edgeData, error: edgeErr } = await client.functions.invoke("send-password-reset", {
-          body: {
-            email: normalizedEmail,
-            redirectTo: targetRedirectUrl
-          }
-        });
-
-        if (!edgeErr && edgeData?.success) {
-          return {
-            success: true,
-            emailSent: edgeData.emailSent ?? true,
-            rateLimited: false,
-            otp: edgeData.otp || null,
-            actionLink: edgeData.actionLink || null,
-            email: normalizedEmail,
-            viaResend: true
-          };
-        }
-
-        if (edgeData?.notFound) {
-          return {
-            success: false,
-            notFound: true,
-            error: edgeData.error || "No account found with this email address. Please check your spelling or create a new account."
-          };
-        }
-      } catch (edgeInvocationErr) {
-        console.info("send-password-reset edge function notice:", edgeInvocationErr);
-      }
+    const edgeResults = await Promise.allSettled(resetClients.map((client) =>
+      client.functions.invoke("send-password-reset", {
+        body: { email: normalizedEmail, redirectTo: targetRedirectUrl }
+      })
+    ));
+    const edgeDelivered = edgeResults.some((result) =>
+      result.status === "fulfilled" && !result.value?.error && result.value?.data?.emailSent === true
+    );
+    rateLimited = edgeResults.some((result) =>
+      result.status === "fulfilled" && result.value?.data?.rateLimited === true
+    );
+    if (edgeDelivered) {
+      return { success: true, emailSent: true, rateLimited: false, otp: null, actionLink: null, email: normalizedEmail, viaResend: true };
     }
 
-    // 2. Admin generateLink extraction if service/admin API is accessible
-    if (client?.auth?.admin?.generateLink) {
+    // If a custom mail function is unavailable, ask both Auth projects to
+    // dispatch their standard recovery email. Their neutral response keeps
+    // account existence private while ensuring the owning project is tried.
+    for (const client of resetClients) {
       try {
-        const linkRes = await client.auth.admin.generateLink({
-          type: "recovery",
-          email: normalizedEmail,
-          options: { redirectTo: targetRedirectUrl }
-        });
-        if (linkRes?.data?.properties) {
-          otp = linkRes.data.properties.email_otp;
-          actionLink = linkRes.data.properties.action_link;
-
-          // Attempt direct Resend dispatch if client key exists
-          const resendDirect = await sendPasswordResetViaResendDirect({
-            email: normalizedEmail,
-            resetUrl: actionLink || targetRedirectUrl,
-            otpCode: otp
-          });
-          if (resendDirect?.success) {
-            emailSent = true;
-          }
-        }
-      } catch (e) {
-        console.warn("generateLink fallback notice:", e);
-      }
-    }
-
-    // 3. Fallback: Supabase standard password reset
-    if (!emailSent) {
-      try {
-        const resetRes = await client.auth.resetPasswordForEmail(normalizedEmail, {
-          redirectTo: targetRedirectUrl
-        });
-        if (resetRes?.error) {
+        const resetRes = await client.auth.resetPasswordForEmail(normalizedEmail, { redirectTo: targetRedirectUrl });
+        if (!resetRes?.error) emailSent = true;
+        else {
           const errMsg = (resetRes.error.message || "").toLowerCase();
-          if (resetRes.error.status === 429 || errMsg.includes("rate limit")) {
-            rateLimited = true;
-          } else if (errMsg.includes("not found")) {
-            return {
-              success: false,
-              notFound: true,
-              error: "No account found with this email address. Please check your spelling or create a new account."
-            };
-          } else if (resetRes.error.status === 401 || errMsg.includes("invalid api key")) {
-            return {
-              success: false,
-              error: "Authentication service connection error (Invalid API Key). Please contact support at info@trainailtd.com."
-            };
-          } else {
-            return {
-              success: false,
-              error: resetRes.error.message || "Failed to send reset link."
-            };
-          }
-        } else {
-          emailSent = true;
+          if (resetRes.error.status === 429 || errMsg.includes("rate limit")) rateLimited = true;
         }
       } catch (e) {
         console.warn("resetPasswordForEmail fallback error:", e);
-        rateLimited = true;
       }
     }
 
     return {
       success: true,
       emailSent,
-      rateLimited,
+      rateLimited: rateLimited && !emailSent,
       otp,
       actionLink,
       email: normalizedEmail
@@ -537,29 +472,30 @@ export function useAuth() {
   // Verifies the 6-8 digit OTP recovery code directly
   const verifyRecoveryOtp = useCallback(async (email, otpToken) => {
     const normalizedEmail = (email || "").trim().toLowerCase();
-    const targetProject = resolveProjectForSignIn(normalizedEmail);
-    const client = getSupabaseClientForProject(targetProject) || supabase;
-    if (!client) return { success: false, error: "Authentication client unavailable." };
-
     try {
-      const { data, error } = await client.auth.verifyOtp({
-        email: normalizedEmail,
-        token: (otpToken || "").trim(),
-        type: "recovery"
-      });
-
-      if (error) {
-        return { success: false, error: error.message || "Invalid or expired recovery code." };
+      let lastError = null;
+      for (const projectKey of [SUPABASE_PROJECTS.SARA_FOUNDATION, SUPABASE_PROJECTS.ORGANIZATION_DB]) {
+        const client = getSupabaseClientForProject(projectKey);
+        if (!client) continue;
+        const { data, error } = await client.auth.verifyOtp({
+          email: normalizedEmail,
+          token: (otpToken || "").trim(),
+          type: "recovery"
+        });
+        if (error) {
+          lastError = error;
+          continue;
+        }
+        if (data?.session) {
+          recoveryProjectRef.current = projectKey;
+          setActiveSupabaseProject(projectKey);
+          setSession(data.session);
+          safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
+          setIsPasswordRecovery(true);
+          return { success: true, session: data.session };
+        }
       }
-
-      if (data?.session) {
-        setSession(data.session);
-        safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
-        setIsPasswordRecovery(true);
-        return { success: true, session: data.session };
-      }
-
-      return { success: false, error: "Could not create recovery session. Please try again." };
+      return { success: false, error: lastError?.message || "Invalid or expired recovery code." };
     } catch (e) {
       return { success: false, error: e?.message || "Verification failed." };
     }

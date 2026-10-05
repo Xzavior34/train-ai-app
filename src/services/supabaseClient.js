@@ -67,29 +67,20 @@ function buildClient(projectUrl, publishableKey, authOptions = {}) {
   return { configured: !!client, client };
 }
 
-// 1. Train AI 2.0 / Sara Foundation - dedicated project (jeobggrtxeybxvlwpxvn)
-const isRecoveryRedirect = (() => {
-  try {
-    const locationValue = `${window.location.search || ""}${window.location.hash || ""}`;
-    return locationValue.includes("recovery=1") || locationValue.includes("type=recovery") || locationValue.includes("error_code=");
-  } catch {
-    return false;
-  }
-})();
-
+// Recovery URLs are consumed explicitly by useAuth. Letting two clients parse
+// the same one-time token creates a race and can attach an Organization token
+// to the Sara client (or vice versa).
 const sara = buildClient(
   DEFAULT_SARA_URL,
   DEFAULT_SARA_ANON_KEY,
-  { detectSessionInUrl: true }
+  { detectSessionInUrl: false }
 );
 
 // 2. Train AI 2.0 / Organization Database - central platform & tenant project (djikuoucsuhdiyrhsduz)
 const orgDb = buildClient(
   DEFAULT_ORG_DB_URL,
   DEFAULT_ORG_DB_ANON_KEY,
-  // Both clients parsing the same recovery URL races: one removes the token
-  // before the issuing project can establish its session.
-  { detectSessionInUrl: !isRecoveryRedirect }
+  { detectSessionInUrl: false }
 );
 
 const CLIENTS_BY_PROJECT = {

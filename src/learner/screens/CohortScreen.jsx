@@ -425,7 +425,7 @@ export function CohortScreen({
                   <Clock size={13} />
                   <span>{new Date(s.starts_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}</span>
                   <span>•</span>
-                  <span>Facilitator: <strong>{s.host_name || s.instructor || "Sara Foundation"}</strong></span>
+                  <span>Facilitator: <strong>{s.host_name || s.instructor || "Train AI Mentor"}</strong></span>
                 </div>
 
                 <div className="tai-row tai-between" style={{ paddingTop: 12, borderTop: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>

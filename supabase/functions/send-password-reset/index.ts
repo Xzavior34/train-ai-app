@@ -28,6 +28,11 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
   });
 }
 
+async function sha256(value: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest)).map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 function buildHtmlEmail({ email, resetUrl, otpCode }: { email: string; resetUrl: string; otpCode?: string }) {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -154,6 +159,26 @@ Deno.serve(async (req) => {
         persistSession: false
       }
     });
+
+    // Enforce reset throttling on the server. Browser storage is not a
+    // security boundary and can be cleared or bypassed.
+    const clientIp = (req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown")
+      .split(",")[0]
+      .trim();
+    const [emailHash, ipHash] = await Promise.all([sha256(normalizedEmail), sha256(clientIp)]);
+    const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const [{ count: emailCount }, { count: ipCount }] = await Promise.all([
+      supabaseAdmin.from("password_reset_attempts").select("id", { count: "exact", head: true }).eq("email_hash", emailHash).gte("created_at", since),
+      supabaseAdmin.from("password_reset_attempts").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since),
+    ]);
+    if ((emailCount || 0) >= 5 || (ipCount || 0) >= 20) {
+      return jsonResponse({ success: false, emailSent: false, rateLimited: true, error: "Too many reset requests. Please wait 15 minutes before trying again." }, 429);
+    }
+    await supabaseAdmin.from("password_reset_attempts").insert({ email_hash: emailHash, ip_hash: ipHash });
+    // Keep the small audit table bounded without retaining identifiable data.
+    if (Math.random() < 0.02) {
+      await supabaseAdmin.from("password_reset_attempts").delete().lt("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+    }
 
     // 1. Generate recovery link and OTP
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({

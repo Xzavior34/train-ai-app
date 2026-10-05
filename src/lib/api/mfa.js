@@ -114,8 +114,14 @@ export async function getAuthenticatorAssuranceLevel() {
 export async function checkPasswordBreached(password) {
   if (!supabase || !password) return { breached: false, count: 0, degraded: true };
   try {
+    const bytes = new TextEncoder().encode(password);
+    const digest = await crypto.subtle.digest("SHA-1", bytes);
+    const hash = Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase();
     const { data, error } = await supabase.functions.invoke("password-breach-check", {
-      body: { password },
+      body: { hash_prefix: hash.slice(0, 5), hash_suffix: hash.slice(5) },
     });
     if (error || !data) return { breached: false, count: 0, degraded: true };
     return { breached: !!data.breached, count: data.count || 0, degraded: !!data.degraded };

@@ -278,7 +278,7 @@ export function ProfileScreen({
                   </>
                 )}
                 <span style={{ opacity: 0.4 }}>•</span>
-                <span>{user.organization || "Sara Foundation"}</span>
+                <span>{user.organization || "Train AI"}</span>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
@@ -292,7 +292,7 @@ export function ProfileScreen({
                   </span>
                 )}
                 <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>
-                  {user.cohortName || "Sara Foundation Cohort"}
+                  {user.cohortName || "Learning Cohort"}
                 </span>
               </div>
             </div>
@@ -408,11 +408,11 @@ export function ProfileScreen({
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Current Organization</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.organization || "Sara Foundation"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.organization || "Train AI"}</div>
               </div>
               <div style={{ background: "var(--surface-2)", padding: 14, borderRadius: 8 }}>
                 <label className="tai-label">Enrolled Batch</label>
-                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.cohortName || "Sara Foundation Cohort"}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, marginTop: 4, color: "var(--text)" }}>{user.cohortName || "Learning Cohort"}</div>
               </div>
             </div>
           </div>

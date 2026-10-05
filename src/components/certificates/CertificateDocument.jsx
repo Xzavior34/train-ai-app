@@ -24,7 +24,7 @@ export function CertificateDocument({
   const effectiveCourse = courseTitle || certificate.courses?.title || certificate.title || "Course Completion";
   const effectiveDate = issueDate || certificate.issued_at ? (new Date(certificate.issued_at || issueDate || Date.now()).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })) : "October 2026";
   const effectiveNumber = credentialNumber || certificate.certificate_number || certificate.id || "TAI-CERT-8842-X9";
-  const effectiveOrg = config.orgName || certificate.organizations?.name || "Sara Foundation";
+  const effectiveOrg = config.orgName || certificate.organizations?.name || "Train AI";
   const effectiveUrl = verificationUrl || `${typeof window !== "undefined" ? window.location.origin : "https://trainailtd.com"}/verify/${effectiveNumber}`;
 
   return (
@@ -318,11 +318,11 @@ export function CertificateDocument({
               lineHeight: 1,
               marginBottom: 4
             }}>
-              {config.secondarySignatoryName || "Sara Foundation Authority"}
+              {config.secondarySignatoryName || "Authorised Signatory"}
             </div>
             <div style={{ height: 1.5, background: theme.borderColor, width: "100%", maxWidth: 180, marginBottom: 4 }} />
             <div style={{ fontSize: 11.5, fontWeight: 800, color: theme.textColor }}>
-              {config.secondarySignatoryName || "Sara Foundation Authority"}
+              {config.secondarySignatoryName || "Authorised Signatory"}
             </div>
             <div style={{ fontSize: 10, opacity: 0.7 }}>
               {config.secondarySignatoryTitle || "Registrar & Academic Council"}

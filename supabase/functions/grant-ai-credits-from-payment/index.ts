@@ -97,15 +97,14 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "reference or session_id is required" }, 400);
     }
 
-    // Service-role client - used both to call the real verify function
-    // (it doesn't need the caller's own auth, it needs Paystack/Stripe's
-    // secret keys, which are already configured server-side for it) and
-    // to call the service-role-only grant RPC afterward.
+    // The verification function receives the caller's JWT so it can bind
+    // the provider transaction to the authenticated purchaser. The service
+    // role is reserved for the final ledger write after verification.
     const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const verifyFn = provider === "paystack" ? "paystack-verify" : "stripe-verify";
     const verifyBody = provider === "paystack" ? { reference } : { session_id, reference };
-    const { data: verifyResult, error: verifyErr } = await db.functions.invoke(verifyFn, { body: verifyBody });
+    const { data: verifyResult, error: verifyErr } = await authClient.functions.invoke(verifyFn, { body: verifyBody });
     if (verifyErr) {
       console.error("grant-ai-credits-from-payment: verify call failed:", verifyErr);
       return jsonResponse({ error: "Could not verify this payment right now. Please try again." }, 502);

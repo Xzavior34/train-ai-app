@@ -27,7 +27,8 @@ export async function fetchPublishedCourses(organizationId) {
     let query = supabase
       .from("courses")
       .select("*")
-      .eq("is_published", true);
+      .eq("is_published", true)
+      .is("archived_at", null);
 
     if (organizationId && organizationId !== "demo-org-id") {
       query = query.or(`organization_id.eq.${organizationId},organization_id.is.null`);
@@ -164,8 +165,6 @@ export async function fetchMyLessonProgress(userId, lessonIds) {
 export async function markLessonComplete(userId, lessonId, courseId = null) {
   if (!userId || !lessonId) return;
 
-  const timestamp = new Date().toISOString();
-
   // 1. Resilient local cache sync
   try {
     const localKey = `trainai_completed_lessons_${userId}`;
@@ -186,60 +185,14 @@ export async function markLessonComplete(userId, lessonId, courseId = null) {
 
   if (!supabase) return;
 
-  // 2. Sync to lesson_progress table
-  try {
-    const { error: lpErr } = await supabase
-      .from("lesson_progress")
-      .upsert(
-        { user_id: userId, lesson_id: lessonId, is_completed: true, completed_at: timestamp },
-        { onConflict: "user_id,lesson_id" }
-      );
-    if (lpErr) console.warn("lesson_progress sync notice:", lpErr.message || lpErr);
-  } catch (e) {
-    console.warn("lesson_progress upsert catch:", e);
-  }
-
-  // 3. Recalculate and update course enrollment progress
-  if (courseId) {
-    try {
-      const { data: allLessons } = await supabase.from("lessons").select("id").eq("course_id", courseId);
-      const { data: doneLessons } = await supabase.from("lesson_progress").select("lesson_id").eq("user_id", userId).eq("is_completed", true);
-      
-      const total = allLessons?.length || 4;
-      const completedCount = doneLessons ? doneLessons.filter(l => allLessons?.some(al => al.id === l.lesson_id)).length : 1;
-      const percentage = Math.min(100, Math.round((completedCount / total) * 100));
-
-      await supabase
-        .from("course_enrollments")
-        .upsert({
-          user_id: userId,
-          course_id: courseId,
-          progress_percentage: percentage,
-          updated_at: timestamp,
-          ...(percentage === 100 ? { completed_at: timestamp } : {})
-        }, { onConflict: "user_id,course_id" });
-    } catch (e) {
-      console.warn("Enrollment progress calculation notice:", e);
-    }
-  }
-
-  // 4. Update user gamification stats
-  try {
-    const { data: stats } = await supabase.from("user_gamification_stats").select("*").eq("user_id", userId).maybeSingle();
-    const currentPoints = stats?.total_points || 0;
-    const currentLessons = stats?.lessons_completed || 0;
-    
-    await supabase
-      .from("user_gamification_stats")
-      .upsert({
-        user_id: userId,
-        total_points: currentPoints + 50,
-        lessons_completed: currentLessons + 1,
-        updated_at: timestamp
-      }, { onConflict: "user_id" });
-  } catch (e) {
-    console.warn("Gamification stats sync notice:", e);
-  }
+  // Progress and rewards are one server-side transaction. The RPC derives
+  // the user from auth.uid(), validates the lesson/course relationship and
+  // awards points only when the completion row is first created.
+  const { error } = await supabase.rpc("complete_lesson_and_update_progress", {
+    p_lesson_id: lessonId,
+    p_course_id: courseId,
+  });
+  if (error) throw error;
 }
 
 export async function fetchSafeQuizQuestions(quizId) {

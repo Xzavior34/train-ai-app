@@ -347,6 +347,17 @@ export default function AuthPage({
                   </div>
                 )}
 
+                {forgotResult.rateLimited && (
+                  <div style={{ padding: "14px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <Clock size={18} color="#C2410C" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <div style={{ fontSize: 12.5, color: "#9A3412", lineHeight: 1.45 }}>
+                        <strong>Too many reset requests.</strong> For your security, wait 15 minutes before trying again. If an earlier reset email arrived, you can still use its link while it remains valid.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Instant recovery is only available when the server actually
                     returned a one-time code. Never claim that a code exists
                     merely because the mail provider is rate-limited. */}
@@ -505,7 +516,7 @@ export default function AuthPage({
                   className="auth-submit"
                   style={{ ...styles.submit, opacity: sendingReset ? 0.75 : 1 }}
                 >
-                  {sendingReset ? "Checking account..." : "Send reset link"}
+                  {sendingReset ? "Sending reset link..." : "Send reset link"}
                 </button>
                 <div style={styles.switchRow}>
                   <span className="auth-switch" style={styles.switchLink} onClick={() => setMode("signin")}>

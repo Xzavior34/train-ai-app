@@ -24,12 +24,12 @@ export function OrgCertificateStudio({
   const initialConfig = parseCertificateTemplate(initialTemplate);
   const [themeId, setThemeId] = useState(initialConfig.themeId || "cyber_neon");
   const [title, setTitle] = useState(initialConfig.title || "Certificate of Completion");
-  const [orgName, setOrgName] = useState(initialConfig.orgName || "Sara Foundation");
+  const [orgName, setOrgName] = useState(initialConfig.orgName || "Train AI");
   const [orgSubtitle, setOrgSubtitle] = useState(initialConfig.orgSubtitle || "Global AI Learning & Workforce Development Initiative");
   
   const [signatoryName, setSignatoryName] = useState(initialConfig.signatoryName || "Inem Emmanuel");
   const [signatoryTitle, setSignatoryTitle] = useState(initialConfig.signatoryTitle || "Director of Academic Excellence");
-  const [secondarySignatoryName, setSecondarySignatoryName] = useState(initialConfig.secondarySignatoryName || "Sara Foundation Authority");
+  const [secondarySignatoryName, setSecondarySignatoryName] = useState(initialConfig.secondarySignatoryName || "Authorised Signatory");
   const [secondarySignatoryTitle, setSecondarySignatoryTitle] = useState(initialConfig.secondarySignatoryTitle || "Registrar & Academic Council");
 
   const [primaryColor, setPrimaryColor] = useState(initialConfig.primaryColor || "#2563EB");
@@ -48,11 +48,11 @@ export function OrgCertificateStudio({
       const p = parseCertificateTemplate(initialTemplate);
       setThemeId(p.themeId || "cyber_neon");
       setTitle(p.title || "Certificate of Completion");
-      setOrgName(p.orgName || "Sara Foundation");
+      setOrgName(p.orgName || "Train AI");
       setOrgSubtitle(p.orgSubtitle || "Global AI Learning & Workforce Development Initiative");
       setSignatoryName(p.signatoryName || "Inem Emmanuel");
       setSignatoryTitle(p.signatoryTitle || "Director of Academic Excellence");
-      setSecondarySignatoryName(p.secondarySignatoryName || "Sara Foundation Authority");
+      setSecondarySignatoryName(p.secondarySignatoryName || "Authorised Signatory");
       setSecondarySignatoryTitle(p.secondarySignatoryTitle || "Registrar & Academic Council");
       setPrimaryColor(p.primaryColor || "#2563EB");
       setAccentColor(p.accentColor || "#38BDF8");

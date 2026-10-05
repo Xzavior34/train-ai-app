@@ -292,14 +292,10 @@ export const DEFAULT_PAYMENT_GATEWAY_SETTINGS = {
   paystack_public_key:
     (typeof import.meta !== "undefined" && import.meta.env?.VITE_PAYSTACK_PUBLIC_KEY) ||
     "pk_live_e0aba73a49d9ffd6a3d18f70392f5fff30d41d30",
-  paystack_secret_key:
-    (typeof import.meta !== "undefined" && import.meta.env?.PAYSTACK_SECRET_KEY) || "",
   paystack_subaccount_code: "",
   stripe_publishable_key:
     (typeof import.meta !== "undefined" && import.meta.env?.VITE_STRIPE_PUBLISHABLE_KEY) ||
     "pk_live_51RT2PjCLDyMvhL5blPBYfPyUDRGCNSBwQm4Z4yJSL9TfeKpdEZRu75TrgqVZwhSX3XqLB5ynaXCNd0ZRu0jPemWD00y59JzP1p",
-  stripe_secret_key:
-    (typeof import.meta !== "undefined" && import.meta.env?.STRIPE_SECRET_KEY) || "",
   stripe_account_id: "",
   bank_name: "",
   account_number: "",
@@ -318,14 +314,17 @@ export async function fetchOrgPaymentGatewaySettings(organizationId) {
       .maybeSingle();
     if (error || !data) return { ...DEFAULT_PAYMENT_GATEWAY_SETTINGS };
     const gw = data.settings?.payment_gateways || {};
+    const { data: secretStatus } = await supabase.functions.invoke("org-payment-credentials", {
+      body: { action: "status", organization_id: organizationId },
+    });
     return {
       ...DEFAULT_PAYMENT_GATEWAY_SETTINGS,
       ...gw,
       // For security, never expose raw secret key to client after save
       paystack_secret_key: "",
       stripe_secret_key: "",
-      has_paystack_secret: Boolean(gw.paystack_secret_key),
-      has_stripe_secret: Boolean(gw.stripe_secret_key),
+      has_paystack_secret: !!secretStatus?.has_paystack_secret,
+      has_stripe_secret: !!secretStatus?.has_stripe_secret,
     };
   } catch (e) {
     console.warn("Payment gateway settings fetch warning:", e);
@@ -345,22 +344,10 @@ export async function updateOrgPaymentGatewaySettings(organizationId, patch) {
 
     const existingGw = existing?.settings?.payment_gateways || {};
     const cleanPatch = { ...patch };
-
-    // If secret keys are empty in patch (i.e. not changed), preserve existing saved secret keys
-    if (!cleanPatch.paystack_secret_key || !cleanPatch.paystack_secret_key.trim()) {
-      if (existingGw.paystack_secret_key) {
-        cleanPatch.paystack_secret_key = existingGw.paystack_secret_key;
-      } else {
-        delete cleanPatch.paystack_secret_key;
-      }
-    }
-    if (!cleanPatch.stripe_secret_key || !cleanPatch.stripe_secret_key.trim()) {
-      if (existingGw.stripe_secret_key) {
-        cleanPatch.stripe_secret_key = existingGw.stripe_secret_key;
-      } else {
-        delete cleanPatch.stripe_secret_key;
-      }
-    }
+    const paystackSecret = typeof cleanPatch.paystack_secret_key === "string" ? cleanPatch.paystack_secret_key.trim() : "";
+    const stripeSecret = typeof cleanPatch.stripe_secret_key === "string" ? cleanPatch.stripe_secret_key.trim() : "";
+    delete cleanPatch.paystack_secret_key;
+    delete cleanPatch.stripe_secret_key;
 
     const nextSettings = {
       ...(existing?.settings || {}),
@@ -368,6 +355,17 @@ export async function updateOrgPaymentGatewaySettings(organizationId, patch) {
     };
     const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
     if (error) throw error;
+    if (paystackSecret || stripeSecret) {
+      const { data: secretData, error: secretError } = await supabase.functions.invoke("org-payment-credentials", {
+        body: {
+          action: "update",
+          organization_id: organizationId,
+          paystack_secret_key: paystackSecret || undefined,
+          stripe_secret_key: stripeSecret || undefined,
+        },
+      });
+      if (secretError || secretData?.error) throw new Error(secretData?.error || secretError?.message || "Could not save payment credentials.");
+    }
     return { success: true };
   } catch (e) {
     return { success: false, error: e?.message || "Could not save payment gateway settings." };

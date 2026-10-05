@@ -96,11 +96,11 @@ export function parseCertificateTemplate(templateObj) {
   const defaultValues = {
     themeId: "cyber_neon",
     title: "Certificate of Completion",
-    orgName: "Sara Foundation",
+    orgName: "Train AI",
     orgSubtitle: "Global AI Learning & Workforce Development Initiative",
     signatoryName: "Inem Emmanuel",
     signatoryTitle: "Director of Academic Excellence",
-    secondarySignatoryName: "Sara Foundation Authority",
+    secondarySignatoryName: "Authorised Signatory",
     secondarySignatoryTitle: "Registrar & Certification Officer",
     signatureStyle: "sig_1",
     primaryColor: "#2563EB",

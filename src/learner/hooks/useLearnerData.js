@@ -477,7 +477,7 @@ export function useLearnerData(session, screen, params) {
     initials: initialsOf(userProfileQuery.data?.display_name || session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.display_name || session?.user?.email),
     avatarUrl: userProfileQuery.data?.avatar_url || null,
     location: userProfileQuery.data?.school || userProfileQuery.data?.department || "Member",
-    organization: orgQuery.data?.name || (orgId ? "Sara Foundation" : "Train AI"),
+    organization: orgQuery.data?.name || "Train AI",
     organizationId: orgId,
     role: userProfileQuery.data?.role || "Learner",
     level: gamificationStatsQuery.data?.current_level || Math.floor((gamificationStatsQuery.data?.total_points || 0) / 500) + 1 || 1,
@@ -889,7 +889,7 @@ export function useLearnerData(session, screen, params) {
         enrollmentsQuery.refetch();
         coursesQuery.refetch();
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "course_lessons" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "lessons" }, () => {
         courseLessonsQuery.refetch();
         lessonCountsQuery.refetch();
       })
