@@ -667,8 +667,8 @@ export async function resolveOrgPaymentGateway(organizationId) {
   return {
     provider: settings.preferred_gateway || "default",
     environment: settings.environment || "test",
-    hasPaystackCustomKeys: !!(settings.paystack_public_key || settings.paystack_secret_key || settings.paystack_subaccount_code),
-    hasStripeCustomKeys: !!(settings.stripe_publishable_key || settings.stripe_secret_key || settings.stripe_account_id),
+    hasPaystackCustomKeys: !!(settings.paystack_public_key || settings.has_paystack_secret || settings.paystack_subaccount_code),
+    hasStripeCustomKeys: !!(settings.stripe_publishable_key || settings.has_stripe_secret || settings.stripe_account_id),
     settings,
   };
 }
