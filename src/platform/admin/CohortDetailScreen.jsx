@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, ToastContext } from "../components/PlatformUI.jsx";
-import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon, Layers, Sparkles, Filter } from "lucide-react";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
@@ -8,8 +8,9 @@ import {
   createCohortPost, assignCohortLearnerCourse, removeCohortLearnerCourse,
   fetchUsersInOrg, fetchCourses,
   addCohortResource, deleteCohortResource, createCohortSession, deleteCohortSession,
-  bulkAddCohortMembersByEmail,
+  bulkAddCohortMembersByEmail, batchAssignTrackCoursesToCohort,
 } from "../../lib/api/platform.js";
+
 
 // Cohort detail/space - reached from CohortsScreen by clicking a cohort card.
 // TrainAIPlatformApp has no existing "push with a param" navigation pattern

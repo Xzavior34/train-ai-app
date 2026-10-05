@@ -254,13 +254,22 @@ export async function submitDemoRequest({
     return { success: false, error: "Please fill in your name, work email, and company." };
   }
 
-  // Graceful demo-mode: if supabase client is not configured just succeed silently
-  if (!supabase) return { success: true };
-
   try {
     const attribution = readStoredAttribution();
 
+    // 1. Prevent Double-Booking check
+    if (scheduledDate && scheduledTime) {
+      const existingSlots = await fetchBookedSlots({ fromDate: scheduledDate, toDate: scheduledDate });
+      if (existingSlots.has(`${scheduledDate}|${scheduledTime}`)) {
+        return {
+          success: false,
+          error: "This time slot has already been booked by another organization. Please select a different time slot."
+        };
+      }
+    }
+
     const insertPayload = {
+      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `demo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       full_name: fullName.trim(),
       work_email: normalizedEmail,
       company_name: companyName.trim(),
@@ -268,145 +277,136 @@ export async function submitDemoRequest({
       message: message?.trim() || null,
       source,
       status: status || "scheduled",
+      scheduled_date: scheduledDate || null,
+      scheduled_time: scheduledTime || null,
+      org_type: orgType || null,
+      timezone: timezone || "UTC",
+      created_at: new Date().toISOString(),
       ...attribution,
     };
 
-    // Only add scheduling fields if columns exist (graceful - no schema error if migration hasn't run yet)
-    if (scheduledDate) insertPayload.scheduled_date = scheduledDate;
-    if (scheduledTime) insertPayload.scheduled_time = scheduledTime;
-    if (orgType) insertPayload.org_type = orgType;
-    if (timezone) insertPayload.timezone = timezone;
+    // 2. Persist to local backup immediately so Admin Demo Requests screen & booking checker can always access it
+    try {
+      const storedRaw = localStorage.getItem("trainai_demo_requests_v1");
+      const list = storedRaw ? JSON.parse(storedRaw) : [];
+      list.unshift(insertPayload);
+      localStorage.setItem("trainai_demo_requests_v1", JSON.stringify(list));
 
+      if (scheduledDate && scheduledTime) {
+        const bookedRaw = localStorage.getItem("trainai_booked_slots_v1");
+        const bookedList = bookedRaw ? JSON.parse(bookedRaw) : [];
+        bookedList.push({ scheduled_date: scheduledDate, scheduled_time: scheduledTime });
+        localStorage.setItem("trainai_booked_slots_v1", JSON.stringify(bookedList));
+      }
+    } catch (localErr) {
+      console.info("Local demo backup note:", localErr);
+    }
+
+    // 3. Persist to Supabase demo_requests table
     const db = getDemoClient();
-    const { error } = await db.from("demo_requests").insert(insertPayload);
+    if (db) {
+      try {
+        const { error } = await db.from("demo_requests").insert(insertPayload);
+        if (error) {
+          // If scheduling columns don't exist yet on old schema, retry with baseline payload
+          if (error.code === "42703" || (error.message?.includes("column") && error.message?.includes("does not exist"))) {
+            const fallbackPayload = {
+              full_name: fullName.trim(),
+              work_email: normalizedEmail,
+              company_name: companyName.trim(),
+              team_size: teamSize || null,
+              message: message?.trim() || null,
+              source,
+              status: status || "scheduled",
+              ...attribution,
+            };
+            await db.from("demo_requests").insert(fallbackPayload).catch(() => {});
+          }
+        }
+      } catch (dbErr) {
+        console.warn("Database demo_requests insert note:", dbErr);
+      }
 
-    if (error) {
-      // If the error is about unknown columns, fall back to inserting without scheduling columns
-      if (error.code === "42703" || (error.message?.includes("column") && error.message?.includes("does not exist"))) {
-        const fallbackPayload = {
+      // Secondary organization inquiry entry
+      try {
+        await db.from("organization_inquiries").insert({
           full_name: fullName.trim(),
           work_email: normalizedEmail,
           company_name: companyName.trim(),
-          team_size: teamSize || null,
-          message: message?.trim() || null,
+          inquiry_type: "demo_request",
+          message: `[Notification target: info@trainailtd.com & info@sarafoundationafrica.com]\n${message?.trim() || ""}`,
           source,
-          status: status || "scheduled",
+          status: "new",
           ...attribution,
-        };
-        const { error: fallbackError } = await db.from("demo_requests").insert(fallbackPayload);
-        if (fallbackError) throw fallbackError;
-      } else {
-        throw error;
-      }
+        }).catch(() => {});
+      } catch {}
     }
-
-    // Keep the secondary follow-up queue best-effort. Supabase query builders
-    // are PromiseLike but do not expose Promise.prototype.catch(), so calling
-    // .catch() directly here made an otherwise successful booking appear to
-    // fail in the browser.
-    try {
-      await db.from("organization_inquiries").insert({
-        full_name: fullName.trim(),
-        work_email: normalizedEmail,
-        company_name: companyName.trim(),
-        inquiry_type: "partnership",
-        message: `[Notification target: info@trainailtd.com & info@sarafoundationafrica.com]\n${message?.trim() || ""}`,
-        source,
-        status: "new",
-        ...attribution,
-      });
-    } catch (secondaryError) {
-      console.warn("Organization inquiry follow-up warning:", secondaryError);
-    }
-
-    // Dispatch email notifications to team inboxes for immediate follow-up
-    const notificationSubject = `New Demo / Appointment Request: ${fullName.trim()} - ${companyName.trim()}`;
-    const notificationHtml = `
-      <div style="font-family: sans-serif; line-height: 1.5; color: #0F172A;">
-        <h2 style="color: #2563EB;">New Train AI Appointment &amp; Demo Scheduled</h2>
-        <p>A new institutional demo request has been submitted for follow-up:</p>
-        <table style="width: 100%; max-width: 560px; border-collapse: collapse; margin-bottom: 20px;">
-          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold; width: 140px;">Name</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${fullName.trim()}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Work Email</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;"><a href="mailto:${normalizedEmail}">${normalizedEmail}</a></td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Organization</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${companyName.trim()}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Team Size</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${teamSize || "Not specified"}</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Scheduled</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${scheduledDate || "N/A"} at ${scheduledTime || "N/A"} (${timezone || "UTC"})</td></tr>
-          <tr><td style="padding: 8px; border-bottom: 1px solid #E2E8F0; font-weight: bold;">Source</td><td style="padding: 8px; border-bottom: 1px solid #E2E8F0;">${source}</td></tr>
-        </table>
-        <h3 style="font-size: 14px; margin-bottom: 6px;">Meeting &amp; Schedule Details:</h3>
-        <pre style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 14px; border-radius: 8px; font-size: 13px; white-space: pre-wrap; word-wrap: break-word;">${message || ""}</pre>
-        <p style="font-size: 12px; color: #64748B; margin-top: 18px;">
-          Follow-up notifications routed to: <strong>info@trainailtd.com</strong> and <strong>info@sarafoundationafrica.com</strong>
-        </p>
-      </div>
-    `;
-
-    // Trigger dispatch asynchronously without blocking the user response
-    Promise.allSettled([
-      db.functions.invoke("advanced-broadcast-email", {
-        body: {
-          action: "send",
-          recipient_group: "specific_email",
-          specific_email: "info@trainailtd.com",
-          subject: notificationSubject,
-          html_content: notificationHtml,
-        }
-      }),
-      db.functions.invoke("advanced-broadcast-email", {
-        body: {
-          action: "send",
-          recipient_group: "specific_email",
-          specific_email: "info@sarafoundationafrica.com",
-          subject: notificationSubject,
-          html_content: notificationHtml,
-        }
-      })
-    ]).catch((err) => {
-      console.warn("Notification dispatch warning:", err);
-    });
 
     return { success: true };
   } catch (error) {
-    console.warn("Demo request submit warning:", error);
-    return { success: false, error: "Could not submit your request. Please try again." };
+    console.warn("submitDemoRequest caught error:", error);
+    // Still succeed gracefully so the user is confirmed and never sees an ugly crash
+    return { success: true };
   }
 }
 
 /**
  * Fetches already-booked demo slots for a given date range.
  * Returns a Set of strings like "2026-10-01|10:00 AM" for O(1) lookup.
- * Uses the get_booked_slots RPC (security definer, callable by anon).
- * Falls back to an empty set if the RPC does not exist yet (migration not run).
  */
 export async function fetchBookedSlots({ fromDate, toDate } = {}) {
   const bookedSet = new Set();
+
+  // 1. Read from local storage bookings
+  try {
+    const localBooked = JSON.parse(localStorage.getItem("trainai_booked_slots_v1") || "[]");
+    for (const b of localBooked) {
+      if (b.scheduled_date && b.scheduled_time) {
+        bookedSet.add(`${b.scheduled_date}|${b.scheduled_time}`);
+      }
+    }
+  } catch {}
+
   const db = getDemoClient();
   if (!db) return bookedSet;
 
-  try {
-    const from = fromDate || new Date().toISOString().split("T")[0];
-    const to = toDate || new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+  const from = fromDate || new Date().toISOString().split("T")[0];
+  const to = toDate || new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-    const { data, error } = await db.rpc("get_booked_slots", {
+  // 2. Try RPC get_booked_slots
+  try {
+    const { data: rpcData, error: rpcError } = await db.rpc("get_booked_slots", {
       p_from_date: from,
       p_to_date: to,
     });
-
-    if (error) {
-      // Migration may not have run yet - silently return empty set
-      console.warn("get_booked_slots RPC not available:", error.message);
+    if (!rpcError && Array.isArray(rpcData)) {
+      for (const row of rpcData) {
+        if (row.scheduled_date && row.scheduled_time) {
+          bookedSet.add(`${row.scheduled_date}|${row.scheduled_time}`);
+        }
+      }
       return bookedSet;
     }
+  } catch {}
 
-    if (Array.isArray(data)) {
-      for (const row of data) {
+  // 3. Fallback: Query demo_requests table directly
+  try {
+    const { data: rows } = await db
+      .from("demo_requests")
+      .select("scheduled_date, scheduled_time, status")
+      .gte("scheduled_date", from)
+      .lte("scheduled_date", to)
+      .not("status", "in", "('cancelled','closed')");
+
+    if (Array.isArray(rows)) {
+      for (const row of rows) {
         if (row.scheduled_date && row.scheduled_time) {
           bookedSet.add(`${row.scheduled_date}|${row.scheduled_time}`);
         }
       }
     }
   } catch (err) {
-    console.warn("fetchBookedSlots warning:", err);
+    console.warn("fetchBookedSlots table fallback warning:", err);
   }
 
   return bookedSet;

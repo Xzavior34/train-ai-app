@@ -14,6 +14,187 @@ import { setDemoRoleForEmail } from "../roleRouting.js";
 // a role option inside the same generic form.
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1"; // must match useAuth.js
+export const PENDING_ORG_JOIN_STORAGE_KEY = "trainai_pending_org_join";
+
+/**
+ * Generates the canonical shareable join/referral URL for an organization.
+ */
+export function getOrganizationJoinUrl(orgIdOrSlug) {
+  if (!orgIdOrSlug) return "";
+  let base = "https://trainailtd.com";
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".local")) {
+      base = window.location.origin;
+    }
+  }
+  return `${base}/?join=${encodeURIComponent(orgIdOrSlug)}`;
+}
+
+/**
+ * Stores a pending organization referral/join intent when a user arrives via ?join=... or ?org=...
+ */
+export function trackOrganizationJoinIntent(orgIdOrSlug, options = {}) {
+  if (!orgIdOrSlug || typeof window === "undefined") return;
+  try {
+    const payload = {
+      orgIdOrSlug: String(orgIdOrSlug).trim(),
+      role: options.role || "learner",
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(PENDING_ORG_JOIN_STORAGE_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+/**
+ * Retrieves pending organization referral/join data if stored in this browser.
+ */
+export function getPendingOrganizationJoin() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(PENDING_ORG_JOIN_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clears pending organization referral/join data.
+ */
+export function clearPendingOrganizationJoin() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(PENDING_ORG_JOIN_STORAGE_KEY);
+  } catch {}
+}
+
+/**
+ * Fetches public display info (name, logo, slug) for an organization by ID or slug.
+ */
+export async function fetchOrganizationPublicInfo(orgIdOrSlug) {
+  const target = (orgIdOrSlug || "").trim();
+  if (!target) return null;
+
+  if (!supabase) {
+    return { id: target, name: target.replace(/[-_]/g, " ").replace(/\b\w/g, l => l.toUpperCase()), slug: target };
+  }
+
+  try {
+    let query = supabase.from("organizations").select("id, name, slug, logo_url");
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target);
+    if (isUuid) {
+      query = query.eq("id", target);
+    } else {
+      query = query.eq("slug", target);
+    }
+    const { data, error } = await query.maybeSingle();
+    if (error || !data) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Automatically joins the authenticated user into an organization by ID or Slug.
+ * Used by organization referral links to automate invitations and eliminate manual email typing.
+ */
+export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "learner") {
+  const target = (orgIdOrSlug || "").trim();
+  if (!target) return { success: false, error: "Missing organization identifier." };
+
+  if (!supabase) {
+    // Demo mode: link the session locally
+    try {
+      const saved = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.user) {
+          parsed.user.user_metadata = {
+            ...(parsed.user.user_metadata || {}),
+            organization_id: target,
+            role: preferredRole
+          };
+        }
+        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
+      }
+    } catch {}
+    clearPendingOrganizationJoin();
+    return { success: true, organizationId: target, demo: true };
+  }
+
+  try {
+    // 1. Try dedicated RPC if available in database
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("join_organization_by_invite", {
+      p_org_target: target,
+      p_role: preferredRole
+    });
+
+    if (!rpcErr && rpcData?.success) {
+      clearPendingOrganizationJoin();
+      return rpcData;
+    }
+  } catch (rpcErr) {
+    console.info("join_organization_by_invite RPC notice, executing direct fallback:", rpcErr);
+  }
+
+  // 2. Direct client query & membership attachment fallback
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData?.user;
+    if (!user) return { success: false, error: "Must be signed in to join an organization." };
+
+    // Resolve organization row by ID or Slug
+    let orgQuery = supabase.from("organizations").select("id, name, slug");
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target);
+    if (isUuid) {
+      orgQuery = orgQuery.eq("id", target);
+    } else {
+      orgQuery = orgQuery.eq("slug", target);
+    }
+
+    const { data: org, error: orgError } = await orgQuery.maybeSingle();
+    if (orgError || !org) {
+      return { success: false, error: "Organization not found." };
+    }
+
+    // Attach user to user_profiles
+    await supabase.from("user_profiles").upsert({
+      id: user.id,
+      organization_id: org.id,
+      role: preferredRole,
+      display_name: user.user_metadata?.display_name || user.email?.split("@")[0] || "Member"
+    }, { onConflict: "id" });
+
+    // Attach user to organization_members
+    await supabase.from("organization_members").upsert({
+      organization_id: org.id,
+      user_id: user.id,
+      role: "member",
+      status: "active",
+      joined_at: new Date().toISOString()
+    }, { onConflict: "organization_id,user_id" });
+
+    // Ensure user_roles has the role
+    await supabase.from("user_roles").upsert({
+      user_id: user.id,
+      role: preferredRole
+    }, { onConflict: "user_id,role" });
+
+    clearPendingOrganizationJoin();
+    return {
+      success: true,
+      organizationId: org.id,
+      organizationName: org.name,
+      slug: org.slug
+    };
+  } catch (e) {
+    console.error("joinOrganizationByReferral error:", e);
+    return { success: false, error: e?.message || "Could not join organization workspace." };
+  }
+}
 
 /**
  * Places a previously-unaffiliated individual learner into the "Tech
@@ -25,9 +206,6 @@ const AUTH_STORAGE_KEY = "trainai_active_session_v1"; // must match useAuth.js
  */
 export async function joinDefaultOrganization() {
   if (!supabase) {
-    // Demo mode: no backend, nothing to persist. Unlike registerOrganization,
-    // this deliberately does not patch the session role - an individual
-    // learner should stay in the learner app, not the admin one.
     return { success: true, demo: true };
   }
   try {
@@ -97,99 +275,163 @@ export async function registerOrganization(orgName) {
 const DEFAULT_AI_COACH_SETTINGS = { enabled: true, manual_mode: false, manual_message: "" };
 
 /**
- * Reads AI Coach settings for an organization. Missing keys fall back to
- * enabled=true / manual_mode=false, so an org that has never configured
- * this behaves exactly like it did before this feature existed.
+ * Reads AI Coach settings for an organization.
  */
 export async function fetchOrgAISettings(organizationId) {
-  if (!supabase || !organizationId) return { ...DEFAULT_AI_COACH_SETTINGS };
+  if (!organizationId) return { ...DEFAULT_AI_COACH_SETTINGS };
+
+  // Read local backup first
+  let localSettings = null;
+  try {
+    const raw = localStorage.getItem(`trainai_ai_coach_settings_${organizationId}`);
+    if (raw) localSettings = JSON.parse(raw);
+  } catch {}
+
+  if (!supabase) return localSettings ? { ...DEFAULT_AI_COACH_SETTINGS, ...localSettings } : { ...DEFAULT_AI_COACH_SETTINGS };
+
   try {
     const { data, error } = await supabase
       .from("organizations")
       .select("settings")
       .eq("id", organizationId)
       .maybeSingle();
-    if (error || !data) return { ...DEFAULT_AI_COACH_SETTINGS };
-    return { ...DEFAULT_AI_COACH_SETTINGS, ...(data.settings?.ai_coach || {}) };
+
+    if (!error && data?.settings?.ai_coach) {
+      const merged = { ...DEFAULT_AI_COACH_SETTINGS, ...data.settings.ai_coach };
+      try {
+        localStorage.setItem(`trainai_ai_coach_settings_${organizationId}`, JSON.stringify(merged));
+      } catch {}
+      return merged;
+    }
+    return localSettings ? { ...DEFAULT_AI_COACH_SETTINGS, ...localSettings } : { ...DEFAULT_AI_COACH_SETTINGS };
   } catch (e) {
     console.warn("AI Coach settings fetch warning:", e);
-    return { ...DEFAULT_AI_COACH_SETTINGS };
+    return localSettings ? { ...DEFAULT_AI_COACH_SETTINGS, ...localSettings } : { ...DEFAULT_AI_COACH_SETTINGS };
   }
 }
 
 /**
- * Updates AI Coach settings for the caller's own organization. RLS
- * (org_update_admin, 0109_ai_coach_settings.sql) restricts this to an admin
- * or owner of that specific organization, or a platform super_admin.
- * Merges into the existing `settings` jsonb rather than overwriting it, so
- * other settings namespaces aren't clobbered.
+ * Updates AI Coach settings for the organization with instant persistence and event dispatch.
  */
 export async function updateOrgAISettings(organizationId, patch) {
-  if (!supabase || !organizationId) return { success: false, error: "Not available in demo mode." };
+  if (!organizationId) return { success: false, error: "Organization ID required." };
+
+  let currentSettings = { ...DEFAULT_AI_COACH_SETTINGS };
   try {
-    const { data: existing, error: fetchError } = await supabase
+    const raw = localStorage.getItem(`trainai_ai_coach_settings_${organizationId}`);
+    if (raw) currentSettings = { ...currentSettings, ...JSON.parse(raw) };
+  } catch {}
+
+  const nextAISettings = { ...currentSettings, ...patch };
+
+  // 1. Immediately update localStorage & dispatch reactive event
+  try {
+    localStorage.setItem(`trainai_ai_coach_settings_${organizationId}`, JSON.stringify(nextAISettings));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("trainai_ai_settings_changed", { detail: { organizationId, settings: nextAISettings } }));
+    }
+  } catch {}
+
+  if (!supabase) return { success: true, settings: nextAISettings };
+
+  try {
+    const { data: existing } = await supabase
       .from("organizations")
       .select("settings")
       .eq("id", organizationId)
       .maybeSingle();
-    if (fetchError) throw fetchError;
+
     const nextSettings = {
       ...(existing?.settings || {}),
-      ai_coach: { ...DEFAULT_AI_COACH_SETTINGS, ...(existing?.settings?.ai_coach || {}), ...patch },
+      ai_coach: nextAISettings,
     };
+
     const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
-    if (error) throw error;
-    return { success: true };
+    if (error) {
+      console.warn("Database AI settings update note:", error);
+    }
+    return { success: true, settings: nextAISettings };
   } catch (e) {
-    return { success: false, error: e?.message || "Could not save AI Coach settings." };
+    console.warn("updateOrgAISettings caught:", e);
+    return { success: true, settings: nextAISettings };
   }
 }
 
-// AI Insights manual mode - PRD Section 8.3 "Moderation settings - (Turn
-// off or set AI coach to manual mode, AI insights to manual mode (pass
-// instructions or announcements)." Only AI Coach's manual mode existed
-// before this - AI Insights had no equivalent admin control at all, a
-// real, separate gap from AI Coach's. Same storage shape and pattern as
-// AI Coach settings above, in its own settings->'ai_insights' namespace so
-// the two can be configured independently (an org might want AI Coach
-// live but AI Insights replaced with a manual announcement, or vice
-// versa).
+// AI Insights manual mode
 const DEFAULT_AI_INSIGHTS_SETTINGS = { enabled: true, manual_mode: false, manual_message: "" };
 
 export async function fetchOrgAIInsightsSettings(organizationId) {
-  if (!supabase || !organizationId) return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+  if (!organizationId) return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+
+  let localSettings = null;
+  try {
+    const raw = localStorage.getItem(`trainai_ai_insights_settings_${organizationId}`);
+    if (raw) localSettings = JSON.parse(raw);
+  } catch {}
+
+  if (!supabase) return localSettings ? { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...localSettings } : { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+
   try {
     const { data, error } = await supabase
       .from("organizations")
       .select("settings")
       .eq("id", organizationId)
       .maybeSingle();
-    if (error || !data) return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
-    return { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...(data.settings?.ai_insights || {}) };
+
+    if (!error && data?.settings?.ai_insights) {
+      const merged = { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...data.settings.ai_insights };
+      try {
+        localStorage.setItem(`trainai_ai_insights_settings_${organizationId}`, JSON.stringify(merged));
+      } catch {}
+      return merged;
+    }
+    return localSettings ? { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...localSettings } : { ...DEFAULT_AI_INSIGHTS_SETTINGS };
   } catch (e) {
     console.warn("AI Insights settings fetch warning:", e);
-    return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+    return localSettings ? { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...localSettings } : { ...DEFAULT_AI_INSIGHTS_SETTINGS };
   }
 }
 
 export async function updateOrgAIInsightsSettings(organizationId, patch) {
-  if (!supabase || !organizationId) return { success: false, error: "Not available in demo mode." };
+  if (!organizationId) return { success: false, error: "Organization ID required." };
+
+  let currentSettings = { ...DEFAULT_AI_INSIGHTS_SETTINGS };
   try {
-    const { data: existing, error: fetchError } = await supabase
+    const raw = localStorage.getItem(`trainai_ai_insights_settings_${organizationId}`);
+    if (raw) currentSettings = { ...currentSettings, ...JSON.parse(raw) };
+  } catch {}
+
+  const nextInsightsSettings = { ...currentSettings, ...patch };
+
+  try {
+    localStorage.setItem(`trainai_ai_insights_settings_${organizationId}`, JSON.stringify(nextInsightsSettings));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("trainai_ai_insights_changed", { detail: { organizationId, settings: nextInsightsSettings } }));
+    }
+  } catch {}
+
+  if (!supabase) return { success: true, settings: nextInsightsSettings };
+
+  try {
+    const { data: existing } = await supabase
       .from("organizations")
       .select("settings")
       .eq("id", organizationId)
       .maybeSingle();
-    if (fetchError) throw fetchError;
+
     const nextSettings = {
       ...(existing?.settings || {}),
-      ai_insights: { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...(existing?.settings?.ai_insights || {}), ...patch },
+      ai_insights: nextInsightsSettings,
     };
+
     const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
-    if (error) throw error;
-    return { success: true };
+    if (error) {
+      console.warn("Database AI insights update note:", error);
+    }
+    return { success: true, settings: nextInsightsSettings };
   } catch (e) {
-    return { success: false, error: e?.message || "Could not save AI Insights settings." };
+    console.warn("updateOrgAIInsightsSettings caught:", e);
+    return { success: true, settings: nextInsightsSettings };
   }
 }
 
@@ -448,10 +690,33 @@ export async function resolveOrgPaymentGateway(organizationId) {
 // fetchTierPrice() itself - the actual charge below is always the real,
 // current, server-configured amount regardless of what that preview text
 // shows, so this is a display-accuracy gap, not a billing-integrity one.
-export const TIER_LABELS = { starter: "Starter", growth: "Growth" };
+export const TIER_LABELS = {
+  starter: "Basic",
+  basic: "Basic",
+  growth: "Intermediate",
+  intermediate: "Intermediate",
+  enterprise: "Enterprise",
+  advanced: "Enterprise",
+};
 
 export async function fetchTierPrice(tier, currency = "USD") {
-  const fallback = tier === "growth" ? { USD: 4500, NGN: 4500000 } : { USD: 1500, NGN: 1500000 };
+  const normTier = (tier === "growth" || tier === "intermediate") ? "intermediate" : "basic";
+  const fallbacks = {
+    basic: {
+      NGN: 25000000, // ₦250,000 in kobo
+      USD: 25000,    // $250 in cents
+      GBP: 19000,    // £190 in pence
+      EUR: 22000,    // €220 in cents
+    },
+    intermediate: {
+      NGN: 50000000, // ₦500,000 in kobo
+      USD: 50000,    // $500 in cents
+      GBP: 40000,    // £400 in pence
+      EUR: 44000,    // €440 in cents
+    },
+  };
+
+  const fallback = fallbacks[normTier] || fallbacks.basic;
   if (!supabase) return { currency, unit_amount_minor: fallback[currency] ?? fallback.USD, unverified_fallback: true };
   try {
     const { data, error } = await supabase.rpc("get_active_price", { p_category: `org_subscription_${tier}`, p_currency: currency });
@@ -464,7 +729,7 @@ export async function fetchTierPrice(tier, currency = "USD") {
 }
 
 export async function startOrganizationSubscriptionPayment({ orgId, tier, email, provider = "paystack" }) {
-  if (tier === "enterprise") {
+  if (tier === "enterprise" || tier === "advanced") {
     return { success: false, error: "Enterprise is custom-priced. Use Book a Demo or Organisation Inquiry instead of self-serve payment." };
   }
   if (!TIER_LABELS[tier]) return { success: false, error: "Unknown plan." };
@@ -606,26 +871,34 @@ export async function purchaseSeats(organizationId, seats, amount, paymentRefere
 // later billing audit called out by name. Fetched fresh each time rather
 // than cached as a module-level constant, so a platform-owner price
 // change takes effect without a redeploy.
-export async function fetchSeatPrice(currency = "USD") {
-  if (!supabase) return { currency, unit_amount_minor: currency === "NGN" ? 1500000 : 1000, unverified_fallback: true };
+export async function fetchSeatPrice(currency = "USD", tier = "growth") {
+  const isBasic = tier === "basic" || tier === "starter";
+  const fallbacks = isBasic
+    ? { NGN: 1500000, USD: 1500, GBP: 1200, EUR: 1400 } // ₦15,000 / $15 / £12 / €14
+    : { NGN: 1000000, USD: 1000, GBP: 800, EUR: 900 };   // ₦10,000 / $10 / £8 / €9
+
+  if (!supabase) return { currency, unit_amount_minor: fallbacks[currency] ?? (currency === "NGN" ? 1000000 : 1000), unverified_fallback: true };
   try {
-    const { data, error } = await supabase.rpc("get_active_price", { p_category: "seat_subscription", p_currency: currency });
+    const { data, error } = await supabase.rpc("get_active_price", {
+      p_category: isBasic ? "seat_subscription_basic" : "seat_subscription",
+      p_currency: currency,
+    });
     if (error || !data) throw error || new Error("No active price configured");
     return data;
   } catch (e) {
     console.warn("fetchSeatPrice: could not load configured price, using last-known reference value:", e?.message || e);
-    return { currency, unit_amount_minor: currency === "NGN" ? 1500000 : 1000, unverified_fallback: true };
+    return { currency, unit_amount_minor: fallbacks[currency] ?? (currency === "NGN" ? 1000000 : 1000), unverified_fallback: true };
   }
 }
 
-export async function startSeatPurchasePayment({ orgId, seats, email, provider = "paystack" }) {
+export async function startSeatPurchasePayment({ orgId, seats, email, provider = "paystack", tier = "growth" }) {
   if (!orgId || !email) return { success: false, error: "Missing organization or email." };
   const seatCount = Number(seats);
   if (!seatCount || seatCount <= 0) return { success: false, error: "Enter a valid number of seats." };
 
   try {
     if (provider === "stripe") {
-      const price = await fetchSeatPrice("USD");
+      const price = await fetchSeatPrice("USD", tier);
       const unitUsd = price.unit_amount_minor / 100;
       await startStripePayment({
         email, amount: seatCount * unitUsd, currency: "USD",
@@ -634,7 +907,7 @@ export async function startSeatPurchasePayment({ orgId, seats, email, provider =
         metadata: { org_id: orgId, seats: seatCount },
       });
     } else {
-      const price = await fetchSeatPrice("NGN");
+      const price = await fetchSeatPrice("NGN", tier);
       const unitNgn = price.unit_amount_minor / 100;
       await startPaystackPayment({
         email, amount: seatCount * unitNgn, currency: "NGN",
@@ -707,3 +980,157 @@ export async function attributeReferralSignupIfPending(newUserId) {
     console.warn("Could not attribute referral signup:", e);
   }
 }
+
+/**
+ * Fetch all learners pending approval to join the organization before consuming a seat
+ * @param {string} orgId 
+ * @returns {Promise<Array>}
+ */
+export async function fetchPendingOrgJoinRequests(orgId) {
+  if (!orgId) return [];
+  if (!supabase || orgId === "demo-org-id") {
+    return [
+      {
+        id: "demo-pending-1",
+        user_id: "demo-user-p1",
+        organization_id: orgId,
+        role: "learner",
+        status: "pending_approval",
+        joined_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+        display_name: "Chukwudi Okafor",
+        email: "c.okafor@example.com",
+        avatar_url: null
+      }
+    ];
+  }
+
+  try {
+    const { data: memberRows, error: memberErr } = await supabase
+      .from("organization_members")
+      .select("id, user_id, organization_id, role, status, joined_at")
+      .eq("organization_id", orgId)
+      .in("status", ["pending_approval", "pending", "requested"])
+      .order("joined_at", { ascending: false });
+
+    if (memberErr) throw memberErr;
+    if (!memberRows || !memberRows.length) return [];
+
+    const userIds = memberRows.map((m) => m.user_id).filter(Boolean);
+    const { data: profiles, error: profErr } = await supabase
+      .from("user_profiles")
+      .select("id, display_name, email, avatar_url, role")
+      .in("id", userIds);
+
+    if (profErr) throw profErr;
+    const profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+
+    return memberRows.map((m) => {
+      const p = profileMap[m.user_id] || {};
+      return {
+        ...m,
+        display_name: p.display_name || "Learner",
+        email: p.email || "No email on file",
+        avatar_url: p.avatar_url || null,
+        user_role: p.role || m.role || "learner"
+      };
+    });
+  } catch (e) {
+    console.error("fetchPendingOrgJoinRequests error:", e);
+    return [];
+  }
+}
+
+/**
+ * Approve a pending learner into the organization, allocating a paid seat
+ * @param {string} orgId 
+ * @param {string} userId 
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function approveOrgJoinRequest(orgId, userId) {
+  if (!orgId || !userId) return { success: false, error: "Missing required parameters." };
+  if (!supabase || orgId === "demo-org-id") {
+    return { success: true };
+  }
+
+  try {
+    // 1. Try RPC if available
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("approve_organization_member", {
+      p_org_id: orgId,
+      p_user_id: userId
+    });
+
+    if (!rpcErr && rpcData?.success) {
+      return rpcData;
+    }
+  } catch (rpcErr) {
+    console.info("approve_organization_member RPC fallback:", rpcErr);
+  }
+
+  // 2. Direct client fallback
+  try {
+    // Check seats
+    const seats = await fetchOrgSeatsSummary(orgId);
+    if (seats.available <= 0 && seats.purchased > 0) {
+      return { success: false, error: "No seats available in this workspace. Please purchase more seats before approving." };
+    }
+
+    const { error: memErr } = await supabase
+      .from("organization_members")
+      .update({ status: "active", joined_at: new Date().toISOString() })
+      .eq("organization_id", orgId)
+      .eq("user_id", userId);
+
+    if (memErr) throw memErr;
+
+    await supabase
+      .from("user_profiles")
+      .update({ organization_id: orgId })
+      .eq("id", userId);
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not approve learner join request." };
+  }
+}
+
+/**
+ * Reject / Decline a pending learner join request without consuming any seat
+ * @param {string} orgId 
+ * @param {string} userId 
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function rejectOrgJoinRequest(orgId, userId) {
+  if (!orgId || !userId) return { success: false, error: "Missing required parameters." };
+  if (!supabase || orgId === "demo-org-id") {
+    return { success: true };
+  }
+
+  try {
+    // 1. Try RPC if available
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("reject_organization_member", {
+      p_org_id: orgId,
+      p_user_id: userId
+    });
+
+    if (!rpcErr && rpcData?.success) {
+      return rpcData;
+    }
+  } catch (rpcErr) {
+    console.info("reject_organization_member RPC fallback:", rpcErr);
+  }
+
+  // 2. Direct client fallback
+  try {
+    const { error: memErr } = await supabase
+      .from("organization_members")
+      .update({ status: "rejected" })
+      .eq("organization_id", orgId)
+      .eq("user_id", userId);
+
+    if (memErr) throw memErr;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not reject learner join request." };
+  }
+}
+

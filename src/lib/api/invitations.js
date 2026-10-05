@@ -68,37 +68,128 @@ export async function acceptInvitation({ token, password, displayName } = {}) {
   if (!supabase) return { ok: false, requiresSignup: false, message: "Not available right now." };
   if (!token) return { ok: false, requiresSignup: false, message: "Missing invitation token." };
 
-  const { data, error } = await supabase.functions.invoke("accept-invitation", {
-    body: { token, password: password || undefined, display_name: displayName || undefined },
-  });
+  // 1. Try dedicated edge function first
+  try {
+    const { data, error } = await supabase.functions.invoke("accept-invitation", {
+      body: { token, password: password || undefined, display_name: displayName || undefined },
+    });
 
-  if (error) {
-    const body = await readFunctionErrorBody(error);
-    if (body?.requires_signup) {
+    if (error) {
+      const body = await readFunctionErrorBody(error);
+      if (body?.requires_signup) {
+        return {
+          ok: false,
+          requiresSignup: true,
+          email: body.email,
+          organizationName: body.organization_name,
+          role: body.role,
+        };
+      }
+      // If error is not a signup-prompt, check if we should fall back to direct DB RPC
+      if (!body?.error && (error.message?.includes("Failed to send") || error.message?.includes("FunctionsFetchError") || error.status === 404)) {
+        throw error;
+      }
+      return { ok: false, requiresSignup: false, message: body?.error || error.message || "Failed to accept invitation." };
+    }
+
+    if (data && data.success === false) {
+      return { ok: false, requiresSignup: !!data.requires_signup, message: data.error || "Failed to accept invitation." };
+    }
+
+    if (data && (data.success || data.user_id || data.organization_id)) {
+      return {
+        ok: true,
+        isNewUser: !!data?.is_new_user,
+        userId: data?.user_id,
+        organizationId: data?.organization_id,
+        role: data?.role,
+        message: data?.message,
+      };
+    }
+  } catch (edgeErr) {
+    console.info("accept-invitation edge function notice, executing database RPC fallback:", edgeErr);
+  }
+
+  // 2. Direct database RPC & Auth fallback
+  try {
+    const inviteRow = await validateInvitationToken(token);
+    if (!inviteRow || !inviteRow.is_valid) {
+      return { ok: false, requiresSignup: false, message: "This invitation link is invalid or has expired." };
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+    const currentSession = sessionData?.session;
+
+    // If caller already has an active session for this email
+    if (currentSession?.user?.id) {
+      const { error: rpcErr } = await supabase.rpc("accept_invitation", { p_token: token });
+      if (rpcErr) {
+        return { ok: false, requiresSignup: false, message: rpcErr.message || "Could not accept invitation." };
+      }
+      return {
+        ok: true,
+        isNewUser: false,
+        userId: currentSession.user.id,
+        organizationId: inviteRow.organization_id,
+        role: inviteRow.role,
+        message: `Successfully joined ${inviteRow.organization_name || "the organization"}!`
+      };
+    }
+
+    // If caller is not authenticated yet and no password was provided
+    if (!password) {
       return {
         ok: false,
         requiresSignup: true,
-        email: body.email,
-        organizationName: body.organization_name,
-        role: body.role,
+        email: inviteRow.email,
+        organizationName: inviteRow.organization_name,
+        role: inviteRow.role,
       };
     }
-    return { ok: false, requiresSignup: false, message: body?.error || error.message || "Failed to accept invitation." };
-  }
 
-  // The edge function returns 200 with { success: false, error } on some
-  // validation failures (e.g. token already used) rather than a non-2xx
-  // handle that shape too instead of assuming `error` covers every failure.
-  if (data && data.success === false) {
-    return { ok: false, requiresSignup: !!data.requires_signup, message: data.error || "Failed to accept invitation." };
-  }
+    // New user signup or signin with provided password
+    let authUser = null;
+    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+      email: inviteRow.email,
+      password,
+      options: {
+        data: {
+          display_name: displayName || inviteRow.email.split("@")[0],
+          role: inviteRow.role
+        }
+      }
+    });
 
-  return {
-    ok: true,
-    isNewUser: !!data?.is_new_user,
-    userId: data?.user_id,
-    organizationId: data?.organization_id,
-    role: data?.role,
-    message: data?.message,
-  };
+    if (signUpData?.user) {
+      authUser = signUpData.user;
+    } else if (signUpErr) {
+      // User might already exist in auth, try signing in with the provided password
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+        email: inviteRow.email,
+        password
+      });
+      if (signInData?.user) {
+        authUser = signInData.user;
+      } else {
+        return { ok: false, requiresSignup: false, message: signUpErr.message || signInErr?.message || "Could not create or authenticate account." };
+      }
+    }
+
+    // Now that user is authenticated in Supabase, execute accept_invitation RPC
+    const { error: acceptRpcErr } = await supabase.rpc("accept_invitation", { p_token: token });
+    if (acceptRpcErr) {
+      console.warn("accept_invitation RPC warning:", acceptRpcErr);
+    }
+
+    return {
+      ok: true,
+      isNewUser: !!signUpData?.user,
+      userId: authUser?.id,
+      organizationId: inviteRow.organization_id,
+      role: inviteRow.role,
+      message: `Welcome! You've joined ${inviteRow.organization_name || "the organization"}.`
+    };
+  } catch (err) {
+    return { ok: false, requiresSignup: false, message: err?.message || "Could not process invitation acceptance." };
+  }
 }

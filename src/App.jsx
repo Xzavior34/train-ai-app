@@ -17,6 +17,7 @@ import { applyAccessibilityPrefs, getStoredAccessibilityPrefs } from "./componen
 import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./services/authService.js";
 import { resolveViewMode, DASHBOARDS } from "./lib/roleRouting.js";
 import { getAuthenticatorAssuranceLevel } from "./lib/api/mfa.js";
+import { trackOrganizationJoinIntent, getPendingOrganizationJoin, joinOrganizationByReferral } from "./lib/api/organizations.js";
 
 export default function App() {
   const {
@@ -143,7 +144,8 @@ export default function App() {
   // sign-in gate, rather than inside either authenticated app shell.
   const [inviteToken, setInviteToken] = useState(() => {
     try {
-      return new URLSearchParams(window.location.search).get("invite") || null;
+      const search = new URLSearchParams(window.location.search);
+      return search.get("invite") || search.get("token") || search.get("invite_token") || null;
     } catch {
       return null;
     }
@@ -151,7 +153,12 @@ export default function App() {
 
   const [orgSlugParam] = useState(() => {
     try {
-      return new URLSearchParams(window.location.search).get("org") || new URLSearchParams(window.location.search).get("workspace") || null;
+      const search = new URLSearchParams(window.location.search);
+      const target = search.get("join") || search.get("org") || search.get("workspace") || search.get("ref_org") || null;
+      if (target) {
+        trackOrganizationJoinIntent(target);
+      }
+      return target;
     } catch {
       return null;
     }
@@ -173,6 +180,13 @@ export default function App() {
     } catch {}
     return orgSlugParam ? "auth" : "landing";
   }); // "landing" | "auth" | "book-demo"
+
+  // Auto-join if user is already authenticated and lands on an organization join/referral link
+  useEffect(() => {
+    if (session?.user?.id && orgSlugParam) {
+      joinOrganizationByReferral(orgSlugParam).catch((e) => console.warn("Auto-join referral notice:", e));
+    }
+  }, [session, orgSlugParam]);
 
   // Handle browser back/forward buttons smoothly
   useEffect(() => {

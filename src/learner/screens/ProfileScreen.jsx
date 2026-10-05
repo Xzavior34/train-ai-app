@@ -8,6 +8,7 @@ import AccessibilityPanel from "../../components/common/AccessibilityPanel.jsx";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import MfaSetupScreen from "../../pages/auth/MfaSetupScreen.jsx";
 import { usePushNotifications } from "../hooks/usePushNotifications.js";
+import { getCanonicalDomain } from "../../services/emailService.js";
 
 export function ProfileScreen({
   user,
@@ -825,7 +826,7 @@ export function ProfileScreen({
                   <input
                     className="tai-input"
                     readOnly
-                    value={`${typeof window !== "undefined" ? window.location.origin : ""}/?ref=${referralLink.code}`}
+                    value={`${getCanonicalDomain()}/?ref=${referralLink.code}`}
                     style={{ flex: 1, minWidth: 220, fontSize: 12.5 }}
                     onFocus={(e) => e.target.select()}
                   />
@@ -833,7 +834,7 @@ export function ProfileScreen({
                     type="button"
                     className="tai-btn tai-btn-primary"
                     onClick={async () => {
-                      const url = `${window.location.origin}/?ref=${referralLink.code}`;
+                      const url = `${getCanonicalDomain()}/?ref=${referralLink.code}`;
                       try {
                         await navigator.clipboard.writeText(url);
                         setCopiedReferral(true);

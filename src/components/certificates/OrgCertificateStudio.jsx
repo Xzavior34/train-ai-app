@@ -17,7 +17,7 @@ export function OrgCertificateStudio({
   showToast = () => {},
   isOrgLevel = false
 }) {
-  const [activeTab, setActiveTab] = useState("theme"); // "theme" | "branding" | "signatories" | "criteria"
+  const [activeTab, setActiveTab] = useState("writeup"); // "writeup" | "theme" | "branding" | "signatories" | "criteria"
   const [saving, setSaving] = useState(false);
 
   // Studio configuration state
@@ -27,6 +27,14 @@ export function OrgCertificateStudio({
   const [orgName, setOrgName] = useState(initialConfig.orgName || "Train AI");
   const [orgSubtitle, setOrgSubtitle] = useState(initialConfig.orgSubtitle || "Global AI Learning & Workforce Development Initiative");
   
+  // Fully editable certificate writeup & statements
+  const [presentationText, setPresentationText] = useState(initialConfig.presentationText || "This officially certifies that");
+  const [completionStatement, setCompletionStatement] = useState(initialConfig.completionStatement || "has demonstrated verified proficiency and successfully completed the comprehensive curriculum and rigorous practical assessments for");
+  const [honorsText, setHonorsText] = useState(initialConfig.honorsText || "");
+  const [badgeLabel, setBadgeLabel] = useState(initialConfig.badgeLabel || "VERIFIED CREDENTIAL");
+  const [sealText, setSealText] = useState(initialConfig.sealText || "OFFICIAL");
+  const [footerNote, setFooterNote] = useState(initialConfig.footerNote || "Accredited by Train AI & Global Industry Standards");
+
   const [signatoryName, setSignatoryName] = useState(initialConfig.signatoryName || "Inem Emmanuel");
   const [signatoryTitle, setSignatoryTitle] = useState(initialConfig.signatoryTitle || "Director of Academic Excellence");
   const [secondarySignatoryName, setSecondarySignatoryName] = useState(initialConfig.secondarySignatoryName || "Authorised Signatory");
@@ -50,6 +58,12 @@ export function OrgCertificateStudio({
       setTitle(p.title || "Certificate of Completion");
       setOrgName(p.orgName || "Train AI");
       setOrgSubtitle(p.orgSubtitle || "Global AI Learning & Workforce Development Initiative");
+      setPresentationText(p.presentationText || "This officially certifies that");
+      setCompletionStatement(p.completionStatement || "has demonstrated verified proficiency and successfully completed the comprehensive curriculum and rigorous practical assessments for");
+      setHonorsText(p.honorsText || "");
+      setBadgeLabel(p.badgeLabel || "VERIFIED CREDENTIAL");
+      setSealText(p.sealText || "OFFICIAL");
+      setFooterNote(p.footerNote || "Accredited by Train AI & Global Industry Standards");
       setSignatoryName(p.signatoryName || "Inem Emmanuel");
       setSignatoryTitle(p.signatoryTitle || "Director of Academic Excellence");
       setSecondarySignatoryName(p.secondarySignatoryName || "Authorised Signatory");
@@ -67,6 +81,12 @@ export function OrgCertificateStudio({
     title,
     orgName,
     orgSubtitle,
+    presentationText,
+    completionStatement,
+    honorsText,
+    badgeLabel,
+    sealText,
+    footerNote,
     signatoryName,
     signatoryTitle,
     secondarySignatoryName,
@@ -167,12 +187,13 @@ export function OrgCertificateStudio({
         <div className="tai-card" style={{ padding: 18, borderRadius: 12, border: "1px solid var(--border)" }}>
           
           {/* Studio Section Tabs */}
-          <div style={{ display: "flex", gap: 6, borderBottom: "1px solid var(--border)", paddingBottom: 12, marginBottom: 16 }}>
+          <div style={{ display: "flex", gap: 6, borderBottom: "1px solid var(--border)", paddingBottom: 12, marginBottom: 16, overflowX: "auto" }}>
             {[
+              { k: "writeup", label: "Writeup & Text", icon: FileText },
               { k: "theme", label: "Themes", icon: Layers },
               { k: "branding", label: "Branding", icon: Palette },
-              { k: "signatories", label: "Signatories", icon: FileText },
-              { k: "criteria", label: "Issuance", icon: Sliders },
+              { k: "signatories", label: "Signatories", icon: Sliders },
+              { k: "criteria", label: "Issuance", icon: Award },
             ].map(t => {
               const Icon = t.icon;
               const isActive = activeTab === t.k;
@@ -193,6 +214,7 @@ export function OrgCertificateStudio({
                     display: "flex",
                     alignItems: "center",
                     gap: 5,
+                    whiteSpace: "nowrap",
                     transition: "all .15s ease"
                   }}
                 >
@@ -202,6 +224,87 @@ export function OrgCertificateStudio({
               );
             })}
           </div>
+
+          {/* TAB: WRITEUP & STATEMENTS CUSTOMIZATION */}
+          {activeTab === "writeup" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label className="ta-label">Certificate Title / Credential Name</label>
+                <input
+                  className="ta-input ta-mt4"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Certificate of Completion / Professional Diploma"
+                />
+              </div>
+
+              <div>
+                <label className="ta-label">Presentation Opening Statement</label>
+                <input
+                  className="ta-input ta-mt4"
+                  value={presentationText}
+                  onChange={(e) => setPresentationText(e.target.value)}
+                  placeholder="e.g. This officially certifies that"
+                />
+              </div>
+
+              <div>
+                <label className="ta-label">Achievement &amp; Completion Body Writeup</label>
+                <textarea
+                  className="ta-input ta-mt4"
+                  rows={3}
+                  value={completionStatement}
+                  onChange={(e) => setCompletionStatement(e.target.value)}
+                  placeholder="e.g. has demonstrated verified proficiency and successfully completed the comprehensive curriculum..."
+                  style={{ width: "100%", boxSizing: "border-box", resize: "vertical" }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label className="ta-label">Honors / Distinction (Optional)</label>
+                  <input
+                    className="ta-input ta-mt4"
+                    value={honorsText}
+                    onChange={(e) => setHonorsText(e.target.value)}
+                    placeholder="e.g. Graduated with Honors"
+                  />
+                </div>
+
+                <div>
+                  <label className="ta-label">Verification Badge Label</label>
+                  <input
+                    className="ta-input ta-mt4"
+                    value={badgeLabel}
+                    onChange={(e) => setBadgeLabel(e.target.value)}
+                    placeholder="e.g. VERIFIED CREDENTIAL"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div>
+                  <label className="ta-label">Gold Seal Foil Text</label>
+                  <input
+                    className="ta-input ta-mt4"
+                    value={sealText}
+                    onChange={(e) => setSealText(e.target.value)}
+                    placeholder="e.g. OFFICIAL / ACCREDITED"
+                  />
+                </div>
+
+                <div>
+                  <label className="ta-label">Footer Accreditation Note</label>
+                  <input
+                    className="ta-input ta-mt4"
+                    value={footerNote}
+                    onChange={(e) => setFooterNote(e.target.value)}
+                    placeholder="e.g. Accredited by Train AI"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* TAB 1: THEME SELECTION */}
           {activeTab === "theme" && (
@@ -452,13 +555,20 @@ export function OrgCertificateStudio({
 
         {/* RIGHT COLUMN: Live Responsive Document Canvas */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em" }}>
               Live Certificate Preview
             </span>
-            <span style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700 }}>
-              Updates in real-time
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700 }}>Recipient Name:</span>
+              <input
+                className="ta-input"
+                style={{ height: 28, fontSize: 12, padding: "2px 8px", width: 140 }}
+                value={previewRecipient}
+                onChange={(e) => setPreviewRecipient(e.target.value)}
+                placeholder="Learner Name"
+              />
+            </div>
           </div>
 
           <div style={{
@@ -471,6 +581,8 @@ export function OrgCertificateStudio({
             <CertificateDocument
               template={{ template_text: liveConfig, title, passing_score_pct: passingScorePct, requires_admin_approval: requiresApproval }}
               recipientName={previewRecipient}
+              onRecipientNameChange={(name) => setPreviewRecipient(name)}
+              allowNameEdit={true}
               courseTitle={course.title || "Foundations of Artificial Intelligence & Applied LLMs"}
               issueDate="October 2026"
               credentialNumber={`TAI-CERT-${new Date().getFullYear()}-DEMO`}

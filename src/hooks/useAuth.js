@@ -427,6 +427,7 @@ export function useAuth() {
     let actionLink = null;
     let emailSent = false;
     let rateLimited = false;
+    let lastError = null;
 
     const edgeResults = await Promise.allSettled(resetClients.map((client) =>
       client.functions.invoke("send-password-reset", {
@@ -453,8 +454,10 @@ export function useAuth() {
         else {
           const errMsg = (resetRes.error.message || "").toLowerCase();
           if (resetRes.error.status === 429 || errMsg.includes("rate limit")) rateLimited = true;
+          lastError = resetRes.error.message;
         }
       } catch (e) {
+        lastError = e?.message || "Password reset request failed.";
         console.warn("resetPasswordForEmail fallback error:", e);
       }
     }
@@ -465,40 +468,49 @@ export function useAuth() {
       rateLimited: rateLimited && !emailSent,
       otp,
       actionLink,
-      email: normalizedEmail
+      email: normalizedEmail,
+      warning: lastError
     };
   }, []);
 
-  // Verifies the 6-8 digit OTP recovery code directly
+  // Verifies the 6-8 digit OTP recovery code directly across all project clients
   const verifyRecoveryOtp = useCallback(async (email, otpToken) => {
     const normalizedEmail = (email || "").trim().toLowerCase();
-    try {
-      let lastError = null;
-      for (const projectKey of [SUPABASE_PROJECTS.SARA_FOUNDATION, SUPABASE_PROJECTS.ORGANIZATION_DB]) {
-        const client = getSupabaseClientForProject(projectKey);
-        if (!client) continue;
+    const cleanToken = (otpToken || "").trim();
+    if (!cleanToken) return { success: false, error: "Please enter your recovery code." };
+
+    const targetProject = resolveProjectForSignIn(normalizedEmail);
+    const clientOrder = [
+      { key: targetProject, client: getSupabaseClientForProject(targetProject) || supabase },
+      { key: targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION ? SUPABASE_PROJECTS.ORGANIZATION_DB : SUPABASE_PROJECTS.SARA_FOUNDATION,
+        client: getSupabaseClientForProject(targetProject === SUPABASE_PROJECTS.SARA_FOUNDATION ? SUPABASE_PROJECTS.ORGANIZATION_DB : SUPABASE_PROJECTS.SARA_FOUNDATION) }
+    ].filter((entry) => Boolean(entry.client));
+
+    let lastError = null;
+
+    for (const { key, client } of clientOrder) {
+      try {
         const { data, error } = await client.auth.verifyOtp({
           email: normalizedEmail,
-          token: (otpToken || "").trim(),
+          token: cleanToken,
           type: "recovery"
         });
-        if (error) {
-          lastError = error;
-          continue;
-        }
-        if (data?.session) {
-          recoveryProjectRef.current = projectKey;
-          setActiveSupabaseProject(projectKey);
+
+        if (!error && data?.session) {
+          recoveryProjectRef.current = key;
+          setActiveSupabaseProject(key);
           setSession(data.session);
           safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
           setIsPasswordRecovery(true);
           return { success: true, session: data.session };
         }
+        if (error) lastError = error.message;
+      } catch (e) {
+        lastError = e?.message;
       }
-      return { success: false, error: lastError?.message || "Invalid or expired recovery code." };
-    } catch (e) {
-      return { success: false, error: e?.message || "Verification failed." };
     }
+
+    return { success: false, error: lastError || "Invalid or expired recovery code. Please request a new link." };
   }, []);
 
   const completePasswordReset = useCallback(async (newPassword) => {

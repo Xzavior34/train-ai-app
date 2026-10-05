@@ -12,6 +12,7 @@ import { PortalModal } from "../../components/common/PortalModal.jsx";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
 import { CERTIFICATE_THEMES } from "../../components/certificates/certificateThemes.js";
+import { getCanonicalDomain } from "../../services/emailService.js";
 
 function iconForCategory(category) {
   if (category === "streak") return Flame;
@@ -43,8 +44,16 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
   const [claimingBox, setClaimingBox] = useState(false);
   const [revealedReward, setRevealedReward] = useState(null);
   const [selectedCertificate, setSelectedCertificate] = useState(null);
+  const [customCertName, setCustomCertName] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (session?.user) {
+      const defaultName = session.user.user_metadata?.full_name || session.user.user_metadata?.display_name || user.name || session.user.email?.split("@")[0] || "Learner Name";
+      setCustomCertName(defaultName);
+    }
+  }, [session?.user, user.name]);
+
+  useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     fetchMyMysteryBoxes(userId).then((rows) => { if (!cancelled) setMysteryBoxes(rows); });
@@ -84,7 +93,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
         template: cert.certificate_templates || null,
         instructor: cert.courses?.instructor || user.organization || "Train AI",
         skills: [cert.courses?.category || "Core Curriculum", "Applied Mastery"],
-        verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/verify/${cert.certificate_number || cert.id}`,
+        verificationUrl: `${getCanonicalDomain()}/verify/${cert.certificate_number || cert.id}`,
         bannerImage: cert.courses?.coverImageUrl || cert.courses?.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
       }));
     }
@@ -100,7 +109,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
       template: null,
       instructor: c.instructor || user.organization || "Train AI",
       skills: [c.category || "General", "Track Completion"],
-      verificationUrl: `${typeof window !== "undefined" ? window.location.origin : ""}/verify/TAI-${c.id}`,
+      verificationUrl: `${getCanonicalDomain()}/verify/TAI-${c.id}`,
       bannerImage: c.coverImageUrl || c.image || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80"
     }));
   })();
@@ -679,7 +688,9 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
               <CertificateDocument
                 certificate={selectedCertificate}
                 template={selectedCertificate.template}
-                recipientName={session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "Learner"}
+                recipientName={customCertName || session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "Learner"}
+                onRecipientNameChange={setCustomCertName}
+                allowNameEdit={true}
                 courseTitle={selectedCertificate.title}
                 issueDate={selectedCertificate.issueDate}
                 credentialNumber={selectedCertificate.credentialId}
