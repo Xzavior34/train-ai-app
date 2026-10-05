@@ -44,8 +44,16 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
   const [claimingBox, setClaimingBox] = useState(false);
   const [revealedReward, setRevealedReward] = useState(null);
   const [selectedCertificate, setSelectedCertificate] = useState(null);
+  const [customCertName, setCustomCertName] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (session?.user) {
+      const defaultName = session.user.user_metadata?.full_name || session.user.user_metadata?.display_name || user.name || session.user.email?.split("@")[0] || "Learner Name";
+      setCustomCertName(defaultName);
+    }
+  }, [session?.user, user.name]);
+
+  useEffect(() => {
     if (!userId) return;
     let cancelled = false;
     fetchMyMysteryBoxes(userId).then((rows) => { if (!cancelled) setMysteryBoxes(rows); });
@@ -680,7 +688,9 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
               <CertificateDocument
                 certificate={selectedCertificate}
                 template={selectedCertificate.template}
-                recipientName={session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "Learner"}
+                recipientName={customCertName || session?.user?.user_metadata?.full_name || session?.user?.email?.split("@")[0] || "Learner"}
+                onRecipientNameChange={setCustomCertName}
+                allowNameEdit={true}
                 courseTitle={selectedCertificate.title}
                 issueDate={selectedCertificate.issueDate}
                 credentialNumber={selectedCertificate.credentialId}

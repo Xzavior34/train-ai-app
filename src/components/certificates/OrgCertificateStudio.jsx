@@ -555,13 +555,20 @@ export function OrgCertificateStudio({
 
         {/* RIGHT COLUMN: Live Responsive Document Canvas */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em" }}>
               Live Certificate Preview
             </span>
-            <span style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700 }}>
-              Updates in real-time
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 11, color: "var(--text-3)", fontWeight: 700 }}>Recipient Name:</span>
+              <input
+                className="ta-input"
+                style={{ height: 28, fontSize: 12, padding: "2px 8px", width: 140 }}
+                value={previewRecipient}
+                onChange={(e) => setPreviewRecipient(e.target.value)}
+                placeholder="Learner Name"
+              />
+            </div>
           </div>
 
           <div style={{
@@ -574,6 +581,8 @@ export function OrgCertificateStudio({
             <CertificateDocument
               template={{ template_text: liveConfig, title, passing_score_pct: passingScorePct, requires_admin_approval: requiresApproval }}
               recipientName={previewRecipient}
+              onRecipientNameChange={(name) => setPreviewRecipient(name)}
+              allowNameEdit={true}
               courseTitle={course.title || "Foundations of Artificial Intelligence & Applied LLMs"}
               issueDate="October 2026"
               credentialNumber={`TAI-CERT-${new Date().getFullYear()}-DEMO`}
