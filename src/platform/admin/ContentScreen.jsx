@@ -8,6 +8,7 @@ import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { CourseBuilderWizard } from "./CourseBuilderWizard.jsx";
 import { OrgCertificateStudio } from "../../components/certificates/OrgCertificateStudio.jsx";
 import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
+import { CERTIFICATE_THEMES } from "../../components/certificates/certificateThemes.js";
 
 function GradingRow({ attempt, currentUserId, onOverride }) {
   const [editing, setEditing] = useState(false);
@@ -159,6 +160,8 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
   const [certPassingScore, setCertPassingScore] = useState("70");
   const [certRequiresApproval, setCertRequiresApproval] = useState(true);
   const [assignLearnerId, setAssignLearnerId] = useState("");
+  const [assignRecipientName, setAssignRecipientName] = useState("");
+  const [assignThemeId, setAssignThemeId] = useState("cyber_neon");
   const [assignCertTitle, setAssignCertTitle] = useState("");
   const [assignCertFileUrl, setAssignCertFileUrl] = useState("");
   const [issuingDirectCert, setIssuingDirectCert] = useState(false);
@@ -966,47 +969,137 @@ export function ContentScreen({ orgId, orgSelector, setScreen, selectedCourseId,
                 <div className="ta-card" style={{ marginTop: 8 }}>
                   <div style={{ fontWeight: 800, fontSize: 16, color: "var(--text)" }}>Give Certificate Directly</div>
                   <div style={{ fontSize: 12.5, color: "var(--text-3)", marginTop: 2 }}>
-                    Upload and assign a certificate to a specific learner enrolled in this course - independent of the assessment flow.
+                    Upload and assign a certificate to a specific learner enrolled in this course - independent of the assessment flow. Customize their printed name and theme.
                   </div>
-                  <div className="ta-label ta-mt12">Learner</div>
-                  <select className="ta-input ta-mt8" value={assignLearnerId} onChange={(e) => setAssignLearnerId(e.target.value)}>
-                    <option value="">Select an enrolled learner...</option>
-                    {(enrolledLearnersQuery.data || []).map((l) => (
-                      <option key={l.userId} value={l.userId}>{l.name} - {l.progress}% complete</option>
-                    ))}
-                  </select>
-                  <div className="ta-label ta-mt12">Certificate title</div>
-                  <input className="ta-input ta-mt8" placeholder={`Certificate of ${activeCourse.title} Completion`} value={assignCertTitle} onChange={(e) => setAssignCertTitle(e.target.value)} />
-                  <div className="ta-label ta-mt12">Upload certificate file (optional)</div>
-                  <FileUploadZone
-                    bucket="uploads"
-                    pathPrefix={`certificates/${assignLearnerId || "pending"}`}
-                    accept="application/pdf,image/*"
-                    onUploaded={(url) => setAssignCertFileUrl(url)}
-                    label="Drag and drop a certificate PDF or image, or click to browse"
-                  />
-                  <button
-                    className="ta-btn ta-btn-primary ta-mt12"
-                    disabled={issuingDirectCert || !assignLearnerId}
-                    onClick={async () => {
-                      setIssuingDirectCert(true);
-                      try {
-                        const title = assignCertTitle.trim() || `Certificate of ${activeCourse.title} Completion`;
-                        const result = await issueCertificateDirectly(assignLearnerId, orgId, title, activeCourse.id, assignCertFileUrl || null);
-                        if (!result.success) showToast(result.error);
-                        else {
-                          const learnerName = (enrolledLearnersQuery.data || []).find((l) => l.userId === assignLearnerId)?.name || "learner";
-                          showToast(`Certificate given to ${learnerName}.`);
-                          setAssignLearnerId(""); setAssignCertTitle(""); setAssignCertFileUrl("");
-                          certRequestsQuery.refetch();
-                        }
-                      } finally {
-                        setIssuingDirectCert(false);
-                      }
-                    }}
-                  >
-                    {issuingDirectCert ? "Issuing..." : "Give Certificate"}
-                  </button>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16, marginTop: 14, alignItems: "start" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div>
+                        <div className="ta-label">Enrolled Learner</div>
+                        <select
+                          className="ta-input ta-mt4"
+                          value={assignLearnerId}
+                          onChange={(e) => {
+                            const lId = e.target.value;
+                            setAssignLearnerId(lId);
+                            const selected = (enrolledLearnersQuery.data || []).find((l) => l.userId === lId);
+                            if (selected) {
+                              setAssignRecipientName(selected.name || "");
+                            }
+                          }}
+                        >
+                          <option value="">Select an enrolled learner...</option>
+                          {(enrolledLearnersQuery.data || []).map((l) => (
+                            <option key={l.userId} value={l.userId}>{l.name} - {l.progress}% complete</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <div className="ta-label">Recipient Full Name on Certificate (Editable)</div>
+                        <input
+                          className="ta-input ta-mt4"
+                          placeholder="Recipient Full Name (e.g. Inem Emmanuel)"
+                          value={assignRecipientName}
+                          onChange={(e) => setAssignRecipientName(e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <div className="ta-label">Certificate Title</div>
+                        <input
+                          className="ta-input ta-mt4"
+                          placeholder={`Certificate of ${activeCourse.title} Completion`}
+                          value={assignCertTitle}
+                          onChange={(e) => setAssignCertTitle(e.target.value)}
+                        />
+                      </div>
+
+                      <div>
+                        <div className="ta-label">Certificate Visual Style</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 4 }}>
+                          {Object.values(CERTIFICATE_THEMES).map((th) => (
+                            <button
+                              key={th.id}
+                              type="button"
+                              onClick={() => setAssignThemeId(th.id)}
+                              style={{
+                                padding: "6px 10px",
+                                borderRadius: 8,
+                                border: assignThemeId === th.id ? "2px solid var(--primary)" : "1px solid var(--border)",
+                                background: assignThemeId === th.id ? "var(--surface-3)" : "var(--surface)",
+                                cursor: "pointer",
+                                fontSize: 11.5,
+                                fontWeight: 700,
+                                color: "var(--text)",
+                                textAlign: "left"
+                              }}
+                            >
+                              {th.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="ta-label">Upload Certificate File (Optional)</div>
+                        <FileUploadZone
+                          bucket="uploads"
+                          pathPrefix={`certificates/${assignLearnerId || "pending"}`}
+                          accept="application/pdf,image/*"
+                          onUploaded={(url) => setAssignCertFileUrl(url)}
+                          label="Drag and drop a certificate PDF or image, or click to browse"
+                        />
+                      </div>
+
+                      <button
+                        className="ta-btn ta-btn-primary"
+                        style={{ marginTop: 6 }}
+                        disabled={issuingDirectCert || !assignLearnerId}
+                        onClick={async () => {
+                          setIssuingDirectCert(true);
+                          try {
+                            const title = assignCertTitle.trim() || `Certificate of ${activeCourse.title} Completion`;
+                            const result = await issueCertificateDirectly(assignLearnerId, orgId, title, activeCourse.id, assignCertFileUrl || null);
+                            if (!result.success) showToast(result.error);
+                            else {
+                              const learnerName = assignRecipientName.trim() || (enrolledLearnersQuery.data || []).find((l) => l.userId === assignLearnerId)?.name || "learner";
+                              showToast(`Certificate given to ${learnerName}.`);
+                              setAssignLearnerId(""); setAssignRecipientName(""); setAssignCertTitle(""); setAssignCertFileUrl("");
+                              certRequestsQuery.refetch();
+                            }
+                          } finally {
+                            setIssuingDirectCert(false);
+                          }
+                        }}
+                      >
+                        {issuingDirectCert ? "Issuing..." : "Give Certificate"}
+                      </button>
+                    </div>
+
+                    {/* Live Certificate Preview for Admin */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>
+                        Live Document Preview
+                      </div>
+                      <div style={{ background: "var(--surface-2)", padding: 12, borderRadius: 10, border: "1px solid var(--border)" }}>
+                        <CertificateDocument
+                          template={{
+                            title: assignCertTitle || `Certificate of ${activeCourse.title} Completion`,
+                            template_text: { themeId: assignThemeId, title: assignCertTitle || `Certificate of ${activeCourse.title} Completion` }
+                          }}
+                          recipientName={assignRecipientName || "Selected Learner"}
+                          onRecipientNameChange={(name) => setAssignRecipientName(name)}
+                          allowNameEdit={true}
+                          courseTitle={activeCourse.title}
+                          issueDate={new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                          credentialNumber="TAI-CERT-DIRECT-PREVIEW"
+                          scorePct={100}
+                          isLivePreview={true}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="ta-card">
