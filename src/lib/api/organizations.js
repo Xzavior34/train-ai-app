@@ -951,3 +951,157 @@ export async function attributeReferralSignupIfPending(newUserId) {
     console.warn("Could not attribute referral signup:", e);
   }
 }
+
+/**
+ * Fetch all learners pending approval to join the organization before consuming a seat
+ * @param {string} orgId 
+ * @returns {Promise<Array>}
+ */
+export async function fetchPendingOrgJoinRequests(orgId) {
+  if (!orgId) return [];
+  if (!supabase || orgId === "demo-org-id") {
+    return [
+      {
+        id: "demo-pending-1",
+        user_id: "demo-user-p1",
+        organization_id: orgId,
+        role: "learner",
+        status: "pending_approval",
+        joined_at: new Date(Date.now() - 3600000 * 4).toISOString(),
+        display_name: "Chukwudi Okafor",
+        email: "c.okafor@example.com",
+        avatar_url: null
+      }
+    ];
+  }
+
+  try {
+    const { data: memberRows, error: memberErr } = await supabase
+      .from("organization_members")
+      .select("id, user_id, organization_id, role, status, joined_at")
+      .eq("organization_id", orgId)
+      .in("status", ["pending_approval", "pending", "requested"])
+      .order("joined_at", { ascending: false });
+
+    if (memberErr) throw memberErr;
+    if (!memberRows || !memberRows.length) return [];
+
+    const userIds = memberRows.map((m) => m.user_id).filter(Boolean);
+    const { data: profiles, error: profErr } = await supabase
+      .from("user_profiles")
+      .select("id, display_name, email, avatar_url, role")
+      .in("id", userIds);
+
+    if (profErr) throw profErr;
+    const profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+
+    return memberRows.map((m) => {
+      const p = profileMap[m.user_id] || {};
+      return {
+        ...m,
+        display_name: p.display_name || "Learner",
+        email: p.email || "No email on file",
+        avatar_url: p.avatar_url || null,
+        user_role: p.role || m.role || "learner"
+      };
+    });
+  } catch (e) {
+    console.error("fetchPendingOrgJoinRequests error:", e);
+    return [];
+  }
+}
+
+/**
+ * Approve a pending learner into the organization, allocating a paid seat
+ * @param {string} orgId 
+ * @param {string} userId 
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function approveOrgJoinRequest(orgId, userId) {
+  if (!orgId || !userId) return { success: false, error: "Missing required parameters." };
+  if (!supabase || orgId === "demo-org-id") {
+    return { success: true };
+  }
+
+  try {
+    // 1. Try RPC if available
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("approve_organization_member", {
+      p_org_id: orgId,
+      p_user_id: userId
+    });
+
+    if (!rpcErr && rpcData?.success) {
+      return rpcData;
+    }
+  } catch (rpcErr) {
+    console.info("approve_organization_member RPC fallback:", rpcErr);
+  }
+
+  // 2. Direct client fallback
+  try {
+    // Check seats
+    const seats = await fetchOrgSeatsSummary(orgId);
+    if (seats.available <= 0 && seats.purchased > 0) {
+      return { success: false, error: "No seats available in this workspace. Please purchase more seats before approving." };
+    }
+
+    const { error: memErr } = await supabase
+      .from("organization_members")
+      .update({ status: "active", joined_at: new Date().toISOString() })
+      .eq("organization_id", orgId)
+      .eq("user_id", userId);
+
+    if (memErr) throw memErr;
+
+    await supabase
+      .from("user_profiles")
+      .update({ organization_id: orgId })
+      .eq("id", userId);
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not approve learner join request." };
+  }
+}
+
+/**
+ * Reject / Decline a pending learner join request without consuming any seat
+ * @param {string} orgId 
+ * @param {string} userId 
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function rejectOrgJoinRequest(orgId, userId) {
+  if (!orgId || !userId) return { success: false, error: "Missing required parameters." };
+  if (!supabase || orgId === "demo-org-id") {
+    return { success: true };
+  }
+
+  try {
+    // 1. Try RPC if available
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("reject_organization_member", {
+      p_org_id: orgId,
+      p_user_id: userId
+    });
+
+    if (!rpcErr && rpcData?.success) {
+      return rpcData;
+    }
+  } catch (rpcErr) {
+    console.info("reject_organization_member RPC fallback:", rpcErr);
+  }
+
+  // 2. Direct client fallback
+  try {
+    const { error: memErr } = await supabase
+      .from("organization_members")
+      .update({ status: "rejected" })
+      .eq("organization_id", orgId)
+      .eq("user_id", userId);
+
+    if (memErr) throw memErr;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e?.message || "Could not reject learner join request." };
+  }
+}
+

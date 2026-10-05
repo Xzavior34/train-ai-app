@@ -9,7 +9,13 @@ import {
 import { CERTIFICATE_THEMES } from "../../components/certificates/certificateThemes.js";
 import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { getOrganizationJoinUrl } from "../../lib/api/organizations.js";
+import {
+  getOrganizationJoinUrl,
+  fetchPendingOrgJoinRequests,
+  approveOrgJoinRequest,
+  rejectOrgJoinRequest,
+  fetchOrgSeatsSummary
+} from "../../lib/api/organizations.js";
 import {
   fetchOrgMembers, fetchPendingInvitations, createInvitation, revokeInvitation,
   updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly,
@@ -644,9 +650,14 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const [tab, setTab] = useState("all");
   const [certModalUser, setCertModalUser] = useState(null);
   const [certTitle, setCertTitle] = useState("");
+  const [certPresentation, setCertPresentation] = useState("This officially certifies that");
+  const [certStatement, setCertStatement] = useState("has demonstrated verified proficiency and successfully completed the comprehensive curriculum and rigorous practical assessments for");
+  const [certHonors, setCertHonors] = useState("");
+  const [certSignatory, setCertSignatory] = useState("Inem Emmanuel");
   const [certThemeId, setCertThemeId] = useState("cyber_neon");
   const [certFileUrl, setCertFileUrl] = useState("");
   const [issuingCert, setIssuingCert] = useState(false);
+  const [approvalBusyId, setApprovalBusyId] = useState(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteModalTab, setInviteModalTab] = useState("link"); // "link" | "single" | "bulk"
   const [bulkMode, setBulkMode] = useState(false);
@@ -676,6 +687,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const invitationsQuery = useSupabaseQuery(async () => orgId ? fetchPendingInvitations(orgId) : [], [orgId]);
   const progressQuery = useSupabaseQuery(async () => orgId ? fetchOrgLearnerProgressOverview(orgId) : [], [orgId]);
   const kpisQuery = useSupabaseQuery(async () => orgId ? fetchOrgPeopleKpis(orgId) : null, [orgId]);
+  const joinRequestsQuery = useSupabaseQuery(async () => orgId ? fetchPendingOrgJoinRequests(orgId) : [], [orgId]);
+  const seatsQuery = useSupabaseQuery(async () => orgId ? fetchOrgSeatsSummary(orgId) : null, [orgId]);
   // Instructor applications: mentors rows in this org that aren't active yet.
   const applicationsQuery = useSupabaseQuery(async () => orgId ? fetchMentorApplications(orgId) : [], [orgId]);
   const rolePermsQuery = useSupabaseQuery(async () => orgId ? fetchOrgRolePermissions(orgId) : [], [orgId]);
@@ -686,6 +699,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const members = membersQuery.data || [];
   const instructors = instructorsQuery.data || [];
   const invitations = invitationsQuery.data || [];
+  const joinRequests = joinRequestsQuery.data || [];
+  const seats = seatsQuery.data || { purchased: 0, used: 0, available: 0 };
   const dsarRequests = dsarQuery.data || [];
   const kpis = kpisQuery.data;
   const applications = applicationsQuery.data || [];
@@ -735,6 +750,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
     kpisQuery.refetch();
     progressQuery.refetch();
     cohortsQuery.refetch();
+    joinRequestsQuery.refetch();
+    seatsQuery.refetch();
   }
 
   async function runBulk(label, fn) {
@@ -804,6 +821,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         <div className="ta-tabs">
           {[
             { k: "all", label: `Users (${members.length})` },
+            { k: "approvals", label: `Pending Approvals (${joinRequests.length})` },
             { k: "progress", label: `Progress${behindCount > 0 ? ` (${behindCount} behind)` : ""}` },
             { k: "mentorapps", label: `Instructor Applications (${applications.length})` },
             { k: "applications", label: `Instructor Monitor (${instructors.length})` },
@@ -817,6 +835,50 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
 
         {tab === "all" && (
           <div className="ta-col ta-gap16">
+            {/* Join Requests Pending Alert Banner */}
+            {joinRequests.length > 0 && (
+              <div
+                style={{
+                  padding: "12px 18px",
+                  background: "linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(217,119,6,0.06) 100%)",
+                  border: "1.5px solid rgba(245,158,11,0.35)",
+                  borderRadius: 10,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 12
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: "#FEF3C7", color: "#B45309",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0
+                  }}>
+                    <Users size={16} />
+                  </div>
+                  <div>
+                    <strong style={{ color: "#92400E", fontSize: 13 }}>
+                      {joinRequests.length} Learner(s) Awaiting Approval Before Consuming Seats
+                    </strong>
+                    <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+                      Review and accept or reject candidates before allocating your paid organization seat quota.
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="ta-btn ta-btn-primary ta-btn-sm"
+                  onClick={() => setTab("approvals")}
+                  style={{ fontWeight: 700 }}
+                >
+                  Review Approvals ({joinRequests.length})
+                </button>
+              </div>
+            )}
+
             {/* KPI row */}
             <div className="ta-grid ta-grid-4 anim-stagger">
               <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
@@ -1033,6 +1095,138 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                         </tr>
                       );
                     })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === "approvals" && (
+          <div className="ta-col ta-gap16">
+            {/* Seat capacity & protection banner */}
+            <div className="ta-card" style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 14 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>Seat Allocation &amp; Member Protection Queue</div>
+                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 3 }}>
+                  Learners below applied or joined via your organization invite link. Reviewing and accepting them will allocate an active seat. Rejecting them denies access without consuming any seats.
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Available Seats</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: seats.available > 0 ? "#10B981" : "#EF4444" }}>
+                    {seats.available} / {seats.purchased || (seats.used + seats.available)}
+                  </div>
+                </div>
+                {setScreen && (
+                  <button
+                    type="button"
+                    className="ta-btn ta-btn-outline ta-btn-sm"
+                    onClick={() => setScreen("seats")}
+                  >
+                    Buy More Seats
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="ta-card">
+              <div className="ta-table-wrap">
+                <table className="ta-table">
+                  <thead>
+                    <tr>
+                      <th>Learner</th>
+                      <th>Role Requested</th>
+                      <th>Date Joined / Requested</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: "right" }}>Decision</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {joinRequestsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading pending requests...</td></tr>}
+                    {!joinRequestsQuery.loading && joinRequests.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="ta-empty">
+                          No pending join requests. All learners have been processed!
+                        </td>
+                      </tr>
+                    )}
+                    {joinRequests.map((req) => (
+                      <tr key={req.id}>
+                        <td>
+                          <div className="ta-row ta-gap10">
+                            <Avatar
+                              initials={(req.display_name || "L").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()}
+                              size={32}
+                              src={req.avatar_url || undefined}
+                            />
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: 13 }}>{req.display_name}</div>
+                              <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{req.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <Tag>{req.user_role || req.role || "learner"}</Tag>
+                        </td>
+                        <td>
+                          {req.joined_at ? new Date(req.joined_at).toLocaleDateString() : "Recently"}
+                        </td>
+                        <td>
+                          <Tag tone="warning">Pending Approval</Tag>
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <div className="ta-row ta-gap8" style={{ justifyContent: "flex-end" }}>
+                            <button
+                              type="button"
+                              className="ta-btn ta-btn-primary ta-btn-sm"
+                              disabled={approvalBusyId === req.user_id}
+                              style={{ fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5 }}
+                              onClick={async () => {
+                                setApprovalBusyId(req.user_id);
+                                try {
+                                  const res = await approveOrgJoinRequest(orgId, req.user_id);
+                                  if (res.success) {
+                                    showToast(`${req.display_name} accepted into workspace! 1 seat allocated.`);
+                                    refreshDirectory();
+                                  } else {
+                                    showToast(res.error || "Could not approve learner.");
+                                  }
+                                } finally {
+                                  setApprovalBusyId(null);
+                                }
+                              }}
+                            >
+                              <Check size={13} /> {approvalBusyId === req.user_id ? "Approving..." : "Accept & Grant Seat"}
+                            </button>
+
+                            <button
+                              type="button"
+                              className="ta-btn ta-btn-danger ta-btn-sm"
+                              disabled={approvalBusyId === req.user_id}
+                              onClick={async () => {
+                                if (!window.confirm(`Decline and reject ${req.display_name}? They will not receive a seat.`)) return;
+                                setApprovalBusyId(req.user_id);
+                                try {
+                                  const res = await rejectOrgJoinRequest(orgId, req.user_id);
+                                  if (res.success) {
+                                    showToast(`Join request for ${req.display_name} rejected.`);
+                                    refreshDirectory();
+                                  } else {
+                                    showToast(res.error || "Could not reject request.");
+                                  }
+                                } finally {
+                                  setApprovalBusyId(null);
+                                }
+                              }}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -1639,7 +1833,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               {/* Left Column: Form Controls */}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
-                  <div className="ta-label">Certificate Title</div>
+                  <div className="ta-label">Certificate Title / Credential Name</div>
                   <input
                     className="ta-input ta-mt4"
                     style={{ width: "100%", boxSizing: "border-box" }}
@@ -1648,6 +1842,53 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     onChange={(e) => setCertTitle(e.target.value)}
                     autoFocus
                   />
+                </div>
+
+                <div>
+                  <div className="ta-label">Presentation Statement</div>
+                  <input
+                    className="ta-input ta-mt4"
+                    style={{ width: "100%", boxSizing: "border-box" }}
+                    placeholder="e.g. This officially certifies that"
+                    value={certPresentation}
+                    onChange={(e) => setCertPresentation(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <div className="ta-label">Achievement / Completion Body Writeup</div>
+                  <textarea
+                    className="ta-input ta-mt4"
+                    rows={2}
+                    style={{ width: "100%", boxSizing: "border-box", resize: "vertical" }}
+                    placeholder="e.g. has demonstrated verified proficiency and successfully completed the comprehensive curriculum..."
+                    value={certStatement}
+                    onChange={(e) => setCertStatement(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div>
+                    <div className="ta-label">Honors / Distinction (Optional)</div>
+                    <input
+                      className="ta-input ta-mt4"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      placeholder="e.g. Graduated with Honors"
+                      value={certHonors}
+                      onChange={(e) => setCertHonors(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <div className="ta-label">Signatory Name</div>
+                    <input
+                      className="ta-input ta-mt4"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      placeholder="e.g. Inem Emmanuel"
+                      value={certSignatory}
+                      onChange={(e) => setCertSignatory(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -1697,7 +1938,16 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Live Preview</div>
                 <div style={{ border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden", background: "var(--surface-2)" }}>
                   <CertificateDocument
-                    template={{ template_text: { themeId: certThemeId, title: certTitle || "Certificate of Achievement" } }}
+                    template={{
+                      template_text: {
+                        themeId: certThemeId,
+                        title: certTitle || "Certificate of Achievement",
+                        presentationText: certPresentation,
+                        completionStatement: certStatement,
+                        honorsText: certHonors,
+                        signatoryName: certSignatory
+                      }
+                    }}
                     recipientName={certModalUser.display_name || "Learner"}
                     courseTitle={certTitle || "Professional Capability & Excellence"}
                     issueDate="October 2026"

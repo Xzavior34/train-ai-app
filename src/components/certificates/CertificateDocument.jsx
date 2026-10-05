@@ -183,7 +183,7 @@ export function CertificateDocument({
               fontWeight: 800,
               letterSpacing: ".05em"
             }}>
-              <ShieldCheck size={13} /> VERIFIED CREDENTIAL
+              <ShieldCheck size={13} /> {config.badgeLabel || "VERIFIED CREDENTIAL"}
             </div>
             <div style={{ fontSize: 10.5, opacity: 0.6, fontFamily: "monospace", marginTop: 3 }}>
               ID: {effectiveNumber}
@@ -205,7 +205,7 @@ export function CertificateDocument({
           </div>
 
           <div style={{ fontSize: "clamp(11px, 1.3vw, 13px)", opacity: 0.8, fontStyle: theme.id === "classic_academic" ? "italic" : "normal" }}>
-            This officially certifies that
+            {config.presentationText || "This officially certifies that"}
           </div>
 
           {/* Recipient Full Name */}
@@ -224,7 +224,7 @@ export function CertificateDocument({
           </div>
 
           <div style={{ fontSize: "clamp(11px, 1.3vw, 13px)", opacity: 0.8, maxWidth: 640, margin: "6px auto 0", lineHeight: 1.45 }}>
-            has demonstrated verified proficiency and successfully completed the comprehensive curriculum and rigorous practical assessments for
+            {config.completionStatement || "has demonstrated verified proficiency and successfully completed the comprehensive curriculum and rigorous practical assessments for"}
           </div>
 
           {/* Course Title */}
@@ -238,22 +238,38 @@ export function CertificateDocument({
             {effectiveCourse}
           </div>
 
-          {/* Optional score badge */}
-          {scorePct && (
-            <div style={{
-              display: "inline-block",
-              background: theme.id === "classic_academic" ? "#FEF3C7" : "rgba(245,158,11,0.15)",
-              color: theme.id === "classic_academic" ? "#92400E" : "#FBBF24",
-              border: "1px solid rgba(245,158,11,0.3)",
-              fontSize: 11,
-              fontWeight: 800,
-              padding: "2px 10px",
-              borderRadius: 6,
-              marginTop: 4
-            }}>
-              Assessed Score: {scorePct}% (Passing Standard Met)
-            </div>
-          )}
+          {/* Honors or Score badge */}
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", alignItems: "center", flexWrap: "wrap", marginTop: 4 }}>
+            {config.honorsText && (
+              <div style={{
+                display: "inline-block",
+                background: "linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(217,119,6,0.1) 100%)",
+                color: config.goldColor || theme.goldColor,
+                border: `1px solid ${config.goldColor || theme.goldColor}66`,
+                fontSize: 11,
+                fontWeight: 800,
+                padding: "2px 10px",
+                borderRadius: 6
+              }}>
+                ★ {config.honorsText}
+              </div>
+            )}
+
+            {scorePct && (
+              <div style={{
+                display: "inline-block",
+                background: theme.id === "classic_academic" ? "#FEF3C7" : "rgba(245,158,11,0.15)",
+                color: theme.id === "classic_academic" ? "#92400E" : "#FBBF24",
+                border: "1px solid rgba(245,158,11,0.3)",
+                fontSize: 11,
+                fontWeight: 800,
+                padding: "2px 10px",
+                borderRadius: 6
+              }}>
+                Assessed Score: {scorePct}% (Passing Standard Met)
+              </div>
+            )}
+          </div>
         </div>
 
         {/* 3. BOTTOM FOOTER: Signatures, Seal Badge, Date, and QR Matrix */}
@@ -301,7 +317,7 @@ export function CertificateDocument({
             }}>
               <Award size={26} color="#FFFFFF" />
               <span style={{ fontSize: 7.5, fontWeight: 900, letterSpacing: ".06em", marginTop: 2, textTransform: "uppercase" }}>
-                OFFICIAL
+                {config.sealText || "OFFICIAL"}
               </span>
             </div>
             <div style={{ fontSize: 10, fontWeight: 800, opacity: 0.7, marginTop: 6 }}>

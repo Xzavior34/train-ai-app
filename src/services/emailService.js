@@ -5,6 +5,19 @@ export const CANONICAL_DOMAIN = "https://trainailtd.com";
 export const SUPPORT_EMAIL = "info@trainailtd.com";
 
 /**
+ * Returns the active Resend API key from environment variables.
+ */
+export function getResendApiKey() {
+  const envKey = (
+    (typeof import.meta !== "undefined" && import.meta.env && (import.meta.env.VITE_RESEND_API_KEY || import.meta.env.RESEND_API_KEY)) ||
+    (typeof process !== "undefined" && process.env && (process.env.VITE_RESEND_API_KEY || process.env.RESEND_API_KEY)) ||
+    ""
+  ).trim();
+
+  return envKey;
+}
+
+/**
  * Returns the active canonical domain for links & redirects.
  * In local development, respects window.location.origin; in production, defaults to https://trainailtd.com.
  */
@@ -22,13 +35,10 @@ export function getCanonicalDomain() {
  * Dispatches a password reset email via Resend directly from client if API key is provided.
  */
 export async function sendPasswordResetViaResendDirect({ email, resetUrl, otpCode }) {
-  const apiKey = (
-    (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_RESEND_API_KEY) ||
-    (typeof process !== "undefined" && process.env && process.env.VITE_RESEND_API_KEY) ||
-    ""
-  ).trim();
+  const apiKey = getResendApiKey();
 
   if (!apiKey) return { success: false, reason: "NO_CLIENT_KEY" };
+
 
   try {
     const fromEmail = "Train AI <info@trainailtd.com>";
@@ -92,11 +102,7 @@ export async function sendPasswordResetViaResendDirect({ email, resetUrl, otpCod
  * Dispatches an organization invitation email via Resend directly from client if API key is provided.
  */
 export async function sendInvitationViaResendDirect({ email, orgName, role, inviteUrl }) {
-  const apiKey = (
-    (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_RESEND_API_KEY) ||
-    (typeof process !== "undefined" && process.env && process.env.VITE_RESEND_API_KEY) ||
-    ""
-  ).trim();
+  const apiKey = getResendApiKey();
 
   if (!apiKey) return { success: false, reason: "NO_CLIENT_KEY" };
 
@@ -160,11 +166,7 @@ export async function sendInvitationViaResendDirect({ email, orgName, role, invi
  * Dispatches a demo booking confirmation and team notification via Resend.
  */
 export async function sendDemoBookingNotificationViaResend({ fullName, workEmail, companyName, teamSize, scheduledDate, scheduledTime, timezone, message }) {
-  const apiKey = (
-    (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_RESEND_API_KEY) ||
-    (typeof process !== "undefined" && process.env && process.env.VITE_RESEND_API_KEY) ||
-    ""
-  ).trim();
+  const apiKey = getResendApiKey();
 
   if (!apiKey) return { success: false, reason: "NO_CLIENT_KEY" };
 
@@ -266,11 +268,8 @@ export async function sendDemoBookingNotificationViaResend({ fullName, workEmail
  * Dispatches a 2.0 Migration & Password Setup email via Resend for legacy users.
  */
 export async function sendMigrationPasswordResetViaResend({ email, displayName, resetUrl }) {
-  const apiKey = (
-    (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_RESEND_API_KEY) ||
-    (typeof process !== "undefined" && process.env && process.env.VITE_RESEND_API_KEY) ||
-    ""
-  ).trim();
+  const apiKey = getResendApiKey();
+
 
   const domain = getCanonicalDomain();
   const url = resetUrl || `${domain}/?view=auth&recovery=1&email=${encodeURIComponent(email)}`;

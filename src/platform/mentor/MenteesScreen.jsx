@@ -78,6 +78,10 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
   const canIssueCertificates = !!canIssueCertPermQuery.data;
   const [certModalUser, setCertModalUser] = useState(null);
   const [certTitle, setCertTitle] = useState("");
+  const [certPresentation, setCertPresentation] = useState("This officially certifies that");
+  const [certStatement, setCertStatement] = useState("has demonstrated verified proficiency and successfully completed the comprehensive curriculum and rigorous practical assessments for");
+  const [certHonors, setHonors] = useState("");
+  const [certSignatory, setCertSignatory] = useState("Instructor Inem Emmanuel");
   const [certThemeId, setCertThemeId] = useState("cyber_neon");
   const [certFileUrl, setCertFileUrl] = useState("");
   const [issuingCert, setIssuingCert] = useState(false);
@@ -364,7 +368,7 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                 {/* Left Column: Form Controls */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <div>
-                    <div className="ta-label">Certificate Title</div>
+                    <div className="ta-label">Certificate Title / Credential Name</div>
                     <input
                       className="ta-input ta-mt4"
                       style={{ width: "100%", boxSizing: "border-box" }}
@@ -373,6 +377,53 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                       onChange={(e) => setCertTitle(e.target.value)}
                       autoFocus
                     />
+                  </div>
+
+                  <div>
+                    <div className="ta-label">Presentation Statement</div>
+                    <input
+                      className="ta-input ta-mt4"
+                      style={{ width: "100%", boxSizing: "border-box" }}
+                      placeholder="e.g. This officially certifies that"
+                      value={certPresentation}
+                      onChange={(e) => setCertPresentation(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <div className="ta-label">Achievement / Completion Body Writeup</div>
+                    <textarea
+                      className="ta-input ta-mt4"
+                      rows={2}
+                      style={{ width: "100%", boxSizing: "border-box", resize: "vertical" }}
+                      placeholder="e.g. has demonstrated verified proficiency and successfully completed the comprehensive curriculum..."
+                      value={certStatement}
+                      onChange={(e) => setCertStatement(e.target.value)}
+                    />
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    <div>
+                      <div className="ta-label">Honors / Distinction (Optional)</div>
+                      <input
+                        className="ta-input ta-mt4"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        placeholder="e.g. Graduated with Honors"
+                        value={certHonors}
+                        onChange={(e) => setHonors(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <div className="ta-label">Signatory Name</div>
+                      <input
+                        className="ta-input ta-mt4"
+                        style={{ width: "100%", boxSizing: "border-box" }}
+                        placeholder="e.g. Instructor Inem Emmanuel"
+                        value={certSignatory}
+                        onChange={(e) => setCertSignatory(e.target.value)}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -422,7 +473,16 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                   <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Live Preview</div>
                   <div style={{ border: "1px solid var(--border)", borderRadius: 10, overflow: "hidden", background: "var(--surface-2)" }}>
                     <CertificateDocument
-                      template={{ template_text: { themeId: certThemeId, title: certTitle || "Instructor Certificate of Excellence" } }}
+                      template={{
+                        template_text: {
+                          themeId: certThemeId,
+                          title: certTitle || "Instructor Certificate of Excellence",
+                          presentationText: certPresentation,
+                          completionStatement: certStatement,
+                          honorsText: certHonors,
+                          signatoryName: certSignatory
+                        }
+                      }}
                       recipientName={certModalUser.name || "Learner"}
                       courseTitle={certTitle || "Instructor Recognition & Mentorship"}
                       issueDate="October 2026"

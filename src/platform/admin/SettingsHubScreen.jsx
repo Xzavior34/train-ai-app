@@ -7,6 +7,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchOrganizationById, updateOrganization } from "../../lib/api/platform.js";
 import { fetchOrgAISettings, updateOrgAISettings, fetchOrgAIInsightsSettings, updateOrgAIInsightsSettings, fetchOrgLeaderboardSettings, updateOrgLeaderboardSettings, fetchOrgGamificationSettings, updateOrgGamificationSettings, startOrganizationSubscriptionPayment, TIER_LABELS, fetchTierPrice, fetchOrgSeatsSummary, startSeatPurchasePayment, fetchSeatPrice } from "../../lib/api/organizations.js";
 import { fetchMyOrgSupportTickets, createSupportTicket } from "../../lib/api/platform.js";
+import { OrganizationReferralCard } from "./PeopleScreen.jsx";
 
 // organization's name with that fake placeholder if an admin didn't notice
 // and retype their real name first. Fixed by fetching the real organizations
@@ -257,7 +258,10 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
         {orgId && orgQuery.error && <div className="ta-empty">Couldn't load organization: {orgQuery.error}</div>}
 
         {orgId && !orgQuery.loading && !orgQuery.error && (
-          <div className="ta-grid ta-grid-2" style={{ gap: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <OrganizationReferralCard orgId={orgId} showToast={showToast} />
+
+            <div className="ta-grid ta-grid-2" style={{ gap: 20 }}>
 
             {/* Left Column: Organization, Billing & Seats */}
             <div className="anim-stagger" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -576,8 +580,8 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                 </div>
               </div>
             </div>
-
           </div>
+        </div>
         )}
       </div>
     </div>
