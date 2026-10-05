@@ -37,9 +37,15 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
   const seatsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgSeatsSummary(orgId) : null), [orgId]);
   const historyQuery = useSupabaseQuery(async () => (orgId ? fetchSeatPurchaseHistory(orgId) : []), [orgId]);
   const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
-  const invitesQuery = useSupabaseQuery(async () => (orgId ? fetchPendingInvitations(orgId) : []), [orgId]);
-  const ngnPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("NGN"), []);
-  const usdPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("USD"), []);
+  const org = orgQuery.data;
+  const orgTier = org?.subscription_tier || "growth";
+  const seats = seatsQuery.data || { purchased: 0, used: 0, available: 0 };
+  const history = historyQuery.data || [];
+  const members = membersQuery.data || [];
+  const invites = invitesQuery.data || [];
+
+  const ngnPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("NGN", orgTier), [orgTier]);
+  const usdPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("USD", orgTier), [orgTier]);
 
   // Credit requests query
   const creditRequestsQuery = useSupabaseQuery(async () => fetchOrgCreditRequests(orgId), [orgId]);
@@ -47,12 +53,6 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
 
   const pendingRequests = useMemo(() => creditRequests.filter((r) => r.status === "pending"), [creditRequests]);
   const approvedRequests = useMemo(() => creditRequests.filter((r) => r.status === "approved"), [creditRequests]);
-
-  const org = orgQuery.data;
-  const seats = seatsQuery.data || { purchased: 0, used: 0, available: 0 };
-  const history = historyQuery.data || [];
-  const members = membersQuery.data || [];
-  const invites = invitesQuery.data || [];
 
   const PROVIDERS = [
     { ...PROVIDER_META[0], unit: (ngnPriceQuery.data?.unit_amount_minor || 0) / 100 },
@@ -93,7 +93,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
     if (!userEmail) { showToast("No billing email on your account - add one in Settings first."); return; }
     setStarting(true);
     try {
-      const res = await startSeatPurchasePayment({ orgId, seats: qty, email: userEmail, provider });
+      const res = await startSeatPurchasePayment({ orgId, seats: qty, email: userEmail, provider, tier: orgTier });
       if (!res.success) { showToast(res.error); setStarting(false); }
     } catch (e) {
       showToast(e?.message || "Could not start the seat purchase.");

@@ -22,13 +22,16 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
   const seatsSummary = seatsSummaryQuery.data || { purchased: 0, used: 0, available: 0 };
   const [seatsToBuy, setSeatsToBuy] = useState("");
   const [purchasingSeats, setPurchasingSeats] = useState(false);
-  const seatPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("USD"), []);
+  const orgTier = org?.subscription_tier || "growth";
+  const seatPriceQuery = useSupabaseQuery(async () => fetchSeatPrice("USD", orgTier), [orgTier]);
   const SEAT_PRICE_DISPLAY = (seatPriceQuery.data?.unit_amount_minor || 0) / 100;
-  const starterPriceQuery = useSupabaseQuery(async () => fetchTierPrice("starter", "NGN"), []);
-  const growthPriceQuery = useSupabaseQuery(async () => fetchTierPrice("growth", "NGN"), []);
+  const basicPriceQuery = useSupabaseQuery(async () => fetchTierPrice("basic", "NGN"), []);
+  const intermediatePriceQuery = useSupabaseQuery(async () => fetchTierPrice("intermediate", "NGN"), []);
   const TIER_PRICES_NGN = {
-    starter: (starterPriceQuery.data?.unit_amount_minor || 0) / 100,
-    growth: (growthPriceQuery.data?.unit_amount_minor || 0) / 100,
+    basic: (basicPriceQuery.data?.unit_amount_minor || 25000000) / 100,
+    starter: (basicPriceQuery.data?.unit_amount_minor || 25000000) / 100,
+    intermediate: (intermediatePriceQuery.data?.unit_amount_minor || 50000000) / 100,
+    growth: (intermediatePriceQuery.data?.unit_amount_minor || 50000000) / 100,
   };
   const ticketsQuery = useSupabaseQuery(async () => (orgId ? fetchMyOrgSupportTickets(orgId) : []), [orgId]);
   const [ticketSubject, setTicketSubject] = useState("");
@@ -299,18 +302,21 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                 </div>
 
                 <div className="ta-row ta-gap10 ta-mt16" style={{ flexWrap: "wrap" }}>
-                  {["starter", "growth"].map((tier) => (
+                  {[
+                    { key: "basic", label: "Basic", priceNgn: TIER_PRICES_NGN.basic },
+                    { key: "intermediate", label: "Intermediate", priceNgn: TIER_PRICES_NGN.intermediate },
+                  ].map(({ key: tier, label, priceNgn }) => (
                     <button
                       key={tier}
-                      className={org?.subscription_tier === tier && org?.status === "active" ? "ta-btn ta-btn-ghost" : "ta-btn ta-btn-primary"}
-                      disabled={payingTier === tier || (org?.subscription_tier === tier && org?.status === "active")}
+                      className={(org?.subscription_tier === tier || (tier === "basic" && org?.subscription_tier === "starter") || (tier === "intermediate" && org?.subscription_tier === "growth")) && org?.status === "active" ? "ta-btn ta-btn-ghost" : "ta-btn ta-btn-primary"}
+                      disabled={payingTier === tier || ((org?.subscription_tier === tier || (tier === "basic" && org?.subscription_tier === "starter") || (tier === "intermediate" && org?.subscription_tier === "growth")) && org?.status === "active")}
                       onClick={() => handleUpgrade(tier)}
                     >
-                      {org?.subscription_tier === tier && org?.status === "active"
-                        ? `Current plan: ${TIER_LABELS[tier]}`
+                      {(org?.subscription_tier === tier || (tier === "basic" && org?.subscription_tier === "starter") || (tier === "intermediate" && org?.subscription_tier === "growth")) && org?.status === "active"
+                        ? `Current plan: ${label}`
                         : payingTier === tier
                           ? "Redirecting to checkout..."
-                          : `${org?.status === "active" ? "Switch to" : "Activate"} ${TIER_LABELS[tier]}: ₦${TIER_PRICES_NGN[tier].toLocaleString()}/mo`}
+                          : `${org?.status === "active" ? "Switch to" : "Activate"} ${label}: ₦${priceNgn.toLocaleString()}/mo`}
                     </button>
                   ))}
                   <a className="ta-btn ta-btn-ghost" href="mailto:info@trainailtd.com?subject=Enterprise%20plan%20inquiry">
@@ -339,7 +345,7 @@ export function SettingsHubScreen({ orgId, profileQuery, orgSelector, setScreen,
                     onClick={async () => {
                       setPurchasingSeats(true);
                       try {
-                        const result = await startSeatPurchasePayment({ orgId, seats: Number(seatsToBuy), email: userEmail });
+                        const result = await startSeatPurchasePayment({ orgId, seats: Number(seatsToBuy), email: userEmail, tier: orgTier });
                         if (!result.success) { showToast(result.error); setPurchasingSeats(false); }
                       } catch (e) {
                         showToast(e?.message || "Could not start seat purchase.");
