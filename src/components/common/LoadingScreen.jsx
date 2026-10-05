@@ -16,8 +16,8 @@ export default function LoadingScreen({ message = "Preparing your workspace..." 
         window.__trainai_clear_cache_and_reload(true);
       } else {
         try {
-          if ("caches" in window) {
-            caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+          if (typeof window !== "undefined" && "caches" in window && window.caches) {
+            window.caches.keys().then((names) => names.forEach((n) => window.caches.delete(n)));
           }
           if ("serviceWorker" in navigator) {
             navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));

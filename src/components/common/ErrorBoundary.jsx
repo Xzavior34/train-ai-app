@@ -44,8 +44,8 @@ export default class ErrorBoundary extends React.Component {
           window.__trainai_clear_cache_and_reload(false);
         } else {
           try {
-            if ("caches" in window) {
-              caches.keys().then((names) => names.forEach((n) => caches.delete(n)));
+            if (typeof window !== "undefined" && "caches" in window && window.caches) {
+              window.caches.keys().then((names) => names.forEach((n) => window.caches.delete(n)));
             }
           } catch (_) {}
           window.location.replace(window.location.pathname + "?_nocache=" + now);
@@ -79,9 +79,9 @@ export default class ErrorBoundary extends React.Component {
   handleHardReset = async () => {
     if (window.confirm("This will clear all temporary browser cache, service workers, and reload the application. Continue?")) {
       try {
-        if ("caches" in window) {
-          const names = await caches.keys();
-          await Promise.all(names.map((n) => caches.delete(n)));
+        if (typeof window !== "undefined" && "caches" in window && window.caches) {
+          const names = await window.caches.keys();
+          await Promise.all(names.map((n) => window.caches.delete(n)));
         }
         if ("serviceWorker" in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
