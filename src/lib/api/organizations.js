@@ -692,10 +692,33 @@ export async function resolveOrgPaymentGateway(organizationId) {
 // fetchTierPrice() itself - the actual charge below is always the real,
 // current, server-configured amount regardless of what that preview text
 // shows, so this is a display-accuracy gap, not a billing-integrity one.
-export const TIER_LABELS = { starter: "Starter", growth: "Growth" };
+export const TIER_LABELS = {
+  starter: "Basic",
+  basic: "Basic",
+  growth: "Intermediate",
+  intermediate: "Intermediate",
+  enterprise: "Enterprise",
+  advanced: "Enterprise",
+};
 
 export async function fetchTierPrice(tier, currency = "USD") {
-  const fallback = tier === "growth" ? { USD: 4500, NGN: 4500000 } : { USD: 1500, NGN: 1500000 };
+  const normTier = (tier === "growth" || tier === "intermediate") ? "intermediate" : "basic";
+  const fallbacks = {
+    basic: {
+      NGN: 25000000, // ₦250,000 in kobo
+      USD: 25000,    // $250 in cents
+      GBP: 19000,    // £190 in pence
+      EUR: 22000,    // €220 in cents
+    },
+    intermediate: {
+      NGN: 50000000, // ₦500,000 in kobo
+      USD: 50000,    // $500 in cents
+      GBP: 40000,    // £400 in pence
+      EUR: 44000,    // €440 in cents
+    },
+  };
+
+  const fallback = fallbacks[normTier] || fallbacks.basic;
   if (!supabase) return { currency, unit_amount_minor: fallback[currency] ?? fallback.USD, unverified_fallback: true };
   try {
     const { data, error } = await supabase.rpc("get_active_price", { p_category: `org_subscription_${tier}`, p_currency: currency });
@@ -708,7 +731,7 @@ export async function fetchTierPrice(tier, currency = "USD") {
 }
 
 export async function startOrganizationSubscriptionPayment({ orgId, tier, email, provider = "paystack" }) {
-  if (tier === "enterprise") {
+  if (tier === "enterprise" || tier === "advanced") {
     return { success: false, error: "Enterprise is custom-priced. Use Book a Demo or Organisation Inquiry instead of self-serve payment." };
   }
   if (!TIER_LABELS[tier]) return { success: false, error: "Unknown plan." };
@@ -850,26 +873,34 @@ export async function purchaseSeats(organizationId, seats, amount, paymentRefere
 // later billing audit called out by name. Fetched fresh each time rather
 // than cached as a module-level constant, so a platform-owner price
 // change takes effect without a redeploy.
-export async function fetchSeatPrice(currency = "USD") {
-  if (!supabase) return { currency, unit_amount_minor: currency === "NGN" ? 1500000 : 1000, unverified_fallback: true };
+export async function fetchSeatPrice(currency = "USD", tier = "growth") {
+  const isBasic = tier === "basic" || tier === "starter";
+  const fallbacks = isBasic
+    ? { NGN: 1500000, USD: 1500, GBP: 1200, EUR: 1400 } // ₦15,000 / $15 / £12 / €14
+    : { NGN: 1000000, USD: 1000, GBP: 800, EUR: 900 };   // ₦10,000 / $10 / £8 / €9
+
+  if (!supabase) return { currency, unit_amount_minor: fallbacks[currency] ?? (currency === "NGN" ? 1000000 : 1000), unverified_fallback: true };
   try {
-    const { data, error } = await supabase.rpc("get_active_price", { p_category: "seat_subscription", p_currency: currency });
+    const { data, error } = await supabase.rpc("get_active_price", {
+      p_category: isBasic ? "seat_subscription_basic" : "seat_subscription",
+      p_currency: currency,
+    });
     if (error || !data) throw error || new Error("No active price configured");
     return data;
   } catch (e) {
     console.warn("fetchSeatPrice: could not load configured price, using last-known reference value:", e?.message || e);
-    return { currency, unit_amount_minor: currency === "NGN" ? 1500000 : 1000, unverified_fallback: true };
+    return { currency, unit_amount_minor: fallbacks[currency] ?? (currency === "NGN" ? 1000000 : 1000), unverified_fallback: true };
   }
 }
 
-export async function startSeatPurchasePayment({ orgId, seats, email, provider = "paystack" }) {
+export async function startSeatPurchasePayment({ orgId, seats, email, provider = "paystack", tier = "growth" }) {
   if (!orgId || !email) return { success: false, error: "Missing organization or email." };
   const seatCount = Number(seats);
   if (!seatCount || seatCount <= 0) return { success: false, error: "Enter a valid number of seats." };
 
   try {
     if (provider === "stripe") {
-      const price = await fetchSeatPrice("USD");
+      const price = await fetchSeatPrice("USD", tier);
       const unitUsd = price.unit_amount_minor / 100;
       await startStripePayment({
         email, amount: seatCount * unitUsd, currency: "USD",
@@ -878,7 +909,7 @@ export async function startSeatPurchasePayment({ orgId, seats, email, provider =
         metadata: { org_id: orgId, seats: seatCount },
       });
     } else {
-      const price = await fetchSeatPrice("NGN");
+      const price = await fetchSeatPrice("NGN", tier);
       const unitNgn = price.unit_amount_minor / 100;
       await startPaystackPayment({
         email, amount: seatCount * unitNgn, currency: "NGN",
