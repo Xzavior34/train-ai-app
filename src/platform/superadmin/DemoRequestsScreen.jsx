@@ -558,7 +558,9 @@ export function DemoRequestsScreen({ orgSelector }) {
                         )}
                       </div>
                       <a
-                        href={`mailto:${req.work_email}?subject=Train%20AI%20Demo%20Confirmation%20-%20${encodeURIComponent(dateDisplay || "")}&body=Hi%20${encodeURIComponent(req.full_name || "")},%0A%0AWe%20are%20looking%20forward%20to%20our%2030-minute%20walkthrough%20session%20on%20${encodeURIComponent(dateDisplay || "")}%20at%20${encodeURIComponent(req.scheduled_time || "")}%20(${encodeURIComponent(req.timezone || "WAT")}).%0A%0AGoogle%20Meet%20link:%20https://meet.google.com%0A%0ABest,%0ATrain%20AI%20Team`}
+                        href={req.meeting_url || req.calendar_event_url || `mailto:${req.work_email}?subject=Train%20AI%20Demo%20Follow-up%20-%20${encodeURIComponent(dateDisplay || "")}`}
+                        target={req.meeting_url || req.calendar_event_url ? "_blank" : undefined}
+                        rel={req.meeting_url || req.calendar_event_url ? "noopener noreferrer" : undefined}
                         style={{
                           fontSize: 12,
                           fontWeight: 700,
@@ -569,7 +571,7 @@ export function DemoRequestsScreen({ orgSelector }) {
                           gap: 4,
                         }}
                       >
-                        Send Meeting Invite <ExternalLink size={12} />
+                        {req.meeting_url ? "Open Google Meet" : req.calendar_event_url ? "Open Calendar Event" : "Email Attendee"} <ExternalLink size={12} />
                       </a>
                     </div>
                   )}

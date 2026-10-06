@@ -121,6 +121,12 @@ function parseTimeSlot(timeStr) {
   return { hours, minutes };
 }
 
+function watSlotToUtc(dateIso, timeStr) {
+  const { hours, minutes } = parseTimeSlot(timeStr);
+  const [year, month, day] = dateIso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hours - 1, minutes, 0));
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function AppointmentBookingPage({ onBack, onNavigate, initialSector = "academies" }) {
@@ -181,12 +187,14 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
   // Booked slots from the database (keyed by WAT time)
   const [bookedSlots, setBookedSlots] = useState(new Set());
   const [slotsLoading, setSlotsLoading] = useState(true);
+  const [availabilityError, setAvailabilityError] = useState("");
 
   // Load booked slots on mount
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     async function loadSlots() {
       setSlotsLoading(true);
+      setAvailabilityError("");
       try {
         const from = availableDates[0]?.iso;
         const to = availableDates[availableDates.length - 1]?.iso;
@@ -194,6 +202,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
         setBookedSlots(slots);
       } catch {
         setBookedSlots(new Set());
+        setAvailabilityError("Live appointment availability could not be loaded. Refresh the page before booking.");
       } finally {
         setSlotsLoading(false);
       }
@@ -232,6 +241,10 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
       setSubmitError("Please ensure a day and time are selected.");
       return;
     }
+    if (availabilityError) {
+      setSubmitError("Live availability is unavailable. Refresh the page before booking so we do not double-book your time.");
+      return;
+    }
     if (isSlotBooked(selectedDate.iso, selectedTime)) {
       setSubmitError("This time slot is already booked. Please choose a different one.");
       return;
@@ -245,22 +258,12 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
     setSubmitError("");
 
     try {
-      const scheduledSummary = `${selectedDate.formattedLong} at ${selectedTime} (${detectedTimezone})`;
-      const fullMessage = [
-        `[APPOINTMENT SCHEDULED]`,
-        `Appointment Slot: ${scheduledSummary}`,
-        `Organization Type: ${orgType}`,
-        `Cohort / Team Size: ${teamSize}`,
-        `Meeting Link: Google Meet (Automatic Dispatch)`,
-        agendaNotes ? `Special Goals / Questions: ${agendaNotes.trim()}` : null,
-      ].filter(Boolean).join("\n");
-
       const result = await submitDemoRequest({
         fullName: fullName.trim(),
         workEmail: workEmail.trim(),
-        companyName: `[${orgType}] ${organizationName.trim()}`,
+        companyName: organizationName.trim(),
         teamSize,
-        message: fullMessage,
+        message: agendaNotes.trim(),
         source: `appointment_scheduler_${initialSector}`,
         scheduledDate: selectedDate.iso,
         scheduledTime: selectedTime,
@@ -287,6 +290,9 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
         time: selectedTime,
         timezone: detectedTimezone,
         isoDate: selectedDate.iso,
+        meetingUrl: result.meetingUrl,
+        calendarEventUrl: result.calendarEventUrl,
+        bookingId: result.bookingId,
       });
       setIsConfirmed(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -301,25 +307,12 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
   // ─── Calendar links ──────────────────────────────────────────────────────
 
   function getGoogleCalendarUrl() {
-    if (!confirmedDetails) return "#";
-    const { hours, minutes } = parseTimeSlot(confirmedDetails.time);
-    const start = new Date(confirmedDetails.dateObj);
-    start.setHours(hours, minutes, 0, 0);
-    const end = new Date(start.getTime() + 30 * 60 * 1000);
-    const formatUtc = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
-    const datesParam = `${formatUtc(start)}/${formatUtc(end)}`;
-    const title = encodeURIComponent("Train AI: Product Demo & Institutional Consultation");
-    const details = encodeURIComponent(
-      `Train AI 30-minute institutional demo and strategy session.\n\nOrganization: ${confirmedDetails.organizationName} (${confirmedDetails.orgType})\nAttendee: ${confirmedDetails.fullName} (${confirmedDetails.workEmail})\nLocation: Google Meet video link will be sent to your email.`
-    );
-    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datesParam}&details=${details}&location=${encodeURIComponent("Google Meet (Video Conference)")}`;
+    return confirmedDetails?.calendarEventUrl || confirmedDetails?.meetingUrl || "#";
   }
 
   function handleDownloadIcs() {
     if (!confirmedDetails) return;
-    const { hours, minutes } = parseTimeSlot(confirmedDetails.time);
-    const start = new Date(confirmedDetails.dateObj);
-    start.setHours(hours, minutes, 0, 0);
+    const start = watSlotToUtc(confirmedDetails.isoDate, confirmedDetails.time);
     const end = new Date(start.getTime() + 30 * 60 * 1000);
     const formatIcs = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
     const icsContent = [
@@ -327,8 +320,15 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
       "PRODID:-//Train AI Ltd//Appointment Scheduler//EN",
       "CALSCALE:GREGORIAN", "METHOD:REQUEST", "BEGIN:VEVENT",
       `SUMMARY:Train AI Product Demo & Institutional Consultation`,
-      `DESCRIPTION:Train AI 30-minute consultation for ${confirmedDetails.organizationName}. Google Meet video conference link will be dispatched to your email.`,
-      `LOCATION:Google Meet`,
+      `UID:${confirmedDetails.bookingId}@trainailtd.com`,
+      `DTSTAMP:${formatIcs(new Date())}`,
+      `DESCRIPTION:Train AI 30-minute consultation for ${confirmedDetails.organizationName}. Join at ${confirmedDetails.meetingUrl}`,
+      `LOCATION:${confirmedDetails.meetingUrl}`,
+      `URL:${confirmedDetails.meetingUrl}`,
+      `ORGANIZER;CN=Train AI:mailto:trainailtd@gmail.com`,
+      `ATTENDEE;CN=${confirmedDetails.fullName};RSVP=TRUE:mailto:${confirmedDetails.workEmail}`,
+      `ATTENDEE;RSVP=TRUE:mailto:info@sarafoundationafrica.com`,
+      `ATTENDEE;RSVP=TRUE:mailto:trainailtd@gmail.com`,
       `DTSTART:${formatIcs(start)}`, `DTEND:${formatIcs(end)}`,
       `STATUS:CONFIRMED`, "END:VEVENT", "END:VCALENDAR",
     ].join("\r\n");
@@ -475,14 +475,14 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                 Your Appointment is Confirmed
               </h2>
               <p style={{ fontSize: 14, color: "#64748B", margin: "0 auto 24px", textAlign: "center", maxWidth: 520, lineHeight: 1.5 }}>
-                A calendar invitation and Google Meet link will be sent to <strong>{confirmedDetails.workEmail}</strong>. The Train AI team will be in touch before your session.
+                The Google Calendar event and Meet room have been created. Invitations were sent to <strong>{confirmedDetails.workEmail}</strong> and the Train AI team.
               </p>
 
               <div style={S.confirmedBox}>
                 {[
                   { icon: <Calendar size={17} color="#2563EB" />, label: "Date", value: confirmedDetails.dateFormatted },
                   { icon: <Clock size={17} color="#2563EB" />, label: "Time & Duration", value: `${confirmedDetails.time} (30 mins) [${confirmedDetails.timezone}]` },
-                  { icon: <Video size={17} color="#2563EB" />, label: "Meeting Format", value: "Google Meet (Video Conference)" },
+                  { icon: <Video size={17} color="#2563EB" />, label: "Meeting Format", value: "Google Meet (Invitation sent)" },
                   { icon: <Building2 size={17} color="#2563EB" />, label: "Organization", value: `${confirmedDetails.organizationName} (${confirmedDetails.orgType})` },
                 ].map(({ icon, label, value }) => (
                   <div key={label} style={S.confirmedRow}>
@@ -499,7 +499,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                 <a href={getGoogleCalendarUrl()} target="_blank" rel="noopener noreferrer"
                   className="action-btn-primary"
                   style={{ textDecoration: "none", padding: "11px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 7 }}>
-                  <Calendar size={15} /> Add to Google Calendar <ExternalLink size={13} />
+                  <Calendar size={15} /> Open Calendar Event <ExternalLink size={13} />
                 </a>
                 <button onClick={handleDownloadIcs} className="action-btn-outline"
                   style={{ padding: "11px 20px", borderRadius: 8, fontSize: 13, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 7 }}>
@@ -537,6 +537,13 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     </div>
                   )}
                 </div>
+
+                {availabilityError && (
+                  <div style={{ ...S.errorBox, marginBottom: 14 }}>
+                    <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                    {availabilityError}
+                  </div>
+                )}
 
                 {/* Step 1: Select Day */}
                 <div style={{ marginBottom: 22 }}>
@@ -775,9 +782,9 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                   )}
 
                   {/* Submit */}
-                  <button type="submit" disabled={submitting || (selectedDate && isSlotBooked(selectedDate.iso, selectedTime))}
+                  <button type="submit" disabled={submitting || !!availabilityError || (selectedDate && isSlotBooked(selectedDate.iso, selectedTime))}
                     className="action-btn-primary"
-                    style={{ ...S.submitBtn, opacity: (selectedDate && isSlotBooked(selectedDate.iso, selectedTime)) ? 0.5 : 1 }}>
+                    style={{ ...S.submitBtn, opacity: (availabilityError || (selectedDate && isSlotBooked(selectedDate.iso, selectedTime))) ? 0.5 : 1 }}>
                     {submitting
                       ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Confirming Appointment...</>
                       : <>Confirm Appointment for {selectedDate ? selectedDate.dayName : ""} at {selectedTime} <ChevronRight size={16} /></>}

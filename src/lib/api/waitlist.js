@@ -256,78 +256,43 @@ export async function submitDemoRequest({
 
   try {
     const attribution = readStoredAttribution();
-
-    // 1. Prevent Double-Booking check
-    if (scheduledDate && scheduledTime) {
-      const existingSlots = await fetchBookedSlots({ fromDate: scheduledDate, toDate: scheduledDate });
-      if (existingSlots.has(`${scheduledDate}|${scheduledTime}`)) {
-        return {
-          success: false,
-          error: "This time slot has already been booked by another organization. Please select a different time slot."
-        };
-      }
-    }
-
-    const insertPayload = {
-      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `demo_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      full_name: fullName.trim(),
-      work_email: normalizedEmail,
-      company_name: companyName.trim(),
-      team_size: teamSize || null,
-      message: message?.trim() || null,
-      source,
-      status: status || "scheduled",
-      scheduled_date: scheduledDate || null,
-      scheduled_time: scheduledTime || null,
-      org_type: orgType || null,
-      timezone: timezone || "UTC",
-      created_at: new Date().toISOString(),
-      ...attribution,
-    };
-
-    // Persist to the shared database before confirming the appointment. A
-    // browser-only success would be invisible to staff on every other device.
     const db = getDemoClient();
     if (!db) {
       return { success: false, error: "Booking is temporarily unavailable. Please try again or email info@trainailtd.com." };
     }
 
-    let { error: insertError } = await db.from("demo_requests").insert(insertPayload);
-    if (insertError && (insertError.code === "42703" || (insertError.message?.includes("column") && insertError.message?.includes("does not exist")))) {
-      const fallbackPayload = {
-        id: insertPayload.id,
-        full_name: fullName.trim(),
-        work_email: normalizedEmail,
-        company_name: companyName.trim(),
-        team_size: teamSize || null,
-        message: message?.trim() || null,
+    const { data, error } = await db.functions.invoke("book-demo-appointment", {
+      body: {
+        fullName: fullName.trim(),
+        workEmail: normalizedEmail,
+        organizationName: companyName.trim(),
+        teamSize: teamSize || "Not specified",
+        agendaNotes: message?.trim() || "",
         source,
-        status: status || "scheduled",
-        created_at: insertPayload.created_at,
-      };
-      ({ error: insertError } = await db.from("demo_requests").insert(fallbackPayload));
-    }
-    if (insertError) {
-      console.warn("Database demo request insert failed:", insertError);
-      return { success: false, error: "We could not save your booking. Please try again or email info@trainailtd.com." };
-    }
-
-    // The inquiry entry is supplemental. The confirmed demo request above is
-    // the source of truth used by the appointment pipeline.
-    await db.from("organization_inquiries").insert({
-      full_name: fullName.trim(),
-      work_email: normalizedEmail,
-      company_name: companyName.trim(),
-      inquiry_type: "demo_request",
-      message: `[Notification target: info@trainailtd.com & info@sarafoundationafrica.com]\n${message?.trim() || ""}`,
-      source,
-      status: "new",
-      ...attribution,
-    }).then(({ error }) => {
-      if (error) console.warn("Supplemental organization inquiry insert failed:", error);
+        scheduledDate,
+        scheduledTime,
+        orgType: orgType || "Other",
+        timezone: timezone || "UTC",
+        ...attribution,
+      },
     });
+    if (error || !data?.success) {
+      let remoteMessage = data?.error;
+      if (!remoteMessage && error?.context instanceof Response) {
+        try {
+          const payload = await error.context.clone().json();
+          remoteMessage = payload?.error;
+        } catch {}
+      }
+      console.warn("Demo appointment creation failed:", error || data);
+      return {
+        success: false,
+        code: data?.code || null,
+        error: remoteMessage || "We could not create the calendar invitation. No appointment was recorded. Please try again or email info@trainailtd.com.",
+      };
+    }
 
-    return { success: true };
+    return data;
   } catch (error) {
     console.warn("submitDemoRequest caught error:", error);
     return { success: false, error: "We could not save your booking. Please try again or email info@trainailtd.com." };
@@ -360,6 +325,7 @@ export async function fetchBookedSlots({ fromDate, toDate } = {}) {
   const to = toDate || new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
   // 2. Try RPC get_booked_slots
+  let rpcFailure = null;
   try {
     const { data: rpcData, error: rpcError } = await db.rpc("get_booked_slots", {
       p_from_date: from,
@@ -373,16 +339,21 @@ export async function fetchBookedSlots({ fromDate, toDate } = {}) {
       }
       return bookedSet;
     }
-  } catch {}
+    rpcFailure = rpcError || new Error("Availability response was invalid.");
+  } catch (error) {
+    rpcFailure = error;
+  }
 
   // 3. Fallback: Query demo_requests table directly
   try {
-    const { data: rows } = await db
+    const { data: rows, error } = await db
       .from("demo_requests")
       .select("scheduled_date, scheduled_time, status")
       .gte("scheduled_date", from)
       .lte("scheduled_date", to)
       .not("status", "in", "('cancelled','closed')");
+
+    if (error) throw error;
 
     if (Array.isArray(rows)) {
       for (const row of rows) {
@@ -391,11 +362,11 @@ export async function fetchBookedSlots({ fromDate, toDate } = {}) {
         }
       }
     }
-  } catch (err) {
-    console.warn("fetchBookedSlots table fallback warning:", err);
+    return bookedSet;
+  } catch (error) {
+    console.warn("fetchBookedSlots failed:", rpcFailure, error);
+    throw new Error("Live appointment availability could not be loaded.");
   }
-
-  return bookedSet;
 }
 
 // Organisation Inquiry - secondary B2B contact path, distinct from Book a

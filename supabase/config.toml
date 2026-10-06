@@ -35,3 +35,8 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+# Public booking endpoint. It performs its own origin, validation, rate-limit,
+# slot-locking, and service-role checks before creating a calendar event.
+[functions.book-demo-appointment]
+verify_jwt = false
