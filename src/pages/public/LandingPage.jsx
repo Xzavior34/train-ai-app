@@ -108,9 +108,10 @@ export default function LandingPage({ onNavigate }) {
 
 
   const showcasePhotos = [
-    { src: "/images/train-ai-white-team.jpg", title: "Academies and training providers", caption: "Bring courses, instructors, cohorts and learner progress into one connected learning operation." },
-    { src: "/images/train-ai-women-tech.jpg", title: "Foundations and social-impact organisations", caption: "Manage cohorts, learning communities and programme participation with clearer visibility into development and impact." },
-    { src: "/images/train-ai-diverse-team.jpg", title: "Businesses and enterprise teams", caption: "Develop people against organisational needs and use skill-gap, readiness and manager insights to guide support." },
+    { src: "/images/train-ai-diverse-learners.jpg", title: "Enterprise & Foundation Cohorts", caption: "Multi-racial teams collaborating across AI and technical training tracks." },
+    { src: "/images/train-ai-women-tech.jpg", title: "Women in Technology Programs", caption: "Community-driven learning tracks with peer accountability and mentor reviews." },
+    { src: "/images/train-ai-diverse-team.jpg", title: "Workforce & NGO Development", caption: "Structured development cohorts measuring skills, readiness, and impact." },
+    { src: "/images/train-ai-white-team.jpg", title: "Training Programmes & Sprints", caption: "Instructor-led sessions and hands-on portfolio milestones." },
   ];
 
   const handlePrevPhoto = () => {
@@ -197,6 +198,7 @@ export default function LandingPage({ onNavigate }) {
             <button onClick={() => scrollToSection("screens")}>Have a look</button>
             <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
             <button onClick={() => scrollToSection("pricing")}>Pricing</button>
+            <button onClick={() => navigate("marketplace")}>Marketplace</button>
             <button onClick={() => scrollToSection("faq")}>FAQ</button>
           </nav>
           <div className="lp-header-actions">
@@ -213,6 +215,7 @@ export default function LandingPage({ onNavigate }) {
             <button onClick={() => scrollToSection("screens")}>Have a look</button>
             <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
             <button onClick={() => scrollToSection("pricing")}>Pricing</button>
+            <button onClick={() => navigate("marketplace")}>Marketplace</button>
             <button onClick={() => scrollToSection("faq")}>FAQ</button>
             <button onClick={() => navigate("signin")}>Sign in</button>
             <button className="lp-primary-button" onClick={() => navigate("book-demo")}>Book a demo</button>
@@ -425,6 +428,8 @@ export default function LandingPage({ onNavigate }) {
               <h3>Company</h3>
               <button onClick={() => setLegalModal("about")}>About Train AI</button>
               <button onClick={() => scrollToSection("organisations")}>Who it is for</button>
+              <button onClick={() => navigate("marketplace")}>Academy Marketplace</button>
+              <button onClick={() => (window.location.href = "/?verify=1")}>Verify Certificate</button>
               <button onClick={() => scrollToSection("faq")}>Frequently asked questions</button>
               <button onClick={() => navigate("signin")}>Customer sign in</button>
             </div>

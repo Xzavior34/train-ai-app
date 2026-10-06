@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TopBar, StatTile, Avatar, optionLabel, optionValue, initialsOf, Tag, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Trophy, Flame, Zap, Award, Target, HelpCircle, CheckCircle2, ChevronRight,
@@ -88,9 +88,20 @@ export function AIQuizScreen({
     showToast?.(`Loaded: ${t.title}`);
   }
 
+  const chatBottomRef = useRef(null);
+
+  useEffect(() => {
+    if (chatBottomRef.current) {
+      chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [coachMessages, coachSending]);
+
   function handleQuickPromptClick(promptText) {
     if (setCoachInput) {
       setCoachInput(promptText);
+    }
+    if (onSendCoachMessage) {
+      onSendCoachMessage(promptText);
     }
   }
 
@@ -523,6 +534,7 @@ export function AIQuizScreen({
                 </div>
               </div>
             )}
+            <div ref={chatBottomRef} />
           </div>
 
           {/* Chat Input Bar */}
@@ -530,9 +542,14 @@ export function AIQuizScreen({
             <input
               type="text"
               placeholder="Ask your AI coach anything (e.g. explain variables, review my code, quiz my knowledge)..."
-              value={coachInput}
+              value={coachInput || ""}
               onChange={e => setCoachInput && setCoachInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" && !coachSending && coachInput?.trim()) onSendCoachMessage && onSendCoachMessage(); }}
+              onKeyDown={e => {
+                if (e.key === "Enter" && !coachSending && (coachInput || "").trim()) {
+                  e.preventDefault();
+                  onSendCoachMessage && onSendCoachMessage();
+                }
+              }}
               disabled={coachSending}
               style={{
                 flex: 1, border: "none", outline: "none", background: "transparent",
@@ -542,12 +559,12 @@ export function AIQuizScreen({
 
             <button
               className="tai-btn tai-btn-primary"
-              disabled={coachSending || !coachInput?.trim()}
+              disabled={coachSending || !(coachInput || "").trim()}
               onClick={() => onSendCoachMessage && onSendCoachMessage()}
-              style={{ padding: "8px 14px", borderRadius: 6, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6 }}
+              style={{ padding: "8px 16px", borderRadius: 6, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 6, cursor: (coachSending || !(coachInput || "").trim()) ? "not-allowed" : "pointer" }}
             >
-              <span>Send</span>
-              <Send size={14} />
+              <span>{coachSending ? "Sending..." : "Send"}</span>
+              <Send size={14} className={coachSending ? "anim-spin" : ""} />
             </button>
           </div>
         </div>

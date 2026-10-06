@@ -27,9 +27,16 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rateLimit, setRateLimit] = useState(() => getRateLimitStatus(""));
+  const [capsLockActive, setCapsLockActive] = useState(false);
 
-  // Rate Limiting on Password attempts
-  const [rateLimit, setRateLimit] = useState(() => getRateLimitStatus(email));
+  function handlePasswordKeyDown(e) {
+    if (e.getModifierState && e.getModifierState("CapsLock")) {
+      setCapsLockActive(true);
+    } else {
+      setCapsLockActive(false);
+    }
+  }
 
   useEffect(() => {
     setActiveSupabaseProject(SUPABASE_PROJECTS.ORGANIZATION_DB);
@@ -139,6 +146,8 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handlePasswordKeyDown}
+            onKeyUp={handlePasswordKeyDown}
             disabled={rateLimit.isLocked}
             className="owner-input"
             style={{
@@ -164,6 +173,13 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
+
+        {/* Caps Lock Warning */}
+        {capsLockActive && !rateLimit.isLocked && (
+          <div style={{ background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 6, padding: "6px 10px", marginBottom: 12, fontSize: 11.5, color: "#92400E", display: "flex", alignItems: "center", gap: 6 }}>
+            <AlertCircle size={13} color="#D97706" /> Caps Lock is ON
+          </div>
+        )}
 
         {/* Lockout Box */}
         {rateLimit.isLocked && (

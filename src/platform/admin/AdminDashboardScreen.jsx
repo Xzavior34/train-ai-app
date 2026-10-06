@@ -6,6 +6,8 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { Skeleton, SkeletonCard } from "../../components/common/Skeleton.jsx";
 import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
+import { KPITrackerCard } from "../components/KPITrackerCard.jsx";
+
 export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelector, isPlatformOwner }) {
   const showToast = useContext(ToastContext);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
@@ -130,6 +132,9 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
         <div className="ta-sidebar-layout">
           {/* Main Left Workspace Section */}
           <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+            {/* KPI Tracker Component */}
+            <KPITrackerCard organizationId={orgId} showToast={showToast} />
+
             {/* Today's Tasks Section */}
             <div className="ta-card">
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>

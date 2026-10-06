@@ -3,6 +3,8 @@ import { useAuth } from "./hooks/useAuth.js";
 import LoadingScreen from "./components/common/LoadingScreen.jsx";
 import ConsentBanner from "./components/common/ConsentBanner.jsx";
 import OfflineIndicator from "./components/common/OfflineIndicator.jsx";
+import CertificateVerificationPage from "./pages/public/CertificateVerificationPage.jsx";
+import MarketplacePage from "./pages/public/MarketplacePage.jsx";
 import { applyAccessibilityPrefs, getStoredAccessibilityPrefs } from "./components/common/AccessibilityPanel.jsx";
 import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./services/authService.js";
 import { resolveViewMode, DASHBOARDS } from "./lib/roleRouting.js";
@@ -153,6 +155,21 @@ export default function App() {
     }
   });
 
+  const [certVerifyCode, setCertVerifyCode] = useState(() => {
+    try {
+      const search = new URLSearchParams(window.location.search);
+      const code = search.get("verify") || search.get("cert") || search.get("certificate") || null;
+      if (code) return code;
+      const path = window.location.pathname;
+      if (path.startsWith("/certificate/")) {
+        return path.replace("/certificate/", "");
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
   const [orgSlugParam] = useState(() => {
     try {
       const search = new URLSearchParams(window.location.search);
@@ -176,15 +193,19 @@ export default function App() {
   const [publicView, setPublicView] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") {
+      const view = params.get("view");
+      if (view === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") {
         return "book-demo";
       }
-      if (params.get("view") === "auth") {
+      if (view === "auth") {
         return "auth";
+      }
+      if (view === "marketplace" || window.location.pathname === "/marketplace") {
+        return "marketplace";
       }
     } catch {}
     return orgSlugParam ? "auth" : "landing";
-  }); // "landing" | "auth" | "book-demo"
+  }); // "landing" | "auth" | "book-demo" | "marketplace"
 
   // Auto-join if user is already authenticated and lands on an organization join/referral link
   useEffect(() => {
@@ -360,6 +381,23 @@ export default function App() {
     );
   }
 
+  // Certificate verification portal - accessible publicly with ?verify=CERT_CODE or /certificate/:id
+  if (certVerifyCode) {
+    return (
+      <>
+        <OfflineIndicator mode={offlineMode} />
+        <CertificateVerificationPage
+          certCode={certVerifyCode === "1" ? "" : certVerifyCode}
+          onGoHome={() => {
+            try { window.history.pushState({}, "", window.location.pathname); } catch {}
+            setCertVerifyCode(null);
+            setPublicView("landing");
+          }}
+        />
+      </>
+    );
+  }
+
   // Invitation links are handled before every other boot gate (sign-in,
   // MFA, onboarding) since a brand-new invitee has no session, no MFA
   // factor and no onboarding state yet - none of those gates apply until
@@ -395,6 +433,27 @@ export default function App() {
   }
 
   if (!session) {
+    if (publicView === "marketplace") {
+      return (
+        <>
+          <OfflineIndicator mode={offlineMode} />
+          <MarketplacePage
+            onGoHome={() => {
+              try { window.history.pushState({}, "", window.location.pathname); } catch {}
+              setPublicView("landing");
+            }}
+            onBookDemo={() => {
+              try { window.history.pushState({}, "", "?view=book-demo"); } catch {}
+              setPublicView("book-demo");
+            }}
+            onSignIn={() => {
+              try { window.history.pushState({}, "", "?view=auth"); } catch {}
+              setPublicView("auth");
+            }}
+          />
+        </>
+      );
+    }
     if (publicView === "auth") {
       return (
         <>

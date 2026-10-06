@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Layers, Video, Calendar, FileText, Link2, ExternalLink, Flame, Users,
-  CheckCircle2, Clock, Play, ArrowRight, ArrowLeft, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send
+  CheckCircle2, Clock, Play, ArrowRight, ArrowLeft, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send, Rocket
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
 import { createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
 import { fetchCohortDetail } from "../../lib/api/platform.js";
+import CapCohort3Screen from "./CapCohort3Screen.jsx";
 
 export function CohortScreen({
   cohort: propCohort, cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
@@ -205,6 +206,7 @@ export function CohortScreen({
       <div className="tai-row tai-gap8" style={{ borderBottom: "1px solid var(--border)", paddingBottom: 10, overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
         {[
           { k: "chat", label: `Announcements & Discussion (${posts.length})`, icon: MessageCircle },
+          { k: "cap", label: "CAP 3 Accelerator (6-Wk)", icon: Rocket },
           { k: "sessions", label: `Live Sessions (${sessions.length})`, icon: Video },
           { k: "courses", label: `Assigned Courses (${assignedCourses.length})`, icon: BookOpen },
           { k: "resources", label: `Shared Resources (${resources.length})`, icon: FileText },
@@ -531,6 +533,19 @@ export function CohortScreen({
             </div>
           ))}
         </div>
+      )}
+
+      {/* =========================================================================
+          TAB: CAP COHORT 3 ACCELERATOR
+          ========================================================================= */}
+      {tab === "cap" && (
+        <CapCohort3Screen
+          session={session}
+          showToast={showToast}
+          push={push}
+          goTab={goTab}
+          cohortId={cohort?.id}
+        />
       )}
 
       {/* =========================================================================
