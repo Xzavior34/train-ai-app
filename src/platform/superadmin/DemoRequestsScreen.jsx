@@ -507,20 +507,26 @@ export function DemoRequestsScreen({ orgSelector }) {
                           border: "1px solid var(--border)",
                           background: "var(--surface)",
                           color:
-                            req.status === "scheduled"
+                            req.status === "confirmed" || req.status === "completed"
                               ? "#10B981"
-                              : req.status === "contacted"
+                              : req.status === "scheduled"
                               ? "#2563EB"
-                              : req.status === "closed"
-                              ? "#64748B"
+                              : req.status === "follow_up"
+                              ? "#8B5CF6"
+                              : req.status === "no_show" || req.status === "cancelled"
+                              ? "#EF4444"
                               : "#F59E0B",
                           cursor: "pointer",
                         }}
                       >
-                        <option value="new">New Inquiry</option>
+                        <option value="new">New</option>
                         <option value="scheduled">Scheduled</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="closed">Closed / Handled</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="follow_up">Follow-up Required</option>
+                        <option value="no_show">No Show</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="closed">Closed</option>
                       </select>
                     </div>
                   </div>

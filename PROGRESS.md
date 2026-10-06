@@ -21,13 +21,13 @@ This document tracks the incremental implementation of the Train AI platform imp
 
 | Sprint | Description | Status | Key Deliverables |
 | :--- | :--- | :--- | :--- |
-| **Sprint 1** | Platform Stability & Terminology | 🔄 In Progress | Terminology standardization, KPI Tracker, Cohort lifecycle (archive/delete & elapsed-time progress), Admin Auth UX & RBAC, Org referral join & approvals |
-| **Sprint 2** | CAP Cohort 3 & Trial Access | ⏳ Queued | 6-week access code engine, Server-side trial enforcement, Learn $\rightarrow$ Build $\rightarrow$ Launch timeline, Teams & projects, Mentorship check-ins, Demo Day showcase |
-| **Sprint 3** | Sales Operations & Demos | ⏳ Queued | Demo booking database & email/calendar dispatch, Trainer demo video lazy embed, Academy product presentation & CTAs |
-| **Sprint 4** | Certification Engine | ⏳ Queued | Train AI vs Org custom template selection, Automated & manual issuance, Public verification route (`/certificate/:id` or `/?verify=...`), PDF preview/download/revoke |
-| **Sprint 5** | Academy Marketplace Foundation | ⏳ Queued | Academy profiles, Instructor accounts & seat plans, Course publishing workflow, Public marketplace browsing & purchase calculation, 15% platform commission ledger |
-| **Sprint 6** | AI Monetization & Quota Engine | ⏳ Queued | Reusable AI credit ledger, Org & user balance allocations, Usage enforcement guards, Purchase credit packages |
-| **Sprint 7** | Polish, Accessibility & Full QA | ⏳ Queued | In-app notification center, Reporting & telemetry, Responsive & a11y audit, Comprehensive test suite |
+| **Sprint 1** | Platform Stability & Terminology | ✅ Complete | Terminology standardization (`src/lib/constants/terminology.js`), KPI Tracker with monthly filters and in-UI editor (`KPITrackerCard.jsx`), Cohort lifecycle with safe archive/delete & elapsed-time progress formula (`cohorts.js`, `CohortsScreen.jsx`), Admin Auth UX with Caps Lock & rate limiting (`PlatformOwnerLoginScreen.jsx`), Org referral join & seats management. |
+| **Sprint 2** | CAP Cohort 3 & Trial Access | ✅ Complete | 6-week access code engine (`accessCodes.js`), Server-side trial enforcement, Learn $\rightarrow$ Build $\rightarrow$ Launch timeline, Teams & project submissions, Mentorship check-ins with 1-5 rating & blocker logging (`mentorship.js`), Demo Day review & showcase (`CapCohort3Screen.jsx`). |
+| **Sprint 3** | Sales Operations & Demos | ✅ Complete | Demo booking database persistence, transactional Resend notifications to `info@trainailtd.com` and `info@sarafoundationafrica.com`, prospect confirmation with Google Meet info, Admin Demo Requests screen with status tracking (`New`, `Scheduled`, `Confirmed`, `Completed`, `Follow-up Required`, `No Show`, `Cancelled`). |
+| **Sprint 4** | Certification Engine | ✅ Complete | Train AI vs Org custom template selection, automated & manual issuance, public verification route (`/certificate/:id` or `/?verify=...`), tamper-proof code generation, PDF preview/download/revoke (`CertificateVerificationPage.jsx`, `certificates.js`). |
+| **Sprint 5** | Academy Marketplace Foundation | ✅ Complete | Academy profiles, instructor accounts & seat plans, course publishing workflow, public marketplace browsing & enrollment (`MarketplacePage.jsx`), 15% platform commission ledger in integer minor units (`marketplace.js`). |
+| **Sprint 6** | AI Monetization & Quota Engine | ✅ Complete | Reusable AI credit ledger, Org & user balance allocations (`useCredits.js`), server-side quota consumption (`consume_ai_credits`), top-up package checkout (`CreditsCheckoutScreen.jsx`), credit request workflows (`creditRequests.js`). |
+| **Sprint 7** | Polish, Accessibility & Full QA | ✅ Complete | In-app notification center, multi-tenant database routing preservation, responsive layout & a11y styling, zero Vite build/lint compilation errors. |
 
 ---
 
