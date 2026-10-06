@@ -197,11 +197,9 @@ export async function markLessonComplete(userId, lessonId, courseId = null) {
 
 export async function fetchSafeQuizQuestions(quizId) {
   if (!supabase || !quizId) return [];
-  const { data, error } = await supabase
-    .from("safe_quiz_questions")
-    .select("*")
-    .eq("quiz_id", quizId)
-    .order("order_index", { ascending: true });
+  const { data, error } = await supabase.rpc("get_safe_quiz_questions", {
+    p_quiz_id: quizId,
+  });
   if (error) return [];
   return data || [];
 }
@@ -1099,11 +1097,9 @@ export async function fetchSafeAssessmentQuestions(assessmentId) {
     }
     return [];
   }
-  const { data, error } = await supabase
-    .from("safe_assessment_questions")
-    .select("*")
-    .eq("assessment_id", assessmentId)
-    .order("order_index", { ascending: true });
+  const { data, error } = await supabase.rpc("get_safe_assessment_questions", {
+    p_assessment_id: assessmentId,
+  });
   if (error) { console.warn("Assessment questions fetch warning:", error); return []; }
   return data || [];
 }

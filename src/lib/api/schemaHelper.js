@@ -1350,24 +1350,13 @@ export async function fetchCohortSessions(cohortId) {
 // Community - suggested people to follow/connect with
 export async function fetchCommunityPeople(excludeUserId, limit = 20) {
   if (!supabase) return [];
-  // A real, confirmed bug: user_profiles.id IS the real auth uid directly
-  // (no separate user_id column exists on this specific table - the
-  // comment previously here repeated a claim already disproven elsewhere
-  // in this codebase). The primary query below was filtering on a column
-  // that doesn't exist, meaning it silently errored on every real call
-  // and fell through to the fallback path every time - and that fallback
-  // never excluded the caller's own profile at all, meaning a real user
-  // has always seen themselves listed among "community people."
-  let query = supabase.from("user_profiles").select("*").limit(limit);
-  if (excludeUserId) query = query.neq("id", excludeUserId);
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc("get_public_user_profiles", {
+    p_exclude_user_id: excludeUserId || null,
+    p_limit: limit,
+  });
   if (error) {
-    // Retry with public_user_profiles if user_profiles query fails -
-    // this view's own real PK is also `id`, not `user_id`.
-    let fallbackQuery = supabase.from("public_user_profiles").select("*").limit(limit);
-    if (excludeUserId) fallbackQuery = fallbackQuery.neq("id", excludeUserId);
-    const { data: fallbackData } = await fallbackQuery;
-    return fallbackData || [];
+    console.warn("Community people fetch warning:", error);
+    return [];
   }
   return data || [];
 }

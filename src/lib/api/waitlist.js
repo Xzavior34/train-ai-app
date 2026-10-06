@@ -137,14 +137,9 @@ export async function fetchMyWaitlistStatus({ email, userId } = {}) {
   if (!supabase || (!normalizedEmail && !userId)) return empty;
 
   try {
-    if (normalizedEmail) {
-      const { data: paidRow } = await supabase
-        .from("safe_paid_waitlist")
-        .select("*")
-        .eq("email", normalizedEmail)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    if (userId) {
+      const { data: paidRows } = await supabase.rpc("get_my_paid_waitlist_status");
+      const paidRow = Array.isArray(paidRows) ? paidRows[0] : paidRows;
       if (paidRow) {
         return {
           onWaitlist: true,
