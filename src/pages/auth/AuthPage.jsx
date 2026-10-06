@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock, KeyRound, HelpCircle, RefreshCw } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock, KeyRound, HelpCircle, RefreshCw, Gift, CreditCard, Sparkles, Check, X } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
 import {
   registerOrganization,
+  validateOrgPromoCode,
   joinDefaultOrganization,
   attributeReferralSignupIfPending,
   joinOrganizationByReferral,
@@ -27,6 +28,12 @@ export default function AuthPage({
   const [showPassword, setShowPassword] = useState(false);
   const [accountType, setAccountType] = useState("organization");
   const [orgName, setOrgName] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoValidation, setPromoValidation] = useState(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [testPaymentProcessing, setTestPaymentProcessing] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState("USD");
   const [orgError, setOrgError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [breachWarning, setBreachWarning] = useState(false);
@@ -195,6 +202,62 @@ export default function AuthPage({
     }
   }
 
+  async function handleCheckPromoCode(codeVal) {
+    const trimmed = (codeVal || "").trim();
+    setPromoCode(trimmed);
+    if (!trimmed) {
+      setPromoValidation(null);
+      return;
+    }
+    setValidatingPromo(true);
+    try {
+      const res = await validateOrgPromoCode(trimmed);
+      setPromoValidation(res);
+    } catch {
+      setPromoValidation({ valid: false, error: "Could not validate code." });
+    } finally {
+      setValidatingPromo(false);
+    }
+  }
+
+  async function executeOrgSignup(paymentReference = null, paymentProvider = "test_flow") {
+    setSubmitting(true);
+    setOrgError("");
+    try {
+      const signupRole = "learner";
+      const result = await onSignUp(email, password, signupRole, "organization");
+
+      if (result?.error) {
+        setOrgError(result.error);
+        setSubmitting(false);
+        return false;
+      }
+
+      if (result?.data?.user?.id) {
+        attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
+      }
+
+      const orgResult = await registerOrganization(orgName, {
+        promoCode: promoValidation?.valid ? promoCode : "",
+        paymentRef: paymentReference || (promoValidation?.valid ? null : `TEST_PAY_${Date.now()}`),
+        paymentProvider: promoValidation?.valid ? "promo_code" : paymentProvider,
+      });
+
+      if (!orgResult.success) {
+        setOrgError(orgResult.error || "Account created, but we could not register your organization. You can complete this from Settings.");
+        setSubmitting(false);
+        return false;
+      } else {
+        window.location.reload();
+        return true;
+      }
+    } catch (err) {
+      setOrgError(err?.message || "An error occurred during organization creation.");
+      setSubmitting(false);
+      return false;
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
@@ -203,9 +266,9 @@ export default function AuthPage({
       return;
     }
     setOrgError("");
-    setSubmitting(true);
 
     if (mode === "signin") {
+      setSubmitting(true);
       const currentLimit = getRateLimitStatus(email);
       if (currentLimit.isLocked) {
         setRateLimit(currentLimit);
@@ -217,31 +280,34 @@ export default function AuthPage({
       if (!signInRes?.error && targetOrgTarget) {
         await joinOrganizationByReferral(targetOrgTarget, "learner").catch(() => {});
       }
+      setSubmitting(false);
     } else {
-      const signupRole = "learner";
-      const result = await onSignUp(email, password, signupRole, accountType);
-
-      if (!result?.error && result?.data?.user?.id) {
-        attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
-      }
-
-      if (accountType === "organization" && !result?.error) {
-        const orgResult = await registerOrganization(orgName);
-        if (!orgResult.success) {
-          setOrgError(orgResult.error || "Account created, but we could not register your organization. You can complete this from Settings.");
+      // Sign-up branch
+      if (accountType === "organization") {
+        // If valid foundation code, proceed immediately with waived payment
+        if (promoValidation?.valid) {
+          await executeOrgSignup();
         } else {
-          window.location.reload();
-          return;
+          // If no foundation code, prompt mandatory test payment flow
+          setShowPaymentModal(true);
         }
-      } else if (accountType === "learner" && !result?.error) {
-        if (targetOrgTarget) {
-          await joinOrganizationByReferral(targetOrgTarget, "learner").catch(() => {});
-        } else {
-          joinDefaultOrganization().catch(() => {});
+      } else {
+        // Individual learner sign-up
+        setSubmitting(true);
+        const result = await onSignUp(email, password, "learner", "learner");
+        if (!result?.error && result?.data?.user?.id) {
+          attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
         }
+        if (!result?.error) {
+          if (targetOrgTarget) {
+            await joinOrganizationByReferral(targetOrgTarget, "learner").catch(() => {});
+          } else {
+            joinDefaultOrganization().catch(() => {});
+          }
+        }
+        setSubmitting(false);
       }
     }
-    setSubmitting(false);
   }
 
   const isEmailNotFound = authError && (authError.includes("No account found") || authError.includes("create a new account"));
@@ -775,20 +841,82 @@ export default function AuthPage({
                 </div>
 
                 {accountType === "organization" && (
-                  <div style={{ marginTop: 12 }}>
-                    <label style={styles.label}>Organization name</label>
-                    <div style={styles.inputWrap}>
-                      <Building2 size={15} color="#94A3B8" style={styles.inputIcon} />
-                      <input
-                        type="text"
-                        value={orgName}
-                        onChange={(e) => { setOrgName(e.target.value); if (orgError) setOrgError(""); }}
-                        className="auth-input"
-                        style={styles.input}
-                        placeholder="Acme Corporation"
-                      />
+                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div>
+                      <label style={styles.label}>Organization name</label>
+                      <div style={styles.inputWrap}>
+                        <Building2 size={15} color="#94A3B8" style={styles.inputIcon} />
+                        <input
+                          type="text"
+                          value={orgName}
+                          onChange={(e) => { setOrgName(e.target.value); if (orgError) setOrgError(""); }}
+                          className="auth-input"
+                          style={styles.input}
+                          placeholder="Acme Corporation or Foundation"
+                        />
+                      </div>
+                      {orgError && <div style={{ ...styles.breachBox, marginTop: 8 }}><ShieldAlert size={14} style={{ flexShrink: 0, marginTop: 1 }} /><span>{orgError}</span></div>}
                     </div>
-                    {orgError && <div style={{ ...styles.breachBox, marginTop: 8 }}><ShieldAlert size={14} style={{ flexShrink: 0, marginTop: 1 }} /><span>{orgError}</span></div>}
+
+                    {/* Foundation / Partner Promo Code (Optional) */}
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <label style={styles.label}>Foundation / Promo Code <span style={{ color: "#94A3B8", textTransform: "none", fontWeight: 500 }}>(Optional)</span></label>
+                        {validatingPromo && <span style={{ fontSize: 11, color: "#2563EB", fontWeight: 700 }}>Checking code...</span>}
+                      </div>
+                      <div style={styles.inputWrap}>
+                        <Gift size={15} color={promoValidation?.valid ? "#10B981" : "#94A3B8"} style={styles.inputIcon} />
+                        <input
+                          type="text"
+                          value={promoCode}
+                          onChange={(e) => handleCheckPromoCode(e.target.value)}
+                          onBlur={(e) => handleCheckPromoCode(e.target.value)}
+                          className="auth-input"
+                          style={{
+                            ...styles.input,
+                            borderColor: promoValidation?.valid ? "#10B981" : promoValidation?.valid === false ? "#F87171" : "#E2E8F0",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.04em",
+                            fontWeight: 700
+                          }}
+                          placeholder="e.g. SARA-FOUNDATION or FOUNDATION-FREE"
+                        />
+                      </div>
+
+                      {/* Promo Verification Result */}
+                      {promoValidation?.valid && (
+                        <div style={{
+                          marginTop: 8,
+                          padding: "8px 12px",
+                          borderRadius: 6,
+                          background: "#ECFDF5",
+                          border: "1px solid #A7F3D0",
+                          color: "#065F46",
+                          fontSize: 12,
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: 8
+                        }}>
+                          <Sparkles size={15} color="#10B981" style={{ flexShrink: 0, marginTop: 2 }} />
+                          <div>
+                            <div style={{ fontWeight: 800, color: "#047857" }}>{promoValidation.name || "Foundation Grant Verified"}</div>
+                            <div style={{ fontSize: 11, color: "#065F46", marginTop: 2 }}>
+                              ✓ Payment Waived • Free Basic Plan • {promoValidation.grant_ai_credits || 1000} AI Credits • {promoValidation.grant_seats || 50} Free Seats
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {promoValidation && !promoValidation.valid && promoCode.trim() && (
+                        <div style={{ fontSize: 11.5, color: "#DC2626", marginTop: 5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                          <X size={13} /> {promoValidation.error || "Invalid promo code"}
+                        </div>
+                      )}
+
+                      <div style={{ fontSize: 11, color: "#64748B", marginTop: 4 }}>
+                        Foundations &amp; NGOs with a code bypass subscription fees and unlock free credits.
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -968,6 +1096,210 @@ export default function AuthPage({
             </div>
           </>
         )}
+
+        {/* Test Payment Activation Modal for Paid Organizations */}
+        {showPaymentModal && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+            padding: 20
+          }}>
+            <div style={{
+              background: "#FFFFFF",
+              borderRadius: 12,
+              width: "100%",
+              maxWidth: 440,
+              padding: "24px 22px",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              border: "1px solid #E2E8F0"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <CreditCard size={18} color="#2563EB" />
+                  <span style={{ fontSize: 16, fontWeight: 800, color: "#0F172A" }}>Activate Organization Plan</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentModal(false)}
+                  style={{ background: "transparent", border: "none", cursor: "pointer", color: "#64748B" }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={{
+                background: "#F8FAFC",
+                border: "1px solid #E2E8F0",
+                borderRadius: 8,
+                padding: "12px 14px",
+                marginBottom: 16
+              }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "#0F172A" }}>Starter Plan (Test Mode)</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: "#2563EB" }}>
+                    {selectedCurrency === "USD" ? "$19.00 / mo" : "₦15,000 / mo"}
+                  </span>
+                </div>
+                <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 4, lineHeight: 1.4 }}>
+                  Includes <strong>25 Team Seats</strong>, <strong>200 AI Credits</strong>, Cohort tracking, and unlimited LMS courses.
+                </div>
+              </div>
+
+              {/* Currency Toggle */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+                {["USD", "NGN"].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setSelectedCurrency(c)}
+                    style={{
+                      flex: 1,
+                      padding: "6px 10px",
+                      borderRadius: 6,
+                      fontSize: 12,
+                      fontWeight: 700,
+                      border: selectedCurrency === c ? "1.5px solid #2563EB" : "1px solid #E2E8F0",
+                      background: selectedCurrency === c ? "#EFF6FF" : "#FFFFFF",
+                      color: selectedCurrency === c ? "#1E40AF" : "#64748B",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {c === "USD" ? "USD ($19)" : "NGN (₦15,000)"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Simulated Test Card Notice */}
+              <div style={{
+                background: "#EFF6FF",
+                border: "1px solid #BFDBFE",
+                borderRadius: 8,
+                padding: "10px 12px",
+                marginBottom: 16,
+                fontSize: 12,
+                color: "#1E40AF"
+              }}>
+                <div style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Sparkles size={14} color="#2563EB" /> Sandbox Test Payment Flow
+                </div>
+                <div style={{ fontSize: 11, marginTop: 3, color: "#3B82F6" }}>
+                  Test Card pre-filled: <code>4000 0000 0000 0000</code> (No live charge).
+                </div>
+              </div>
+
+              {/* Alternative Promo Code shortcut inside modal */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", marginBottom: 4 }}>
+                  Have a Foundation Code instead?
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. SARA-FOUNDATION"
+                    style={{
+                      flex: 1,
+                      padding: "7px 10px",
+                      borderRadius: 6,
+                      border: "1px solid #CBD5E1",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      textTransform: "uppercase"
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handleCheckPromoCode(promoCode);
+                      if (promoCode.trim().toUpperCase() === "SARA-FOUNDATION" || promoCode.trim().toUpperCase() === "FOUNDATION-FREE") {
+                        setShowPaymentModal(false);
+                      }
+                    }}
+                    style={{
+                      padding: "7px 12px",
+                      borderRadius: 6,
+                      background: "#0F172A",
+                      color: "#FFF",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      border: "none",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Apply Code
+                  </button>
+                </div>
+              </div>
+
+              {orgError && (
+                <div style={{ ...styles.errorBox, marginBottom: 12 }}>{orgError}</div>
+              )}
+
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    border: "1px solid #CBD5E1",
+                    background: "#FFFFFF",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#475569",
+                    cursor: "pointer"
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={testPaymentProcessing}
+                  onClick={async () => {
+                    setTestPaymentProcessing(true);
+                    const success = await executeOrgSignup(`TEST_TXN_${Date.now()}`, selectedCurrency === "NGN" ? "paystack_test" : "stripe_test");
+                    if (!success) {
+                      setTestPaymentProcessing(false);
+                    }
+                  }}
+                  style={{
+                    flex: 2,
+                    padding: "10px 14px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: "#2563EB",
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "#FFFFFF",
+                    cursor: testPaymentProcessing ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6
+                  }}
+                >
+                  {testPaymentProcessing ? (
+                    <>Processing Test Payment...</>
+                  ) : (
+                    <>Pay &amp; Activate Org <ArrowRight size={14} /></>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </form>
     </div>
   );

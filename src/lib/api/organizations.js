@@ -218,52 +218,106 @@ export async function joinDefaultOrganization() {
 }
 
 /**
- * Registers a brand-new organization with the current signed-in user as its
- * owner/admin. Call this immediately after a successful account creation on
- * the "Sign up your organization" path.
- * @param {string} orgName
- * @returns {Promise<{ success: boolean, organizationId?: string, error?: string, demo?: boolean }>}
+ * Validates a foundation promo code (e.g. SARA-FOUNDATION, FOUNDATION-FREE)
+ * @param {string} code
+ * @returns {Promise<{ valid: boolean, name?: string, grant_ai_credits?: number, grant_seats?: number, error?: string }>}
  */
-export async function registerOrganization(orgName) {
+export async function validateOrgPromoCode(code) {
+  const normalized = (code || "").trim().toUpperCase();
+  if (!normalized) return { valid: false, error: "Please enter a promo code." };
+
+  const KNOWN_PROMOS = {
+    "SARA-FOUNDATION": { name: "Sara Foundation Africa Social Impact Grant", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+    "FOUNDATION-FREE": { name: "Global Non-Profit Free Basic Plan", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+    "TRAINAI-FOUNDATION": { name: "Train AI Impact & Foundation Partner", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+    "CAP3-FOUNDATION": { name: "CAP Cohort 3 Foundation Sponsor", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+    "IMPACT-2026": { name: "Non-Governmental Organization Grant 2026", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+  };
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.rpc("validate_org_promo_code", { p_code: normalized });
+      if (!error && data) return data;
+    } catch {}
+  }
+
+  // Fallback / client check
+  if (KNOWN_PROMOS[normalized]) {
+    return {
+      valid: true,
+      code: normalized,
+      ...KNOWN_PROMOS[normalized],
+    };
+  }
+
+  return { valid: false, error: "Invalid foundation or partner promo code." };
+}
+
+/**
+ * Registers a brand-new organization with the current signed-in user as its owner/admin.
+ * Supports Free Foundation Promo Code bypass or verified payment reference.
+ * @param {string} orgName
+ * @param {object} options
+ * @param {string} [options.promoCode]
+ * @param {string} [options.paymentRef]
+ * @param {string} [options.paymentProvider]
+ * @returns {Promise<{ success: boolean, organizationId?: string, error?: string, demo?: boolean, is_free_grant?: boolean }>}
+ */
+export async function registerOrganization(orgName, { promoCode = "", paymentRef = "", paymentProvider = "test_flow" } = {}) {
   const trimmed = (orgName || "").trim();
   if (trimmed.length < 2) {
     return { success: false, error: "Organization name is required." };
   }
+
+  const normalizedPromo = (promoCode || "").trim().toUpperCase();
+
   if (!supabase) {
-    // Demo mode: no backend to create a real organization row or run the
-    // real RPC's role promotion against. To still preview what a real
-    // organization sign-up leads to (landing in the Platform/admin app, not
-    // the plain learner Home), patch the local demo session the same way
-    // the real RPC would have changed the account's role, then let the
-    // caller reload so every downstream role lookup (App.jsx) recomputes
-    // from scratch - the same pattern AcceptInvitationScreen already uses.
+    // Demo mode: patch session
     try {
       const saved = localStorage.getItem(AUTH_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         parsed.role = "admin";
         if (parsed.user) {
-          parsed.user.user_metadata = { ...(parsed.user.user_metadata || {}), role: "admin", organization_name: trimmed };
+          parsed.user.user_metadata = {
+            ...(parsed.user.user_metadata || {}),
+            role: "admin",
+            organization_name: trimmed,
+            plan: "starter",
+            is_foundation_grant: !!normalizedPromo,
+          };
         }
         localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
-        // Record the promotion so a later sign-out/sign-in for this same
-        // email remembers "admin" instead of reverting to the "learner"
-        // useAuth.js's signUp assigned a moment earlier, before this
-        // function ran - see setDemoRoleForEmail in roleRouting.js.
         if (parsed.user?.email) {
           setDemoRoleForEmail(parsed.user.email, "admin");
         }
       }
-    } catch {
-      // Best-effort only - a failure here shouldn't block the rest of signup.
-    }
-    return { success: true, organizationId: `demo_org_${Date.now()}`, demo: true };
+    } catch {}
+    return {
+      success: true,
+      organizationId: `demo_org_${Date.now()}`,
+      demo: true,
+      is_free_grant: !!normalizedPromo
+    };
   }
 
   try {
-    const { data, error } = await supabase.rpc("create_organization_self_serve", { p_org_name: trimmed });
-    if (error) throw error;
-    return { success: true, organizationId: data };
+    // Try the enhanced payment / promo RPC first
+    const { data, error } = await supabase.rpc("create_organization_with_code_or_payment", {
+      p_org_name: trimmed,
+      p_promo_code: normalizedPromo || null,
+      p_payment_ref: paymentRef || (normalizedPromo ? null : `TEST_PAY_${Date.now()}`),
+      p_payment_provider: paymentProvider || "test_flow",
+    });
+
+    if (!error && data?.success) {
+      return { success: true, organizationId: data.organization_id, data };
+    }
+
+    // Fallback to legacy self-serve RPC if migration isn't applied yet
+    const { data: legacyData, error: legacyError } = await supabase.rpc("create_organization_self_serve", { p_org_name: trimmed });
+    if (legacyError) throw legacyError;
+    return { success: true, organizationId: legacyData };
   } catch (e) {
     return { success: false, error: e?.message || "Could not register your organization. Please try again." };
   }
