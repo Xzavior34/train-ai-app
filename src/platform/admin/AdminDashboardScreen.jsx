@@ -193,7 +193,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
               <div className="ta-row ta-between" style={{ paddingBottom: 12, borderBottom: "1px solid var(--border)" }}>
                 <div>
                   <div className="ta-title">Cohort progress</div>
-                  <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Cohort milestone & completion tracking</div>
+                  <div className="ta-sub" style={{ marginTop: 2, fontSize: 12 }}>Schedule elapsed from each cohort's start and end dates</div>
                 </div>
                 <span className="ta-body" style={{ fontSize: 12, cursor: "pointer", color: "var(--primary)", fontWeight: 700 }} onClick={() => setScreen("cohorts")}>All cohorts</span>
               </div>
@@ -207,13 +207,14 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
                 {!cohortProgressQuery.loading && (cohortProgressQuery.data || []).length === 0 && (
                   <div className="ta-empty">No cohorts yet.</div>
                 )}
-                {(cohortProgressQuery.data || []).map(c => (
+                {(cohortProgressQuery.data || []).filter((c) => !c.isArchived).map(c => (
                   <div key={c.name} style={{ background: "var(--surface-3)", padding: 12, borderRadius: 8, border: "1px solid var(--border)", cursor: "pointer", transition: "all 0.15s ease" }} onClick={() => setScreen("cohorts")}>
                     <div className="ta-row ta-between" style={{ fontSize: 13, marginBottom: 8, gap: 10 }}>
                       <span style={{ fontWeight: 700, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</span>
-                      <span style={{ color: "var(--primary)", fontWeight: 700, flexShrink: 0 }}>{c.progress}%</span>
+                      <span style={{ color: "var(--primary)", fontWeight: 700, flexShrink: 0 }}>{c.progress}% elapsed</span>
                     </div>
                     <ProgressBar value={c.progress} />
+                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>{c.scheduleLabel}</div>
                   </div>
                 ))}
               </div>

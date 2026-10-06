@@ -126,73 +126,17 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
   }
 
   try {
-    // 1. Try dedicated RPC if available in database
     const { data: rpcData, error: rpcErr } = await supabase.rpc("join_organization_by_invite", {
       p_org_target: target,
       p_role: preferredRole
     });
-
-    if (!rpcErr && rpcData?.success) {
-      clearPendingOrganizationJoin();
-      return rpcData;
-    }
-  } catch (rpcErr) {
-    console.info("join_organization_by_invite RPC notice, executing direct fallback:", rpcErr);
-  }
-
-  // 2. Direct client query & membership attachment fallback
-  try {
-    const { data: authData } = await supabase.auth.getUser();
-    const user = authData?.user;
-    if (!user) return { success: false, error: "Must be signed in to join an organization." };
-
-    // Resolve organization row by ID or Slug
-    let orgQuery = supabase.from("organizations").select("id, name, slug");
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target);
-    if (isUuid) {
-      orgQuery = orgQuery.eq("id", target);
-    } else {
-      orgQuery = orgQuery.eq("slug", target);
-    }
-
-    const { data: org, error: orgError } = await orgQuery.maybeSingle();
-    if (orgError || !org) {
-      return { success: false, error: "Organization not found." };
-    }
-
-    // Attach user to user_profiles
-    await supabase.from("user_profiles").upsert({
-      id: user.id,
-      organization_id: org.id,
-      role: preferredRole,
-      display_name: user.user_metadata?.display_name || user.email?.split("@")[0] || "Member"
-    }, { onConflict: "id" });
-
-    // Attach user to organization_members
-    await supabase.from("organization_members").upsert({
-      organization_id: org.id,
-      user_id: user.id,
-      role: "member",
-      status: "active",
-      joined_at: new Date().toISOString()
-    }, { onConflict: "organization_id,user_id" });
-
-    // Ensure user_roles has the role
-    await supabase.from("user_roles").upsert({
-      user_id: user.id,
-      role: preferredRole
-    }, { onConflict: "user_id,role" });
-
+    if (rpcErr) throw rpcErr;
+    if (!rpcData?.success) return rpcData || { success: false, error: "Could not submit this join request." };
     clearPendingOrganizationJoin();
-    return {
-      success: true,
-      organizationId: org.id,
-      organizationName: org.name,
-      slug: org.slug
-    };
+    return rpcData;
   } catch (e) {
     console.error("joinOrganizationByReferral error:", e);
-    return { success: false, error: e?.message || "Could not join organization workspace." };
+    return { success: false, error: e?.message || "Could not submit the organization join request." };
   }
 }
 
@@ -263,13 +207,16 @@ export async function validateOrgPromoCode(code) {
  * @param {string} [options.paymentProvider]
  * @returns {Promise<{ success: boolean, organizationId?: string, error?: string, demo?: boolean, is_free_grant?: boolean }>}
  */
-export async function registerOrganization(orgName, { promoCode = "", paymentRef = "", paymentProvider = "test_flow" } = {}) {
+export async function registerOrganization(orgName, { promoCode = "", paymentRef = "", paymentProvider = "verified_payment" } = {}) {
   const trimmed = (orgName || "").trim();
   if (trimmed.length < 2) {
     return { success: false, error: "Organization name is required." };
   }
 
   const normalizedPromo = (promoCode || "").trim().toUpperCase();
+  if (!normalizedPromo && !paymentRef) {
+    return { success: false, error: "A valid Foundation Code or verified payment reference is required." };
+  }
 
   if (!supabase) {
     // Demo mode: patch session
@@ -306,18 +253,13 @@ export async function registerOrganization(orgName, { promoCode = "", paymentRef
     const { data, error } = await supabase.rpc("create_organization_with_code_or_payment", {
       p_org_name: trimmed,
       p_promo_code: normalizedPromo || null,
-      p_payment_ref: paymentRef || (normalizedPromo ? null : `TEST_PAY_${Date.now()}`),
-      p_payment_provider: paymentProvider || "test_flow",
+      p_payment_ref: paymentRef || null,
+      p_payment_provider: paymentProvider || "verified_payment",
     });
 
-    if (!error && data?.success) {
-      return { success: true, organizationId: data.organization_id, data };
-    }
-
-    // Fallback to legacy self-serve RPC if migration isn't applied yet
-    const { data: legacyData, error: legacyError } = await supabase.rpc("create_organization_self_serve", { p_org_name: trimmed });
-    if (legacyError) throw legacyError;
-    return { success: true, organizationId: legacyData };
+    if (error) throw error;
+    if (!data?.success) return { success: false, error: data?.error || "Could not activate this organization." };
+    return { success: true, organizationId: data.organization_id, data };
   } catch (e) {
     return { success: false, error: e?.message || "Could not register your organization. Please try again." };
   }
@@ -1044,7 +986,7 @@ export async function fetchPendingOrgJoinRequests(orgId) {
         user_id: "demo-user-p1",
         organization_id: orgId,
         role: "learner",
-        status: "pending_approval",
+        status: "pending",
         joined_at: new Date(Date.now() - 3600000 * 4).toISOString(),
         display_name: "Chukwudi Okafor",
         email: "c.okafor@example.com",
@@ -1058,7 +1000,7 @@ export async function fetchPendingOrgJoinRequests(orgId) {
       .from("organization_members")
       .select("id, user_id, organization_id, role, status, joined_at")
       .eq("organization_id", orgId)
-      .in("status", ["pending_approval", "pending", "requested"])
+      .eq("status", "pending")
       .order("joined_at", { ascending: false });
 
     if (memberErr) throw memberErr;
@@ -1102,41 +1044,12 @@ export async function approveOrgJoinRequest(orgId, userId) {
   }
 
   try {
-    // 1. Try RPC if available
     const { data: rpcData, error: rpcErr } = await supabase.rpc("approve_organization_member", {
       p_org_id: orgId,
       p_user_id: userId
     });
-
-    if (!rpcErr && rpcData?.success) {
-      return rpcData;
-    }
-  } catch (rpcErr) {
-    console.info("approve_organization_member RPC fallback:", rpcErr);
-  }
-
-  // 2. Direct client fallback
-  try {
-    // Check seats
-    const seats = await fetchOrgSeatsSummary(orgId);
-    if (seats.available <= 0 && seats.purchased > 0) {
-      return { success: false, error: "No seats available in this workspace. Please purchase more seats before approving." };
-    }
-
-    const { error: memErr } = await supabase
-      .from("organization_members")
-      .update({ status: "active", joined_at: new Date().toISOString() })
-      .eq("organization_id", orgId)
-      .eq("user_id", userId);
-
-    if (memErr) throw memErr;
-
-    await supabase
-      .from("user_profiles")
-      .update({ organization_id: orgId })
-      .eq("id", userId);
-
-    return { success: true };
+    if (rpcErr) throw rpcErr;
+    return rpcData || { success: false, error: "Could not approve learner." };
   } catch (e) {
     return { success: false, error: e?.message || "Could not approve learner join request." };
   }
@@ -1155,29 +1068,12 @@ export async function rejectOrgJoinRequest(orgId, userId) {
   }
 
   try {
-    // 1. Try RPC if available
     const { data: rpcData, error: rpcErr } = await supabase.rpc("reject_organization_member", {
       p_org_id: orgId,
       p_user_id: userId
     });
-
-    if (!rpcErr && rpcData?.success) {
-      return rpcData;
-    }
-  } catch (rpcErr) {
-    console.info("reject_organization_member RPC fallback:", rpcErr);
-  }
-
-  // 2. Direct client fallback
-  try {
-    const { error: memErr } = await supabase
-      .from("organization_members")
-      .update({ status: "rejected" })
-      .eq("organization_id", orgId)
-      .eq("user_id", userId);
-
-    if (memErr) throw memErr;
-    return { success: true };
+    if (rpcErr) throw rpcErr;
+    return rpcData || { success: false, error: "Could not decline learner." };
   } catch (e) {
     return { success: false, error: e?.message || "Could not reject learner join request." };
   }

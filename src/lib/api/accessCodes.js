@@ -78,11 +78,12 @@ export async function fetchAccessCodes(organizationId) {
       query = query.eq("organization_id", organizationId);
     }
     const { data, error } = await query;
-    if (error || !data || data.length === 0) return getCachedCodes();
+    if (error) throw error;
     saveCachedCodes(data);
-    return data;
-  } catch {
-    return getCachedCodes();
+    return data || [];
+  } catch (error) {
+    console.error("Could not load access codes:", error);
+    return [];
   }
 }
 
@@ -118,10 +119,10 @@ export async function createAccessCode({
   };
 
   if (supabase) {
-    try {
-      const { data, error } = await supabase.from("access_codes").insert(newRow).select().single();
-      if (!error && data) return { success: true, data };
-    } catch {}
+    const { id, ...databaseRow } = newRow;
+    const { data, error } = await supabase.from("access_codes").insert(databaseRow).select().single();
+    if (error) throw error;
+    return { success: true, data };
   }
 
   const existing = getCachedCodes();
@@ -135,9 +136,9 @@ export async function createAccessCode({
  */
 export async function toggleAccessCodeActive(codeId, isActive) {
   if (supabase) {
-    try {
-      await supabase.from("access_codes").update({ is_active: isActive }).eq("id", codeId);
-    } catch {}
+    const { error } = await supabase.from("access_codes").update({ is_active: isActive }).eq("id", codeId);
+    if (error) throw error;
+    return { success: true };
   }
 
   const existing = getCachedCodes();
@@ -168,8 +169,9 @@ export async function fetchAccessCodeRedemptions(accessCodeId) {
       user_name: r.user_profiles?.display_name || "Learner",
       user_email: r.user_profiles?.email || "learner@trainailtd.com",
     }));
-  } catch {
-    return getCachedRedemptions().filter((r) => r.access_code_id === accessCodeId);
+  } catch (error) {
+    console.error("Could not load access-code redemptions:", error);
+    return [];
   }
 }
 
@@ -180,6 +182,10 @@ export async function redeemAccessCode(code, userId) {
   const normalizedCode = (code || "").trim().toUpperCase();
   if (!normalizedCode) return { success: false, error: "Please enter an access code." };
 
+  if (supabase && !userId) {
+    return { success: false, error: "Sign in before redeeming an access code." };
+  }
+
   if (supabase && userId) {
     try {
       const { data, error } = await supabase.rpc("redeem_access_code", {
@@ -189,7 +195,8 @@ export async function redeemAccessCode(code, userId) {
       if (error) throw error;
       return data;
     } catch (err) {
-      console.warn("RPC redeem_access_code notice, executing safe fallback:", err);
+      console.error("redeem_access_code failed:", err);
+      return { success: false, error: err?.message || "Could not verify this access code." };
     }
   }
 
@@ -235,9 +242,9 @@ export async function redeemAccessCode(code, userId) {
  */
 export async function revokeTrialAccess(redemptionId) {
   if (supabase) {
-    try {
-      await supabase.from("access_code_redemptions").update({ status: "revoked" }).eq("id", redemptionId);
-    } catch {}
+    const { error } = await supabase.from("access_code_redemptions").update({ status: "revoked" }).eq("id", redemptionId);
+    if (error) throw error;
+    return { success: true };
   }
 
   const redemptions = getCachedRedemptions();

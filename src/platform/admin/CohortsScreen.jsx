@@ -36,6 +36,10 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   async function handleCreateCohort(e) {
     e.preventDefault();
     if (!name.trim()) { showToast("Enter a cohort name first."); return; }
+    if (new Date(endDate).getTime() <= new Date(startDate).getTime()) {
+      showToast("The cohort end date must be after the start date.");
+      return;
+    }
     if (!orgId) {
       showToast("You need to be part of an organization to create a cohort.");
       return;
@@ -127,7 +131,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
               )}
               {cohorts.map((c, idx) => {
                 // Precise elapsed time calculation
-                const progressInfo = calculateCohortProgress(c.start_date || c.startsAt || c.created_at, c.end_date || c.endsAt);
+                const progressInfo = calculateCohortProgress(c.starts_at || c.startsAt, c.ends_at || c.endsAt);
                 const cohortCovers = [
                   "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=600&auto=format&fit=crop&q=80",
                   "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop&q=80",
@@ -171,7 +175,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                           <span className="ta-row ta-gap6">
                             <Users size={13} color="var(--primary)" /> {c.members ?? c.learner_count ?? 0} learners
                           </span>
-                          <span style={{ fontWeight: 800, color: "var(--primary)" }}>{progressInfo.percent}%</span>
+                          <span style={{ fontWeight: 800, color: "var(--primary)" }}>{progressInfo.percent}% elapsed</span>
                         </div>
                         <ProgressBar value={progressInfo.percent} />
 
@@ -243,7 +247,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                 <input
                   className="ta-input ta-mt6"
                   style={{ width: "100%", boxSizing: "border-box" }}
-                  placeholder="e.g. CAP Cohort 3 — AI &amp; Product Batch"
+                  placeholder="e.g. CAP Cohort 3: AI &amp; Product Batch"
                   required
                   value={name}
                   onChange={e => setName(e.target.value)}

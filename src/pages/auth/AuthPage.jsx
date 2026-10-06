@@ -220,7 +220,7 @@ export default function AuthPage({
     }
   }
 
-  async function executeOrgSignup(paymentReference = null, paymentProvider = "test_flow") {
+  async function executeOrgSignup(paymentReference = null, paymentProvider = "verified_payment") {
     setSubmitting(true);
     setOrgError("");
     try {
@@ -239,7 +239,7 @@ export default function AuthPage({
 
       const orgResult = await registerOrganization(orgName, {
         promoCode: promoValidation?.valid ? promoCode : "",
-        paymentRef: paymentReference || (promoValidation?.valid ? null : `TEST_PAY_${Date.now()}`),
+        paymentRef: paymentReference || null,
         paymentProvider: promoValidation?.valid ? "promo_code" : paymentProvider,
       });
 
@@ -288,7 +288,7 @@ export default function AuthPage({
         if (promoValidation?.valid) {
           await executeOrgSignup();
         } else {
-          // If no foundation code, prompt mandatory test payment flow
+          // Paid organisation activation must use a verified provider flow.
           setShowPaymentModal(true);
         }
       } else {
@@ -391,10 +391,12 @@ export default function AuthPage({
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, color: "#1E40AF", fontWeight: 700, lineHeight: 1.3 }}>
-                Joining {orgInfo?.name || targetOrgTarget}
+                Request access to {orgInfo?.name || targetOrgTarget}
               </div>
               <div style={{ fontSize: 11.5, color: "#3B82F6", lineHeight: 1.35, marginTop: 2 }}>
-                {mode === "signup" ? "Sign up to automatically access your team's assigned courses and cohorts." : "Sign in to access your organization workspace."}
+                {mode === "signup"
+                  ? "Create your account, then the organisation administrator can approve or decline your request."
+                  : "Sign in to submit your request. Access begins after the organisation administrator approves it."}
               </div>
             </div>
           </div>
@@ -1097,7 +1099,7 @@ export default function AuthPage({
           </>
         )}
 
-        {/* Test Payment Activation Modal for Paid Organizations */}
+        {/* Organisation activation options */}
         {showPaymentModal && (
           <div style={{
             position: "fixed",
@@ -1144,10 +1146,7 @@ export default function AuthPage({
                 marginBottom: 16
               }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: "#0F172A" }}>Starter Plan (Test Mode)</span>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: "#2563EB" }}>
-                    {selectedCurrency === "USD" ? "$19.00 / mo" : "₦15,000 / mo"}
-                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "#0F172A" }}>Organisation plan activation</span>
                 </div>
                 <div style={{ fontSize: 11.5, color: "#64748B", marginTop: 4, lineHeight: 1.4 }}>
                   Includes <strong>25 Team Seats</strong>, <strong>200 AI Credits</strong>, Cohort tracking, and unlimited LMS courses.
@@ -1178,7 +1177,7 @@ export default function AuthPage({
                 ))}
               </div>
 
-              {/* Simulated Test Card Notice */}
+              {/* Payment safety notice */}
               <div style={{
                 background: "#EFF6FF",
                 border: "1px solid #BFDBFE",
@@ -1189,10 +1188,10 @@ export default function AuthPage({
                 color: "#1E40AF"
               }}>
                 <div style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-                  <Sparkles size={14} color="#2563EB" /> Sandbox Test Payment Flow
+                  <ShieldCheck size={14} color="#2563EB" /> Verified activation only
                 </div>
                 <div style={{ fontSize: 11, marginTop: 3, color: "#3B82F6" }}>
-                  Test Card pre-filled: <code>4000 0000 0000 0000</code> (No live charge).
+                  Train AI will not activate a paid workspace using a simulated transaction. Use an approved Foundation Code, or contact the team for verified billing setup.
                 </div>
               </div>
 
@@ -1265,13 +1264,8 @@ export default function AuthPage({
                 </button>
                 <button
                   type="button"
-                  disabled={testPaymentProcessing}
-                  onClick={async () => {
-                    setTestPaymentProcessing(true);
-                    const success = await executeOrgSignup(`TEST_TXN_${Date.now()}`, selectedCurrency === "NGN" ? "paystack_test" : "stripe_test");
-                    if (!success) {
-                      setTestPaymentProcessing(false);
-                    }
+                  onClick={() => {
+                    setOrgError("Enter and validate an approved Foundation Code, or book a demo so the team can activate verified billing for your organisation.");
                   }}
                   style={{
                     flex: 2,
@@ -1282,18 +1276,14 @@ export default function AuthPage({
                     fontSize: 13,
                     fontWeight: 800,
                     color: "#FFFFFF",
-                    cursor: testPaymentProcessing ? "not-allowed" : "pointer",
+                    cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     gap: 6
                   }}
                 >
-                  {testPaymentProcessing ? (
-                    <>Processing Test Payment...</>
-                  ) : (
-                    <>Pay &amp; Activate Org <ArrowRight size={14} /></>
-                  )}
+                  <>Continue with verified activation <ArrowRight size={14} /></>
                 </button>
               </div>
             </div>

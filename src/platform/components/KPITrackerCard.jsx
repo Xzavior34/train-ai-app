@@ -325,7 +325,7 @@ export function KPITrackerCard({ organizationId, showToast }) {
                   </td>
                   <td>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>
-                      {kpi.current_metric || "—"} <span style={{ color: "var(--text-3)", fontWeight: 400 }}>/ {kpi.target_metric || "100%"}</span>
+                      {kpi.current_metric || "Not set"} <span style={{ color: "var(--text-3)", fontWeight: 400 }}>/ {kpi.target_metric || "100%"}</span>
                     </div>
                   </td>
                   <td style={{ textAlign: "right" }}>

@@ -1795,11 +1795,11 @@ export function CommunityScreen({
                     <span style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Status</span>
                     <span style={{ fontSize: 14, fontWeight: 800, color: "#10B981" }}>Active Sprint</span>
                   </div>
-                  {cohort.start_date && (
+                  {cohort.starts_at && (
                     <div style={{ padding: "8px 12px", borderRadius: 10, background: "var(--surface-3)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: 2 }}>
                       <span style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase" }}>Start Date</span>
                       <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
-                        {new Date(cohort.start_date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                        {new Date(cohort.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                       </span>
                     </div>
                   )}

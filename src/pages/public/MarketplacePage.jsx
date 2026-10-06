@@ -7,7 +7,6 @@ import {
 import {
   fetchMarketplaceCourses,
   fetchInstructorSeatPlans,
-  recordMarketplacePurchase,
   calculateMarketplaceSplit
 } from "../../lib/api/marketplace.js";
 
@@ -21,8 +20,6 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
   
   // Course Detail & Purchase Modal
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [purchasing, setPurchasing] = useState(false);
-  const [purchaseSuccess, setPurchaseSuccess] = useState(false);
 
   const plans = fetchInstructorSeatPlans();
 
@@ -46,18 +43,9 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
     loadCourses();
   }, [selectedCategory, selectedSkill]);
 
-  async function handlePurchase(course) {
-    setPurchasing(true);
-    try {
-      const res = await recordMarketplacePurchase({ courseId: course.id });
-      if (res.success) {
-        setPurchaseSuccess(true);
-      }
-    } catch (e) {
-      alert("Could not complete checkout: " + (e?.message || "Error"));
-    } finally {
-      setPurchasing(false);
-    }
+  function handlePurchase() {
+    setSelectedCourse(null);
+    onSignIn?.();
   }
 
   return (
@@ -328,14 +316,13 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
                               ${(course.price_amount / 100).toFixed(2)}
                             </span>
                             <span style={{ fontSize: 11, color: "#64748B", display: "block" }}>
-                              15% Platform Commission Verified
+                              15% platform commission after verified payment
                             </span>
                           </div>
                           <button
                             className="ta-btn ta-btn-primary ta-btn-sm"
                             onClick={() => {
                               setSelectedCourse(course);
-                              setPurchaseSuccess(false);
                             }}
                           >
                             View &amp; Enroll <ArrowRight size={13} />
@@ -419,7 +406,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
                     onClick={onBookDemo}
                     style={{ width: "100%", justifyContent: "center" }}
                   >
-                    {p.monthlyPriceCents > 0 ? "Get Started" : "Talk to Sales"}
+                    {p.monthlyPriceCents > 0 ? "Apply for Academy Access" : "Talk to Sales"}
                   </button>
                 </div>
               ))}
@@ -487,7 +474,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
               }}
             >
               <div style={{ fontWeight: 700, color: "#CBD5E1", marginBottom: 8 }}>
-                Automated 15% Platform Commission Settlement
+                15% Platform Commission on Completed Payments
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", color: "#94A3B8", marginBottom: 4 }}>
                 <span>Gross Course Price:</span>
@@ -507,24 +494,13 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
               </div>
             </div>
 
-            {purchaseSuccess ? (
-              <div style={{ background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: 10, padding: 16, textAlign: "center", color: "#10B981" }}>
-                <Check size={24} style={{ margin: "0 auto 8px" }} />
-                <div style={{ fontWeight: 800, fontSize: 15 }}>Enrollment &amp; Purchase Successful!</div>
-                <div style={{ fontSize: 12, color: "#CBD5E1", marginTop: 4 }}>
-                  Course access and invoice have been attached to your profile.
-                </div>
-              </div>
-            ) : (
-              <button
-                className="ta-btn ta-btn-primary"
-                style={{ width: "100%", justifyContent: "center", padding: "12px", fontSize: 14 }}
-                disabled={purchasing}
-                onClick={() => handlePurchase(selectedCourse)}
-              >
-                {purchasing ? "Processing Ledger..." : `Confirm Enrollment ($${(selectedCourse.price_amount / 100).toFixed(2)})`}
-              </button>
-            )}
+            <button
+              className="ta-btn ta-btn-primary"
+              style={{ width: "100%", justifyContent: "center", padding: "12px", fontSize: 14 }}
+              onClick={handlePurchase}
+            >
+              Sign in to purchase and enrol
+            </button>
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@ import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { isRealDatabaseId } from "../mockDataManager.js";
 import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
 import { getCanonicalDomain } from "../../services/emailService.js";
+import { calculateCohortProgress } from "./cohorts.js";
 
 
 // Admin-scoped queries. RLS (up_select_org_admin in 0006_rls_policies.sql)
@@ -737,7 +738,7 @@ export async function fetchCohortProgressSummary(organizationId) {
   if (!supabase) return [];
   try {
     const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
-    let query = supabase.from("cohorts").select("id, name");
+    let query = supabase.from("cohorts").select("id, name, starts_at, ends_at, status, is_archived");
     if (orgFilter) query = query.eq("organization_id", orgFilter);
     const { data: cohorts, error } = await query;
     
@@ -748,17 +749,26 @@ export async function fetchCohortProgressSummary(organizationId) {
       const { count: members } = await supabase.from("cohort_members").select("id", { count: "exact", head: true }).eq("cohort_id", c.id);
       const { data: memberRows } = await supabase.from("cohort_members").select("user_id").eq("cohort_id", c.id);
       const userIds = (memberRows || []).map(m => m.user_id);
-      let progress = 0;
+      let learningProgress = 0;
       if (userIds.length) {
         // A large cohort's membership can exceed the ~30-60 id URL-length
         // ceiling that broke the other org-scale queries fixed alongside
         // this one - see safeInQuery.
         const enrollments = await safeInQuery("course_enrollments", "progress_percentage", "user_id", userIds);
         if (enrollments && enrollments.length) {
-          progress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
+          learningProgress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
         }
       }
-      return { name: c.name, members: members || 0, progress };
+      const schedule = calculateCohortProgress(c.starts_at, c.ends_at);
+      return {
+        id: c.id,
+        name: c.name,
+        members: members || 0,
+        progress: schedule.percent,
+        scheduleLabel: schedule.statusLabel,
+        learningProgress,
+        isArchived: !!c.is_archived,
+      };
     }));
     return rows;
   } catch (err) {
@@ -1586,11 +1596,35 @@ export async function fetchOrgAIUsageByFeature(organizationId) {
    ADMIN: Cohorts
    ========================================================================= */
 
-export async function createCohort({ organizationId, name, startsAt, endsAt, createdBy }) {
+export async function createCohort({
+  organizationId,
+  name,
+  startsAt,
+  endsAt,
+  startDate,
+  endDate,
+  programName = "Training Programme",
+  trialStatus = "none",
+  createdBy,
+}) {
   if (!supabase) return null;
+  const effectiveStart = startsAt || startDate || null;
+  const effectiveEnd = endsAt || endDate || null;
+  if (effectiveStart && effectiveEnd && new Date(effectiveEnd).getTime() <= new Date(effectiveStart).getTime()) {
+    throw new Error("The cohort end date must be after its start date.");
+  }
   const { data, error } = await supabase
     .from("cohorts")
-    .insert({ organization_id: organizationId, name, starts_at: startsAt || null, ends_at: endsAt || null, created_by: createdBy })
+    .insert({
+      organization_id: organizationId,
+      name,
+      starts_at: effectiveStart,
+      ends_at: effectiveEnd,
+      program_name: programName,
+      trial_status: trialStatus,
+      status: effectiveStart && new Date(effectiveStart).getTime() > Date.now() ? "Upcoming" : "Active",
+      created_by: createdBy,
+    })
     .select()
     .single();
   if (error) throw error;
@@ -1620,7 +1654,7 @@ export async function fetchCohortsWithStats(organizationId) {
   const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
   let query = supabase
     .from("cohorts")
-    .select("id, name, starts_at, ends_at")
+    .select("id, name, description, starts_at, ends_at, status, is_archived, program_name, trial_status, banner_url, created_at")
     .order("starts_at", { ascending: false });
 
   if (orgFilter) query = query.eq("organization_id", orgFilter);
@@ -1641,14 +1675,14 @@ export async function fetchCohortsWithStats(organizationId) {
       if (enrollments && enrollments.length) progress = Math.round(enrollments.reduce((a, e) => a + (e.progress_percentage || 0), 0) / enrollments.length);
     }
     return {
-      id: c.id,
-      name: c.name,
+      ...c,
       start: c.starts_at ? new Date(c.starts_at).toLocaleDateString() : "TBD",
       end: c.ends_at ? new Date(c.ends_at).toLocaleDateString() : "TBD",
+      startsAt: c.starts_at || null,
       endsAt: c.ends_at || null,
       members: members || 0,
       courses: courses || 0,
-      progress,
+      learningProgress: progress,
     };
   }));
 }

@@ -108,8 +108,8 @@ export async function fetchCohortsWithDetails(organizationId) {
         name: "CAP Cohort 3 (Career Acceleration)",
         program_name: "Career Acceleration Programme (CAP)",
         organization_id: organizationId || "org-demo",
-        start_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-        end_date: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
+        starts_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+        ends_at: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
         status: COHORT_STATUSES.ACTIVE,
         is_archived: false,
         trial_status: "active",
@@ -121,8 +121,8 @@ export async function fetchCohortsWithDetails(organizationId) {
         name: "AI Engineering Fast-Track",
         program_name: "Executive Academy",
         organization_id: organizationId || "org-demo",
-        start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        end_date: new Date(Date.now() + 49 * 24 * 60 * 60 * 1000).toISOString(),
+        starts_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        ends_at: new Date(Date.now() + 49 * 24 * 60 * 60 * 1000).toISOString(),
         status: COHORT_STATUSES.UPCOMING,
         is_archived: false,
         trial_status: "none",
@@ -134,8 +134,8 @@ export async function fetchCohortsWithDetails(organizationId) {
         name: "Spring 2026 Foundation Cohort",
         program_name: "Internal Training",
         organization_id: organizationId || "org-demo",
-        start_date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-        end_date: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
+        starts_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+        ends_at: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
         status: COHORT_STATUSES.COMPLETED,
         is_archived: false,
         trial_status: "none",
@@ -161,7 +161,7 @@ export async function fetchCohortsWithDetails(organizationId) {
     return (data || []).map((c) => ({
       ...c,
       learner_count: c.cohort_members?.[0]?.count || 0,
-      progress: calculateCohortProgress(c.start_date, c.end_date),
+      progress: calculateCohortProgress(c.starts_at, c.ends_at),
     }));
   } catch (err) {
     console.warn("fetchCohortsWithDetails fallback notice:", err);
@@ -181,8 +181,8 @@ export async function createCohort({ name, organizationId, programName, startDat
         name,
         organization_id: organizationId,
         program_name: programName || "Training Programme",
-        start_date: startDate,
-        end_date: endDate,
+        starts_at: startDate,
+        ends_at: endDate,
         status,
         trial_status: trialStatus,
         learner_count: 0,
@@ -197,8 +197,8 @@ export async function createCohort({ name, organizationId, programName, startDat
       name,
       organization_id: organizationId,
       program_name: programName || "Training Programme",
-      start_date: startDate,
-      end_date: endDate,
+      starts_at: startDate,
+      ends_at: endDate,
       status,
       trial_status: trialStatus,
       is_archived: false,
@@ -234,19 +234,10 @@ export async function updateCohort(cohortId, updates) {
 export async function deleteOrArchiveCohort(cohortId) {
   if (!supabase) return { success: true, action: "archived", message: "Cohort archived." };
 
-  try {
-    const { data, error } = await supabase.rpc("delete_or_archive_cohort", { p_cohort_id: cohortId });
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    // Fallback if RPC is missing
-    const { error: delErr } = await supabase.from("cohorts").delete().eq("id", cohortId);
-    if (delErr) {
-      await supabase.from("cohorts").update({ is_archived: true, status: "Archived" }).eq("id", cohortId);
-      return { success: true, action: "archived", message: "Cohort safely archived." };
-    }
-    return { success: true, action: "deleted", message: "Cohort deleted." };
-  }
+  const { data, error } = await supabase.rpc("delete_or_archive_cohort", { p_cohort_id: cohortId });
+  if (error) throw error;
+  if (!data?.success) throw new Error(data?.error || "Could not delete or archive this cohort.");
+  return data;
 }
 
 /**

@@ -126,20 +126,20 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
         .owner-preview-btn:hover { background: #F8FAFC; }
         .owner-preview-btn:active { transform: scale(.98); }
       `}</style>
-      <form onSubmit={handleSignIn} className="owner-card" style={{ maxWidth: 360, width: "100%", padding: 32, background: "#fff", borderRadius: 10, margin: 16 }}>
+      <form onSubmit={handleSignIn} className="owner-card" style={{ maxWidth: 360, width: "100%", padding: 32, background: "#fff", color: "#0F172A", borderRadius: 10, margin: 16 }}>
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", color: "#EF4444", textTransform: "uppercase" }}>Train AI Internal</div>
-        <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4 }}>Platform Owner Access</div>
+        <div style={{ fontSize: 20, fontWeight: 800, marginTop: 4, color: "#0F172A" }}>Platform Owner Access</div>
         <div style={{ fontSize: 12.5, color: "#656C86", marginTop: 6, marginBottom: 20 }}>
           Train AI staff only. This is not the organization or learner sign-in.
         </div>
-        <label style={{ fontSize: 12, fontWeight: 600 }}>Email</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>Email</label>
         <input
           type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
           placeholder="you@trainailtd.com"
           className="owner-input"
-          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 12, borderRadius: 8, border: "1px solid #E5E7EB", boxSizing: "border-box" }}
+          style={{ width: "100%", padding: "10px 12px", marginTop: 4, marginBottom: 12, borderRadius: 8, border: "1px solid #CBD5E1", boxSizing: "border-box", background: "#FFFFFF", color: "#0F172A", caretColor: "#0F172A" }}
         />
-        <label style={{ fontSize: 12, fontWeight: 600 }}>Password</label>
+        <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>Password</label>
         <div style={{ position: "relative", width: "100%", marginTop: 4, marginBottom: 16 }}>
           <input
             type={showPassword ? "text" : "password"}
@@ -153,7 +153,7 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
             style={{
               width: "100%", padding: "10px 38px 10px 12px", borderRadius: 8,
               border: "1px solid #E5E7EB", boxSizing: "border-box",
-              backgroundColor: rateLimit.isLocked ? "#F8FAFC" : "#FFFFFF",
+              backgroundColor: rateLimit.isLocked ? "#F8FAFC" : "#FFFFFF", color: "#0F172A", caretColor: "#0F172A",
               cursor: rateLimit.isLocked ? "not-allowed" : "text"
             }}
           />

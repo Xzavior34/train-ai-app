@@ -100,7 +100,7 @@ export default function CapCohort3Screen({ session, showToast }) {
               <Sparkles size={12} /> 6-Week Intensive Accelerator
             </div>
             <h1 style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 900, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
-              Career Acceleration Programme (CAP) — Cohort 3
+              Career Acceleration Programme (CAP): Cohort 3
             </h1>
             <p style={{ fontSize: 13.5, color: "#94A3B8", margin: 0, maxWidth: 640, lineHeight: 1.5 }}>
               Hands-on enterprise AI product delivery, cross-functional sprints, dedicated industry mentorship, and Demo Day graduation.

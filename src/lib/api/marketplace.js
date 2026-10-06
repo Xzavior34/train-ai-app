@@ -160,7 +160,23 @@ export function calculateMarketplaceSplit(priceInCents, commissionPercent = MARK
  * Fetches public marketplace courses with filters
  */
 export async function fetchMarketplaceCourses({ category, skillLevel, searchQuery, academyId } = {}) {
-  let courses = getCachedCourses().filter((c) => c.status === "Published");
+  let courses;
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("marketplace_courses")
+      .select("*, marketplace_academies(id, name, slug, logo_url, is_verified)")
+      .eq("status", "Published")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    courses = (data || []).map((course) => ({
+      ...course,
+      academy_name: course.marketplace_academies?.name || "Independent Academy",
+      academy_slug: course.marketplace_academies?.slug || null,
+      academy_verified: !!course.marketplace_academies?.is_verified,
+    }));
+  } else {
+    courses = getCachedCourses().filter((c) => c.status === "Published");
+  }
 
   if (category && category !== "all") {
     courses = courses.filter((c) => c.category?.toLowerCase() === category.toLowerCase());
@@ -185,14 +201,27 @@ export async function fetchMarketplaceCourses({ category, skillLevel, searchQuer
  * Fetches course details by ID or slug
  */
 export async function fetchMarketplaceCourseById(idOrSlug) {
-  const courses = getCachedCourses();
-  return courses.find((c) => c.id === idOrSlug || c.slug === idOrSlug) || null;
+  if (supabase) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug || "");
+    let query = supabase
+      .from("marketplace_courses")
+      .select("*, marketplace_academies(id, name, slug, logo_url, is_verified)")
+      .eq("status", "Published");
+    query = isUuid ? query.eq("id", idOrSlug) : query.eq("slug", idOrSlug);
+    const { data, error } = await query.maybeSingle();
+    if (error) throw error;
+    return data ? { ...data, academy_name: data.marketplace_academies?.name || "Independent Academy" } : null;
+  }
+  return getCachedCourses().find((c) => c.id === idOrSlug || c.slug === idOrSlug) || null;
 }
 
 /**
  * Records a marketplace purchase with 15% platform commission ledger
  */
 export async function recordMarketplacePurchase({ courseId, userId, txId, commissionPercent = 15.0 }) {
+  if (!supabase) return { success: false, error: "Marketplace checkout requires an online account." };
+  if (!userId) return { success: false, error: "Sign in before purchasing a course." };
+  if (!txId) return { success: false, error: "A verified payment reference is required." };
   const course = await fetchMarketplaceCourseById(courseId);
   if (!course) return { success: false, error: "Course not found." };
 
@@ -214,16 +243,13 @@ export async function recordMarketplacePurchase({ courseId, userId, txId, commis
     created_at: new Date().toISOString(),
   };
 
-  if (supabase) {
-    try {
-      await supabase.from("marketplace_purchases").insert(newPurchase);
-    } catch {}
-  }
+  const { data, error } = await supabase.rpc("record_verified_marketplace_purchase", {
+    p_course_id: course.id,
+    p_payment_reference: txId,
+  });
+  if (error) return { success: false, error: error.message || "Could not record the verified purchase." };
 
-  const purchases = getCachedPurchases();
-  saveCachedPurchases([newPurchase, ...purchases]);
-
-  return { success: true, data: newPurchase };
+  return { success: true, data: data || newPurchase };
 }
 
 /**

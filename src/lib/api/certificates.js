@@ -11,7 +11,7 @@ const SEED_CERTIFICATES = [
     organization_id: "org-demo",
     organization_name: "Tech Learning Academy",
     course_id: "course-cap3",
-    course_name: "Career Acceleration Programme (CAP) — AI & Product",
+    course_name: "Career Acceleration Programme (CAP): AI & Product",
     cohort_id: "cap-cohort-3",
     cohort_name: "CAP Cohort 3",
     template_type: "train_ai_default",
