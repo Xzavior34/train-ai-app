@@ -53,8 +53,8 @@ function doPost(event) {
       "Goals or questions: " + (clean(body.agendaNotes, 3000) || "None provided"),
     ].join("\n");
 
-    const calendarId = CalendarApp.getDefaultCalendar().getId();
-    const created = Calendar.Events.insert({
+    const calendarId = "primary";
+    const eventPayload = {
       summary: title,
       description: description,
       start: { dateTime: body.start, timeZone: "Africa/Lagos" },
@@ -69,14 +69,33 @@ function doPost(event) {
         },
       },
       extendedProperties: { private: { trainAiBookingId: bookingId } },
-    }, calendarId, { conferenceDataVersion: 1, sendUpdates: "all" });
+    };
+    const insertUrl = "https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(calendarId)
+      + "/events?conferenceDataVersion=1&sendUpdates=all";
+    const insertResponse = UrlFetchApp.fetch(insertUrl, {
+      method: "post",
+      contentType: "application/json",
+      headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+      payload: JSON.stringify(eventPayload),
+      muteHttpExceptions: true,
+    });
+    const created = JSON.parse(insertResponse.getContentText() || "{}");
+    if (insertResponse.getResponseCode() < 200 || insertResponse.getResponseCode() >= 300) {
+      return jsonResponse({ success: false, error: (created.error && created.error.message) || "Google Calendar rejected the event." });
+    }
 
     const videoEntry = created.conferenceData && created.conferenceData.entryPoints
       ? created.conferenceData.entryPoints.filter(function (item) { return item.entryPointType === "video"; })[0]
       : null;
     const meetingUrl = created.hangoutLink || (videoEntry && videoEntry.uri);
     if (!created.id || !meetingUrl) {
-      if (created.id) Calendar.Events.remove(calendarId, created.id, { sendUpdates: "none" });
+      if (created.id) {
+        UrlFetchApp.fetch("https://www.googleapis.com/calendar/v3/calendars/" + encodeURIComponent(calendarId) + "/events/" + encodeURIComponent(created.id) + "?sendUpdates=none", {
+          method: "delete",
+          headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() },
+          muteHttpExceptions: true,
+        });
+      }
       return jsonResponse({ success: false, error: "The calendar event did not produce a Google Meet room." });
     }
 
@@ -91,4 +110,3 @@ function doPost(event) {
     return jsonResponse({ success: false, error: String(error && error.message ? error.message : error) });
   }
 }
-
