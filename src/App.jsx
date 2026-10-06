@@ -179,6 +179,9 @@ export default function App() {
       if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") {
         return "book-demo";
       }
+      if (params.get("view") === "auth") {
+        return "auth";
+      }
     } catch {}
     return orgSlugParam ? "auth" : "landing";
   }); // "landing" | "auth" | "book-demo"
