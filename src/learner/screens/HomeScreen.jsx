@@ -167,7 +167,7 @@ export function HomeScreen({
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 800, color: "#FFFFFF" }}>Explore Curated Courses</div>
-                  <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>Browse verified certifications and learning paths.</div>
+                  <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.75)", marginTop: 2 }}>Browse available courses and learning paths.</div>
                 </div>
                 <button
                   className="tai-btn tai-btn-primary"

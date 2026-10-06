@@ -28,72 +28,44 @@ const AUDIENCES = [
   [Building2, "Businesses and enterprise teams", "Develop people against organisational needs and use skill-gap and readiness information to guide workforce decisions."],
 ];
 
-const CURRENCY_CONFIG = {
-  NGN: { key: "NGN", label: "NGN (₦)", symbol: "₦" },
-  USD: { key: "USD", label: "USD ($)", symbol: "$" },
-  GBP: { key: "GBP", label: "GBP (£)", symbol: "£" },
-  EUR: { key: "EUR", label: "EUR (€)", symbol: "€" },
-};
-
 const PRICING_TIERS = [
   {
     name: "Basic",
     tierKey: "basic",
-    prices: { NGN: "₦250,000", USD: "$250", GBP: "£190", EUR: "€220" },
-    period: "/ month",
-    seatSummary: "1 Admin · 1 Instructor · 20 Learners",
-    extraSeatNote: { NGN: "+₦15,000 / addtl. learner", USD: "+$15 / addtl. learner", GBP: "+£12 / addtl. learner", EUR: "+€14 / addtl. learner" },
-    creditsBadge: "220 AI Credits",
+    commercialLabel: "Discussed after your demo",
+    scopeLabel: "For focused learning operations",
     description: "A focused starting point for organisations bringing structured learning, learners and cohorts into one system.",
     features: [
-      "1 Admin & 1 Instructor seat",
-      "20 Learners included",
-      "Additional learners: ₦15k / $15 per seat",
-      "220 AI Credits for entire organisation",
-      "Default colours & standard UI (no custom branding)",
-      "Structured course delivery & cohort management",
-      "Study groups & peer community feed",
-      "Core progress & completion tracking",
+      "Structured course delivery",
+      "Learner and cohort management",
+      "Study groups and learning communities",
+      "Core progress and completion visibility",
     ],
   },
   {
     name: "Intermediate",
     tierKey: "intermediate",
-    prices: { NGN: "₦500,000", USD: "$500", GBP: "£400", EUR: "€440" },
-    period: "/ month",
-    seatSummary: "Multiple Admins & Instructors · Manager View · 30 Learners",
-    extraSeatNote: { NGN: "+₦10,000 / addtl. seat", USD: "+$10 / addtl. seat", GBP: "+£8 / addtl. seat", EUR: "+€9 / addtl. seat" },
-    creditsBadge: "400 AI Credits",
-    description: "For organisations that need deeper learning support, manager oversight, custom branding, and workforce intelligence.",
+    commercialLabel: "Discussed after your demo",
+    scopeLabel: "For broader oversight and intelligence",
+    description: "For organisations that need deeper learning support, manager oversight and workforce intelligence.",
     features: [
-      "Multiple Admin & Instructor seats",
-      "Manager view & role access permissions",
-      "30 Learners included",
-      "Additional seats: ₦10k / $10 per seat",
-      "400 AI Credits for entire organisation",
-      "Custom organisation branding & colors on Train AI",
-      "Workforce intelligence & skill-gap tracking",
-      "Data download (CSV / JSON reports)",
+      "Everything needed for connected learning delivery",
+      "Manager and instructor oversight",
+      "Workforce intelligence and skill-gap tracking",
+      "AI summaries and administrative comment logs",
     ],
   },
   {
-    name: "Advanced / Enterprise",
+    name: "Customizable Enterprise",
     tierKey: "enterprise",
-    prices: { NGN: "Custom", USD: "Custom", GBP: "Custom", EUR: "Custom" },
-    period: "Contact our sales team",
-    seatSummary: "Multiple Admins, Managers & Instructors · Custom Learners",
-    extraSeatNote: { NGN: "Tailored seat volume", USD: "Tailored seat volume", GBP: "Tailored seat volume", EUR: "Tailored seat volume" },
-    creditsBadge: "Custom AI Quota",
-    description: "A fully configurable engagement for enterprises, foundations and institutions with advanced security, SSO, and API connection.",
+    commercialLabel: "Tailored to your requirements",
+    scopeLabel: "For complex organisational deployments",
+    description: "A configurable engagement for enterprises, foundations and institutions that require a tailored rollout and single sign-on.",
     features: [
-      "Multiple Admins, Managers, and Instructors",
-      "Custom / Unlimited learner volume",
-      "Custom AI Credits & dedicated organisation quota",
-      "Full customisation & white-labelling",
-      "Workforce Intelligence & talent readiness mapping",
-      "Data download & compliance audit reports",
-      "API connection, SSO (Single Sign-On), & webhooks",
-      "Dedicated account manager & SLA support",
+      "Configuration shaped around your learning operation",
+      "Organisation-wide learner and instructor management",
+      "Workforce intelligence and readiness visibility",
+      "SSO for enterprise access",
     ],
   },
 ];
@@ -133,14 +105,12 @@ export default function LandingPage({ onNavigate }) {
   const [openFaq, setOpenFaq] = useState(null);
   const [legalModal, setLegalModal] = useState(null);
   const [photoIndex, setPhotoIndex] = useState(0);
-  const [currency, setCurrency] = useState("NGN");
 
 
   const showcasePhotos = [
-    { src: "/images/train-ai-diverse-learners.jpg", title: "Enterprise & Foundation Cohorts", caption: "Multi-racial teams collaborating across AI and technical training tracks." },
-    { src: "/images/train-ai-women-tech.jpg", title: "Women in Technology Programs", caption: "Community-driven learning tracks with peer accountability and mentor reviews." },
-    { src: "/images/train-ai-diverse-team.jpg", title: "Workforce & NGO Development", caption: "Structured development cohorts measuring skills, readiness, and impact." },
-    { src: "/images/train-ai-white-team.jpg", title: "Collaborative Planning Sprints", caption: "Instructor-led sessions and hands-on portfolio milestones." },
+    { src: "/images/train-ai-white-team.jpg", title: "Academies and training providers", caption: "Bring courses, instructors, cohorts and learner progress into one connected learning operation." },
+    { src: "/images/train-ai-women-tech.jpg", title: "Foundations and social-impact organisations", caption: "Manage cohorts, learning communities and programme participation with clearer visibility into development and impact." },
+    { src: "/images/train-ai-diverse-team.jpg", title: "Businesses and enterprise teams", caption: "Develop people against organisational needs and use skill-gap, readiness and manager insights to guide support." },
   ];
 
   const handlePrevPhoto = () => {
@@ -306,11 +276,11 @@ export default function LandingPage({ onNavigate }) {
           <div className="lp-shell">
             <div className="lp-section-heading">
               <p className="lp-kicker">Who Train AI is for</p>
-              <h2>One platform, applied to different learning operations.</h2>
-              <p>The core platform stays consistent. Implementation is shaped around how each organisation delivers learning and measures development.</p>
+              <h2>Built for organisations that deliver learning and develop people.</h2>
+              <p>Train AI supports academies and training providers, foundations and social-impact organisations, and businesses developing their workforce. The platform is configured around each organisation's learners, cohorts, instructors and reporting needs.</p>
             </div>
 
-            {/* Foundation Showcase with Interactive Scrolling Arrows */}
+            {/* Customer groups, shown with real workplace and learning photography. */}
             <div className="lp-showcase-container" aria-label="Learning and collaboration in practice">
               <div className="lp-showcase-frame">
                 <img
@@ -369,29 +339,11 @@ export default function LandingPage({ onNavigate }) {
             <div className="lp-section-heading lp-heading-split">
               <p className="lp-kicker">Standard pricing structure</p>
               <h2>Three tiers. The same framework for every organisation type.</h2>
-              <p>Transparent monthly subscriptions for cohorts, academies, foundations and enterprise teams. Toggle currency to view local rates.</p>
-            </div>
-
-            {/* Currency Selector */}
-            <div className="lp-currency-selector-bar">
-              <span className="lp-currency-label">Select Billing Currency:</span>
-              <div className="lp-currency-pill-group">
-                {Object.values(CURRENCY_CONFIG).map((c) => (
-                  <button
-                    key={c.key}
-                    className={`lp-currency-pill ${currency === c.key ? "active" : ""}`}
-                    onClick={() => setCurrency(c.key)}
-                    aria-pressed={currency === c.key}
-                  >
-                    {c.label}
-                  </button>
-                ))}
-              </div>
+              <p>Choose between Basic, Intermediate and Customizable Enterprise. Scope and commercial terms are confirmed after a personalised product demo.</p>
             </div>
 
             <div className="lp-pricing-table">
               {PRICING_TIERS.map((tier, index) => {
-                const currentPrice = tier.prices[currency] || tier.prices.NGN;
                 const isEnterprise = tier.tierKey === "enterprise";
                 return (
                   <article key={tier.name} className={`lp-pricing-tier ${isEnterprise ? "lp-pricing-tier-enterprise" : ""}`}>
@@ -402,14 +354,9 @@ export default function LandingPage({ onNavigate }) {
 
                     <div className="lp-tier-price-block">
                       <div className="lp-tier-price-row">
-                        <span className="lp-tier-amount">{currentPrice}</span>
-                        <span className="lp-tier-period">{tier.period}</span>
+                        <span className="lp-tier-amount">{tier.commercialLabel}</span>
                       </div>
-                      <div className="lp-tier-seats-summary">{tier.seatSummary}</div>
-                      <div className="lp-tier-badge-row">
-                        <span className="lp-tier-credit-badge">{tier.creditsBadge}</span>
-                        <span className="lp-tier-extra-note">{tier.extraSeatNote[currency]}</span>
-                      </div>
+                      <div className="lp-tier-seats-summary">{tier.scopeLabel}</div>
                     </div>
 
                     <p className="lp-tier-desc">{tier.description}</p>
@@ -427,13 +374,13 @@ export default function LandingPage({ onNavigate }) {
                       className={isEnterprise ? "lp-primary-button" : "lp-secondary-button"}
                       onClick={() => navigate("book-demo", { sector: tier.name.toLowerCase() })}
                     >
-                      {isEnterprise ? "Contact sales team" : `Get started with ${tier.name}`} <ArrowRight size={16} />
+                      {isEnterprise ? "Discuss Enterprise" : `Discuss ${tier.name}`} <ArrowRight size={16} />
                     </button>
                   </article>
                 );
               })}
             </div>
-            <p className="lp-pricing-note">All plans include secure cloud infrastructure, automated backups, and 99.9% uptime. Custom configurations and multi-year SLAs confirmed during onboarding.</p>
+            <p className="lp-pricing-note">Exact scope, user volumes and commercial terms are agreed after Train AI is reviewed against your organisation's requirements.</p>
           </div>
         </section>
 
@@ -528,6 +475,6 @@ const landingStyles = `
   .lp-motion-ready .lp-hero-copy{animation:lp-hero-copy-in .72s cubic-bezier(.2,.7,.2,1) both}.lp-motion-ready .lp-hero-figure{animation:lp-hero-visual-in .82s .1s cubic-bezier(.2,.7,.2,1) both}.lp-motion-ready .lp-reveal{opacity:0;transform:translateY(26px);transition:opacity .62s ease,transform .62s cubic-bezier(.2,.7,.2,1)}.lp-motion-ready .lp-reveal.lp-reveal-visible{opacity:1;transform:none}.lp-motion-ready .lp-audience-row:nth-child(2),.lp-motion-ready .lp-pricing-tier:nth-child(2){transition-delay:.08s}.lp-motion-ready .lp-audience-row:nth-child(3),.lp-motion-ready .lp-pricing-tier:nth-child(3){transition-delay:.16s}
   @keyframes lp-hero-copy-in{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}@keyframes lp-hero-visual-in{from{opacity:0;transform:translateX(28px) scale(.985)}to{opacity:1;transform:none}}@keyframes lp-answer-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
   @media(max-width:900px){.lp-nav,.lp-header-actions{display:none}.lp-menu-button{display:inline-flex}.lp-mobile-nav{display:grid;gap:3px;padding:8px 20px 18px;border-top:1px solid var(--lp-line);background:#fff;animation:lp-mobile-menu-in .24s ease both}.lp-mobile-nav>button:not(.lp-primary-button){border:0;background:transparent;padding:12px 0;text-align:left;color:var(--lp-ink);font-weight:650}.lp-hero-grid,.lp-heading-split,.lp-outcomes-grid,.lp-demo-grid,.lp-faq-grid{grid-template-columns:1fr;gap:34px}.lp-hero-copy{max-width:720px}.lp-two-column-feature,.lp-pricing-table{grid-template-columns:1fr}.lp-showcase-frame{height:300px}.lp-showcase-overlay{flex-direction:column;align-items:flex-start;gap:14px}.lp-feature-column-dark{border-top:1px solid var(--lp-line)}.lp-pricing-tier{min-height:auto;border-right:0;border-bottom:1px solid var(--lp-line)}.lp-pricing-tier:last-child{border-bottom:0}.lp-pricing-tier>p{min-height:0}.lp-pricing-tier button{margin-top:12px}.lp-footer-main{grid-template-columns:1.4fr 1fr 1fr;gap:38px}.lp-footer-contact{grid-column:2/4}}@keyframes lp-mobile-menu-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-  @media(max-width:640px){.lp-shell,.lp-header-inner{width:min(100% - 28px,1160px)}.lp-header-inner{height:58px}.lp-logo-button img{height:21px}.lp-menu-button{padding:6px}.lp-hero{padding:38px 0 46px}.lp-hero-grid{gap:30px}.lp-kicker{margin-bottom:13px;font-size:10.5px;letter-spacing:.12em}.lp-hero h1{font-size:clamp(34px,9.6vw,42px);line-height:1.06;letter-spacing:-.043em}.lp-hero-description{margin-top:19px;font-size:15px;line-height:1.58}.lp-hero-actions{display:grid;gap:9px;margin-top:24px}.lp-hero-actions button{width:100%;min-height:42px}.lp-sales-note{margin-top:14px;font-size:11.5px;line-height:1.5}.lp-hero-figure figcaption{display:grid;gap:4px;padding:11px 0}.lp-hero-figure strong{font-size:12px}.lp-hero-figure span{font-size:11px;text-align:left}.lp-section{padding:52px 0}.lp-section-heading{margin-bottom:28px}.lp-section-heading h2,.lp-outcomes-grid h2,.lp-demo-grid h2,.lp-faq-intro h2{font-size:clamp(27px,7.6vw,34px);line-height:1.12;letter-spacing:-.035em}.lp-section-heading>p:last-child,.lp-faq-intro>p:last-child{margin-top:15px;font-size:14.5px;line-height:1.58}.lp-heading-split>p:last-child{margin-top:0}.lp-outcomes-section::after{inset:48% 0 0 0;opacity:.08}.lp-outcomes-grid{gap:24px}.lp-outcome-copy{padding-top:0}.lp-outcome-copy p{margin-bottom:16px;font-size:15px;line-height:1.62}.lp-showcase-frame{height:240px}.lp-showcase-text strong{font-size:15px}.lp-showcase-text span{font-size:12px}.lp-feature-column{padding:24px 20px}.lp-column-title{padding-bottom:22px}.lp-column-title h3{font-size:22px;line-height:1.28}.lp-feature-row{grid-template-columns:23px 1fr;gap:12px;padding:19px 0}.lp-feature-row h4{font-size:15px}.lp-feature-row p{font-size:13.5px;line-height:1.55}.lp-audience-row{grid-template-columns:26px 24px 1fr;gap:11px;padding:24px 0}.lp-audience-row h3{font-size:17px;line-height:1.3}.lp-audience-row p{grid-column:3;font-size:13.5px;line-height:1.58}.lp-pricing-tier{padding:24px 20px}.lp-tier-heading h3{font-size:23px}.lp-pricing-tier>p{margin:20px 0;font-size:13.5px}.lp-pricing-tier li{font-size:13px}.lp-demo-grid{gap:24px}.lp-demo-grid p:not(.lp-kicker){font-size:14.5px;line-height:1.6}.lp-faq-grid{gap:28px}.lp-faq-item button{padding:18px 0;font-size:14px}.lp-faq-item p{font-size:13.5px;line-height:1.6}.lp-footer{padding-top:46px}.lp-footer-main{grid-template-columns:1fr 1fr;gap:32px 20px}.lp-footer-brand,.lp-footer-contact{grid-column:1/-1}.lp-footer-brand img{height:29px}.lp-footer-bottom{align-items:flex-start;flex-direction:column}.lp-footer-bottom>div{gap:16px}.lp-modal{padding:28px 22px}.lp-modal h2{font-size:22px}}
+  @media(max-width:640px){.lp-shell,.lp-header-inner{width:min(100% - 28px,1160px)}.lp-header-inner{height:58px}.lp-logo-button img{height:21px}.lp-menu-button{padding:6px}.lp-hero{padding:38px 0 46px}.lp-hero-grid{gap:30px}.lp-kicker{margin-bottom:13px;font-size:10.5px;letter-spacing:.12em}.lp-hero h1{font-size:clamp(34px,9.6vw,42px);line-height:1.06;letter-spacing:-.043em}.lp-hero-description{margin-top:19px;font-size:15px;line-height:1.58}.lp-hero-actions{display:grid;gap:9px;margin-top:24px}.lp-hero-actions button{width:100%;min-height:42px}.lp-sales-note{margin-top:14px;font-size:11.5px;line-height:1.5}.lp-hero-figure figcaption{display:grid;gap:4px;padding:11px 0}.lp-hero-figure strong{font-size:12px}.lp-hero-figure span{font-size:11px;text-align:left}.lp-section{padding:52px 0}.lp-section-heading{margin-bottom:28px}.lp-section-heading h2,.lp-outcomes-grid h2,.lp-demo-grid h2,.lp-faq-intro h2{font-size:clamp(27px,7.6vw,34px);line-height:1.12;letter-spacing:-.035em}.lp-section-heading>p:last-child,.lp-faq-intro>p:last-child{margin-top:15px;font-size:14.5px;line-height:1.58}.lp-heading-split>p:last-child{margin-top:0}.lp-outcomes-section::after{inset:48% 0 0 0;opacity:.08}.lp-outcomes-grid{gap:24px}.lp-outcome-copy{padding-top:0}.lp-outcome-copy p{margin-bottom:16px;font-size:15px;line-height:1.62}.lp-showcase-frame{height:240px}.lp-showcase-text strong{font-size:15px}.lp-showcase-text span{font-size:12px}.lp-feature-column{padding:24px 20px}.lp-column-title{padding-bottom:22px}.lp-column-title h3{font-size:22px;line-height:1.28}.lp-feature-row{grid-template-columns:23px 1fr;gap:12px;padding:19px 0}.lp-feature-row h4{font-size:15px}.lp-feature-row p{font-size:13.5px;line-height:1.55}.lp-audience-row{grid-template-columns:26px 24px 1fr;gap:11px;padding:24px 0}.lp-audience-row h3{font-size:17px;line-height:1.3}.lp-audience-row p{grid-column:3;font-size:13.5px;line-height:1.58}.lp-pricing-tier{padding:24px 20px}.lp-tier-heading h3{font-size:23px}.lp-tier-amount{font-size:22px;line-height:1.2}.lp-pricing-tier>p{margin:20px 0;font-size:13.5px}.lp-pricing-tier li{font-size:13px}.lp-demo-grid{gap:24px}.lp-demo-grid p:not(.lp-kicker){font-size:14.5px;line-height:1.6}.lp-faq-grid{gap:28px}.lp-faq-item button{padding:18px 0;font-size:14px}.lp-faq-item p{font-size:13.5px;line-height:1.6}.lp-footer{padding-top:46px}.lp-footer-main{grid-template-columns:1fr 1fr;gap:32px 20px}.lp-footer-brand,.lp-footer-contact{grid-column:1/-1}.lp-footer-brand img{height:29px}.lp-footer-bottom{align-items:flex-start;flex-direction:column}.lp-footer-bottom>div{gap:16px}.lp-modal{padding:28px 22px}.lp-modal h2{font-size:22px}}
   @media(prefers-reduced-motion:reduce){.lp-page *{scroll-behavior:auto!important;transition:none!important;animation:none!important}.lp-motion-ready .lp-reveal{opacity:1!important;transform:none!important}}
 `;

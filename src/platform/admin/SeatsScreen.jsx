@@ -105,7 +105,8 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
   async function handleApproveRequest(req) {
     setActionLoadingId(req.id);
     try {
-      await approveCreditRequest(req.id, orgId);
+      const result = await approveCreditRequest(req.id, orgId);
+      if (!result.success) throw new Error(result.error || "Could not approve request");
       showToast(`Approved ${req.amount} credits for ${req.user?.display_name || "Learner"}`);
       creditRequestsQuery.refetch();
     } catch (err) {
@@ -118,7 +119,8 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
   async function handleDenyRequest(req) {
     setActionLoadingId(req.id);
     try {
-      await denyCreditRequest(req.id);
+      const result = await denyCreditRequest(req.id);
+      if (!result.success) throw new Error(result.error || "Could not deny request");
       showToast("Credit request denied");
       creditRequestsQuery.refetch();
     } catch (err) {
@@ -141,12 +143,13 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
 
     setGrantSubmitting(true);
     try {
-      await grantDirectCredits({
+      const result = await grantDirectCredits({
         userId: grantSelectedUserId,
         organizationId: orgId,
         amount: amt,
         reason: grantReason.trim() || "Admin direct grant",
       });
+      if (!result.success) throw new Error(result.error || "Could not grant credits");
       showToast(`Successfully granted ${amt} AI credits!`);
       setGrantModalOpen(false);
       setGrantReason("");

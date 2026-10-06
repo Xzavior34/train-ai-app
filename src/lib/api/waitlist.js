@@ -285,68 +285,52 @@ export async function submitDemoRequest({
       ...attribution,
     };
 
-    // 2. Persist to local backup immediately so Admin Demo Requests screen & booking checker can always access it
-    try {
-      const storedRaw = localStorage.getItem("trainai_demo_requests_v1");
-      const list = storedRaw ? JSON.parse(storedRaw) : [];
-      list.unshift(insertPayload);
-      localStorage.setItem("trainai_demo_requests_v1", JSON.stringify(list));
-
-      if (scheduledDate && scheduledTime) {
-        const bookedRaw = localStorage.getItem("trainai_booked_slots_v1");
-        const bookedList = bookedRaw ? JSON.parse(bookedRaw) : [];
-        bookedList.push({ scheduled_date: scheduledDate, scheduled_time: scheduledTime });
-        localStorage.setItem("trainai_booked_slots_v1", JSON.stringify(bookedList));
-      }
-    } catch (localErr) {
-      console.info("Local demo backup note:", localErr);
-    }
-
-    // 3. Persist to Supabase demo_requests table
+    // Persist to the shared database before confirming the appointment. A
+    // browser-only success would be invisible to staff on every other device.
     const db = getDemoClient();
-    if (db) {
-      try {
-        const { error } = await db.from("demo_requests").insert(insertPayload);
-        if (error) {
-          // If scheduling columns don't exist yet on old schema, retry with baseline payload
-          if (error.code === "42703" || (error.message?.includes("column") && error.message?.includes("does not exist"))) {
-            const fallbackPayload = {
-              full_name: fullName.trim(),
-              work_email: normalizedEmail,
-              company_name: companyName.trim(),
-              team_size: teamSize || null,
-              message: message?.trim() || null,
-              source,
-              status: status || "scheduled",
-              ...attribution,
-            };
-            await db.from("demo_requests").insert(fallbackPayload).catch(() => {});
-          }
-        }
-      } catch (dbErr) {
-        console.warn("Database demo_requests insert note:", dbErr);
-      }
-
-      // Secondary organization inquiry entry
-      try {
-        await db.from("organization_inquiries").insert({
-          full_name: fullName.trim(),
-          work_email: normalizedEmail,
-          company_name: companyName.trim(),
-          inquiry_type: "demo_request",
-          message: `[Notification target: info@trainailtd.com & info@sarafoundationafrica.com]\n${message?.trim() || ""}`,
-          source,
-          status: "new",
-          ...attribution,
-        }).catch(() => {});
-      } catch {}
+    if (!db) {
+      return { success: false, error: "Booking is temporarily unavailable. Please try again or email info@trainailtd.com." };
     }
+
+    let { error: insertError } = await db.from("demo_requests").insert(insertPayload);
+    if (insertError && (insertError.code === "42703" || (insertError.message?.includes("column") && insertError.message?.includes("does not exist")))) {
+      const fallbackPayload = {
+        id: insertPayload.id,
+        full_name: fullName.trim(),
+        work_email: normalizedEmail,
+        company_name: companyName.trim(),
+        team_size: teamSize || null,
+        message: message?.trim() || null,
+        source,
+        status: status || "scheduled",
+        created_at: insertPayload.created_at,
+      };
+      ({ error: insertError } = await db.from("demo_requests").insert(fallbackPayload));
+    }
+    if (insertError) {
+      console.warn("Database demo request insert failed:", insertError);
+      return { success: false, error: "We could not save your booking. Please try again or email info@trainailtd.com." };
+    }
+
+    // The inquiry entry is supplemental. The confirmed demo request above is
+    // the source of truth used by the appointment pipeline.
+    await db.from("organization_inquiries").insert({
+      full_name: fullName.trim(),
+      work_email: normalizedEmail,
+      company_name: companyName.trim(),
+      inquiry_type: "demo_request",
+      message: `[Notification target: info@trainailtd.com & info@sarafoundationafrica.com]\n${message?.trim() || ""}`,
+      source,
+      status: "new",
+      ...attribution,
+    }).then(({ error }) => {
+      if (error) console.warn("Supplemental organization inquiry insert failed:", error);
+    });
 
     return { success: true };
   } catch (error) {
     console.warn("submitDemoRequest caught error:", error);
-    // Still succeed gracefully so the user is confirmed and never sees an ugly crash
-    return { success: true };
+    return { success: false, error: "We could not save your booking. Please try again or email info@trainailtd.com." };
   }
 }
 
@@ -356,19 +340,21 @@ export async function submitDemoRequest({
  */
 export async function fetchBookedSlots({ fromDate, toDate } = {}) {
   const bookedSet = new Set();
-
-  // 1. Read from local storage bookings
-  try {
-    const localBooked = JSON.parse(localStorage.getItem("trainai_booked_slots_v1") || "[]");
-    for (const b of localBooked) {
-      if (b.scheduled_date && b.scheduled_time) {
-        bookedSet.add(`${b.scheduled_date}|${b.scheduled_time}`);
-      }
-    }
-  } catch {}
-
   const db = getDemoClient();
-  if (!db) return bookedSet;
+
+  // Local bookings are only a development fallback. In production, stale
+  // browser records must never override the shared appointment calendar.
+  if (!db) {
+    try {
+      const localBooked = JSON.parse(localStorage.getItem("trainai_booked_slots_v1") || "[]");
+      for (const b of localBooked) {
+        if (b.scheduled_date && b.scheduled_time) {
+          bookedSet.add(`${b.scheduled_date}|${b.scheduled_time}`);
+        }
+      }
+    } catch {}
+    return bookedSet;
+  }
 
   const from = fromDate || new Date().toISOString().split("T")[0];
   const to = toDate || new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];

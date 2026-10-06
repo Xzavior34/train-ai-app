@@ -296,17 +296,21 @@ export async function fetchOrgAISettings(organizationId) {
       .eq("id", organizationId)
       .maybeSingle();
 
-    if (!error && data?.settings?.ai_coach) {
+    if (error) {
+      console.warn("AI Coach settings fetch warning:", error);
+      return { ...DEFAULT_AI_COACH_SETTINGS };
+    }
+    if (data?.settings?.ai_coach) {
       const merged = { ...DEFAULT_AI_COACH_SETTINGS, ...data.settings.ai_coach };
       try {
         localStorage.setItem(`trainai_ai_coach_settings_${organizationId}`, JSON.stringify(merged));
       } catch {}
       return merged;
     }
-    return localSettings ? { ...DEFAULT_AI_COACH_SETTINGS, ...localSettings } : { ...DEFAULT_AI_COACH_SETTINGS };
+    return { ...DEFAULT_AI_COACH_SETTINGS };
   } catch (e) {
     console.warn("AI Coach settings fetch warning:", e);
-    return localSettings ? { ...DEFAULT_AI_COACH_SETTINGS, ...localSettings } : { ...DEFAULT_AI_COACH_SETTINGS };
+    return { ...DEFAULT_AI_COACH_SETTINGS };
   }
 }
 
@@ -316,30 +320,21 @@ export async function fetchOrgAISettings(organizationId) {
 export async function updateOrgAISettings(organizationId, patch) {
   if (!organizationId) return { success: false, error: "Organization ID required." };
 
-  let currentSettings = { ...DEFAULT_AI_COACH_SETTINGS };
-  try {
-    const raw = localStorage.getItem(`trainai_ai_coach_settings_${organizationId}`);
-    if (raw) currentSettings = { ...currentSettings, ...JSON.parse(raw) };
-  } catch {}
-
-  const nextAISettings = { ...currentSettings, ...patch };
-
-  // 1. Immediately update localStorage & dispatch reactive event
-  try {
-    localStorage.setItem(`trainai_ai_coach_settings_${organizationId}`, JSON.stringify(nextAISettings));
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("trainai_ai_settings_changed", { detail: { organizationId, settings: nextAISettings } }));
-    }
-  } catch {}
-
-  if (!supabase) return { success: true, settings: nextAISettings };
+  if (!supabase) return { success: false, error: "The database is unavailable." };
 
   try {
-    const { data: existing } = await supabase
+    const { data: existing, error: readError } = await supabase
       .from("organizations")
       .select("settings")
       .eq("id", organizationId)
       .maybeSingle();
+    if (readError) throw readError;
+
+    const nextAISettings = {
+      ...DEFAULT_AI_COACH_SETTINGS,
+      ...(existing?.settings?.ai_coach || {}),
+      ...patch,
+    };
 
     const nextSettings = {
       ...(existing?.settings || {}),
@@ -347,13 +342,15 @@ export async function updateOrgAISettings(organizationId, patch) {
     };
 
     const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
-    if (error) {
-      console.warn("Database AI settings update note:", error);
-    }
+    if (error) throw error;
+    try {
+      localStorage.setItem(`trainai_ai_coach_settings_${organizationId}`, JSON.stringify(nextAISettings));
+      window.dispatchEvent(new CustomEvent("trainai_ai_settings_changed", { detail: { organizationId, settings: nextAISettings } }));
+    } catch {}
     return { success: true, settings: nextAISettings };
   } catch (e) {
     console.warn("updateOrgAISettings caught:", e);
-    return { success: true, settings: nextAISettings };
+    return { success: false, error: e?.message || "Could not save AI Coach settings." };
   }
 }
 
@@ -378,46 +375,42 @@ export async function fetchOrgAIInsightsSettings(organizationId) {
       .eq("id", organizationId)
       .maybeSingle();
 
-    if (!error && data?.settings?.ai_insights) {
+    if (error) {
+      console.warn("AI Insights settings fetch warning:", error);
+      return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+    }
+    if (data?.settings?.ai_insights) {
       const merged = { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...data.settings.ai_insights };
       try {
         localStorage.setItem(`trainai_ai_insights_settings_${organizationId}`, JSON.stringify(merged));
       } catch {}
       return merged;
     }
-    return localSettings ? { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...localSettings } : { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+    return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
   } catch (e) {
     console.warn("AI Insights settings fetch warning:", e);
-    return localSettings ? { ...DEFAULT_AI_INSIGHTS_SETTINGS, ...localSettings } : { ...DEFAULT_AI_INSIGHTS_SETTINGS };
+    return { ...DEFAULT_AI_INSIGHTS_SETTINGS };
   }
 }
 
 export async function updateOrgAIInsightsSettings(organizationId, patch) {
   if (!organizationId) return { success: false, error: "Organization ID required." };
 
-  let currentSettings = { ...DEFAULT_AI_INSIGHTS_SETTINGS };
-  try {
-    const raw = localStorage.getItem(`trainai_ai_insights_settings_${organizationId}`);
-    if (raw) currentSettings = { ...currentSettings, ...JSON.parse(raw) };
-  } catch {}
-
-  const nextInsightsSettings = { ...currentSettings, ...patch };
+  if (!supabase) return { success: false, error: "The database is unavailable." };
 
   try {
-    localStorage.setItem(`trainai_ai_insights_settings_${organizationId}`, JSON.stringify(nextInsightsSettings));
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("trainai_ai_insights_changed", { detail: { organizationId, settings: nextInsightsSettings } }));
-    }
-  } catch {}
-
-  if (!supabase) return { success: true, settings: nextInsightsSettings };
-
-  try {
-    const { data: existing } = await supabase
+    const { data: existing, error: readError } = await supabase
       .from("organizations")
       .select("settings")
       .eq("id", organizationId)
       .maybeSingle();
+    if (readError) throw readError;
+
+    const nextInsightsSettings = {
+      ...DEFAULT_AI_INSIGHTS_SETTINGS,
+      ...(existing?.settings?.ai_insights || {}),
+      ...patch,
+    };
 
     const nextSettings = {
       ...(existing?.settings || {}),
@@ -425,13 +418,15 @@ export async function updateOrgAIInsightsSettings(organizationId, patch) {
     };
 
     const { error } = await supabase.from("organizations").update({ settings: nextSettings }).eq("id", organizationId);
-    if (error) {
-      console.warn("Database AI insights update note:", error);
-    }
+    if (error) throw error;
+    try {
+      localStorage.setItem(`trainai_ai_insights_settings_${organizationId}`, JSON.stringify(nextInsightsSettings));
+      window.dispatchEvent(new CustomEvent("trainai_ai_insights_changed", { detail: { organizationId, settings: nextInsightsSettings } }));
+    } catch {}
     return { success: true, settings: nextInsightsSettings };
   } catch (e) {
     console.warn("updateOrgAIInsightsSettings caught:", e);
-    return { success: true, settings: nextInsightsSettings };
+    return { success: false, error: e?.message || "Could not save AI Insights settings." };
   }
 }
 

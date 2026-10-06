@@ -36,26 +36,18 @@ export async function requestCredits({ userId, organizationId, amount, reason })
   const numAmount = Number(amount) || 50;
 
   if (supabase && resolvedUserId && isRealDatabaseId(resolvedUserId)) {
-    try {
-      const { data, error } = await supabase
-        .from("credit_requests")
-        .insert({
-          user_id: resolvedUserId,
-          organization_id: cleanOrgId,
-          amount: numAmount,
-          reason: reason || null,
-        })
-        .select()
-        .single();
-      if (!error && data) {
-        return data;
-      }
-      if (error) {
-        console.warn("Supabase credit_requests insert failed, falling back to local store:", error.message);
-      }
-    } catch (err) {
-      console.warn("Supabase credit_requests network error, falling back to local store:", err);
-    }
+    const { data, error } = await supabase
+      .from("credit_requests")
+      .insert({
+        user_id: resolvedUserId,
+        organization_id: cleanOrgId,
+        amount: numAmount,
+        reason: reason || null,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   }
 
   // Fallback / Demo storage
@@ -81,45 +73,29 @@ export async function requestCredits({ userId, organizationId, amount, reason })
  * Fetch credit requests submitted by the current learner
  */
 export async function fetchMyCreditRequests(userId) {
-  let list = [];
   if (supabase && userId && isRealDatabaseId(userId)) {
-    try {
-      const { data, error } = await supabase
-        .from("credit_requests")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-      if (!error && data) {
-        list = data;
-      }
-    } catch (err) {
-      console.warn("Error querying my credit_requests:", err);
-    }
+    const { data, error } = await supabase
+      .from("credit_requests")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
   }
 
-  // Merge with local requests for this user if any exist
-  const local = getLocalCreditRequests().filter((r) => !userId || r.user_id === userId);
-  const existingIds = new Set(list.map((r) => r.id));
-  for (const item of local) {
-    if (!existingIds.has(item.id)) {
-      list.push(item);
-    }
-  }
-
-  list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  return list;
+  return getLocalCreditRequests()
+    .filter((r) => !userId || r.user_id === userId)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
 /**
  * Fetch all credit requests for an organization (for Org Admins & Super Admins)
  */
 export async function fetchOrgCreditRequests(orgId) {
-  let list = [];
   if (supabase) {
-    try {
-      let query = supabase
-        .from("credit_requests")
-        .select(`
+    let query = supabase
+      .from("credit_requests")
+      .select(`
           id,
           user_id,
           organization_id,
@@ -135,39 +111,25 @@ export async function fetchOrgCreditRequests(orgId) {
             role,
             avatar_url
           )
-        `)
-        .order("created_at", { ascending: false });
+      `)
+      .order("created_at", { ascending: false });
 
-      if (orgId && isRealDatabaseId(orgId)) {
-        query = query.eq("organization_id", orgId);
-      }
-
-      const { data, error } = await query;
-      if (!error && data) {
-        list = data.map((item) => ({
-          ...item,
-          user: item.user_profiles || { id: item.user_id, display_name: "Learner" },
-        }));
-      }
-    } catch (err) {
-      console.warn("Error querying org credit_requests:", err);
+    if (orgId && isRealDatabaseId(orgId)) {
+      query = query.eq("organization_id", orgId);
     }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map((item) => ({
+      ...item,
+      user: item.user_profiles || { id: item.user_id, display_name: "Learner" },
+    }));
   }
 
-  // Merge local demo requests
-  const local = getLocalCreditRequests().filter((r) => !orgId || !r.organization_id || r.organization_id === orgId);
-  const existingIds = new Set(list.map((r) => r.id));
-  for (const item of local) {
-    if (!existingIds.has(item.id)) {
-      list.push({
-        ...item,
-        user: { id: item.user_id, display_name: "Learner (Demo)" },
-      });
-    }
-  }
-
-  list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  return list;
+  return getLocalCreditRequests()
+    .filter((r) => !orgId || !r.organization_id || r.organization_id === orgId)
+    .map((item) => ({ ...item, user: { id: item.user_id, display_name: "Learner (Demo)" } }))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
 /**
@@ -175,53 +137,9 @@ export async function fetchOrgCreditRequests(orgId) {
  */
 export async function approveCreditRequest(requestId, orgId) {
   if (supabase && isRealDatabaseId(requestId)) {
-    try {
-      const { data, error } = await supabase.rpc("approve_credit_request", {
-        p_request_id: requestId,
-      });
-      if (!error) return { success: true, data };
-      console.warn("RPC approve_credit_request failed, trying direct update:", error.message);
-    } catch (rpcErr) {
-      console.warn("RPC approve_credit_request network error:", rpcErr);
-    }
-
-    try {
-      const { data: reqData } = await supabase
-        .from("credit_requests")
-        .select("*")
-        .eq("id", requestId)
-        .single();
-
-      if (reqData) {
-        await supabase
-          .from("credit_requests")
-          .update({
-            status: "approved",
-            resolved_at: new Date().toISOString(),
-          })
-          .eq("id", requestId);
-
-        // Update ai_credit_accounts if it exists
-        try {
-          const { data: acct } = await supabase
-            .from("ai_credit_accounts")
-            .select("id, balance")
-            .eq("user_id", reqData.user_id)
-            .maybeSingle();
-
-          if (acct) {
-            await supabase
-              .from("ai_credit_accounts")
-              .update({ balance: (acct.balance || 0) + reqData.amount })
-              .eq("id", acct.id);
-          }
-        } catch (_) {}
-
-        return { success: true };
-      }
-    } catch (directErr) {
-      console.warn("Direct credit request approval update failed:", directErr);
-    }
+    const { data, error } = await supabase.rpc("approve_credit_request", { p_request_id: requestId });
+    if (error) throw error;
+    return { success: true, data };
   }
 
   // Update local store
@@ -232,7 +150,8 @@ export async function approveCreditRequest(requestId, orgId) {
     found.resolved_at = new Date().toISOString();
     saveLocalCreditRequests(localList);
   }
-  return { success: true };
+  if (found) return { success: true };
+  return { success: false, error: "Credit request not found." };
 }
 
 /**
@@ -240,28 +159,9 @@ export async function approveCreditRequest(requestId, orgId) {
  */
 export async function denyCreditRequest(requestId) {
   if (supabase && isRealDatabaseId(requestId)) {
-    try {
-      const { data, error } = await supabase.rpc("deny_credit_request", {
-        p_request_id: requestId,
-      });
-      if (!error) return { success: true, data };
-      console.warn("RPC deny_credit_request failed, trying direct update:", error.message);
-    } catch (rpcErr) {
-      console.warn("RPC deny_credit_request network error:", rpcErr);
-    }
-
-    try {
-      await supabase
-        .from("credit_requests")
-        .update({
-          status: "denied",
-          resolved_at: new Date().toISOString(),
-        })
-        .eq("id", requestId);
-      return { success: true };
-    } catch (directErr) {
-      console.warn("Direct credit request denial update failed:", directErr);
-    }
+    const { data, error } = await supabase.rpc("deny_credit_request", { p_request_id: requestId });
+    if (error) throw error;
+    return { success: true, data };
   }
 
   // Update local store
@@ -272,7 +172,8 @@ export async function denyCreditRequest(requestId) {
     found.resolved_at = new Date().toISOString();
     saveLocalCreditRequests(localList);
   }
-  return { success: true };
+  if (found) return { success: true };
+  return { success: false, error: "Credit request not found." };
 }
 
 /**
@@ -281,43 +182,17 @@ export async function denyCreditRequest(requestId) {
 export async function grantDirectCredits({ userId, organizationId, amount, reason }) {
   const numAmount = Number(amount) || 50;
   if (supabase && userId && isRealDatabaseId(userId)) {
-    try {
-      const { data, error } = await supabase
-        .from("credit_requests")
-        .insert({
-          user_id: userId,
-          organization_id: isRealDatabaseId(organizationId) ? organizationId : null,
-          amount: numAmount,
-          reason: reason || "Admin direct grant",
-          status: "approved",
-          resolved_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (!error && data) {
-        // Try to update ai_credit_accounts
-        try {
-          const { data: acct } = await supabase
-            .from("ai_credit_accounts")
-            .select("id, balance")
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          if (acct) {
-            await supabase
-              .from("ai_credit_accounts")
-              .update({ balance: (acct.balance || 0) + numAmount })
-              .eq("id", acct.id);
-          }
-        } catch (_) {}
-        return { success: true, data };
-      }
-    } catch (err) {
-      console.warn("Direct grant failed:", err);
-    }
+    if (!isRealDatabaseId(organizationId)) throw new Error("A valid organization is required.");
+    const { data, error } = await supabase.rpc("grant_ai_credits_to_learner", {
+      p_user_id: userId,
+      p_organization_id: organizationId,
+      p_amount: numAmount,
+      p_reference: `admin_direct:${reason || "manual"}:${Date.now()}`,
+    });
+    if (error) throw error;
+    return { success: true, data };
   }
 
-  return { success: true };
+  return { success: false, error: "Credits can only be granted to a saved learner account." };
 }
 

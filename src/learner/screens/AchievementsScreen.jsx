@@ -460,7 +460,7 @@ export function AchievementsScreen({ user = {}, courses = [], achievements = [],
       {activeProgressTab === "certificates" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ fontSize: 13, color: "var(--text-3)" }}>
-            Accredited certificates issued upon completing syllabi, final assessments, and peer reviews.
+            Organisation-issued certificates are available when the requirements configured for a course have been completed.
           </div>
 
           {dynamicCertificates.length === 0 ? (

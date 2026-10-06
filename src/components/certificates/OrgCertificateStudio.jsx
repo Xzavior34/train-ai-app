@@ -33,7 +33,7 @@ export function OrgCertificateStudio({
   const [honorsText, setHonorsText] = useState(initialConfig.honorsText || "");
   const [badgeLabel, setBadgeLabel] = useState(initialConfig.badgeLabel || "VERIFIED CREDENTIAL");
   const [sealText, setSealText] = useState(initialConfig.sealText || "OFFICIAL");
-  const [footerNote, setFooterNote] = useState(initialConfig.footerNote || "Accredited by Train AI & Global Industry Standards");
+  const [footerNote, setFooterNote] = useState(initialConfig.footerNote || "Issued by the organisation named on this certificate");
 
   const [signatoryName, setSignatoryName] = useState(initialConfig.signatoryName || "Inem Emmanuel");
   const [signatoryTitle, setSignatoryTitle] = useState(initialConfig.signatoryTitle || "Director of Academic Excellence");
@@ -63,7 +63,7 @@ export function OrgCertificateStudio({
       setHonorsText(p.honorsText || "");
       setBadgeLabel(p.badgeLabel || "VERIFIED CREDENTIAL");
       setSealText(p.sealText || "OFFICIAL");
-      setFooterNote(p.footerNote || "Accredited by Train AI & Global Industry Standards");
+      setFooterNote(p.footerNote || "Issued by the organisation named on this certificate");
       setSignatoryName(p.signatoryName || "Inem Emmanuel");
       setSignatoryTitle(p.signatoryTitle || "Director of Academic Excellence");
       setSecondarySignatoryName(p.secondarySignatoryName || "Authorised Signatory");
@@ -154,7 +154,7 @@ export function OrgCertificateStudio({
             </span>
           </div>
           <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "4px 0 0" }}>
-            Design bespoke, accredited certificate templates for {course.title ? `"${course.title}"` : "your organization"}.
+            Design branded certificate templates for {course.title ? `"${course.title}"` : "your organisation"}.
           </p>
         </div>
 
@@ -289,17 +289,17 @@ export function OrgCertificateStudio({
                     className="ta-input ta-mt4"
                     value={sealText}
                     onChange={(e) => setSealText(e.target.value)}
-                    placeholder="e.g. OFFICIAL / ACCREDITED"
+                    placeholder="e.g. OFFICIAL / VERIFIED"
                   />
                 </div>
 
                 <div>
-                  <label className="ta-label">Footer Accreditation Note</label>
+                  <label className="ta-label">Footer Verification Note</label>
                   <input
                     className="ta-input ta-mt4"
                     value={footerNote}
                     onChange={(e) => setFooterNote(e.target.value)}
-                    placeholder="e.g. Accredited by Train AI"
+                    placeholder="e.g. Issued by your organisation"
                   />
                 </div>
               </div>

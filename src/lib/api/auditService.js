@@ -68,7 +68,7 @@ export async function logAdminAction({
 
     const { data, error } = await supabase.from('admin_audit_log').insert(record).select().single();
     if (error) {
-      console.warn('Audit log write error (falling back to memory log):', error);
+      console.warn('Audit log write error:', error);
       return { success: false, record };
     }
     return { success: true, record: data };
@@ -87,7 +87,7 @@ export async function fetchAuditLogs(limit = 100) {
     .limit(limit);
 
   if (error) {
-    console.warn('Could not fetch audit logs from backend, returning mock:', error);
+    console.warn('Could not fetch audit logs from backend:', error);
     return [];
   }
   return data || [];

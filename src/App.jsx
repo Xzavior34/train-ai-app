@@ -1,15 +1,5 @@
-import React, { useState, useEffect } from "react";
-import TrainAILearnerApp from "./learner/TrainAILearnerApp.jsx";
-import TrainAIPlatformApp from "./platform/TrainAIPlatformApp.jsx";
-import PlatformOwnerApp from "./platform/PlatformOwnerApp.jsx";
-import { PlatformOwnerLoginScreen } from "./pages/PlatformOwnerLoginScreen.jsx";
+import React, { lazy, useState, useEffect } from "react";
 import { useAuth } from "./hooks/useAuth.js";
-import LandingPage from "./pages/public/LandingPage.jsx";
-import AppointmentBookingPage from "./pages/public/AppointmentBookingPage.jsx";
-import AuthPage from "./pages/auth/AuthPage.jsx";
-import MfaChallengeScreen from "./pages/auth/MfaChallengeScreen.jsx";
-import AcceptInvitationScreen from "./pages/auth/AcceptInvitationScreen.jsx";
-import OnboardingPage from "./pages/onboarding/OnboardingPage.jsx";
 import LoadingScreen from "./components/common/LoadingScreen.jsx";
 import ConsentBanner from "./components/common/ConsentBanner.jsx";
 import OfflineIndicator from "./components/common/OfflineIndicator.jsx";
@@ -18,6 +8,18 @@ import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./s
 import { resolveViewMode, DASHBOARDS } from "./lib/roleRouting.js";
 import { getAuthenticatorAssuranceLevel } from "./lib/api/mfa.js";
 import { trackOrganizationJoinIntent, getPendingOrganizationJoin, joinOrganizationByReferral } from "./lib/api/organizations.js";
+
+const TrainAILearnerApp = lazy(() => import("./learner/TrainAILearnerApp.jsx"));
+const TrainAIPlatformApp = lazy(() => import("./platform/TrainAIPlatformApp.jsx"));
+const PlatformOwnerApp = lazy(() => import("./platform/PlatformOwnerApp.jsx"));
+const PlatformOwnerLoginScreen = lazy(() =>
+  import("./pages/PlatformOwnerLoginScreen.jsx").then((module) => ({ default: module.PlatformOwnerLoginScreen }))
+);
+const LandingPage = lazy(() => import("./pages/public/LandingPage.jsx"));
+const AppointmentBookingPage = lazy(() => import("./pages/public/AppointmentBookingPage.jsx"));
+const AuthPage = lazy(() => import("./pages/auth/AuthPage.jsx"));
+const MfaChallengeScreen = lazy(() => import("./pages/auth/MfaChallengeScreen.jsx"));
+const AcceptInvitationScreen = lazy(() => import("./pages/auth/AcceptInvitationScreen.jsx"));
 
 export default function App() {
   const {

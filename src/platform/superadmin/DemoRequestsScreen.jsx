@@ -31,72 +31,37 @@ function getDemoClient() {
 }
 
 export async function fetchAllDemoRequests() {
-  const map = new Map();
-
-  // 1. Fetch from database
   const db = getDemoClient();
   if (db) {
-    try {
-      const { data, error } = await db
-        .from("demo_requests")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (!error && Array.isArray(data)) {
-        for (const row of data) {
-          const key = row.id || `${row.work_email}_${row.created_at}`;
-          map.set(key, row);
-        }
-      }
-    } catch (err) {
-      console.warn("fetchDemoRequests warning:", err);
-    }
+    const { data, error } = await db
+      .from("demo_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return Array.isArray(data) ? data : [];
   }
 
-  // 2. Merge local storage demo requests
+  // Local records are only a development fallback when no database exists.
   try {
     const localRaw = localStorage.getItem("trainai_demo_requests_v1");
-    if (localRaw) {
-      const localList = JSON.parse(localRaw);
-      for (const row of localList) {
-        const key = row.id || `${row.work_email}_${row.created_at}`;
-        if (!map.has(key)) {
-          map.set(key, row);
-        }
-      }
-    }
+    const localList = localRaw ? JSON.parse(localRaw) : [];
+    return Array.isArray(localList) ? localList.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)) : [];
   } catch {}
-
-  const all = Array.from(map.values());
-  all.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-  return all;
+  return [];
 }
 
 export async function updateDemoRequestStatus(id, newStatus) {
-  // Update local storage backup
-  try {
-    const localRaw = localStorage.getItem("trainai_demo_requests_v1");
-    if (localRaw) {
-      const localList = JSON.parse(localRaw);
-      const updated = localList.map((item) => item.id === id ? { ...item, status: newStatus } : item);
-      localStorage.setItem("trainai_demo_requests_v1", JSON.stringify(updated));
-    }
-  } catch {}
-
   const db = getDemoClient();
-  if (!db) return { id, status: newStatus };
-  try {
-    const { data, error } = await db
-      .from("demo_requests")
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .maybeSingle();
-    if (error) console.warn("updateDemoRequestStatus DB notice:", error);
-    return data || { id, status: newStatus };
-  } catch (err) {
-    console.warn("updateDemoRequestStatus caught:", err);
-    return { id, status: newStatus };
-  }
+  if (!db) throw new Error("The booking database is unavailable.");
+  const { data, error } = await db
+    .from("demo_requests")
+    .update({ status: newStatus, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("The demo request could not be found.");
+  return data;
 }
 
 export function DemoRequestsScreen({ orgSelector }) {

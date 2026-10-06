@@ -76,12 +76,13 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
     }
     setRequestSubmitting(true);
     try {
-      await requestCredits({
+      const result = await requestCredits({
         userId: session?.user?.id,
         organizationId: orgId,
         amount: Number(requestAmount),
         reason: requestReason.trim(),
       });
+      if (!result) throw new Error("Could not save your credit request.");
       showToast?.("Credit request sent to your organization.");
       setRequestReason("");
       myRequestsQuery.refetch();

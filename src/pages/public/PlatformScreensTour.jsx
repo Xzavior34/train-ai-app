@@ -588,7 +588,7 @@ export default function PlatformScreensTour() {
           <p className="lp-kicker">HAVE A LOOK INSIDE</p>
           <h2>Experience the platform from both perspectives.</h2>
           <p>
-            Explore the screens where learners study, practise and collaborate — and the summary workspace where administrators manage cohorts and track readiness.
+            Explore the screens where learners study, practise and collaborate, and the summary workspace where administrators manage cohorts and track readiness.
           </p>
 
           {/* Section Filter Pills */}

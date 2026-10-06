@@ -534,7 +534,7 @@ export function CoursesScreen({
           progress: 100,
           lessonsRemaining: "All lessons complete",
           instructor: "Train AI Academy",
-          instructorRole: "Certification Board",
+          instructorRole: "Course Team",
           instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
           coverImage: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80",
           cta: "Review Completed Material",

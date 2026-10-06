@@ -1838,10 +1838,11 @@ export async function batchAssignTrackCoursesToCohort({ cohortId, userIds, cours
 
     // If a track category is provided, find all courses matching the category
     if (trackCategory && (!targetCourseIds || !targetCourseIds.length)) {
-      const { data: catCourses } = await supabase
+      const { data: catCourses, error: catError } = await supabase
         .from("courses")
         .select("id, title, category")
         .ilike("category", `%${trackCategory}%`);
+      if (catError) throw catError;
       if (catCourses && catCourses.length) {
         targetCourseIds = catCourses.map((c) => c.id);
       }
@@ -1849,7 +1850,8 @@ export async function batchAssignTrackCoursesToCohort({ cohortId, userIds, cours
 
     // If still no courses found, fetch all available courses to assign the primary ones
     if (!targetCourseIds || !targetCourseIds.length) {
-      const { data: allCourses } = await supabase.from("courses").select("id").limit(3);
+      const { data: allCourses, error: coursesError } = await supabase.from("courses").select("id").limit(3);
+      if (coursesError) throw coursesError;
       if (allCourses && allCourses.length) {
         targetCourseIds = allCourses.map((c) => c.id);
       }
@@ -1860,10 +1862,11 @@ export async function batchAssignTrackCoursesToCohort({ cohortId, userIds, cours
     }
 
     // Check existing assignments to avoid duplicates
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from("cohort_learner_courses")
       .select("user_id, course_id")
       .eq("cohort_id", cohortId);
+    if (existingError) throw existingError;
 
     const existingSet = new Set((existing || []).map((e) => `${e.user_id}:${e.course_id}`));
 
@@ -1890,14 +1893,23 @@ export async function batchAssignTrackCoursesToCohort({ cohortId, userIds, cours
     }
 
     if (rowsToInsert.length > 0) {
-      const { error: insertErr } = await supabase.from("cohort_learner_courses").insert(rowsToInsert);
-      if (insertErr) console.warn("batchAssignTrackCoursesToCohort insert warning:", insertErr);
+      const { data: insertedAssignments, error: insertErr } = await supabase
+        .from("cohort_learner_courses")
+        .insert(rowsToInsert)
+        .select("id");
+      if (insertErr) throw insertErr;
 
       // Also ensure course_enrollments exists so learners see it on their dashboard
-      try {
-        await supabase.from("course_enrollments").upsert(enrollmentsToUpsert, { onConflict: "user_id,course_id", ignoreDuplicates: true });
-      } catch (e) {
-        console.warn("batch enrollments upsert note:", e);
+      const { error: enrollmentError } = await supabase
+        .from("course_enrollments")
+        .upsert(enrollmentsToUpsert, { onConflict: "user_id,course_id", ignoreDuplicates: true });
+      if (enrollmentError) {
+        const insertedIds = (insertedAssignments || []).map((row) => row.id).filter(Boolean);
+        if (insertedIds.length) {
+          const { error: rollbackError } = await supabase.from("cohort_learner_courses").delete().in("id", insertedIds);
+          if (rollbackError) console.error("Could not roll back incomplete cohort assignments:", rollbackError);
+        }
+        throw enrollmentError;
       }
     }
 

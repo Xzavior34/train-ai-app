@@ -104,7 +104,7 @@ export function parseCertificateTemplate(templateObj) {
     honorsText: "",
     badgeLabel: "VERIFIED CREDENTIAL",
     sealText: "OFFICIAL",
-    footerNote: "Accredited by Train AI & Global Industry Standards",
+    footerNote: "Issued by the organisation named on this certificate",
     signatoryName: "Inem Emmanuel",
     signatoryTitle: "Director of Academic Excellence",
     secondarySignatoryName: "Authorised Signatory",

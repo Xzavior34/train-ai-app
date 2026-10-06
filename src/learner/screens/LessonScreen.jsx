@@ -1165,7 +1165,7 @@ export function LessonScreen({
                 <span style={{ fontSize: 12, fontWeight: 800, color: "var(--text)" }}>Official Credential</span>
               </div>
               <div style={{ fontSize: 11.5, color: "var(--text-2)", lineHeight: 1.4 }}>
-                Complete all lessons and capstone assessment to earn your verified industry certificate.
+                Complete all lessons and the capstone assessment to become eligible for an organisation-issued course certificate.
               </div>
             </div>
           </div>
