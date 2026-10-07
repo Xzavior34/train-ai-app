@@ -14,7 +14,7 @@ import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../.
 
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "",
-  onForgotPassword, onVerifyRecoveryOtp, recoveryMode = false, onCompletePasswordReset,
+  onForgotPassword, onVerifyRecoveryOtp, recoveryMode = false, recoverySessionReady = false, onCompletePasswordReset,
   onGoHome, orgParam = ""
 }) {
   const [mode, setMode] = useState("signin");
@@ -67,8 +67,10 @@ export default function AuthPage({
       setRecoveryLinkError(
         decodeURIComponent((description || "This password reset link is invalid or has expired.").replace(/\+/g, " "))
       );
+    } else if (recoveryMode && !recoverySessionReady) {
+      setRecoveryLinkError("This password reset link is incomplete, invalid, or has expired.");
     }
-  }, []);
+  }, [recoveryMode, recoverySessionReady]);
 
   // Organization Referral & Join Link target info
   const [targetOrgTarget, setTargetOrgTarget] = useState(() => {

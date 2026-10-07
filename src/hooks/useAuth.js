@@ -6,6 +6,22 @@ import { safeStorage } from "../lib/storage.js";
 import { getCanonicalDomain, CANONICAL_DOMAIN } from "../services/emailService.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1";
+const RECOVERY_VERIFIED_KEY = "trainai_recovery_verified_v1";
+
+function readRecoveryVerified() {
+  try {
+    return sessionStorage.getItem(RECOVERY_VERIFIED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function persistRecoveryVerified(verified) {
+  try {
+    if (verified) sessionStorage.setItem(RECOVERY_VERIFIED_KEY, "1");
+    else sessionStorage.removeItem(RECOVERY_VERIFIED_KEY);
+  } catch {}
+}
 
 export function useAuth() {
   const [session, setSession] = useState(() => {
@@ -13,6 +29,7 @@ export function useAuth() {
   });
   const [authError, setAuthError] = useState(null);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [recoverySessionReady, setRecoverySessionReady] = useState(readRecoveryVerified);
   const recoveryProjectRef = useRef(null);
 
   useEffect(() => {
@@ -61,6 +78,8 @@ export function useAuth() {
               resolvedSession = data.session;
               resolvedProject = tokenProject;
               recoveryProjectRef.current = tokenProject;
+              persistRecoveryVerified(true);
+              setRecoverySessionReady(true);
               setIsPasswordRecovery(true);
               window.history.replaceState({}, document.title, "/?view=auth&recovery=1");
             }
@@ -113,6 +132,8 @@ export function useAuth() {
         setSession(resolvedSession);
         safeStorage.setItem(AUTH_STORAGE_KEY, resolvedSession);
       } else {
+        persistRecoveryVerified(false);
+        setRecoverySessionReady(false);
         const parsed = safeStorage.getJSON(AUTH_STORAGE_KEY);
         if (parsed) {
           syncProject(parsed?.user?.email);
@@ -145,6 +166,8 @@ export function useAuth() {
           if (event === "PASSWORD_RECOVERY") {
             recoveryProjectRef.current = projKey;
             setActiveSupabaseProject(projKey);
+            persistRecoveryVerified(true);
+            setRecoverySessionReady(true);
             setIsPasswordRecovery(true);
           }
           if (event === "SIGNED_OUT") {
@@ -501,6 +524,8 @@ export function useAuth() {
           setActiveSupabaseProject(key);
           setSession(data.session);
           safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
+          persistRecoveryVerified(true);
+          setRecoverySessionReady(true);
           setIsPasswordRecovery(true);
           return { success: true, session: data.session };
         }
@@ -515,6 +540,9 @@ export function useAuth() {
 
   const completePasswordReset = useCallback(async (newPassword) => {
     if (!supabase) return { success: false, error: "Not available in demo mode." };
+    if (!recoverySessionReady) {
+      return { success: false, error: "Your secure reset session is missing or has expired. Please request a new reset email and open only the newest link." };
+    }
     try {
       let lastError = null;
       const orderedProjects = [
@@ -534,6 +562,8 @@ export function useAuth() {
           const { error } = await client.auth.updateUser({ password: newPassword });
           if (!error) {
             recoveryProjectRef.current = null;
+            persistRecoveryVerified(false);
+            setRecoverySessionReady(false);
             setIsPasswordRecovery(false);
             return { success: true };
           }
@@ -547,12 +577,14 @@ export function useAuth() {
           : lastError.message || "Could not update your password.";
         return { success: false, error: message, sessionMissing: message.includes("session is missing") };
       }
+      persistRecoveryVerified(false);
+      setRecoverySessionReady(false);
       setIsPasswordRecovery(false);
       return { success: true };
     } catch (e) {
       return { success: false, error: e?.message || "Could not update your password." };
     }
-  }, []);
+  }, [recoverySessionReady]);
 
   return {
     session,
@@ -563,6 +595,7 @@ export function useAuth() {
     signUp,
     signOut,
     isPasswordRecovery,
+    recoverySessionReady,
     sendPasswordReset,
     verifyRecoveryOtp,
     completePasswordReset,

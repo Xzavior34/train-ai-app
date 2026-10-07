@@ -26,7 +26,7 @@ const AcceptInvitationScreen = lazy(() => import("./pages/auth/AcceptInvitationS
 export default function App() {
   const {
     session, loading, authError, signIn, signUp, signOut, isDemoMode,
-    isPasswordRecovery, sendPasswordReset, verifyRecoveryOtp, completePasswordReset,
+    isPasswordRecovery, recoverySessionReady, sendPasswordReset, verifyRecoveryOtp, completePasswordReset,
   } = useAuth();
 
   // Platform Owner's separate login - PRD Section 10: "not login from
@@ -376,7 +376,11 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <AuthPage recoveryMode onCompletePasswordReset={completePasswordReset} />
+        <AuthPage
+          recoveryMode
+          recoverySessionReady={recoverySessionReady}
+          onCompletePasswordReset={completePasswordReset}
+        />
       </>
     );
   }
