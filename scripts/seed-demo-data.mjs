@@ -30,7 +30,11 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const DEMO_PASSWORD = process.env.DEMO_PASSWORD || "DemoAcademy2026!";
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD;
+
+if (!DEMO_PASSWORD || DEMO_PASSWORD.length < 12) {
+  throw new Error("DEMO_PASSWORD is required and must be at least 12 characters.");
+}
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables.");
@@ -195,7 +199,7 @@ async function main() {
 
   console.log("\n=== Demo data seeded successfully ===");
   console.log(`Organization: Demo Academy (Sample Data) [${orgId}]`);
-  console.log(`\nReal, loginable accounts (password: ${DEMO_PASSWORD}):`);
+  console.log("\nReal, loginable demo accounts were created. The password was not printed.");
   console.log("  Admin:       demo-admin@demoacademy.sample");
   console.log("  Manager:     demo-manager@demoacademy.sample");
   console.log("  Instructor:  demo-instructor1@demoacademy.sample");

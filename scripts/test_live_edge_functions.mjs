@@ -1,6 +1,5 @@
 import https from "https";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const BASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co/functions/v1";
 const ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";

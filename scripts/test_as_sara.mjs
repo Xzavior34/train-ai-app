@@ -1,11 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 import fs from "fs";
+import { randomUUID } from "node:crypto";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-const SARA_URL = "https://qibqouymqtpirtbyjvjr.supabase.co";
-const SHARED_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const SHARED_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const SARA_URL = process.env.SARA_SUPABASE_URL;
+const SARA_ANON_KEY = process.env.SARA_SUPABASE_ANON_KEY;
+const SHARED_URL = process.env.SUPABASE_URL;
+const SHARED_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const PLATFORM_OWNER_EMAIL = process.env.TEST_PLATFORM_OWNER_EMAIL;
+const PLATFORM_OWNER_PASSWORD = process.env.TEST_PLATFORM_OWNER_PASSWORD;
+const EPHEMERAL_TEST_PASSWORD = `Qa-${randomUUID()}-A1!`;
+
+if (!SARA_URL || !SARA_ANON_KEY || !SHARED_URL || !SHARED_ANON_KEY) {
+  throw new Error("SARA_SUPABASE_URL, SARA_SUPABASE_ANON_KEY, SUPABASE_URL, and SUPABASE_ANON_KEY are required.");
+}
 
 const anonSharedClient = createClient(SHARED_URL, SHARED_ANON_KEY);
 
@@ -35,7 +43,7 @@ async function main() {
   console.log("--- 1. Testing Two Physical Supabase Projects Configuration ---");
   try {
     const { error: sharedErr } = await anonSharedClient.from("organizations").select("id").limit(1);
-    const saraClient = createClient(SARA_URL, "sb_publishable_Mvj-78bHq-yC7zXvL2pP_4GkLmnP");
+    const saraClient = createClient(SARA_URL, SARA_ANON_KEY);
     const { error: saraErr } = await saraClient.from("organizations").select("id").limit(1);
     const sharedAlive = !sharedErr;
     recordMatrix(
@@ -59,9 +67,12 @@ async function main() {
   let digitalOrg = null;
 
   try {
+    if (!PLATFORM_OWNER_EMAIL || !PLATFORM_OWNER_PASSWORD) {
+      throw new Error("TEST_PLATFORM_OWNER_EMAIL and TEST_PLATFORM_OWNER_PASSWORD are required for the owner checks.");
+    }
     const poSignIn = await anonSharedClient.auth.signInWithPassword({
-      email: "trainailtd@gmail.com",
-      password: "SaraF123$"
+      email: PLATFORM_OWNER_EMAIL,
+      password: PLATFORM_OWNER_PASSWORD
     });
 
     if (poSignIn.data?.session) {
@@ -83,7 +94,7 @@ async function main() {
         4,
         "Platform owner visibility & super_admin role",
         isSuperAdmin && digitalOrg ? "PASS" : "FAIL",
-        `trainailtd@gmail.com has roles [${rolesList.join(", ")}], sees ${allOrgs.length} orgs including ${digitalOrg?.name} (${digitalOrg?.slug})`,
+        `${PLATFORM_OWNER_EMAIL} has roles [${rolesList.join(", ")}], sees ${allOrgs.length} orgs including ${digitalOrg?.name} (${digitalOrg?.slug})`,
         "CRITICAL"
       );
     } else {
@@ -101,7 +112,7 @@ async function main() {
   try {
     const signupRes = await anonSharedClient.auth.signUp({
       email: testIndEmail,
-      password: "Password123!Secure",
+      password: EPHEMERAL_TEST_PASSWORD,
       options: { data: { role: "learner" } }
     });
 

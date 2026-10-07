@@ -1,16 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 import https from "https";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-const SUPABASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
+const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
+
+if (!SUPABASE_URL || !ANON_KEY || !TEST_USER_EMAIL || !TEST_USER_PASSWORD) {
+  throw new Error("SUPABASE_URL, SUPABASE_ANON_KEY, TEST_USER_EMAIL, and TEST_USER_PASSWORD are required.");
+}
 
 const supabase = createClient(SUPABASE_URL, ANON_KEY);
 
 async function main() {
-  const email = "trainai@gmail.com";
-  const password = "SaraF123$";
+  const email = TEST_USER_EMAIL;
+  const password = TEST_USER_PASSWORD;
 
   const { data: authData } = await supabase.auth.signInWithPassword({ email, password });
   const jwt = authData.session.access_token;

@@ -1,10 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const SUPABASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const TEST_PASSWORD = `Qa-${crypto.randomUUID()}-A1!`;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -44,7 +44,7 @@ async function run() {
 
   const { data: adminUser, error: adminErr } = await supabase.auth.admin.createUser({
     email: adminEmail,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Test Admin", role: "admin" }
   });
@@ -97,7 +97,7 @@ async function run() {
   console.log(`\n4. Testing Invitation Acceptance for Learner 1`);
   const { data: learner1Auth, error: l1Err } = await supabase.auth.admin.createUser({
     email: inviteEmail1,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Learner One", role: "learner" }
   });
@@ -132,7 +132,7 @@ async function run() {
   const mentorEmail = `mentor-${testRunId}@testorg.com`;
   const { data: mentorAuth } = await supabase.auth.admin.createUser({
     email: mentorEmail,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Test Instructor", role: "mentor" }
   });

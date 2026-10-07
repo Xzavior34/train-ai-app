@@ -108,10 +108,10 @@ export default function LandingPage({ onNavigate }) {
 
 
   const showcasePhotos = [
-    { src: "/images/train-ai-diverse-learners.jpg", title: "Enterprise & Foundation Cohorts", caption: "Multi-racial teams collaborating across AI and technical training tracks." },
-    { src: "/images/train-ai-women-tech.jpg", title: "Women in Technology Programs", caption: "Community-driven learning tracks with peer accountability and mentor reviews." },
-    { src: "/images/train-ai-diverse-team.jpg", title: "Workforce & NGO Development", caption: "Structured development cohorts measuring skills, readiness, and impact." },
-    { src: "/images/train-ai-white-team.jpg", title: "Training Programmes & Sprints", caption: "Instructor-led sessions and hands-on portfolio milestones." },
+    { src: "/images/train-ai-diverse-learners.jpg", title: "Organisation-led learning", caption: "Bring courses, cohorts, learner support and reporting into one managed workspace." },
+    { src: "/images/train-ai-women-tech.jpg", title: "Academy and instructor delivery", caption: "Host courses for independent learners or manage structured cohorts through organisation access." },
+    { src: "/images/train-ai-diverse-team.jpg", title: "Workforce and foundation programmes", caption: "Track participation, progress, skill development and programme outcomes in one place." },
+    { src: "/images/train-ai-white-team.jpg", title: "Cohort learning and mentorship", caption: "Coordinate scheduled learning, instructor support, mentorship and learner progress." },
   ];
 
   const handlePrevPhoto = () => {

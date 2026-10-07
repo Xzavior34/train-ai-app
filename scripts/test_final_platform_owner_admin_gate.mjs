@@ -1,10 +1,5 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-process.env.VITE_SUPABASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-process.env.VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Implb2JnZ3J0eGV5Ynh2bHdweHZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzMyNjM1NywiZXhwIjoyMTAyOTAyMzU3fQ.uDCs11c1ti9xGopgIcrVAGALgvjrhYSLMZyu5A_F-_Y";
-process.env.VITE_SUPABASE_SARA_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-process.env.VITE_SUPABASE_SARA_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Implb2JnZ3J0eGV5Ynh2bHdweHZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzMyNjM1NywiZXhwIjoyMTAyOTAyMzU3fQ.uDCs11c1ti9xGopgIcrVAGALgvjrhYSLMZyu5A_F-_Y";
-
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 import {
   getAvailableDashboards,
   hasStaffOrAdminRole,
@@ -18,9 +13,17 @@ import {
   createInvitation,
 } from "../src/lib/api/platform.js";
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || ANON_KEY;
+const PROJECT = process.env.SUPABASE_PROJECT_REF;
+const TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!PROJECT || !TOKEN || !SUPABASE_URL || !ANON_KEY || !SERVICE_ROLE_KEY) {
+  throw new Error(
+    "SUPABASE_PROJECT_REF, SUPABASE_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY are required."
+  );
+}
 
 async function querySQL(q) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT}/database/query`, {
@@ -75,7 +78,7 @@ async function runPlatformOwnerAdminGate() {
   let adminHJwt = null;
   let learnerHJwt = null;
 
-  const pwd = "Password123!";
+  const pwd = process.env.QA_TEST_PASSWORD || `Qa-${randomUUID()}-A1!`;
 
   try {
     console.log(`--- SECTION 1: Platform Owner Create Admin & Invitation Flow ---`);

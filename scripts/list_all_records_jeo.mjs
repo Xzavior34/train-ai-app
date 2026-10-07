@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const JEO_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const JEO_ANON = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";

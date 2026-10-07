@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const SUPABASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";

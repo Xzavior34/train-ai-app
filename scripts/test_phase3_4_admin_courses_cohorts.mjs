@@ -1,9 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const SUPABASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const TEST_PASSWORD = `Qa-${randomUUID()}-A1!`;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -40,7 +41,7 @@ async function run() {
   console.log(`\n2. Creating Admin, Mentor, and 2 Learners`);
   const adminRes = await supabase.auth.admin.createUser({
     email: `admin-${testRunId}@pilotacademy.com`,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Pilot Admin", role: "admin" }
   });
@@ -51,7 +52,7 @@ async function run() {
 
   const mentorRes = await supabase.auth.admin.createUser({
     email: `mentor-${testRunId}@pilotacademy.com`,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Pilot Instructor", role: "mentor" }
   });
@@ -63,7 +64,7 @@ async function run() {
 
   const learnerRes1 = await supabase.auth.admin.createUser({
     email: `learner1-${testRunId}@pilotacademy.com`,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Pilot Learner 1", role: "learner" }
   });
@@ -74,7 +75,7 @@ async function run() {
 
   const learnerRes2 = await supabase.auth.admin.createUser({
     email: `learner2-${testRunId}@pilotacademy.com`,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Pilot Learner 2", role: "learner" }
   });

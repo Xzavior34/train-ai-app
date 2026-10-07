@@ -1,9 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const SUPABASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const TEST_PASSWORD = `Qa-${randomUUID()}-A1!`;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -29,7 +30,7 @@ async function run() {
 
   const adminARes = await supabase.auth.admin.createUser({
     email: `admin-a-${runId}@alpha.org`,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Alpha Admin", role: "admin" }
   });
@@ -39,7 +40,7 @@ async function run() {
 
   const learnerARes = await supabase.auth.admin.createUser({
     email: `learner-a-${runId}@alpha.org`,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Alpha Learner", role: "learner" }
   });
@@ -70,7 +71,7 @@ async function run() {
 
   const adminBRes = await supabase.auth.admin.createUser({
     email: `admin-b-${runId}@beta.org`,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Beta Admin", role: "admin" }
   });
@@ -80,7 +81,7 @@ async function run() {
 
   const learnerBRes = await supabase.auth.admin.createUser({
     email: `learner-b-${runId}@beta.org`,
-    password: "Password123!Secure",
+    password: TEST_PASSWORD,
     email_confirm: true,
     user_metadata: { display_name: "Beta Learner", role: "learner" }
   });

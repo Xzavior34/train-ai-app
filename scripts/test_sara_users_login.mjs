@@ -1,9 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "node:crypto";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-const JEO_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const JEO_ANON = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const JEO_URL = process.env.SUPABASE_URL;
+const JEO_ANON = process.env.SUPABASE_ANON_KEY;
+const TEST_EMAIL = process.env.TEST_USER_EMAIL || "nonexistent-auth-probe@example.invalid";
+
+if (!JEO_URL || !JEO_ANON) {
+  throw new Error("SUPABASE_URL and SUPABASE_ANON_KEY are required.");
+}
 
 const client = createClient(JEO_URL, JEO_ANON, { auth: { persistSession: false } });
 
@@ -12,8 +17,8 @@ async function main() {
 
   // Test sign in attempt with a non-existent password to verify auth service responds with expected credentials rejection (not 401/network/invalid key error)
   const res = await client.auth.signInWithPassword({
-    email: "learner@sarafoundationafrica.com",
-    password: "TestPassword123!"
+    email: TEST_EMAIL,
+    password: `Invalid-${randomUUID()}-A1!`
   });
 
   console.log("Auth Response Status / Code:", res.error?.status, res.error?.message);

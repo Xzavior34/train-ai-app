@@ -1,16 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_SARA_URL;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const PLATFORM_OWNER_EMAILS = (process.env.PLATFORM_OWNER_EMAILS || "")
+  .split(",")
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+const PLATFORM_OWNER_TEMP_PASSWORD = process.env.PLATFORM_OWNER_TEMP_PASSWORD;
 
-const SUPABASE_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Implb2JnZ3J0eGV5Ynh2bHdweHZuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NzMyNjM1NywiZXhwIjoyMTAyOTAyMzU3fQ.uDCs11c1ti9xGopgIcrVAGALgvjrhYSLMZyu5A_F-_Y";
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.");
+}
+if (!PLATFORM_OWNER_EMAILS.length || !PLATFORM_OWNER_TEMP_PASSWORD) {
+  throw new Error("PLATFORM_OWNER_EMAILS and PLATFORM_OWNER_TEMP_PASSWORD are required.");
+}
+if (PLATFORM_OWNER_TEMP_PASSWORD.length < 12) {
+  throw new Error("PLATFORM_OWNER_TEMP_PASSWORD must be at least 12 characters.");
+}
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
 async function main() {
-  const emails = ["trainailtd@gmail.com", "trainai@gmail.com"];
+  const emails = PLATFORM_OWNER_EMAILS;
 
   // Find Digital Training Organization or first org
   const { data: orgs } = await supabase.from("organizations").select("*").limit(5);
@@ -26,7 +39,7 @@ async function main() {
       console.log(`Creating auth user for ${email}...`);
       const res = await supabase.auth.admin.createUser({
         email,
-        password: "SaraF123$",
+        password: PLATFORM_OWNER_TEMP_PASSWORD,
         email_confirm: true,
         user_metadata: { display_name: "Platform Owner", role: "super_admin" }
       });
@@ -35,7 +48,6 @@ async function main() {
       console.log(`Updating auth metadata for ${email}...`);
       await supabase.auth.admin.updateUserById(user.id, {
         user_metadata: { display_name: "Platform Owner", role: "super_admin" },
-        password: "SaraF123$",
         email_confirm: true
       });
     }
