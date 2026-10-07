@@ -6,7 +6,7 @@ const TIMESTAMP = new Date().toISOString().replace(/[-:T.Z]/g, "").slice(0, 14);
 const QA_NAMESPACE = `QA_${TIMESTAMP}`;
 
 const ORG_DB_URL = process.env.VITE_SUPABASE_ORGANIZATION_URL || "https://djikuoucsuhdiyrhsduz.supabase.co";
-const ORG_DB_ANON_KEY = process.env.VITE_SUPABASE_ORGANIZATION_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const ORG_DB_ANON_KEY = process.env.VITE_SUPABASE_ORGANIZATION_ANON_KEY || "sb_publishable_mZQWX6ByDTehCprpYsP85g_1NCE0NIx";
 
 const SARA_URL = process.env.VITE_SUPABASE_SARA_URL || "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const SARA_ANON_KEY = process.env.VITE_SUPABASE_SARA_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";

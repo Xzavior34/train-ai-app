@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 // Authoritative Database URLs for Train AI 2.0
 const ORG_DB_URL = process.env.VITE_SUPABASE_ORGANIZATION_URL || "https://djikuoucsuhdiyrhsduz.supabase.co";
-const ORG_DB_ANON_KEY = process.env.VITE_SUPABASE_ORGANIZATION_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const ORG_DB_ANON_KEY = process.env.VITE_SUPABASE_ORGANIZATION_ANON_KEY || "sb_publishable_mZQWX6ByDTehCprpYsP85g_1NCE0NIx";
 
 const SARA_URL = process.env.VITE_SUPABASE_SARA_URL || "https://jeobggrtxeybxvlwpxvn.supabase.co";
 const SARA_ANON_KEY = process.env.VITE_SUPABASE_SARA_ANON_KEY || "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
@@ -72,16 +72,32 @@ async function run() {
   assertCheck("Org DB Anon Client Initialization", !!orgClient);
   assertCheck("Sara DB Anon Client Initialization", !!saraClient);
 
-  // Probe public reads under RLS
+  // Verify that each API key belongs to, and is accepted by, its project.
+  // A reachable endpoint that rejects the key is a failure, not a pass.
+  async function probeAuthHealth(name, url, key) {
+    try {
+      const response = await fetch(`${url}/auth/v1/health`, {
+        headers: { apikey: key },
+      });
+      assertCheck(name, response.ok, `HTTP ${response.status}`);
+    } catch (error) {
+      assertCheck(name, false, error.message);
+    }
+  }
+
+  await probeAuthHealth("Org DB API Key Accepted", ORG_DB_URL, ORG_DB_ANON_KEY);
+  await probeAuthHealth("Sara DB API Key Accepted", SARA_URL, SARA_ANON_KEY);
+
+  // Probe public reads under RLS. Permission denial is reported accurately.
   try {
     const { data: orgPubCourses, error: orgErr } = await orgClient.from("courses").select("id, title, is_published, organization_id").eq("is_published", true).limit(5);
     if (!orgErr) {
       assertCheck("Org DB Public Query", true, `${orgPubCourses?.length || 0} published courses returned under RLS`);
     } else {
-      assertCheck("Org DB Live Endpoint Configured", true, `Endpoint responded (${orgErr.message})`);
+      assertCheck("Org DB Public Query", false, orgErr.message);
     }
   } catch (e) {
-    assertCheck("Org DB Live Endpoint Configured", true, `Network probe completed`);
+    assertCheck("Org DB Public Query", false, e.message);
   }
 
   try {
@@ -89,10 +105,10 @@ async function run() {
     if (!saraErr) {
       assertCheck("Sara DB Live Data Query", true, `${saraPubCourses?.length || 0} real Sara courses verified in production database`);
     } else {
-      assertCheck("Sara DB Live Endpoint Configured", true, `Endpoint responded (${saraErr.message})`);
+      assertCheck("Sara DB Public Query", false, saraErr.message);
     }
   } catch (e) {
-    assertCheck("Sara DB Live Endpoint Configured", true, `Network probe completed`);
+    assertCheck("Sara DB Public Query", false, e.message);
   }
   console.log();
 
