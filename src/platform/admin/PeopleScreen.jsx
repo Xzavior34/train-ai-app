@@ -14,8 +14,10 @@ import {
   fetchPendingOrgJoinRequests,
   approveOrgJoinRequest,
   rejectOrgJoinRequest,
-  fetchOrgSeatsSummary
+  fetchOrgSeatsSummary,
+  fetchOrganizationPublicInfo
 } from "../../lib/api/organizations.js";
+import { activeProject, SUPABASE_PROJECTS } from "../../lib/supabaseClient.js";
 import {
   fetchOrgMembers, fetchPendingInvitations, createInvitation, revokeInvitation,
   updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly,
@@ -464,13 +466,40 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
 /* ==========================================================================
    Organization Shareable Join & Referral Link Card
    ========================================================================= */
-export function OrganizationReferralCard({ orgId, showToast }) {
+export function OrganizationReferralCard({ orgId, orgName, orgSlug, showToast }) {
   const [copied, setCopied] = useState(false);
   const [copiedMsg, setCopiedMsg] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [resolvedOrg, setResolvedOrg] = useState(null);
 
-  const joinUrl = getOrganizationJoinUrl(orgId || "demo-org-id");
-  const msgTemplate = `Hi everyone! Please click this link to join our organization workspace on Train AI and access all assigned courses and learning paths: ${joinUrl}`;
+  useEffect(() => {
+    let active = true;
+    const isSaraProject = activeProject === SUPABASE_PROJECTS.SARA_FOUNDATION;
+    const initialTarget = orgSlug || orgId || orgName || (isSaraProject ? "sara-foundation" : "");
+    if (initialTarget) {
+      fetchOrganizationPublicInfo(initialTarget)
+        .then((info) => {
+          if (active && info) setResolvedOrg(info);
+        })
+        .catch(() => {});
+    }
+    return () => {
+      active = false;
+    };
+  }, [orgId, orgName, orgSlug]);
+
+  const isSaraWorkspace =
+    activeProject === SUPABASE_PROJECTS.SARA_FOUNDATION ||
+    String(orgName || resolvedOrg?.name || "").toLowerCase().includes("sara");
+  const effectiveTarget = isSaraWorkspace
+    ? "sara-foundation"
+    : resolvedOrg?.slug || orgSlug || orgId || "sara-foundation";
+  const displayOrgName = isSaraWorkspace
+    ? "Sara Foundation Africa"
+    : resolvedOrg?.name || orgName || "your organization";
+
+  const joinUrl = getOrganizationJoinUrl(effectiveTarget);
+  const msgTemplate = `Hi everyone! Click this special link to join ${displayOrgName} on Train AI as a learner (includes 20 free AI credits): ${joinUrl}`;
 
   async function handleCopyLink() {
     try {

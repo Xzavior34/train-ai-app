@@ -23,8 +23,10 @@ export default function AuthPage({
     if (recoveryMode) return "recovery";
     if (initialMode === "signup" || initialMode === "signin") return initialMode;
     try {
-      const urlMode = new URLSearchParams(window.location.search).get("mode");
+      const params = new URLSearchParams(window.location.search);
+      const urlMode = params.get("mode");
       if (urlMode === "signup" || urlMode === "signin") return urlMode;
+      if (orgParam || params.get("join") || params.get("org") || params.get("ref_org")) return "signup";
     } catch {}
     return "signin";
   });
@@ -42,7 +44,10 @@ export default function AuthPage({
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [accountType, setAccountType] = useState("organization");
+  const [accountType, setAccountType] = useState(() => {
+    const hasJoinTarget = Boolean(orgParam || getPendingOrganizationJoin()?.orgIdOrSlug);
+    return hasJoinTarget ? "learner" : "organization";
+  });
   const [orgName, setOrgName] = useState("");
   const [availableOrgs, setAvailableOrgs] = useState(PUBLIC_ORGANIZATIONS_DIRECTORY);
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
@@ -150,10 +155,11 @@ export default function AuthPage({
     const target = orgParam || getPendingOrganizationJoin()?.orgIdOrSlug || "";
     setTargetOrgTarget(target);
     if (target) {
+      setAccountType("learner");
       fetchOrganizationPublicInfo(target).then((info) => {
         if (info) {
           setOrgInfo(info);
-          if (!orgName && info.name) {
+          if (info.name) {
             setOrgName(info.name);
             setSelectedDirectoryOrg(info);
           }
@@ -959,9 +965,36 @@ export default function AuthPage({
         {/* ================================================================ */}
         {(mode === "signin" || mode === "signup") && (
           <>
-            <h1 style={styles.h1}>{mode === "signin" ? "Welcome back" : "Create your account"}</h1>
+            {orgInfo?.name && (
+              <div style={{
+                marginBottom: 14,
+                padding: "12px 14px",
+                borderRadius: 10,
+                background: "#EFF6FF",
+                border: "1.5px solid #BFDBFE",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10
+              }}>
+                <Building2 size={18} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: "#1E40AF" }}>
+                    Joining {orgInfo.name}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: "#1E3A8A", marginTop: 2, lineHeight: 1.45 }}>
+                    {mode === "signup"
+                      ? `Create your learner account below to join under ${orgInfo.name} with 20 free AI credits.`
+                      : `Sign in below to link your account with ${orgInfo.name}.`}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <h1 style={styles.h1}>{mode === "signin" ? "Welcome back" : (orgInfo?.name ? `Join ${orgInfo.name}` : "Create your account")}</h1>
             <p style={styles.sub}>
-              {mode === "signin" ? "Sign in with your email and password." : "Join Train AI to start your workforce learning path."}
+              {mode === "signin"
+                ? "Sign in with your email and password."
+                : "Join Train AI to start your workforce learning path (includes 20 free AI credits)."}
             </p>
 
             {mode === "signup" && (
@@ -978,7 +1011,9 @@ export default function AuthPage({
                   <div className="role-picker-header" style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <Building2 size={15} color={accountType === "organization" ? "#2563EB" : "#64748B"} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Organization</span>
-                    <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
+                    {!orgInfo?.name && (
+                      <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
+                    )}
                   </div>
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
                     Workforce readiness, team cohorts, and org-wide reporting. You become the organization admin.
@@ -995,9 +1030,18 @@ export default function AuthPage({
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <User size={15} color={accountType === "learner" ? "#2563EB" : "#64748B"} />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Individual learner</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>
+                      {orgInfo?.name ? `Learner under ${orgInfo.name}` : "Individual learner"}
+                    </span>
+                    {orgInfo?.name && (
+                      <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>INVITED</span>
+                    )}
                   </div>
-                  <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>Access courses, AI quizzes, and community independently.</span>
+                  <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
+                    {orgInfo?.name
+                      ? `Enroll as a learner under ${orgInfo.name} and receive 20 free AI credits.`
+                      : "Access courses, AI quizzes, and community independently (includes 20 free AI credits)."}
+                  </span>
                 </div>
 
                 <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>

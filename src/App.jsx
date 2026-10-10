@@ -190,8 +190,10 @@ export default function App() {
   const [inviteAuthEmail, setInviteAuthEmail] = useState("");
   const [authInitialMode, setAuthInitialMode] = useState(() => {
     try {
-      const m = new URLSearchParams(window.location.search).get("mode");
+      const params = new URLSearchParams(window.location.search);
+      const m = params.get("mode");
       if (m === "signup" || m === "signin") return m;
+      if (params.get("join") || params.get("org") || params.get("ref_org")) return "signup";
     } catch {}
     return "";
   });

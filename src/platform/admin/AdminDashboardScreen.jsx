@@ -7,6 +7,7 @@ import { Skeleton, SkeletonCard } from "../../components/common/Skeleton.jsx";
 import { fetchOrgDashboardStats, fetchTodaysTasks, fetchCohortProgressSummary, fetchStudentRiskList, fetchTopMentors, fetchUpcomingOrgSessions, fetchOrganizationById, fetchOrgActivityLog } from "../../lib/api/platform.js";
 
 import { KPITrackerCard } from "../components/KPITrackerCard.jsx";
+import { OrganizationReferralCard } from "./PeopleScreen.jsx";
 
 export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelector, isPlatformOwner }) {
   const showToast = useContext(ToastContext);
@@ -114,6 +115,14 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
             </div>
           </div>
         </div>
+
+        {/* Organization Special Learner Join Link */}
+        <OrganizationReferralCard
+          orgId={orgId}
+          orgName={orgQuery.data?.name || profileQuery?.data?.organization}
+          orgSlug={orgQuery.data?.slug}
+          showToast={showToast}
+        />
 
         {/* Primary 5-Card KPI Grid Composition */}
         {statsQuery.loading ? (

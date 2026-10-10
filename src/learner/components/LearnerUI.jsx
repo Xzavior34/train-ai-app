@@ -789,7 +789,7 @@ export function LearnerHeader({
         {/* AI Credits Pill */}
         <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Credits">
           <Plus size={13} color="#2563EB" />
-          <span>{typeof credits === "number" ? credits : 0}<span className="tai-pill-unit tai-desktop-only"> credits</span></span>
+          <span>{typeof credits === "number" ? credits : 20}<span className="tai-pill-unit tai-desktop-only"> credits</span></span>
         </div>
 
         {/* Workspace Switcher Button (Desktop only) */}

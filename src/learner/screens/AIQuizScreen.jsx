@@ -111,7 +111,7 @@ export function AIQuizScreen({
       return;
     }
     if (typeof credits === "number" && credits <= 0) {
-      setQuizGenError("You're out of AI credits for today. Buy more or wait for tomorrow's reset.");
+      setQuizGenError("You've used all your free AI credits (20/20). Buy more AI credits to continue generating AI quizzes.");
       return;
     }
     setQuizGenError(null);
@@ -537,6 +537,22 @@ export function AIQuizScreen({
             <div ref={chatBottomRef} />
           </div>
 
+          {typeof credits === "number" && credits <= 0 && (
+            <div style={{ padding: "10px 14px", borderRadius: 8, background: "var(--danger-bg)", color: "var(--danger)", fontSize: 12.5, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+              <span>You have used all 20 free AI credits. Buy AI credits to continue using AI Coach and AI Quizzes.</span>
+              {onBuyCredits && (
+                <button
+                  type="button"
+                  className="tai-btn tai-btn-primary tai-btn-sm"
+                  onClick={onBuyCredits}
+                  style={{ borderRadius: 6, fontWeight: 700, fontSize: 12 }}
+                >
+                  Buy AI Credits
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Chat Input Bar */}
           <div className="tai-row tai-gap8" style={{ background: "var(--surface)", padding: 6, borderRadius: 8, border: "1px solid var(--border)" }}>
             <input
@@ -641,11 +657,25 @@ export function AIQuizScreen({
                   </div>
                 </div>
 
+
+
                 {quizGenError && (
-                  <div style={{ padding: "8px 12px", borderRadius: 8, background: "var(--danger-bg)", color: "var(--danger)", fontSize: 12, fontWeight: 600, marginBottom: 14 }}>
-                    {quizGenError}
+                  <div style={{ padding: "10px 12px", borderRadius: 8, background: "var(--danger-bg)", color: "var(--danger)", fontSize: 12, fontWeight: 600, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                    <span>{quizGenError}</span>
+                    {typeof credits === "number" && credits <= 0 && onBuyCredits && (
+                      <button
+                        type="button"
+                        className="tai-btn tai-btn-primary tai-btn-sm"
+                        onClick={onBuyCredits}
+                        style={{ borderRadius: 6, fontWeight: 700, fontSize: 11.5 }}
+                      >
+                        Buy AI Credits
+                      </button>
+                    )}
                   </div>
                 )}
+
+
 
                 <button
                   className="tai-btn tai-btn-primary"

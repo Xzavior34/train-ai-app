@@ -371,6 +371,11 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   async function handleSendCoachMessage(customPrompt) {
     const content = (typeof customPrompt === "string" ? customPrompt : coachInput).trim();
     if (!content || coachSending) return;
+    if (typeof credits === "number" && credits <= 0) {
+      showToast("You have used all 20 free AI credits. Please buy AI credits to continue using AI Coach.");
+      push("creditsCheckout", { mode: "credits" });
+      return;
+    }
     setCoachInput("");
     setCoachSending(true);
 
@@ -412,6 +417,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       } else {
         const fallbackText = generateContextualAIFallback(content);
         await sendAIChatMessage({ conversationId: convId, userId: currentUserId, content: fallbackText, role: "assistant" });
+      }
+      if (consumeCredit) {
+        await consumeCredit(1, "ai_chat_message");
       }
       coachMessagesQuery.refetch();
     } catch (e) {

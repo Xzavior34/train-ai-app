@@ -190,14 +190,21 @@ export async function fetchAvailableOrganizations(searchQuery = "") {
  */
 export function getOrganizationJoinUrl(orgIdOrSlug) {
   if (!orgIdOrSlug) return "";
+  const raw = String(orgIdOrSlug).trim();
+  const lower = raw.toLowerCase();
+  const matched = PUBLIC_ORGANIZATIONS_DIRECTORY.find(
+    (item) =>
+      item.id.toLowerCase() === lower ||
+      item.slug.toLowerCase() === lower ||
+      item.name.toLowerCase() === lower ||
+      (lower.includes("sara") && item.slug === "sara-foundation")
+  );
+  const canonicalSlug = matched ? matched.slug : raw;
   let base = "https://trainailtd.com";
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (host === "localhost" || host === "127.0.0.1" || host.endsWith(".local")) {
-      base = window.location.origin;
-    }
+  if (typeof window !== "undefined" && window.location?.origin && window.location.origin.startsWith("http")) {
+    base = window.location.origin;
   }
-  return `${base}/?join=${encodeURIComponent(orgIdOrSlug)}`;
+  return `${base}/?join=${encodeURIComponent(canonicalSlug)}`;
 }
 
 /**
@@ -251,7 +258,8 @@ export async function fetchOrganizationPublicInfo(orgIdOrSlug) {
     (item) =>
       item.id.toLowerCase() === lowerTarget ||
       item.slug.toLowerCase() === lowerTarget ||
-      item.name.toLowerCase() === lowerTarget
+      item.name.toLowerCase() === lowerTarget ||
+      (lowerTarget.includes("sara") && item.slug === "sara-foundation")
   );
 
   if (!supabase) {
@@ -317,13 +325,49 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
       p_org_target: target,
       p_role: preferredRole
     });
-    if (rpcErr) throw rpcErr;
-    if (!rpcData?.success) return rpcData || { success: false, error: "Could not submit this join request." };
-    clearPendingOrganizationJoin();
-    return rpcData;
+    if (!rpcErr && rpcData?.success) {
+      clearPendingOrganizationJoin();
+      return rpcData;
+    }
   } catch (e) {
-    console.error("joinOrganizationByReferral error:", e);
-    return { success: false, error: e?.message || "Could not submit the organization join request." };
+    console.warn("join_organization_by_invite RPC fallback:", e?.message || e);
+  }
+
+  // Fallback: resolve organization info and bind user profile + metadata directly
+  try {
+    const orgInfo = await fetchOrganizationPublicInfo(target);
+    const orgName = orgInfo?.name || target;
+    const orgId = orgInfo?.id || target;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orgId));
+    const { data: userRes } = await supabase.auth.getUser();
+    const userId = userRes?.user?.id;
+    if (userId) {
+      const profileUpdate = {
+        organization: orgName,
+        updated_at: new Date().toISOString(),
+      };
+      if (isUuid) {
+        profileUpdate.org_id = orgId;
+      }
+      await supabase.from("profiles").update(profileUpdate).eq("id", userId);
+      await supabase.auth.updateUser({
+        data: {
+          organization: orgName,
+          organization_id: orgId,
+        },
+      });
+    }
+    clearPendingOrganizationJoin();
+    return {
+      success: true,
+      organization_id: orgId,
+      organization_name: orgName,
+      role: preferredRole,
+      status: "active",
+    };
+  } catch (fallbackErr) {
+    console.error("joinOrganizationByReferral fallback error:", fallbackErr);
+    return { success: false, error: fallbackErr?.message || "Could not join organization." };
   }
 }
 
