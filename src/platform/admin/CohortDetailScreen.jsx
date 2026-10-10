@@ -1,8 +1,9 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, ToastContext } from "../components/PlatformUI.jsx";
-import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon, Layers, Sparkles, Filter } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon, Layers, Sparkles, Filter, Clock } from "lucide-react";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
+import { calculateCohortProgress, extendCohortTimeline } from "../../lib/api/cohorts.js";
 import {
   fetchCohortDetail, updateCohort, addCohortMember, removeCohortMember,
   createCohortPost, assignCohortLearnerCourse, removeCohortLearnerCourse,
@@ -48,6 +49,15 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
   const [descInput, setDescInput] = useState("");
   const [startsInput, setStartsInput] = useState("");
   const [endsInput, setEndsInput] = useState("");
+
+  const progressInfo = calculateCohortProgress(cohort?.starts_at, cohort?.ends_at);
+
+  function extendEndDateByDays(days) {
+    const base = endsInput ? new Date(endsInput) : (cohort?.ends_at ? new Date(cohort.ends_at) : new Date());
+    const nextDate = new Date(base.getTime() + days * 86400000);
+    setEndsInput(nextDate.toISOString().slice(0, 10));
+    showToast(`Extended by ${days} days (${nextDate.toISOString().slice(0, 10)})`);
+  }
 
   function openSettings() {
     setNameInput(cohort?.name || "");
@@ -171,9 +181,22 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
         {detailQuery.loading && <div className="ta-empty">Loading cohort...</div>}
         {!detailQuery.loading && !cohort && <div className="ta-empty">Cohort not found.</div>}
         {cohort && !editingSettings && (
-          <div className="ta-row ta-between" style={{ marginBottom: 12, alignItems: "center" }}>
-            <div style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 600 }}>Batch Management &amp; Pacing</div>
-            <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={openSettings}><SettingsIcon size={14} /> Cohort Settings</button>
+          <div className="ta-card" style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 10 }}>
+            <div className="ta-row ta-between" style={{ marginBottom: 8, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+              <div className="ta-row ta-gap8" style={{ alignItems: "center" }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981" }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
+                  ⏱️ 6-Week Accelerator Timeline: Week {progressInfo.currentWeek} of {progressInfo.totalWeeks} &bull; <strong style={{ color: "#10B981" }}>{progressInfo.daysRemaining} Days Left</strong> before cohort ends
+                </span>
+              </div>
+              <div className="ta-row ta-gap8" style={{ alignItems: "center" }}>
+                <span style={{ fontSize: 12, fontWeight: 800, color: "var(--primary)", background: "rgba(37,99,235,0.1)", padding: "2px 8px", borderRadius: 6 }}>
+                  {progressInfo.daysRemaining} Days Left ({progressInfo.percent}% Elapsed)
+                </span>
+                <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={openSettings}><SettingsIcon size={14} /> Cohort Settings / Extend</button>
+              </div>
+            </div>
+            <ProgressBar value={progressInfo.percent} />
           </div>
         )}
 
@@ -211,6 +234,25 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
               <div>
                 <div className="ta-label">Ends</div>
                 <input type="date" className="ta-input ta-mt8" style={{ width: "100%" }} value={endsInput} onChange={(e) => setEndsInput(e.target.value)} />
+                <div className="ta-row ta-gap6 ta-mt6" style={{ flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "var(--text-3)" }}>Quick Extend:</span>
+                  {[
+                    { label: "+1 Wk", days: 7 },
+                    { label: "+2 Wks", days: 14 },
+                    { label: "+3 Wks", days: 21 },
+                    { label: "+4 Wks", days: 28 },
+                  ].map(b => (
+                    <button
+                      key={b.days}
+                      type="button"
+                      className="ta-btn ta-btn-outline ta-btn-sm"
+                      style={{ padding: "2px 6px", fontSize: 11 }}
+                      onClick={() => extendEndDateByDays(b.days)}
+                    >
+                      {b.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <div className="ta-row ta-gap8 ta-mt12">

@@ -114,9 +114,36 @@ export async function createMentorCheckin({
 
   if (supabase) {
     try {
-      const { data, error } = await supabase.from("mentorship_checkins").insert(newRow).select().single();
-      if (!error && data) return { success: true, data };
-    } catch {}
+      const { data: authUser } = await supabase.auth.getUser();
+      const currentUid = authUser?.user?.id;
+      const isUid = (val) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val || ""));
+
+      const dbRow = {
+        team_name: newRow.team_name,
+        mentor_name: newRow.mentor_name,
+        checkin_date: newRow.checkin_date,
+        notes: newRow.notes,
+        progress_rating: newRow.progress_rating,
+        issues_blockers: newRow.issues_blockers,
+        recommended_actions: newRow.recommended_actions,
+        next_checkin_date: newRow.next_checkin_date,
+        is_private_admin: newRow.is_private_admin,
+      };
+      if (isUid(teamId)) dbRow.team_id = teamId;
+      if (isUid(cohortId)) dbRow.cohort_id = cohortId;
+      if (isUid(mentorId)) dbRow.mentor_id = mentorId;
+      else if (isUid(currentUid)) dbRow.mentor_id = currentUid;
+
+      const { data, error } = await supabase.from("mentorship_checkins").insert(dbRow).select().single();
+      if (!error && data) {
+        const merged = { ...newRow, id: data.id };
+        const existing = getCachedCheckins();
+        saveCachedCheckins([merged, ...existing]);
+        return { success: true, data: merged };
+      }
+    } catch (e) {
+      console.warn("createMentorCheckin Supabase fallback:", e);
+    }
   }
 
   const existing = getCachedCheckins();

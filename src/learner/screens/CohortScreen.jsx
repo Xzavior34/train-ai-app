@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { TopBar, Avatar, Tag, timeAgo, initialsOf, ProgressBar } from "../components/LearnerUI.jsx";
 import {
   Layers, Video, Calendar, FileText, Link2, ExternalLink, Flame, Users,
-  CheckCircle2, Clock, Play, ArrowRight, ArrowLeft, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send, Rocket
+  CheckCircle2, Clock, Play, ArrowRight, ArrowLeft, BookOpen, Star, MessageCircle, Heart, GraduationCap, Send, Rocket, Edit3, Plus, X
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
 import { createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
 import { fetchCohortDetail } from "../../lib/api/platform.js";
+import { calculateCohortProgress, extendCohortTimeline } from "../../lib/api/cohorts.js";
 import CapCohort3Screen from "./CapCohort3Screen.jsx";
 
 export function CohortScreen({
@@ -22,6 +23,10 @@ export function CohortScreen({
   const [posting, setPosting] = useState(false);
   const [replyInputs, setReplyInputs] = useState({});
   const [submittingReply, setSubmittingReply] = useState(false);
+  const [extendModalOpen, setExtendModalOpen] = useState(false);
+  const [extendDays, setExtendDays] = useState(7);
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [extending, setExtending] = useState(false);
 
   const targetCohortId = params?.id || params?.cohortId || propCohort?.id || cohortMembershipQuery?.data?.cohort?.id;
 
@@ -124,6 +129,36 @@ export function CohortScreen({
     ? Math.round(assignedCourses.reduce((sum, cc) => sum + (Number(cc.courses?.progress) || 0), 0) / assignedCourses.length)
     : 0;
 
+  const isAdminOrMentor =
+    user?.role === "admin" ||
+    user?.role === "mentor" ||
+    user?.role === "instructor" ||
+    session?.user?.user_metadata?.role === "admin" ||
+    session?.user?.user_metadata?.role === "mentor" ||
+    String(session?.user?.email || "").toLowerCase().includes("admin") ||
+    instructorMembers.some(m => m.user_id === session?.user?.id || m.id === session?.user?.id);
+
+  const progressInfo = calculateCohortProgress(cohort?.starts_at, cohort?.ends_at);
+
+  async function handleExtendTimeline(daysToAdd, explicitEnd) {
+    if (!cohort?.id) return;
+    setExtending(true);
+    try {
+      const res = await extendCohortTimeline({
+        cohortId: cohort.id,
+        extensionDays: daysToAdd || extendDays,
+        newEndDate: explicitEnd || customEndDate || null,
+      });
+      showToast(res.message || `Cohort extended by ${daysToAdd || extendDays} days!`);
+      setExtendModalOpen(false);
+      fallbackCohortQuery.refetch?.();
+    } catch (err) {
+      showToast(err?.message || "Failed to extend cohort timeline.");
+    } finally {
+      setExtending(false);
+    }
+  }
+
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <TopBar title={cohort.name || "Cohort"} sub={cohort.description || "Cohort Workspace"} onBack={back} />
@@ -198,40 +233,84 @@ export function CohortScreen({
           </div>
         </div>
 
-        {/* Milestone Progress Bar */}
+        {/* 6-Week Cohort Timeline Progress Bar */}
         <div className="tai-hero-subcard" style={{
           marginTop: 16,
           position: "relative",
           zIndex: 1,
-          padding: "12px 16px",
-          borderRadius: 10
+          padding: "14px 18px",
+          borderRadius: 12,
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          background: "rgba(15, 23, 42, 0.65)",
+          backdropFilter: "blur(12px)"
         }}>
-          <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
-            <div className="tai-row tai-gap6">
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34D399" }} />
-              <span>Cohort Curriculum Progress: {completedAssignedCount} of {assignedCourses.length} Courses Completed</span>
+          <div className="tai-row tai-between" style={{ fontSize: 12.5, fontWeight: 700, marginBottom: 8, color: "var(--text)", flexWrap: "wrap", gap: 8 }}>
+            <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34D399", boxShadow: "0 0 8px #34D399" }} />
+              <span>
+                ⏱️ 6-Week Accelerator Timeline: Week {progressInfo.currentWeek} of {progressInfo.totalWeeks} &bull; <strong style={{ color: "#34D399" }}>{progressInfo.daysRemaining} Days Left</strong> before cohort ends
+              </span>
             </div>
-            <span style={{
-              color: "#34D399",
-              fontSize: 12,
-              fontWeight: 700
-            }}>
-              {assignedCompletionRate}% Completed
-            </span>
+            <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
+              <span style={{
+                color: "#34D399",
+                fontSize: 13,
+                fontWeight: 800,
+                background: "rgba(16, 185, 129, 0.15)",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
+                padding: "2px 8px",
+                borderRadius: 6
+              }}>
+                {progressInfo.daysRemaining} Days Left ({progressInfo.percent}% Elapsed)
+              </span>
+              {isAdminOrMentor && (
+                <button
+                  type="button"
+                  onClick={() => setExtendModalOpen(true)}
+                  style={{
+                    background: "rgba(59, 130, 246, 0.2)",
+                    border: "1px solid rgba(59, 130, 246, 0.4)",
+                    color: "#60A5FA",
+                    padding: "3px 10px",
+                    borderRadius: 6,
+                    fontSize: 11.5,
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4
+                  }}
+                >
+                  <Clock size={12} /> Extend Timeline
+                </button>
+              )}
+            </div>
           </div>
 
           <div style={{
-            height: 8,
+            height: 9,
             borderRadius: 99,
-            background: "var(--surface-3)",
-            overflow: "hidden"
+            background: "rgba(255, 255, 255, 0.1)",
+            overflow: "hidden",
+            position: "relative"
           }}>
             <div style={{
-              width: `${assignedCompletionRate}%`,
+              width: `${progressInfo.percent}%`,
               height: "100%",
-              background: "#10B981",
-              borderRadius: 99
+              background: "linear-gradient(90deg, #10B981 0%, #34D399 100%)",
+              borderRadius: 99,
+              boxShadow: "0 0 12px rgba(16, 185, 129, 0.4)",
+              transition: "width 0.4s ease"
             }} />
+          </div>
+
+          <div className="tai-row tai-between" style={{ marginTop: 8, fontSize: 11, color: "var(--text-3)", flexWrap: "wrap", gap: 6 }}>
+            <span>
+              Started: {cohort?.starts_at ? new Date(cohort.starts_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "Cohort Launch"} &bull; Ends: {cohort?.ends_at ? new Date(cohort.ends_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "6 Weeks from Start"}
+            </span>
+            <span>
+              📚 Assigned Curriculum: {completedAssignedCount} of {assignedCourses.length} Courses Completed ({assignedCompletionRate}%)
+            </span>
           </div>
         </div>
       </div>
@@ -641,6 +720,142 @@ export function CohortScreen({
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          ADMIN / MENTOR MODAL: EXTEND COHORT TIMELINE
+          ========================================================================= */}
+      {extendModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.75)",
+            backdropFilter: "blur(6px)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: "var(--surface, #1E293B)",
+              border: "1.5px solid var(--border, rgba(255,255,255,0.15))",
+              borderRadius: 16,
+              padding: 26,
+              maxWidth: 480,
+              width: "100%",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+              color: "var(--text, #FFFFFF)",
+            }}
+          >
+            <div className="tai-row tai-between" style={{ marginBottom: 12, alignItems: "flex-start" }}>
+              <div className="tai-row tai-gap10" style={{ alignItems: "center" }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: "rgba(59, 130, 246, 0.15)", color: "#60A5FA", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Clock size={20} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 17, fontWeight: 900, margin: 0, color: "var(--text, #FFF)" }}>Extend Cohort Timeline</h3>
+                  <div style={{ fontSize: 12, color: "var(--text-3, #94A3B8)", marginTop: 2 }}>{cohort?.name}</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setExtendModalOpen(false)}
+                style={{ background: "transparent", border: "none", color: "var(--text-3)", cursor: "pointer", padding: 4 }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ background: "var(--surface-2, rgba(0,0,0,0.25))", borderRadius: 10, padding: 12, border: "1px solid var(--border, rgba(255,255,255,0.08))", marginBottom: 16, fontSize: 12 }}>
+              <div className="tai-row tai-between" style={{ marginBottom: 4 }}>
+                <span style={{ color: "var(--text-3)" }}>Current End Date:</span>
+                <span style={{ fontWeight: 700, color: "var(--text)" }}>{cohort?.ends_at ? new Date(cohort.ends_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "TBD"}</span>
+              </div>
+              <div className="tai-row tai-between">
+                <span style={{ color: "var(--text-3)" }}>Current Pacing:</span>
+                <span style={{ fontWeight: 700, color: "#34D399" }}>{progressInfo.daysRemaining} Days Left &bull; Week {progressInfo.currentWeek} of {progressInfo.totalWeeks}</span>
+              </div>
+            </div>
+
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2, #CBD5E1)", marginBottom: 8 }}>
+              Quick Extension Presets:
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, marginBottom: 16 }}>
+              {[
+                { label: "+1 Week (+7 Days)", days: 7 },
+                { label: "+2 Weeks (+14 Days)", days: 14 },
+                { label: "+3 Weeks (+21 Days)", days: 21 },
+                { label: "+4 Weeks (+28 Days)", days: 28 },
+              ].map(opt => (
+                <button
+                  key={opt.days}
+                  type="button"
+                  onClick={() => { setExtendDays(opt.days); setCustomEndDate(""); }}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 8,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    border: extendDays === opt.days && !customEndDate ? "2px solid #3B82F6" : "1px solid var(--border, rgba(255,255,255,0.12))",
+                    background: extendDays === opt.days && !customEndDate ? "rgba(59, 130, 246, 0.2)" : "var(--surface-3, rgba(255,255,255,0.04))",
+                    color: extendDays === opt.days && !customEndDate ? "#60A5FA" : "var(--text, #FFF)",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-2, #CBD5E1)", marginBottom: 6 }}>
+                Or Pick Custom Completion Date:
+              </div>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "10px 12px",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  background: "var(--surface-2, rgba(0,0,0,0.3))",
+                  border: "1px solid var(--border, rgba(255,255,255,0.15))",
+                  color: "var(--text, #FFF)",
+                  outline: "none",
+                }}
+              />
+            </div>
+
+            <div className="tai-row tai-between" style={{ gap: 10, justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                className="tai-btn tai-btn-outline tai-btn-sm"
+                onClick={() => setExtendModalOpen(false)}
+                disabled={extending}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="tai-btn tai-btn-primary tai-btn-sm"
+                onClick={() => handleExtendTimeline(extendDays, customEndDate || null)}
+                disabled={extending}
+                style={{ padding: "8px 18px", fontWeight: 800 }}
+              >
+                {extending ? "Updating Cohort..." : "Save & Extend Cohort"}
+              </button>
+            </div>
           </div>
         </div>
       )}
