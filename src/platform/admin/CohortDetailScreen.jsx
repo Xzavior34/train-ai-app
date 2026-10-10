@@ -3,7 +3,7 @@ import { TopBar, Tag, ProgressBar, Avatar, ToastContext } from "../components/Pl
 import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon, Layers, Sparkles, Filter, Clock } from "lucide-react";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { calculateCohortProgress, extendCohortTimeline } from "../../lib/api/cohorts.js";
+import { calculateCohortProgress, extendCohortTimeline, assignCourseToCohortOrLearners, unassignCohortCourse } from "../../lib/api/cohorts.js";
 import {
   fetchCohortDetail, updateCohort, addCohortMember, removeCohortMember,
   createCohortPost, assignCohortLearnerCourse, removeCohortLearnerCourse,
@@ -21,6 +21,326 @@ import {
 // down as a prop) - the selected cohort id is lifted to TrainAIPlatformApp
 // as `selectedCohortId` and this screen is rendered for a dedicated
 // "cohort-detail" screen value, with `onBack` returning to "cohorts".
+
+/**
+ * Dual-Scope Course Assignment Component
+ * Allows assigning courses to the Entire Cohort or Individual Members.
+ */
+function CohortCourseAssignmentSection({
+  cohortId,
+  members = [],
+  courses = [],
+  cohortCourses = [],
+  learnerCourses = [],
+  currentUserId,
+  onUpdated,
+  showToast,
+  title = "Assign Courses to Cohort or Individuals",
+}) {
+  const [courseId, setCourseId] = useState("");
+  const [scope, setScope] = useState("cohort"); // "cohort" | "individuals"
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [memberFilter, setMemberFilter] = useState("");
+  const [dueAt, setDueAt] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const filteredMembers = members.filter((m) => {
+    if (!memberFilter.trim()) return true;
+    const name = m.user_profiles?.display_name || "";
+    return name.toLowerCase().includes(memberFilter.toLowerCase().trim());
+  });
+
+  const cohortCoursesList = (() => {
+    const map = new Map();
+    for (const cc of cohortCourses || []) {
+      const cid = cc.course_id || cc.id;
+      if (!cid) continue;
+      map.set(cid, {
+        course_id: cid,
+        title: cc.courses?.title || courses.find((c) => c.id === cid)?.title || "Assigned Course",
+        category: cc.courses?.category || courses.find((c) => c.id === cid)?.category || "",
+        due_at: cc.due_at || null,
+        isEntireCohort: true,
+        learnerCount: members.length,
+      });
+    }
+    for (const lc of learnerCourses || []) {
+      const cid = lc.course_id;
+      if (!cid) continue;
+      if (!map.has(cid)) {
+        const assignedLearners = (learnerCourses || []).filter((l) => l.course_id === cid);
+        const isAll = members.length > 0 && assignedLearners.length >= members.length;
+        map.set(cid, {
+          course_id: cid,
+          title: lc.courses?.title || courses.find((c) => c.id === cid)?.title || "Assigned Course",
+          category: lc.courses?.category || courses.find((c) => c.id === cid)?.category || "",
+          due_at: null,
+          isEntireCohort: isAll,
+          learnerCount: assignedLearners.length,
+        });
+      }
+    }
+    return Array.from(map.values());
+  })();
+
+  async function handleAssignSubmit() {
+    if (!cohortId || !courseId) {
+      showToast?.("Please choose a course from the catalog to assign.");
+      return;
+    }
+    if (scope === "individuals" && selectedUserIds.length === 0) {
+      showToast?.("Please select at least one cohort member.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const res = await assignCourseToCohortOrLearners({
+        cohortId,
+        courseId,
+        scope,
+        memberUserIds: selectedUserIds,
+        dueAt: dueAt || null,
+        assignedBy: currentUserId,
+      });
+      showToast?.(res.message || "Course assigned successfully!");
+      setCourseId("");
+      setSelectedUserIds([]);
+      setDueAt("");
+      onUpdated?.();
+    } catch (err) {
+      showToast?.(err?.message || "Failed to assign course.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleUnassign(cId, title) {
+    try {
+      await unassignCohortCourse({ cohortId, courseId: cId });
+      showToast?.(`Unassigned "${title || "course"}"`);
+      onUpdated?.();
+    } catch (err) {
+      showToast?.(err?.message || "Failed to unassign course.");
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 16, background: "var(--surface-2, rgba(255,255,255,0.03))", border: "1px solid var(--border)", borderRadius: 10, padding: 16 }}>
+      <div className="ta-row ta-between" style={{ alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
+        <div className="ta-row ta-gap8" style={{ alignItems: "center" }}>
+          <BookOpen size={18} color="var(--primary)" />
+          <span style={{ fontWeight: 800, fontSize: 14.5, color: "var(--text)" }}>{title}</span>
+        </div>
+        <span style={{ fontSize: 12, color: "var(--text-3)" }}>
+          Directly enroll all cohort members or choose specific learners
+        </span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12, marginBottom: 12 }}>
+        <div>
+          <div className="ta-label" style={{ marginBottom: 6 }}>1. Select Course</div>
+          <select
+            className="ta-input"
+            style={{ width: "100%", fontSize: 13 }}
+            value={courseId}
+            onChange={(e) => setCourseId(e.target.value)}
+          >
+            <option value="">-- Choose course from catalog ({courses.length}) --</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.title} {c.category ? `[${c.category}]` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <div className="ta-label" style={{ marginBottom: 6 }}>2. Target Due Date (Optional)</div>
+          <input
+            type="date"
+            className="ta-input"
+            style={{ width: "100%", fontSize: 13 }}
+            value={dueAt}
+            onChange={(e) => setDueAt(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 14 }}>
+        <div className="ta-label" style={{ marginBottom: 6 }}>3. Assignment Scope</div>
+        <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className={`ta-btn ${scope === "cohort" ? "ta-btn-primary" : "ta-btn-outline"}`}
+            style={{ fontSize: 12.5, padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: 6 }}
+            onClick={() => setScope("cohort")}
+          >
+            <Users size={14} /> Entire Cohort (All {members.length} Members)
+          </button>
+          <button
+            type="button"
+            className={`ta-btn ${scope === "individuals" ? "ta-btn-primary" : "ta-btn-outline"}`}
+            style={{ fontSize: 12.5, padding: "6px 14px", display: "inline-flex", alignItems: "center", gap: 6 }}
+            onClick={() => setScope("individuals")}
+          >
+            <Filter size={14} /> Specific Individual(s) ({selectedUserIds.length} selected)
+          </button>
+        </div>
+      </div>
+
+      {scope === "cohort" ? (
+        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.25)", marginBottom: 14, fontSize: 12.5, color: "var(--text)" }}>
+          👥 <strong>Cohort-Wide Enrollment:</strong> Assigning to the entire cohort will automatically enroll all <strong>{members.length} members</strong> and list it on their cohort curriculum.
+        </div>
+      ) : (
+        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, padding: 12, marginBottom: 14 }}>
+          <div className="ta-row ta-between" style={{ alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 6 }}>
+            <input
+              type="text"
+              className="ta-input"
+              placeholder="Search members by name..."
+              style={{ fontSize: 12, flex: 1, minWidth: 160 }}
+              value={memberFilter}
+              onChange={(e) => setMemberFilter(e.target.value)}
+            />
+            <div className="ta-row ta-gap6">
+              <button
+                type="button"
+                className="ta-btn ta-btn-outline ta-btn-sm"
+                style={{ fontSize: 11, padding: "3px 8px" }}
+                onClick={() => setSelectedUserIds(members.map((m) => m.user_id))}
+              >
+                Select All ({members.length})
+              </button>
+              <button
+                type="button"
+                className="ta-btn ta-btn-outline ta-btn-sm"
+                style={{ fontSize: 11, padding: "3px 8px" }}
+                onClick={() => setSelectedUserIds([])}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div style={{ maxHeight: 180, overflowY: "auto", display: "flex", flexDirection: "column", gap: 6 }}>
+            {filteredMembers.length === 0 && (
+              <div style={{ fontSize: 12, color: "var(--text-3)", padding: 8 }}>No matching members found.</div>
+            )}
+            {filteredMembers.map((m) => {
+              const isSelected = selectedUserIds.includes(m.user_id);
+              const name = m.user_profiles?.display_name || "Cohort Member";
+              return (
+                <label
+                  key={m.user_id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "6px 10px",
+                    borderRadius: 6,
+                    background: isSelected ? "rgba(37,99,235,0.12)" : "transparent",
+                    cursor: "pointer",
+                    border: isSelected ? "1px solid rgba(37,99,235,0.3)" : "1px solid transparent",
+                    fontSize: 12.5,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => {
+                      setSelectedUserIds((prev) =>
+                        isSelected ? prev.filter((id) => id !== m.user_id) : [...prev, m.user_id]
+                      );
+                    }}
+                  />
+                  <Avatar initials={name.slice(0, 2).toUpperCase()} size={24} />
+                  <span style={{ fontWeight: 600, color: "var(--text)", flex: 1 }}>{name}</span>
+                  <span style={{ fontSize: 11, color: "var(--text-3)" }}>Progress: {m.progress || 0}%</span>
+                </label>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 6 }}>
+            {selectedUserIds.length} of {members.length} members selected for individual assignment
+          </div>
+        </div>
+      )}
+
+      <div className="ta-row ta-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+        <button
+          type="button"
+          className="ta-btn ta-btn-primary"
+          disabled={busy || !courseId || (scope === "individuals" && selectedUserIds.length === 0)}
+          onClick={handleAssignSubmit}
+          style={{ padding: "8px 18px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
+        >
+          <BookOpen size={14} />
+          {busy
+            ? "Assigning Course..."
+            : scope === "cohort"
+            ? `Assign to Entire Cohort (${members.length} Learners)`
+            : `Assign to ${selectedUserIds.length} Selected Member(s)`}
+        </button>
+      </div>
+
+      {/* Currently assigned courses list */}
+      <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--border)" }}>
+        <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>
+          Curriculum Currently Assigned to this Cohort ({cohortCoursesList.length})
+        </div>
+        {cohortCoursesList.length === 0 && (
+          <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+            No courses assigned to this cohort yet.
+          </div>
+        )}
+        <div className="ta-col ta-gap8">
+          {cohortCoursesList.map((cc) => (
+            <div
+              key={cc.course_id}
+              className="ta-row ta-between"
+              style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                padding: "8px 12px",
+                borderRadius: 8,
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: 8,
+              }}
+            >
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <span style={{ fontWeight: 700, fontSize: 13, color: "var(--text)" }}>{cc.title}</span>
+                <div className="ta-row ta-gap8" style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2, flexWrap: "wrap" }}>
+                  <span style={{
+                    background: cc.isEntireCohort ? "rgba(16, 185, 129, 0.15)" : "rgba(37, 99, 235, 0.15)",
+                    color: cc.isEntireCohort ? "#10B981" : "#3B82F6",
+                    padding: "1px 6px",
+                    borderRadius: 4,
+                    fontWeight: 700,
+                  }}>
+                    {cc.isEntireCohort ? "Entire Cohort" : `${cc.learnerCount} Individual(s)`}
+                  </span>
+                  {cc.due_at && <span>Due: {new Date(cc.due_at).toLocaleDateString()}</span>}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="ta-btn ta-btn-outline ta-btn-sm"
+                style={{ fontSize: 11, color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.3)", padding: "2px 8px" }}
+                onClick={() => handleUnassign(cc.course_id, cc.title)}
+              >
+                <Trash2 size={11} /> Unassign
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, orgSelector, setScreen }) {
   const showToast = useContext(ToastContext);
   const [tab, setTab] = useState("members");
@@ -34,6 +354,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
   const members = detail?.members || [];
   const posts = detail?.posts || [];
   const learnerCourses = detail?.learnerCourses || [];
+  const cohortCourses = detail?.cohortCourses || [];
   const resources = detail?.resources || [];
   const sessions = detail?.sessions || [];
 

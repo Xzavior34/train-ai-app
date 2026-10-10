@@ -8,7 +8,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
 import { createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
 import { fetchCohortDetail } from "../../lib/api/platform.js";
-import { calculateCohortProgress, extendCohortTimeline, createCohortSession } from "../../lib/api/cohorts.js";
+import { calculateCohortProgress, extendCohortTimeline, createCohortSession, assignCourseToCohortOrLearners } from "../../lib/api/cohorts.js";
 import CapCohort3Screen from "./CapCohort3Screen.jsx";
 
 export function CohortScreen({
@@ -33,6 +33,13 @@ export function CohortScreen({
   const [sessionJoinUrl, setSessionJoinUrl] = useState("");
   const [sessionDescription, setSessionDescription] = useState("");
   const [savingSession, setSavingSession] = useState(false);
+  const [assignCourseModalOpen, setAssignCourseModalOpen] = useState(false);
+  const [modalCourseId, setModalCourseId] = useState("");
+  const [modalAssignScope, setModalAssignScope] = useState("cohort"); // "cohort" | "individuals"
+  const [modalSelectedUserIds, setModalSelectedUserIds] = useState([]);
+  const [modalMemberFilter, setModalMemberFilter] = useState("");
+  const [modalDueAt, setModalDueAt] = useState("");
+  const [submittingAssignment, setSubmittingAssignment] = useState(false);
 
   const targetCohortId = params?.id || params?.cohortId || propCohort?.id || cohortMembershipQuery?.data?.cohort?.id;
 
@@ -162,6 +169,40 @@ export function CohortScreen({
       showToast(err?.message || "Failed to extend cohort timeline.");
     } finally {
       setExtending(false);
+    }
+  }
+
+  async function handleModalAssignCourse(e) {
+    e.preventDefault();
+    if (!cohort?.id || !modalCourseId) {
+      showToast?.("Please choose a course from catalog to assign.");
+      return;
+    }
+    if (modalAssignScope === "individuals" && modalSelectedUserIds.length === 0) {
+      showToast?.("Please select at least one cohort member.");
+      return;
+    }
+    setSubmittingAssignment(true);
+    try {
+      const res = await assignCourseToCohortOrLearners({
+        cohortId: cohort.id,
+        courseId: modalCourseId,
+        scope: modalAssignScope,
+        memberUserIds: modalSelectedUserIds,
+        dueAt: modalDueAt || null,
+        assignedBy: session?.user?.id || user?.id,
+      });
+      showToast?.(res.message || "Course assigned successfully!");
+      setAssignCourseModalOpen(false);
+      setModalCourseId("");
+      setModalSelectedUserIds([]);
+      setModalDueAt("");
+      fallbackCohortQuery?.refetch?.();
+      cohortCoursesQuery?.refetch?.();
+    } catch (err) {
+      showToast?.(err?.message || "Failed to assign course.");
+    } finally {
+      setSubmittingAssignment(false);
     }
   }
 

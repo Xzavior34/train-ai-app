@@ -3,7 +3,8 @@ import { fetchProfilesByUserIds } from "./schemaHelper.js";
 import { isRealDatabaseId } from "../mockDataManager.js";
 import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
 import { getCanonicalDomain } from "../../services/emailService.js";
-import { calculateCohortProgress } from "./cohorts.js";
+import { calculateCohortProgress, assignCourseToCohortOrLearners, unassignCohortCourse } from "./cohorts.js";
+export { assignCourseToCohortOrLearners, unassignCohortCourse };
 
 
 // Admin-scoped queries. RLS (up_select_org_admin in 0006_rls_policies.sql)
@@ -1715,6 +1716,9 @@ export async function fetchCohortDetail(cohortId) {
       sessions: [
         { id: "demo-cohort-sess-1", cohort_id: cohortId, title: "Cohort Kickoff Call", starts_at: new Date(Date.now() + 3 * 86400000).toISOString() },
       ],
+      cohortCourses: [
+        { id: "demo-cc-1", cohort_id: cohortId, course_id: "demo-course-ai-fundamentals", due_at: "2026-03-30", courses: { id: "demo-course-ai-fundamentals", title: "AI Fundamentals", description: "Core concepts of artificial intelligence" } },
+      ],
       learnerCourses: [
         { cohort_id: cohortId, user_id: "demo-learner-1", course_id: "demo-course-ai-fundamentals", progress: 100, user_profiles: { display_name: "Amara Chen" }, courses: { id: "demo-course-ai-fundamentals", title: "AI Fundamentals" } },
         { cohort_id: cohortId, user_id: "demo-learner-2", course_id: "demo-course-ai-fundamentals", progress: 85, user_profiles: { display_name: "David Osei" }, courses: { id: "demo-course-ai-fundamentals", title: "AI Fundamentals" } },
@@ -1726,13 +1730,14 @@ export async function fetchCohortDetail(cohortId) {
   // None of cohort_members/cohort_posts/cohort_learner_courses have a
   // declared FK to user_profiles (and cohort_learner_courses has none to
   // courses either), so those need manual lookups instead of embeds.
-  const [{ data: cohort, error: cohortErr }, { data: memberRows }, { data: posts }, { data: resources }, { data: sessions }, { data: learnerCourses }] = await Promise.all([
+  const [{ data: cohort, error: cohortErr }, { data: memberRows }, { data: posts }, { data: resources }, { data: sessions }, { data: learnerCourses }, { data: cohortCourses }] = await Promise.all([
     supabase.from("cohorts").select("*").eq("id", cohortId).maybeSingle(),
     supabase.from("cohort_members").select("*").eq("cohort_id", cohortId).order("added_at", { ascending: false }),
     supabase.from("cohort_posts").select("*").eq("cohort_id", cohortId).order("created_at", { ascending: false }),
     supabase.from("cohort_resources").select("*").eq("cohort_id", cohortId).order("created_at", { ascending: false }),
     supabase.from("cohort_sessions").select("*").eq("cohort_id", cohortId).order("starts_at", { ascending: true }),
     supabase.from("cohort_learner_courses").select("*").eq("cohort_id", cohortId),
+    supabase.from("cohort_courses").select("*").eq("cohort_id", cohortId),
   ]);
   if (cohortErr) throw cohortErr;
 
@@ -1767,8 +1772,9 @@ export async function fetchCohortDetail(cohortId) {
   const postsOut = postRows.map((p) => ({ ...p, user_profiles: postProfiles[p.author_id] || null }));
 
   const lcRows = learnerCourses || [];
+  const ccRows = cohortCourses || [];
   const lcProfiles = await fetchProfilesByUserIds(lcRows.map((l) => l.user_id));
-  const courseIds = [...new Set(lcRows.map((l) => l.course_id).filter(Boolean))];
+  const courseIds = [...new Set([...lcRows.map((l) => l.course_id), ...ccRows.map((c) => c.course_id)].filter(Boolean))];
   const { data: coursesForLc } = courseIds.length
     ? await supabase.from("courses").select("id, title").in("id", courseIds)
     : { data: [] };
@@ -1780,7 +1786,12 @@ export async function fetchCohortDetail(cohortId) {
     progress: progressByUserCourse[`${l.user_id}:${l.course_id}`] ?? 0,
   }));
 
-  return { cohort: cohort || null, members: membersOut, posts: postsOut, resources: resources || [], sessions: sessions || [], learnerCourses: learnerCoursesOut };
+    const cohortCoursesOut = ccRows.map((c) => ({
+    ...c,
+    courses: coursesById[c.course_id] || null,
+  }));
+
+  return { cohort: cohort || null, members: membersOut, posts: postsOut, resources: resources || [], sessions: sessions || [], learnerCourses: learnerCoursesOut, cohortCourses: cohortCoursesOut };
 }
 
 // Adds an existing org member to a cohort. cohort_members has a real

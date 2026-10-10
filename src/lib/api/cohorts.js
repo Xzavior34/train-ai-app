@@ -398,3 +398,187 @@ export async function createCohortSession({ cohortId, createdBy, title, descript
   return data;
 }
 
+/**
+ * Assigns a course to either the entire cohort OR specific individual members.
+ * Keeps `cohort_courses`, `cohort_learner_courses`, and `course_enrollments` synchronized.
+ */
+export async function assignCourseToCohortOrLearners({
+  cohortId,
+  courseId,
+  scope = "cohort",
+  memberUserIds = [],
+  dueAt = null,
+  assignedBy = null,
+}) {
+  if (!cohortId || !courseId) {
+    throw new Error("Cohort ID and Course ID are required to assign a course.");
+  }
+
+  if (!supabase) {
+    const count = scope === "cohort" ? 5 : (memberUserIds?.length || 1);
+    return {
+      success: true,
+      count,
+      scope,
+      message: scope === "cohort"
+        ? `Assigned course to entire cohort (${count} members).`
+        : `Assigned course to ${count} individual member(s).`,
+    };
+  }
+
+  let authUserId = assignedBy;
+  if (!authUserId) {
+    const { data: authData } = await supabase.auth.getUser();
+    authUserId = authData?.user?.id || null;
+  }
+
+  // 1. Determine target user IDs
+  let targetUserIds = [];
+  if (scope === "cohort") {
+    const { data: memberRows, error: memberErr } = await supabase
+      .from("cohort_members")
+      .select("user_id")
+      .eq("cohort_id", cohortId);
+    if (memberErr) console.warn("Could not fetch cohort members:", memberErr);
+    targetUserIds = (memberRows || []).map((m) => m.user_id).filter(Boolean);
+
+    // Upsert into cohort_courses (cohort-level track syllabus)
+    try {
+      await supabase
+        .from("cohort_courses")
+        .upsert(
+          { cohort_id: cohortId, course_id: courseId, due_at: dueAt || null },
+          { onConflict: "cohort_id,course_id", ignoreDuplicates: false }
+        );
+    } catch (ccErr) {
+      console.warn("cohort_courses upsert error:", ccErr);
+    }
+  } else {
+    targetUserIds = Array.isArray(memberUserIds) ? memberUserIds.filter(Boolean) : [];
+    if (!targetUserIds.length) {
+      throw new Error("Please select at least one individual member to assign this course.");
+    }
+
+    // Also record in cohort_courses so the cohort curriculum acknowledges this course
+    try {
+      await supabase
+        .from("cohort_courses")
+        .upsert(
+          { cohort_id: cohortId, course_id: courseId, due_at: dueAt || null },
+          { onConflict: "cohort_id,course_id", ignoreDuplicates: true }
+        );
+    } catch {}
+  }
+
+  // 2. Fetch existing cohort_learner_courses to prevent duplicates
+  const { data: existingAssignments } = await supabase
+    .from("cohort_learner_courses")
+    .select("user_id")
+    .eq("cohort_id", cohortId)
+    .eq("course_id", courseId);
+
+  const alreadyAssignedUserIds = new Set((existingAssignments || []).map((r) => r.user_id));
+  const newAssigneeIds = targetUserIds.filter((uid) => !alreadyAssignedUserIds.has(uid));
+
+  // 3. Insert into cohort_learner_courses
+  if (newAssigneeIds.length > 0) {
+    const learnerCourseRows = newAssigneeIds.map((uid) => ({
+      cohort_id: cohortId,
+      user_id: uid,
+      course_id: courseId,
+      assigned_by: authUserId,
+    }));
+    const { error: insertErr } = await supabase
+      .from("cohort_learner_courses")
+      .insert(learnerCourseRows);
+    if (insertErr) {
+      console.warn("cohort_learner_courses insert warning:", insertErr);
+    }
+  }
+
+  // 4. Upsert into course_enrollments so each learner has it in their active dashboard
+  if (targetUserIds.length > 0) {
+    const enrollments = targetUserIds.map((uid) => ({
+      user_id: uid,
+      course_id: courseId,
+      status: "enrolled",
+      progress_percentage: 0,
+    }));
+    try {
+      await supabase
+        .from("course_enrollments")
+        .upsert(enrollments, { onConflict: "user_id,course_id", ignoreDuplicates: true });
+    } catch (enrErr) {
+      console.warn("course_enrollments upsert warning:", enrErr);
+    }
+  }
+
+  // 5. Post an activity announcement to cohort feed
+  try {
+    const { data: courseRow } = await supabase
+      .from("courses")
+      .select("title")
+      .eq("id", courseId)
+      .maybeSingle();
+    const courseTitle = courseRow?.title || "Course Curriculum";
+    const scopeMsg = scope === "cohort" ? "the entire cohort" : `${targetUserIds.length} member(s)`;
+    const dueMsg = dueAt ? ` • Due: ${new Date(dueAt).toLocaleDateString()}` : "";
+    if (authUserId) {
+      await supabase.from("cohort_posts").insert({
+        cohort_id: cohortId,
+        author_id: authUserId,
+        content: `📚 Course Assigned: "${courseTitle}" has been assigned to ${scopeMsg}!${dueMsg}`,
+        is_announcement: true,
+      });
+    }
+  } catch {}
+
+  const finalCount = targetUserIds.length;
+  return {
+    success: true,
+    count: finalCount,
+    scope,
+    newlyAssigned: newAssigneeIds.length,
+    message: scope === "cohort"
+      ? `Successfully assigned to entire cohort (${finalCount} member${finalCount === 1 ? "" : "s"}).`
+      : `Successfully assigned to ${finalCount} selected member${finalCount === 1 ? "" : "s"}.`,
+  };
+}
+
+/**
+ * Unassigns a course from a specific learner or from the entire cohort
+ */
+export async function unassignCohortCourse({ cohortId, courseId, userId = null }) {
+  if (!cohortId || !courseId) return { success: false, error: "Missing cohort or course ID" };
+  if (!supabase) return { success: true, message: "Course unassigned." };
+
+  try {
+    if (userId) {
+      await supabase
+        .from("cohort_learner_courses")
+        .delete()
+        .eq("cohort_id", cohortId)
+        .eq("course_id", courseId)
+        .eq("user_id", userId);
+    } else {
+      // Unassign from entire cohort
+      await supabase
+        .from("cohort_learner_courses")
+        .delete()
+        .eq("cohort_id", cohortId)
+        .eq("course_id", courseId);
+
+      await supabase
+        .from("cohort_courses")
+        .delete()
+        .eq("cohort_id", cohortId)
+        .eq("course_id", courseId);
+    }
+    return { success: true, message: "Course unassigned successfully." };
+  } catch (err) {
+    console.error("unassignCohortCourse error:", err);
+    throw err;
+  }
+}
+
+
