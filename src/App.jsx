@@ -188,6 +188,13 @@ export default function App() {
   // signup, or an existing-but-signed-out account) - set right before
   // switching publicView to "auth" below.
   const [inviteAuthEmail, setInviteAuthEmail] = useState("");
+  const [authInitialMode, setAuthInitialMode] = useState(() => {
+    try {
+      const m = new URLSearchParams(window.location.search).get("mode");
+      if (m === "signup" || m === "signin") return m;
+    } catch {}
+    return "";
+  });
 
   const [demoSectorParam, setDemoSectorParam] = useState("academies");
   const [publicView, setPublicView] = useState(() => {
@@ -221,7 +228,11 @@ export default function App() {
         const params = new URLSearchParams(window.location.search);
         if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") {
           setPublicView("book-demo");
+        } else if (params.get("view") === "marketplace" || window.location.pathname === "/marketplace") {
+          setPublicView("marketplace");
         } else if (params.get("view") === "auth") {
+          const modeParam = params.get("mode");
+          if (modeParam === "signup" || modeParam === "signin") setAuthInitialMode(modeParam);
           setPublicView("auth");
         } else if (!session) {
           setPublicView("landing");
@@ -451,7 +462,8 @@ export default function App() {
               setPublicView("book-demo");
             }}
             onSignIn={() => {
-              try { window.history.pushState({}, "", "?view=auth"); } catch {}
+              setAuthInitialMode("signin");
+              try { window.history.pushState({}, "", "?view=auth&mode=signin"); } catch {}
               setPublicView("auth");
             }}
           />
@@ -467,6 +479,7 @@ export default function App() {
             onSignUp={signUp}
             authError={authError}
             initialEmail={inviteAuthEmail}
+            initialMode={authInitialMode}
             onForgotPassword={sendPasswordReset}
             onVerifyRecoveryOtp={verifyRecoveryOtp}
             onGoHome={() => {
@@ -491,8 +504,13 @@ export default function App() {
             }}
             onNavigate={(target) => {
               if (["signin", "signup"].includes(target)) {
-                try { window.history.pushState({}, "", "?view=auth"); } catch {}
+                const nextMode = target === "signup" ? "signup" : "signin";
+                setAuthInitialMode(nextMode);
+                try { window.history.pushState({}, "", `?view=auth&mode=${nextMode}`); } catch {}
                 setPublicView("auth");
+              } else if (target === "marketplace") {
+                try { window.history.pushState({}, "", "?view=marketplace"); } catch {}
+                setPublicView("marketplace");
               } else {
                 try { window.history.pushState({}, "", window.location.pathname); } catch {}
                 setPublicView("landing");
@@ -512,8 +530,13 @@ export default function App() {
         <LandingPage
           onNavigate={(target, data) => {
             if (["signin", "signup", "courses", "mentors"].includes(target)) {
-              try { window.history.pushState({}, "", "?view=auth"); } catch {}
+              const nextMode = target === "signin" ? "signin" : "signup";
+              setAuthInitialMode(nextMode);
+              try { window.history.pushState({}, "", `?view=auth&mode=${nextMode}`); } catch {}
               setPublicView("auth");
+            } else if (target === "marketplace") {
+              try { window.history.pushState({}, "", "?view=marketplace"); } catch {}
+              setPublicView("marketplace");
             } else if (target === "demo" || target === "book-demo") {
               if (data?.sector) setDemoSectorParam(data.sector);
               try { window.history.pushState({}, "", "?view=book-demo"); } catch {}

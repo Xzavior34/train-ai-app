@@ -176,7 +176,15 @@ export default function LandingPage({ onNavigate }) {
   function navigate(target, data) {
     setMenuOpen(false);
     if (typeof onNavigate === "function") return onNavigate(target, data);
-    window.location.href = target === "book-demo" ? "/?view=book-demo" : "/?view=auth";
+    if (target === "book-demo" || target === "demo") {
+      window.location.href = "/?view=book-demo";
+    } else if (target === "marketplace") {
+      window.location.href = "/?view=marketplace";
+    } else if (target === "signup") {
+      window.location.href = "/?view=auth&mode=signup";
+    } else {
+      window.location.href = "/?view=auth&mode=signin";
+    }
   }
 
   function scrollToSection(id) {

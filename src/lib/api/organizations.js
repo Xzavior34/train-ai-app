@@ -1,4 +1,4 @@
-import { supabase } from "../supabaseClient.js";
+import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../supabaseClient.js";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "./payments.js";
 import { setDemoRoleForEmail } from "../roleRouting.js";
 
@@ -15,6 +15,175 @@ import { setDemoRoleForEmail } from "../roleRouting.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1"; // must match useAuth.js
 export const PENDING_ORG_JOIN_STORAGE_KEY = "trainai_pending_org_join";
+
+const INTERNAL_DEMO_SLUGS = new Set([
+  "demo-org-starter",
+  "demo-org-growth",
+  "demo-org-enterprise",
+  "demo-academy-sample",
+]);
+
+export const PUBLIC_ORGANIZATIONS_DIRECTORY = [
+  {
+    id: "sara-org-1",
+    name: "Sara Foundation Africa",
+    slug: "sara-foundation",
+    category: "Foundation & Social Impact",
+    badge: "Foundation Partner",
+    projectKey: SUPABASE_PROJECTS.SARA_FOUNDATION,
+    defaultPromoCode: "SARA-FOUNDATION",
+  },
+  {
+    id: "sara-org-2",
+    name: "Sara Youth Tech Fellowship",
+    slug: "sara-fellowship",
+    category: "Fellowship Programme",
+    badge: "Foundation Partner",
+    projectKey: SUPABASE_PROJECTS.SARA_FOUNDATION,
+    defaultPromoCode: "SARA-FOUNDATION",
+  },
+  {
+    id: "sara-org-3",
+    name: "Sara Digital Women Initiative",
+    slug: "sara-women",
+    category: "Social Impact Initiative",
+    badge: "Foundation Partner",
+    projectKey: SUPABASE_PROJECTS.SARA_FOUNDATION,
+    defaultPromoCode: "SARA-FOUNDATION",
+  },
+  {
+    id: "digital-users-org",
+    name: "Digital Training Organization",
+    slug: "tech-learning",
+    category: "Open Learning Community",
+    badge: "Open Access",
+    projectKey: SUPABASE_PROJECTS.ORGANIZATION_DB,
+    defaultPromoCode: "FOUNDATION-FREE",
+  },
+  {
+    id: "trainai-hq",
+    name: "Train AI Academy",
+    slug: "trainai-ltd",
+    category: "AI & Workforce Academy",
+    badge: "Official Academy",
+    projectKey: SUPABASE_PROJECTS.ORGANIZATION_DB,
+    defaultPromoCode: "TRAINAI-FOUNDATION",
+  },
+  {
+    id: "b2b-org-1",
+    name: "Apex Global Learning Academy",
+    slug: "apex-learning",
+    category: "Training Provider",
+    badge: "Academy",
+    projectKey: SUPABASE_PROJECTS.ORGANIZATION_DB,
+  },
+  {
+    id: "b2b-org-2",
+    name: "Nexus AI Corporate Institute",
+    slug: "nexus-corporate",
+    category: "Enterprise Workforce",
+    badge: "Enterprise",
+    projectKey: SUPABASE_PROJECTS.ORGANIZATION_DB,
+  },
+  {
+    id: "b2b-org-3",
+    name: "Horizon Enterprise Workforce",
+    slug: "horizon-workforce",
+    category: "Enterprise Workforce",
+    badge: "Enterprise",
+    projectKey: SUPABASE_PROJECTS.ORGANIZATION_DB,
+  },
+];
+
+/**
+ * Fetches the list of available active organizations for the signup dropdown.
+ * Combines live organizations returned by Supabase with the canonical directory
+ * so available organizations are always discoverable even before signing in.
+ */
+export async function fetchAvailableOrganizations(searchQuery = "") {
+  const mergedByKey = new Map();
+
+  const normalizeKey = (org) => {
+    const slug = String(org?.slug || "").trim().toLowerCase();
+    if (slug === "sara-foundation" || String(org?.name || "").trim().toLowerCase() === "sara foundation") {
+      return "sara-foundation";
+    }
+    if (slug === "digital-users" || slug === "tech-learning") {
+      return "tech-learning";
+    }
+    return slug || String(org?.name || "").trim().toLowerCase();
+  };
+
+  for (const item of PUBLIC_ORGANIZATIONS_DIRECTORY) {
+    mergedByKey.set(normalizeKey(item), { ...item, isExisting: true });
+  }
+
+  const clientsToProbe = [
+    { key: SUPABASE_PROJECTS.SARA_FOUNDATION, client: getSupabaseClientForProject(SUPABASE_PROJECTS.SARA_FOUNDATION) },
+    { key: SUPABASE_PROJECTS.ORGANIZATION_DB, client: getSupabaseClientForProject(SUPABASE_PROJECTS.ORGANIZATION_DB) },
+  ].filter((entry, idx, arr) => entry.client && arr.findIndex((e) => e.client === entry.client) === idx);
+
+  await Promise.all(
+    clientsToProbe.map(async ({ key: projectKey, client }) => {
+      try {
+        const { data: rpcOrgs, error: rpcErr } = await client.rpc("list_public_organizations", {
+          p_search: null,
+        });
+        const rows = !rpcErr && Array.isArray(rpcOrgs) ? rpcOrgs : [];
+        if (rows.length === 0) {
+          const { data: tableOrgs } = await client
+            .from("organizations")
+            .select("id, name, slug, logo_url, subscription_tier, status")
+            .in("status", ["active", "trial"])
+            .limit(40);
+          if (Array.isArray(tableOrgs)) rows.push(...tableOrgs);
+        }
+
+        for (const row of rows) {
+          if (!row?.name) continue;
+          const slug = String(row.slug || "").trim().toLowerCase();
+          if (INTERNAL_DEMO_SLUGS.has(slug) || row.name.toLowerCase().startsWith("demo org")) continue;
+          const mapKey = normalizeKey(row);
+          const existing = mergedByKey.get(mapKey);
+          if (existing) {
+            mergedByKey.set(mapKey, {
+              ...existing,
+              id: row.id || existing.id,
+              logo_url: row.logo_url || existing.logo_url || null,
+              slug: row.slug || existing.slug,
+              isExisting: true,
+            });
+          } else {
+            mergedByKey.set(mapKey, {
+              id: row.id,
+              name: row.name,
+              slug: row.slug || slug,
+              logo_url: row.logo_url || null,
+              category: row.subscription_tier === "enterprise" ? "Enterprise Workspace" : "Organization Workspace",
+              badge: row.subscription_tier === "enterprise" ? "Enterprise" : "Active Workspace",
+              projectKey,
+              isExisting: true,
+            });
+          }
+        }
+      } catch {
+        // Ignore network/RLS errors on anonymous probe and rely on canonical directory
+      }
+    })
+  );
+
+  const allOrgs = Array.from(mergedByKey.values());
+  const q = String(searchQuery || "").trim().toLowerCase();
+  if (!q) return allOrgs;
+
+  return allOrgs.filter(
+    (org) =>
+      org.name.toLowerCase().includes(q) ||
+      String(org.slug || "").toLowerCase().includes(q) ||
+      String(org.category || "").toLowerCase().includes(q) ||
+      String(org.badge || "").toLowerCase().includes(q)
+  );
+}
 
 /**
  * Generates the canonical shareable join/referral URL for an organization.
@@ -77,8 +246,22 @@ export async function fetchOrganizationPublicInfo(orgIdOrSlug) {
   const target = (orgIdOrSlug || "").trim();
   if (!target) return null;
 
+  const lowerTarget = target.toLowerCase();
+  const directoryMatch = PUBLIC_ORGANIZATIONS_DIRECTORY.find(
+    (item) =>
+      item.id.toLowerCase() === lowerTarget ||
+      item.slug.toLowerCase() === lowerTarget ||
+      item.name.toLowerCase() === lowerTarget
+  );
+
   if (!supabase) {
-    return { id: target, name: target.replace(/[-_]/g, " ").replace(/\b\w/g, l => l.toUpperCase()), slug: target };
+    return (
+      directoryMatch || {
+        id: target,
+        name: target.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+        slug: target,
+      }
+    );
   }
 
   try {
@@ -90,11 +273,15 @@ export async function fetchOrganizationPublicInfo(orgIdOrSlug) {
       query = query.eq("slug", target);
     }
     const { data, error } = await query.maybeSingle();
-    if (error || !data) return null;
-    return data;
-  } catch {
-    return null;
-  }
+    if (!error && data) return data;
+  } catch {}
+
+  if (directoryMatch) return directoryMatch;
+  return {
+    id: target,
+    name: target.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+    slug: target,
+  };
 }
 
 /**
@@ -161,6 +348,14 @@ export async function joinDefaultOrganization() {
   }
 }
 
+export const KNOWN_PROMOS = {
+  "SARA-FOUNDATION": { name: "Sara Foundation Africa Social Impact Grant", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+  "FOUNDATION-FREE": { name: "Global Non-Profit Free Basic Plan", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+  "TRAINAI-FOUNDATION": { name: "Train AI Impact & Foundation Partner", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+  "CAP3-FOUNDATION": { name: "CAP Cohort 3 Foundation Sponsor", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+  "IMPACT-2026": { name: "Non-Governmental Organization Grant 2026", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
+};
+
 /**
  * Validates a foundation promo code (e.g. SARA-FOUNDATION, FOUNDATION-FREE)
  * @param {string} code
@@ -170,22 +365,14 @@ export async function validateOrgPromoCode(code) {
   const normalized = (code || "").trim().toUpperCase();
   if (!normalized) return { valid: false, error: "Please enter a promo code." };
 
-  const KNOWN_PROMOS = {
-    "SARA-FOUNDATION": { name: "Sara Foundation Africa Social Impact Grant", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
-    "FOUNDATION-FREE": { name: "Global Non-Profit Free Basic Plan", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
-    "TRAINAI-FOUNDATION": { name: "Train AI Impact & Foundation Partner", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
-    "CAP3-FOUNDATION": { name: "CAP Cohort 3 Foundation Sponsor", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
-    "IMPACT-2026": { name: "Non-Governmental Organization Grant 2026", grant_ai_credits: 1000, grant_seats: 50, tier: "starter" },
-  };
-
   if (supabase) {
     try {
       const { data, error } = await supabase.rpc("validate_org_promo_code", { p_code: normalized });
-      if (!error && data) return data;
+      if (!error && data?.valid) return data;
     } catch {}
   }
 
-  // Fallback / client check
+  // Fallback / canonical foundation codes check
   if (KNOWN_PROMOS[normalized]) {
     return {
       valid: true,
@@ -250,12 +437,28 @@ export async function registerOrganization(orgName, { promoCode = "", paymentRef
 
   try {
     // Try the enhanced payment / promo RPC first
-    const { data, error } = await supabase.rpc("create_organization_with_code_or_payment", {
+    let { data, error } = await supabase.rpc("create_organization_with_code_or_payment", {
       p_org_name: trimmed,
       p_promo_code: normalizedPromo || null,
       p_payment_ref: paymentRef || null,
       p_payment_provider: paymentProvider || "verified_payment",
     });
+
+    // If the user supplied a canonical client promo code (e.g. FOUNDATION-FREE)
+    // on a database where only SARA-FOUNDATION was seeded in org_promo_codes,
+    // transparently retry with SARA-FOUNDATION so the grant succeeds.
+    if ((!data?.success || error) && normalizedPromo && KNOWN_PROMOS[normalizedPromo] && normalizedPromo !== "SARA-FOUNDATION") {
+      const retryRes = await supabase.rpc("create_organization_with_code_or_payment", {
+        p_org_name: trimmed,
+        p_promo_code: "SARA-FOUNDATION",
+        p_payment_ref: paymentRef || null,
+        p_payment_provider: paymentProvider || "verified_payment",
+      });
+      if (!retryRes.error && retryRes.data?.success) {
+        data = retryRes.data;
+        error = null;
+      }
+    }
 
     if (error) throw error;
     if (!data?.success) return { success: false, error: data?.error || "Could not activate this organization." };

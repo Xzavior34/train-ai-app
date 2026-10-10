@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock, KeyRound, HelpCircle, RefreshCw, Gift, CreditCard, Sparkles, Check, X } from "lucide-react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock, KeyRound, HelpCircle, RefreshCw, Gift, CreditCard, Sparkles, Check, X, ChevronDown, Search, Plus } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
 import {
   registerOrganization,
@@ -8,26 +8,47 @@ import {
   attributeReferralSignupIfPending,
   joinOrganizationByReferral,
   getPendingOrganizationJoin,
-  fetchOrganizationPublicInfo
+  fetchOrganizationPublicInfo,
+  fetchAvailableOrganizations,
+  PUBLIC_ORGANIZATIONS_DIRECTORY,
 } from "../../lib/api/organizations.js";
 import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../../lib/authRateLimiter.js";
 
 export default function AuthPage({
-  onSignIn, onSignUp, authError, initialEmail = "",
+  onSignIn, onSignUp, authError, initialEmail = "", initialMode = "",
   onForgotPassword, onVerifyRecoveryOtp, recoveryMode = false, recoverySessionReady = false, onCompletePasswordReset,
   onGoHome, orgParam = ""
 }) {
-  const [mode, setMode] = useState("signin");
+  const [mode, setMode] = useState(() => {
+    if (recoveryMode) return "recovery";
+    if (initialMode === "signup" || initialMode === "signin") return initialMode;
+    try {
+      const urlMode = new URLSearchParams(window.location.search).get("mode");
+      if (urlMode === "signup" || urlMode === "signin") return urlMode;
+    } catch {}
+    return "signin";
+  });
 
   useEffect(() => {
     if (recoveryMode) setMode("recovery");
   }, [recoveryMode]);
+
+  useEffect(() => {
+    if (!recoveryMode && (initialMode === "signup" || initialMode === "signin")) {
+      setMode(initialMode);
+    }
+  }, [initialMode, recoveryMode]);
 
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [accountType, setAccountType] = useState("organization");
   const [orgName, setOrgName] = useState("");
+  const [availableOrgs, setAvailableOrgs] = useState(PUBLIC_ORGANIZATIONS_DIRECTORY);
+  const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
+  const [highlightedOrgIndex, setHighlightedOrgIndex] = useState(0);
+  const [selectedDirectoryOrg, setSelectedDirectoryOrg] = useState(null);
+  const orgDropdownRef = useRef(null);
   const [promoCode, setPromoCode] = useState("");
   const [promoValidation, setPromoValidation] = useState(null);
   const [validatingPromo, setValidatingPromo] = useState(false);
@@ -79,11 +100,64 @@ export default function AuthPage({
   const [orgInfo, setOrgInfo] = useState(null);
 
   useEffect(() => {
+    let active = true;
+    fetchAvailableOrganizations()
+      .then((orgs) => {
+        if (active && Array.isArray(orgs) && orgs.length > 0) {
+          setAvailableOrgs(orgs);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (orgDropdownRef.current && !orgDropdownRef.current.contains(event.target)) {
+        setOrgDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOrgs = useMemo(() => {
+    const query = orgName.trim().toLowerCase();
+    // If empty or matches the currently selected organization exactly, show all available organizations
+    if (!query || (selectedDirectoryOrg && selectedDirectoryOrg.name.toLowerCase() === query)) {
+      return availableOrgs;
+    }
+    return availableOrgs.filter(
+      (org) =>
+        org.name.toLowerCase().includes(query) ||
+        String(org.slug || "").toLowerCase().includes(query) ||
+        String(org.category || "").toLowerCase().includes(query) ||
+        String(org.badge || "").toLowerCase().includes(query)
+    );
+  }, [availableOrgs, orgName, selectedDirectoryOrg]);
+
+  const exactOrgMatch = useMemo(() => {
+    const query = orgName.trim().toLowerCase();
+    if (!query) return null;
+    return availableOrgs.find(
+      (org) => org.name.toLowerCase() === query || String(org.slug || "").toLowerCase() === query
+    ) || null;
+  }, [availableOrgs, orgName]);
+
+  useEffect(() => {
     const target = orgParam || getPendingOrganizationJoin()?.orgIdOrSlug || "";
     setTargetOrgTarget(target);
     if (target) {
       fetchOrganizationPublicInfo(target).then((info) => {
-        if (info) setOrgInfo(info);
+        if (info) {
+          setOrgInfo(info);
+          if (!orgName && info.name) {
+            setOrgName(info.name);
+            setSelectedDirectoryOrg(info);
+          }
+        }
       }).catch(() => {});
     }
   }, [orgParam]);
@@ -209,28 +283,69 @@ export default function AuthPage({
     setPromoCode(trimmed);
     if (!trimmed) {
       setPromoValidation(null);
-      return;
+      return null;
     }
     setValidatingPromo(true);
     try {
       const res = await validateOrgPromoCode(trimmed);
       setPromoValidation(res);
+      return res;
     } catch {
-      setPromoValidation({ valid: false, error: "Could not validate code." });
+      const fallback = { valid: false, error: "Could not validate code." };
+      setPromoValidation(fallback);
+      return fallback;
     } finally {
       setValidatingPromo(false);
     }
   }
 
-  async function executeOrgSignup(paymentReference = null, paymentProvider = "verified_payment") {
+  function handleSelectOrganization(org) {
+    if (!org) return;
+    setOrgName(org.name);
+    setSelectedDirectoryOrg(org);
+    setOrgDropdownOpen(false);
+    if (orgError) setOrgError("");
+    if (org.defaultPromoCode && !promoCode.trim()) {
+      handleCheckPromoCode(org.defaultPromoCode);
+    }
+  }
+
+  function handleOrgInputKeyDown(e) {
+    if (!orgDropdownOpen && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      setOrgDropdownOpen(true);
+      return;
+    }
+    if (!orgDropdownOpen) return;
+
+    const totalItems = filteredOrgs.length + (orgName.trim() && !exactOrgMatch ? 1 : 0);
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedOrgIndex((prev) => (totalItems > 0 ? (prev + 1) % totalItems : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedOrgIndex((prev) => (totalItems > 0 ? (prev - 1 + totalItems) % totalItems : 0));
+    } else if (e.key === "Enter" && totalItems > 0) {
+      e.preventDefault();
+      if (highlightedOrgIndex < filteredOrgs.length) {
+        handleSelectOrganization(filteredOrgs[highlightedOrgIndex]);
+      } else {
+        setOrgDropdownOpen(false);
+      }
+    } else if (e.key === "Escape") {
+      setOrgDropdownOpen(false);
+    }
+  }
+
+  async function executeOrgSignup(paymentReference = null, paymentProvider = "verified_payment", overridePromoCode = "") {
     setSubmitting(true);
     setOrgError("");
     try {
+      const matchedOrg = selectedDirectoryOrg || exactOrgMatch;
       const signupRole = "learner";
-      const result = await onSignUp(email, password, signupRole, "organization");
+      const result = await onSignUp(email, password, signupRole, "organization", matchedOrg?.projectKey);
 
       if (result?.error) {
-        setOrgError(result.error);
+        setOrgError(result.error?.message || String(result.error));
         setSubmitting(false);
         return false;
       }
@@ -239,13 +354,28 @@ export default function AuthPage({
         attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
       }
 
+      const effectivePromo = overridePromoCode || (promoValidation?.valid ? promoCode : "") || matchedOrg?.defaultPromoCode || "";
+
+      if (!effectivePromo && !paymentReference && matchedOrg?.isExisting) {
+        const joinRes = await joinOrganizationByReferral(matchedOrg.slug || matchedOrg.id, "learner");
+        if (joinRes?.success) {
+          window.location.reload();
+          return true;
+        }
+      }
+
       const orgResult = await registerOrganization(orgName, {
-        promoCode: promoValidation?.valid ? promoCode : "",
+        promoCode: effectivePromo,
         paymentRef: paymentReference || null,
-        paymentProvider: promoValidation?.valid ? "promo_code" : paymentProvider,
+        paymentProvider: effectivePromo ? "promo_code" : paymentProvider,
       });
 
       if (!orgResult.success) {
+        if (matchedOrg?.isExisting) {
+          await joinOrganizationByReferral(matchedOrg.slug || matchedOrg.id, "learner").catch(() => {});
+          window.location.reload();
+          return true;
+        }
         setOrgError(orgResult.error || "Account created, but we could not register your organization. You can complete this from Settings.");
         setSubmitting(false);
         return false;
@@ -264,7 +394,7 @@ export default function AuthPage({
     e.preventDefault();
     if (!email.trim() || !password.trim()) return;
     if (mode === "signup" && accountType === "organization" && orgName.trim().length < 2) {
-      setOrgError("Enter your organization name to continue.");
+      setOrgError("Select or enter your organization name to continue.");
       return;
     }
     setOrgError("");
@@ -286,8 +416,24 @@ export default function AuthPage({
     } else {
       // Sign-up branch
       if (accountType === "organization") {
-        // If valid foundation code, proceed immediately with waived payment
+        const matchedOrg = selectedDirectoryOrg || exactOrgMatch;
         if (promoValidation?.valid) {
+          await executeOrgSignup(null, "promo_code", promoCode);
+        } else if (promoCode.trim()) {
+          const checkRes = await handleCheckPromoCode(promoCode);
+          if (checkRes?.valid) {
+            await executeOrgSignup(null, "promo_code", promoCode.trim());
+          } else {
+            setOrgError(checkRes?.error || "Please enter a valid Foundation / Promo Code or clear the field.");
+          }
+        } else if (matchedOrg?.defaultPromoCode) {
+          const checkRes = await handleCheckPromoCode(matchedOrg.defaultPromoCode);
+          if (checkRes?.valid) {
+            await executeOrgSignup(null, "promo_code", matchedOrg.defaultPromoCode);
+          } else {
+            setShowPaymentModal(true);
+          }
+        } else if (matchedOrg?.isExisting) {
           await executeOrgSignup();
         } else {
           // Paid organisation activation must use a verified provider flow.
@@ -296,13 +442,15 @@ export default function AuthPage({
       } else {
         // Individual learner sign-up
         setSubmitting(true);
-        const result = await onSignUp(email, password, "learner", "learner");
+        const matchedOrg = selectedDirectoryOrg || exactOrgMatch;
+        const result = await onSignUp(email, password, "learner", "learner", matchedOrg?.projectKey);
         if (!result?.error && result?.data?.user?.id) {
           attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
         }
         if (!result?.error) {
-          if (targetOrgTarget) {
-            await joinOrganizationByReferral(targetOrgTarget, "learner").catch(() => {});
+          const joinTarget = matchedOrg?.slug || matchedOrg?.id || targetOrgTarget;
+          if (joinTarget) {
+            await joinOrganizationByReferral(joinTarget, "learner").catch(() => {});
           } else {
             joinDefaultOrganization().catch(() => {});
           }
@@ -322,6 +470,12 @@ export default function AuthPage({
         .auth-input {
           background-color: #FFFFFF !important;
           color: #0F172A !important;
+        }
+        .auth-input::placeholder {
+          text-transform: none !important;
+          font-weight: 400 !important;
+          letter-spacing: normal !important;
+          color: #94A3B8 !important;
         }
         .auth-input:focus {
           outline: none;
@@ -344,6 +498,8 @@ export default function AuthPage({
         .role-picker-card { transition: border-color .15s ease, background-color .15s ease; }
         .role-picker-card:hover { border-color: #CBD5E1; }
         .role-picker-card.active { border-color: #2563EB !important; background: #EFF6FF !important; }
+        .org-dropdown-item { transition: background-color .12s ease; }
+        .org-dropdown-item:hover { background-color: #F1F5F9 !important; }
         @media (max-width: 440px) {
           .auth-card { padding: 24px 18px !important; }
           .role-picker-header { flex-wrap: wrap; row-gap: 4px; }
@@ -844,29 +1000,335 @@ export default function AuthPage({
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>Access courses, AI quizzes, and community independently.</span>
                 </div>
 
-                {accountType === "organization" && (
-                  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div>
-                      <label style={styles.label}>Organization name</label>
-                      <div style={styles.inputWrap}>
-                        <Building2 size={15} color="#94A3B8" style={styles.inputIcon} />
-                        <input
-                          type="text"
-                          value={orgName}
-                          onChange={(e) => { setOrgName(e.target.value); if (orgError) setOrgError(""); }}
-                          className="auth-input"
-                          style={styles.input}
-                          placeholder="Acme Corporation or Foundation"
-                        />
-                      </div>
-                      {orgError && <div style={{ ...styles.breachBox, marginTop: 8 }}><ShieldAlert size={14} style={{ flexShrink: 0, marginTop: 1 }} /><span>{orgError}</span></div>}
+                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div ref={orgDropdownRef} style={{ position: "relative" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <label style={styles.label}>
+                        {accountType === "organization" ? (
+                          "Organization name"
+                        ) : (
+                          <>Organization / Academy <span style={{ color: "#94A3B8", textTransform: "none", fontWeight: 500 }}>(Optional)</span></>
+                        )}
+                      </label>
+                      <span
+                        onClick={() => setOrgDropdownOpen((prev) => !prev)}
+                        style={{ fontSize: 11, color: "#2563EB", fontWeight: 600, cursor: "pointer", userSelect: "none" }}
+                      >
+                        {orgDropdownOpen ? "Hide list" : `Browse organizations (${availableOrgs.length})`}
+                      </span>
                     </div>
 
-                    {/* Foundation / Partner Promo Code (Optional) */}
+                    <div style={styles.inputWrap}>
+                      <Building2 size={15} color={(selectedDirectoryOrg || exactOrgMatch) ? "#2563EB" : "#94A3B8"} style={styles.inputIcon} />
+                      <input
+                        type="text"
+                        value={orgName}
+                        onFocus={() => {
+                          setOrgDropdownOpen(true);
+                          setHighlightedOrgIndex(0);
+                        }}
+                        onClick={() => setOrgDropdownOpen(true)}
+                        onKeyDown={handleOrgInputKeyDown}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setOrgName(val);
+                          setOrgDropdownOpen(true);
+                          setHighlightedOrgIndex(0);
+                          if (selectedDirectoryOrg && selectedDirectoryOrg.name.toLowerCase() !== val.trim().toLowerCase()) {
+                            setSelectedDirectoryOrg(null);
+                          }
+                          if (orgError) setOrgError("");
+                        }}
+                        className="auth-input"
+                        style={{
+                          ...styles.input,
+                          paddingRight: orgName ? 60 : 36,
+                          borderColor: (selectedDirectoryOrg || exactOrgMatch)
+                            ? "#93C5FD"
+                            : orgDropdownOpen
+                              ? "#2563EB"
+                              : "#E2E8F0",
+                        }}
+                        placeholder={
+                          accountType === "organization"
+                            ? "Search or select an organization (or type new)..."
+                            : "Select your organization or academy (optional)..."
+                        }
+                        autoComplete="off"
+                        role="combobox"
+                        aria-expanded={orgDropdownOpen}
+                        aria-autocomplete="list"
+                        aria-haspopup="listbox"
+                      />
+                      {orgName && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOrgName("");
+                            setSelectedDirectoryOrg(null);
+                            setOrgDropdownOpen(true);
+                            setHighlightedOrgIndex(0);
+                          }}
+                          style={{
+                            position: "absolute",
+                            right: 30,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: "transparent",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 4,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#94A3B8",
+                          }}
+                          aria-label="Clear organization"
+                          title="Clear organization"
+                          tabIndex={-1}
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setOrgDropdownOpen((prev) => !prev)}
+                        style={{
+                          position: "absolute",
+                          right: 6,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 6,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: orgDropdownOpen ? "#2563EB" : "#64748B",
+                        }}
+                        aria-label="Toggle available organizations dropdown"
+                        title="Show available organizations"
+                        tabIndex={-1}
+                      >
+                        <ChevronDown
+                          size={16}
+                          style={{
+                            transform: orgDropdownOpen ? "rotate(180deg)" : "none",
+                            transition: "transform 0.15s ease",
+                          }}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Searchable Available Organizations Dropdown Menu */}
+                    {orgDropdownOpen && (
+                      <div
+                        role="listbox"
+                        style={{
+                          position: "absolute",
+                          top: "calc(100% + 6px)",
+                          left: 0,
+                          right: 0,
+                          background: "#FFFFFF",
+                          border: "1px solid #CBD5E1",
+                          borderRadius: 10,
+                          boxShadow: "0 12px 28px -6px rgba(15, 23, 42, 0.16), 0 4px 10px -2px rgba(15, 23, 42, 0.06)",
+                          zIndex: 60,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: "7px 12px",
+                            background: "#F8FAFC",
+                            borderBottom: "1px solid #E2E8F0",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                            color: "#64748B",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                            <Search size={11} color="#2563EB" /> Available Organizations ({filteredOrgs.length})
+                          </span>
+                          <span>Click to select</span>
+                        </div>
+
+                        <div style={{ maxHeight: 224, overflowY: "auto" }}>
+                          {filteredOrgs.length > 0 ? (
+                            filteredOrgs.map((org, idx) => {
+                              const isSelected =
+                                (selectedDirectoryOrg && selectedDirectoryOrg.slug === org.slug) ||
+                                orgName.trim().toLowerCase() === org.name.toLowerCase();
+                              const isHighlighted = idx === highlightedOrgIndex;
+                              const isFoundation = Boolean(org.defaultPromoCode);
+                              return (
+                                <div
+                                  key={org.id || org.slug || org.name}
+                                  role="option"
+                                  aria-selected={isSelected}
+                                  className="org-dropdown-item"
+                                  onMouseEnter={() => setHighlightedOrgIndex(idx)}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleSelectOrganization(org);
+                                  }}
+                                  style={{
+                                    padding: "9px 12px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 10,
+                                    cursor: "pointer",
+                                    borderBottom: "1px solid #F1F5F9",
+                                    background: isSelected
+                                      ? "#EFF6FF"
+                                      : isHighlighted
+                                        ? "#F8FAFC"
+                                        : "#FFFFFF",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      width: 28,
+                                      height: 28,
+                                      borderRadius: 7,
+                                      background: isFoundation ? "#ECFDF5" : "#EFF6FF",
+                                      color: isFoundation ? "#059669" : "#2563EB",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      flexShrink: 0,
+                                    }}
+                                  >
+                                    <Building2 size={14} />
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div
+                                      style={{
+                                        fontSize: 13,
+                                        fontWeight: 700,
+                                        color: "#0F172A",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      }}
+                                    >
+                                      {org.name}
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: 11,
+                                        color: "#64748B",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      }}
+                                    >
+                                      {org.category || "Organization Workspace"}
+                                    </div>
+                                  </div>
+                                  {org.badge && (
+                                    <span
+                                      style={{
+                                        fontSize: 10,
+                                        fontWeight: 700,
+                                        padding: "2px 6px",
+                                        borderRadius: 999,
+                                        background: isFoundation ? "#D1FAE5" : "#E0E7FF",
+                                        color: isFoundation ? "#065F46" : "#1E40AF",
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      {org.badge}
+                                    </span>
+                                  )}
+                                  {isSelected && <Check size={14} color="#2563EB" style={{ flexShrink: 0 }} />}
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div style={{ padding: "12px 14px", fontSize: 12, color: "#64748B" }}>
+                              No matching organization in directory.
+                            </div>
+                          )}
+
+                          {accountType === "organization" && orgName.trim().length >= 2 && !exactOrgMatch && (
+                            <div
+                              className="org-dropdown-item"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setSelectedDirectoryOrg(null);
+                                setOrgDropdownOpen(false);
+                              }}
+                              style={{
+                                padding: "9px 12px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                cursor: "pointer",
+                                background: "#F8FAFC",
+                                borderTop: "1px solid #E2E8F0",
+                                color: "#2563EB",
+                                fontSize: 12,
+                                fontWeight: 700,
+                              }}
+                            >
+                              <Plus size={14} color="#2563EB" style={{ flexShrink: 0 }} />
+                              <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                Create new organization &ldquo;{orgName.trim()}&rdquo;
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {(selectedDirectoryOrg || exactOrgMatch) && (
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: 11.5,
+                          color: "#1E40AF",
+                          background: "#EFF6FF",
+                          border: "1px solid #BFDBFE",
+                          borderRadius: 6,
+                          padding: "5px 9px",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <CheckCircle2 size={13} color="#2563EB" style={{ flexShrink: 0 }} />
+                        <span>
+                          Selected: <strong>{(selectedDirectoryOrg || exactOrgMatch).name}</strong>
+                        </span>
+                      </div>
+                    )}
+
+                    {orgError && (
+                      <div style={{ ...styles.breachBox, marginTop: 8 }}>
+                        <ShieldAlert size={14} style={{ flexShrink: 0, marginTop: 1 }} />
+                        <span>{orgError}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Foundation / Partner Promo Code (Optional) - shown for Organization accounts */}
+                  {accountType === "organization" && (
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <label style={styles.label}>Foundation / Promo Code <span style={{ color: "#94A3B8", textTransform: "none", fontWeight: 500 }}>(Optional)</span></label>
-                        {validatingPromo && <span style={{ fontSize: 11, color: "#2563EB", fontWeight: 700 }}>Checking code...</span>}
+                        <label style={styles.label}>
+                          Foundation / Promo Code{" "}
+                          <span style={{ color: "#94A3B8", textTransform: "none", fontWeight: 500 }}>(Optional)</span>
+                        </label>
+                        {validatingPromo && (
+                          <span style={{ fontSize: 11, color: "#2563EB", fontWeight: 700 }}>Checking code...</span>
+                        )}
                       </div>
                       <div style={styles.inputWrap}>
                         <Gift size={15} color={promoValidation?.valid ? "#10B981" : "#94A3B8"} style={styles.inputIcon} />
@@ -878,10 +1340,14 @@ export default function AuthPage({
                           className="auth-input"
                           style={{
                             ...styles.input,
-                            borderColor: promoValidation?.valid ? "#10B981" : promoValidation?.valid === false ? "#F87171" : "#E2E8F0",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.04em",
-                            fontWeight: 700
+                            borderColor: promoValidation?.valid
+                              ? "#10B981"
+                              : promoValidation?.valid === false && promoCode.trim()
+                                ? "#F87171"
+                                : "#E2E8F0",
+                            textTransform: promoCode ? "uppercase" : "none",
+                            letterSpacing: promoCode ? "0.04em" : "normal",
+                            fontWeight: promoCode ? 700 : 400,
                           }}
                           placeholder="e.g. SARA-FOUNDATION or FOUNDATION-FREE"
                         />
@@ -889,30 +1355,45 @@ export default function AuthPage({
 
                       {/* Promo Verification Result */}
                       {promoValidation?.valid && (
-                        <div style={{
-                          marginTop: 8,
-                          padding: "8px 12px",
-                          borderRadius: 6,
-                          background: "#ECFDF5",
-                          border: "1px solid #A7F3D0",
-                          color: "#065F46",
-                          fontSize: 12,
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: 8
-                        }}>
+                        <div
+                          style={{
+                            marginTop: 8,
+                            padding: "8px 12px",
+                            borderRadius: 6,
+                            background: "#ECFDF5",
+                            border: "1px solid #A7F3D0",
+                            color: "#065F46",
+                            fontSize: 12,
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 8,
+                          }}
+                        >
                           <Sparkles size={15} color="#10B981" style={{ flexShrink: 0, marginTop: 2 }} />
                           <div>
-                            <div style={{ fontWeight: 800, color: "#047857" }}>{promoValidation.name || "Foundation Grant Verified"}</div>
+                            <div style={{ fontWeight: 800, color: "#047857" }}>
+                              {promoValidation.name || "Foundation Grant Verified"}
+                            </div>
                             <div style={{ fontSize: 11, color: "#065F46", marginTop: 2 }}>
-                              ✓ Payment Waived • Free Basic Plan • {promoValidation.grant_ai_credits || 1000} AI Credits • {promoValidation.grant_seats || 50} Free Seats
+                              ✓ Payment Waived • Free Basic Plan • {promoValidation.grant_ai_credits || 1000} AI Credits •{" "}
+                              {promoValidation.grant_seats || 50} Free Seats
                             </div>
                           </div>
                         </div>
                       )}
 
                       {promoValidation && !promoValidation.valid && promoCode.trim() && (
-                        <div style={{ fontSize: 11.5, color: "#DC2626", marginTop: 5, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                        <div
+                          style={{
+                            fontSize: 11.5,
+                            color: "#DC2626",
+                            marginTop: 5,
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
                           <X size={13} /> {promoValidation.error || "Invalid promo code"}
                         </div>
                       )}
@@ -921,8 +1402,8 @@ export default function AuthPage({
                         Foundations &amp; NGOs with a code bypass subscription fees and unlock free credits.
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 10, display: "flex", alignItems: "center", gap: 5 }}>
                   <ShieldCheck size={13} color="#94A3B8" /> Admin access is granted by your organisation or the platform team.
@@ -1208,22 +1689,26 @@ export default function AuthPage({
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                     placeholder="e.g. SARA-FOUNDATION"
+                    className="auth-input"
                     style={{
                       flex: 1,
                       padding: "7px 10px",
                       borderRadius: 6,
                       border: "1px solid #CBD5E1",
                       fontSize: 12,
-                      fontWeight: 700,
-                      textTransform: "uppercase"
+                      fontWeight: promoCode ? 700 : 400,
+                      textTransform: promoCode ? "uppercase" : "none"
                     }}
                   />
                   <button
                     type="button"
                     onClick={async () => {
-                      await handleCheckPromoCode(promoCode);
-                      if (promoCode.trim().toUpperCase() === "SARA-FOUNDATION" || promoCode.trim().toUpperCase() === "FOUNDATION-FREE") {
+                      const checkRes = await handleCheckPromoCode(promoCode);
+                      if (checkRes?.valid) {
+                        setOrgError("");
                         setShowPaymentModal(false);
+                      } else {
+                        setOrgError(checkRes?.error || "Invalid Foundation Code.");
                       }
                     }}
                     style={{

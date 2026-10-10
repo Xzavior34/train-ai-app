@@ -120,6 +120,9 @@ function readStoredActiveProject() {
 }
 
 function getInitialActiveProject() {
+  const stored = readStoredActiveProject();
+  if (stored && CLIENTS_BY_PROJECT[stored]) return stored;
+
   try {
     const sessionStr = localStorage.getItem("trainai_active_session_v1");
     if (sessionStr) {
@@ -131,8 +134,6 @@ function getInitialActiveProject() {
     }
   } catch {}
 
-  const stored = readStoredActiveProject();
-  if (stored && CLIENTS_BY_PROJECT[stored]) return stored;
   if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.ORGANIZATION_DB]) return SUPABASE_PROJECTS.ORGANIZATION_DB;
   if (CLIENTS_BY_PROJECT[SUPABASE_PROJECTS.SARA_FOUNDATION]) return SUPABASE_PROJECTS.SARA_FOUNDATION;
   return SUPABASE_PROJECTS.ORGANIZATION_DB;
@@ -166,7 +167,13 @@ export function setActiveSupabaseProject(projectKey) {
  * - All other signups (individual learners, organization self-serve, Train AI staff)
  *   -> Train AI 2.0 / Organization Database (djikuoucsuhdiyrhsduz)
  */
-export function resolveProjectForSignUp(email = "", accountType = "learner") {
+export function resolveProjectForSignUp(email = "", accountType = "learner", preferredProject = "") {
+  if (
+    preferredProject === SUPABASE_PROJECTS.SARA_FOUNDATION ||
+    preferredProject === SUPABASE_PROJECTS.ORGANIZATION_DB
+  ) {
+    return preferredProject;
+  }
   const normalized = email.trim().toLowerCase();
   if (normalized.endsWith("@sarafoundationafrica.com") || normalized.endsWith("@sarafoundation.org")) {
     return SUPABASE_PROJECTS.SARA_FOUNDATION;

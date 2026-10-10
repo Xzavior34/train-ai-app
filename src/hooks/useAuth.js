@@ -324,12 +324,12 @@ export function useAuth() {
     return { data: newSession, error: null };
   }, []);
 
-  const signUp = useCallback(async (email, password, role = "learner", accountType = "learner") => {
+  const signUp = useCallback(async (email, password, role = "learner", accountType = "learner", preferredProject = "") => {
     setAuthError(null);
     const normalizedEmail = (email || "").trim().toLowerCase();
     let finalRole = role === "mentor" ? "mentor" : "learner";
 
-    const targetProject = resolveProjectForSignUp(normalizedEmail, accountType);
+    const targetProject = resolveProjectForSignUp(normalizedEmail, accountType, preferredProject);
     setActiveSupabaseProject(targetProject);
     const client = getSupabaseClientForProject(targetProject) || supabase;
 
