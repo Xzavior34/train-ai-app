@@ -1626,14 +1626,54 @@ export async function fetchMyMysteryBoxes(userId) {
 // tables (0002_progress_quizzes_cohorts.sql), but CohortScreen.jsx had
 // zero references to either - only Chat/Resources/Sessions existed as
 // tabs.
-export async function fetchCohortAssignedCourses(cohortId) {
+export async function fetchCohortAssignedCourses(cohortId, userId = null) {
   if (!supabase || !cohortId) return [];
   const { data, error } = await supabase
     .from("cohort_courses")
-    .select("id, due_at, courses(id, title, description)")
+    .select("id, course_id, due_at, courses(id, title, description)")
     .eq("cohort_id", cohortId);
   if (error) { console.warn("Cohort courses fetch warning:", error); return []; }
-  return data || [];
+  const { data: learnerCourseRows } = await supabase
+    .from("cohort_learner_courses")
+    .select("id, course_id, user_id, courses(id, title, description)")
+    .eq("cohort_id", cohortId);
+  const mergedByCourseId = new Map();
+  for (const row of data || []) {
+    const cid = row.course_id || row.courses?.id;
+    if (!cid) continue;
+    mergedByCourseId.set(cid, {
+      id: row.id,
+      course_id: cid,
+      due_at: row.due_at || null,
+      courses: row.courses ? { ...row.courses, progress: 0 } : { id: cid, title: "Assigned Course", description: "", progress: 0 },
+    });
+  }
+  for (const row of learnerCourseRows || []) {
+    if (userId && row.user_id && row.user_id !== userId) continue;
+    const cid = row.course_id || row.courses?.id;
+    if (!cid || mergedByCourseId.has(cid)) continue;
+    mergedByCourseId.set(cid, {
+      id: row.id,
+      course_id: cid,
+      due_at: null,
+      courses: row.courses ? { ...row.courses, progress: 0 } : { id: cid, title: "Assigned Course", description: "", progress: 0 },
+    });
+  }
+  const courseIds = Array.from(mergedByCourseId.keys());
+  if (userId && courseIds.length > 0) {
+    const { data: enrollments } = await supabase
+      .from("course_enrollments")
+      .select("course_id, progress_percentage")
+      .eq("user_id", userId)
+      .in("course_id", courseIds);
+    for (const enr of enrollments || []) {
+      const existing = mergedByCourseId.get(enr.course_id);
+      if (existing && existing.courses) {
+        existing.courses.progress = Math.round(Number(enr.progress_percentage) || 0);
+      }
+    }
+  }
+  return Array.from(mergedByCourseId.values());
 }
 
 export async function fetchCohortMembers(cohortId) {

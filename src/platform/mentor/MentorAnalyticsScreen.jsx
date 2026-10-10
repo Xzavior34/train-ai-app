@@ -102,7 +102,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
               <span style={{ fontSize: 13, color: "var(--text-3)", fontWeight: 600 }}>/ 5.0 ({totalReviews} reviews)</span>
             </div>
             <div className="ta-row ta-gap6 ta-mt10" style={{ fontSize: 12, color: "var(--success)", fontWeight: 700 }}>
-              <TrendingUp size={14} /> +0.2 vs last month
+              <TrendingUp size={14} /> {totalReviews > 0 ? "Verified learner ratings" : "No ratings yet"}
             </div>
           </div>
 
@@ -201,11 +201,11 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
                 <div className="ta-row ta-between" style={{ fontSize: 12, marginBottom: 5 }}>
                   <span style={{ color: "var(--text)", fontWeight: 600 }}>Course Completion Trajectory</span>
                   <span style={{ fontWeight: 700, color: "var(--primary)" }}>
-                    {sessions.length ? `${Math.round((completedSessions.length / sessions.length) * 100)}%` : "100%"}
+                    {sessions.length ? `${Math.round((completedSessions.length / sessions.length) * 100)}%` : "0%"}
                   </span>
                 </div>
                 <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ width: `${sessions.length ? Math.round((completedSessions.length / sessions.length) * 100) : 100}%`, height: "100%", background: "#2563EB", borderRadius: 3 }} />
+                  <div style={{ width: `${sessions.length ? Math.round((completedSessions.length / sessions.length) * 100) : 0}%`, height: "100%", background: "#2563EB", borderRadius: 3 }} />
                 </div>
               </div>
 
@@ -225,7 +225,7 @@ export function MentorAnalyticsScreen({ mentorId, mentorProfileQuery, orgSelecto
                   <span style={{ fontWeight: 700, color: "var(--primary)" }}>{menteesHelped > 0 ? "High" : "Optimal"}</span>
                 </div>
                 <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                  <div style={{ width: "95%", height: "100%", background: "#2563EB", borderRadius: 3 }} />
+                  <div style={{ width: `${menteesHelped > 0 ? 100 : 0}%`, height: "100%", background: "#2563EB", borderRadius: 3 }} />
                 </div>
               </div>
             </div>

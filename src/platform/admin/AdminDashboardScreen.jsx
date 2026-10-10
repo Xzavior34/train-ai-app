@@ -64,7 +64,7 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
     },
     { label: "Ongoing cohorts", value: statsQuery.data.cohorts, icon: Layers, sub: "Synchronous learning batches" },
     { label: "Published courses", value: statsQuery.data.courses, icon: BookOpen, sub: `${statsQuery.data.mentors} active instructors` },
-    { label: "Avg. completed courses", value: `${statsQuery.data.avgCompletedCourses || 2.8}`, icon: CheckCircle2, sub: "Average completed per learner" },
+    { label: "Avg. completed courses", value: `${statsQuery.data.avgCompletedCourses ?? 0}`, icon: CheckCircle2, sub: "Average completed per learner" },
     { label: "Completion rate", value: `${statsQuery.data.completionRate}%`, icon: Target, sub: "Milestone trajectory" },
   ] : [];
 

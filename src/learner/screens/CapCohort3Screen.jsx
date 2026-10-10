@@ -9,7 +9,7 @@ import { fetchMentorshipCheckins } from "../../lib/api/mentorship.js";
 import { redeemAccessCode } from "../../lib/api/accessCodes.js";
 import { CAP_PHASES, CAP_ROLES } from "../../lib/constants/terminology.js";
 
-export default function CapCohort3Screen({ session, showToast }) {
+export default function CapCohort3Screen({ session, showToast, cohortId, courses = [], user }) {
   const [activePhase, setActivePhase] = useState("BUILD"); // LEARN | BUILD | LAUNCH
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,8 +25,8 @@ export default function CapCohort3Screen({ session, showToast }) {
     setLoading(true);
     try {
       const [teamsData, checkinsData] = await Promise.all([
-        fetchCapTeams("cap-cohort-3"),
-        fetchMentorshipCheckins({ cohortId: "cap-cohort-3" }),
+        fetchCapTeams(cohortId || "cap-cohort-3"),
+        fetchMentorshipCheckins({ cohortId: cohortId || "cap-cohort-3" }),
       ]);
       setTeams(teamsData);
       setCheckins(checkinsData);
@@ -204,7 +204,9 @@ export default function CapCohort3Screen({ session, showToast }) {
                 <p style={{ fontSize: 12, color: "var(--text-2)", margin: "0 0 10px" }}>
                   Prompt engineering, API integration, Supabase vector databases, and evaluation rubrics.
                 </p>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#10B981" }}>Completed (100%)</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: (user?.mastery || 0) >= 100 ? "#10B981" : "#2563EB" }}>
+                  {(user?.mastery || 0) >= 100 ? "Completed (100%)" : `In Progress (${user?.mastery || 0}%)`}
+                </div>
               </div>
 
               <div style={{ padding: 16, background: "var(--surface-2)", borderRadius: 10, border: "1px solid var(--border)" }}>
@@ -215,7 +217,9 @@ export default function CapCohort3Screen({ session, showToast }) {
                 <p style={{ fontSize: 12, color: "var(--text-2)", margin: "0 0 10px" }}>
                   Engineering CV optimization, portfolio positioning, and soft skills interview prep.
                 </p>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "#2563EB" }}>In Progress (80%)</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#2563EB" }}>
+                  {(user?.mastery || 0) > 0 ? `In Progress (${user?.mastery || 0}%)` : "Not Started (0%)"}
+                </div>
               </div>
 
               <div style={{ padding: 16, background: "var(--surface-2)", borderRadius: 10, border: "1px solid var(--border)" }}>

@@ -542,14 +542,14 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
       // Integration), used as the real session link instead of inventing a
       // throwaway one when a learner or the instructor books a session.
       meetingUrl: m.personal_meeting_url || m.meeting_url || "",
-      name: m.name || m.user_profiles?.display_name || (m.title?.includes("Marketing") ? "Inem Emmanuel" : m.title?.includes("Data") ? "Loveth Omokaro" : m.title?.includes("Full-Stack") ? "Olumide Shode" : "Train AI Mentor"),
+      name: m.name || m.user_profiles?.display_name || "Instructor",
       avatar: m.avatar || m.user_profiles?.avatar_url || m.avatar_url || null,
       title: m.title || "Instructor",
       tagline: m.tagline || "",
       rate: m.hourly_rate || 0,
-      rating: m.rating || 5.0,
+      rating: m.rating ?? null,
       sessions: m.total_sessions || 0,
-      years: m.years_of_experience || 4,
+      years: m.years_of_experience ?? null,
       languages: m.languages || ["English"],
       specializations: m.specializations || [],
       verified: m.is_active !== false,
@@ -789,6 +789,9 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   goToMyCourses={() => { setShowMyCoursesOnly(true); goTab("courses"); }}
                   cohort={cohortMembershipQuery.data?.cohort || null}
                   cohortLoading={cohortMembershipQuery.loading}
+                  cohortCoursesQuery={cohortCoursesQuery}
+                  cohortMembersQuery={cohortMembersQuery}
+                  myCertificatesQuery={myCertificatesQuery}
                   achievements={achievementsQuery.data || []}
                   learningPathsQuery={learningPathsQuery}
                   pathEnrollmentsQuery={pathEnrollmentsQuery}
@@ -948,6 +951,8 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
                   cohortSessionsQuery={cohortSessionsQuery}
                   cohortCoursesQuery={cohortCoursesQuery}
                   cohortMembersQuery={cohortMembersQuery}
+                  courses={courses}
+                  user={user}
                   session={session} showToast={showToast} back={back} push={push} goTab={goTab} params={params}
                 />
               )}

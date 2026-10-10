@@ -115,7 +115,7 @@ export function useLearnerData(session, screen, params) {
       streak: r.streak_days || r.streak || 0,
       level: r.current_level || 1,
       completed_courses: r.completed_courses || 0,
-      badges_count: r.badges_count || 1,
+      badges_count: r.badges_count ?? 0,
       you: r.user_id === session?.user?.id,
     }));
   }, [session?.user?.id]);
@@ -470,6 +470,10 @@ export function useLearnerData(session, screen, params) {
     if (!session?.user?.id) return [];
     return fetchMyCertificates(session.user.id);
   }, [session?.user?.id]);
+  const quizAttemptsQuery = useSupabaseQuery(async () => {
+    if (!session?.user?.id) return [];
+    return fetchMyQuizAttempts(session.user.id, 10);
+  }, [session?.user?.id]);
 
   const user = {
     email: userProfileQuery.data?.email || session?.user?.email || "",
@@ -499,7 +503,12 @@ export function useLearnerData(session, screen, params) {
     mastery: enrolledCoursesList.length > 0
       ? Math.round(enrolledCoursesList.reduce((s, c) => s + (c.progress || 0), 0) / enrolledCoursesList.length)
       : Math.min(100, Math.round((realLessonsDone * 10) / 2)),
-    accuracy: 85,
+    accuracy: (() => {
+      const attempts = quizAttemptsQuery?.data || [];
+      return attempts.length
+        ? Math.round(attempts.reduce((sum, a) => sum + (Number(a.score ?? a.percentage) || 0), 0) / attempts.length)
+        : 0;
+    })(),
   };
 
   function courseById(id) {
@@ -717,10 +726,11 @@ export function useLearnerData(session, screen, params) {
   }, [screen === "lesson" ? params?.id : null, screen === "lesson" ? params?.lessonId : null]);
 
   const quizzesQuery = useSupabaseQuery(async () => fetchAvailableQuizzes(), []);
-  const quizAttemptsQuery = useSupabaseQuery(async () => {
+  // quizAttemptsQuery is declared above user summary
+  const _quizAttemptsRef = (() => {
     if (!session?.user?.id) return [];
     return fetchMyQuizAttempts(session.user.id, 10);
-  }, [session?.user?.id]);
+  });
 
   const postsQuery = useSupabaseQuery(async () => fetchCommunityPosts(), []);
   const studyGroupsQuery = useSupabaseQuery(async () => fetchStudyGroups(), []);
@@ -777,7 +787,7 @@ export function useLearnerData(session, screen, params) {
   // 0124_cohort_courses_rls_fix.sql - nothing had ever queried it before).
   const cohortCoursesQuery = useSupabaseQuery(async () => {
     if (!cohortId) return [];
-    return fetchCohortAssignedCourses(cohortId);
+    return fetchCohortAssignedCourses(cohortId, session?.user?.id);
   }, [cohortId]);
   const cohortMembersQuery = useSupabaseQuery(async () => {
     if (!cohortId) return [];

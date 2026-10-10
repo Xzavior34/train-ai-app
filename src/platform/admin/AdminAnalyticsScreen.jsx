@@ -212,7 +212,7 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Certificates issued</div>
             </div>
             <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--primary)" }}>{generalOverviewQuery.data?.avgAssessmentScore ? `${generalOverviewQuery.data.avgAssessmentScore}%` : "88%"}</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--primary)" }}>{generalOverviewQuery.data?.avgAssessmentScore != null ? `${generalOverviewQuery.data.avgAssessmentScore}%` : "0%"}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Avg. score</div>
             </div>
           </div>
@@ -225,15 +225,15 @@ export function AdminAnalyticsScreen({ orgId, orgSelector, setScreen, isPlatform
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
             <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.total ?? 148).toLocaleString()}</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.total ?? 0).toLocaleString()}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>All time</div>
             </div>
             <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.last30d ?? 84).toLocaleString()}</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--text)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.last30d ?? 0).toLocaleString()}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Last 30 days</div>
             </div>
             <div style={{ background: "var(--surface-2)", padding: "12px 14px", borderRadius: 8 }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--primary)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.last7d ?? 32).toLocaleString()}</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "var(--primary)" }}>{aiUsageQuery.loading ? "..." : (aiUsage?.last7d ?? 0).toLocaleString()}</div>
               <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 2 }}>Last 7 days</div>
             </div>
           </div>

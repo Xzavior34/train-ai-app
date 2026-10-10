@@ -68,7 +68,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
   const activeLiveSession = mentorSessions.find(s => s.status === "in_progress" || s.status === "live") || null;
   const upcomingMentorSessions = mentorSessions.filter(s => s.status === "scheduled" || s.status === "pending" || s.status === "requested" || s.status === "confirmed");
 
-  const mentorName = profileQuery?.data?.display_name || "Hazel";
+  const mentorName = profileQuery?.data?.display_name || "Instructor";
 
   return (
     <div className="ta-fade">
@@ -152,7 +152,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               <TrendingUp size={18} color="#2563EB" />
             </div>
             <div style={{ fontSize: 26, fontWeight: 800, color: "var(--text)" }}>
-              {sessionsQuery.loading ? "…" : mentorSessions.length ? `${Math.round((mentorSessions.filter(s => s.status === "completed").length / mentorSessions.length) * 100)}%` : "100%"}
+              {sessionsQuery.loading ? "…" : mentorSessions.length ? `${Math.round((mentorSessions.filter(s => s.status === "completed").length / mentorSessions.length) * 100)}%` : "0%"}
             </div>
             <div className="ta-row ta-gap6 ta-mt8" style={{ fontSize: 12, color: "var(--success)" }}>
               <span>{mentorSessions.filter(s => s.status === "completed").length} of {mentorSessions.length || 0} completed</span>
@@ -282,13 +282,21 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               </div>
               
               <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 10, lineHeight: 1.55 }}>
-                Based on recent quiz submissions and assignment grading, <strong>32% of students</strong> in <em>Module 3</em> struggled with <strong>RAG Architecture and Vector Embeddings</strong>. We recommend scheduling a targeted 30-minute clarification workshop.
+                {studentRisks.length > 0 ? (
+                  <>
+                    Based on recent activity and course progress, <strong>{studentRisks.length} learner{studentRisks.length === 1 ? "" : "s"}</strong> currently need extra support. We recommend scheduling a targeted clarification workshop or 1:1 check-in.
+                  </>
+                ) : (
+                  <>
+                    All learners across your {activeCohorts.length || 0} active cohort{activeCohorts.length === 1 ? "" : "s"} are currently on track. You can schedule a live review workshop or generate a study guide anytime.
+                  </>
+                )}
               </div>
 
               {aiActionSuccess && (
                 <div className="ta-card ta-mt12 anim-pop" style={{ background: "rgba(16, 185, 129, 0.1)", borderColor: "#10B981", padding: 10 }}>
                   <div className="ta-row ta-gap8" style={{ color: "#10B981", fontSize: 12.5, fontWeight: 600 }}>
-                    <CheckCircle2 size={15} /> Workshop scheduled and invitations broadcasted to 24 affected learners.
+                    <CheckCircle2 size={15} /> Workshop scheduled and invitations broadcasted to {studentRisks.length || activeLearnerCount || 0} learners.
                   </div>
                 </div>
               )}

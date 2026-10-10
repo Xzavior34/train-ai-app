@@ -274,10 +274,23 @@ export function HomeScreen({
               {(() => {
                 const assignedList = cohortCoursesQuery?.data || [];
                 const assignedCompleted = assignedList.filter(c => (c.courses?.progress || 0) >= 100).length;
-                const milestonePct = assignedList.length > 0 
-                  ? Math.round((assignedCompleted / assignedList.length) * 100)
-                  : (user.mastery || 0);
-                const peersCount = cohortMembersQuery?.data?.length || 1;
+
+                const milestonePct = assignedList.length > 0
+                  ? Math.round(
+                      assignedList.reduce((sum, cc) => {
+                        const cid = cc.course_id || cc.courses?.id || cc.id;
+                        const matched = (courses || []).find(c => c.id === cid);
+                        const pct = matched ? (Number(matched.progress) || 0) : (Number(cc.courses?.progress ?? cc.progress) || 0);
+                        return sum + pct;
+                      }, 0) / assignedList.length
+                    )
+                  : (() => {
+                      const enrolled = (courses || []).filter(c => c.enrolled);
+                      return enrolled.length > 0
+                        ? Math.round(enrolled.reduce((s, c) => s + (Number(c.progress) || 0), 0) / enrolled.length)
+                        : 0;
+                    })();
+                const peersCount = cohortMembersQuery?.data?.length ?? 0;
                 return (
                   <>
                     <div className="tai-row tai-between" style={{ alignItems: "center", marginBottom: 12 }}>

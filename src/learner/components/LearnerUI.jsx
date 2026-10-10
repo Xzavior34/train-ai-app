@@ -777,7 +777,7 @@ export function LearnerHeader({
         {/* Streak Pill - single source of truth for streak/XP/credits, shown once here on every breakpoint */}
         <div className="tai-streak-pill" onClick={() => go?.("achievements")} title="Active Streak">
           <Flame size={14} color="#EA580C" />
-          <span>{user?.streak || 8} <span className="tai-pill-unit tai-desktop-only">days</span></span>
+          <span>{user?.streak ?? 0} <span className="tai-pill-unit tai-desktop-only">days</span></span>
         </div>
 
         {/* XP Pill - hidden on mobile screens to prevent header crowding */}
@@ -789,7 +789,7 @@ export function LearnerHeader({
         {/* AI Credits Pill */}
         <div className="tai-credits-pill" onClick={onBuyCredits || (() => go?.("creditsCheckout"))} title="AI Credits">
           <Plus size={13} color="#2563EB" />
-          <span>{typeof credits === "number" ? credits : 10}<span className="tai-pill-unit tai-desktop-only"> credits</span></span>
+          <span>{typeof credits === "number" ? credits : 0}<span className="tai-pill-unit tai-desktop-only"> credits</span></span>
         </div>
 
         {/* Workspace Switcher Button (Desktop only) */}

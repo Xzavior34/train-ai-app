@@ -13,6 +13,7 @@ import CapCohort3Screen from "./CapCohort3Screen.jsx";
 export function CohortScreen({
   cohort: propCohort, cohortMembershipQuery, cohortPostsQuery, cohortResourcesQuery, cohortSessionsQuery,
   cohortCoursesQuery, cohortMembersQuery,
+  courses = [], user,
   session, showToast = () => {}, back, push, goTab, params
 }) {
   const [tab, setTab] = useState("chat"); // "chat" | "courses" | "resources" | "sessions" | "members"
@@ -60,7 +61,51 @@ export function CohortScreen({
   const posts = (cohortPostsQuery?.data?.length ? cohortPostsQuery.data : fallbackCohortQuery.data?.posts) || [];
   const resources = (cohortResourcesQuery?.data?.length ? cohortResourcesQuery.data : fallbackCohortQuery.data?.resources) || [];
   const sessions = (cohortSessionsQuery?.data?.length ? cohortSessionsQuery.data : fallbackCohortQuery.data?.sessions) || [];
-  const assignedCourses = (cohortCoursesQuery?.data?.length ? cohortCoursesQuery.data : fallbackCohortQuery.data?.learnerCourses) || [];
+  const rawAssignedCourses = (cohortCoursesQuery?.data?.length ? cohortCoursesQuery.data : fallbackCohortQuery.data?.learnerCourses) || [];
+  const courseMap = new Map((courses || []).map(c => [c.id, c]));
+  const assignedCourses = (() => {
+    if (rawAssignedCourses.length > 0) {
+      const seen = new Set();
+      return rawAssignedCourses
+        .filter(cc => {
+          const cid = cc.course_id || cc.courses?.id || cc.id;
+          if (!cid || seen.has(cid)) return false;
+          seen.add(cid);
+          return true;
+        })
+        .map(cc => {
+          const cid = cc.course_id || cc.courses?.id || cc.id;
+          const matched = courseMap.get(cid);
+          const realProgress = matched
+            ? Math.round(Number(matched.progress) || 0)
+            : Math.round(Number(cc.courses?.progress ?? cc.progress) || 0);
+          return {
+            ...cc,
+            course_id: cid,
+            courses: {
+              ...(cc.courses || {}),
+              id: cid,
+              title: cc.courses?.title || matched?.title || "Assigned Cohort Course",
+              description: cc.courses?.description || matched?.tagline || matched?.description || "",
+              progress: realProgress,
+            },
+          };
+        });
+    }
+    return (courses || [])
+      .filter(c => c.enrolled || c.assigned)
+      .map(c => ({
+        id: c.id,
+        course_id: c.id,
+        due_at: c.complianceDueAt || null,
+        courses: {
+          id: c.id,
+          title: c.title,
+          description: c.tagline || c.description || "",
+          progress: Math.round(Number(c.progress) || 0),
+        },
+      }));
+  })();
   const members = (cohortMembersQuery?.data?.length ? cohortMembersQuery.data : fallbackCohortQuery.data?.members) || [];
 
   const now = Date.now();
@@ -75,7 +120,9 @@ export function CohortScreen({
   );
 
   const completedAssignedCount = assignedCourses.filter(cc => (cc.courses?.progress || 0) >= 100).length;
-  const assignedCompletionRate = assignedCourses.length ? Math.round((completedAssignedCount / assignedCourses.length) * 100) : 0;
+  const assignedCompletionRate = assignedCourses.length
+    ? Math.round(assignedCourses.reduce((sum, cc) => sum + (Number(cc.courses?.progress) || 0), 0) / assignedCourses.length)
+    : 0;
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -162,7 +209,7 @@ export function CohortScreen({
           <div className="tai-row tai-between" style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>
             <div className="tai-row tai-gap6">
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34D399" }} />
-              <span>Cohort Curriculum Progress: {completedAssignedCount} of {assignedCourses.length || 1} Courses Completed</span>
+              <span>Cohort Curriculum Progress: {completedAssignedCount} of {assignedCourses.length} Courses Completed</span>
             </div>
             <span style={{
               color: "#34D399",
@@ -545,6 +592,8 @@ export function CohortScreen({
           push={push}
           goTab={goTab}
           cohortId={cohort?.id}
+          courses={courses}
+          user={user}
         />
       )}
 

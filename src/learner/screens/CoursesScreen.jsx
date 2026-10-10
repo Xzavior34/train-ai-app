@@ -420,10 +420,10 @@ export function CoursesScreen({
       ...c,
       coverImageUrl: c.coverImageUrl || c.image || fallbackImage,
       rating: c.rating || (4.8 + ((idx % 3) * 0.1)).toFixed(1),
-      reviewsCount: c.reviewsCount || (840 + idx * 120),
-      studentsCount: c.studentsCount || `${(4.2 + idx * 1.5).toFixed(1)}k`,
-      hours: c.hours || (12 + (idx % 4) * 4),
-      lessonsCount: c.lessonsCount || (16 + (idx % 3) * 6),
+      reviewsCount: c.reviewsCount ?? 0,
+      studentsCount: c.studentsCount ?? 0,
+      hours: c.hours || 4,
+      lessonsCount: c.lessonsCount || c.lessons || 0,
       // Real per-course instructor comes from courses.instructor_id via
       // useLearnerData's fetchCourseInstructorNames(). Courses without one set
       // in the DB used to get a fake named instructor (Astrid Larsson / Alex
@@ -551,8 +551,8 @@ export function CoursesScreen({
         title: c.title,
         description: c.tagline || c.description || `Essential course for your ${trackDisplayName}. Master production workflows and hands-on competencies.`,
         rating: c.rating || 4.9,
-        reviews: `${c.reviewsCount || 420} reviews`,
-        enrolled: `${c.studentsCount || "1.2k"} Enrolled`,
+        reviews: `${c.reviewsCount ?? 0} reviews`,
+        enrolled: `${c.studentsCount ?? 0} Enrolled`,
         status: c.enrolled ? "In Progress" : "Required",
         progress: c.progress || 0,
         lessonsRemaining: `${c.lessons || c.lessonsCount || 12} lessons`,
@@ -1019,9 +1019,9 @@ export function CoursesScreen({
                         <Star size={14} fill="#F59E0B" color="#F59E0B" />
                         <span>{course.rating || "4.9"}</span>
                       </div>
-                      <span style={{ color: "var(--text-3)" }}>({course.reviewsCount || 840})</span>
+                      <span style={{ color: "var(--text-3)" }}>({course.reviewsCount ?? 0})</span>
                       <span style={{ color: "var(--text-3)" }}>•</span>
-                      <span style={{ color: "var(--text-3)", fontWeight: 600 }}>{course.studentsCount || "4.2k"} learners</span>
+                      <span style={{ color: "var(--text-3)", fontWeight: 600 }}>{course.studentsCount ?? 0} learners</span>
                     </div>
                   </div>
 
@@ -1029,7 +1029,7 @@ export function CoursesScreen({
                     <div className="tai-row" style={{ padding: "10px 0", borderTop: "1px solid var(--border)", fontSize: 11.5, color: "var(--text-3)", fontWeight: 600, gap: 6, flexWrap: "wrap" }}>
                       <span>{course.hours || 12} Total Hours</span>
                       <span>•</span>
-                      <span>{course.lessonsCount || 16} Modules</span>
+                      <span>{course.lessonsCount || course.lessons || 0} Modules</span>
                       <span>•</span>
                       <span>{course.hasCertificate ? "Verified Certificate" : "Audited"}</span>
                     </div>
