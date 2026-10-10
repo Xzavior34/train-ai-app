@@ -7,6 +7,7 @@ import {
   BarChart3, Bookmark,
   GraduationCap, HelpCircle, ShieldCheck, Play
 } from "lucide-react";
+import { calculateCohortProgress } from "../../lib/api/cohorts.js";
 
 export function HomeScreen({
   user = {}, courses = [], coursesLoading, unreadNotifs = 0, weeklyGoal = 5,
@@ -274,6 +275,7 @@ export function HomeScreen({
               {(() => {
                 const assignedList = cohortCoursesQuery?.data || [];
                 const assignedCompleted = assignedList.filter(c => (c.courses?.progress || 0) >= 100).length;
+                const progressInfo = calculateCohortProgress(cohort?.starts_at, cohort?.ends_at);
 
                 const milestonePct = assignedList.length > 0
                   ? Math.round(
@@ -307,16 +309,20 @@ export function HomeScreen({
                           </div>
                         </div>
                       </div>
-                      <Tag tone="primary">{milestonePct >= 100 ? "Completed" : "Active"}</Tag>
+                      <Tag tone={progressInfo.isCompleted ? "warning" : "primary"}>{progressInfo.isCompleted ? "Completed" : "Active"}</Tag>
                     </div>
 
                     <div style={{ background: "var(--surface)", padding: "10px 12px", borderRadius: 8, border: "1px solid var(--border)", marginBottom: 12 }}>
                       <div className="tai-row tai-between" style={{ fontSize: 11, fontWeight: 700, marginBottom: 5 }}>
-                        <span style={{ color: "var(--text-2)" }}>Curriculum Milestone</span>
-                        <span style={{ color: "var(--primary)" }}>{milestonePct}% Completed</span>
+                        <span style={{ color: "var(--text)" }}>⏱️ 6-Week Accelerator Timeline: Week {progressInfo.currentWeek} of {progressInfo.totalWeeks}</span>
+                        <span style={{ color: "#10B981", fontWeight: 800 }}>{progressInfo.daysRemaining} Days Left ({progressInfo.percent}% Elapsed)</span>
                       </div>
                       <div style={{ height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
-                        <div style={{ width: `${milestonePct}%`, height: "100%", background: "var(--primary, #2563EB)", borderRadius: 3, transition: "width 0.4s ease" }} />
+                        <div style={{ width: `${progressInfo.percent}%`, height: "100%", background: "linear-gradient(90deg, #10B981 0%, #34D399 100%)", borderRadius: 3, transition: "width 0.4s ease" }} />
+                      </div>
+                      <div className="tai-row tai-between" style={{ marginTop: 6, fontSize: 10.5, color: "var(--text-3)" }}>
+                        <span>📚 Assigned Curriculum: {assignedCompleted} of {assignedList.length} Courses Completed</span>
+                        <span>{cohort?.ends_at ? `Ends ${new Date(cohort.ends_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}` : `${progressInfo.daysRemaining} Days Left`}</span>
                       </div>
                     </div>
 
