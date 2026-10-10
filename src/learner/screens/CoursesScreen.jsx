@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { TopBar, CourseCard, ProgressBar, Tag } from "../components/LearnerUI.jsx";
+import { TopBar, CourseCard, ProgressBar, Tag, Avatar, initialsOf } from "../components/LearnerUI.jsx";
 import {
   Search, Play, Clock, Video, Eye,
   ArrowRight, ExternalLink, Bookmark, CheckCircle2,
@@ -193,9 +193,9 @@ const SPOTLIGHT_SLIDES = [
     status: "In Progress",
     progress: 72,
     lessonsRemaining: "4 lessons left",
-    instructor: "Astrid Larsson",
+    instructor: "Course Instructor",
     instructorRole: "Lead Design Systems Architect",
-    instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+    instructorAvatar: null,
     coverImage: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80",
     cta: "Resume Lesson 14",
     action: "continue",
@@ -221,9 +221,9 @@ const SPOTLIGHT_SLIDES = [
     status: "In Progress",
     progress: 19,
     lessonsRemaining: "Module 2: Function Calling",
-    instructor: "Alex Rivera",
+    instructor: "Course Instructor",
     instructorRole: "Principal AI Engineer",
-    instructorAvatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
+    instructorAvatar: null,
     coverImage: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
     cta: "Continue Module 2",
     action: "continue",
@@ -249,9 +249,9 @@ const SPOTLIGHT_SLIDES = [
     status: "Featured Course",
     progress: 0,
     lessonsRemaining: "Includes 3D Asset Kit",
-    instructor: "Sarah Connor",
+    instructor: "Course Instructor",
     instructorRole: "Spatial Experience Designer",
-    instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+    instructorAvatar: null,
     coverImage: "https://images.unsplash.com/photo-1592478411213-6153e4ebc07d?w=800&auto=format&fit=crop&q=80",
     cta: "Explore Course",
     action: "explore",
@@ -277,9 +277,9 @@ const SPOTLIGHT_SLIDES = [
     status: "Recommended",
     progress: 0,
     lessonsRemaining: "Hands-on Cloud Lab",
-    instructor: "David Vance",
+    instructor: "Course Instructor",
     instructorRole: "DevOps Infrastructure Lead",
-    instructorAvatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
+    instructorAvatar: null,
     coverImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80",
     cta: "Start Learning Path",
     action: "explore",
@@ -332,7 +332,7 @@ const RECENT_RECORDINGS = [
     date: "18 Nov 2024",
     duration: "45 mins",
     views: "1.4k views",
-    instructor: "Sarah Jenkins",
+    instructor: "Course Instructor",
     role: "Staff Product Designer",
     thumbnail: "https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
@@ -345,7 +345,7 @@ const RECENT_RECORDINGS = [
     date: "14 Nov 2024",
     duration: "1 hr 10m",
     views: "2.8k views",
-    instructor: "Alex Rivera",
+    instructor: "Course Instructor",
     role: "Lead AI Design Engineer",
     thumbnail: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
@@ -358,7 +358,7 @@ const RECENT_RECORDINGS = [
     date: "10 Nov 2024",
     duration: "52 mins",
     views: "3.2k views",
-    instructor: "Elena Rostova",
+    instructor: "Course Instructor",
     role: "Principal AI Scientist",
     thumbnail: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
@@ -371,7 +371,7 @@ const RECENT_RECORDINGS = [
     date: "4 Nov 2024",
     duration: "38 mins",
     views: "1.9k views",
-    instructor: "Marcus Vance",
+    instructor: "Course Instructor",
     role: "Lead Motion Designer",
     thumbnail: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&auto=format&fit=crop&q=80",
     videoUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
@@ -432,7 +432,7 @@ export function CoursesScreen({
       // instead of inventing an identity.
       instructor: c.instructor || null,
       instructorRole: c.instructorRole || "Course Instructor",
-      instructorAvatar: c.instructorAvatar || (idx % 2 === 0 ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80")
+      instructorAvatar: c.instructorAvatar || null
     };
   });
 
@@ -535,7 +535,7 @@ export function CoursesScreen({
           lessonsRemaining: "All lessons complete",
           instructor: "Train AI Academy",
           instructorRole: "Course Team",
-          instructorAvatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+          instructorAvatar: null,
           coverImage: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80",
           cta: "Review Completed Material",
           action: "explore",
@@ -558,7 +558,7 @@ export function CoursesScreen({
         lessonsRemaining: `${c.lessons || c.lessonsCount || 12} lessons`,
         instructor: c.instructor || "Curriculum Specialist",
         instructorRole: c.instructorRole || "Instructor",
-        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        instructorAvatar: c.instructorAvatar || null,
         coverImage: c.coverImageUrl || c.image || getSafeCoverImage(c, idx),
         cta: c.enrolled ? (c.progress > 0 ? "Resume Lesson" : "Start Course") : "Enroll & Start Course",
         action: c.enrolled ? "continue" : "explore",
@@ -1004,11 +1004,11 @@ export function CoursesScreen({
                     </p>
 
                     <div className="tai-row tai-gap8" style={{ marginBottom: 12 }}>
-                      <img
-                        src={course.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"}
-                        alt=""
-                        style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }}
-                      />
+                      <Avatar size={26} initials={initialsOf(course.instructor || "Course Instructor")} src={course.instructorAvatar || null} />
+
+
+
+
                       <div style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600 }}>
                         {course.instructor || "Course Instructor"}
                       </div>

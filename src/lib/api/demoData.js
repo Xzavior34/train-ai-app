@@ -96,14 +96,14 @@ export const DEMO_PROJECT_DATA = {
 };
 
 export const DEMO_LEARNERS = [
-  { id: "demo-learner-1", name: "Amara Chen", email: "amara.chen@sarafoundationafrica.com", initials: "AC", risk: "success", status: "On Track", attendance: 98, progress: 95, avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" },
-  { id: "demo-learner-2", name: "David Osei", email: "david.osei@sarafoundationafrica.com", initials: "DO", risk: "success", status: "On Track", attendance: 92, progress: 85, avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&auto=format&fit=crop&q=80" },
-  { id: "demo-learner-3", name: "Priya Nair", email: "priya.nair@digitaltraining.org", initials: "PN", risk: "warning", status: "Needs Attention", attendance: 78, progress: 60, avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80" },
-  { id: "demo-learner-4", name: "Marcus Webb", email: "marcus.webb@digitaltraining.org", initials: "MW", risk: "success", status: "On Track", attendance: 96, progress: 90, avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80" },
-  { id: "demo-learner-5", name: "Fatima Diallo", email: "fatima.diallo@sarafoundationafrica.com", initials: "FD", risk: "danger", status: "High Risk", attendance: 45, progress: 30, avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" },
-  { id: "demo-learner-6", name: "Liam Torres", email: "liam.torres@trainailtd.com", initials: "LT", risk: "danger", status: "High Risk", attendance: 52, progress: 25, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80" },
-  { id: "demo-learner-7", name: "Ngozi Adeyemi", email: "ngozi.adeyemi@trainailtd.com", initials: "NA", risk: "success", status: "On Track", attendance: 100, progress: 100, avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&auto=format&fit=crop&q=80" },
-  { id: "demo-learner-8", name: "Sofia Kim", email: "sofia.kim@trainailtd.com", initials: "SK", risk: "warning", status: "Needs Attention", attendance: 80, progress: 65, avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&auto=format&fit=crop&q=80" },
+  { id: "demo-learner-1", name: "Amara Chen", email: "amara.chen@sarafoundationafrica.com", initials: "AC", risk: "success", status: "On Track", attendance: 98, progress: 95, avatar: null },
+  { id: "demo-learner-2", name: "David Osei", email: "david.osei@sarafoundationafrica.com", initials: "DO", risk: "success", status: "On Track", attendance: 92, progress: 85, avatar: null },
+  { id: "demo-learner-3", name: "Priya Nair", email: "priya.nair@digitaltraining.org", initials: "PN", risk: "warning", status: "Needs Attention", attendance: 78, progress: 60, avatar: null },
+  { id: "demo-learner-4", name: "Marcus Webb", email: "marcus.webb@digitaltraining.org", initials: "MW", risk: "success", status: "On Track", attendance: 96, progress: 90, avatar: null },
+  { id: "demo-learner-5", name: "Fatima Diallo", email: "fatima.diallo@sarafoundationafrica.com", initials: "FD", risk: "danger", status: "High Risk", attendance: 45, progress: 30, avatar: null },
+  { id: "demo-learner-6", name: "Liam Torres", email: "liam.torres@trainailtd.com", initials: "LT", risk: "danger", status: "High Risk", attendance: 52, progress: 25, avatar: null },
+  { id: "demo-learner-7", name: "Ngozi Adeyemi", email: "ngozi.adeyemi@trainailtd.com", initials: "NA", risk: "success", status: "On Track", attendance: 100, progress: 100, avatar: null },
+  { id: "demo-learner-8", name: "Sofia Kim", email: "sofia.kim@trainailtd.com", initials: "SK", risk: "warning", status: "Needs Attention", attendance: 80, progress: 65, avatar: null },
 ];
 
 export const DEMO_INSTRUCTORS = [

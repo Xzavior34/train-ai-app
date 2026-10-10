@@ -3,8 +3,8 @@ import { Trophy, RefreshCw, Zap, Quote, Crown, Medal, Award, Flame, BookOpen, Ta
 import { Avatar, initialsOf } from "./LearnerUI.jsx";
 import { SkeletonCard } from "../../components/common/Skeleton.jsx";
 
-const FALLBACK_AVATARS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=140&auto=format&fit=crop&q=80",
+const FALLBACK_AVATARS = [];
+  /*
   "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=140&auto=format&fit=crop&q=80",
   "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=140&auto=format&fit=crop&q=80",
   "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=140&auto=format&fit=crop&q=80",
@@ -12,13 +12,13 @@ const FALLBACK_AVATARS = [
   "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=140&auto=format&fit=crop&q=80",
   "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=140&auto=format&fit=crop&q=80",
   "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=140&auto=format&fit=crop&q=80"
-];
+  */
 
 function resolveAvatar(l, index = 0) {
   if (l?.avatar && typeof l.avatar === "string" && l.avatar.startsWith("http")) return l.avatar;
   if (l?.avatar_url && typeof l.avatar_url === "string" && l.avatar_url.startsWith("http")) return l.avatar_url;
   if (l?.avatarUrl && typeof l.avatarUrl === "string" && l.avatarUrl.startsWith("http")) return l.avatarUrl;
-  return FALLBACK_AVATARS[index % FALLBACK_AVATARS.length];
+  return null;
 }
 
 const MOTIVATION_QUOTES = [

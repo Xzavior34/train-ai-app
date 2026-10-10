@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Brain, ArrowRight, BellRing, Sparkles } from "lucide-react";
+import { Brain, ArrowRight, BellRing } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchAIRecommendations } from "../../lib/api/schemaHelper.js";
 
@@ -130,7 +130,7 @@ export function AIRecommendationsCard({ user, courses = [], session, goTab, maxI
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div className="tai-row tai-gap8" style={{ alignItems: "center" }}>
                       <span className="tai-tag" style={{ textTransform: "capitalize", fontSize: 10, fontWeight: 800 }}>
-                        <Sparkles size={10} style={{ marginRight: 3 }} /> {r.type || "AI Suggestion"}
+                        {r.type || "AI Suggestion"}
                       </span>
                       {r.priority && (
                         <span

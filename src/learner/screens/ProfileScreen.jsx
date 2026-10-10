@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { TopBar, Avatar, Switch } from "../components/LearnerUI.jsx";
+import { TopBar, Avatar, Switch, initialsOf } from "../components/LearnerUI.jsx";
 import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users, Star, Award } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
@@ -208,18 +208,18 @@ export function ProfileScreen({
               onClick={() => session?.user?.id && setShowAvatarUpload(v => !v)}
               title="Change profile photo"
             >
-              <img
-                src={user.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=220&auto=format&fit=crop&q=80"}
-                alt={user.name}
-                style={{
-                  width: "clamp(68px, 14vw, 88px)",
-                  height: "clamp(68px, 14vw, 88px)",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "3px solid var(--surface-2)",
-                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.22)"
-                }}
-              />
+              <Avatar size={78} src={user.avatarUrl || null} initials={initialsOf(user.name || user.email || "Learner")} style={{ border: "3px solid var(--surface-2)", boxShadow: "0 8px 24px -4px rgba(0,0,0,0.22)" }} />
+
+
+
+
+
+
+
+
+
+
+
               {session?.user?.id && (
                 <div
                   style={{

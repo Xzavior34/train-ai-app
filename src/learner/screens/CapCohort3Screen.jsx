@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Rocket, BookOpen, Hammer, Award, Users, Github, ExternalLink,
-  CheckCircle2, Clock, Star, MessageSquare, AlertCircle, Sparkles,
+  CheckCircle2, Clock, Star, MessageSquare, AlertCircle,
   KeyRound, ShieldCheck, ChevronRight, Play, FileText, Plus, Edit3, X, Check, Code
 } from "lucide-react";
 import { fetchCapTeams, saveCapTeam, joinCapTeam, updateDemoDayReview } from "../../lib/api/capProgram.js";
@@ -29,7 +29,7 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
   const [newProjectTitle, setNewProjectTitle] = useState("");
   const [newProblemStatement, setNewProblemStatement] = useState("");
   const [newTechs, setNewTechs] = useState("React, Python, FastAPI, Supabase");
-  const [newMentorName, setNewMentorName] = useState("Dr. Amara Okafor");
+  const [newMentorName, setNewMentorName] = useState("");
   const [newCreatorRole, setNewCreatorRole] = useState("Software Engineer");
   const [submittingTeam, setSubmittingTeam] = useState(false);
 
@@ -50,7 +50,7 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
   // Log Mentorship Check-in Modal
   const [checkinModalOpen, setCheckinModalOpen] = useState(false);
   const [checkinTeamId, setCheckinTeamId] = useState("");
-  const [checkinMentor, setCheckinMentor] = useState("Dr. Amara Okafor");
+  const [checkinMentor, setCheckinMentor] = useState("");
   const [checkinDate, setCheckinDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [checkinRating, setCheckinRating] = useState(5);
   const [checkinNotes, setCheckinNotes] = useState("");
@@ -65,6 +65,12 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
   const [scoreVal, setScoreVal] = useState(90);
   const [scoreFeedback, setScoreFeedback] = useState("");
   const [submittingScore, setSubmittingScore] = useState(false);
+
+  // Assign Mentor Modal (Admins & Instructors)
+  const [assignMentorModalOpen, setAssignMentorModalOpen] = useState(false);
+  const [selectedTeamForMentor, setSelectedTeamForMentor] = useState(null);
+  const [assignMentorInput, setAssignMentorInput] = useState("");
+  const [savingMentor, setSavingMentor] = useState(false);
 
   // Problem Statement Modal (Phase A)
   const [problemModalOpen, setProblemModalOpen] = useState(false);
@@ -150,7 +156,7 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
         project_title: newProjectTitle.trim(),
         problem_statement: newProblemStatement.trim() || "High-impact African industry solution.",
         technologies: techsList.length ? techsList : ["React", "Python", "Supabase"],
-        mentor_name: newMentorName.trim() || "Dr. Amara Okafor",
+        mentor_name: newMentorName.trim() || "Assigned Mentor",
         phase: "BUILD",
         demo_day_status: "Pending Review",
         members: [
@@ -311,6 +317,45 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
     }
   }
 
+  function openAssignMentorModal(team) {
+    setSelectedTeamForMentor(team);
+    setAssignMentorInput(team.mentor_name || "");
+    setAssignMentorModalOpen(true);
+  }
+
+  async function handleSaveAssignedMentor(e) {
+    e.preventDefault();
+    if (!selectedTeamForMentor) return;
+    setSavingMentor(true);
+    try {
+      await saveCapTeam({
+        ...selectedTeamForMentor,
+        mentor_name: assignMentorInput.trim() || null,
+      });
+      showToast?.(`Mentor updated for Team ${selectedTeamForMentor.name}!`);
+      setAssignMentorModalOpen(false);
+      setSelectedTeamForMentor(null);
+      await loadData();
+    } catch (err) {
+      showToast?.(err?.message || "Failed to update mentor assignment.");
+    } finally {
+      setSavingMentor(false);
+    }
+  }
+
+  async function handleUpdateTeamPhase(team, nextPhase) {
+    try {
+      await saveCapTeam({
+        ...team,
+        phase: nextPhase,
+      });
+      showToast?.(`Team ${team.name} updated to Phase: ${nextPhase}!`);
+      await loadData();
+    } catch (err) {
+      showToast?.(err?.message || "Failed to update team phase.");
+    }
+  }
+
   // Derive relevant courses for Phase A
   const primaryCourse = courses.find(c => c.enrolled || c.assigned) || courses[0] || null;
 
@@ -349,7 +394,7 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
                 marginBottom: 10,
               }}
             >
-              <Sparkles size={12} /> 6-Week Intensive Accelerator
+              <Rocket size={12} /> 6-Week Intensive Accelerator
             </div>
             <h1 style={{ fontSize: "clamp(22px, 3vw, 30px)", fontWeight: 900, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
               Career Acceleration Programme (CAP): Cohort 3
@@ -637,9 +682,38 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
                   </div>
 
                   {/* Mentor */}
-                  <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 14 }}>
-                    Mentor: <strong style={{ color: "var(--text)" }}>{team.mentor_name || "Assigned Mentor"}</strong>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+                    <div>
+                      Mentor: <strong style={{ color: "var(--text)" }}>{team.mentor_name || "Assigned Mentor"}</strong>
+                    </div>
+                    {isAdminOrMentor && (
+                      <button
+                        type="button"
+                        className="ta-btn ta-btn-outline ta-btn-sm"
+                        style={{ fontSize: 11, padding: "2px 8px" }}
+                        onClick={() => openAssignMentorModal(team)}
+                      >
+                        <Edit3 size={11} /> Reassign Mentor
+                      </button>
+                    )}
                   </div>
+
+                  {/* Instructor / Admin Phase Controls */}
+                  {isAdminOrMentor && (
+                    <div style={{ marginBottom: 14, padding: "8px 12px", background: "var(--surface-2)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>Accelerator Phase:</span>
+                      <select
+                        className="ta-select"
+                        style={{ fontSize: 11.5, padding: "4px 8px", borderRadius: 6, fontWeight: 600, background: "var(--surface)", color: "var(--text)", border: "1px solid var(--border)" }}
+                        value={team.phase || "BUILD"}
+                        onChange={(e) => handleUpdateTeamPhase(team, e.target.value)}
+                      >
+                        <option value="LEARN">Phase A: LEARN (Foundation)</option>
+                        <option value="BUILD">Phase B: BUILD (Sprint Delivery)</option>
+                        <option value="LAUNCH">Phase C: LAUNCH (Demo Day)</option>
+                      </select>
+                    </div>
+                  )}
 
                   {/* Submission Links */}
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderTop: "1px solid var(--border)", paddingTop: 12, alignItems: "center", justifyContent: "space-between" }}>
@@ -998,7 +1072,7 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
                     type="text"
                     className="ta-input"
                     style={{ width: "100%", boxSizing: "border-box" }}
-                    placeholder="Dr. Amara Okafor"
+                    placeholder="e.g. Assigned Mentor"
                     value={newMentorName}
                     onChange={(e) => setNewMentorName(e.target.value)}
                   />
@@ -1490,6 +1564,81 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
                   className="ta-btn ta-btn-primary ta-btn-sm"
                 >
                   Save Problem Statement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Mentor Modal (Admins & Instructors) */}
+      {assignMentorModalOpen && selectedTeamForMentor && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.6)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+          }}
+        >
+          <div
+            style={{
+              background: "#FFFFFF",
+              borderRadius: 14,
+              padding: 26,
+              maxWidth: 440,
+              width: "100%",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              color: "#0F172A",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div style={{ fontWeight: 800, fontSize: 16 }}>Assign Mentor to Team {selectedTeamForMentor.name}</div>
+              <button
+                type="button"
+                className="ta-btn ta-btn-ghost ta-btn-sm"
+                onClick={() => setAssignMentorModalOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: 13, color: "#64748B", margin: "0 0 14px" }}>
+              Project: <strong>{selectedTeamForMentor.project_title}</strong>
+            </p>
+
+            <form onSubmit={handleSaveAssignedMentor}>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Assigned Mentor Name or Email *</div>
+                <input
+                  type="text"
+                  className="ta-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  placeholder="e.g. Lead Industry Mentor"
+                  required
+                  value={assignMentorInput}
+                  onChange={(e) => setAssignMentorInput(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <button
+                  type="button"
+                  className="ta-btn ta-btn-outline ta-btn-sm"
+                  onClick={() => setAssignMentorModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="ta-btn ta-btn-primary ta-btn-sm"
+                  disabled={savingMentor}
+                >
+                  {savingMentor ? "Saving..." : "Save Mentor Assignment"}
                 </button>
               </div>
             </form>

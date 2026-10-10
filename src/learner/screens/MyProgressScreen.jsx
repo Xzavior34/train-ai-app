@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { TopBar, Avatar, Tag, ProgressBar, StatTile } from "../components/LearnerUI.jsx";
+import { TopBar, Avatar, Tag, ProgressBar, StatTile, initialsOf } from "../components/LearnerUI.jsx";
 import {
   BarChart3, BookOpen, Clock, Trophy, Flame, GraduationCap, CheckCircle2,
   Calendar, ArrowRight, Play, Star, Target, Award, ShieldCheck,
@@ -33,7 +33,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
         title: c.title,
         category: c.category || "Professional Track",
         instructor: c.instructor || "Instructor",
-        instructorAvatar: c.instructorAvatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
+        instructorAvatar: c.instructorAvatar || null,
         totalLessons: c.lessons || 12,
         completedLessons: Math.round(((c.progress || 0) / 100) * (c.lessons || 12)),
         totalHours: c.hours || 10,
@@ -342,7 +342,7 @@ export function MyProgressScreen({ user = {}, courses = [], push, back, session,
 
                       <div className="tai-row tai-gap12" style={{ fontSize: 12.5, color: "var(--text-3)", flexWrap: "wrap" }}>
                         <div className="tai-row tai-gap6">
-                          <img src={course.instructorAvatar} alt={course.instructor} style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
+                          <Avatar size={20} initials={initialsOf(course.instructor || "Instructor")} src={course.instructorAvatar || null} />
                           <span>{course.instructor}</span>
                         </div>
                         <span>•</span>

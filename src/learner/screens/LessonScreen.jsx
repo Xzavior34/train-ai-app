@@ -44,56 +44,7 @@ const LESSON_RESOURCES = [
 ];
 
 // Lesson Q&A Discussions
-const INITIAL_QA_THREADS = [
-  {
-    id: "qa-1",
-    author: "Elena Rostova",
-    role: "Senior AI Engineer",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80",
-    time: "2 days ago",
-    timestamp: "08:15",
-    title: "How do we handle rate-limiting when parallel agents make 10+ tool calls simultaneously?",
-    content: "When spawning multiple subagents concurrently, is it better to use a leaky bucket queue or token-bucket throttling at the gateway layer?",
-    upvotes: 24,
-    upvoted: false,
-    answersCount: 3,
-    answers: [
-      {
-        id: "ans-1",
-        author: "Astrid Larsson",
-        isInstructor: true,
-        role: "Instructor • Lead AI Architect",
-        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
-        time: "1 day ago",
-        text: "Great question Elena! In production we recommend a token-bucket queue paired with exponential backoff and jitter. Check Chapter 4 where we cover the retry middleware pattern."
-      }
-    ]
-  },
-  {
-    id: "qa-2",
-    author: "David Kim",
-    role: "Full-Stack Fellow",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
-    time: "4 days ago",
-    timestamp: "13:30",
-    title: "Does pgvector index creation slow down batch inserts for 100k+ documents?",
-    content: "Should we build the HNSW index before or after bulk loading the initial dataset?",
-    upvotes: 18,
-    upvoted: false,
-    answersCount: 2,
-    answers: [
-      {
-        id: "ans-2",
-        author: "Alex Rivera",
-        isInstructor: true,
-        role: "Staff Engineer",
-        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
-        time: "3 days ago",
-        text: "Always bulk load first without the HNSW index, then run CREATE INDEX afterwards! It's up to 10x faster."
-      }
-    ]
-  }
-];
+const INITIAL_QA_THREADS = [];
 
 export function LessonScreen({
   course, lessons = [], lessonId, session, lessonNotesQuery, noteInputText, setNoteInputText,

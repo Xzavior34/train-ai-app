@@ -352,3 +352,49 @@ export async function duplicateCohort(cohortId, newName) {
     throw err;
   }
 }
+
+/**
+ * Creates a new Cohort Live Studio Session.
+ * Full backend control for Admins & Instructors.
+ */
+export async function createCohortSession({ cohortId, createdBy, title, description, startsAt, joinUrl, recordingUrl }) {
+  if (!supabase) {
+    return {
+      id: `sess-${Date.now()}`,
+      cohort_id: cohortId,
+      title,
+      description: description || "",
+      starts_at: startsAt || new Date().toISOString(),
+      join_url: joinUrl || null,
+      recording_url: recordingUrl || null,
+      status: "Scheduled"
+    };
+  }
+
+  let authUserId = createdBy;
+  if (!authUserId) {
+    const { data: authData } = await supabase.auth.getUser();
+    authUserId = authData?.user?.id;
+  }
+
+  const { data, error } = await supabase
+    .from("cohort_sessions")
+    .insert({
+      cohort_id: cohortId,
+      created_by: authUserId,
+      title,
+      description: description || null,
+      starts_at: startsAt,
+      join_url: joinUrl || null,
+      recording_url: recordingUrl || null,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("createCohortSession error:", error);
+    throw error;
+  }
+  return data;
+}
+

@@ -1192,30 +1192,30 @@ export function ScheduleView({ push, back }) {
       title: "UI Critique & System Architecture Review",
       track: "Design & UX",
       time: "Live Now (10:00 AM - 11:30 AM)",
-      instructor: "Astrid Larsson",
+      instructor: "Cohort Lead",
       isLive: true,
       attendees: 18,
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80"
+      avatar: null
     },
     {
       id: "live-2",
       title: "Full-Stack GenAI: Vector Embeddings & Supabase",
       track: "AI & Engineering",
       time: "Tomorrow at 02:00 PM UTC",
-      instructor: "Alex Rivera",
+      instructor: "Engineering Mentor",
       isLive: false,
       attendees: 24,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
+      avatar: null
     },
     {
       id: "live-3",
       title: "Axon AI Prompting & Autonomous Workflows",
       track: "AI Tools",
       time: "Thursday at 04:30 PM UTC",
-      instructor: "Marcus Vance",
+      instructor: "Technical Specialist",
       isLive: false,
       attendees: 31,
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80"
+      avatar: null
     }
   ];
 

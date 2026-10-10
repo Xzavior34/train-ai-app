@@ -8,7 +8,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchCohortActivityToday } from "../../lib/api/learner.js";
 import { createCohortPost, addCohortPostReply, toggleCohortPostReaction } from "../../lib/api/schemaHelper.js";
 import { fetchCohortDetail } from "../../lib/api/platform.js";
-import { calculateCohortProgress, extendCohortTimeline } from "../../lib/api/cohorts.js";
+import { calculateCohortProgress, extendCohortTimeline, createCohortSession } from "../../lib/api/cohorts.js";
 import CapCohort3Screen from "./CapCohort3Screen.jsx";
 
 export function CohortScreen({
@@ -27,6 +27,12 @@ export function CohortScreen({
   const [extendDays, setExtendDays] = useState(7);
   const [customEndDate, setCustomEndDate] = useState("");
   const [extending, setExtending] = useState(false);
+  const [addSessionModalOpen, setAddSessionModalOpen] = useState(false);
+  const [sessionTitle, setSessionTitle] = useState("");
+  const [sessionStartsAt, setSessionStartsAt] = useState("");
+  const [sessionJoinUrl, setSessionJoinUrl] = useState("");
+  const [sessionDescription, setSessionDescription] = useState("");
+  const [savingSession, setSavingSession] = useState(false);
 
   const targetCohortId = params?.id || params?.cohortId || propCohort?.id || cohortMembershipQuery?.data?.cohort?.id;
 
@@ -158,6 +164,38 @@ export function CohortScreen({
       setExtending(false);
     }
   }
+
+  async function handleCreateSession(e) {
+    e.preventDefault();
+    if (!sessionTitle.trim() || !sessionStartsAt) {
+      showToast?.("Please enter a session title and date/time.");
+      return;
+    }
+    setSavingSession(true);
+    try {
+      await createCohortSession({
+        cohortId: cohort.id,
+        createdBy: session?.user?.id,
+        title: sessionTitle.trim(),
+        description: sessionDescription.trim() || null,
+        startsAt: new Date(sessionStartsAt).toISOString(),
+        joinUrl: sessionJoinUrl.trim() || null,
+      });
+      showToast?.("Live Studio session scheduled!");
+      setAddSessionModalOpen(false);
+      setSessionTitle("");
+      setSessionStartsAt("");
+      setSessionJoinUrl("");
+      setSessionDescription("");
+      cohortSessionsQuery?.refetch?.();
+      fallbackCohortQuery?.refetch?.();
+    } catch (err) {
+      showToast?.(err?.message || "Failed to schedule live studio session.");
+    } finally {
+      setSavingSession(false);
+    }
+  }
+
 
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -534,6 +572,21 @@ export function CohortScreen({
           ========================================================================= */}
       {tab === "sessions" && (
         <div className="tai-col tai-gap16">
+          {isAdminOrMentor && (
+            <div className="tai-row tai-between" style={{ alignItems: "center", background: "var(--surface)", padding: "14px 18px", borderRadius: 10, border: "1px solid var(--border)", flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Instructor Live Studio Controls</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Schedule, announce, and broadcast live workshops or code reviews for this cohort</div>
+              </div>
+              <button
+                type="button"
+                className="tai-btn tai-btn-primary tai-btn-sm"
+                onClick={() => setAddSessionModalOpen(true)}
+              >
+                <Plus size={14} /> Schedule Live Studio
+              </button>
+            </div>
+          )}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
             {sessions.map(s => (
               <div key={s.id} className="tai-card" style={{ padding: 22, borderRadius: 10, background: "var(--surface)" }}>
@@ -859,6 +912,121 @@ export function CohortScreen({
           </div>
         </div>
       )}
+
+      {/* Schedule Live Studio Modal (Instructors / Admins) */}
+      {addSessionModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.65)",
+            zIndex: 99999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+            backdropFilter: "blur(4px)",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--surface, #1E293B)",
+              borderRadius: 14,
+              padding: 26,
+              maxWidth: 480,
+              width: "100%",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+              color: "var(--text, #FFF)",
+              border: "1px solid var(--border, rgba(255,255,255,0.1))",
+            }}
+          >
+            <div className="tai-row tai-between" style={{ marginBottom: 14, alignItems: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: 16 }}>Schedule Live Studio Session</div>
+              <button
+                type="button"
+                className="tai-iconbtn"
+                onClick={() => setAddSessionModalOpen(false)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: 12.5, color: "var(--text-3)", margin: "0 0 16px", lineHeight: 1.45 }}>
+              Create a scheduled virtual workshop or code critique session for all enrolled learners in this cohort.
+            </p>
+
+            <form onSubmit={handleCreateSession}>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 5 }}>Session Title *</div>
+                <input
+                  type="text"
+                  className="tai-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  placeholder="e.g. Sprint 2 Architecture Review & Code Lab"
+                  required
+                  value={sessionTitle}
+                  onChange={(e) => setSessionTitle(e.target.value)}
+                />
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 5 }}>Starts At (Date & Time) *</div>
+                <input
+                  type="datetime-local"
+                  className="tai-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  required
+                  value={sessionStartsAt}
+                  onChange={(e) => setSessionStartsAt(e.target.value)}
+                />
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 5 }}>Virtual Studio Join URL (Google Meet / Zoom)</div>
+                <input
+                  type="url"
+                  className="tai-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  placeholder="https://meet.google.com/..."
+                  value={sessionJoinUrl}
+                  onChange={(e) => setSessionJoinUrl(e.target.value)}
+                />
+              </div>
+
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 5 }}>Session Agenda & Notes</div>
+                <textarea
+                  className="tai-input"
+                  rows={3}
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  placeholder="What will learners build or review in this live studio?"
+                  value={sessionDescription}
+                  onChange={(e) => setSessionDescription(e.target.value)}
+                />
+              </div>
+
+              <div className="tai-row tai-between" style={{ gap: 10, justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  className="tai-btn tai-btn-outline tai-btn-sm"
+                  onClick={() => setAddSessionModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="tai-btn tai-btn-primary tai-btn-sm"
+                  disabled={savingSession}
+                  style={{ padding: "8px 18px", fontWeight: 800 }}
+                >
+                  {savingSession ? "Scheduling..." : "Schedule Live Studio"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 
     </div>
   );
