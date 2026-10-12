@@ -122,6 +122,10 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
           orgName={orgQuery.data?.name || profileQuery?.data?.organization}
           orgSlug={orgQuery.data?.slug}
           showToast={showToast}
+          onFilterByReferral={() => {
+            try { sessionStorage.setItem("ta_people_filter_referral", "shareable_link"); } catch {}
+            if (setScreen) setScreen("people");
+          }}
         />
 
         {/* Primary 5-Card KPI Grid Composition */}

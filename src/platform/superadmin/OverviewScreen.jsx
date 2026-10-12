@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
-import { TopBar, StatCard, Tag, exportRowsAsCsv, ProgressBar } from "../components/PlatformUI.jsx";
+import React, { useState, useMemo, useContext } from "react";
+import { TopBar, StatCard, Tag, exportRowsAsCsv, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
 import {
   Building2, Users, Layers, Activity, Download, Clock,
   Globe, TrendingUp, TrendingDown, Megaphone, ShieldCheck,
   Server, Database, ArrowUpRight, CheckCircle2, ChevronRight, Plus,
-  DollarSign, BarChart2, Radio, Play, CalendarCheck
+  DollarSign, BarChart2, Radio, Play, CalendarCheck, Link2, Copy
 } from "lucide-react";
 import { Skeleton } from "../../components/common/Skeleton.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
@@ -16,18 +16,25 @@ import {
   fetchWebsitePerformanceStats,
   fetchChurnSummary,
   fetchCampaignAttribution,
-  checkPlatformHealth
+  checkPlatformHealth,
+  matchesDateRangeFilter,
 } from "../../lib/api/platform.js";
 import {
   fetchPlatformEnrollmentTrend,
   fetchPlatformAIUsageByFeature,
   fetchPlatformLessonCount
 } from "../../lib/api/live/ownerLive.js";
+import { PlatformUserReferralTracker } from "./OrganizationsScreen.jsx";
 
 const FEATURE_COLORS = ["#3B82F6", "#EC4899", "#10B981", "#8B5CF6", "#F59E0B", "#06B6D4"];
 
 export function OverviewScreen({ orgSelector, onNavigate }) {
+  const showToast = useContext(ToastContext);
   const [activeChartMetric, setActiveChartMetric] = useState("enrollments");
+  const [tenantLinkFilter, setTenantLinkFilter] = useState("all");
+  const [tenantDatePreset, setTenantDatePreset] = useState("all");
+  const [tenantDateFrom, setTenantDateFrom] = useState("");
+  const [tenantDateTo, setTenantDateTo] = useState("");
 
   const statsQuery = useSupabaseQuery(async () => fetchPlatformOverviewStats(), []);
   const orgsQuery = useSupabaseQuery(async () => fetchAllOrganizationsWithUserCounts(), []);
@@ -50,11 +57,29 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
   const aiFeatures = aiFeatureUsageQuery.data || [];
   const lessonCount = lessonCountQuery.data || 0;
 
+  const filteredOrgs = useMemo(() => {
+    return orgs.filter((o) => {
+      const slug = o.referral_slug || o.slug || o.id;
+      const matchLink =
+        tenantLinkFilter === "all" ||
+        o.id === tenantLinkFilter ||
+        slug === tenantLinkFilter;
+      const matchDate = matchesDateRangeFilter(
+        o.created_at,
+        tenantDatePreset,
+        tenantDateFrom,
+        tenantDateTo
+      );
+      return matchLink && matchDate;
+    });
+  }, [orgs, tenantLinkFilter, tenantDatePreset, tenantDateFrom, tenantDateTo]);
+
   function handleExportPlatformReport() {
-    if (!orgs.length) return;
-    exportRowsAsCsv("platform-tenant-report.csv", orgs.map(o => ({
+    if (!filteredOrgs.length) return;
+    exportRowsAsCsv("platform-tenant-report.csv", filteredOrgs.map(o => ({
       organization: o.name,
       usersCount: o.user_count || 0,
+      shareableInviteLink: o.shareable_link || `/?join=${o.referral_slug || o.slug || o.id}`,
       tier: o.subscription_tier || "growth",
       createdAt: new Date(o.created_at).toLocaleDateString(),
       status: o.status || "active",
@@ -225,6 +250,11 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
         </div>
 
         {/* =========================================================================
+            PLATFORM-WIDE USER TRACKING BY DATE & SHAREABLE INVITE LINK
+            ========================================================================= */}
+        <PlatformUserReferralTracker orgs={orgs} showToast={showToast} />
+
+        {/* =========================================================================
             ANALYTICS VISUALIZATION & AI CONSUMPTION SPLIT
             ========================================================================= */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 24 }}>
@@ -350,18 +380,75 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
           <div className="ta-card" style={{ padding: 24, borderRadius: 10 }}>
             <div className="ta-row ta-between" style={{ paddingBottom: 16, borderBottom: "1px solid var(--border)", gap: 10, flexWrap: "wrap" }}>
               <div>
-                <div className="ta-title" style={{ fontSize: 16 }}>Tenant Organizations</div>
-                <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Multi-tenant seat allocations &amp; statuses</div>
+                <div className="ta-title" style={{ fontSize: 16 }}>Tenant Organizations &amp; Shareable Invite Links</div>
+                <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Multi-tenant seat allocations, referral links &amp; creation dates</div>
               </div>
-              <div className="ta-row ta-gap8">
+              <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                <select
+                  className="ta-select"
+                  style={{ width: "auto", minWidth: 165, height: 32, fontSize: 11.5 }}
+                  value={tenantLinkFilter}
+                  onChange={(e) => setTenantLinkFilter(e.target.value)}
+                  title="Filter by Organization Shareable Invite & Referral Link"
+                >
+                  <option value="all">All Invite Links</option>
+                  {orgs.map((o) => {
+                    const slug = o.referral_slug || o.slug || o.id;
+                    return (
+                      <option key={o.id} value={o.id}>
+                        {o.name} (/?join={slug})
+                      </option>
+                    );
+                  })}
+                </select>
+                <select
+                  className="ta-select"
+                  style={{ width: "auto", minWidth: 130, height: 32, fontSize: 11.5 }}
+                  value={tenantDatePreset}
+                  onChange={(e) => setTenantDatePreset(e.target.value)}
+                  title="Filter by Date Created"
+                >
+                  <option value="all">All Dates</option>
+                  <option value="today">Today</option>
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                  <option value="90d">Last 90 Days</option>
+                  <option value="this_month">This Month</option>
+                  <option value="this_year">This Year</option>
+                  <option value="custom">Custom Dates</option>
+                </select>
+                {(tenantDatePreset === "custom" || tenantDateFrom || tenantDateTo) && (
+                  <div className="ta-row ta-gap4" style={{ flexWrap: "wrap" }}>
+                    <input
+                      type="date"
+                      className="ta-input"
+                      style={{ width: "auto", height: 32, padding: "0 6px", fontSize: 11 }}
+                      value={tenantDateFrom}
+                      onChange={(e) => {
+                        setTenantDateFrom(e.target.value);
+                        if (tenantDatePreset !== "custom") setTenantDatePreset("custom");
+                      }}
+                    />
+                    <input
+                      type="date"
+                      className="ta-input"
+                      style={{ width: "auto", height: 32, padding: "0 6px", fontSize: 11 }}
+                      value={tenantDateTo}
+                      onChange={(e) => {
+                        setTenantDateTo(e.target.value);
+                        if (tenantDatePreset !== "custom") setTenantDatePreset("custom");
+                      }}
+                    />
+                  </div>
+                )}
                 <button
                   className="ta-btn ta-btn-outline ta-btn-sm"
                   onClick={handleExportPlatformReport}
-                  disabled={!orgs.length}
+                  disabled={!filteredOrgs.length}
                 >
                   <Download size={13} /> Export CSV
                 </button>
-                <Tag tone="primary">{orgs.length} Active Tenants</Tag>
+                <Tag tone="primary">{filteredOrgs.length} Tenants</Tag>
               </div>
             </div>
 
@@ -371,6 +458,7 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                   <tr>
                     <th>Organization</th>
                     <th>Active Seats</th>
+                    <th>Shareable Invite Link</th>
                     <th>Tier</th>
                     <th>Status</th>
                   </tr>
@@ -382,44 +470,69 @@ export function OverviewScreen({ orgSelector, onNavigate }) {
                         <tr key={idx}>
                           <td><Skeleton width="160px" height="16px" borderRadius="4px" /></td>
                           <td><Skeleton width="70px" height="14px" borderRadius="4px" /></td>
+                          <td><Skeleton width="110px" height="14px" borderRadius="4px" /></td>
                           <td><Skeleton width="60px" height="20px" borderRadius="4px" /></td>
                           <td><Skeleton width="50px" height="20px" borderRadius="4px" /></td>
                         </tr>
                       ))}
                     </>
                   )}
-                  {orgsQuery.error && <tr><td colSpan={4} className="ta-empty">Couldn't load organizations: {orgsQuery.error}</td></tr>}
-                  {!orgsQuery.loading && !orgsQuery.error && orgs.length === 0 && (
-                    <tr><td colSpan={4} className="ta-empty">No organizations registered yet.</td></tr>
+                  {orgsQuery.error && <tr><td colSpan={5} className="ta-empty">Couldn't load organizations: {orgsQuery.error}</td></tr>}
+                  {!orgsQuery.loading && !orgsQuery.error && filteredOrgs.length === 0 && (
+                    <tr><td colSpan={5} className="ta-empty">No organizations match the current date or invite link filters.</td></tr>
                   )}
-                  {orgs.map((o) => (
-                    <tr key={o.id}>
-                      <td>
-                        <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
-                          <div style={{ color: "var(--primary)", display: "flex", alignItems: "center", flexShrink: 0 }}>
-                            <Building2 size={18} />
+                  {filteredOrgs.map((o) => {
+                    const slug = o.referral_slug || o.slug || o.id;
+                    const shareableLink = o.shareable_link || `${typeof window !== "undefined" ? window.location.origin : "https://train-ai-app.vercel.app"}/?join=${encodeURIComponent(slug)}`;
+                    return (
+                      <tr key={o.id}>
+                        <td>
+                          <div className="ta-row ta-gap10" style={{ minWidth: 0 }}>
+                            <div style={{ color: "var(--primary)", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                              <Building2 size={18} />
+                            </div>
+                            <div style={{ minWidth: 0, overflow: "hidden" }}>
+                              <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>
+                              <div style={{ fontSize: 11, color: "var(--text-3)" }}>
+                                Created {o.created_at ? new Date(o.created_at).toLocaleDateString() : "—"}
+                              </div>
+                            </div>
                           </div>
-                          <div style={{ minWidth: 0, overflow: "hidden" }}>
-                            <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{o.name}</div>
-                            <div style={{ fontSize: 11, color: "var(--text-3)" }}>ID: {o.id.slice(0, 8)}...</div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 700, fontSize: 13.5 }}>{o.user_count || 0} learners</div>
+                        </td>
+                        <td>
+                          <div className="ta-row ta-gap6">
+                            <span style={{ fontSize: 11, fontFamily: "monospace", color: "var(--primary)" }}>
+                              /?join={slug}
+                            </span>
+                            <button
+                              className="ta-btn ta-btn-ghost ta-btn-sm"
+                              style={{ height: 22, padding: "0 6px", fontSize: 10 }}
+                              onClick={() => {
+                                navigator.clipboard?.writeText(shareableLink);
+                                if (showToast) showToast(`Copied ${o.name} invite link!`);
+                              }}
+                              title="Copy Shareable Invite & Referral Link"
+                            >
+                              <Copy size={10} /> Copy
+                            </button>
                           </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 700, fontSize: 13.5 }}>{o.user_count || 0} learners</div>
-                      </td>
-                      <td>
-                        <Tag tone={o.subscription_tier === "enterprise" ? "primary" : "neutral"}>
-                          {o.subscription_tier ? o.subscription_tier.toUpperCase() : "GROWTH"}
-                        </Tag>
-                      </td>
-                      <td>
-                        <Tag tone={o.status === "active" ? "success" : "warning"}>
-                          {o.status || "active"}
-                        </Tag>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td>
+                          <Tag tone={o.subscription_tier === "enterprise" ? "primary" : "neutral"}>
+                            {o.subscription_tier ? o.subscription_tier.toUpperCase() : "GROWTH"}
+                          </Tag>
+                        </td>
+                        <td>
+                          <Tag tone={o.status === "active" ? "success" : "warning"}>
+                            {o.status || "active"}
+                          </Tag>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

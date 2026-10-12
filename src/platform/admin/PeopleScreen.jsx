@@ -19,7 +19,7 @@ import {
 } from "../../lib/api/organizations.js";
 import { activeProject, SUPABASE_PROJECTS } from "../../lib/supabaseClient.js";
 import {
-  fetchOrgMembers, fetchPendingInvitations, createInvitation, revokeInvitation,
+  fetchOrgMembers, matchesDateRangeFilter, fetchPendingInvitations, createInvitation, revokeInvitation,
   updateOrgMemberStatus, fetchOrgLearnerProgressOverview, issueCertificateDirectly,
   fetchOrgInstructorsMonitor, bulkImportUsers, parseUserImportCsv, fetchCohorts,
   // Everything below is new - the directory previously had no way to open a
@@ -76,12 +76,15 @@ async function downloadUserDataExport(userId, label) {
 // the roster an admin actually asks for - one row per member with the columns
 // on screen - and nothing in this screen could produce it before.
 function downloadDirectoryCsv(rows, progressByMemberId) {
-  const header = ["Name", "Email", "Role", "Status", "Cohort", "Avg progress %", "Department", "Last active"];
+  const header = ["Name", "Email", "Role", "Status", "Join Source", "Shareable Referral Link", "Date Joined", "Cohort", "Avg progress %", "Department", "Last active"];
   const body = rows.map((m) => [
     m.display_name || "",
     m.email || "",
     ROLE_LABEL[m.role] || m.role || "",
     m.status || "",
+    (m.join_source || "shareable_link") === "shareable_link" ? "Organization Shareable Invite Link" : m.join_source === "email_invite" ? "Email Invitation" : "Direct / Admin",
+    m.referral_link || "",
+    (m.joined_at || m.created_at) ? new Date(m.joined_at || m.created_at).toISOString().slice(0, 10) : "",
     m.cohort_name || "",
     Object.prototype.hasOwnProperty.call(progressByMemberId, m.id) ? String(progressByMemberId[m.id]) : "",
     m.department || "",
@@ -466,7 +469,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
 /* ==========================================================================
    Organization Shareable Join & Referral Link Card
    ========================================================================= */
-export function OrganizationReferralCard({ orgId, orgName, orgSlug, showToast }) {
+export function OrganizationReferralCard({ orgId, orgName, orgSlug, showToast, members = [], referralFilter = "all", onToggleReferralFilter }) {
   const [copied, setCopied] = useState(false);
   const [copiedMsg, setCopiedMsg] = useState(false);
   const [showQr, setShowQr] = useState(false);
@@ -622,6 +625,21 @@ export function OrganizationReferralCard({ orgId, orgName, orgSlug, showToast })
         >
           <QrCode size={14} /> QR Code
         </button>
+
+        {typeof onToggleReferralFilter === "function" && (
+          <button
+            type="button"
+            className={referralFilter === "shareable_link" ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
+            onClick={() => onToggleReferralFilter(referralFilter === "shareable_link" ? "all" : "shareable_link")}
+            title="Filter user directory to show only members who joined via this Organization Shareable Invite & Referral Link"
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700 }}
+          >
+            <Users size={14} />
+            {referralFilter === "shareable_link"
+              ? `Showing Link Signups (${members.filter((m) => (m.join_source || "shareable_link") === "shareable_link").length})`
+              : `Track Link Users (${members.filter((m) => (m.join_source || "shareable_link") === "shareable_link").length})`}
+          </button>
+        )}
       </div>
 
       {showQr && (
@@ -701,6 +719,19 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const [cohortFilter, setCohortFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [referralFilter, setReferralFilter] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem("ta_people_filter_referral");
+      if (saved) {
+        sessionStorage.removeItem("ta_people_filter_referral");
+        return saved;
+      }
+    } catch {}
+    return "all";
+  });
+  const [dateFilter, setDateFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [progressSort, setProgressSort] = useState("pace"); // "pace" | "name"
   const [detailMember, setDetailMember] = useState(null);
   // Row actions live in a portal action sheet, not an absolutely-positioned
@@ -763,14 +794,24 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
       || (m.display_name || "").toLowerCase().includes(needle)
       || (m.email || "").toLowerCase().includes(needle)
       || (m.role || "").toLowerCase().includes(needle)
-      || (m.department || "").toLowerCase().includes(needle);
+      || (m.department || "").toLowerCase().includes(needle)
+      || (m.referral_link || "").toLowerCase().includes(needle)
+      || (m.organization_name || "").toLowerCase().includes(needle);
     if (!matchesSearch) return false;
     if (roleFilter !== "all" && (m.role || "learner") !== roleFilter) return false;
     if (statusFilter !== "all" && (m.status || "active") !== statusFilter) return false;
-    if (cohortFilter === "none") return !m.cohort_name;
-    if (cohortFilter !== "all") return m.cohort_name === cohortFilter;
+    if (cohortFilter === "none" && m.cohort_name) return false;
+    if (cohortFilter !== "all" && cohortFilter !== "none" && m.cohort_name !== cohortFilter) return false;
+    if (referralFilter !== "all") {
+      const memberJoinSource = m.join_source || "shareable_link";
+      if (referralFilter === "shareable_link" && memberJoinSource !== "shareable_link") return false;
+      if (referralFilter === "email_invite" && memberJoinSource !== "email_invite") return false;
+      if (referralFilter === "direct" && memberJoinSource !== "direct") return false;
+    }
+    const effectiveDate = m.joined_at || m.created_at || m.last_active_at;
+    if (!matchesDateRangeFilter(effectiveDate, dateFilter, dateFrom, dateTo)) return false;
     return true;
-  }), [members, search, roleFilter, statusFilter, cohortFilter]);
+  }), [members, search, roleFilter, statusFilter, cohortFilter, referralFilter, dateFilter, dateFrom, dateTo]);
 
   const selectedMembers = members.filter((m) => selectedMemberIds.has(m.id));
 
@@ -939,7 +980,13 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
             </div>
 
             {/* Organization Shareable Invite & Referral Link Card */}
-            <OrganizationReferralCard orgId={orgId} showToast={showToast} />
+            <OrganizationReferralCard
+              orgId={orgId}
+              showToast={showToast}
+              members={members}
+              referralFilter={referralFilter}
+              onToggleReferralFilter={(next) => setReferralFilter(next)}
+            />
 
             <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
@@ -971,12 +1018,78 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     <option value="suspended">Suspended</option>
                     <option value="pending">Pending</option>
                   </select>
-                  <select className="ta-input" style={{ width: "auto", minWidth: 130, flex: "0 1 150px" }} defaultValue="all">
+                  <select
+                    className="ta-input"
+                    style={{ width: "auto", minWidth: 185, flex: "0 1 220px", borderColor: referralFilter !== "all" ? "#2563EB" : undefined }}
+                    value={referralFilter}
+                    onChange={(e) => setReferralFilter(e.target.value)}
+                    title="Filter by Organization Shareable Invite & Referral Link or Join Method"
+                  >
+                    <option value="all">All Invite &amp; Referral Sources</option>
+                    <option value="shareable_link">🔗 Shareable Invite &amp; Referral Link</option>
+                    <option value="email_invite">✉️ Direct Email Invitation</option>
+                    <option value="direct">👤 Admin / Direct Provisioned</option>
+                  </select>
+                  <select
+                    className="ta-input"
+                    style={{ width: "auto", minWidth: 145, flex: "0 1 170px", borderColor: dateFilter !== "all" ? "#2563EB" : undefined }}
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    title="Filter users by date joined or active date"
+                  >
                     <option value="all">All Dates / Historic</option>
+                    <option value="today">Joined Today</option>
+                    <option value="7d">Last 7 Days</option>
                     <option value="30d">Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
                     <option value="this_month">This Month</option>
                     <option value="this_year">This Year</option>
+                    <option value="custom">Custom Date Range...</option>
                   </select>
+                  <div className="ta-row ta-gap6" style={{ alignItems: "center", flexWrap: "wrap" }}>
+                    <input
+                      type="date"
+                      className="ta-input"
+                      style={{ width: "auto", minWidth: 128, fontSize: 12, padding: "6px 8px" }}
+                      value={dateFrom}
+                      onChange={(e) => {
+                        setDateFrom(e.target.value);
+                        if (e.target.value && dateFilter === "all") setDateFilter("custom");
+                      }}
+                      title="Start Date (From)"
+                    />
+                    <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>to</span>
+                    <input
+                      type="date"
+                      className="ta-input"
+                      style={{ width: "auto", minWidth: 128, fontSize: 12, padding: "6px 8px" }}
+                      value={dateTo}
+                      onChange={(e) => {
+                        setDateTo(e.target.value);
+                        if (e.target.value && dateFilter === "all") setDateFilter("custom");
+                      }}
+                      title="End Date (To)"
+                    />
+                  </div>
+                  {(referralFilter !== "all" || dateFilter !== "all" || dateFrom || dateTo || roleFilter !== "all" || statusFilter !== "all" || cohortFilter !== "all" || search) && (
+                    <button
+                      type="button"
+                      className="ta-btn ta-btn-ghost ta-btn-sm"
+                      onClick={() => {
+                        setSearch("");
+                        setCohortFilter("all");
+                        setRoleFilter("all");
+                        setStatusFilter("all");
+                        setReferralFilter("all");
+                        setDateFilter("all");
+                        setDateFrom("");
+                        setDateTo("");
+                      }}
+                      style={{ fontSize: 11.5, color: "#2563EB", fontWeight: 700 }}
+                    >
+                      Reset Filters ({filteredMembers.length}/{members.length})
+                    </button>
+                  )}
                 </div>
 
                 <button
@@ -1044,6 +1157,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                       </th>
                       <th style={{ minWidth: 180 }}>Member</th>
                       <th>Role</th>
+                      <th>Invite &amp; Referral Link</th>
+                      <th>Date Joined</th>
                       <th>Cohort</th>
                       <th>Attendance</th>
                       <th style={{ minWidth: 150 }}>Course Progress</th>
@@ -1052,8 +1167,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {membersQuery.loading && <tr><td colSpan={8} className="ta-empty">Loading members...</td></tr>}
-                    {!membersQuery.loading && filteredMembers.length === 0 && <tr><td colSpan={8} className="ta-empty">No members match your filters.</td></tr>}
+                    {membersQuery.loading && <tr><td colSpan={10} className="ta-empty">Loading members...</td></tr>}
+                    {!membersQuery.loading && filteredMembers.length === 0 && <tr><td colSpan={10} className="ta-empty">No members match your filters.</td></tr>}
                     {filteredMembers.map((m) => {
                       const hasProgress = Object.prototype.hasOwnProperty.call(progressByMemberId, m.id);
                       const progress = hasProgress ? progressByMemberId[m.id] : 0;
@@ -1085,6 +1200,48 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                             </div>
                           </td>
                           <td><Tag>{ROLE_LABEL[m.role] || m.role || "learner"}</Tag></td>
+                          <td>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                              {(m.join_source || "shareable_link") === "shareable_link" ? (
+                                <span style={{
+                                  display: "inline-flex", alignItems: "center", gap: 4,
+                                  fontSize: 11, fontWeight: 700, color: "#2563EB",
+                                  background: "#EFF6FF", padding: "2px 7px", borderRadius: 5,
+                                  width: "fit-content"
+                                }}>
+                                  <Link2 size={11} /> Shareable Invite Link
+                                </span>
+                              ) : m.join_source === "email_invite" ? (
+                                <span style={{
+                                  display: "inline-flex", alignItems: "center", gap: 4,
+                                  fontSize: 11, fontWeight: 700, color: "#059669",
+                                  background: "#ECFDF5", padding: "2px 7px", borderRadius: 5,
+                                  width: "fit-content"
+                                }}>
+                                  <Mail size={11} /> Email Invite
+                                </span>
+                              ) : (
+                                <span style={{
+                                  display: "inline-flex", alignItems: "center", gap: 4,
+                                  fontSize: 11, fontWeight: 600, color: "var(--text-2)",
+                                  background: "var(--surface-2)", padding: "2px 7px", borderRadius: 5,
+                                  width: "fit-content"
+                                }}>
+                                  Direct / Admin
+                                </span>
+                              )}
+                              {m.referral_link && (
+                                <span style={{ fontSize: 10.5, fontFamily: "monospace", color: "var(--text-3)", maxWidth: 165, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={m.referral_link}>
+                                  {m.referral_link.replace(/^https?:\/\/[^/]+/, "")}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: 12, color: "var(--text-2)", fontWeight: 600 }}>
+                              {(m.joined_at || m.created_at) ? new Date(m.joined_at || m.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "N/A"}
+                            </span>
+                          </td>
                           <td>
                             <span style={{ fontSize: 12.5, fontWeight: 500, color: m.cohort_name ? "var(--text)" : "var(--text-3)" }}>
                               {m.cohort_name || "Not in a cohort"}

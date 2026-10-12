@@ -349,11 +349,24 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
       if (isUuid) {
         profileUpdate.org_id = orgId;
       }
+      const refUrl = getOrganizationJoinUrl(orgInfo?.slug || target);
       await supabase.from("profiles").update(profileUpdate).eq("id", userId);
+      await supabase
+        .from("user_profiles")
+        .update({
+          ...(isUuid ? { organization_id: orgId } : {}),
+          join_source: "shareable_link",
+          referral_link: refUrl,
+          joined_at: new Date().toISOString(),
+        })
+        .eq("id", userId)
+        .then(() => {}, () => {});
       await supabase.auth.updateUser({
         data: {
           organization: orgName,
           organization_id: orgId,
+          join_source: "shareable_link",
+          referral_link: refUrl,
         },
       });
     }
@@ -1237,6 +1250,8 @@ export async function fetchPendingOrgJoinRequests(orgId) {
         joined_at: new Date(Date.now() - 3600000 * 4).toISOString(),
         display_name: "Chukwudi Okafor",
         email: "c.okafor@example.com",
+        join_source: "shareable_link",
+        referral_link: getOrganizationJoinUrl(orgId),
         avatar_url: null
       }
     ];
@@ -1245,7 +1260,7 @@ export async function fetchPendingOrgJoinRequests(orgId) {
   try {
     const { data: memberRows, error: memberErr } = await supabase
       .from("organization_members")
-      .select("id, user_id, organization_id, role, status, joined_at")
+      .select("*")
       .eq("organization_id", orgId)
       .eq("status", "pending")
       .order("joined_at", { ascending: false });
@@ -1269,7 +1284,9 @@ export async function fetchPendingOrgJoinRequests(orgId) {
         display_name: p.display_name || "Learner",
         email: p.email || "No email on file",
         avatar_url: p.avatar_url || null,
-        user_role: p.role || m.role || "learner"
+        user_role: p.role || m.role || "learner",
+        join_source: m.join_source || (m.invited_by ? "email_invite" : "shareable_link"),
+        referral_link: m.referral_link || getOrganizationJoinUrl(orgId)
       };
     });
   } catch (e) {
