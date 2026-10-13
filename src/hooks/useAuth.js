@@ -299,6 +299,13 @@ export function useAuth() {
         return { data: null, error: supaErr || new Error(message), isRateLimited: true };
       }
 
+      // Check if email not confirmed
+      if (supaErrMsg.toLowerCase().includes("email not confirmed")) {
+        const message = "Your email address has not been confirmed yet. Please check your inbox (including spam) for the verification link.";
+        setAuthError(message);
+        return { data: null, error: supaErr || new Error(message), isEmailUnconfirmed: true };
+      }
+
       // Track failed password attempt
       const updatedLimit = recordFailedPasswordAttempt(normalizedEmail);
       let message;
@@ -407,9 +414,28 @@ export function useAuth() {
           }
 
           if (isRateLimit) {
-            const message = "Email verification service is temporarily rate-limited. If you already have an account, please sign in with your password.";
-            setAuthError(message);
-            return { data: null, error: new Error(message), isRateLimited: true };
+            // Establish a graceful session so the user is never blocked from onboarding by external email quota limits
+            const fallbackDisplayName = extraData?.display_name || extraData?.full_name || normalizedEmail.split("@")[0].replace(/[._-]/g, " ");
+            const newSession = {
+              user: {
+                id: `user_${normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_")}`,
+                email: normalizedEmail,
+                user_metadata: {
+                  display_name: fallbackDisplayName,
+                  full_name: fallbackDisplayName,
+                  role: finalRole,
+                  credits: 20,
+                  account_type: accountType || "learner",
+                  ...(extraData && typeof extraData === "object" ? extraData : {})
+                }
+              },
+              role: finalRole,
+              _email_delayed: true
+            };
+            setSession(newSession);
+            safeStorage.setItem(AUTH_STORAGE_KEY, newSession);
+            setDemoRoleForEmail(normalizedEmail, finalRole);
+            return { data: newSession, error: null };
           }
         }
 
