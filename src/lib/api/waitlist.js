@@ -247,11 +247,10 @@ export async function submitDemoRequest({
   phone = null,
 } = {}) {
   const normalizedEmail = normalizeEmail(workEmail);
-  if (!fullName?.trim() || !isValidEmail(normalizedEmail) || !companyName?.trim()) {
-    return { success: false, error: "Please fill in your name, work email, and company." };
-  }
-
   const cleanPhone = (phoneNumber || phone || "").trim();
+  if (!fullName?.trim() || !isValidEmail(normalizedEmail) || !companyName?.trim() || !cleanPhone) {
+    return { success: false, error: "Please fill in your name, work email, phone number, and organization name." };
+  }
 
   // Combine agenda notes with phone number so it's always included in Google Calendar description,
   // emails, and database records regardless of backend schema differences

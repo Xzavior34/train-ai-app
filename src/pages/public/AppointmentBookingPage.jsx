@@ -251,8 +251,14 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
       setSubmitError("This time slot is already booked. Please choose a different one.");
       return;
     }
-    if (!fullName.trim() || !workEmail.trim() || !organizationName.trim()) {
-      setSubmitError("Please fill in your name, work email, and organization name.");
+    const cleanPhone = phoneNumber.trim();
+    if (!fullName.trim() || !workEmail.trim() || !cleanPhone || !organizationName.trim()) {
+      setSubmitError("Please fill in your name, work email, phone number, and organization name.");
+      return;
+    }
+    const phoneDigits = cleanPhone.replace(/\D/g, "");
+    if (phoneDigits.length < 7) {
+      setSubmitError("Please enter a valid phone number (at least 7 digits, including country or area code).");
       return;
     }
 
@@ -260,7 +266,6 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
     setSubmitError("");
 
     try {
-      const cleanPhone = phoneNumber.trim();
       const result = await submitDemoRequest({
         fullName: fullName.trim(),
         workEmail: workEmail.trim(),
@@ -751,10 +756,10 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
 
                   {/* Phone Number */}
                   <div>
-                    <label style={S.label}>Phone Number / WhatsApp <span style={{ color: "#94A3B8", fontWeight: 400 }}>(Optional - for meeting & calendar reminders)</span></label>
+                    <label style={S.label}>Phone Number / WhatsApp <span style={{ color: "#EF4444" }}>*</span></label>
                     <div className="apt-input-group" style={S.inputGroup}>
                       <Phone size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
-                      <input type="tel" placeholder="e.g. +234 801 234 5678 or +1 (555) 019-2834"
+                      <input required type="tel" placeholder="e.g. +234 801 234 5678 or +1 (555) 019-2834"
                         value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)}
                         className="apt-input-field" style={S.textInput} />
                     </div>

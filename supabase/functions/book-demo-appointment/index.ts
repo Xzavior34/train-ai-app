@@ -264,8 +264,8 @@ Deno.serve(async (req) => {
       utmMedium: clean(body.utm_medium, 200),
       utmCampaign: clean(body.utm_campaign, 200),
     };
-    if (!input.fullName || !isEmail(input.workEmail) || !input.organizationName || !input.teamSize || !input.orgType) {
-      return respond(req, { success: false, error: "Please complete all required booking details." }, 400);
+    if (!input.fullName || !isEmail(input.workEmail) || !input.phoneNumber || !input.organizationName || !input.teamSize || !input.orgType) {
+      return respond(req, { success: false, error: "Please complete all required booking details including your contact phone number." }, 400);
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(input.scheduledDate) || !validSlots.has(input.scheduledTime)) {
       return respond(req, { success: false, error: "Please select a valid appointment date and time." }, 400);

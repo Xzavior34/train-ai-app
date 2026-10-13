@@ -39,7 +39,19 @@ async function runTests() {
   assert(typeof submitDemoRequest === "function", "submitDemoRequest must be exported as a function");
   pass("submitDemoRequest is properly exported and callable");
 
-  // 2. Test booking submission with phone number
+  // 2. Test mandatory rejection when phone number is missing
+  const rejectResult = await submitDemoRequest({
+    fullName: "Dr. Test User",
+    workEmail: "test@example.com",
+    companyName: "Test Company",
+    phoneNumber: "", // Empty phone
+    phone: "",
+  });
+  assert(rejectResult.success === false, "Missing phone number must be rejected");
+  assert(rejectResult.error.toLowerCase().includes("phone"), "Error message must mention phone number");
+  pass(`submitDemoRequest enforces mandatory phone number: rejected with "${rejectResult.error}"`);
+
+  // 3. Test booking submission with valid phone number
   const testPhone = "+234 801 234 5678";
   const submitResult = await submitDemoRequest({
     fullName: "Prof. Kenneth Okafor",
