@@ -210,13 +210,18 @@ export function useAuth() {
       return { data: null, error: new Error(lockMsg), isRateLimited: true, remainingMs: rateLimit.remainingMs };
     }
 
-    const candidateEmails = [rawInput];
+    const candidateEmails = [normalizedEmail];
+    if (rawInput !== normalizedEmail && !candidateEmails.includes(rawInput)) {
+      candidateEmails.push(rawInput);
+    }
     if (!rawInput.includes("@") && rawInput.length > 0) {
-      candidateEmails.push(`${rawInput}@gmail.com`);
-      candidateEmails.push(`${rawInput}@sarafoundation.org`);
-      candidateEmails.push(`${rawInput}@sarafoundationafrica.com`);
-      candidateEmails.push(`${rawInput}@yahoo.com`);
-      candidateEmails.push(`${rawInput}@outlook.com`);
+      candidateEmails.push(`${normalizedEmail}@gmail.com`);
+      candidateEmails.push(`${normalizedEmail}@sarafoundation.org`);
+      candidateEmails.push(`${normalizedEmail}@sarafoundationafrica.com`);
+      candidateEmails.push(`${normalizedEmail}@yahoo.com`);
+      candidateEmails.push(`${normalizedEmail}@outlook.com`);
+      candidateEmails.push(`${normalizedEmail}@trainailtd.com`);
+      candidateEmails.push(`${normalizedEmail}@sarafoundationafrica.org`);
     }
 
     let targetProject = resolveProjectForSignIn(rawInput);
@@ -367,25 +372,36 @@ export function useAuth() {
         const isAlreadyRegistered = errMsg.toLowerCase().includes("already registered") || errMsg.toLowerCase().includes("already exists");
 
         if (isRateLimit || isAlreadyRegistered) {
-          // If the email already exists in Auth or mail provider is rate-limited, attempt seamless sign-in with the provided password
-          try {
-            const signInRes = await client.auth.signInWithPassword({
-              email: normalizedEmail,
-              password,
-            });
-            if (signInRes?.data?.session) {
-              setActiveSupabaseProject(targetProject);
-              resetPasswordRateLimit(normalizedEmail);
-              setSession(signInRes.data.session);
-              safeStorage.setItem(AUTH_STORAGE_KEY, signInRes.data.session);
-              return { data: signInRes.data, error: null };
+          // If the email already exists in Auth or mail provider is rate-limited, attempt seamless sign-in with the provided password.
+          // Tries target project, and critically tests the old database (SARA_FOUNDATION) where the 700+ users reside!
+          const candidateProjects = [
+            targetProject,
+            SUPABASE_PROJECTS.SARA_FOUNDATION,
+            SUPABASE_PROJECTS.ORGANIZATION_DB
+          ].filter((p, idx, arr) => p && arr.indexOf(p) === idx);
+
+          for (const projKey of candidateProjects) {
+            const projClient = getSupabaseClientForProject(projKey);
+            if (!projClient) continue;
+            try {
+              const signInRes = await projClient.auth.signInWithPassword({
+                email: normalizedEmail,
+                password,
+              });
+              if (signInRes?.data?.session) {
+                setActiveSupabaseProject(projKey);
+                resetPasswordRateLimit(normalizedEmail);
+                setSession(signInRes.data.session);
+                safeStorage.setItem(AUTH_STORAGE_KEY, signInRes.data.session);
+                return { data: signInRes.data, error: null };
+              }
+            } catch (e) {
+              console.info("Sign-in fallback notice on", projKey, e);
             }
-          } catch (e) {
-            console.info("Sign-in fallback notice:", e);
           }
 
           if (isAlreadyRegistered) {
-            const message = "An account with this email already exists. Please sign in with your password or use Forgot Password.";
+            const message = "An account with this email already exists in our records. Please sign in with your password or use Forgot Password to reset it.";
             setAuthError(message);
             return { data: null, error: new Error(message), isExistingUser: true };
           }
