@@ -324,7 +324,7 @@ export function useAuth() {
     return { data: newSession, error: null };
   }, []);
 
-  const signUp = useCallback(async (email, password, role = "learner", accountType = "learner", preferredProject = "") => {
+  const signUp = useCallback(async (email, password, role = "learner", accountType = "learner", preferredProject = "", extraData = {}) => {
     setAuthError(null);
     const normalizedEmail = (email || "").trim().toLowerCase();
     let finalRole = role === "mentor" ? "mentor" : "learner";
@@ -341,7 +341,12 @@ export function useAuth() {
         supaRes = await client.auth.signUp({
           email: normalizedEmail,
           password,
-          options: { data: { role: finalRole } }
+          options: {
+            data: {
+              role: finalRole,
+              ...(extraData && typeof extraData === "object" ? extraData : {})
+            }
+          }
         });
       } catch (networkErr) {
         const message = "Could not reach the authentication server. Please check your network connection and try again.";

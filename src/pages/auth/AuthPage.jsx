@@ -416,7 +416,7 @@ export default function AuthPage({
       const signInRes = await onSignIn(email, password);
       setRateLimit(getRateLimitStatus(email));
       if (!signInRes?.error && targetOrgTarget) {
-        await joinOrganizationByReferral(targetOrgTarget, "learner").catch(() => {});
+        await joinOrganizationByReferral(targetOrgTarget, "learner", signInRes?.data?.user?.id).catch(() => {});
       }
       setSubmitting(false);
     } else {
@@ -449,14 +449,22 @@ export default function AuthPage({
         // Individual learner sign-up
         setSubmitting(true);
         const matchedOrg = selectedDirectoryOrg || exactOrgMatch;
-        const result = await onSignUp(email, password, "learner", "learner", matchedOrg?.projectKey);
+        const joinTarget = matchedOrg?.slug || matchedOrg?.id || targetOrgTarget;
+        const orgMeta = joinTarget ? {
+          organization: orgInfo?.name || matchedOrg?.name || joinTarget,
+          organization_id: orgInfo?.id || matchedOrg?.id || joinTarget,
+          organization_slug: orgInfo?.slug || matchedOrg?.slug || joinTarget,
+          join_source: "shareable_link",
+          referral_link: `${typeof window !== "undefined" ? window.location.origin : "https://trainailtd.com"}/?join=${encodeURIComponent(orgInfo?.slug || matchedOrg?.slug || joinTarget)}`
+        } : {};
+
+        const result = await onSignUp(email, password, "learner", "learner", matchedOrg?.projectKey, orgMeta);
         if (!result?.error && result?.data?.user?.id) {
           attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
         }
         if (!result?.error) {
-          const joinTarget = matchedOrg?.slug || matchedOrg?.id || targetOrgTarget;
           if (joinTarget) {
-            await joinOrganizationByReferral(joinTarget, "learner").catch(() => {});
+            await joinOrganizationByReferral(joinTarget, "learner", result?.data?.user?.id).catch(() => {});
           } else {
             joinDefaultOrganization().catch(() => {});
           }

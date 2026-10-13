@@ -28,24 +28,80 @@ export async function fetchCurrentUserProfile(userId) {
 
   let orgId = data?.organization_id;
   // If the profile row does not exist in user_profiles or has no organization_id,
-  // invoke join_default_organization (SECURITY DEFINER) to provision the profile and org membership
+  // first check organization_members, pending join intent, or auth metadata before defaulting
   if (!data || !orgId) {
     if (isRealDatabaseId(userId)) {
+      // 1. Check if user already has an active or pending record in organization_members
       try {
-        const { data: defaultOrgId } = await supabase.rpc("join_default_organization");
-        if (defaultOrgId) orgId = defaultOrgId;
-        // Re-query user_profiles now that the RPC has inserted the profile row
-        const { data: refreshed } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
-        if (refreshed) {
-          data = refreshed;
-          orgId = refreshed.organization_id || orgId;
+        const { data: memberRow } = await supabase
+          .from("organization_members")
+          .select("organization_id, role, status")
+          .eq("user_id", userId)
+          .order("joined_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (memberRow?.organization_id) {
+          orgId = memberRow.organization_id;
         }
-      } catch (e) {
-        console.warn("Auto-provision profile via join_default_organization:", e);
+      } catch { /* best effort */ }
+
+      // 2. Check if a referral join intent was stored when user arrived via ?join=
+      if (!orgId && typeof window !== "undefined") {
         try {
-          const { data: defaultOrg } = await supabase.from("organizations").select("id").eq("slug", "tech-learning").maybeSingle();
-          orgId = defaultOrg?.id || orgId || null;
+          const rawPending = localStorage.getItem("trainai_pending_org_join");
+          if (rawPending) {
+            const parsed = JSON.parse(rawPending);
+            if (parsed?.orgIdOrSlug) {
+              const { data: rpcRes } = await supabase.rpc("join_organization_by_invite", {
+                p_org_target: parsed.orgIdOrSlug,
+                p_role: parsed.role || "learner"
+              }).catch(() => ({ data: null }));
+              if (rpcRes?.organization_id) {
+                orgId = rpcRes.organization_id;
+                try { localStorage.removeItem("trainai_pending_org_join"); } catch {}
+              }
+            }
+          }
         } catch { /* best effort */ }
+      }
+
+      // 3. Check if user metadata has an organization pointer
+      if (!orgId) {
+        try {
+          const { data: uRes } = await supabase.auth.getUser().catch(() => ({ data: null }));
+          const meta = uRes?.user?.user_metadata;
+          if (meta?.organization_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(meta.organization_id)) {
+            orgId = meta.organization_id;
+          } else if (meta?.organization_slug) {
+            const { data: orgBySlug } = await supabase.from("organizations").select("id").eq("slug", meta.organization_slug).limit(1).maybeSingle().catch(() => ({ data: null }));
+            if (orgBySlug?.id) orgId = orgBySlug.id;
+          }
+        } catch { /* best effort */ }
+      }
+
+      // 4. Only if completely unaffiliated individual learner, fall back to default organization
+      if (!orgId) {
+        try {
+          const { data: defaultOrgId } = await supabase.rpc("join_default_organization");
+          if (defaultOrgId) orgId = defaultOrgId;
+          const { data: refreshed } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
+          if (refreshed) {
+            data = refreshed;
+            orgId = refreshed.organization_id || orgId;
+          }
+        } catch (e) {
+          console.warn("Auto-provision profile via join_default_organization:", e);
+          try {
+            const { data: defaultOrg } = await supabase.from("organizations").select("id").eq("slug", "tech-learning").maybeSingle();
+            orgId = defaultOrg?.id || orgId || null;
+          } catch { /* best effort */ }
+        }
+      } else if (!data) {
+        // We resolved an orgId, re-query user_profiles
+        try {
+          const { data: refreshed } = await supabase.from("user_profiles").select("*").eq("id", userId).maybeSingle();
+          if (refreshed) data = refreshed;
+        } catch {}
       }
     }
   }
@@ -234,32 +290,107 @@ export async function fetchOrgMembers(organizationId) {
       },
     ];
   }
-  let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
-  if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
-  const { data, error } = await query;
-  if (error) throw error;
-  const profiles = data || [];
-  if (!profiles.length) return profiles;
+  // 1. Resolve organization identifier (slug, name alias, or UUID)
+  let resolvedOrgUuid = null;
+  let resolvedOrgInfo = null;
+  if (organizationId && organizationId !== "demo-org-id") {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(organizationId).trim());
+    if (isUuid) {
+      resolvedOrgUuid = String(organizationId).trim();
+    } else {
+      const clean = String(organizationId).trim().toLowerCase();
+      try {
+        const { data: orgMatch } = await supabase
+          .from("organizations")
+          .select("id, name, slug")
+          .or(`slug.eq.${clean},slug.ilike.${clean},name.ilike.%${clean}%`)
+          .limit(1)
+          .maybeSingle();
+        if (orgMatch) {
+          resolvedOrgUuid = orgMatch.id;
+          resolvedOrgInfo = orgMatch;
+        }
+      } catch {}
+    }
+  }
 
-  const userIds = profiles.map((p) => p.id);
-  const [memberRows, orgMemberRows, { data: orgRows }] = await Promise.all([
-    safeInQuery("cohort_members", "user_id, cohort_id", "user_id", userIds),
-    safeInQuery("organization_members", "*", "user_id", userIds).catch(() => []),
+  // 2. Query user_profiles and organization_members in parallel
+  let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
+  if (resolvedOrgUuid) {
+    query = query.eq("organization_id", resolvedOrgUuid);
+  }
+
+  let omQuery = supabase.from("organization_members").select("*").order("joined_at", { ascending: false });
+  if (resolvedOrgUuid) {
+    omQuery = omQuery.eq("organization_id", resolvedOrgUuid);
+  }
+
+  const [upResult, omResult, { data: orgRows }] = await Promise.all([
+    query.catch(() => ({ data: [] })),
+    omQuery.catch(() => ({ data: [] })),
     supabase.from("organizations").select("id, name, slug").then((r) => r, () => ({ data: [] })),
   ]);
 
+  const initialProfiles = upResult?.data || [];
+  const orgMemberRows = omResult?.data || [];
   const orgById = Object.fromEntries((orgRows || []).map((o) => [o.id, o]));
+  if (resolvedOrgInfo && resolvedOrgUuid && !orgById[resolvedOrgUuid]) {
+    orgById[resolvedOrgUuid] = resolvedOrgInfo;
+  }
+
+  // 3. Gather all unique user IDs across user_profiles and organization_members
+  const allUserIds = [...new Set([
+    ...initialProfiles.map((p) => p.id),
+    ...orgMemberRows.map((m) => m.user_id).filter(Boolean)
+  ])];
+
+  if (!allUserIds.length) return [];
+
+  // 4. Fetch profiles for any members in organization_members who were not captured by initial user_profiles query
+  const missingIds = allUserIds.filter((id) => !initialProfiles.some((p) => p.id === id));
+  let extraProfiles = [];
+  if (missingIds.length > 0) {
+    extraProfiles = await safeInQuery("user_profiles", "*", "id", missingIds).catch(() => []);
+  }
+
+  const combinedProfiles = [...initialProfiles, ...extraProfiles];
+  const profileMap = Object.fromEntries(combinedProfiles.map((p) => [p.id, p]));
+
+  // 5. If an invited member does not have a user_profiles row yet, synthesize one so they are visible
+  for (const om of orgMemberRows) {
+    if (om.user_id && !profileMap[om.user_id]) {
+      const fallbackName = om.display_name || (om.email ? om.email.split("@")[0].replace(/[._-]/g, " ") : "Learner");
+      const refSlug = resolvedOrgInfo?.slug || (resolvedOrgUuid ? orgById[resolvedOrgUuid]?.slug : null) || "workspace";
+      const synthesized = {
+        id: om.user_id,
+        display_name: fallbackName,
+        email: om.email || null,
+        role: om.role || "learner",
+        status: om.status || "active",
+        organization_id: om.organization_id || resolvedOrgUuid,
+        joined_at: om.joined_at || om.created_at || new Date().toISOString(),
+        created_at: om.created_at || om.joined_at || new Date().toISOString(),
+        join_source: om.join_source || "shareable_link",
+        referral_slug: refSlug,
+        referral_link: om.referral_link || `${baseOrigin}/?join=${refSlug}`,
+      };
+      combinedProfiles.push(synthesized);
+      profileMap[om.user_id] = synthesized;
+    }
+  }
+
   const orgMemberByUserId = {};
-  (orgMemberRows || []).forEach((om) => {
-    if (!orgMemberByUserId[om.user_id] || (organizationId && om.organization_id === organizationId)) {
+  orgMemberRows.forEach((om) => {
+    if (!orgMemberByUserId[om.user_id] || (resolvedOrgUuid && om.organization_id === resolvedOrgUuid)) {
       orgMemberByUserId[om.user_id] = om;
     }
   });
 
+  const memberRows = await safeInQuery("cohort_members", "user_id, cohort_id", "user_id", allUserIds).catch(() => []);
   const cohortIds = [...new Set((memberRows || []).map((m) => m.cohort_id))];
   let cohortNameById = {};
   if (cohortIds.length) {
-    const cohorts = await safeInQuery("cohorts", "id, name", "id", cohortIds);
+    const cohorts = await safeInQuery("cohorts", "id, name", "id", cohortIds).catch(() => []);
     cohortNameById = Object.fromEntries((cohorts || []).map((c) => [c.id, c.name]));
   }
   const cohortNamesByUserId = {};
@@ -269,6 +400,8 @@ export async function fetchOrgMembers(organizationId) {
     if (!cohortNamesByUserId[m.user_id]) cohortNamesByUserId[m.user_id] = [];
     if (!cohortNamesByUserId[m.user_id].includes(name)) cohortNamesByUserId[m.user_id].push(name);
   });
+
+  const profiles = combinedProfiles;
 
   return profiles.map((p) => {
     const om = orgMemberByUserId[p.id] || null;

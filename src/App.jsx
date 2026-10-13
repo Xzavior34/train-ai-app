@@ -222,12 +222,17 @@ export default function App() {
     return orgSlugParam ? "auth" : "landing";
   }); // "landing" | "auth" | "book-demo" | "marketplace"
 
-  // Auto-join if user is already authenticated and lands on an organization join/referral link
+  // Auto-join if user is already authenticated and lands on an organization join/referral link or has pending intent
   useEffect(() => {
-    if (session?.user?.id && orgSlugParam) {
-      joinOrganizationByReferral(orgSlugParam).catch((e) => console.warn("Auto-join referral notice:", e));
+    if (session?.user?.id) {
+      const pending = getPendingOrganizationJoin();
+      const target = orgSlugParam || pending?.orgIdOrSlug;
+      if (target) {
+        joinOrganizationByReferral(target, pending?.role || "learner", session.user.id)
+          .catch((e) => console.warn("Auto-join referral notice:", e));
+      }
     }
-  }, [session, orgSlugParam]);
+  }, [session?.user?.id, orgSlugParam]);
 
   // Handle browser back/forward buttons smoothly
   useEffect(() => {

@@ -296,7 +296,7 @@ export async function fetchOrganizationPublicInfo(orgIdOrSlug) {
  * Automatically joins the authenticated user into an organization by ID or Slug.
  * Used by organization referral links to automate invitations and eliminate manual email typing.
  */
-export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "learner") {
+export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "learner", explicitUserId = null) {
   const target = (orgIdOrSlug || "").trim();
   if (!target) return { success: false, error: "Missing organization identifier." };
 
@@ -320,6 +320,7 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
     return { success: true, organizationId: target, demo: true };
   }
 
+  // Attempt 1: Call join_organization_by_invite with (p_org_target, p_role)
   try {
     const { data: rpcData, error: rpcErr } = await supabase.rpc("join_organization_by_invite", {
       p_org_target: target,
@@ -330,18 +331,68 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
       return rpcData;
     }
   } catch (e) {
-    console.warn("join_organization_by_invite RPC fallback:", e?.message || e);
+    console.warn("join_organization_by_invite (2-arg) error:", e?.message || e);
   }
 
-  // Fallback: resolve organization info and bind user profile + metadata directly
+  // Attempt 2: Call join_organization_by_invite with single param (p_org_target)
+  try {
+    const { data: rpcData2, error: rpcErr2 } = await supabase.rpc("join_organization_by_invite", {
+      p_org_target: target
+    });
+    if (!rpcErr2 && rpcData2?.success) {
+      clearPendingOrganizationJoin();
+      return rpcData2;
+    }
+  } catch (e) {
+    console.warn("join_organization_by_invite (1-arg) error:", e?.message || e);
+  }
+
+  // Fallback: resolve organization info and bind user profile + organization_members directly
   try {
     const orgInfo = await fetchOrganizationPublicInfo(target);
     const orgName = orgInfo?.name || target;
     const orgId = orgInfo?.id || target;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orgId));
-    const { data: userRes } = await supabase.auth.getUser();
-    const userId = userRes?.user?.id;
+    let userId = explicitUserId;
+    if (!userId) {
+      const { data: userRes } = await supabase.auth.getUser().catch(() => ({ data: null }));
+      userId = userRes?.user?.id;
+    }
+
     if (userId) {
+      // Attempt record_pending_org_join RPC if available
+      try {
+        const { data: recordData } = await supabase.rpc("record_pending_org_join", {
+          p_user_id: userId,
+          p_org_target: target,
+          p_role: preferredRole
+        });
+        if (recordData?.success) {
+          clearPendingOrganizationJoin();
+          return recordData;
+        }
+      } catch {}
+
+      const refUrl = getOrganizationJoinUrl(orgInfo?.slug || target);
+      if (isUuid) {
+        // Direct upsert to organization_members
+        await supabase
+          .from("organization_members")
+          .upsert(
+            {
+              organization_id: orgId,
+              user_id: userId,
+              role: "member",
+              status: "active",
+              joined_at: new Date().toISOString(),
+              join_source: "shareable_link",
+              referral_link: refUrl
+            },
+            { onConflict: "organization_id,user_id" }
+          )
+          .catch(() => {});
+      }
+
       const profileUpdate = {
         organization: orgName,
         updated_at: new Date().toISOString(),
@@ -349,8 +400,7 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
       if (isUuid) {
         profileUpdate.org_id = orgId;
       }
-      const refUrl = getOrganizationJoinUrl(orgInfo?.slug || target);
-      await supabase.from("profiles").update(profileUpdate).eq("id", userId);
+      await supabase.from("profiles").update(profileUpdate).eq("id", userId).catch(() => {});
       await supabase
         .from("user_profiles")
         .update({
@@ -360,7 +410,8 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
           joined_at: new Date().toISOString(),
         })
         .eq("id", userId)
-        .then(() => {}, () => {});
+        .catch(() => {});
+
       await supabase.auth.updateUser({
         data: {
           organization: orgName,
@@ -368,15 +419,25 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
           join_source: "shareable_link",
           referral_link: refUrl,
         },
-      });
+      }).catch(() => {});
+
+      clearPendingOrganizationJoin();
+      return {
+        success: true,
+        organization_id: orgId,
+        organization_name: orgName,
+        role: preferredRole,
+        status: "active",
+      };
     }
-    clearPendingOrganizationJoin();
+
+    // No active user session yet (e.g. pending email confirmation).
+    // Keep pending join intent in storage so it applies the moment session resolves.
     return {
       success: true,
+      pending_session: true,
       organization_id: orgId,
       organization_name: orgName,
-      role: preferredRole,
-      status: "active",
     };
   } catch (fallbackErr) {
     console.error("joinOrganizationByReferral fallback error:", fallbackErr);
@@ -1258,32 +1319,44 @@ export async function fetchPendingOrgJoinRequests(orgId) {
   }
 
   try {
+    let resolvedOrgId = orgId;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orgId).trim());
+    if (!isUuid) {
+      const orgInfo = await fetchOrganizationPublicInfo(orgId);
+      if (orgInfo?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orgInfo.id))) {
+        resolvedOrgId = orgInfo.id;
+      }
+    }
+
     const { data: memberRows, error: memberErr } = await supabase
       .from("organization_members")
       .select("*")
-      .eq("organization_id", orgId)
-      .eq("status", "pending")
+      .eq("organization_id", resolvedOrgId)
+      .in("status", ["pending", "pending_approval", "requested"])
       .order("joined_at", { ascending: false });
 
     if (memberErr) throw memberErr;
     if (!memberRows || !memberRows.length) return [];
 
     const userIds = memberRows.map((m) => m.user_id).filter(Boolean);
-    const { data: profiles, error: profErr } = await supabase
-      .from("user_profiles")
-      .select("id, display_name, email, avatar_url, role")
-      .in("id", userIds);
-
-    if (profErr) throw profErr;
-    const profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+    let profileMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("user_profiles")
+        .select("id, display_name, email, avatar_url, role")
+        .in("id", userIds)
+        .catch(() => ({ data: [] }));
+      profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+    }
 
     return memberRows.map((m) => {
       const p = profileMap[m.user_id] || {};
+      const fallbackName = m.display_name || (m.email ? m.email.split("@")[0].replace(/[._-]/g, " ") : "Learner");
       return {
         ...m,
-        display_name: p.display_name || "Learner",
-        email: p.email || "No email on file",
-        avatar_url: p.avatar_url || null,
+        display_name: p.display_name || fallbackName,
+        email: p.email || m.email || "No email on file",
+        avatar_url: p.avatar_url || m.avatar_url || null,
         user_role: p.role || m.role || "learner",
         join_source: m.join_source || (m.invited_by ? "email_invite" : "shareable_link"),
         referral_link: m.referral_link || getOrganizationJoinUrl(orgId)

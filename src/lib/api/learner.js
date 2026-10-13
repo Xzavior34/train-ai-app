@@ -31,7 +31,22 @@ export async function fetchPublishedCourses(organizationId) {
       .is("archived_at", null);
 
     if (organizationId && organizationId !== "demo-org-id") {
-      query = query.or(`organization_id.eq.${organizationId},organization_id.is.null`);
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(organizationId).trim());
+      let filterOrgId = isUuid ? String(organizationId).trim() : null;
+      if (!filterOrgId) {
+        const clean = String(organizationId).trim().toLowerCase();
+        const { data: orgData } = await supabase
+          .from("organizations")
+          .select("id")
+          .or(`slug.eq.${clean},slug.ilike.${clean},name.ilike.%${clean}%`)
+          .limit(1)
+          .maybeSingle()
+          .catch(() => ({ data: null }));
+        if (orgData?.id) filterOrgId = orgData.id;
+      }
+      if (filterOrgId) {
+        query = query.or(`organization_id.eq.${filterOrgId},organization_id.is.null`);
+      }
     }
 
     let { data, error } = await query.order("created_at", { ascending: false });
