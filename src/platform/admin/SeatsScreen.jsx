@@ -2,7 +2,7 @@ import React, { useState, useContext, useMemo } from "react";
 import { TopBar, ToastContext, Tag, Avatar, NavigationContext } from "../components/PlatformUI.jsx";
 import {
   Armchair, CreditCard, Users, Plus, Minus, RefreshCw, ShieldCheck, AlertTriangle,
-  Receipt, ArrowRight, UserPlus, Info, Zap, Check, X, Clock, Search, Send, Layers,
+  Receipt, ArrowRight, UserPlus, Info, Zap, Check, X, Clock, Search, Send, Layers, Link2,
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import {
@@ -454,7 +454,14 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
                         <div style={{ fontSize: 11, color: "var(--text-3)", textTransform: "capitalize" }}>{m.role || "learner"}</div>
                       </div>
                     </div>
-                    <Tag tone="success">Seat in use</Tag>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      {(m.join_source || "shareable_link") === "shareable_link" && (
+                        <Tag tone="info">
+                          <Link2 size={11} style={{ marginRight: 3, verticalAlign: "middle" }} /> Org Link
+                        </Tag>
+                      )}
+                      <Tag tone="success">Seat in use</Tag>
+                    </div>
                   </div>
                 ))}
 

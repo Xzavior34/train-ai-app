@@ -123,7 +123,10 @@ export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelect
           orgSlug={orgQuery.data?.slug}
           showToast={showToast}
           onFilterByReferral={() => {
-            try { sessionStorage.setItem("ta_people_filter_referral", "shareable_link"); } catch {}
+            try {
+              sessionStorage.setItem("ta_people_filter_referral", "shareable_link");
+              sessionStorage.setItem("ta_people_tab", "link_users");
+            } catch {}
             if (setScreen) setScreen("people");
           }}
         />
