@@ -15,6 +15,13 @@ async function runTests() {
       origin: "https://train-ai-app.vercel.app",
       search: "?join=sara-foundation",
       pathname: "/",
+    },
+    dispatchEvent: () => {}
+  };
+  global.CustomEvent = class CustomEvent {
+    constructor(type, init) {
+      this.type = type;
+      this.detail = init?.detail;
     }
   };
   global.localStorage = {
@@ -33,6 +40,8 @@ async function runTests() {
     fetchOrganizationPublicInfo,
     joinOrganizationByReferral,
     fetchPendingOrgJoinRequests,
+    recordReferralSignupInRoster,
+    getReferralSignupsRoster,
     PUBLIC_ORGANIZATIONS_DIRECTORY,
   } = await import("../src/lib/api/organizations.js");
 
@@ -40,6 +49,7 @@ async function runTests() {
     fetchOrgMembers,
     fetchCurrentUserProfile,
     fetchOrganizationById,
+    fetchUsersInOrg,
   } = await import("../src/lib/api/platform.js");
 
   const { fetchPublishedCourses } = await import("../src/lib/api/learner.js");
@@ -69,55 +79,67 @@ async function runTests() {
   assert(orgInfo.name.toLowerCase().includes("sara"), `Organization name must match Sara Foundation, got: ${orgInfo?.name}`);
   pass(`3. fetchOrganizationPublicInfo resolves organization metadata: ${orgInfo.name} (id: ${orgInfo.id})`);
 
-  // --- TEST 4: Join Organization via Referral Link (Demo/Simulation) ---
-  const joinResult = await joinOrganizationByReferral("sara-foundation", "learner");
+  // --- TEST 4: Join Organization via Referral Link (with Real Student Identity) ---
+  const joinResult = await joinOrganizationByReferral(
+    "sara-foundation",
+    "learner",
+    "user-amina-test-123",
+    { email: "amina.bello@example.com", displayName: "Amina Bello" }
+  );
   assert(joinResult.success === true, "joinOrganizationByReferral must return success: true");
   pass(`4. joinOrganizationByReferral links user to workspace with success: true`);
 
-  // --- TEST 5: Admin Member Directory Fetch (fetchOrgMembers) ---
+  // --- TEST 5: Verify Student Captured in Referral Roster ---
+  const roster = getReferralSignupsRoster("sara-foundation");
+  const aminaInRoster = roster.find((r) => r.email === "amina.bello@example.com");
+  assert(aminaInRoster, "Student Amina Bello must exist in the referral signups roster");
+  assert.strictEqual(aminaInRoster.display_name, "Amina Bello");
+  assert.strictEqual(aminaInRoster.join_source, "shareable_link");
+  pass(`5. Roster records signed up student with real email, display name, and referral link`);
+
+  // --- TEST 6: Admin Member Directory Fetch (fetchOrgMembers) Shows Student ---
   const members = await fetchOrgMembers("sara-foundation");
   assert(Array.isArray(members), "fetchOrgMembers must return an array of members");
   assert(members.length > 0, "fetchOrgMembers must return members for the organization");
   
-  const sampleMember = members[0];
-  assert(sampleMember.id, "Member record must have an id");
-  assert(sampleMember.display_name, "Member record must have display_name");
-  assert(sampleMember.email, "Member record must have email");
-  assert(sampleMember.join_source, "Member record must have join_source");
-  assert(sampleMember.referral_link, "Member record must have referral_link");
-  pass(`5. fetchOrgMembers returns ${members.length} members with join_source, referral link, and activity status`);
+  const aminaInAdmin = members.find((m) => m.email === "amina.bello@example.com" || m.id === "user-amina-test-123");
+  assert(aminaInAdmin, "CRITICAL: Student who signed up via link MUST show up in Admin Members list!");
+  assert.strictEqual(aminaInAdmin.display_name, "Amina Bello");
+  assert.strictEqual(aminaInAdmin.role, "learner");
+  assert.strictEqual(aminaInAdmin.join_source, "shareable_link");
+  assert(aminaInAdmin.referral_link.includes("/?join="), "Referral link must format as /?join=...");
+  pass(`6. fetchOrgMembers verifies student who signed up with link displays in Admin with full details (${members.length} total members)`);
 
-  // --- TEST 6: Verify Shareable Link Tracking on Members ---
-  const shareableMembers = members.filter((m) => m.join_source === "shareable_link");
-  assert(shareableMembers.length > 0, "Must have members registered via shareable_link");
-  assert(shareableMembers[0].referral_link.includes("/?join="), "Referral link must format as /?join=...");
-  pass(`6. Admin Directory correctly identifies members who joined via shareable invite links (${shareableMembers.length} found)`);
+  // --- TEST 7: Global Search / Users in Org Returns Signed Up Student ---
+  const orgUsers = await fetchUsersInOrg("sara-foundation");
+  const aminaInSearch = orgUsers.find((u) => u.name === "Amina Bello" || u.id === "user-amina-test-123");
+  assert(aminaInSearch, "Student must show up in fetchUsersInOrg for global admin search");
+  pass(`7. fetchUsersInOrg returns signed up student in organization selector & search: ${aminaInSearch.name}`);
 
-  // --- TEST 7: Pending Approval Queue (fetchPendingOrgJoinRequests) ---
+  // --- TEST 8: Pending Approval Queue (fetchPendingOrgJoinRequests) ---
   const pendingRequests = await fetchPendingOrgJoinRequests("sara-foundation");
   assert(Array.isArray(pendingRequests), "fetchPendingOrgJoinRequests must return an array");
-  pass(`7. fetchPendingOrgJoinRequests returns pending seat approval queue (${pendingRequests.length} candidate(s))`);
+  pass(`8. fetchPendingOrgJoinRequests returns pending seat approval queue (${pendingRequests.length} candidate(s))`);
 
-  // --- TEST 8: Course Access for Joined Learner (fetchPublishedCourses) ---
-  // Ensure that passing slug or UUID does NOT throw Postgres syntax errors
+  // --- TEST 9: Course Access for Joined Learner (fetchPublishedCourses) ---
   const coursesWithSlug = await fetchPublishedCourses("sara-foundation");
   assert(Array.isArray(coursesWithSlug), "fetchPublishedCourses with slug must return courses array");
   assert(coursesWithSlug.length > 0, "fetchPublishedCourses must return active courses for learner to work on");
 
   const coursesWithUuid = await fetchPublishedCourses("00000000-0000-0000-0000-000000000001");
   assert(Array.isArray(coursesWithUuid), "fetchPublishedCourses with UUID must return courses array");
-  pass(`8. fetchPublishedCourses cleanly resolves courses for joined learner without UUID cast errors (${coursesWithSlug.length} courses loaded)`);
+  pass(`9. fetchPublishedCourses cleanly resolves courses for joined learner without UUID cast errors (${coursesWithSlug.length} courses loaded)`);
 
-  // --- TEST 9: Learner Profile Organization Preservation ---
+  // --- TEST 10: Learner Profile Organization Preservation ---
   const userProfile = await fetchCurrentUserProfile("demo-learner-1");
   assert(userProfile !== null, "fetchCurrentUserProfile must return valid profile");
   assert(userProfile.organization_id !== null, "fetchCurrentUserProfile must contain organization_id");
-  pass(`9. fetchCurrentUserProfile preserves organization identity: org_id=${userProfile.organization_id}, role=${userProfile.role}`);
+  pass(`10. fetchCurrentUserProfile preserves organization identity: org_id=${userProfile.organization_id}, role=${userProfile.role}`);
 
   console.log("==================================================================");
-  console.log(`ALL ${passedCount}/9 TESTS PASSED SUCCESSFULLY!`);
-  console.log("Verified: Users who click the link join the organization, are visible to admins,");
-  console.log("can be monitored in Directory & Pending Approvals, and can access courses to work.");
+  console.log(`ALL ${passedCount}/10 TESTS PASSED SUCCESSFULLY!`);
+  console.log("Verified: ALL students who sign up with link show in admin Directory,");
+  console.log("are identified by shareable link badge, and are searchable across the admin workspace.");
   console.log("==================================================================");
 }
 

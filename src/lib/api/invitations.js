@@ -1,4 +1,5 @@
 import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../supabaseClient.js";
+import { recordReferralSignupInRoster } from "./organizations.js";
 
 // Public/pre-auth invitation acceptance flow - deliberately kept separate
 // from platform.js (which is admin-scoped and documents itself as relying on
@@ -228,6 +229,46 @@ export async function acceptInvitation({ token, password, displayName } = {}) {
         const { data: sRes } = await targetClient.auth.signInWithPassword({ email: inviteRow.email, password });
         authSession = sRes?.session || null;
       } catch {}
+    }
+
+    // Record in persistent roster so admin sees them immediately in Directory
+    recordReferralSignupInRoster({
+      userId: authUser?.id,
+      email: inviteRow.email,
+      displayName: displayName || (inviteRow.email ? inviteRow.email.split("@")[0].replace(/[._-]/g, " ") : "Learner"),
+      organizationId: inviteRow.organization_id,
+      organizationName: inviteRow.organization_name,
+      role: inviteRow.role || "learner",
+      status: "active",
+      joinSource: "email_invite",
+      referralLink: `/accept-invitation?token=${token}`,
+    });
+
+    // Safe DB profile and membership upsert
+    if (authUser?.id && inviteRow.organization_id) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(inviteRow.organization_id).trim());
+      try {
+        const profPayload = {
+          id: authUser.id,
+          role: inviteRow.role || "learner",
+          display_name: displayName || (inviteRow.email ? inviteRow.email.split("@")[0].replace(/[._-]/g, " ") : "Learner"),
+          last_active_at: new Date().toISOString()
+        };
+        if (isUuid) profPayload.organization_id = inviteRow.organization_id;
+        await targetClient.from("user_profiles").upsert(profPayload, { onConflict: "id" });
+      } catch {}
+
+      if (isUuid) {
+        try {
+          await targetClient.from("organization_members").upsert({
+            organization_id: inviteRow.organization_id,
+            user_id: authUser.id,
+            role: inviteRow.role === "admin" ? "admin" : inviteRow.role === "mentor" ? "admin" : "member",
+            status: "active",
+            joined_at: new Date().toISOString()
+          }, { onConflict: "organization_id,user_id" });
+        } catch {}
+      }
     }
 
     return {

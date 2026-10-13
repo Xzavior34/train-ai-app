@@ -4,6 +4,7 @@ import { isRealDatabaseId } from "../mockDataManager.js";
 import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
 import { getCanonicalDomain } from "../../services/emailService.js";
 import { calculateCohortProgress, assignCourseToCohortOrLearners, unassignCohortCourse } from "./cohorts.js";
+import { getReferralSignupsRoster } from "./organizations.js";
 export { assignCourseToCohortOrLearners, unassignCohortCourse };
 
 
@@ -292,8 +293,20 @@ export async function fetchOrgMembers(organizationId) {
       ? window.location.origin
       : "https://trainailtd.com";
 
-  if (!supabase || organizationId === "demo-org-id" || organizationId === "sara-org-1" || organizationId === "sara-foundation") {
-    return generateDemoOrgMembers(organizationId, baseOrigin);
+  const rosterMembers = getReferralSignupsRoster(organizationId);
+
+  if (!supabase || organizationId === "demo-org-id") {
+    const demoMembers = generateDemoOrgMembers(organizationId, baseOrigin);
+    if (!rosterMembers.length) return demoMembers;
+    const seen = new Set(rosterMembers.map((m) => m.id || m.user_id));
+    const combined = [...rosterMembers];
+    for (const d of demoMembers) {
+      if (!seen.has(d.id)) {
+        combined.push(d);
+        seen.add(d.id);
+      }
+    }
+    return combined;
   }
   // 1. Resolve organization identifier (slug, name alias, or UUID)
   let resolvedOrgUuid = null;
@@ -351,13 +364,6 @@ export async function fetchOrgMembers(organizationId) {
     ...orgMemberRows.map((m) => m.user_id).filter(Boolean)
   ])];
 
-  if (!allUserIds.length) {
-    if (String(organizationId || "").toLowerCase().includes("sara") || organizationId === "demo-org-id") {
-      return generateDemoOrgMembers(organizationId, baseOrigin);
-    }
-    return [];
-  }
-
   // 4. Fetch profiles for any members in organization_members who were not captured by initial user_profiles query
   const missingIds = allUserIds.filter((id) => !initialProfiles.some((p) => p.id === id));
   let extraProfiles = [];
@@ -389,6 +395,49 @@ export async function fetchOrgMembers(organizationId) {
       combinedProfiles.push(synthesized);
       profileMap[om.user_id] = synthesized;
     }
+  }
+
+  // 6. Merge students from the persistent referral roster so every student who signed up via link is visible
+  for (const rm of rosterMembers) {
+    const rId = rm.userId || rm.id || rm.user_id;
+    if (rId && !profileMap[rId]) {
+      const syn = {
+        id: rId,
+        display_name: rm.display_name || (rm.email ? rm.email.split("@")[0].replace(/[._-]/g, " ") : "Learner"),
+        email: rm.email || null,
+        role: rm.role || "learner",
+        status: rm.status || "active",
+        organization_id: rm.organization_id || resolvedOrgUuid,
+        organization_name: rm.organization_name,
+        organization_slug: rm.organization_slug,
+        joined_at: rm.joined_at || new Date().toISOString(),
+        created_at: rm.created_at || rm.joined_at || new Date().toISOString(),
+        join_source: rm.join_source || "shareable_link",
+        referral_slug: rm.organization_slug || resolvedOrgInfo?.slug || "workspace",
+        referral_link: rm.referral_link || `${baseOrigin}/?join=${encodeURIComponent(rm.organization_slug || resolvedOrgInfo?.slug || "workspace")}`,
+      };
+      combinedProfiles.unshift(syn);
+      profileMap[rId] = syn;
+      if (!allUserIds.includes(rId)) allUserIds.push(rId);
+    } else if (rId && profileMap[rId]) {
+      if (!profileMap[rId].email && rm.email) profileMap[rId].email = rm.email;
+      if (!profileMap[rId].join_source && rm.join_source) profileMap[rId].join_source = rm.join_source;
+      if (!profileMap[rId].referral_link && rm.referral_link) profileMap[rId].referral_link = rm.referral_link;
+    }
+  }
+
+  if (!allUserIds.length && !combinedProfiles.length) {
+    const demoMembers = generateDemoOrgMembers(organizationId, baseOrigin);
+    if (!rosterMembers.length) return demoMembers;
+    const seen = new Set(rosterMembers.map((m) => m.id || m.user_id));
+    const combined = [...rosterMembers];
+    for (const d of demoMembers) {
+      if (!seen.has(d.id)) {
+        combined.push(d);
+        seen.add(d.id);
+      }
+    }
+    return combined;
   }
 
   const orgMemberByUserId = {};
@@ -470,22 +519,63 @@ export async function fetchOrgMembers(organizationId) {
 }
 
 export async function fetchUsersInOrg(organizationId) {
+  const roster = getReferralSignupsRoster(organizationId);
+  const rosterMapped = roster.map((r) => ({
+    id: r.id || r.user_id,
+    name: r.display_name || "Learner",
+    initials: (r.display_name || "L").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+  }));
+
   if (!supabase) {
-    return [
+    const demo = [
       ...DEMO_LEARNERS.map((l) => ({ id: l.id, name: l.name, initials: l.initials })),
       ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, name: i.name, initials: i.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() })),
       { id: "demo-manager-id", name: "Demo Manager", initials: "DM" },
     ];
+    return [...rosterMapped, ...demo];
   }
-  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
-  let query = supabase
-    .from("user_profiles")
-    .select("id, display_name")
-    .order("display_name", { ascending: true });
-  if (orgFilter) query = query.eq("organization_id", orgFilter);
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data || []).map(u => ({ id: u.id, name: u.display_name || "Unnamed user", initials: (u.display_name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() }));
+
+  let resolvedOrgUuid = null;
+  if (organizationId && organizationId !== "demo-org-id") {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(organizationId).trim());
+    if (isUuid) {
+      resolvedOrgUuid = String(organizationId).trim();
+    } else {
+      const clean = String(organizationId).trim().toLowerCase();
+      try {
+        const { data: orgMatch } = await supabase
+          .from("organizations")
+          .select("id")
+          .or(`slug.eq.${clean},slug.ilike.${clean},name.ilike.%${clean}%`)
+          .limit(1)
+          .maybeSingle();
+        if (orgMatch?.id) resolvedOrgUuid = orgMatch.id;
+      } catch {}
+    }
+  }
+
+  let dbUsers = [];
+  try {
+    let query = supabase
+      .from("user_profiles")
+      .select("id, display_name")
+      .order("display_name", { ascending: true });
+    if (resolvedOrgUuid) query = query.eq("organization_id", resolvedOrgUuid);
+    const { data, error } = await query;
+    if (!error && data) {
+      dbUsers = data.map(u => ({ id: u.id, name: u.display_name || "Unnamed user", initials: (u.display_name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() }));
+    }
+  } catch {}
+
+  const seenIds = new Set(dbUsers.map(u => u.id));
+  const combined = [...dbUsers];
+  for (const r of rosterMapped) {
+    if (!seenIds.has(r.id)) {
+      combined.unshift(r);
+      seenIds.add(r.id);
+    }
+  }
+  return combined;
 }
 
 export async function fetchOrgMembersWithStatus() {

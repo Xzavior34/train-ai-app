@@ -416,7 +416,10 @@ export default function AuthPage({
       const signInRes = await onSignIn(email, password);
       setRateLimit(getRateLimitStatus(email));
       if (!signInRes?.error && targetOrgTarget) {
-        await joinOrganizationByReferral(targetOrgTarget, "learner", signInRes?.data?.user?.id).catch(() => {});
+        const uid = signInRes?.data?.user?.id;
+        const uEmail = signInRes?.data?.user?.email || email;
+        const uName = signInRes?.data?.user?.user_metadata?.display_name || uEmail.split("@")[0].replace(/[._-]/g, " ");
+        await joinOrganizationByReferral(targetOrgTarget, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
       }
       setSubmitting(false);
     } else {
@@ -464,7 +467,10 @@ export default function AuthPage({
         }
         if (!result?.error) {
           if (joinTarget) {
-            await joinOrganizationByReferral(joinTarget, "learner", result?.data?.user?.id).catch(() => {});
+            const uid = result?.data?.user?.id;
+            const uEmail = result?.data?.user?.email || email;
+            const uName = result?.data?.user?.user_metadata?.display_name || uEmail.split("@")[0].replace(/[._-]/g, " ");
+            await joinOrganizationByReferral(joinTarget, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
           } else {
             joinDefaultOrganization().catch(() => {});
           }

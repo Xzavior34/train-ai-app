@@ -228,7 +228,9 @@ export default function App() {
       const pending = getPendingOrganizationJoin();
       const target = orgSlugParam || pending?.orgIdOrSlug;
       if (target) {
-        joinOrganizationByReferral(target, pending?.role || "learner", session.user.id)
+        const uEmail = session.user.email;
+        const uName = session.user.user_metadata?.display_name || (uEmail ? uEmail.split("@")[0].replace(/[._-]/g, " ") : "Learner");
+        joinOrganizationByReferral(target, pending?.role || "learner", session.user.id, { email: uEmail, displayName: uName })
           .catch((e) => console.warn("Auto-join referral notice:", e));
       }
     }

@@ -837,6 +837,14 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
     seatsQuery.refetch();
   }
 
+  useEffect(() => {
+    function handleReferralSignup() {
+      refreshDirectory();
+    }
+    window.addEventListener("trainai_referral_signup", handleReferralSignup);
+    return () => window.removeEventListener("trainai_referral_signup", handleReferralSignup);
+  }, []);
+
   async function runBulk(label, fn) {
     setBulkBusy(true);
     let succeeded = 0, failed = 0;
