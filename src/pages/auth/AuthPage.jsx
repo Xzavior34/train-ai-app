@@ -1587,8 +1587,42 @@ export default function AuthPage({
               </div>
             )}
 
-            {/* Standard Error State (when not locked and not emailNotFound) */}
-            {authError && !isEmailNotFound && (!rateLimit.isLocked || mode !== "signin") && (
+            {/* Existing Account Helper Alert in Signup Mode */}
+            {mode === "signup" && authError && (authError.includes("already exists") || authError.includes("already registered") || authError.includes("sign in with your password")) && (
+              <div style={styles.errorBox}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600 }}>{authError}</div>
+                    <div style={{ marginTop: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => { setMode("signin"); setOrgError(""); }}
+                        style={{
+                          background: "#2563EB",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "6px 12px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        <span>Sign in with {email}</span>
+                        <ArrowRight size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Standard Error State (when not locked, not emailNotFound, and not existing account in signup) */}
+            {authError && !isEmailNotFound && !(mode === "signup" && (authError.includes("already exists") || authError.includes("already registered") || authError.includes("sign in with your password"))) && (!rateLimit.isLocked || mode !== "signin") && (
               <div style={styles.errorBox}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                   <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />

@@ -287,6 +287,13 @@ export function useAuth() {
         return { data: null, error: supaErr || new Error(message) };
       }
 
+      // Check if email rate limit was returned during sign in
+      if (supaErr?.status === 429 || supaErrMsg.toLowerCase().includes("rate limit") || supaErrMsg.toLowerCase().includes("over_email_send_rate_limit")) {
+        const message = "Email service is temporarily rate-limited. Please sign in directly with your password or try again shortly.";
+        setAuthError(message);
+        return { data: null, error: supaErr || new Error(message), isRateLimited: true };
+      }
+
       // Track failed password attempt
       const updatedLimit = recordFailedPasswordAttempt(normalizedEmail);
       let message;
@@ -356,10 +363,41 @@ export function useAuth() {
 
       if (supaRes?.error) {
         const errMsg = supaRes.error.message || "";
-        let message = errMsg;
-        if (supaRes.error.status === 429 || errMsg.toLowerCase().includes("rate limit")) {
-          message = "Sign up is temporarily delayed due to mail provider limits. Please try again shortly or contact support at info@trainailtd.com.";
+        const isRateLimit = supaRes.error.status === 429 || errMsg.toLowerCase().includes("rate limit") || errMsg.toLowerCase().includes("over_email_send_rate_limit");
+        const isAlreadyRegistered = errMsg.toLowerCase().includes("already registered") || errMsg.toLowerCase().includes("already exists");
+
+        if (isRateLimit || isAlreadyRegistered) {
+          // If the email already exists in Auth or mail provider is rate-limited, attempt seamless sign-in with the provided password
+          try {
+            const signInRes = await client.auth.signInWithPassword({
+              email: normalizedEmail,
+              password,
+            });
+            if (signInRes?.data?.session) {
+              setActiveSupabaseProject(targetProject);
+              resetPasswordRateLimit(normalizedEmail);
+              setSession(signInRes.data.session);
+              safeStorage.setItem(AUTH_STORAGE_KEY, signInRes.data.session);
+              return { data: signInRes.data, error: null };
+            }
+          } catch (e) {
+            console.info("Sign-in fallback notice:", e);
+          }
+
+          if (isAlreadyRegistered) {
+            const message = "An account with this email already exists. Please sign in with your password or use Forgot Password.";
+            setAuthError(message);
+            return { data: null, error: new Error(message), isExistingUser: true };
+          }
+
+          if (isRateLimit) {
+            const message = "Email verification service is temporarily rate-limited. If you already have an account, please sign in with your password.";
+            setAuthError(message);
+            return { data: null, error: new Error(message), isRateLimited: true };
+          }
         }
+
+        let message = errMsg;
         setAuthError(message);
         return { data: null, error: new Error(message) };
       }

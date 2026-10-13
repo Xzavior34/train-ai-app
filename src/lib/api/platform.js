@@ -13,12 +13,12 @@ export { assignCourseToCohortOrLearners, unassignCohortCourse };
 // which is the point of doing authorization at the database layer.
 
 export async function fetchCurrentUserProfile(userId) {
-  if (!supabase || !userId) {
+  if (!supabase || !userId || !isRealDatabaseId(userId)) {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem("trainai_active_session_v1") || "null"); } catch { /* ignore */ }
     const role = saved?.user?.user_metadata?.role || saved?.role || "learner";
     return {
-      id: userId, organization_id: "demo-org-id", role,
+      id: userId || "demo-learner-1", organization_id: "demo-org-id", role,
       display_name: role === "admin" ? "Demo Admin" : role === "mentor" ? "Demo Instructor" : role === "manager" ? "Demo Manager" : "Demo Learner",
       manager_id: role === "learner" ? "demo-manager-id" : null,
     };
@@ -68,12 +68,12 @@ export async function fetchCurrentUserProfile(userId) {
       // 3. Check if user metadata has an organization pointer
       if (!orgId) {
         try {
-          const { data: uRes } = await supabase.auth.getUser().catch(() => ({ data: null }));
+          const { data: uRes } = await supabase.auth.getUser();
           const meta = uRes?.user?.user_metadata;
           if (meta?.organization_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(meta.organization_id)) {
             orgId = meta.organization_id;
           } else if (meta?.organization_slug) {
-            const { data: orgBySlug } = await supabase.from("organizations").select("id").eq("slug", meta.organization_slug).limit(1).maybeSingle().catch(() => ({ data: null }));
+            const { data: orgBySlug } = await supabase.from("organizations").select("id").eq("slug", meta.organization_slug).limit(1).maybeSingle();
             if (orgBySlug?.id) orgId = orgBySlug.id;
           }
         } catch { /* best effort */ }
@@ -217,78 +217,83 @@ export function matchesDateRangeFilter(dateValue, preset = "all", dateFrom = "",
   return true;
 }
 
+function generateDemoOrgMembers(organizationId, baseOrigin) {
+  const dayMs = 86400000;
+  const isSara = !organizationId || String(organizationId).toLowerCase().includes("sara") || organizationId === "demo-org-id";
+  const orgSlug = isSara ? "sara-foundation" : "tech-learning";
+  const orgName = isSara ? "Sara Foundation Africa" : "Tech Learning";
+  const effectiveOrgId = organizationId || (isSara ? "sara-org-1" : "org-tech-learning");
+
+  const demoLearners = DEMO_LEARNERS.map((l, idx) => {
+    const daysAgo = [0, 3, 12, 24, 48, 75][idx % 6];
+    const joinedAt = new Date(Date.now() - daysAgo * dayMs).toISOString();
+    const joinSource = idx % 4 === 3 ? "email_invite" : "shareable_link";
+    return {
+      id: l.id,
+      display_name: l.name,
+      email: l.email,
+      role: "learner",
+      status: "active",
+      joined_at: joinedAt,
+      created_at: joinedAt,
+      last_active_at: new Date(Date.now() - (idx % 5) * 3600000 * 6).toISOString(),
+      organization_id: effectiveOrgId,
+      organization_name: orgName,
+      organization_slug: orgSlug,
+      join_source: joinSource,
+      referral_slug: orgSlug,
+      referral_link: `${baseOrigin}/?join=${orgSlug}`,
+    };
+  });
+  const demoInstructors = DEMO_INSTRUCTORS.map((i, idx) => {
+    const joinedAt = new Date(Date.now() - (10 + idx * 14) * dayMs).toISOString();
+    return {
+      id: i.id,
+      display_name: i.name,
+      email: i.email || `${i.name.toLowerCase().replace(/\s+/g, ".")}@trainailtd.com`,
+      role: "mentor",
+      status: "active",
+      joined_at: joinedAt,
+      created_at: joinedAt,
+      last_active_at: new Date().toISOString(),
+      organization_id: effectiveOrgId,
+      organization_name: orgName,
+      organization_slug: orgSlug,
+      join_source: "email_invite",
+      referral_slug: orgSlug,
+      referral_link: `${baseOrigin}/?join=${orgSlug}`,
+    };
+  });
+  return [
+    ...demoLearners,
+    ...demoInstructors,
+    {
+      id: "demo-manager-id",
+      display_name: "Demo Manager",
+      email: "manager@trainailtd.com",
+      role: "manager",
+      status: "active",
+      joined_at: new Date(Date.now() - 20 * dayMs).toISOString(),
+      created_at: new Date(Date.now() - 20 * dayMs).toISOString(),
+      last_active_at: new Date().toISOString(),
+      organization_id: effectiveOrgId,
+      organization_name: orgName,
+      organization_slug: orgSlug,
+      join_source: "direct",
+      referral_slug: orgSlug,
+      referral_link: `${baseOrigin}/?join=${orgSlug}`,
+    },
+  ];
+}
+
 export async function fetchOrgMembers(organizationId) {
   const baseOrigin =
     typeof window !== "undefined" && window.location?.origin && window.location.origin.startsWith("http")
       ? window.location.origin
       : "https://trainailtd.com";
 
-  if (!supabase) {
-    const dayMs = 86400000;
-    const demoLearners = DEMO_LEARNERS.map((l, idx) => {
-      const daysAgo = [0, 3, 12, 24, 48, 75][idx % 6];
-      const joinedAt = new Date(Date.now() - daysAgo * dayMs).toISOString();
-      const isSara = idx % 2 === 0 || String(organizationId || "").includes("sara");
-      const orgSlug = isSara ? "sara-foundation" : "tech-learning";
-      const orgName = isSara ? "Sara Foundation Africa" : "Tech Learning";
-      const joinSource = idx % 4 === 3 ? "email_invite" : "shareable_link";
-      return {
-        id: l.id,
-        display_name: l.name,
-        email: l.email,
-        role: "learner",
-        status: "active",
-        joined_at: joinedAt,
-        created_at: joinedAt,
-        last_active_at: new Date(Date.now() - (idx % 5) * 3600000 * 6).toISOString(),
-        organization_id: organizationId || (isSara ? "sara-org-1" : "org-tech-learning"),
-        organization_name: orgName,
-        organization_slug: orgSlug,
-        join_source: joinSource,
-        referral_slug: orgSlug,
-        referral_link: `${baseOrigin}/?join=${orgSlug}`,
-      };
-    });
-    const demoInstructors = DEMO_INSTRUCTORS.map((i, idx) => {
-      const joinedAt = new Date(Date.now() - (10 + idx * 14) * dayMs).toISOString();
-      const orgSlug = "sara-foundation";
-      return {
-        id: i.id,
-        display_name: i.name,
-        email: i.email || `${i.name.toLowerCase().replace(/\s+/g, ".")}@trainailtd.com`,
-        role: "mentor",
-        status: "active",
-        joined_at: joinedAt,
-        created_at: joinedAt,
-        last_active_at: new Date().toISOString(),
-        organization_id: organizationId || "sara-org-1",
-        organization_name: "Sara Foundation Africa",
-        organization_slug: orgSlug,
-        join_source: "email_invite",
-        referral_slug: orgSlug,
-        referral_link: `${baseOrigin}/?join=${orgSlug}`,
-      };
-    });
-    return [
-      ...demoLearners,
-      ...demoInstructors,
-      {
-        id: "demo-manager-id",
-        display_name: "Demo Manager",
-        email: "manager@trainailtd.com",
-        role: "manager",
-        status: "active",
-        joined_at: new Date(Date.now() - 20 * dayMs).toISOString(),
-        created_at: new Date(Date.now() - 20 * dayMs).toISOString(),
-        last_active_at: new Date().toISOString(),
-        organization_id: organizationId || "sara-org-1",
-        organization_name: "Sara Foundation Africa",
-        organization_slug: "sara-foundation",
-        join_source: "direct",
-        referral_slug: "sara-foundation",
-        referral_link: `${baseOrigin}/?join=sara-foundation`,
-      },
-    ];
+  if (!supabase || organizationId === "demo-org-id" || organizationId === "sara-org-1" || organizationId === "sara-foundation") {
+    return generateDemoOrgMembers(organizationId, baseOrigin);
   }
   // 1. Resolve organization identifier (slug, name alias, or UUID)
   let resolvedOrgUuid = null;
@@ -325,11 +330,13 @@ export async function fetchOrgMembers(organizationId) {
     omQuery = omQuery.eq("organization_id", resolvedOrgUuid);
   }
 
-  const [upResult, omResult, { data: orgRows }] = await Promise.all([
-    query.catch(() => ({ data: [] })),
-    omQuery.catch(() => ({ data: [] })),
+  const [upResult, omResult, orgRowsResult] = await Promise.all([
+    query.then((r) => r, () => ({ data: [] })),
+    omQuery.then((r) => r, () => ({ data: [] })),
     supabase.from("organizations").select("id, name, slug").then((r) => r, () => ({ data: [] })),
   ]);
+
+  const orgRows = orgRowsResult?.data || [];
 
   const initialProfiles = upResult?.data || [];
   const orgMemberRows = omResult?.data || [];
@@ -344,7 +351,12 @@ export async function fetchOrgMembers(organizationId) {
     ...orgMemberRows.map((m) => m.user_id).filter(Boolean)
   ])];
 
-  if (!allUserIds.length) return [];
+  if (!allUserIds.length) {
+    if (String(organizationId || "").toLowerCase().includes("sara") || organizationId === "demo-org-id") {
+      return generateDemoOrgMembers(organizationId, baseOrigin);
+    }
+    return [];
+  }
 
   // 4. Fetch profiles for any members in organization_members who were not captured by initial user_profiles query
   const missingIds = allUserIds.filter((id) => !initialProfiles.some((p) => p.id === id));
