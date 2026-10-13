@@ -459,8 +459,9 @@ export async function fetchOrgMembers(organizationId) {
         join_source: "shareable_link",
         referral_slug: cm.organization_slug || resolvedOrgInfo?.slug || "workspace",
         referral_link: cm.referral_link || `${baseOrigin}/?join=${encodeURIComponent(cm.organization_slug || resolvedOrgInfo?.slug || "workspace")}`,
+        cohort_name: cm.cohort_name || "Awaiting Signup",
       };
-      combinedProfiles.push(syn);
+      combinedProfiles.unshift(syn);
       profileMap[cId] = syn;
       if (!allUserIds.includes(cId)) allUserIds.push(cId);
     }
@@ -554,7 +555,7 @@ export async function fetchOrgMembers(organizationId) {
       join_source: joinSource,
       referral_slug: orgSlug,
       referral_link: fullRefLink,
-      cohort_name: cohortNames.length ? cohortNames.join(", ") : null,
+      cohort_name: cohortNames.length ? cohortNames.join(", ") : (p.cohort_name || (p.status === "link_clicked" ? "Awaiting Signup" : null)),
       cohort_names: cohortNames,
     };
   });
