@@ -42,6 +42,8 @@ async function runTests() {
     fetchPendingOrgJoinRequests,
     recordReferralSignupInRoster,
     getReferralSignupsRoster,
+    getLinkClicksRoster,
+    recordLinkClickInRoster,
     PUBLIC_ORGANIZATIONS_DIRECTORY,
   } = await import("../src/lib/api/organizations.js");
 
@@ -60,13 +62,19 @@ async function runTests() {
     console.log(`[PASS] ${testName}`);
   }
 
-  // --- TEST 1: Track Join Intent ---
+  // --- TEST 1: Track Join Intent & Record Link Click ---
   trackOrganizationJoinIntent("sara-foundation", { role: "learner" });
   const pending = getPendingOrganizationJoin();
   assert(pending !== null, "Pending join intent should be stored in localStorage");
   assert.strictEqual(pending.orgIdOrSlug, "sara-foundation", "Pending target should match sara-foundation");
   assert.strictEqual(pending.role, "learner", "Role should match learner");
-  pass("1. trackOrganizationJoinIntent records pending referral in browser storage");
+
+  const clicks = getLinkClicksRoster("sara-foundation");
+  assert(clicks.length > 0, "Link click should be recorded in getLinkClicksRoster");
+  const firstClick = clicks[0];
+  assert.strictEqual(firstClick.status, "link_clicked", "Link click status should be link_clicked");
+  assert.strictEqual(firstClick.join_source, "shareable_link");
+  pass("1. trackOrganizationJoinIntent records pending referral and prospective link click in browser storage");
 
   // --- TEST 2: Generate Shareable Link ---
   const joinUrl = getOrganizationJoinUrl("sara-foundation");
@@ -97,7 +105,13 @@ async function runTests() {
   assert.strictEqual(aminaInRoster.join_source, "shareable_link");
   pass(`5. Roster records signed up student with real email, display name, and referral link`);
 
-  // --- TEST 6: Admin Member Directory Fetch (fetchOrgMembers) Shows Student ---
+  // --- TEST 6: Record an Additional Prospective Link Clicker ---
+  recordLinkClickInRoster("sara-foundation", { visitorId: "visitor_external_user", displayName: "Prospective Student (Visitor #A921)" });
+  const updatedClicks = getLinkClicksRoster("sara-foundation");
+  assert(updatedClicks.some((c) => c.status === "link_clicked"), "Prospective link click visitor must be in clicks roster");
+  pass("6. recordLinkClickInRoster tracks prospective visitors who clicked the link awaiting signup");
+
+  // --- TEST 7: Admin Member Directory Fetch (fetchOrgMembers) Shows Student, Link Clickers, and Previous People ---
   const members = await fetchOrgMembers("sara-foundation");
   assert(Array.isArray(members), "fetchOrgMembers must return an array of members");
   assert(members.length > 0, "fetchOrgMembers must return members for the organization");
@@ -108,36 +122,47 @@ async function runTests() {
   assert.strictEqual(aminaInAdmin.role, "learner");
   assert.strictEqual(aminaInAdmin.join_source, "shareable_link");
   assert(aminaInAdmin.referral_link.includes("/?join="), "Referral link must format as /?join=...");
-  pass(`6. fetchOrgMembers verifies student who signed up with link displays in Admin with full details (${members.length} total members)`);
 
-  // --- TEST 7: Global Search / Users in Org Returns Signed Up Student ---
+  const linkClickerInAdmin = members.find((m) => m.status === "link_clicked");
+  assert(linkClickerInAdmin, "CRITICAL: Visitors who clicked the link MUST show up in Admin Members list with status link_clicked!");
+  assert.strictEqual(linkClickerInAdmin.join_source, "shareable_link");
+
+  const previousDemoMember = members.find((m) => m.id === "demo-learner-1" || (m.display_name && m.display_name.includes("Amara")));
+  assert(previousDemoMember, "CRITICAL: Previous/seeded students must NOT disappear when new students join or click the link!");
+
+  pass(`7. fetchOrgMembers verifies student who signed up, link click visitor, and previous members ALL display simultaneously (${members.length} total members)`);
+
+  // --- TEST 8: Global Search / Users in Org Returns Signed Up Student & Link Visitors ---
   const orgUsers = await fetchUsersInOrg("sara-foundation");
   const aminaInSearch = orgUsers.find((u) => u.name === "Amina Bello" || u.id === "user-amina-test-123");
   assert(aminaInSearch, "Student must show up in fetchUsersInOrg for global admin search");
-  pass(`7. fetchUsersInOrg returns signed up student in organization selector & search: ${aminaInSearch.name}`);
+  pass(`8. fetchUsersInOrg returns signed up student in organization selector & search: ${aminaInSearch.name}`);
 
-  // --- TEST 8: Pending Approval Queue (fetchPendingOrgJoinRequests) ---
+  // --- TEST 9: Pending Approval Queue (fetchPendingOrgJoinRequests) ---
   const pendingRequests = await fetchPendingOrgJoinRequests("sara-foundation");
   assert(Array.isArray(pendingRequests), "fetchPendingOrgJoinRequests must return an array");
-  pass(`8. fetchPendingOrgJoinRequests returns pending seat approval queue (${pendingRequests.length} candidate(s))`);
+  pass(`9. fetchPendingOrgJoinRequests returns pending seat approval queue (${pendingRequests.length} candidate(s))`);
 
-  // --- TEST 9: Course Access for Joined Learner (fetchPublishedCourses) ---
+  // --- TEST 10: Course Access for Joined Learner (fetchPublishedCourses) ---
   const coursesWithSlug = await fetchPublishedCourses("sara-foundation");
   assert(Array.isArray(coursesWithSlug), "fetchPublishedCourses with slug must return courses array");
   assert(coursesWithSlug.length > 0, "fetchPublishedCourses must return active courses for learner to work on");
 
   const coursesWithUuid = await fetchPublishedCourses("00000000-0000-0000-0000-000000000001");
   assert(Array.isArray(coursesWithUuid), "fetchPublishedCourses with UUID must return courses array");
-  pass(`9. fetchPublishedCourses cleanly resolves courses for joined learner without UUID cast errors (${coursesWithSlug.length} courses loaded)`);
+  pass(`10. fetchPublishedCourses cleanly resolves courses for joined learner without UUID cast errors (${coursesWithSlug.length} courses loaded)`);
 
-  // --- TEST 10: Learner Profile Organization Preservation ---
+  // --- TEST 11: Learner Profile Organization Preservation ---
   const userProfile = await fetchCurrentUserProfile("demo-learner-1");
   assert(userProfile !== null, "fetchCurrentUserProfile must return valid profile");
   assert(userProfile.organization_id !== null, "fetchCurrentUserProfile must contain organization_id");
-  pass(`10. fetchCurrentUserProfile preserves organization identity: org_id=${userProfile.organization_id}, role=${userProfile.role}`);
+  pass(`11. fetchCurrentUserProfile preserves organization identity: org_id=${userProfile.organization_id}, role=${userProfile.role}`);
 
   console.log("==================================================================");
-  console.log(`ALL ${passedCount}/10 TESTS PASSED SUCCESSFULLY!`);
+  console.log(`ALL ${passedCount}/11 TESTS PASSED SUCCESSFULLY!`);
+  console.log("Verified: ALL students who sign up with link, visitors who click the link,");
+  console.log("and previous/historical cohort members show in Admin Directory seamlessly.");
+  console.log("==================================================================");
   console.log("Verified: ALL students who sign up with link show in admin Directory,");
   console.log("are identified by shareable link badge, and are searchable across the admin workspace.");
   console.log("==================================================================");

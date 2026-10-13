@@ -4,7 +4,7 @@ import { isRealDatabaseId } from "../mockDataManager.js";
 import { DEMO_PROJECT_DATA, DEMO_LEARNERS, DEMO_INSTRUCTORS, DEMO_COURSES, DEMO_ENROLLMENTS, DEMO_CERTIFICATES, DEMO_COHORT, DEMO_STUDY_GROUP, demoTotalUsersBreakdown, demoTopCourses, demoSkillGapsDetail, demoLearnerProgressOverview } from "./demoData.js";
 import { getCanonicalDomain } from "../../services/emailService.js";
 import { calculateCohortProgress, assignCourseToCohortOrLearners, unassignCohortCourse } from "./cohorts.js";
-import { getReferralSignupsRoster } from "./organizations.js";
+import { getReferralSignupsRoster, getLinkClicksRoster } from "./organizations.js";
 export { assignCourseToCohortOrLearners, unassignCohortCourse };
 
 
@@ -294,14 +294,28 @@ export async function fetchOrgMembers(organizationId) {
       : "https://trainailtd.com";
 
   const rosterMembers = getReferralSignupsRoster(organizationId);
+  const clickMembers = getLinkClicksRoster(organizationId);
+  const demoMembers = generateDemoOrgMembers(organizationId, baseOrigin);
 
   if (!supabase || organizationId === "demo-org-id") {
-    const demoMembers = generateDemoOrgMembers(organizationId, baseOrigin);
-    if (!rosterMembers.length) return demoMembers;
-    const seen = new Set(rosterMembers.map((m) => m.id || m.user_id));
-    const combined = [...rosterMembers];
+    const seen = new Set();
+    const combined = [];
+    for (const rm of rosterMembers) {
+      const id = rm.id || rm.user_id;
+      if (id && !seen.has(id)) {
+        combined.push(rm);
+        seen.add(id);
+      }
+    }
+    for (const cm of clickMembers) {
+      const id = cm.id || cm.user_id;
+      if (id && !seen.has(id)) {
+        combined.push(cm);
+        seen.add(id);
+      }
+    }
     for (const d of demoMembers) {
-      if (!seen.has(d.id)) {
+      if (d.id && !seen.has(d.id)) {
         combined.push(d);
         seen.add(d.id);
       }
@@ -426,18 +440,43 @@ export async function fetchOrgMembers(organizationId) {
     }
   }
 
-  if (!allUserIds.length && !combinedProfiles.length) {
-    const demoMembers = generateDemoOrgMembers(organizationId, baseOrigin);
-    if (!rosterMembers.length) return demoMembers;
-    const seen = new Set(rosterMembers.map((m) => m.id || m.user_id));
-    const combined = [...rosterMembers];
-    for (const d of demoMembers) {
-      if (!seen.has(d.id)) {
-        combined.push(d);
-        seen.add(d.id);
+  // 7. Merge prospective link click visitors so visitors who clicked the invite link show up in Admin
+  for (const cm of clickMembers) {
+    const cId = cm.userId || cm.id || cm.user_id;
+    if (cId && !profileMap[cId]) {
+      const syn = {
+        id: cId,
+        display_name: cm.display_name || "Prospective Student (Link Visitor)",
+        email: cm.email || null,
+        role: cm.role || "learner",
+        status: "link_clicked",
+        organization_id: cm.organization_id || resolvedOrgUuid,
+        organization_name: cm.organization_name,
+        organization_slug: cm.organization_slug,
+        joined_at: cm.joined_at || new Date().toISOString(),
+        created_at: cm.created_at || cm.joined_at || new Date().toISOString(),
+        last_active_at: cm.last_active_at || cm.joined_at || new Date().toISOString(),
+        join_source: "shareable_link",
+        referral_slug: cm.organization_slug || resolvedOrgInfo?.slug || "workspace",
+        referral_link: cm.referral_link || `${baseOrigin}/?join=${encodeURIComponent(cm.organization_slug || resolvedOrgInfo?.slug || "workspace")}`,
+      };
+      combinedProfiles.push(syn);
+      profileMap[cId] = syn;
+      if (!allUserIds.includes(cId)) allUserIds.push(cId);
+    }
+  }
+
+  // 8. Merge previous / historical seeded cohort members so previous learners are always retained
+  for (const dm of demoMembers) {
+    if (dm.id && !profileMap[dm.id]) {
+      const emailLower = (dm.email || "").toLowerCase();
+      const alreadyHasEmail = emailLower && combinedProfiles.some((p) => (p.email || "").toLowerCase() === emailLower);
+      if (!alreadyHasEmail) {
+        combinedProfiles.push(dm);
+        profileMap[dm.id] = dm;
+        if (!allUserIds.includes(dm.id)) allUserIds.push(dm.id);
       }
     }
-    return combined;
   }
 
   const orgMemberByUserId = {};
@@ -472,7 +511,10 @@ export async function fetchOrgMembers(organizationId) {
       effectiveOrgId === "sara-org-1" ||
       String(orgObj?.slug || orgObj?.name || p.organization || "").toLowerCase().includes("sara");
     const defaultDomain = isSara ? "sarafoundationafrica.com" : "trainailtd.com";
-    const email = p.email || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@${defaultDomain}` : null);
+    const isLinkClicked = (p.status || om?.status) === "link_clicked";
+    const email = isLinkClicked
+      ? (p.email || null)
+      : (p.email || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@${defaultDomain}` : null));
     const cohortNames = cohortNamesByUserId[p.id] || [];
     const orgSlug =
       orgObj?.slug ||
@@ -520,19 +562,33 @@ export async function fetchOrgMembers(organizationId) {
 
 export async function fetchUsersInOrg(organizationId) {
   const roster = getReferralSignupsRoster(organizationId);
-  const rosterMapped = roster.map((r) => ({
-    id: r.id || r.user_id,
-    name: r.display_name || "Learner",
-    initials: (r.display_name || "L").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
-  }));
+  const clicks = getLinkClicksRoster(organizationId);
+  const rosterMapped = [
+    ...roster.map((r) => ({
+      id: r.id || r.user_id,
+      name: r.display_name || "Learner",
+      initials: (r.display_name || "L").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    })),
+    ...clicks.map((c) => ({
+      id: c.id || c.user_id,
+      name: c.display_name || "Prospective Student",
+      initials: "LV"
+    }))
+  ];
+
+  const demo = [
+    ...DEMO_LEARNERS.map((l) => ({ id: l.id, name: l.name, initials: l.initials })),
+    ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, name: i.name, initials: i.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() })),
+    { id: "demo-manager-id", name: "Demo Manager", initials: "DM" },
+  ];
 
   if (!supabase) {
-    const demo = [
-      ...DEMO_LEARNERS.map((l) => ({ id: l.id, name: l.name, initials: l.initials })),
-      ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, name: i.name, initials: i.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() })),
-      { id: "demo-manager-id", name: "Demo Manager", initials: "DM" },
-    ];
-    return [...rosterMapped, ...demo];
+    const seen = new Set();
+    const list = [];
+    for (const u of [...rosterMapped, ...demo]) {
+      if (!seen.has(u.id)) { list.push(u); seen.add(u.id); }
+    }
+    return list;
   }
 
   let resolvedOrgUuid = null;
@@ -573,6 +629,12 @@ export async function fetchUsersInOrg(organizationId) {
     if (!seenIds.has(r.id)) {
       combined.unshift(r);
       seenIds.add(r.id);
+    }
+  }
+  for (const d of demo) {
+    if (!seenIds.has(d.id)) {
+      combined.push(d);
+      seenIds.add(d.id);
     }
   }
   return combined;

@@ -639,20 +639,25 @@ export function OrganizationReferralCard({ orgId, orgName, orgSlug, showToast, m
           <QrCode size={14} /> QR Code
         </button>
 
-        {typeof onToggleReferralFilter === "function" && (
-          <button
-            type="button"
-            className={referralFilter === "shareable_link" ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
-            onClick={() => onToggleReferralFilter(referralFilter === "shareable_link" ? "all" : "shareable_link")}
-            title="Filter user directory to show only members who joined via this Organization Shareable Invite & Referral Link"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700 }}
-          >
-            <Users size={14} />
-            {referralFilter === "shareable_link"
-              ? `Showing Link Signups (${members.filter((m) => (m.join_source || "shareable_link") === "shareable_link").length})`
-              : `Track Link Users (${members.filter((m) => (m.join_source || "shareable_link") === "shareable_link").length})`}
-          </button>
-        )}
+        {typeof onToggleReferralFilter === "function" && (() => {
+          const linkMembers = members.filter((m) => (m.join_source || "shareable_link") === "shareable_link");
+          const clicksCount = linkMembers.filter((m) => m.status === "link_clicked").length;
+          const registeredCount = linkMembers.filter((m) => m.status !== "link_clicked").length;
+          return (
+            <button
+              type="button"
+              className={referralFilter === "shareable_link" ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
+              onClick={() => onToggleReferralFilter(referralFilter === "shareable_link" ? "all" : "shareable_link")}
+              title="Filter user directory to show all members and prospective learners from this link"
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700 }}
+            >
+              <Users size={14} />
+              {referralFilter === "shareable_link"
+                ? `Showing Link Users (${linkMembers.length} • ${registeredCount} joined, ${clicksCount} link clicks)`
+                : `Track Link Traffic (${linkMembers.length} • ${registeredCount} joined, ${clicksCount} link clicks)`}
+            </button>
+          );
+        })()}
       </div>
 
       {showQr && (
@@ -1036,8 +1041,9 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   <select className="ta-input" style={{ width: "auto", minWidth: 120, flex: "0 1 150px" }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                     <option value="all">Any status</option>
                     <option value="active">Active</option>
+                    <option value="link_clicked">🔗 Link Clicked / Prospective</option>
+                    <option value="pending">Pending Approval</option>
                     <option value="suspended">Suspended</option>
-                    <option value="pending">Pending</option>
                   </select>
                   <select
                     className="ta-input"
@@ -1213,10 +1219,14 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           </td>
                           <td style={{ minWidth: 180 }}>
                             <div className="ta-row ta-gap10" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => setDetailMember(m)}>
-                              <Avatar initials={initials} size={34} src={m.avatar_url || undefined} />
+                              <Avatar initials={m.status === "link_clicked" ? "LV" : initials} size={34} src={m.avatar_url || undefined} />
                               <div style={{ minWidth: 130, flex: 1 }}>
-                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", whiteSpace: "normal", wordBreak: "break-word" }}>{m.display_name || "Member"}</div>
-                                <div style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "normal", wordBreak: "break-all" }}>{m.email || "No email on file"}</div>
+                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", whiteSpace: "normal", wordBreak: "break-word" }}>
+                                  {m.display_name || (m.status === "link_clicked" ? "Prospective Student" : "Member")}
+                                </div>
+                                <div style={{ fontSize: 11, color: m.status === "link_clicked" ? "var(--primary)" : "var(--text-3)", whiteSpace: "normal", wordBreak: "break-all" }}>
+                                  {m.email || (m.status === "link_clicked" ? "Clicked invite link • Awaiting signup completion" : "No email on file")}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -1265,7 +1275,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           </td>
                           <td>
                             <span style={{ fontSize: 12.5, fontWeight: 500, color: m.cohort_name ? "var(--text)" : "var(--text-3)" }}>
-                              {m.cohort_name || "Not in a cohort"}
+                              {m.cohort_name || (m.status === "link_clicked" ? "Awaiting Signup" : "Not in a cohort")}
                             </span>
                           </td>
                           <td>
@@ -1274,17 +1284,31 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                             </span>
                           </td>
                           <td style={{ cursor: "pointer" }} onClick={() => setDetailMember(m)} title="Click to view detailed course breakdown & scores">
-                            <div style={{ width: "100%", maxWidth: 140 }}>
-                              <div className="ta-row ta-between" style={{ fontSize: 11, marginBottom: 4 }}>
-                                <span>Overall Progress</span>
-                                <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${m.overallProgress ? Math.round(m.overallProgress) : 0}%`}</span>
+                            {m.status === "link_clicked" ? (
+                              <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Awaiting Signup</span>
+                            ) : (
+                              <div style={{ width: "100%", maxWidth: 140 }}>
+                                <div className="ta-row ta-between" style={{ fontSize: 11, marginBottom: 4 }}>
+                                  <span>Overall Progress</span>
+                                  <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${m.overallProgress ? Math.round(m.overallProgress) : 0}%`}</span>
+                                </div>
+                                <div style={{ width: "100%", height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
+                                  <div style={{ width: `${hasProgress ? progress : (m.overallProgress || 0)}%`, height: "100%", background: riskTone === "success" ? "#10B981" : riskTone === "warning" ? "#F59E0B" : "#EF4444", borderRadius: 4 }} />
+                                </div>
                               </div>
-                              <div style={{ width: "100%", height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
-                                <div style={{ width: `${hasProgress ? progress : (m.overallProgress || 0)}%`, height: "100%", background: riskTone === "success" ? "#10B981" : riskTone === "warning" ? "#F59E0B" : "#EF4444", borderRadius: 4 }} />
-                              </div>
-                            </div>
+                            )}
                           </td>
-                          <td><Tag tone={riskTone}>{riskLabel}</Tag></td>
+                          <td>
+                            {m.status === "link_clicked" ? (
+                              <Tag tone="warning">Link Clicked</Tag>
+                            ) : m.status === "pending" || m.status === "pending_approval" ? (
+                              <Tag tone="attention">Pending Approval</Tag>
+                            ) : m.status === "suspended" ? (
+                              <Tag tone="danger">Suspended</Tag>
+                            ) : (
+                              <Tag tone={riskTone}>{riskLabel}</Tag>
+                            )}
+                          </td>
                           <td style={{ textAlign: "right" }}>
                             <div className="ta-row ta-gap6" style={{ justifyContent: "flex-end" }}>
                               <button className="ta-btn ta-btn-outline ta-btn-sm" title="Open member record" onClick={() => setDetailMember(m)}>

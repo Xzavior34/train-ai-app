@@ -16,6 +16,143 @@ import { setDemoRoleForEmail } from "../roleRouting.js";
 const AUTH_STORAGE_KEY = "trainai_active_session_v1"; // must match useAuth.js
 export const PENDING_ORG_JOIN_STORAGE_KEY = "trainai_pending_org_join";
 export const REFERRAL_SIGNUPS_ROSTER_KEY = "trainai_referral_signups_roster_v1";
+export const LINK_CLICKS_ROSTER_KEY = "trainai_link_clicks_v1";
+export const VISITOR_ID_KEY = "trainai_visitor_id";
+
+/**
+ * Gets or creates a persistent visitor identifier for tracking prospective learners who click links.
+ */
+export function getOrCreateVisitorId() {
+  if (typeof window === "undefined") return "visitor-node";
+  try {
+    let id = localStorage.getItem(VISITOR_ID_KEY);
+    if (!id) {
+      id = "v_" + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+      localStorage.setItem(VISITOR_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return "v_" + Date.now();
+  }
+}
+
+/**
+ * Retrieves all visitors who clicked an organization referral/invite link.
+ * Stored locally and persistent across sessions to guarantee admin visibility of click traffic.
+ */
+export function getLinkClicksRoster(orgIdOrSlug = null) {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LINK_CLICKS_ROSTER_KEY);
+    let list = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(list)) list = [];
+
+    // If list is empty and this browser has an active pending join intent, synthesize a click entry
+    if (list.length === 0) {
+      const pendingRaw = localStorage.getItem(PENDING_ORG_JOIN_STORAGE_KEY);
+      if (pendingRaw) {
+        try {
+          const p = JSON.parse(pendingRaw);
+          if (p?.orgIdOrSlug) {
+            const visitorId = getOrCreateVisitorId();
+            const synClick = createLinkClickEntry(p.orgIdOrSlug, {
+              visitorId,
+              timestamp: p.timestamp || Date.now(),
+              role: p.role || "learner",
+            });
+            if (synClick) {
+              list = [synClick];
+              localStorage.setItem(LINK_CLICKS_ROSTER_KEY, JSON.stringify(list));
+            }
+          }
+        } catch {}
+      }
+    }
+
+    if (!orgIdOrSlug) return list;
+    const target = String(orgIdOrSlug).trim().toLowerCase();
+    return list.filter((m) => {
+      const matchId = String(m.organization_id || "").toLowerCase() === target;
+      const matchSlug = String(m.organization_slug || "").toLowerCase() === target;
+      const matchName = String(m.organization_name || "").toLowerCase().includes(target);
+      const isSaraMatch =
+        (target.includes("sara") || target === "sara-org-1") &&
+        (String(m.organization_id || "").toLowerCase().includes("sara") ||
+          String(m.organization_slug || "").toLowerCase().includes("sara") ||
+          String(m.organization_name || "").toLowerCase().includes("sara"));
+      return matchId || matchSlug || matchName || isSaraMatch;
+    });
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Builds a standardized link click record representing a prospective student who clicked the invite link.
+ */
+export function createLinkClickEntry(orgIdOrSlug, options = {}) {
+  const target = String(orgIdOrSlug || "").trim();
+  if (!target) return null;
+  const targetLower = target.toLowerCase();
+  const dirMatch = PUBLIC_ORGANIZATIONS_DIRECTORY.find(
+    (item) =>
+      item.id.toLowerCase() === targetLower ||
+      item.slug.toLowerCase() === targetLower ||
+      item.name.toLowerCase() === targetLower ||
+      (targetLower.includes("sara") && item.slug === "sara-foundation")
+  );
+  const orgSlug = dirMatch ? dirMatch.slug : target;
+  const orgName = dirMatch
+    ? dirMatch.name
+    : targetLower.includes("sara")
+    ? "Sara Foundation Africa"
+    : target.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const orgId = dirMatch ? dirMatch.id : target;
+  const visitorId = options.visitorId || getOrCreateVisitorId();
+  const clickId = `click-${visitorId.replace(/[^a-zA-Z0-9]/g, "")}-${orgSlug}`;
+  const now = options.timestamp ? new Date(options.timestamp).toISOString() : new Date().toISOString();
+  const suffix = visitorId.length >= 4 ? visitorId.slice(-4).toUpperCase() : visitorId.toUpperCase();
+  const displayName = options.displayName || `Prospective Student (Visitor #${suffix})`;
+
+  return {
+    id: clickId,
+    user_id: clickId,
+    visitor_id: visitorId,
+    display_name: displayName,
+    email: options.email || null,
+    role: options.role || "learner",
+    status: "link_clicked",
+    organization_id: orgId,
+    organization_slug: orgSlug,
+    organization_name: orgName,
+    joined_at: now,
+    created_at: now,
+    last_active_at: now,
+    join_source: "shareable_link",
+    referral_link: getOrganizationJoinUrl(orgSlug),
+  };
+}
+
+/**
+ * Records a link click event for a prospective student visiting via ?join=... or ?org=...
+ */
+export function recordLinkClickInRoster(orgIdOrSlug, options = {}) {
+  if (typeof window === "undefined" || !orgIdOrSlug) return null;
+  try {
+    const entry = createLinkClickEntry(orgIdOrSlug, options);
+    if (!entry) return null;
+    const raw = localStorage.getItem(LINK_CLICKS_ROSTER_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    const filtered = (Array.isArray(list) ? list : []).filter((c) => c.id !== entry.id && c.visitor_id !== entry.visitor_id);
+    const nextList = [entry, ...filtered];
+    localStorage.setItem(LINK_CLICKS_ROSTER_KEY, JSON.stringify(nextList));
+    window.dispatchEvent(new CustomEvent("trainai_referral_signup", { detail: entry }));
+    return entry;
+  } catch (e) {
+    console.warn("Could not record link click in roster:", e);
+    return null;
+  }
+}
 
 /**
  * Retrieves all students/learners who signed up or joined an organization via invite/referral link.
@@ -84,6 +221,20 @@ export function recordReferralSignupInRoster(entry) {
 
     const nextList = [formatted, ...filtered];
     localStorage.setItem(REFERRAL_SIGNUPS_ROSTER_KEY, JSON.stringify(nextList));
+
+    // Convert or clear prospective click record for this visitor
+    try {
+      const visitorId = localStorage.getItem(VISITOR_ID_KEY);
+      const rawClicks = localStorage.getItem(LINK_CLICKS_ROSTER_KEY);
+      if (rawClicks) {
+        const clicks = JSON.parse(rawClicks);
+        if (Array.isArray(clicks)) {
+          const remainingClicks = clicks.filter((c) => c.visitor_id !== visitorId && (!entry.email || c.email !== entry.email));
+          localStorage.setItem(LINK_CLICKS_ROSTER_KEY, JSON.stringify(remainingClicks));
+        }
+      }
+    } catch {}
+
     window.dispatchEvent(new CustomEvent("trainai_referral_signup", { detail: formatted }));
     return formatted;
   } catch (e) {
@@ -316,6 +467,7 @@ export function trackOrganizationJoinIntent(orgIdOrSlug, options = {}) {
       timestamp: Date.now(),
     };
     localStorage.setItem(PENDING_ORG_JOIN_STORAGE_KEY, JSON.stringify(payload));
+    recordLinkClickInRoster(orgIdOrSlug, options);
   } catch {}
 }
 

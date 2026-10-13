@@ -21,6 +21,7 @@ import {
   MessageSquare,
   Globe,
   UserCheck,
+  Phone,
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { getSupabaseClientForProject, SUPABASE_PROJECTS, supabase } from "../../services/supabaseClient.js";
@@ -85,11 +86,13 @@ export function DemoRequestsScreen({ orgSelector }) {
       }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
+        const phone = item.phone_number || item.phone || (item.message?.match(/Phone(?:\s*(?:\/ WhatsApp)?\s*(?:Number)?)?:\s*([^\n\r]+)/i)?.[1]?.trim()) || "";
         const nameMatch = (item.full_name || "").toLowerCase().includes(q);
         const emailMatch = (item.work_email || "").toLowerCase().includes(q);
+        const phoneMatch = phone.toLowerCase().includes(q);
         const companyMatch = (item.company_name || "").toLowerCase().includes(q);
         const messageMatch = (item.message || "").toLowerCase().includes(q);
-        if (!nameMatch && !emailMatch && !companyMatch && !messageMatch) return false;
+        if (!nameMatch && !emailMatch && !phoneMatch && !companyMatch && !messageMatch) return false;
       }
       return true;
     });
@@ -127,6 +130,7 @@ export function DemoRequestsScreen({ orgSelector }) {
       filteredRequests.map((r) => ({
         fullName: r.full_name || "",
         workEmail: r.work_email || "",
+        phone: r.phone_number || r.phone || (r.message?.match(/Phone(?:\s*(?:\/ WhatsApp)?\s*(?:Number)?)?:\s*([^\n\r]+)/i)?.[1]?.trim()) || "",
         organization: r.company_name || "",
         orgType: r.org_type || "",
         teamSize: r.team_size || "",
@@ -480,16 +484,33 @@ export function DemoRequestsScreen({ orgSelector }) {
                             </span>
                           )}
                         </div>
-                        <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 2, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                          <span style={{ fontWeight: 600, color: "var(--text)" }}>{req.company_name}</span>
-                          <span style={{ color: "var(--text-3)" }}>•</span>
-                          <a
-                            href={`mailto:${req.work_email}?subject=Train%20AI%20Demo%20Session%20Follow-up&body=Hi%20${encodeURIComponent(req.full_name || "")},%0A%0AThank%20you%20for%20scheduling%20an%20appointment%20with%20Train%20AI.%0A%0ABest%20regards,%0ATrain%20AI%20Team`}
-                            style={{ color: "#2563EB", textDecoration: "none", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}
-                          >
-                            <Mail size={12} /> {req.work_email}
-                          </a>
-                        </div>
+                        {(() => {
+                          const contactPhone = req.phone_number || req.phone || (req.message?.match(/Phone(?:\s*(?:\/ WhatsApp)?\s*(?:Number)?)?:\s*([^\n\r]+)/i)?.[1]?.trim());
+                          return (
+                            <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 2, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                              <span style={{ fontWeight: 600, color: "var(--text)" }}>{req.company_name}</span>
+                              <span style={{ color: "var(--text-3)" }}>•</span>
+                              <a
+                                href={`mailto:${req.work_email}?subject=Train%20AI%20Demo%20Session%20Follow-up&body=Hi%20${encodeURIComponent(req.full_name || "")},%0A%0AThank%20you%20for%20scheduling%20an%20appointment%20with%20Train%20AI.%0A%0ABest%20regards,%0ATrain%20AI%20Team`}
+                                style={{ color: "#2563EB", textDecoration: "none", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}
+                              >
+                                <Mail size={12} /> {req.work_email}
+                              </a>
+                              {contactPhone && (
+                                <>
+                                  <span style={{ color: "var(--text-3)" }}>•</span>
+                                  <a
+                                    href={`tel:${contactPhone}`}
+                                    style={{ color: "#059669", textDecoration: "none", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}
+                                    title="Call or message contact"
+                                  >
+                                    <Phone size={12} /> {contactPhone}
+                                  </a>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
