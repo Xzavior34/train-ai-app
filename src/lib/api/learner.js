@@ -1208,15 +1208,52 @@ export async function fetchMyCertificateForCourse(courseId, userId) {
 }
 
 export async function fetchMyCertificates(userId) {
-  if (!supabase || !userId) return [];
-  const { data, error } = await supabase
-    .from("certificates")
-    .select("*, courses(title, category, instructor, cover_image_url), certificate_templates(*)")
-    .eq("user_id", userId)
-    .eq("status", "issued")
-    .order("issued_at", { ascending: false });
-  if (error) { console.warn("Certificates fetch warning:", error); return []; }
-  return data || [];
+  let cached = [];
+  try {
+    const raw = localStorage.getItem("trainai_certificates_cache_v1");
+    if (raw) {
+      const all = JSON.parse(raw);
+      cached = all.filter((c) => !userId || c.user_id === userId || c.user_id === "user-current" || c.user_id === "demo-learner");
+    }
+  } catch {}
+
+  const mappedCached = cached.map((c) => ({
+    id: c.id,
+    certificate_number: c.certificate_number || c.certificate_code,
+    certificate_code: c.certificate_code || c.certificate_number,
+    title: c.title || c.course_name || "Certificate of Completion",
+    issued_at: c.issued_at,
+    status: "issued",
+    score_pct: c.score_pct || 100,
+    courses: {
+      title: c.title || c.course_name || "Career Acceleration Programme",
+      category: "Professional Track",
+      instructor: c.organization_name || "Train AI",
+    },
+    certificate_templates: c.certificate_templates || null,
+  }));
+
+  if (!supabase || !userId) return mappedCached;
+
+  try {
+    const { data, error } = await supabase
+      .from("certificates")
+      .select("*, courses(title, category, instructor, cover_image_url), certificate_templates(*)")
+      .eq("user_id", userId)
+      .eq("status", "issued")
+      .order("issued_at", { ascending: false });
+
+    if (error) {
+      console.warn("Certificates fetch warning:", error);
+      return mappedCached;
+    }
+    const live = data || [];
+    const seen = new Set(live.map((l) => l.id || l.certificate_number || l.certificate_code));
+    const unmerged = mappedCached.filter((m) => !seen.has(m.id) && !seen.has(m.certificate_number));
+    return [...unmerged, ...live];
+  } catch {
+    return mappedCached;
+  }
 }
 
 export async function requestCertificate(courseId) {

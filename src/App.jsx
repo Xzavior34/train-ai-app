@@ -158,11 +158,17 @@ export default function App() {
   const [certVerifyCode, setCertVerifyCode] = useState(() => {
     try {
       const search = new URLSearchParams(window.location.search);
-      const code = search.get("verify") || search.get("cert") || search.get("certificate") || null;
+      const code = search.get("verify") || search.get("cert") || search.get("certificate") || search.get("code") || null;
       if (code) return code;
       const path = window.location.pathname;
       if (path.startsWith("/certificate/")) {
         return path.replace("/certificate/", "");
+      }
+      if (path.startsWith("/verify/")) {
+        return path.replace("/verify/", "");
+      }
+      if (path === "/verify" || path === "/certificate") {
+        return "1";
       }
       return null;
     } catch {
@@ -236,6 +242,9 @@ export default function App() {
           const modeParam = params.get("mode");
           if (modeParam === "signup" || modeParam === "signin") setAuthInitialMode(modeParam);
           setPublicView("auth");
+        } else if (params.get("verify") || window.location.pathname.startsWith("/verify") || window.location.pathname.startsWith("/certificate")) {
+          const vCode = params.get("verify") || window.location.pathname.replace(/^\/(verify|certificate)\/?/, "") || "1";
+          setCertVerifyCode(vCode);
         } else if (!session) {
           setPublicView("landing");
         }

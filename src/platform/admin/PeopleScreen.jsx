@@ -106,7 +106,7 @@ function downloadDirectoryCsv(rows, progressByMemberId) {
 /* ==========================================================================
    Member record drawer - the whole of one member, in one place
    ========================================================================= */
-function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToast }) {
+function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToast, onIssueCertificate }) {
   const detailQuery = useSupabaseQuery(
     async () => (member ? fetchUserDetailForAdmin(member.id, orgId) : null),
     [member?.id, orgId]
@@ -358,7 +358,20 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
           </div>
 
           <div className="ta-card ta-mt12" style={{ padding: 16 }}>
-            <div style={{ fontWeight: 800, fontSize: 14 }}>Certificates</div>
+            <div className="ta-row ta-between" style={{ alignItems: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: 14 }}>Certificates</div>
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ fontSize: 12, padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={() => {
+                  onClose();
+                  onIssueCertificate?.(member);
+                }}
+              >
+                <Award size={13} />
+                Issue Certificate
+              </button>
+            </div>
             {(detail?.certificates || []).length === 0 && <div className="ta-empty ta-mt10">No certificates issued yet.</div>}
             <div className="ta-col ta-gap6 ta-mt10">
               {(detail?.certificates || []).map((c) => (
@@ -1992,6 +2005,11 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         onClose={() => setDetailMember(null)}
         onChanged={refreshDirectory}
         showToast={showToast}
+        onIssueCertificate={(m) => {
+          setCertModalUser(m);
+          setCertTitle("");
+          setCertFileUrl("");
+        }}
       />
 
       <PortalModal
@@ -2153,10 +2171,24 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 onClick={async () => {
                   setIssuingCert(true);
                   try {
-                    const result = await issueCertificateDirectly(certModalUser.user_id || certModalUser.id, orgId, certTitle.trim(), null, certFileUrl || null);
+                    const result = await issueCertificateDirectly(
+                      certModalUser.user_id || certModalUser.id,
+                      orgId,
+                      certTitle.trim(),
+                      null,
+                      certFileUrl || null,
+                      {
+                        themeId: certThemeId,
+                        presentationText: certPresentation,
+                        completionStatement: certStatement,
+                        honorsText: certHonors,
+                        signatoryName: certSignatory,
+                        recipientName: certModalUser.display_name || certModalUser.full_name || certModalUser.email || "Learner",
+                      }
+                    );
                     if (!result.success) showToast(result.error);
                     else {
-                      showToast(`Certificate issued to ${certModalUser.display_name}.`);
+                      showToast(`Certificate issued to ${certModalUser.display_name || "Learner"}.`);
                       setCertModalUser(null);
                     }
                   } finally {
