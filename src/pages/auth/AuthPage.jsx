@@ -11,6 +11,7 @@ import {
   fetchOrganizationPublicInfo,
   fetchAvailableOrganizations,
   PUBLIC_ORGANIZATIONS_DIRECTORY,
+  recordLinkClickInRoster,
 } from "../../lib/api/organizations.js";
 import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../../lib/authRateLimiter.js";
 import { supabase, getSupabaseClientForProject, resolveProjectForSignUp } from "../../lib/supabaseClient.js";
@@ -512,6 +513,14 @@ export default function AuthPage({
         } : {};
 
         const userDisplayName = fullName.trim() || email.split("@")[0].replace(/[._-]/g, " ");
+        const cleanEmail = email.trim().toLowerCase();
+        if (joinTarget && cleanEmail && cleanEmail.includes("@")) {
+          recordLinkClickInRoster(joinTarget, {
+            email: cleanEmail,
+            displayName: userDisplayName,
+            role: "learner",
+          });
+        }
         const result = await onSignUp(email, password, "learner", "learner", matchedOrg?.projectKey, {
           ...orgMeta,
           display_name: userDisplayName,
@@ -523,7 +532,7 @@ export default function AuthPage({
         if (!result?.error) {
           if (joinTarget) {
             const uid = result?.data?.user?.id;
-            const uEmail = result?.data?.user?.email || email;
+            const uEmail = result?.data?.user?.email || cleanEmail;
             const uName = userDisplayName;
             await joinOrganizationByReferral(joinTarget, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
           } else {

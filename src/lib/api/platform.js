@@ -4967,6 +4967,7 @@ export async function updateUserProfileAsAdmin(userId, patch = {}) {
   if (!supabase || !userId) return { success: false, error: "Missing user." };
   const allowed = {};
   if (patch.displayName !== undefined) allowed.display_name = patch.displayName;
+  if (patch.email !== undefined) allowed.email = patch.email ? String(patch.email).trim().toLowerCase() : null;
   if (patch.department !== undefined) allowed.department = patch.department || null;
   if (patch.school !== undefined) allowed.school = patch.school || null;
   if (patch.bio !== undefined) allowed.bio = patch.bio || null;

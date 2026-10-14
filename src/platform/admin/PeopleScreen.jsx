@@ -15,7 +15,8 @@ import {
   approveOrgJoinRequest,
   rejectOrgJoinRequest,
   fetchOrgSeatsSummary,
-  fetchOrganizationPublicInfo
+  fetchOrganizationPublicInfo,
+  updateMemberEmailInRoster
 } from "../../lib/api/organizations.js";
 import { activeProject, SUPABASE_PROJECTS } from "../../lib/supabaseClient.js";
 import {
@@ -130,6 +131,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
     setCohortId("");
     setForm({
       displayName: member.display_name || "",
+      email: member.email && member.email.includes("@") ? member.email : "",
       department: member.department || "",
       school: member.school || "",
       bio: member.bio || "",
@@ -141,6 +143,9 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
   async function handleSaveProfile() {
     setSavingProfile(true);
     try {
+      if (form.email && form.email.includes("@")) {
+        updateMemberEmailInRoster(member.id, form.email);
+      }
       const res = await updateUserProfileAsAdmin(member.id, form);
       if (!res.success) { showToast(res.error); return; }
       showToast(`${form.displayName || "Member"}'s profile updated.`);
@@ -210,9 +215,13 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
           <div style={{ minWidth: 0 }}>
             <div className="ta-title" style={{ fontSize: 18, overflowWrap: "anywhere" }}>{member.display_name || "Member"}</div>
             <div className="ta-row ta-gap8" style={{ fontSize: 12, color: "var(--text-2)", flexWrap: "wrap" }}>
-              <span style={{ overflowWrap: "anywhere" }}>{member.email || "No email on file"}</span>
+              <span style={{ overflowWrap: "anywhere", fontWeight: member.email && member.email.includes("@") ? 600 : 400, color: member.email && member.email.includes("@") ? "var(--text)" : "var(--text-3)" }}>
+                {member.email && member.email.includes("@") ? member.email : "None (Has not signed up yet)"}
+              </span>
               <Tag>{ROLE_LABEL[member.role] || member.role || "learner"}</Tag>
-              <Tag tone={member.status === "suspended" ? "danger" : "success"}>{member.status || "active"}</Tag>
+              <Tag tone={member.status === "suspended" ? "danger" : member.status === "link_clicked" ? "warning" : "success"}>
+                {member.status === "link_clicked" ? "Link Clicked" : (member.status || "active")}
+              </Tag>
             </div>
           </div>
         </div>
@@ -271,6 +280,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
               <div className="ta-col ta-gap6 ta-mt12" style={{ fontSize: 12.5 }}>
                 {[
                   ["Display name", member.display_name || "Not set"],
+                  ["Email address", member.email && member.email.includes("@") ? member.email : "None (Has not signed up yet)"],
                   ["Department", detail?.profile?.department || member.department || "Not set"],
                   ["School", detail?.profile?.school || member.school || "Not set"],
                   ["Cohort", detail?.cohorts?.length ? detail.cohorts.map((c) => c.name).join(", ") : "Not in a cohort"],
@@ -291,6 +301,8 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
               <div className="ta-mt12">
                 <div className="ta-label">Display name</div>
                 <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={form.displayName} onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))} />
+                <div className="ta-label ta-mt12">Email address</div>
+                <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="user@example.com (or leave blank if not signed up yet)" />
                 <div className="ta-grid ta-grid-2 ta-gap12 ta-mt12">
                   <div>
                     <div className="ta-label">Department</div>
@@ -1272,8 +1284,14 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                                 <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", whiteSpace: "normal", wordBreak: "break-word" }}>
                                   {m.display_name || (m.status === "link_clicked" ? "Prospective Student" : "Member")}
                                 </div>
-                                <div style={{ fontSize: 11, color: m.status === "link_clicked" ? "var(--primary)" : "var(--text-3)", whiteSpace: "normal", wordBreak: "break-all" }}>
-                                  {m.email || (m.status === "link_clicked" ? "Clicked invite link • Awaiting signup completion" : "No email on file")}
+                                <div style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "normal", wordBreak: "break-all", marginTop: 2 }}>
+                                  {m.email && m.email.includes("@") ? (
+                                    <span style={{ color: "var(--text-2)", fontWeight: 500 }}>{m.email}</span>
+                                  ) : (
+                                    <span style={{ color: "var(--text-3)", fontStyle: "italic" }}>
+                                      {m.status === "link_clicked" ? "None (Has not signed up yet)" : "No email on file"}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1508,8 +1526,14 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                                 <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>
                                   {m.display_name || (m.status === "link_clicked" ? "Prospective Student" : "Member")}
                                 </div>
-                                <div style={{ fontSize: 11, color: m.status === "link_clicked" ? "var(--primary)" : "var(--text-3)" }}>
-                                  {m.email || (m.status === "link_clicked" ? "Clicked invite link • Awaiting signup completion" : "No email on file")}
+                                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                                  {m.email && m.email.includes("@") ? (
+                                    <span style={{ color: "var(--text-2)", fontWeight: 500 }}>{m.email}</span>
+                                  ) : (
+                                    <span style={{ color: "var(--text-3)", fontStyle: "italic" }}>
+                                      {m.status === "link_clicked" ? "None (Has not signed up yet)" : "No email on file"}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -2213,7 +2237,13 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 800, fontSize: 15, overflowWrap: "anywhere" }}>{actionsMember.display_name || "Member"}</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", overflowWrap: "anywhere" }}>{actionsMember.email || "No email on file"}</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", overflowWrap: "anywhere" }}>
+                    {actionsMember.email && actionsMember.email.includes("@")
+                      ? actionsMember.email
+                      : actionsMember.status === "link_clicked"
+                      ? "None (Has not signed up yet)"
+                      : "No email on file"}
+                  </div>
                 </div>
               </div>
               <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setActionsMember(null)} aria-label="Close"><X size={16} /></button>

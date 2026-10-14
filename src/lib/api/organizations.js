@@ -42,7 +42,7 @@ export const BASELINE_CONFIRMED_LINK_CLICKS = [
     user_id: "click-visitor-sara-4f92-sara-foundation",
     visitor_id: "v_sara4f92",
     display_name: "Prospective Student (Visitor #4F92)",
-    email: "Clicked invite link • Awaiting signup completion",
+    email: null,
     role: "learner",
     cohort_name: "Awaiting Signup",
     status: "link_clicked",
@@ -60,7 +60,7 @@ export const BASELINE_CONFIRMED_LINK_CLICKS = [
     user_id: "click-visitor-sara-7b18-sara-foundation",
     visitor_id: "v_sara7b18",
     display_name: "Prospective Student (Visitor #7B18)",
-    email: "Clicked invite link • Awaiting signup completion",
+    email: null,
     role: "learner",
     cohort_name: "Awaiting Signup",
     status: "link_clicked",
@@ -94,15 +94,25 @@ export function getLinkClicksRoster(orgIdOrSlug = null) {
 
     // Ensure confirmed baseline clicks are always merged in
     const existingIds = new Set(list.map((c) => c.id || c.visitor_id));
-    let addedBaseline = false;
+    let stateChanged = false;
     for (const baseClick of BASELINE_CONFIRMED_LINK_CLICKS) {
       if (!existingIds.has(baseClick.id) && !existingIds.has(baseClick.visitor_id)) {
         list.push(baseClick);
         existingIds.add(baseClick.id);
-        addedBaseline = true;
+        stateChanged = true;
       }
     }
-    if (addedBaseline) {
+
+    // Clean up any stale placeholder text previously saved in email field
+    list = list.map((c) => {
+      if (c.email && !c.email.includes("@")) {
+        stateChanged = true;
+        return { ...c, email: null };
+      }
+      return c;
+    });
+
+    if (stateChanged) {
       localStorage.setItem(LINK_CLICKS_ROSTER_KEY, JSON.stringify(list));
     }
 
@@ -322,6 +332,54 @@ export function updateReferralRosterMemberStatus(userId, newStatus = "active") {
     localStorage.setItem(REFERRAL_SIGNUPS_ROSTER_KEY, JSON.stringify(nextList));
     window.dispatchEvent(new CustomEvent("trainai_referral_signup", { detail: { userId, status: newStatus } }));
   } catch {}
+}
+
+/**
+ * Updates a member's email in the persistent roster and dispatches sync event
+ */
+export function updateMemberEmailInRoster(userId, newEmail) {
+  if (typeof window === "undefined" || !userId || !newEmail) return false;
+  const cleanEmail = String(newEmail).trim().toLowerCase();
+  if (!cleanEmail.includes("@")) return false;
+
+  let updated = false;
+
+  try {
+    const raw = localStorage.getItem(REFERRAL_SIGNUPS_ROSTER_KEY);
+    if (raw) {
+      const list = JSON.parse(raw);
+      if (Array.isArray(list)) {
+        const nextList = list.map((m) => {
+          if (m.id === userId || m.user_id === userId) {
+            updated = true;
+            return { ...m, email: cleanEmail, updated_at: new Date().toISOString() };
+          }
+          return m;
+        });
+        localStorage.setItem(REFERRAL_SIGNUPS_ROSTER_KEY, JSON.stringify(nextList));
+      }
+    }
+  } catch {}
+
+  try {
+    const rawClicks = localStorage.getItem(LINK_CLICKS_ROSTER_KEY);
+    if (rawClicks) {
+      const clicks = JSON.parse(rawClicks);
+      if (Array.isArray(clicks)) {
+        const nextClicks = clicks.map((c) => {
+          if (c.id === userId || c.user_id === userId || c.visitor_id === userId) {
+            updated = true;
+            return { ...c, email: cleanEmail, updated_at: new Date().toISOString() };
+          }
+          return c;
+        });
+        localStorage.setItem(LINK_CLICKS_ROSTER_KEY, JSON.stringify(nextClicks));
+      }
+    }
+  } catch {}
+
+  window.dispatchEvent(new CustomEvent("trainai_referral_signup", { detail: { userId, email: cleanEmail } }));
+  return updated;
 }
 
 const INTERNAL_DEMO_SLUGS = new Set([
