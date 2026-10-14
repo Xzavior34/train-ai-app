@@ -784,12 +784,12 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const [actionsMember, setActionsMember] = useState(null);
   const [invitingBusy, setInvitingBusy] = useState(null);
 
-  const membersQuery = useSupabaseQuery(async () => orgId ? fetchOrgMembers(orgId) : [], [orgId]);
-  const cohortsQuery = useSupabaseQuery(async () => orgId ? fetchCohorts(orgId) : [], [orgId]);
-  const instructorsQuery = useSupabaseQuery(async () => orgId ? fetchOrgInstructorsMonitor(orgId) : [], [orgId]);
+  const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId || "demo-org-id"), [orgId]);
+  const cohortsQuery = useSupabaseQuery(async () => fetchCohorts(orgId || "demo-org-id"), [orgId]);
+  const instructorsQuery = useSupabaseQuery(async () => fetchOrgInstructorsMonitor(orgId || "demo-org-id"), [orgId]);
   const invitationsQuery = useSupabaseQuery(async () => orgId ? fetchPendingInvitations(orgId) : [], [orgId]);
   const progressQuery = useSupabaseQuery(async () => orgId ? fetchOrgLearnerProgressOverview(orgId) : [], [orgId]);
-  const kpisQuery = useSupabaseQuery(async () => orgId ? fetchOrgPeopleKpis(orgId) : null, [orgId]);
+  const kpisQuery = useSupabaseQuery(async () => fetchOrgPeopleKpis(orgId || "demo-org-id"), [orgId]);
   const joinRequestsQuery = useSupabaseQuery(async () => orgId ? fetchPendingOrgJoinRequests(orgId) : [], [orgId]);
   const seatsQuery = useSupabaseQuery(async () => orgId ? fetchOrgSeatsSummary(orgId) : null, [orgId]);
   // Instructor applications: mentors rows in this org that aren't active yet.

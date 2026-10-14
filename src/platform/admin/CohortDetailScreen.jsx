@@ -346,7 +346,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
   const [tab, setTab] = useState("members");
 
   const detailQuery = useSupabaseQuery(async () => (cohortId ? fetchCohortDetail(cohortId) : null), [cohortId]);
-  const orgUsersQuery = useSupabaseQuery(async () => (orgId ? fetchUsersInOrg(orgId) : []), [orgId]);
+  const orgUsersQuery = useSupabaseQuery(async () => fetchUsersInOrg(orgId || "demo-org-id"), [orgId]);
   const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
 
   const detail = detailQuery.data;

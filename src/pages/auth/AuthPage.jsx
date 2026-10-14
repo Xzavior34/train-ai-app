@@ -487,6 +487,16 @@ export default function AuthPage({
         const uEmail = signInRes?.data?.user?.email || email;
         const uName = signInRes?.data?.user?.user_metadata?.display_name || uEmail.split("@")[0].replace(/[._-]/g, " ");
         await joinOrganizationByReferral(targetOrgTarget, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
+      } else if (!signInRes?.error && signInRes?.data?.user) {
+        const uid = signInRes.data.user.id;
+        const uEmail = signInRes.data.user.email || email;
+        const uName = signInRes.data.user.user_metadata?.display_name || uEmail.split("@")[0].replace(/[._-]/g, " ");
+        const uOrg = signInRes.data.user.user_metadata?.organization_id || signInRes.data.user.user_metadata?.organization_slug;
+        if (uOrg) {
+          await joinOrganizationByReferral(uOrg, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
+        } else {
+          await joinDefaultOrganization({ userId: uid, email: uEmail, displayName: uName }).catch(() => {});
+        }
       }
       setSubmitting(false);
     } else {
@@ -552,7 +562,10 @@ export default function AuthPage({
             const uName = userDisplayName;
             await joinOrganizationByReferral(joinTarget, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
           } else {
-            joinDefaultOrganization().catch(() => {});
+            const uid = result?.data?.user?.id;
+            const uEmail = result?.data?.user?.email || cleanEmail;
+            const uName = userDisplayName;
+            await joinDefaultOrganization({ userId: uid, email: uEmail, displayName: uName }).catch(() => {});
           }
 
           if (result?.data?.session) {
