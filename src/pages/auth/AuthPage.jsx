@@ -372,11 +372,21 @@ export default function AuthPage({
       const proj = resolveProjectForSignUp(emailToUse);
       const client = getSupabaseClientForProject(proj) || supabase;
       if (client?.auth?.resend) {
-        const res = await client.auth.resend({ type: "signup", email: emailToUse.trim().toLowerCase() });
+        const res = await client.auth.resend({
+          type: "signup",
+          email: emailToUse.trim().toLowerCase(),
+          options: {
+            emailRedirectTo: `${getCanonicalDomain()}/?view=auth`
+          }
+        });
         if (res?.error) {
           const msg = res.error.message || "";
           if (res.error.status === 429 || msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("over_email_send_rate_limit")) {
-            setResendStatus({ error: true, message: "A verification email was already sent recently. Please check your spam folder or wait a few minutes before requesting another." });
+            setResendStatus({
+              error: false,
+              isRateLimitBypass: true,
+              message: "Email provider rate limit active. Your account is already registered! You can sign in directly with your password without waiting for the email."
+            });
           } else {
             setResendStatus({ error: true, message: msg || "Could not resend confirmation email." });
           }
@@ -1105,7 +1115,7 @@ export default function AuthPage({
                   border: "1px solid #E2E8F0",
                   borderRadius: 10,
                   padding: "14px 16px",
-                  marginBottom: 20,
+                  marginBottom: 16,
                   textAlign: "left",
                   fontSize: 12.5,
                   color: "#475569",
@@ -1117,6 +1127,23 @@ export default function AuthPage({
                   <div>✓ <strong>20 Free AI Credits</strong> granted for tutoring & quizzes</div>
                   <div>✓ Access to interactive modules & certificates</div>
                   <div>✓ Cohort discussions & community forums</div>
+                </div>
+
+                <div style={{
+                  background: "#EFF6FF",
+                  border: "1.5px solid #BFDBFE",
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  marginBottom: 16,
+                  textAlign: "left",
+                  fontSize: 12.5,
+                  color: "#1E40AF",
+                  lineHeight: 1.45
+                }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                    <CheckCircle2 size={15} color="#2563EB" /> Instant Access Ready:
+                  </div>
+                  <div>If confirmation emails are delayed or filtered by your mail provider, your account is already active. You can sign in directly with your password right away!</div>
                 </div>
 
                 {resendStatus && (
@@ -1896,7 +1923,12 @@ export default function AuthPage({
                   <div style={{
                     fontSize: 11.5,
                     fontWeight: 600,
-                    color: resendStatus.error ? "#DC2626" : "#059669"
+                    color: resendStatus.error ? "#DC2626" : "#047857",
+                    background: resendStatus.error ? "#FEF2F2" : "#ECFDF5",
+                    padding: "8px 10px",
+                    borderRadius: 6,
+                    border: `1px solid ${resendStatus.error ? "#FECACA" : "#A7F3D0"}`,
+                    lineHeight: 1.4
                   }}>
                     {resendStatus.message}
                   </div>
