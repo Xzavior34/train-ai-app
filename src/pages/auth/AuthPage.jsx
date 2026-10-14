@@ -98,8 +98,24 @@ export default function AuthPage({
       setRecoveryLinkError(
         decodeURIComponent((description || "This password reset link is invalid or has expired.").replace(/\+/g, " "))
       );
-    } else if (recoveryMode && !recoverySessionReady) {
-      setRecoveryLinkError("This password reset link is incomplete, invalid, or has expired.");
+      return;
+    }
+
+    if (recoverySessionReady) {
+      setRecoveryLinkError("");
+      return;
+    }
+
+    if (recoveryMode && !recoverySessionReady) {
+      const timer = setTimeout(() => {
+        if (!recoverySessionReady) {
+          const hasTokens = hashParams.get("access_token") || params.get("access_token") || params.get("code");
+          if (!hasTokens) {
+            setRecoveryLinkError("This password reset link is incomplete, invalid, or has expired.");
+          }
+        }
+      }, 2500);
+      return () => clearTimeout(timer);
     }
   }, [recoveryMode, recoverySessionReady]);
 

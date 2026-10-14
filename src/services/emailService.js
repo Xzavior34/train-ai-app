@@ -5,11 +5,8 @@ export const CANONICAL_DOMAIN = "https://trainailtd.com";
 export const SUPPORT_EMAIL = "info@trainailtd.com";
 
 export function getCanonicalDomain() {
-  if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".local")) {
-      return window.location.origin;
-    }
+  if (typeof window !== "undefined" && window.location?.origin && window.location.origin.startsWith("http")) {
+    return window.location.origin;
   }
   return CANONICAL_DOMAIN;
 }

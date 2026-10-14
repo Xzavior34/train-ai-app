@@ -500,6 +500,7 @@ export default function App() {
             initialMode={authInitialMode}
             onForgotPassword={sendPasswordReset}
             onVerifyRecoveryOtp={verifyRecoveryOtp}
+            onCompletePasswordReset={completePasswordReset}
             onGoHome={() => {
               try { window.history.pushState({}, "", window.location.pathname); } catch {}
               setPublicView("landing");

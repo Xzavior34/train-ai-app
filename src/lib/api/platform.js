@@ -568,22 +568,24 @@ export async function fetchUsersInOrg(organizationId) {
     ...roster.map((r) => ({
       id: r.id || r.user_id,
       name: r.display_name || "Learner",
+      email: r.email || "",
       initials: (r.display_name || "L").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
     })),
     ...clicks.map((c) => ({
       id: c.id || c.user_id,
       name: c.display_name || "Prospective Student",
+      email: c.email || "",
       initials: "LV"
     }))
   ];
 
   const demo = [
-    ...DEMO_LEARNERS.map((l) => ({ id: l.id, name: l.name, initials: l.initials })),
-    ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, name: i.name, initials: i.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() })),
-    { id: "demo-manager-id", name: "Demo Manager", initials: "DM" },
+    ...DEMO_LEARNERS.map((l) => ({ id: l.id, name: l.name, email: l.email || "", initials: l.initials })),
+    ...DEMO_INSTRUCTORS.map((i) => ({ id: i.id, name: i.name, email: i.email || "", initials: i.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() })),
+    { id: "demo-manager-id", name: "Demo Manager", email: "manager@trainailtd.com", initials: "DM" },
   ];
 
-  if (!supabase) {
+  if (!supabase || organizationId === "demo-org-id") {
     const seen = new Set();
     const list = [];
     for (const u of [...rosterMapped, ...demo]) {
@@ -592,6 +594,30 @@ export async function fetchUsersInOrg(organizationId) {
     return list;
   }
 
+  // Primary path: fetchOrgMembers combines user_profiles, organization_members,
+  // invited members, and referral rosters with verified display names and emails
+  try {
+    const members = await fetchOrgMembers(organizationId);
+    if (members && members.length > 0) {
+      const seen = new Set();
+      const list = [];
+      for (const m of members) {
+        const id = m.id || m.user_id;
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        const name = m.display_name || m.name || (m.email ? m.email.split("@")[0].replace(/[._-]/g, " ") : "Learner");
+        const email = m.email || "";
+        const initials = ((name || "L").split(" ").map((w) => w[0]).join("").slice(0, 2) || "L").toUpperCase();
+        const label = email && !name.toLowerCase().includes(email.toLowerCase()) ? `${name} (${email})` : name;
+        list.push({ id, name, email, label, initials, role: m.role || "learner" });
+      }
+      if (list.length > 0) return list;
+    }
+  } catch (err) {
+    console.warn("fetchUsersInOrg: fetchOrgMembers lookup warning:", err);
+  }
+
+  // Fallback direct database query
   let resolvedOrgUuid = null;
   if (organizationId && organizationId !== "demo-org-id") {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(organizationId).trim());
@@ -620,11 +646,17 @@ export async function fetchUsersInOrg(organizationId) {
     if (resolvedOrgUuid) query = query.eq("organization_id", resolvedOrgUuid);
     const { data, error } = await query;
     if (!error && data) {
-      dbUsers = data.map(u => ({ id: u.id, name: u.display_name || "Unnamed user", initials: (u.display_name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() }));
+      dbUsers = data.map((u) => ({
+        id: u.id,
+        name: u.display_name || "Unnamed user",
+        email: "",
+        label: u.display_name || "Unnamed user",
+        initials: (u.display_name || "U").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+      }));
     }
   } catch {}
 
-  const seenIds = new Set(dbUsers.map(u => u.id));
+  const seenIds = new Set(dbUsers.map((u) => u.id));
   const combined = [...dbUsers];
   for (const r of rosterMapped) {
     if (!seenIds.has(r.id)) {
@@ -2261,41 +2293,165 @@ export async function fetchCohortDetail(cohortId) {
   return { cohort: cohort || null, members: membersOut, posts: postsOut, resources: resources || [], sessions: sessions || [], learnerCourses: learnerCoursesOut, cohortCourses: cohortCoursesOut };
 }
 
-// Adds an existing org member to a cohort. cohort_members has a real
-// (cohort_id, user_id) row shape with added_by/added_at - same manual-lookup
-// limitation as everything else in this table (no FK to user_profiles).
+// Adds an existing org member to a cohort. cohort_members has a
+// (cohort_id, user_id) unique constraint with added_by/added_at.
 export async function addCohortMember({ cohortId, userId, addedBy }) {
   if (!supabase || !cohortId || !userId) return null;
+
+  // 1. Idempotency check: see if already a member of this cohort
+  try {
+    const { data: existing } = await supabase
+      .from("cohort_members")
+      .select("id, cohort_id, user_id")
+      .eq("cohort_id", cohortId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (existing) {
+      return existing;
+    }
+  } catch (checkErr) {
+    console.warn("addCohortMember existing check warning:", checkErr);
+  }
+
+  // 2. Validate addedBy is a valid UUID so it doesn't fail foreign key constraint
+  const isValidUuid = addedBy && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(addedBy));
+
   const { data, error } = await supabase
     .from("cohort_members")
-    .insert({ cohort_id: cohortId, user_id: userId, added_by: addedBy || null })
+    .insert({
+      cohort_id: cohortId,
+      user_id: userId,
+      added_by: isValidUuid ? addedBy : null,
+    })
     .select()
     .single();
-  if (error) throw error;
+
+  if (error) {
+    // Unique violation (already enrolled concurrently) is treated as success
+    if (error.code === "23505" || error.message?.includes("unique") || error.message?.includes("duplicate")) {
+      return { cohort_id: cohortId, user_id: userId };
+    }
+    throw error;
+  }
   return data;
 }
 
-// Bulk add by email - confirmed directly against the 1.0 reference
-// site's "Bulk add by email" control. Reuses the already-real
-// findUserIdByEmail() (backed by the find_user_id_by_email RPC) rather
-// than inventing a new lookup path - an email that doesn't match a real
-// account is reported back per-email rather than silently skipped, so
-// the caller can see exactly which ones failed and why.
+// Bulk add by email - supports commas, semicolons, newlines, and spaces.
+// Resolves members across organization rosters, direct profile matching,
+// and secure cohort-scoped lookup.
 export async function bulkAddCohortMembersByEmail(cohortId, emails, addedBy) {
   if (!supabase) return { success: false, error: "Not available in demo mode.", added: [], failed: [] };
-  const list = (emails || "").split(",").map((e) => e.trim()).filter(Boolean);
+
+  const rawList = (emails || "")
+    .split(/[,\r\n;\t ]+/)
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => e && e.includes("@"));
+  const uniqueEmails = [...new Set(rawList)];
+
+  if (!uniqueEmails.length) {
+    return { success: false, error: "No valid email addresses provided.", added: [], failed: [] };
+  }
+
+  // 1. Resolve cohort's organization to scope member lookups
+  let orgId = null;
+  try {
+    const { data: cRow } = await supabase
+      .from("cohorts")
+      .select("organization_id")
+      .eq("id", cohortId)
+      .maybeSingle();
+    orgId = cRow?.organization_id || null;
+  } catch {}
+
+  // 2. Preload organization members to match known emails immediately
+  const orgMembers = orgId ? await fetchOrgMembers(orgId).catch(() => []) : [];
+  const memberByEmail = new Map();
+  for (const m of orgMembers) {
+    const id = m.id || m.user_id;
+    if (m.email && id) {
+      memberByEmail.set(m.email.toLowerCase().trim(), id);
+    }
+  }
+
   const added = [];
   const failed = [];
-  for (const email of list) {
+
+  for (const email of uniqueEmails) {
     try {
-      const userId = await findUserIdByEmail(email);
-      if (!userId) { failed.push({ email, reason: "No account found with this email" }); continue; }
+      // Step A: Attempt RPC add_cohort_member_by_email if available
+      try {
+        const { data: rpcRes, error: rpcErr } = await supabase.rpc("add_cohort_member_by_email", {
+          p_cohort_id: cohortId,
+          p_email: email,
+        });
+        if (!rpcErr && rpcRes && rpcRes.success) {
+          added.push(email);
+          continue;
+        }
+      } catch {}
+
+      // Step B: Resolve user ID from org members roster
+      let userId = memberByEmail.get(email) || null;
+
+      // Step C: If not in roster cache, search user_profiles directly
+      if (!userId) {
+        try {
+          const { data: prof } = await supabase
+            .from("user_profiles")
+            .select("id")
+            .ilike("email", email)
+            .limit(1)
+            .maybeSingle();
+          if (prof?.id) userId = prof.id;
+        } catch {}
+      }
+
+      // Step D: Try find_cohort_user_by_email RPC
+      if (!userId) {
+        try {
+          const { data: rpcUserId } = await supabase.rpc("find_cohort_user_by_email", {
+            p_cohort_id: cohortId,
+            p_email: email,
+          });
+          if (rpcUserId) userId = rpcUserId;
+        } catch {}
+      }
+
+      // Step E: Try super-admin findUserIdByEmail RPC fallback
+      if (!userId) {
+        try {
+          const sAdminId = await findUserIdByEmail(email);
+          if (sAdminId) userId = sAdminId;
+        } catch {}
+      }
+
+      // Step F: Search organization_members by email
+      if (!userId && orgId) {
+        try {
+          const { data: omRow } = await supabase
+            .from("organization_members")
+            .select("user_id")
+            .eq("organization_id", orgId)
+            .ilike("email", email)
+            .limit(1)
+            .maybeSingle();
+          if (omRow?.user_id) userId = omRow.user_id;
+        } catch {}
+      }
+
+      if (!userId) {
+        failed.push({ email, reason: "Account not found in this organization. Invite them via Directory first." });
+        continue;
+      }
+
       await addCohortMember({ cohortId, userId, addedBy });
       added.push(email);
     } catch (e) {
-      failed.push({ email, reason: e?.message || "Could not add this member" });
+      failed.push({ email, reason: e?.message || "Could not add this member to the cohort" });
     }
   }
+
   return { success: added.length > 0, added, failed };
 }
 
@@ -5095,10 +5251,16 @@ export async function assignMemberToCohort(userId, cohortId, addedBy, { exclusiv
         await supabase.from("cohort_members").delete().eq("id", row.id);
       }
     }
+    const isValidUuid = addedBy && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(addedBy));
     const { error } = await supabase
       .from("cohort_members")
-      .insert({ cohort_id: cohortId, user_id: userId, added_by: addedBy || null });
-    if (error) throw error;
+      .insert({ cohort_id: cohortId, user_id: userId, added_by: isValidUuid ? addedBy : null });
+    if (error) {
+      if (error.code === "23505" || error.message?.includes("unique") || error.message?.includes("duplicate")) {
+        return { success: true, alreadyMember: true };
+      }
+      throw error;
+    }
     return { success: true };
   } catch (e) {
     return { success: false, error: e?.message || "Could not assign this member to the cohort." };
