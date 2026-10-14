@@ -55,7 +55,7 @@ export function WorkforceIntelligenceScreen({ orgId, orgSelector, currentUserId 
   const progressOverviewQuery = useSupabaseQuery(async () => fetchOrgLearnerProgressOverview(orgId), [orgId]);
   const learnerProgressList = progressOverviewQuery.data || [];
 
-  const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId), [orgId]);
+  const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId || "demo-org-id"), [orgId]);
   const realLearners = (membersQuery.data || [])
     .filter(m => m.role === "learner" || m.role === "student" || !m.role)
     .map(m => {

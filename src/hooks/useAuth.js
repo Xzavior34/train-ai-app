@@ -4,6 +4,7 @@ import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../
 import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime } from "../lib/authRateLimiter.js";
 import { safeStorage } from "../lib/storage.js";
 import { getCanonicalDomain, CANONICAL_DOMAIN } from "../services/emailService.js";
+import { joinDefaultOrganization, joinOrganizationByReferral } from "../lib/api/organizations.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1";
 const RECOVERY_VERIFIED_KEY = "trainai_recovery_verified_v1";
@@ -484,6 +485,28 @@ export function useAuth() {
         setSession(supaRes.data.session);
         safeStorage.setItem(AUTH_STORAGE_KEY, supaRes.data.session);
       }
+
+      const finalUid = supaRes?.data?.user?.id || supaRes?.data?.session?.user?.id || `user_${normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_")}`;
+      const finalName = extraData?.display_name || extraData?.full_name || normalizedEmail.split("@")[0].replace(/[._-]/g, " ");
+      try {
+        const pendingJoin = safeStorage.getJSON("trainai_pending_org_join", null);
+        if (pendingJoin?.orgIdOrSlug) {
+          joinOrganizationByReferral(pendingJoin.orgIdOrSlug, {
+            userId: finalUid,
+            email: normalizedEmail,
+            displayName: finalName,
+            role: finalRole,
+          });
+        } else {
+          joinDefaultOrganization({
+            userId: finalUid,
+            email: normalizedEmail,
+            displayName: finalName,
+            role: finalRole,
+          });
+        }
+      } catch {}
+
       return { data: supaRes.data, error: null };
     }
 

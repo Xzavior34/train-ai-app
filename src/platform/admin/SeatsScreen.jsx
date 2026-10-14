@@ -36,7 +36,7 @@ export function SeatsScreen({ orgId, orgSelector, setScreen, userEmail, defaultT
   const orgQuery = useSupabaseQuery(async () => (orgId ? fetchOrganizationById(orgId) : null), [orgId]);
   const seatsQuery = useSupabaseQuery(async () => (orgId ? fetchOrgSeatsSummary(orgId) : null), [orgId]);
   const historyQuery = useSupabaseQuery(async () => (orgId ? fetchSeatPurchaseHistory(orgId) : []), [orgId]);
-  const membersQuery = useSupabaseQuery(async () => (orgId ? fetchOrgMembers(orgId) : []), [orgId]);
+  const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId || "demo-org-id"), [orgId]);
   const invitesQuery = useSupabaseQuery(async () => (orgId ? fetchPendingInvitations(orgId) : []), [orgId]);
   const org = orgQuery.data;
   const orgTier = org?.subscription_tier || "growth";

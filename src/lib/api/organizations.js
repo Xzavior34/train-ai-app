@@ -92,9 +92,9 @@ export const BASELINE_CONFIRMED_LINK_CLICKS = [
  * Retrieves all visitors who clicked an organization referral/invite link.
  * Stored locally and persistent across sessions to guarantee admin visibility of click traffic.
  */
-export function getLinkClicksRoster(orgIdOrSlug = null) {
+export function getLinkClicksRoster(orgIdOrSlug = null, resolvedOrgInfo = null) {
   if (typeof window === "undefined") {
-    if (!orgIdOrSlug) return BASELINE_CONFIRMED_LINK_CLICKS;
+    if (!orgIdOrSlug || orgIdOrSlug === "demo-org-id" || orgIdOrSlug === "all") return BASELINE_CONFIRMED_LINK_CLICKS;
     const target = String(orgIdOrSlug).trim().toLowerCase();
     return BASELINE_CONFIRMED_LINK_CLICKS.filter((m) =>
       target.includes("sara") || String(m.organization_slug || "").toLowerCase() === target
@@ -152,17 +152,23 @@ export function getLinkClicksRoster(orgIdOrSlug = null) {
       } catch {}
     }
 
-    if (!orgIdOrSlug) return list;
+    if (!orgIdOrSlug || orgIdOrSlug === "demo-org-id" || orgIdOrSlug === "all" || orgIdOrSlug === "workspace") return list;
     const target = String(orgIdOrSlug).trim().toLowerCase();
+    const resolvedSlug = (resolvedOrgInfo?.slug || "").toLowerCase();
+    const resolvedName = (resolvedOrgInfo?.name || "").toLowerCase();
+    const resolvedId = (resolvedOrgInfo?.id || "").toLowerCase();
+
     return list.filter((m) => {
-      const matchId = String(m.organization_id || "").toLowerCase() === target;
-      const matchSlug = String(m.organization_slug || "").toLowerCase() === target;
-      const matchName = String(m.organization_name || "").toLowerCase().includes(target);
+      const mOrgId = String(m.organization_id || "").toLowerCase();
+      const mSlug = String(m.organization_slug || "").toLowerCase();
+      const mName = String(m.organization_name || "").toLowerCase();
+
+      const matchId = mOrgId === target || (resolvedId && mOrgId === resolvedId);
+      const matchSlug = mSlug === target || (resolvedSlug && mSlug === resolvedSlug);
+      const matchName = (target.length > 3 && mName.includes(target)) || (resolvedName.length > 3 && mName.includes(resolvedName));
       const isSaraMatch =
-        (target.includes("sara") || target === "sara-org-1") &&
-        (String(m.organization_id || "").toLowerCase().includes("sara") ||
-          String(m.organization_slug || "").toLowerCase().includes("sara") ||
-          String(m.organization_name || "").toLowerCase().includes("sara"));
+        (target.includes("sara") || target === "sara-org-1" || resolvedSlug.includes("sara")) &&
+        (mOrgId.includes("sara") || mSlug.includes("sara") || mName.includes("sara"));
       return matchId || matchSlug || matchName || isSaraMatch;
     });
   } catch {
@@ -295,7 +301,7 @@ export const BASELINE_CONFIRMED_REFERRAL_SIGNUPS = [
  * Retrieves all students/learners who signed up or joined an organization via invite/referral link.
  * Stored locally and persistent across sessions to guarantee admin visibility.
  */
-export function getReferralSignupsRoster(orgIdOrSlug = null) {
+export function getReferralSignupsRoster(orgIdOrSlug = null, resolvedOrgInfo = null) {
   try {
     const raw = getRosterStorage(REFERRAL_SIGNUPS_ROSTER_KEY);
     let list = raw ? JSON.parse(raw) : [];
@@ -319,16 +325,31 @@ export function getReferralSignupsRoster(orgIdOrSlug = null) {
       return list;
     }
     const target = String(orgIdOrSlug).trim().toLowerCase();
+    const resolvedSlug = (resolvedOrgInfo?.slug || "").toLowerCase();
+    const resolvedName = (resolvedOrgInfo?.name || "").toLowerCase();
+    const resolvedId = (resolvedOrgInfo?.id || "").toLowerCase();
+
     return list.filter((m) => {
-      const matchId = String(m.organization_id || "").toLowerCase() === target;
-      const matchSlug = String(m.organization_slug || "").toLowerCase() === target;
-      const matchName = String(m.organization_name || "").toLowerCase().includes(target);
+      const mOrgId = String(m.organization_id || "").toLowerCase();
+      const mSlug = String(m.organization_slug || "").toLowerCase();
+      const mName = String(m.organization_name || "").toLowerCase();
+
+      const matchId = mOrgId === target || (resolvedId && mOrgId === resolvedId);
+      const matchSlug = mSlug === target || (resolvedSlug && mSlug === resolvedSlug);
+      const matchName = (target.length > 3 && mName.includes(target)) || (resolvedName.length > 3 && mName.includes(resolvedName));
+
       const isSaraMatch =
-        (target.includes("sara") || target === "sara-org-1") &&
-        (String(m.organization_id || "").toLowerCase().includes("sara") ||
-          String(m.organization_slug || "").toLowerCase().includes("sara") ||
-          String(m.organization_name || "").toLowerCase().includes("sara"));
-      return matchId || matchSlug || matchName || isSaraMatch;
+        (target.includes("sara") || target === "sara-org-1" || resolvedSlug.includes("sara") || resolvedName.includes("sara")) &&
+        (mOrgId.includes("sara") || mSlug.includes("sara") || mName.includes("sara"));
+
+      const isTechMatch =
+        (target.includes("tech") || target.includes("digital") || resolvedSlug.includes("tech") || resolvedSlug.includes("digital")) &&
+        (mOrgId.includes("tech") || mSlug.includes("tech") || mName.includes("digital") || m.join_source === "direct_signup");
+
+      // Direct signups and general platform learners are also available to the primary/active organization
+      const isDirectOrUnassigned = !m.organization_id || m.organization_id === "tech-learning" || m.join_source === "direct_signup";
+
+      return matchId || matchSlug || matchName || isSaraMatch || isTechMatch || isDirectOrUnassigned;
     });
   } catch {
     return BASELINE_CONFIRMED_REFERRAL_SIGNUPS;

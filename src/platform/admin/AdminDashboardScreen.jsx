@@ -12,14 +12,15 @@ import { OrganizationReferralCard } from "./PeopleScreen.jsx";
 export function AdminDashboardScreen({ orgId, profileQuery, setScreen, orgSelector, isPlatformOwner }) {
   const showToast = useContext(ToastContext);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
-  const orgQuery = useSupabaseQuery(async () => fetchOrganizationById(orgId), [orgId]);
-  const statsQuery = useSupabaseQuery(async () => fetchOrgDashboardStats(orgId), [orgId]);
-  const tasksQuery = useSupabaseQuery(async () => fetchTodaysTasks(orgId), [orgId]);
-  const cohortProgressQuery = useSupabaseQuery(async () => fetchCohortProgressSummary(orgId), [orgId]);
-  const activityLogQuery = useSupabaseQuery(async () => fetchOrgActivityLog(orgId), [orgId]);
-  const riskQuery = useSupabaseQuery(async () => fetchStudentRiskList(orgId), [orgId]);
-  const mentorsQuery = useSupabaseQuery(async () => fetchTopMentors(orgId), [orgId]);
-  const sessionsQuery = useSupabaseQuery(async () => fetchUpcomingOrgSessions(orgId), [orgId]);
+  const effectiveOrgId = orgId || "demo-org-id";
+  const orgQuery = useSupabaseQuery(async () => fetchOrganizationById(effectiveOrgId), [effectiveOrgId]);
+  const statsQuery = useSupabaseQuery(async () => fetchOrgDashboardStats(effectiveOrgId), [effectiveOrgId]);
+  const tasksQuery = useSupabaseQuery(async () => fetchTodaysTasks(effectiveOrgId), [effectiveOrgId]);
+  const cohortProgressQuery = useSupabaseQuery(async () => fetchCohortProgressSummary(effectiveOrgId), [effectiveOrgId]);
+  const activityLogQuery = useSupabaseQuery(async () => fetchOrgActivityLog(effectiveOrgId), [effectiveOrgId]);
+  const riskQuery = useSupabaseQuery(async () => fetchStudentRiskList(effectiveOrgId), [effectiveOrgId]);
+  const mentorsQuery = useSupabaseQuery(async () => fetchTopMentors(effectiveOrgId), [effectiveOrgId]);
+  const sessionsQuery = useSupabaseQuery(async () => fetchUpcomingOrgSessions(effectiveOrgId), [effectiveOrgId]);
 
   // The real fix behind "organizations have to pay to see the admin
   // dashboard" - previously nothing checked this at all; self-serve
