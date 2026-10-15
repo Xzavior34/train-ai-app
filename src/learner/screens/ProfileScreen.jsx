@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { TopBar, Avatar, Switch, initialsOf } from "../components/LearnerUI.jsx";
-import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users, Star, Award } from "lucide-react";
+import { Moon, ShieldCheck, Download, LogOut, ChevronRight, Trophy, Accessibility, Camera, AlertTriangle, Trash2, Clock, Smartphone, Bell, Flame, User, CheckCircle2, Lock, BookOpen, Brain, Target, CreditCard, Mail, Sliders, Shield, MessageSquare, Send, Check, Gift, Copy, Users, Star, Award, Eye, EyeOff, KeyRound } from "lucide-react";
 import { exportUserData, submitDSARRequest, fetchUserDSARRequests } from "../../lib/api/gdprService.js";
 import { fetchNotificationPreferences, upsertNotificationPreferences } from "../../lib/api/schemaHelper.js";
 import { submitPlatformFeedback, updateWeeklyGoal } from "../../lib/api/platform.js";
@@ -48,9 +48,52 @@ export function ProfileScreen({
   const [submittingDeletion, setSubmittingDeletion] = useState(false);
   const [dsarRequests, setDsarRequests] = useState([]);
 
+  const [profileNewPassword, setProfileNewPassword] = useState("");
+  const [profileConfirmPassword, setProfileConfirmPassword] = useState("");
+  const [profileShowPassword, setProfileShowPassword] = useState(false);
+  const [updatingProfilePassword, setUpdatingProfilePassword] = useState(false);
+  const [profilePasswordSuccess, setProfilePasswordSuccess] = useState(false);
+  const [profilePasswordError, setProfilePasswordError] = useState("");
+
   const userId = session?.user?.id;
   const notify = showToast || (() => {});
   const pushNotifications = usePushNotifications(userId);
+
+  async function handleUpdatePassword(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    setProfilePasswordError("");
+    setProfilePasswordSuccess(false);
+    if (!profileNewPassword || profileNewPassword.length < 8) {
+      setProfilePasswordError("Password must be at least 8 characters long.");
+      return;
+    }
+    if (profileNewPassword !== profileConfirmPassword) {
+      setProfilePasswordError("Passwords do not match.");
+      return;
+    }
+    setUpdatingProfilePassword(true);
+    try {
+      const { supabase } = await import("../../services/supabaseClient.js");
+      if (!supabase?.auth?.updateUser) {
+        setProfilePasswordError("Database connection not ready.");
+        return;
+      }
+      const { error } = await supabase.auth.updateUser({ password: profileNewPassword });
+      if (error) {
+        setProfilePasswordError(error.message || "Could not update password.");
+      } else {
+        setProfilePasswordSuccess(true);
+        setProfileNewPassword("");
+        setProfileConfirmPassword("");
+        notify("Password updated successfully!");
+        setTimeout(() => setProfilePasswordSuccess(false), 4000);
+      }
+    } catch (err) {
+      setProfilePasswordError(err?.message || "Failed to update password.");
+    } finally {
+      setUpdatingProfilePassword(false);
+    }
+  }
 
   async function handleSetWeeklyGoal(goal) {
     setSavingGoal(true);
@@ -750,6 +793,80 @@ export function ProfileScreen({
               </div>
             </div>
           )}
+
+          {/* Password & Security Card */}
+          <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 8, background: "rgba(37, 99, 235, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#2563EB" }}>
+                <KeyRound size={20} />
+              </div>
+              <div>
+                <h2 className="tai-title-sm" style={{ margin: 0 }}>Change Password</h2>
+                <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>
+                  Set a new secure password for your account (minimum 8 characters).
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdatePassword} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>New Password</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={profileShowPassword ? "text" : "password"}
+                    value={profileNewPassword}
+                    onChange={(e) => { setProfileNewPassword(e.target.value); setProfilePasswordError(""); }}
+                    placeholder="Enter at least 8 characters"
+                    className="tai-input"
+                    style={{ width: "100%", paddingRight: 42, boxSizing: "border-box" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setProfileShowPassword(!profileShowPassword)}
+                    style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--text-3)", cursor: "pointer", padding: 6 }}
+                    aria-label={profileShowPassword ? "Hide password" : "Show password"}
+                  >
+                    {profileShowPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>Confirm New Password</label>
+                <input
+                  type={profileShowPassword ? "text" : "password"}
+                  value={profileConfirmPassword}
+                  onChange={(e) => { setProfileConfirmPassword(e.target.value); setProfilePasswordError(""); }}
+                  placeholder="Repeat your new password"
+                  className="tai-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                />
+              </div>
+
+              {profilePasswordError && (
+                <div style={{ padding: "10px 12px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.25)", borderRadius: 8, color: "#DC2626", fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                  <AlertTriangle size={15} style={{ flexShrink: 0 }} />
+                  <span>{profilePasswordError}</span>
+                </div>
+              )}
+
+              {profilePasswordSuccess && (
+                <div style={{ padding: "10px 12px", background: "rgba(22, 163, 74, 0.1)", border: "1px solid rgba(22, 163, 74, 0.25)", borderRadius: 8, color: "#16A34A", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
+                  <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
+                  <span>Your password has been updated successfully!</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={updatingProfilePassword || !profileNewPassword}
+                className="tai-btn tai-btn-primary"
+                style={{ width: "100%", justifyContent: "center", fontWeight: 700, padding: "10px 16px" }}
+              >
+                {updatingProfilePassword ? "Updating Password..." : "Update Password"}
+              </button>
+            </form>
+          </div>
 
           <div className="tai-card" style={{ borderRadius: 12, padding: "clamp(16px, 3vw, 24px)" }}>
             <h2 className="tai-title-sm" style={{ margin: "0 0 12px" }}>Active Session Information</h2>

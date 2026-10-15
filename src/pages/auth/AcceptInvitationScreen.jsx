@@ -73,17 +73,17 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
       if (!result.ok) {
         if (result.requiresSignup) {
           setPhase("needs_signup");
+        } else if (result.isExistingUser) {
+          setPhase("needs_signin");
+          setError(result.message || "An account already exists for this email. Enter your password to join.");
         } else {
           setError(result.message || "Failed to accept invitation.");
         }
         return;
       }
 
-      // Already-signed-in caller accepting their own invite: refresh the
-      // whole app boot so App.jsx re-fetches roles/org membership from
-      // scratch rather than trying to patch a handful of pieces of state
-      // that were computed before this org membership existed.
-      if (session?.user?.id && session.user.id === result.userId) {
+      // If session was established or already signed in
+      if (result.session || (session?.user?.id && session.user.id === result.userId)) {
         setPhase("done");
         setDoneMessage(`You're all set. You've joined ${invitation?.organization_name || "the organization"}.`);
         setDoneNeedsSignIn(false);
@@ -91,15 +91,13 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
         return;
       }
 
-      // New account or an existing-but-signed-out account: there is no local
-      // session for that user (accept-invitation never issues one - it uses
-      // the service-role admin API), so send them to sign in.
+      // If user accepted via edge function / without session
       setPhase("done");
       setDoneNeedsSignIn(true);
       setDoneEmail(invitation?.email || result.email || "");
       setDoneMessage(
         result.isNewUser
-          ? "Account created! Sign in with the password you just set to get started."
+          ? "Account created! Sign in with your password to get started."
           : `Invitation accepted. Sign in to continue as a member of ${invitation?.organization_name || "the organization"}.`
       );
     } catch (e) {
@@ -162,7 +160,7 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
           </>
         )}
 
-        {(phase === "ready" || phase === "needs_signup") && invitation && (
+        {(phase === "ready" || phase === "needs_signup" || phase === "needs_signin") && invitation && (
           <>
             <h1 style={styles.h1}>You're invited!</h1>
             <p style={styles.sub}>Join {invitation.organization_name} on Train AI.</p>
@@ -196,6 +194,45 @@ export default function AcceptInvitationScreen({ token, session, onAccepted, onN
                   {submitting ? "Checking..." : (<>Accept invitation <ArrowRight size={16} /></>)}
                 </button>
               </>
+            )}
+
+            {phase === "needs_signin" && (
+              <form onSubmit={(e) => { e.preventDefault(); handleAccept(true); }}>
+                <p style={{ ...styles.sub, marginTop: 0 }}>
+                  An account already exists for <strong>{invitation.email}</strong>. Enter your password to accept this invitation and enter {invitation.organization_name}.
+                </p>
+                <label style={styles.label}>Password</label>
+                <input
+                  className="invite-input"
+                  style={styles.input}
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                />
+
+                {error && <div style={styles.errorBox}>{error}</div>}
+
+                <button
+                  type="submit"
+                  className="invite-submit"
+                  style={{ ...styles.submit, opacity: submitting ? 0.75 : 1 }}
+                  disabled={submitting || !password}
+                >
+                  {submitting ? "Signing in & joining..." : (<>Sign in & join {invitation.organization_name} <ArrowRight size={16} /></>)}
+                </button>
+
+                <div style={{ marginTop: 14, textAlign: "center" }}>
+                  <button
+                    type="button"
+                    onClick={() => onNeedsSignIn?.(invitation.email)}
+                    style={{ background: "none", border: "none", color: "#2563EB", fontSize: 12.5, cursor: "pointer", textDecoration: "underline" }}
+                  >
+                    Forgot password or need help signing in?
+                  </button>
+                </div>
+              </form>
             )}
 
             {phase === "needs_signup" && (

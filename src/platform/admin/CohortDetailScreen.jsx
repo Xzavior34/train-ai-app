@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, ToastContext } from "../components/PlatformUI.jsx";
-import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon, Layers, Sparkles, Filter, Clock } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon, Layers, Sparkles, Filter, Clock, Users } from "lucide-react";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { calculateCohortProgress, extendCohortTimeline, assignCourseToCohortOrLearners, unassignCohortCourse } from "../../lib/api/cohorts.js";
@@ -346,7 +346,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
   const [tab, setTab] = useState("members");
 
   const detailQuery = useSupabaseQuery(async () => (cohortId ? fetchCohortDetail(cohortId) : null), [cohortId]);
-  const orgUsersQuery = useSupabaseQuery(async () => (orgId ? fetchUsersInOrg(orgId) : []), [orgId]);
+  const orgUsersQuery = useSupabaseQuery(async () => fetchUsersInOrg(orgId || "demo-org-id"), [orgId]);
   const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
 
   const detail = detailQuery.data;
@@ -404,18 +404,23 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
   // --- Members ---
   const [addUserId, setAddUserId] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
+  const [addingMember, setAddingMember] = useState(false);
   const [bulkEmails, setBulkEmails] = useState("");
   const [bulkAdding, setBulkAdding] = useState(false);
   async function handleAddMember() {
     if (!addUserId || !cohortId) return;
+    setAddingMember(true);
     try {
       await addCohortMember({ cohortId, userId: addUserId, addedBy: currentUserId });
       setAddUserId("");
       setMemberSearch("");
       await Promise.all([detailQuery.refetch(), orgUsersQuery.refetch()]);
       showToast("Member added to cohort");
-    } catch (error) {
-      showToast(error?.message || "Could not add this member to the cohort.");
+    } catch (err) {
+      console.error("handleAddMember error:", err);
+      showToast(err?.message || "Failed to add member to cohort");
+    } finally {
+      setAddingMember(false);
     }
   }
 
@@ -606,7 +611,7 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
             {tab === "members" && (
               <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
-                <div className="ta-label">Find an organization member</div>
+                <div className="ta-label">Find an approved organization member</div>
                 <input
                   className="ta-input ta-mt8"
                   style={{ width: "100%", marginBottom: 8 }}
@@ -615,28 +620,48 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                   placeholder="Search by name or email"
                 />
                 <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-                  <select className="ta-input" style={{ flex: 1, minWidth: 200 }} value={addUserId} onChange={(e) => setAddUserId(e.target.value)}>
-                    <option value="">Add a member from org...</option>
+                  <select
+                    className="ta-input"
+                    style={{ flex: 1, minWidth: 200 }}
+                    value={addUserId}
+                    onChange={(e) => setAddUserId(e.target.value)}
+                    disabled={addingMember}
+                  >
+                    <option value="">
+                      {availableUsers.length === 0 ? "No eligible members to add" : "Add a member from org..."}
+                    </option>
                     {availableUsers
                       .filter((user) => {
                         const needle = memberSearch.trim().toLowerCase();
                         return !needle || `${user.name || ""} ${user.email || ""}`.toLowerCase().includes(needle);
                       })
-                      .map((u) => <option key={u.id} value={u.id}>{u.name}{u.email ? ` (${u.email})` : ""}</option>)}
+                      .map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.label || (u.email && !u.name.includes("@") ? `${u.name} (${u.email})` : u.name)}
+                        </option>
+                      ))}
                   </select>
-                  <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddMember} disabled={!addUserId}><Plus size={14} /> Add</button>
+                  <button
+                    className="ta-btn ta-btn-primary ta-btn-sm"
+                    onClick={handleAddMember}
+                    disabled={!addUserId || addingMember}
+                  >
+                    <Plus size={14} /> {addingMember ? "Adding..." : "Add"}
+                  </button>
                 </div>
                 {availableUsers.length === 0 && !orgUsersQuery.loading && (
                   <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 8 }}>
-                    No approved organization members are available. New sign-ups must be approved in People &amp; Access before they can be added to a cohort.
+                    No approved organization members are available. Approve new sign-ups in People &amp; Access before adding them to a cohort.
                   </div>
                 )}
                 <div className="ta-mt12">
                   <div className="ta-label">Bulk add by email</div>
                   <textarea
-                    className="ta-input ta-mt8" style={{ width: "100%", minHeight: 60 }}
-                    placeholder="one@example.com, two@example.com"
-                    value={bulkEmails} onChange={(e) => setBulkEmails(e.target.value)}
+                    className="ta-input ta-mt8"
+                    style={{ width: "100%", minHeight: 60 }}
+                    placeholder="one@example.com, two@example.com (or paste one per line)"
+                    value={bulkEmails}
+                    onChange={(e) => setBulkEmails(e.target.value)}
                   />
                   <button
                     className="ta-btn ta-btn-primary ta-mt8"
@@ -645,9 +670,20 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                       setBulkAdding(true);
                       try {
                         const result = await bulkAddCohortMembersByEmail(cohortId, bulkEmails, currentUserId);
-                        if (result.added.length) { showToast(`Added ${result.added.length} member${result.added.length === 1 ? "" : "s"}.`); detailQuery.refetch(); }
-                        if (result.failed.length) showToast(`Could not add: ${result.failed.map((f) => f.email).join(", ")}`);
-                        if (result.added.length) setBulkEmails("");
+                        if (result.added?.length) {
+                          showToast(`Added ${result.added.length} member${result.added.length === 1 ? "" : "s"} to cohort.`);
+                          await Promise.all([detailQuery.refetch(), orgUsersQuery.refetch()]);
+                          setBulkEmails("");
+                        }
+                        if (result.failed?.length) {
+                          const summary = result.failed.slice(0, 3).map((f) => `${f.email} (${f.reason})`).join("; ");
+                          showToast(`Could not add ${result.failed.length} email(s): ${summary}${result.failed.length > 3 ? "..." : ""}`);
+                        }
+                        if (!result.added?.length && !result.failed?.length) {
+                          showToast(result.error || "No valid email addresses provided.");
+                        }
+                      } catch (err) {
+                        showToast(err?.message || "Failed to bulk add cohort members");
                       } finally {
                         setBulkAdding(false);
                       }
@@ -662,10 +698,10 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
                   <tbody>
                     {members.length === 0 && <tr><td colSpan={4} className="ta-empty">No members in this cohort yet.</td></tr>}
                     {members.map((m) => {
-                      const name = m.user_profiles?.display_name || "Unnamed user";
+                      const name = m.user_profiles?.display_name || m.user_profiles?.email || m.display_name || m.name || m.email || "Learner";
                       return (
                         <tr key={m.id}>
-                          <td><div className="ta-row ta-gap10"><Avatar initials={name.slice(0, 2).toUpperCase()} size={30} /><span style={{ fontWeight: 600 }}>{name}</span></div></td>
+                          <td><div className="ta-row ta-gap10"><Avatar initials={(name || "L").slice(0, 2).toUpperCase()} size={30} /><span style={{ fontWeight: 600 }}>{name}</span></div></td>
                           <td><div className="ta-row ta-gap8" style={{ width: 130 }}><ProgressBar value={m.progress} /><span style={{ fontSize: 12 }}>{m.progress}%</span></div></td>
                           <td>{m.added_at ? new Date(m.added_at).toLocaleDateString() : "N/A"}</td>
                           <td><button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleRemoveMember(m.id, name)}><Trash2 size={13} /> Remove</button></td>

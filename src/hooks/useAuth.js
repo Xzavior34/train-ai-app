@@ -4,6 +4,7 @@ import { isDemoAdminMarker, getDemoRoleForEmail, setDemoRoleForEmail } from "../
 import { getRateLimitStatus, recordFailedPasswordAttempt, resetPasswordRateLimit, formatLockoutTime } from "../lib/authRateLimiter.js";
 import { safeStorage } from "../lib/storage.js";
 import { getCanonicalDomain, CANONICAL_DOMAIN } from "../services/emailService.js";
+import { joinDefaultOrganization, joinOrganizationByReferral } from "../lib/api/organizations.js";
 
 const AUTH_STORAGE_KEY = "trainai_active_session_v1";
 const RECOVERY_VERIFIED_KEY = "trainai_recovery_verified_v1";
@@ -54,38 +55,74 @@ export function useAuth() {
       let resolvedProject = null;
 
       // Consume password-recovery tokens ourselves so the correct Supabase
-      // project owns the session. With two projects, automatic URL parsing is
-      // inherently racy and previously produced "Auth session missing".
+      // project owns the session. Support both hash fragments and query params,
+      // as well as PKCE auth codes sent by various mail clients and gateways.
+      const searchParams = new URLSearchParams(window.location.search || "");
       const hashParams = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
-      const accessToken = hashParams.get("access_token");
-      const refreshToken = hashParams.get("refresh_token");
-      const recoveryType = hashParams.get("type");
-      if (accessToken && refreshToken && recoveryType === "recovery") {
+      const accessToken = hashParams.get("access_token") || searchParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token") || searchParams.get("refresh_token");
+      const recoveryType = hashParams.get("type") || searchParams.get("type");
+      const authCode = searchParams.get("code") || hashParams.get("code");
+      const isRecoveryIntent = recoveryType === "recovery" || searchParams.get("recovery") === "1" || window.location.hash.includes("recovery");
+
+      if (accessToken && refreshToken && isRecoveryIntent) {
         try {
-          const payloadPart = accessToken.split(".")[1] || "";
-          const padded = payloadPart.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(payloadPart.length / 4) * 4, "=");
-          const payload = JSON.parse(window.atob(padded));
-          const issuer = String(payload?.iss || "");
-          const tokenProject = issuer.includes("djikuoucsuhdiyrhsduz")
-            ? SUPABASE_PROJECTS.ORGANIZATION_DB
-            : issuer.includes("jeobggrtxeybxvlwpxvn")
-              ? SUPABASE_PROJECTS.SARA_FOUNDATION
-              : null;
-          const tokenClient = tokenProject ? getSupabaseClientForProject(tokenProject) : null;
-          if (tokenClient) {
-            const { data, error } = await tokenClient.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-            if (!error && data?.session) {
-              resolvedSession = data.session;
-              resolvedProject = tokenProject;
-              recoveryProjectRef.current = tokenProject;
-              persistRecoveryVerified(true);
-              setRecoverySessionReady(true);
-              setIsPasswordRecovery(true);
-              window.history.replaceState({}, document.title, "/?view=auth&recovery=1");
+          let tokenProject = null;
+          try {
+            const payloadPart = accessToken.split(".")[1] || "";
+            const padded = payloadPart.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(payloadPart.length / 4) * 4, "=");
+            const payload = JSON.parse(window.atob(padded));
+            const issuer = String(payload?.iss || "");
+            tokenProject = issuer.includes("djikuoucsuhdiyrhsduz")
+              ? SUPABASE_PROJECTS.ORGANIZATION_DB
+              : issuer.includes("jeobggrtxeybxvlwpxvn")
+                ? SUPABASE_PROJECTS.SARA_FOUNDATION
+                : null;
+          } catch (_) {}
+
+          const candidateProjects = [
+            tokenProject,
+            SUPABASE_PROJECTS.ORGANIZATION_DB,
+            SUPABASE_PROJECTS.SARA_FOUNDATION,
+          ].filter((p, idx, arr) => p && arr.indexOf(p) === idx);
+
+          for (const projKey of candidateProjects) {
+            const tokenClient = getSupabaseClientForProject(projKey);
+            if (tokenClient?.auth?.setSession) {
+              const { data, error } = await tokenClient.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+              if (!error && data?.session) {
+                resolvedSession = data.session;
+                resolvedProject = projKey;
+                recoveryProjectRef.current = projKey;
+                persistRecoveryVerified(true);
+                setRecoverySessionReady(true);
+                setIsPasswordRecovery(true);
+                window.history.replaceState({}, document.title, "/?view=auth&recovery=1");
+                break;
+              }
             }
           }
         } catch (error) {
           console.warn("Could not establish password recovery session:", error);
+        }
+      } else if (authCode && isRecoveryIntent) {
+        for (const projKey of [SUPABASE_PROJECTS.ORGANIZATION_DB, SUPABASE_PROJECTS.SARA_FOUNDATION]) {
+          const tokenClient = getSupabaseClientForProject(projKey);
+          if (tokenClient?.auth?.exchangeCodeForSession) {
+            try {
+              const { data, error } = await tokenClient.auth.exchangeCodeForSession(authCode);
+              if (!error && data?.session) {
+                resolvedSession = data.session;
+                resolvedProject = projKey;
+                recoveryProjectRef.current = projKey;
+                persistRecoveryVerified(true);
+                setRecoverySessionReady(true);
+                setIsPasswordRecovery(true);
+                window.history.replaceState({}, document.title, "/?view=auth&recovery=1");
+                break;
+              }
+            } catch (_) {}
+          }
         }
       }
 
@@ -210,13 +247,18 @@ export function useAuth() {
       return { data: null, error: new Error(lockMsg), isRateLimited: true, remainingMs: rateLimit.remainingMs };
     }
 
-    const candidateEmails = [rawInput];
+    const candidateEmails = [normalizedEmail];
+    if (rawInput !== normalizedEmail && !candidateEmails.includes(rawInput)) {
+      candidateEmails.push(rawInput);
+    }
     if (!rawInput.includes("@") && rawInput.length > 0) {
-      candidateEmails.push(`${rawInput}@gmail.com`);
-      candidateEmails.push(`${rawInput}@sarafoundation.org`);
-      candidateEmails.push(`${rawInput}@sarafoundationafrica.com`);
-      candidateEmails.push(`${rawInput}@yahoo.com`);
-      candidateEmails.push(`${rawInput}@outlook.com`);
+      candidateEmails.push(`${normalizedEmail}@gmail.com`);
+      candidateEmails.push(`${normalizedEmail}@sarafoundation.org`);
+      candidateEmails.push(`${normalizedEmail}@sarafoundationafrica.com`);
+      candidateEmails.push(`${normalizedEmail}@yahoo.com`);
+      candidateEmails.push(`${normalizedEmail}@outlook.com`);
+      candidateEmails.push(`${normalizedEmail}@trainailtd.com`);
+      candidateEmails.push(`${normalizedEmail}@sarafoundationafrica.org`);
     }
 
     let targetProject = resolveProjectForSignIn(rawInput);
@@ -287,6 +329,24 @@ export function useAuth() {
         return { data: null, error: supaErr || new Error(message) };
       }
 
+      // Check if email rate limit was returned during sign in
+      if (supaErr?.status === 429 || supaErrMsg.toLowerCase().includes("rate limit") || supaErrMsg.toLowerCase().includes("over_email_send_rate_limit")) {
+        const message = "Email service is temporarily rate-limited. Please sign in directly with your password or try again shortly.";
+        setAuthError(message);
+        return { data: null, error: supaErr || new Error(message), isRateLimited: true };
+      }
+
+      // Check if email not confirmed
+      if (supaErrMsg.toLowerCase().includes("email not confirmed")) {
+        const message = "Your email address has not been confirmed. Use the verification link or request a new one below.";
+        setAuthError(message);
+        return {
+          data: null,
+          error: new Error(message),
+          isEmailUnconfirmed: true,
+        };
+      }
+
       // Track failed password attempt
       const updatedLimit = recordFailedPasswordAttempt(normalizedEmail);
       let message;
@@ -324,7 +384,7 @@ export function useAuth() {
     return { data: newSession, error: null };
   }, []);
 
-  const signUp = useCallback(async (email, password, role = "learner", accountType = "learner", preferredProject = "") => {
+  const signUp = useCallback(async (email, password, role = "learner", accountType = "learner", preferredProject = "", extraData = {}) => {
     setAuthError(null);
     const normalizedEmail = (email || "").trim().toLowerCase();
     let finalRole = role === "mentor" ? "mentor" : "learner";
@@ -341,7 +401,14 @@ export function useAuth() {
         supaRes = await client.auth.signUp({
           email: normalizedEmail,
           password,
-          options: { data: { role: finalRole } }
+          options: {
+            emailRedirectTo: `${getCanonicalDomain()}/?view=auth`,
+            data: {
+              role: finalRole,
+              display_name: extraData?.display_name || extraData?.full_name || normalizedEmail.split("@")[0].replace(/[._-]/g, " "),
+              ...(extraData && typeof extraData === "object" ? extraData : {})
+            }
+          }
         });
       } catch (networkErr) {
         const message = "Could not reach the authentication server. Please check your network connection and try again.";
@@ -351,19 +418,95 @@ export function useAuth() {
 
       if (supaRes?.error) {
         const errMsg = supaRes.error.message || "";
-        let message = errMsg;
-        if (supaRes.error.status === 429 || errMsg.toLowerCase().includes("rate limit")) {
-          message = "Sign up is temporarily delayed due to mail provider limits. Please try again shortly or contact support at info@trainailtd.com.";
+        const isRateLimit = supaRes.error.status === 429 || errMsg.toLowerCase().includes("rate limit") || errMsg.toLowerCase().includes("over_email_send_rate_limit");
+        const isAlreadyRegistered = errMsg.toLowerCase().includes("already registered") || errMsg.toLowerCase().includes("already exists");
+
+        if (isRateLimit || isAlreadyRegistered) {
+          // If the email already exists in Auth or mail provider is rate-limited, attempt seamless sign-in with the provided password.
+          // Tries target project, and critically tests the old database (SARA_FOUNDATION) where the 700+ users reside!
+          const candidateProjects = [
+            targetProject,
+            SUPABASE_PROJECTS.SARA_FOUNDATION,
+            SUPABASE_PROJECTS.ORGANIZATION_DB
+          ].filter((p, idx, arr) => p && arr.indexOf(p) === idx);
+
+          for (const projKey of candidateProjects) {
+            const projClient = getSupabaseClientForProject(projKey);
+            if (!projClient) continue;
+            try {
+              const signInRes = await projClient.auth.signInWithPassword({
+                email: normalizedEmail,
+                password,
+              });
+              if (signInRes?.data?.session) {
+                setActiveSupabaseProject(projKey);
+                resetPasswordRateLimit(normalizedEmail);
+                setSession(signInRes.data.session);
+                safeStorage.setItem(AUTH_STORAGE_KEY, signInRes.data.session);
+                return { data: signInRes.data, error: null };
+              }
+            } catch (e) {
+              console.info("Sign-in fallback notice on", projKey, e);
+            }
+          }
+
+          if (isAlreadyRegistered) {
+            const message = "An account with this email already exists in our records. Please sign in with your password or use Forgot Password to reset it.";
+            setAuthError(message);
+            return { data: null, error: new Error(message), isExistingUser: true };
+          }
+
+          if (isRateLimit) {
+            const message = "The email provider is temporarily rate-limited. Your account could not be activated securely. Please wait a few minutes, then try again or contact support.";
+            setAuthError(message);
+            return { data: null, error: new Error(message), isRateLimited: true };
+          }
         }
+
+        let message = errMsg;
         setAuthError(message);
         return { data: null, error: new Error(message) };
       }
 
-      if (supaRes?.data?.session) {
-        setSession(supaRes.data.session);
-        safeStorage.setItem(AUTH_STORAGE_KEY, supaRes.data.session);
+      const createdUser = supaRes?.data?.user;
+      let activeSession = supaRes?.data?.session;
+
+      if (activeSession) {
+        setActiveSupabaseProject(targetProject);
+        setSession(activeSession);
+        safeStorage.setItem(AUTH_STORAGE_KEY, activeSession);
+        setDemoRoleForEmail(normalizedEmail, finalRole);
       }
-      return { data: supaRes.data, error: null };
+
+      const finalUid = createdUser?.id || activeSession?.user?.id || `user_${normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_")}`;
+      const finalName = extraData?.display_name || extraData?.full_name || normalizedEmail.split("@")[0].replace(/[._-]/g, " ");
+      try {
+        const pendingJoin = safeStorage.getJSON("trainai_pending_org_join", null);
+        if (activeSession && pendingJoin?.orgIdOrSlug) {
+          joinOrganizationByReferral(pendingJoin.orgIdOrSlug, {
+            userId: finalUid,
+            email: normalizedEmail,
+            displayName: finalName,
+            role: finalRole,
+          });
+        } else if (activeSession) {
+          joinDefaultOrganization({
+            userId: finalUid,
+            email: normalizedEmail,
+            displayName: finalName,
+            role: finalRole,
+          });
+        }
+      } catch {}
+
+      return {
+        data: {
+          user: createdUser || activeSession?.user,
+          session: activeSession
+        },
+        error: null,
+        needsEmailConfirmation: Boolean(createdUser && !activeSession),
+      };
     }
 
     // Demo mode only
@@ -457,14 +600,23 @@ export function useAuth() {
         body: { email: normalizedEmail, redirectTo: targetRedirectUrl }
       })
     ));
-    const edgeDelivered = edgeResults.some((result) =>
+    const edgeSuccess = edgeResults.find((result) =>
       result.status === "fulfilled" && !result.value?.error && result.value?.data?.emailSent === true
     );
     rateLimited = edgeResults.some((result) =>
       result.status === "fulfilled" && result.value?.data?.rateLimited === true
     );
-    if (edgeDelivered) {
-      return { success: true, emailSent: true, rateLimited: false, otp: null, actionLink: null, email: normalizedEmail, viaResend: true };
+    if (edgeSuccess) {
+      const data = edgeSuccess.value?.data;
+      return {
+        success: true,
+        emailSent: Boolean(data?.emailSent),
+        rateLimited: false,
+        otp: data?.otp || null,
+        actionLink: data?.actionLink || null,
+        email: normalizedEmail,
+        viaResend: true
+      };
     }
 
     // If a custom mail function is unavailable, ask both Auth projects to
@@ -483,6 +635,16 @@ export function useAuth() {
         lastError = e?.message || "Password reset request failed.";
         console.warn("resetPasswordForEmail fallback error:", e);
       }
+    }
+
+    const hasDelivery = emailSent || Boolean(otp) || Boolean(actionLink);
+    if (!hasDelivery && !rateLimited) {
+      return {
+        success: false,
+        emailSent: false,
+        rateLimited: false,
+        error: lastError || "Could not dispatch password reset email. Please try again shortly or contact info@trainailtd.com.",
+      };
     }
 
     return {
@@ -512,26 +674,28 @@ export function useAuth() {
     let lastError = null;
 
     for (const { key, client } of clientOrder) {
-      try {
-        const { data, error } = await client.auth.verifyOtp({
-          email: normalizedEmail,
-          token: cleanToken,
-          type: "recovery"
-        });
+      for (const otpType of ["recovery", "email", "magiclink"]) {
+        try {
+          const { data, error } = await client.auth.verifyOtp({
+            email: normalizedEmail,
+            token: cleanToken,
+            type: otpType
+          });
 
-        if (!error && data?.session) {
-          recoveryProjectRef.current = key;
-          setActiveSupabaseProject(key);
-          setSession(data.session);
-          safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
-          persistRecoveryVerified(true);
-          setRecoverySessionReady(true);
-          setIsPasswordRecovery(true);
-          return { success: true, session: data.session };
+          if (!error && data?.session) {
+            recoveryProjectRef.current = key;
+            setActiveSupabaseProject(key);
+            setSession(data.session);
+            safeStorage.setItem(AUTH_STORAGE_KEY, data.session);
+            persistRecoveryVerified(true);
+            setRecoverySessionReady(true);
+            setIsPasswordRecovery(true);
+            return { success: true, session: data.session };
+          }
+          if (error && otpType === "recovery") lastError = error.message;
+        } catch (e) {
+          if (otpType === "recovery") lastError = e?.message;
         }
-        if (error) lastError = error.message;
-      } catch (e) {
-        lastError = e?.message;
       }
     }
 
@@ -540,15 +704,13 @@ export function useAuth() {
 
   const completePasswordReset = useCallback(async (newPassword) => {
     if (!supabase) return { success: false, error: "Not available in demo mode." };
-    if (!recoverySessionReady) {
-      return { success: false, error: "Your secure reset session is missing or has expired. Please request a new reset email and open only the newest link." };
-    }
     try {
       let lastError = null;
+      let foundActiveSession = false;
       const orderedProjects = [
         recoveryProjectRef.current,
-        SUPABASE_PROJECTS.SARA_FOUNDATION,
         SUPABASE_PROJECTS.ORGANIZATION_DB,
+        SUPABASE_PROJECTS.SARA_FOUNDATION,
       ].filter((value, index, values) => value && values.indexOf(value) === index);
 
       for (const projKey of orderedProjects) {
@@ -556,19 +718,24 @@ export function useAuth() {
         if (client?.auth?.updateUser) {
           const { data: sessionData } = await client.auth.getSession();
           if (!sessionData?.session) {
-            lastError = new Error("Auth session missing");
             continue;
           }
+          foundActiveSession = true;
           const { error } = await client.auth.updateUser({ password: newPassword });
           if (!error) {
             recoveryProjectRef.current = null;
             persistRecoveryVerified(false);
             setRecoverySessionReady(false);
             setIsPasswordRecovery(false);
+            resetPasswordRateLimit(sessionData.session.user?.email || "");
             return { success: true };
           }
           lastError = error;
         }
+      }
+
+      if (!foundActiveSession && !recoverySessionReady) {
+        return { success: false, error: "Your secure reset session is missing or has expired. Please request a new reset email and open only the newest link." };
       }
 
       if (lastError) {

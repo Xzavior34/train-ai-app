@@ -502,9 +502,23 @@ export function MenteesScreen({ mentorId, orgSelector, setScreen, setSelectedLea
                   onClick={async () => {
                     setIssuingCert(true);
                     try {
-                      const result = await issueCertificateDirectly(certModalUser.id, orgId, certTitle.trim(), null, certFileUrl || null);
+                      const result = await issueCertificateDirectly(
+                        certModalUser.id,
+                        orgId,
+                        certTitle.trim(),
+                        null,
+                        certFileUrl || null,
+                        {
+                          themeId: certThemeId,
+                          presentationText: certPresentation,
+                          completionStatement: certStatement,
+                          honorsText: certHonors,
+                          signatoryName: certSignatory,
+                          recipientName: certModalUser.name || "Learner",
+                        }
+                      );
                       if (!result.success) showToast(result.error);
-                      else { showToast(`Certificate issued to ${certModalUser.name}.`); setCertModalUser(null); }
+                      else { showToast(`Certificate issued to ${certModalUser.name || "Learner"}.`); setCertModalUser(null); }
                     } finally {
                       setIssuingCert(false);
                     }

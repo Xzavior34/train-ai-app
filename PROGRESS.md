@@ -90,3 +90,18 @@ This document tracks the incremental implementation of the Train AI platform imp
 - Public certificate verification screen.
 - Academy Marketplace browse, detail, and instructor seat plan cards.
 - AI Credit top-up and balance indicator.
+
+---
+
+## 9. Organization Referral & Team Member Onboarding System Fix
+- **Issue Resolved**: When users clicked organization invite links (`/?join=<org-slug>`), they were not appearing in the admin section (Directory or Pending Approvals) and were encountering auth blocks or default org redirects.
+- **Root Cause & Fixes**:
+  1. `AuthPage.jsx`: Added support for `initialMode="signup"`, defaulted `accountType` to `"learner"` when invite target is present, displayed clear team invitation header, and passed organization metadata (`organization_id`, `organization_slug`, `join_source`, `referral_link`) directly to `onSignUp` options.
+  2. `useAuth.js`: Updated `signUp` to accept extra metadata and inject it into `supabase.auth.signUp({ options: { data } })`.
+  3. `organizations.js`: Enhanced `joinOrganizationByReferral` with explicit user ID support, multi-signature RPC calls, and robust fallback inserting into `organization_members`.
+  4. `platform.js`:
+     - Updated `fetchCurrentUserProfile` to preserve active/pending organization membership and pending join intent before defaulting to Tech Learning.
+     - Upgraded `fetchOrgMembers` to query both `user_profiles` and `organization_members` for the resolved organization UUID, merging records so all members who clicked the link are visible immediately in Directory and Seats.
+     - Updated `fetchPendingOrgJoinRequests` to resolve organization slugs to UUID and match status variations (`pending`, `pending_approval`, `requested`).
+  5. `learner.js`: Updated `fetchPublishedCourses` to resolve organization slugs to UUIDs, preventing Postgres `invalid input syntax for type uuid` errors so joined learners can immediately access their courses and continue working.
+  6. Migration `202610130001_fix_org_invite_link_and_member_visibility.sql`: Created Security Definer functions for `join_organization_by_invite`, `record_pending_org_join`, and `get_org_members_and_pending`.

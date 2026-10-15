@@ -5,7 +5,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 const canonicalOrigin = "https://trainailtd.com";
-const allowedHosts = new Set(["trainailtd.com", "www.trainailtd.com"]);
+function isAllowedHost(host: string): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase();
+  return (
+    h === "trainailtd.com" ||
+    h === "www.trainailtd.com" ||
+    h.endsWith(".trainailtd.com") ||
+    h === "train-ai-app.vercel.app" ||
+    h.endsWith(".vercel.app") ||
+    h === "localhost" ||
+    h === "127.0.0.1" ||
+    h.endsWith(".local")
+  );
+}
 
 function respond(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -23,7 +36,9 @@ function safeRedirect(value: unknown) {
   const fallback = `${canonicalOrigin}/?view=auth&recovery=1`;
   try {
     const candidate = new URL(String(value || fallback));
-    return candidate.protocol === "https:" && allowedHosts.has(candidate.hostname)
+    const isHttps = candidate.protocol === "https:";
+    const isLocalHttp = candidate.protocol === "http:" && (candidate.hostname === "localhost" || candidate.hostname === "127.0.0.1");
+    return (isHttps || isLocalHttp) && isAllowedHost(candidate.hostname)
       ? candidate.toString()
       : fallback;
   } catch {

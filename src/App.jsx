@@ -158,11 +158,17 @@ export default function App() {
   const [certVerifyCode, setCertVerifyCode] = useState(() => {
     try {
       const search = new URLSearchParams(window.location.search);
-      const code = search.get("verify") || search.get("cert") || search.get("certificate") || null;
+      const code = search.get("verify") || search.get("cert") || search.get("certificate") || search.get("code") || null;
       if (code) return code;
       const path = window.location.pathname;
       if (path.startsWith("/certificate/")) {
         return path.replace("/certificate/", "");
+      }
+      if (path.startsWith("/verify/")) {
+        return path.replace("/verify/", "");
+      }
+      if (path === "/verify" || path === "/certificate") {
+        return "1";
       }
       return null;
     } catch {
@@ -216,12 +222,19 @@ export default function App() {
     return orgSlugParam ? "auth" : "landing";
   }); // "landing" | "auth" | "book-demo" | "marketplace"
 
-  // Auto-join if user is already authenticated and lands on an organization join/referral link
+  // Auto-join if user is already authenticated and lands on an organization join/referral link or has pending intent
   useEffect(() => {
-    if (session?.user?.id && orgSlugParam) {
-      joinOrganizationByReferral(orgSlugParam).catch((e) => console.warn("Auto-join referral notice:", e));
+    if (session?.user?.id) {
+      const pending = getPendingOrganizationJoin();
+      const target = orgSlugParam || pending?.orgIdOrSlug;
+      if (target) {
+        const uEmail = session.user.email;
+        const uName = session.user.user_metadata?.display_name || (uEmail ? uEmail.split("@")[0].replace(/[._-]/g, " ") : "Learner");
+        joinOrganizationByReferral(target, pending?.role || "learner", session.user.id, { email: uEmail, displayName: uName })
+          .catch((e) => console.warn("Auto-join referral notice:", e));
+      }
     }
-  }, [session, orgSlugParam]);
+  }, [session?.user?.id, orgSlugParam]);
 
   // Handle browser back/forward buttons smoothly
   useEffect(() => {
@@ -236,6 +249,9 @@ export default function App() {
           const modeParam = params.get("mode");
           if (modeParam === "signup" || modeParam === "signin") setAuthInitialMode(modeParam);
           setPublicView("auth");
+        } else if (params.get("verify") || window.location.pathname.startsWith("/verify") || window.location.pathname.startsWith("/certificate")) {
+          const vCode = params.get("verify") || window.location.pathname.replace(/^\/(verify|certificate)\/?/, "") || "1";
+          setCertVerifyCode(vCode);
         } else if (!session) {
           setPublicView("landing");
         }
@@ -484,6 +500,7 @@ export default function App() {
             initialMode={authInitialMode}
             onForgotPassword={sendPasswordReset}
             onVerifyRecoveryOtp={verifyRecoveryOtp}
+            onCompletePasswordReset={completePasswordReset}
             onGoHome={() => {
               try { window.history.pushState({}, "", window.location.pathname); } catch {}
               setPublicView("landing");

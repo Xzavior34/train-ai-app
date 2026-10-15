@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   ShoppingBag, Search, Filter, Star, BookOpen, Clock, Users,
   ArrowRight, Check, ShieldCheck, DollarSign, Sparkles, Building2,
-  Layers, ChevronRight, X, Play
+  Layers, ChevronRight, X, Play, AlertCircle
 } from "lucide-react";
 import {
   fetchMarketplaceCourses,

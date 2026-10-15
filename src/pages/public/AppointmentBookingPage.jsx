@@ -9,6 +9,7 @@ import {
   Building2,
   Users,
   Mail,
+  Phone,
   User,
   ExternalLink,
   Download,
@@ -169,6 +170,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
   // Form state
   const [fullName, setFullName] = useState("");
   const [workEmail, setWorkEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [organizationName, setOrganizationName] = useState("");
   const [orgType, setOrgType] = useState(() => {
     if (initialSector === "ngos") return ORG_TYPE_OPTIONS[1];
@@ -249,8 +251,14 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
       setSubmitError("This time slot is already booked. Please choose a different one.");
       return;
     }
-    if (!fullName.trim() || !workEmail.trim() || !organizationName.trim()) {
-      setSubmitError("Please fill in your name, work email, and organization name.");
+    const cleanPhone = phoneNumber.trim();
+    if (!fullName.trim() || !workEmail.trim() || !cleanPhone || !organizationName.trim()) {
+      setSubmitError("Please fill in your name, work email, phone number, and organization name.");
+      return;
+    }
+    const phoneDigits = cleanPhone.replace(/\D/g, "");
+    if (phoneDigits.length < 7) {
+      setSubmitError("Please enter a valid phone number (at least 7 digits, including country or area code).");
       return;
     }
 
@@ -261,6 +269,8 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
       const result = await submitDemoRequest({
         fullName: fullName.trim(),
         workEmail: workEmail.trim(),
+        phoneNumber: cleanPhone,
+        phone: cleanPhone,
         companyName: organizationName.trim(),
         teamSize,
         message: agendaNotes.trim(),
@@ -282,6 +292,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
       setConfirmedDetails({
         fullName: fullName.trim(),
         workEmail: workEmail.trim(),
+        phoneNumber: cleanPhone,
         organizationName: organizationName.trim(),
         orgType,
         teamSize,
@@ -322,7 +333,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
       `SUMMARY:Train AI Product Demo & Institutional Consultation`,
       `UID:${confirmedDetails.bookingId}@trainailtd.com`,
       `DTSTAMP:${formatIcs(new Date())}`,
-      `DESCRIPTION:Train AI 30-minute consultation for ${confirmedDetails.organizationName}. Join at ${confirmedDetails.meetingUrl}`,
+      `DESCRIPTION:Train AI 30-minute consultation for ${confirmedDetails.organizationName}.${confirmedDetails.phoneNumber ? ` Contact Phone: ${confirmedDetails.phoneNumber}.` : ""} Join at ${confirmedDetails.meetingUrl}`,
       `LOCATION:${confirmedDetails.meetingUrl}`,
       `URL:${confirmedDetails.meetingUrl}`,
       `ORGANIZER;CN=Train AI:mailto:trainailtd@gmail.com`,
@@ -484,6 +495,11 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                   { icon: <Clock size={17} color="#2563EB" />, label: "Time & Duration", value: `${confirmedDetails.time} (30 mins) [${confirmedDetails.timezone}]` },
                   { icon: <Video size={17} color="#2563EB" />, label: "Meeting Format", value: "Google Meet (Invitation sent)" },
                   { icon: <Building2 size={17} color="#2563EB" />, label: "Organization", value: `${confirmedDetails.organizationName} (${confirmedDetails.orgType})` },
+                  ...(confirmedDetails.phoneNumber ? [{
+                    icon: <Phone size={17} color="#2563EB" />,
+                    label: "Phone / WhatsApp",
+                    value: confirmedDetails.phoneNumber,
+                  }] : []),
                 ].map(({ icon, label, value }) => (
                   <div key={label} style={S.confirmedRow}>
                     {icon}
@@ -734,6 +750,17 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                       <Mail size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
                       <input required type="email" placeholder="sarah@institution.edu or name@company.org"
                         value={workEmail} onChange={(e) => setWorkEmail(e.target.value)}
+                        className="apt-input-field" style={S.textInput} />
+                    </div>
+                  </div>
+
+                  {/* Phone Number */}
+                  <div>
+                    <label style={S.label}>Phone Number / WhatsApp <span style={{ color: "#EF4444" }}>*</span></label>
+                    <div className="apt-input-group" style={S.inputGroup}>
+                      <Phone size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
+                      <input required type="tel" placeholder="e.g. +234 801 234 5678 or +1 (555) 019-2834"
+                        value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)}
                         className="apt-input-field" style={S.textInput} />
                     </div>
                   </div>

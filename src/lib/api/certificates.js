@@ -69,12 +69,41 @@ export async function verifyPublicCertificate(codeOrId) {
       });
       if (!error && data) return data;
     } catch {}
+
+    try {
+      const { data: dbData } = await supabase
+        .from("certificates")
+        .select("*, courses(title, name), organizations(name), user_profiles:user_id(display_name, full_name, email)")
+        .or(`certificate_code.eq.${target},certificate_number.eq.${target},id.eq.${target}`)
+        .maybeSingle();
+
+      if (dbData) {
+        if (dbData.is_revoked || dbData.status === "revoked") {
+          return {
+            verified: false,
+            is_revoked: true,
+            reason: dbData.revoked_reason || "This certificate has been revoked by the issuing authority.",
+            issued_at: dbData.issued_at,
+          };
+        }
+        return {
+          verified: true,
+          certificate_code: dbData.certificate_code || dbData.certificate_number || dbData.id,
+          recipient_name: dbData.recipient_name || dbData.user_profiles?.full_name || dbData.user_profiles?.display_name || "Certified Learner",
+          course_name: dbData.course_name || dbData.title || dbData.courses?.title || dbData.courses?.name || "Train AI Certified Programme",
+          organization_name: dbData.organization_name || dbData.organizations?.name || "Train AI Academy",
+          issued_at: dbData.issued_at,
+          template_type: dbData.template_type || "train_ai_default",
+        };
+      }
+    } catch {}
   }
 
   const certs = getCachedCerts();
   const matched = certs.find(
     (c) =>
       c.certificate_code?.toUpperCase() === target.toUpperCase() ||
+      c.certificate_number?.toUpperCase() === target.toUpperCase() ||
       c.id?.toLowerCase() === target.toLowerCase()
   );
 
@@ -82,7 +111,7 @@ export async function verifyPublicCertificate(codeOrId) {
     return { verified: false, error: "Certificate not found or identifier invalid." };
   }
 
-  if (matched.is_revoked) {
+  if (matched.is_revoked || matched.status === "revoked") {
     return {
       verified: false,
       is_revoked: true,
@@ -93,12 +122,12 @@ export async function verifyPublicCertificate(codeOrId) {
 
   return {
     verified: true,
-    certificate_code: matched.certificate_code,
-    recipient_name: matched.recipient_name,
-    course_name: matched.course_name,
-    organization_name: matched.organization_name,
+    certificate_code: matched.certificate_code || matched.certificate_number || matched.id,
+    recipient_name: matched.recipient_name || matched.learnerName || "Certified Learner",
+    course_name: matched.course_name || matched.title || matched.courseTitle || "Train AI Certified Programme",
+    organization_name: matched.organization_name || "Train AI Academy",
     issued_at: matched.issued_at,
-    template_type: matched.template_type,
+    template_type: matched.template_type || "train_ai_default",
   };
 }
 

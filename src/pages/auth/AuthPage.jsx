@@ -11,8 +11,10 @@ import {
   fetchOrganizationPublicInfo,
   fetchAvailableOrganizations,
   PUBLIC_ORGANIZATIONS_DIRECTORY,
+  recordLinkClickInRoster,
 } from "../../lib/api/organizations.js";
 import { getRateLimitStatus, formatLockoutTime, MAX_PASSWORD_TRIALS } from "../../lib/authRateLimiter.js";
+import { supabase, getSupabaseClientForProject, resolveProjectForSignUp } from "../../lib/supabaseClient.js";
 
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "", initialMode = "",
@@ -41,13 +43,16 @@ export default function AuthPage({
     }
   }, [initialMode, recoveryMode]);
 
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [accountType, setAccountType] = useState(() => {
-    const hasJoinTarget = Boolean(orgParam || getPendingOrganizationJoin()?.orgIdOrSlug);
-    return hasJoinTarget ? "learner" : "organization";
-  });
+  const [accountType, setAccountType] = useState("learner");
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendStatus, setResendStatus] = useState(null);
+  const [isEmailUnconfirmed, setIsEmailUnconfirmed] = useState(false);
   const [orgName, setOrgName] = useState("");
   const [availableOrgs, setAvailableOrgs] = useState(PUBLIC_ORGANIZATIONS_DIRECTORY);
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
@@ -93,8 +98,24 @@ export default function AuthPage({
       setRecoveryLinkError(
         decodeURIComponent((description || "This password reset link is invalid or has expired.").replace(/\+/g, " "))
       );
-    } else if (recoveryMode && !recoverySessionReady) {
-      setRecoveryLinkError("This password reset link is incomplete, invalid, or has expired.");
+      return;
+    }
+
+    if (recoverySessionReady) {
+      setRecoveryLinkError("");
+      return;
+    }
+
+    if (recoveryMode && !recoverySessionReady) {
+      const timer = setTimeout(() => {
+        if (!recoverySessionReady) {
+          const hasTokens = hashParams.get("access_token") || params.get("access_token") || params.get("code");
+          if (!hasTokens) {
+            setRecoveryLinkError("This password reset link is incomplete, invalid, or has expired.");
+          }
+        }
+      }, 2500);
+      return () => clearTimeout(timer);
     }
   }, [recoveryMode, recoverySessionReady]);
 
@@ -342,13 +363,56 @@ export default function AuthPage({
     }
   }
 
+  async function handleResendVerification(targetEmail = "") {
+    const emailToUse = targetEmail || signupEmail || email;
+    if (!emailToUse || resendingEmail) return;
+    setResendingEmail(true);
+    setResendStatus(null);
+    try {
+      const proj = resolveProjectForSignUp(emailToUse);
+      const client = getSupabaseClientForProject(proj) || supabase;
+      if (client?.auth?.resend) {
+        const res = await client.auth.resend({
+          type: "signup",
+          email: emailToUse.trim().toLowerCase(),
+          options: {
+            emailRedirectTo: `${getCanonicalDomain()}/?view=auth`
+          }
+        });
+        if (res?.error) {
+          const msg = res.error.message || "";
+          if (res.error.status === 429 || msg.toLowerCase().includes("rate limit") || msg.toLowerCase().includes("over_email_send_rate_limit")) {
+            setResendStatus({
+              error: true,
+              message: "The email provider is temporarily rate-limited. Wait a few minutes and try again. If the message still does not arrive, contact info@trainailtd.com."
+            });
+          } else {
+            setResendStatus({ error: true, message: msg || "Could not resend confirmation email." });
+          }
+        } else {
+          setResendStatus({ error: false, message: "Confirmation email sent! Please check your inbox and spam folder." });
+        }
+      } else {
+        setResendStatus({ error: false, message: "Verification request submitted. Please check your inbox." });
+      }
+    } catch (err) {
+      setResendStatus({ error: true, message: err?.message || "Could not resend email at this time." });
+    } finally {
+      setResendingEmail(false);
+    }
+  }
+
   async function executeOrgSignup(paymentReference = null, paymentProvider = "verified_payment", overridePromoCode = "") {
     setSubmitting(true);
     setOrgError("");
     try {
       const matchedOrg = selectedDirectoryOrg || exactOrgMatch;
       const signupRole = "learner";
-      const result = await onSignUp(email, password, signupRole, "organization", matchedOrg?.projectKey);
+      const userDisplayName = fullName.trim() || email.split("@")[0].replace(/[._-]/g, " ");
+      const result = await onSignUp(email, password, signupRole, "organization", matchedOrg?.projectKey, {
+        display_name: userDisplayName,
+        full_name: userDisplayName,
+      });
 
       if (result?.error) {
         setOrgError(result.error?.message || String(result.error));
@@ -358,6 +422,13 @@ export default function AuthPage({
 
       if (result?.data?.user?.id) {
         attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
+      }
+
+      if (!result?.data?.session && result?.data?.user) {
+        setSignupSuccess(true);
+        setSignupEmail(email);
+        setSubmitting(false);
+        return true;
       }
 
       const effectivePromo = overridePromoCode || (promoValidation?.valid ? promoCode : "") || matchedOrg?.defaultPromoCode || "";
@@ -404,9 +475,11 @@ export default function AuthPage({
       return;
     }
     setOrgError("");
+    setResendStatus(null);
 
     if (mode === "signin") {
       setSubmitting(true);
+      setIsEmailUnconfirmed(false);
       const currentLimit = getRateLimitStatus(email);
       if (currentLimit.isLocked) {
         setRateLimit(currentLimit);
@@ -415,8 +488,24 @@ export default function AuthPage({
       }
       const signInRes = await onSignIn(email, password);
       setRateLimit(getRateLimitStatus(email));
+      if (signInRes?.isEmailUnconfirmed || signInRes?.error?.message?.toLowerCase().includes("not been confirmed") || signInRes?.error?.message?.toLowerCase().includes("email not confirmed")) {
+        setIsEmailUnconfirmed(true);
+      }
       if (!signInRes?.error && targetOrgTarget) {
-        await joinOrganizationByReferral(targetOrgTarget, "learner").catch(() => {});
+        const uid = signInRes?.data?.user?.id;
+        const uEmail = signInRes?.data?.user?.email || email;
+        const uName = signInRes?.data?.user?.user_metadata?.display_name || uEmail.split("@")[0].replace(/[._-]/g, " ");
+        await joinOrganizationByReferral(targetOrgTarget, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
+      } else if (!signInRes?.error && signInRes?.data?.user) {
+        const uid = signInRes.data.user.id;
+        const uEmail = signInRes.data.user.email || email;
+        const uName = signInRes.data.user.user_metadata?.display_name || uEmail.split("@")[0].replace(/[._-]/g, " ");
+        const uOrg = signInRes.data.user.user_metadata?.organization_id || signInRes.data.user.user_metadata?.organization_slug;
+        if (uOrg) {
+          await joinOrganizationByReferral(uOrg, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
+        } else {
+          await joinDefaultOrganization({ userId: uid, email: uEmail, displayName: uName }).catch(() => {});
+        }
       }
       setSubmitting(false);
     } else {
@@ -449,16 +538,51 @@ export default function AuthPage({
         // Individual learner sign-up
         setSubmitting(true);
         const matchedOrg = selectedDirectoryOrg || exactOrgMatch;
-        const result = await onSignUp(email, password, "learner", "learner", matchedOrg?.projectKey);
-        if (!result?.error && result?.data?.user?.id) {
+        const joinTarget = matchedOrg?.slug || matchedOrg?.id || targetOrgTarget;
+        const orgMeta = joinTarget ? {
+          organization: orgInfo?.name || matchedOrg?.name || joinTarget,
+          organization_id: orgInfo?.id || matchedOrg?.id || joinTarget,
+          organization_slug: orgInfo?.slug || matchedOrg?.slug || joinTarget,
+          join_source: "shareable_link",
+          referral_link: `${typeof window !== "undefined" ? window.location.origin : "https://trainailtd.com"}/?join=${encodeURIComponent(orgInfo?.slug || matchedOrg?.slug || joinTarget)}`
+        } : {};
+
+        const userDisplayName = fullName.trim() || email.split("@")[0].replace(/[._-]/g, " ");
+        const cleanEmail = email.trim().toLowerCase();
+        if (joinTarget && cleanEmail && cleanEmail.includes("@")) {
+          recordLinkClickInRoster(joinTarget, {
+            email: cleanEmail,
+            displayName: userDisplayName,
+            role: "learner",
+          });
+        }
+        const result = await onSignUp(email, password, "learner", "learner", matchedOrg?.projectKey, {
+          ...orgMeta,
+          display_name: userDisplayName,
+          full_name: userDisplayName,
+        });
+        if (!result?.error && result?.data?.session && result?.data?.user?.id) {
           attributeReferralSignupIfPending(result.data.user.id).catch(() => {});
         }
         if (!result?.error) {
-          const joinTarget = matchedOrg?.slug || matchedOrg?.id || targetOrgTarget;
-          if (joinTarget) {
-            await joinOrganizationByReferral(joinTarget, "learner").catch(() => {});
-          } else {
-            joinDefaultOrganization().catch(() => {});
+          if (result?.data?.session && joinTarget) {
+            const uid = result?.data?.user?.id;
+            const uEmail = result?.data?.user?.email || cleanEmail;
+            const uName = userDisplayName;
+            await joinOrganizationByReferral(joinTarget, "learner", uid, { email: uEmail, displayName: uName }).catch(() => {});
+          } else if (result?.data?.session) {
+            const uid = result?.data?.user?.id;
+            const uEmail = result?.data?.user?.email || cleanEmail;
+            const uName = userDisplayName;
+            await joinDefaultOrganization({ userId: uid, email: uEmail, displayName: uName }).catch(() => {});
+          }
+
+          if (result?.data?.session) {
+            // Logged in immediately! (Session active)
+          } else if (result?.data?.user) {
+            // User created, confirmation email dispatched
+            setSignupSuccess(true);
+            setSignupEmail(email);
           }
         }
         setSubmitting(false);
@@ -976,6 +1100,116 @@ export default function AuthPage({
         {/* ================================================================ */}
         {(mode === "signin" || mode === "signup") && (
           <>
+            {signupSuccess ? (
+              <div style={{ textAlign: "center", padding: "10px 0" }}>
+                <div style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "#DCFCE7",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  margin: "0 auto 16px"
+                }}>
+                  <CheckCircle2 size={32} color="#16A34A" />
+                </div>
+                <h1 style={{ ...styles.h1, fontSize: 20, marginBottom: 8 }}>Account Created Successfully!</h1>
+                <p style={{ ...styles.sub, fontSize: 13, lineHeight: 1.5, marginBottom: 18 }}>
+                  We've set up your Train AI account. A confirmation link has been sent to <strong style={{ color: "#0F172A" }}>{signupEmail}</strong>.
+                  Please check your inbox (and spam folder) to verify your address.
+                </p>
+
+                <div style={{
+                  background: "#F8FAFC",
+                  border: "1px solid #E2E8F0",
+                  borderRadius: 10,
+                  padding: "14px 16px",
+                  marginBottom: 16,
+                  textAlign: "left",
+                  fontSize: 12.5,
+                  color: "#475569",
+                  lineHeight: 1.55
+                }}>
+                  <div style={{ fontWeight: 700, color: "#1E293B", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                    <Sparkles size={14} color="#2563EB" /> Welcome to Train AI:
+                  </div>
+                  <div>✓ <strong>20 Free AI Credits</strong> granted for tutoring & quizzes</div>
+                  <div>✓ Access to interactive modules & certificates</div>
+                  <div>✓ Cohort discussions & community forums</div>
+                </div>
+
+                <div style={{
+                  background: "#EFF6FF",
+                  border: "1.5px solid #BFDBFE",
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  marginBottom: 16,
+                  textAlign: "left",
+                  fontSize: 12.5,
+                  color: "#1E40AF",
+                  lineHeight: 1.45
+                }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                    <CheckCircle2 size={15} color="#2563EB" /> Verification required:
+                  </div>
+                  <div>Open the verification link before signing in. This keeps your account and organization access secure. If the email is delayed, use the resend option below.</div>
+                </div>
+
+                {resendStatus && (
+                  <div style={{
+                    marginBottom: 14,
+                    padding: "9px 12px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    background: resendStatus.error ? "#FEF2F2" : "#ECFDF5",
+                    color: resendStatus.error ? "#B91C1C" : "#047857",
+                    border: `1px solid ${resendStatus.error ? "#FECACA" : "#A7F3D0"}`
+                  }}>
+                    {resendStatus.message}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSignupSuccess(false);
+                    setMode("signin");
+                    setEmail(signupEmail);
+                    setPassword("");
+                  }}
+                  className="auth-submit"
+                  style={styles.submit}
+                >
+                  Sign in to your account <ArrowRight size={15} />
+                </button>
+
+                <div style={{ marginTop: 14, display: "flex", justifyContent: "center" }}>
+                  <button
+                    type="button"
+                    disabled={resendingEmail}
+                    onClick={() => handleResendVerification(signupEmail)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#2563EB",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      padding: 6,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6
+                    }}
+                  >
+                    <RefreshCw size={12} className={resendingEmail ? "spin" : ""} />
+                    {resendingEmail ? "Resending confirmation email..." : "Didn't receive email? Resend verification link"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
             {orgInfo?.name && (
               <div style={{
                 marginBottom: 14,
@@ -1012,26 +1246,6 @@ export default function AuthPage({
               <div style={{ marginBottom: 18 }}>
                 <div style={styles.label}>Choose account type</div>
                 <div
-                  className={`role-picker-card ${accountType === "organization" ? "active" : ""}`}
-                  onClick={() => setAccountType("organization")}
-                  style={{
-                    marginTop: 8, padding: "12px 14px", borderRadius: 8, border: "1.5px solid #E2E8F0", background: "#FFFFFF",
-                    cursor: "pointer", display: "flex", flexDirection: "column", gap: 4
-                  }}
-                >
-                  <div className="role-picker-header" style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Building2 size={15} color={accountType === "organization" ? "#2563EB" : "#64748B"} />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Organization</span>
-                    {!orgInfo?.name && (
-                      <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>RECOMMENDED</span>
-                    )}
-                  </div>
-                  <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
-                    Workforce readiness, team cohorts, and org-wide reporting. You become the organization admin.
-                  </span>
-                </div>
-
-                <div
                   className={`role-picker-card ${accountType === "learner" ? "active" : ""}`}
                   onClick={() => setAccountType("learner")}
                   style={{
@@ -1044,14 +1258,31 @@ export default function AuthPage({
                     <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>
                       {orgInfo?.name ? `Learner under ${orgInfo.name}` : "Individual learner"}
                     </span>
-                    {orgInfo?.name && (
-                      <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>INVITED</span>
-                    )}
+                    <span className="role-picker-badge" style={{ fontSize: 10, fontWeight: 700, color: "#2563EB", background: "#EFF6FF", padding: "1px 6px", borderRadius: 4, marginLeft: "auto", flexShrink: 0 }}>
+                      {orgInfo?.name ? "INVITED" : "RECOMMENDED"}
+                    </span>
                   </div>
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
                     {orgInfo?.name
                       ? `Enroll as a learner under ${orgInfo.name} and receive 20 free AI credits.`
                       : "Access courses, AI quizzes, and community independently (includes 20 free AI credits)."}
+                  </span>
+                </div>
+
+                <div
+                  className={`role-picker-card ${accountType === "organization" ? "active" : ""}`}
+                  onClick={() => setAccountType("organization")}
+                  style={{
+                    marginTop: 8, padding: "12px 14px", borderRadius: 8, border: "1.5px solid #E2E8F0", background: "#FFFFFF",
+                    cursor: "pointer", display: "flex", flexDirection: "column", gap: 4
+                  }}
+                >
+                  <div className="role-picker-header" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Building2 size={15} color={accountType === "organization" ? "#2563EB" : "#64748B"} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#0F172A" }}>Organization</span>
+                  </div>
+                  <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
+                    Workforce readiness, team cohorts, and org-wide reporting. You become the organization admin.
                   </span>
                 </div>
 
@@ -1465,6 +1696,24 @@ export default function AuthPage({
                 </div>
               </div>
             )}
+            {mode === "signup" && (
+              <div style={{ marginBottom: 14 }}>
+                <label style={styles.label}>Full Name</label>
+                <div style={styles.inputWrap}>
+                  <User size={15} color="#94A3B8" style={styles.inputIcon} />
+                  <input
+                    type="text"
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="auth-input"
+                    style={styles.input}
+                    placeholder="e.g. Alex Morgan"
+                    autoComplete="name"
+                  />
+                </div>
+              </div>
+            )}
 
             <label style={styles.label}>{mode === "signin" ? "Email or Username" : "Email Address"}</label>
             <div style={styles.inputWrap}>
@@ -1590,8 +1839,42 @@ export default function AuthPage({
               </div>
             )}
 
-            {/* Standard Error State (when not locked and not emailNotFound) */}
-            {authError && !isEmailNotFound && (!rateLimit.isLocked || mode !== "signin") && (
+            {/* Existing Account Helper Alert in Signup Mode */}
+            {mode === "signup" && authError && (authError.includes("already exists") || authError.includes("already registered") || authError.includes("sign in with your password")) && (
+              <div style={styles.errorBox}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600 }}>{authError}</div>
+                    <div style={{ marginTop: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => { setMode("signin"); setOrgError(""); }}
+                        style={{
+                          background: "#2563EB",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: 6,
+                          padding: "6px 12px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        <span>Sign in with {email}</span>
+                        <ArrowRight size={13} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Standard Error State (when not locked, not emailNotFound, and not existing account in signup) */}
+            {authError && !isEmailNotFound && !(mode === "signup" && (authError.includes("already exists") || authError.includes("already registered") || authError.includes("sign in with your password"))) && (!rateLimit.isLocked || mode !== "signin") && (
               <div style={styles.errorBox}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                   <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0, marginTop: 2 }} />
@@ -1604,6 +1887,62 @@ export default function AuthPage({
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Unconfirmed Email Helper Alert */}
+            {(isEmailUnconfirmed || (authError && (authError.toLowerCase().includes("not confirmed") || authError.toLowerCase().includes("not been confirmed")))) && (
+              <div style={{
+                marginTop: 10,
+                marginBottom: 14,
+                padding: "12px 14px",
+                borderRadius: 8,
+                background: "#EFF6FF",
+                border: "1.5px solid #BFDBFE",
+                display: "flex",
+                flexDirection: "column",
+                gap: 8
+              }}>
+                <div style={{ fontSize: 12, color: "#1E40AF", lineHeight: 1.45, fontWeight: 500 }}>
+                  Didn't receive the verification email or link expired? We can send a new confirmation link to <strong>{email}</strong>.
+                </div>
+                <button
+                  type="button"
+                  disabled={resendingEmail || !email}
+                  onClick={() => handleResendVerification(email)}
+                  style={{
+                    background: "#2563EB",
+                    color: "#FFFFFF",
+                    border: "none",
+                    borderRadius: 6,
+                    padding: "6px 12px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: (resendingEmail || !email) ? "not-allowed" : "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    alignSelf: "flex-start"
+                  }}
+                >
+                  <RefreshCw size={13} className={resendingEmail ? "spin" : ""} />
+                  <span>{resendingEmail ? "Sending..." : "Resend Verification Email"}</span>
+                </button>
+                {resendStatus && (
+                  <div style={{
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    color: resendStatus.error ? "#DC2626" : "#047857",
+                    background: resendStatus.error ? "#FEF2F2" : "#ECFDF5",
+                    padding: "8px 10px",
+                    borderRadius: 6,
+                    border: `1px solid ${resendStatus.error ? "#FECACA" : "#A7F3D0"}`,
+                    lineHeight: 1.4
+                  }}>
+                    {resendStatus.message}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1634,6 +1973,8 @@ export default function AuthPage({
                 <>Already have an account? <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); setBreachWarning(false); }}>Sign in</span></>
               )}
             </div>
+              </>
+            )}
           </>
         )}
 

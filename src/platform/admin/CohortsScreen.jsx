@@ -28,9 +28,9 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
 
   const [announcementText, setAnnouncementText] = useState("");
   const [postingAnnouncement, setPostingAnnouncement] = useState(false);
-  const cohortsQuery = useSupabaseQuery(async () => orgId ? fetchCohortsWithStats(orgId) : [], [orgId]);
+  const cohortsQuery = useSupabaseQuery(async () => fetchCohortsWithStats(orgId || "demo-org-id"), [orgId]);
   const cohorts = cohortsQuery.data || [];
-  const sessionsQuery = useSupabaseQuery(async () => orgId ? fetchUpcomingOrgSessions(orgId) : [], [orgId]);
+  const sessionsQuery = useSupabaseQuery(async () => fetchUpcomingOrgSessions(orgId || "demo-org-id"), [orgId]);
   const upcomingSessions = sessionsQuery.data || [];
 
   async function handleCreateCohort(e) {

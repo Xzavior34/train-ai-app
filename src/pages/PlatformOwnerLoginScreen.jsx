@@ -174,6 +174,17 @@ export function PlatformOwnerLoginScreen({ onAuthenticated }) {
           </button>
         </div>
 
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6, marginBottom: 12 }}>
+          <a
+            href="/?view=auth"
+            style={{ fontSize: 12, color: "#2563EB", fontWeight: 600, textDecoration: "none" }}
+            onMouseEnter={(e) => { e.currentTarget.style.textDecoration = "underline"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.textDecoration = "none"; }}
+          >
+            Forgot your password?
+          </a>
+        </div>
+
         {/* Caps Lock Warning */}
         {capsLockActive && !rateLimit.isLocked && (
           <div style={{ background: "#FEF3C7", border: "1px solid #FDE68A", borderRadius: 6, padding: "6px 10px", marginBottom: 12, fontSize: 11.5, color: "#92400E", display: "flex", alignItems: "center", gap: 6 }}>

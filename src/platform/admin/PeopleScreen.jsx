@@ -15,7 +15,8 @@ import {
   approveOrgJoinRequest,
   rejectOrgJoinRequest,
   fetchOrgSeatsSummary,
-  fetchOrganizationPublicInfo
+  fetchOrganizationPublicInfo,
+  updateMemberEmailInRoster
 } from "../../lib/api/organizations.js";
 import { activeProject, SUPABASE_PROJECTS } from "../../lib/supabaseClient.js";
 import {
@@ -106,7 +107,7 @@ function downloadDirectoryCsv(rows, progressByMemberId) {
 /* ==========================================================================
    Member record drawer - the whole of one member, in one place
    ========================================================================= */
-function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToast }) {
+function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToast, onIssueCertificate }) {
   const detailQuery = useSupabaseQuery(
     async () => (member ? fetchUserDetailForAdmin(member.id, orgId) : null),
     [member?.id, orgId]
@@ -130,6 +131,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
     setCohortId("");
     setForm({
       displayName: member.display_name || "",
+      email: member.email && member.email.includes("@") ? member.email : "",
       department: member.department || "",
       school: member.school || "",
       bio: member.bio || "",
@@ -141,6 +143,9 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
   async function handleSaveProfile() {
     setSavingProfile(true);
     try {
+      if (form.email && form.email.includes("@")) {
+        updateMemberEmailInRoster(member.id, form.email);
+      }
       const res = await updateUserProfileAsAdmin(member.id, form);
       if (!res.success) { showToast(res.error); return; }
       showToast(`${form.displayName || "Member"}'s profile updated.`);
@@ -210,9 +215,13 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
           <div style={{ minWidth: 0 }}>
             <div className="ta-title" style={{ fontSize: 18, overflowWrap: "anywhere" }}>{member.display_name || "Member"}</div>
             <div className="ta-row ta-gap8" style={{ fontSize: 12, color: "var(--text-2)", flexWrap: "wrap" }}>
-              <span style={{ overflowWrap: "anywhere" }}>{member.email || "No email on file"}</span>
+              <span style={{ overflowWrap: "anywhere", fontWeight: member.email && member.email.includes("@") ? 600 : 400, color: member.email && member.email.includes("@") ? "var(--text)" : "var(--text-3)" }}>
+                {member.email && member.email.includes("@") ? member.email : "None (Has not signed up yet)"}
+              </span>
               <Tag>{ROLE_LABEL[member.role] || member.role || "learner"}</Tag>
-              <Tag tone={member.status === "suspended" ? "danger" : "success"}>{member.status || "active"}</Tag>
+              <Tag tone={member.status === "suspended" ? "danger" : member.status === "link_clicked" ? "warning" : "success"}>
+                {member.status === "link_clicked" ? "Link Clicked" : (member.status || "active")}
+              </Tag>
             </div>
           </div>
         </div>
@@ -271,6 +280,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
               <div className="ta-col ta-gap6 ta-mt12" style={{ fontSize: 12.5 }}>
                 {[
                   ["Display name", member.display_name || "Not set"],
+                  ["Email address", member.email && member.email.includes("@") ? member.email : "None (Has not signed up yet)"],
                   ["Department", detail?.profile?.department || member.department || "Not set"],
                   ["School", detail?.profile?.school || member.school || "Not set"],
                   ["Cohort", detail?.cohorts?.length ? detail.cohorts.map((c) => c.name).join(", ") : "Not in a cohort"],
@@ -291,6 +301,8 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
               <div className="ta-mt12">
                 <div className="ta-label">Display name</div>
                 <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={form.displayName} onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))} />
+                <div className="ta-label ta-mt12">Email address</div>
+                <input className="ta-input ta-mt6" style={{ width: "100%", boxSizing: "border-box" }} value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="user@example.com (or leave blank if not signed up yet)" />
                 <div className="ta-grid ta-grid-2 ta-gap12 ta-mt12">
                   <div>
                     <div className="ta-label">Department</div>
@@ -358,7 +370,20 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
           </div>
 
           <div className="ta-card ta-mt12" style={{ padding: 16 }}>
-            <div style={{ fontWeight: 800, fontSize: 14 }}>Certificates</div>
+            <div className="ta-row ta-between" style={{ alignItems: "center" }}>
+              <div style={{ fontWeight: 800, fontSize: 14 }}>Certificates</div>
+              <button
+                className="ta-btn ta-btn-outline"
+                style={{ fontSize: 12, padding: "4px 10px", display: "inline-flex", alignItems: "center", gap: 5 }}
+                onClick={() => {
+                  onClose();
+                  onIssueCertificate?.(member);
+                }}
+              >
+                <Award size={13} />
+                Issue Certificate
+              </button>
+            </div>
             {(detail?.certificates || []).length === 0 && <div className="ta-empty ta-mt10">No certificates issued yet.</div>}
             <div className="ta-col ta-gap6 ta-mt10">
               {(detail?.certificates || []).map((c) => (
@@ -626,20 +651,25 @@ export function OrganizationReferralCard({ orgId, orgName, orgSlug, showToast, m
           <QrCode size={14} /> QR Code
         </button>
 
-        {typeof onToggleReferralFilter === "function" && (
-          <button
-            type="button"
-            className={referralFilter === "shareable_link" ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
-            onClick={() => onToggleReferralFilter(referralFilter === "shareable_link" ? "all" : "shareable_link")}
-            title="Filter user directory to show only members who joined via this Organization Shareable Invite & Referral Link"
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700 }}
-          >
-            <Users size={14} />
-            {referralFilter === "shareable_link"
-              ? `Showing Link Signups (${members.filter((m) => (m.join_source || "shareable_link") === "shareable_link").length})`
-              : `Track Link Users (${members.filter((m) => (m.join_source || "shareable_link") === "shareable_link").length})`}
-          </button>
-        )}
+        {typeof onToggleReferralFilter === "function" && (() => {
+          const linkMembers = members.filter((m) => (m.join_source || "shareable_link") === "shareable_link");
+          const clicksCount = linkMembers.filter((m) => m.status === "link_clicked").length;
+          const registeredCount = linkMembers.filter((m) => m.status !== "link_clicked").length;
+          return (
+            <button
+              type="button"
+              className={referralFilter === "shareable_link" ? "ta-btn ta-btn-primary ta-btn-sm" : "ta-btn ta-btn-outline ta-btn-sm"}
+              onClick={() => onToggleReferralFilter(referralFilter === "shareable_link" ? "all" : "shareable_link")}
+              title="Filter user directory to show all members and prospective learners from this link"
+              style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700 }}
+            >
+              <Users size={14} />
+              {referralFilter === "shareable_link"
+                ? `Showing Link Users (${linkMembers.length} • ${registeredCount} joined, ${clicksCount} link clicks)`
+                : `Track Link Traffic (${linkMembers.length} • ${registeredCount} joined, ${clicksCount} link clicks)`}
+            </button>
+          );
+        })()}
       </div>
 
       {showQr && (
@@ -694,7 +724,20 @@ export function OrganizationReferralCard({ orgId, orgName, orgSlug, showToast, m
    ========================================================================= */
 export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const showToast = useContext(ToastContext);
-  const [tab, setTab] = useState("all");
+  const [tab, setTab] = useState(() => {
+    try {
+      const savedTab = sessionStorage.getItem("ta_people_tab");
+      if (savedTab) {
+        sessionStorage.removeItem("ta_people_tab");
+        return savedTab;
+      }
+      const savedRef = sessionStorage.getItem("ta_people_filter_referral");
+      if (savedRef === "shareable_link") {
+        return "link_users";
+      }
+    } catch {}
+    return "all";
+  });
   const [certModalUser, setCertModalUser] = useState(null);
   const [certTitle, setCertTitle] = useState("");
   const [certPresentation, setCertPresentation] = useState("This officially certifies that");
@@ -741,12 +784,12 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   const [actionsMember, setActionsMember] = useState(null);
   const [invitingBusy, setInvitingBusy] = useState(null);
 
-  const membersQuery = useSupabaseQuery(async () => orgId ? fetchOrgMembers(orgId) : [], [orgId]);
-  const cohortsQuery = useSupabaseQuery(async () => orgId ? fetchCohorts(orgId) : [], [orgId]);
-  const instructorsQuery = useSupabaseQuery(async () => orgId ? fetchOrgInstructorsMonitor(orgId) : [], [orgId]);
+  const membersQuery = useSupabaseQuery(async () => fetchOrgMembers(orgId || "demo-org-id"), [orgId]);
+  const cohortsQuery = useSupabaseQuery(async () => fetchCohorts(orgId || "demo-org-id"), [orgId]);
+  const instructorsQuery = useSupabaseQuery(async () => fetchOrgInstructorsMonitor(orgId || "demo-org-id"), [orgId]);
   const invitationsQuery = useSupabaseQuery(async () => orgId ? fetchPendingInvitations(orgId) : [], [orgId]);
   const progressQuery = useSupabaseQuery(async () => orgId ? fetchOrgLearnerProgressOverview(orgId) : [], [orgId]);
-  const kpisQuery = useSupabaseQuery(async () => orgId ? fetchOrgPeopleKpis(orgId) : null, [orgId]);
+  const kpisQuery = useSupabaseQuery(async () => fetchOrgPeopleKpis(orgId || "demo-org-id"), [orgId]);
   const joinRequestsQuery = useSupabaseQuery(async () => orgId ? fetchPendingOrgJoinRequests(orgId) : [], [orgId]);
   const seatsQuery = useSupabaseQuery(async () => orgId ? fetchOrgSeatsSummary(orgId) : null, [orgId]);
   // Instructor applications: mentors rows in this org that aren't active yet.
@@ -813,6 +856,28 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
     return true;
   }), [members, search, roleFilter, statusFilter, cohortFilter, referralFilter, dateFilter, dateFrom, dateTo]);
 
+  const linkMembers = useMemo(() => {
+    return members.filter((m) => (m.join_source || "shareable_link") === "shareable_link");
+  }, [members]);
+
+  const linkFilteredMembers = useMemo(() => linkMembers.filter(m => {
+    const needle = search.trim().toLowerCase();
+    const matchesSearch = !needle
+      || (m.display_name || "").toLowerCase().includes(needle)
+      || (m.email || "").toLowerCase().includes(needle)
+      || (m.role || "").toLowerCase().includes(needle)
+      || (m.department || "").toLowerCase().includes(needle)
+      || (m.organization_name || "").toLowerCase().includes(needle);
+    if (!matchesSearch) return false;
+    if (roleFilter !== "all" && (m.role || "learner") !== roleFilter) return false;
+    if (statusFilter !== "all" && (m.status || "active") !== statusFilter) return false;
+    if (cohortFilter === "none" && m.cohort_name) return false;
+    if (cohortFilter !== "all" && cohortFilter !== "none" && m.cohort_name !== cohortFilter) return false;
+    const effectiveDate = m.joined_at || m.created_at || m.last_active_at;
+    if (!matchesDateRangeFilter(effectiveDate, dateFilter, dateFrom, dateTo)) return false;
+    return true;
+  }), [linkMembers, search, roleFilter, statusFilter, cohortFilter, dateFilter, dateFrom, dateTo]);
+
   const selectedMembers = members.filter((m) => selectedMemberIds.has(m.id));
 
   function refreshDirectory() {
@@ -823,6 +888,14 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
     joinRequestsQuery.refetch();
     seatsQuery.refetch();
   }
+
+  useEffect(() => {
+    function handleReferralSignup() {
+      refreshDirectory();
+    }
+    window.addEventListener("trainai_referral_signup", handleReferralSignup);
+    return () => window.removeEventListener("trainai_referral_signup", handleReferralSignup);
+  }, []);
 
   async function runBulk(label, fn) {
     setBulkBusy(true);
@@ -891,6 +964,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         <div className="ta-tabs">
           {[
             { k: "all", label: `Users (${members.length})` },
+            { k: "link_users", label: `🔗 Joined via Link (${linkMembers.length})` },
             { k: "approvals", label: `Pending Approvals (${joinRequests.length})` },
             { k: "progress", label: `Progress${behindCount > 0 ? ` (${behindCount} behind)` : ""}` },
             { k: "mentorapps", label: `Instructor Applications (${applications.length})` },
@@ -991,6 +1065,18 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
             <div className="ta-card" style={{ padding: 20 }}>
               <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
                 <div className="ta-row ta-gap12" style={{ flex: "1 1 260px", minWidth: 0, flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    className={`ta-btn ta-btn-sm ${referralFilter === "shareable_link" ? "ta-btn-primary" : "ta-btn-outline"}`}
+                    style={{ display: "inline-flex", alignItems: "center", gap: 5, fontWeight: 700, flexShrink: 0 }}
+                    onClick={() => setReferralFilter(referralFilter === "shareable_link" ? "all" : "shareable_link")}
+                    title="Filter directory to users who joined via the organization link"
+                  >
+                    <Link2 size={13} />
+                    {referralFilter === "shareable_link"
+                      ? `Showing Link Users (${linkMembers.length})`
+                      : `Filter: Joined via Link (${linkMembers.length})`}
+                  </button>
                   <div className="ta-search" style={{ flex: "1 1 180px", minWidth: 0, width: "auto" }}>
                     <Search size={14} />
                     <input
@@ -1015,8 +1101,9 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                   <select className="ta-input" style={{ width: "auto", minWidth: 120, flex: "0 1 150px" }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                     <option value="all">Any status</option>
                     <option value="active">Active</option>
+                    <option value="link_clicked">🔗 Link Clicked / Prospective</option>
+                    <option value="pending">Pending Approval</option>
                     <option value="suspended">Suspended</option>
-                    <option value="pending">Pending</option>
                   </select>
                   <select
                     className="ta-input"
@@ -1192,10 +1279,20 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           </td>
                           <td style={{ minWidth: 180 }}>
                             <div className="ta-row ta-gap10" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => setDetailMember(m)}>
-                              <Avatar initials={initials} size={34} src={m.avatar_url || undefined} />
+                              <Avatar initials={m.status === "link_clicked" ? "LV" : initials} size={34} src={m.avatar_url || undefined} />
                               <div style={{ minWidth: 130, flex: 1 }}>
-                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", whiteSpace: "normal", wordBreak: "break-word" }}>{m.display_name || "Member"}</div>
-                                <div style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "normal", wordBreak: "break-all" }}>{m.email || "No email on file"}</div>
+                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", whiteSpace: "normal", wordBreak: "break-word" }}>
+                                  {m.display_name || (m.status === "link_clicked" ? "Prospective Student" : "Member")}
+                                </div>
+                                <div style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "normal", wordBreak: "break-all", marginTop: 2 }}>
+                                  {m.email && m.email.includes("@") ? (
+                                    <span style={{ color: "var(--text-2)", fontWeight: 500 }}>{m.email}</span>
+                                  ) : (
+                                    <span style={{ color: "var(--text-3)", fontStyle: "italic" }}>
+                                      {m.status === "link_clicked" ? "None (Has not signed up yet)" : "No email on file"}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -1244,7 +1341,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           </td>
                           <td>
                             <span style={{ fontSize: 12.5, fontWeight: 500, color: m.cohort_name ? "var(--text)" : "var(--text-3)" }}>
-                              {m.cohort_name || "Not in a cohort"}
+                              {m.cohort_name || (m.status === "link_clicked" ? "Awaiting Signup" : "Not in a cohort")}
                             </span>
                           </td>
                           <td>
@@ -1253,17 +1350,31 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                             </span>
                           </td>
                           <td style={{ cursor: "pointer" }} onClick={() => setDetailMember(m)} title="Click to view detailed course breakdown & scores">
-                            <div style={{ width: "100%", maxWidth: 140 }}>
-                              <div className="ta-row ta-between" style={{ fontSize: 11, marginBottom: 4 }}>
-                                <span>Overall Progress</span>
-                                <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${m.overallProgress ? Math.round(m.overallProgress) : 0}%`}</span>
+                            {m.status === "link_clicked" ? (
+                              <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Awaiting Signup</span>
+                            ) : (
+                              <div style={{ width: "100%", maxWidth: 140 }}>
+                                <div className="ta-row ta-between" style={{ fontSize: 11, marginBottom: 4 }}>
+                                  <span>Overall Progress</span>
+                                  <span style={{ fontWeight: 700 }}>{hasProgress ? `${progress}%` : `${m.overallProgress ? Math.round(m.overallProgress) : 0}%`}</span>
+                                </div>
+                                <div style={{ width: "100%", height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
+                                  <div style={{ width: `${hasProgress ? progress : (m.overallProgress || 0)}%`, height: "100%", background: riskTone === "success" ? "#10B981" : riskTone === "warning" ? "#F59E0B" : "#EF4444", borderRadius: 4 }} />
+                                </div>
                               </div>
-                              <div style={{ width: "100%", height: 6, background: "var(--surface-2)", borderRadius: 4, overflow: "hidden" }}>
-                                <div style={{ width: `${hasProgress ? progress : (m.overallProgress || 0)}%`, height: "100%", background: riskTone === "success" ? "#10B981" : riskTone === "warning" ? "#F59E0B" : "#EF4444", borderRadius: 4 }} />
-                              </div>
-                            </div>
+                            )}
                           </td>
-                          <td><Tag tone={riskTone}>{riskLabel}</Tag></td>
+                          <td>
+                            {m.status === "link_clicked" ? (
+                              <Tag tone="warning">Link Clicked</Tag>
+                            ) : m.status === "pending" || m.status === "pending_approval" ? (
+                              <Tag tone="attention">Pending Approval</Tag>
+                            ) : m.status === "suspended" ? (
+                              <Tag tone="danger">Suspended</Tag>
+                            ) : (
+                              <Tag tone={riskTone}>{riskLabel}</Tag>
+                            )}
+                          </td>
                           <td style={{ textAlign: "right" }}>
                             <div className="ta-row ta-gap6" style={{ justifyContent: "flex-end" }}>
                               <button className="ta-btn ta-btn-outline ta-btn-sm" title="Open member record" onClick={() => setDetailMember(m)}>
@@ -1275,6 +1386,205 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                                 onClick={() => setActionsMember(m)}
                               >
                                 <MoreHorizontal size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === "link_users" && (
+          <div className="ta-col ta-gap16">
+            {/* Organization Shareable Invite & Referral Link Card */}
+            <OrganizationReferralCard
+              orgId={orgId}
+              showToast={showToast}
+              members={members}
+              referralFilter="shareable_link"
+              onToggleReferralFilter={() => {}}
+            />
+
+            {/* Link Traffic & Registration Stats Banner */}
+            <div className="ta-grid ta-grid-4 anim-stagger">
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Total Link Traffic</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#2563EB", marginTop: 4 }}>{linkMembers.length}</div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Learners &amp; prospective visitors</div>
+              </div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Active Members</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#10B981", marginTop: 4 }}>
+                  {linkMembers.filter(m => (m.status || "active") === "active").length}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Enrolled with workspace access</div>
+              </div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Pending Approval</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: joinRequests.length > 0 ? "#F59E0B" : "var(--text)", marginTop: 4 }}>
+                  {joinRequests.length}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                  {joinRequests.length > 0 ? (
+                    <button type="button" onClick={() => setTab("approvals")} style={{ background: "none", border: "none", color: "#D97706", fontWeight: 700, padding: 0, cursor: "pointer", textDecoration: "underline" }}>
+                      Review approvals &rarr;
+                    </button>
+                  ) : "All requests processed"}
+                </div>
+              </div>
+              <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
+                <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Prospective Visitors</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#6366F1", marginTop: 4 }}>
+                  {linkMembers.filter(m => m.status === "link_clicked").length}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Clicked link • awaiting signup</div>
+              </div>
+            </div>
+
+            {/* Link Users Table */}
+            <div className="ta-card" style={{ padding: 20 }}>
+              <div className="ta-row ta-between" style={{ flexWrap: "wrap", gap: 12, marginBottom: 16 }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)", display: "flex", alignItems: "center", gap: 8 }}>
+                    <Link2 size={16} color="#2563EB" /> Users Joined via Organization Link
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2 }}>
+                    Every user who clicked or signed up using your organization's unique join link. Click any user to view details or assign cohorts.
+                  </div>
+                </div>
+
+                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                  <div className="ta-search" style={{ minWidth: 220, width: "auto" }}>
+                    <Search size={14} />
+                    <input
+                      className="ta-input"
+                      style={{ border: "none", padding: 0, width: "100%" }}
+                      placeholder="Search link users..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                    />
+                  </div>
+                  <select className="ta-input" style={{ width: "auto", minWidth: 130 }} value={cohortFilter} onChange={(e) => setCohortFilter(e.target.value)}>
+                    <option value="all">All Cohorts</option>
+                    <option value="none">Not in a cohort</option>
+                    {cohorts.map((c) => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                  <select className="ta-input" style={{ width: "auto", minWidth: 120 }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                    <option value="all">Any Status</option>
+                    <option value="active">Active Members</option>
+                    <option value="link_clicked">🔗 Prospective / Link Clicked</option>
+                    <option value="pending">Pending Approval</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="ta-table-wrap">
+                <table className="ta-table">
+                  <thead>
+                    <tr>
+                      <th style={{ minWidth: 180 }}>Learner / User</th>
+                      <th>Join Source</th>
+                      <th>Status</th>
+                      <th>Role</th>
+                      <th>Date Joined / Clicked</th>
+                      <th>Cohort</th>
+                      <th style={{ minWidth: 140 }}>Course Progress</th>
+                      <th style={{ textAlign: "right" }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {membersQuery.loading && <tr><td colSpan={8} className="ta-empty">Loading link users...</td></tr>}
+                    {!membersQuery.loading && linkFilteredMembers.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="ta-empty" style={{ padding: "32px 16px", textAlign: "center" }}>
+                          <Link2 size={24} style={{ opacity: 0.35, marginBottom: 8 }} />
+                          <div style={{ fontWeight: 700, fontSize: 14 }}>No link users found matching criteria</div>
+                          <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
+                            Share your link above to invite learners and watch them appear here automatically in real time.
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    {linkFilteredMembers.map((m) => {
+                      const hasProgress = Object.prototype.hasOwnProperty.call(progressByMemberId, m.id);
+                      const progress = hasProgress ? progressByMemberId[m.id] : 0;
+                      const initials = (m.display_name || "U").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+                      return (
+                        <tr key={m.id}>
+                          <td style={{ minWidth: 180 }}>
+                            <div className="ta-row ta-gap10" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => setDetailMember(m)}>
+                              <Avatar initials={m.status === "link_clicked" ? "LV" : initials} size={34} src={m.avatar_url || undefined} />
+                              <div style={{ minWidth: 130, flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>
+                                  {m.display_name || (m.status === "link_clicked" ? "Prospective Student" : "Member")}
+                                </div>
+                                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                                  {m.email && m.email.includes("@") ? (
+                                    <span style={{ color: "var(--text-2)", fontWeight: 500 }}>{m.email}</span>
+                                  ) : (
+                                    <span style={{ color: "var(--text-3)", fontStyle: "italic" }}>
+                                      {m.status === "link_clicked" ? "None (Has not signed up yet)" : "No email on file"}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span style={{
+                              display: "inline-flex", alignItems: "center", gap: 4,
+                              fontSize: 11, fontWeight: 700, color: "#2563EB",
+                              background: "#EFF6FF", padding: "2px 7px", borderRadius: 5,
+                            }}>
+                              <Link2 size={11} /> Shareable Invite Link
+                            </span>
+                          </td>
+                          <td>
+                            {m.status === "link_clicked" ? (
+                              <Tag tone="info">🔗 Link Clicked</Tag>
+                            ) : m.status === "pending" ? (
+                              <Tag tone="warning">Pending Approval</Tag>
+                            ) : m.status === "suspended" ? (
+                              <Tag tone="danger">Suspended</Tag>
+                            ) : (
+                              <Tag tone="success">Active Member</Tag>
+                            )}
+                          </td>
+                          <td><Tag>{ROLE_LABEL[m.role] || m.role || "learner"}</Tag></td>
+                          <td style={{ fontSize: 12 }}>
+                            {m.joined_at ? new Date(m.joined_at).toLocaleDateString() : "Recently"}
+                          </td>
+                          <td>
+                            {m.cohort_name ? (
+                              <Tag tone="info">{m.cohort_name}</Tag>
+                            ) : (
+                              <span style={{ fontSize: 12, color: "var(--text-3)" }}>Not assigned</span>
+                            )}
+                          </td>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ flex: 1, height: 6, background: "var(--surface-3)", borderRadius: 3, overflow: "hidden" }}>
+                                <div style={{ height: "100%", width: `${Math.min(100, Math.max(0, progress))}%`, background: progress >= 70 ? "#10B981" : progress >= 40 ? "#F59E0B" : "#EF4444" }} />
+                              </div>
+                              <span style={{ fontSize: 11, fontWeight: 700, minWidth: 32 }}>{progress}%</span>
+                            </div>
+                          </td>
+                          <td style={{ textAlign: "right" }}>
+                            <div className="ta-row ta-gap6" style={{ justifyContent: "flex-end" }}>
+                              <button
+                                type="button"
+                                className="ta-btn ta-btn-outline ta-btn-xs"
+                                onClick={() => setDetailMember(m)}
+                              >
+                                View Record
                               </button>
                             </div>
                           </td>
@@ -1324,16 +1634,17 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                     <tr>
                       <th>Learner</th>
                       <th>Role Requested</th>
+                      <th>Join Source</th>
                       <th>Date Joined / Requested</th>
                       <th>Status</th>
                       <th style={{ textAlign: "right" }}>Decision</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {joinRequestsQuery.loading && <tr><td colSpan={5} className="ta-empty">Loading pending requests...</td></tr>}
+                    {joinRequestsQuery.loading && <tr><td colSpan={6} className="ta-empty">Loading pending requests...</td></tr>}
                     {!joinRequestsQuery.loading && joinRequests.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="ta-empty">
+                        <td colSpan={6} className="ta-empty">
                           No pending join requests. All learners have been processed!
                         </td>
                       </tr>
@@ -1355,6 +1666,19 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                         </td>
                         <td>
                           <Tag>{req.user_role || req.role || "learner"}</Tag>
+                        </td>
+                        <td>
+                          {(req.join_source || "shareable_link") === "shareable_link" ? (
+                            <span style={{
+                              display: "inline-flex", alignItems: "center", gap: 4,
+                              fontSize: 11, fontWeight: 700, color: "#2563EB",
+                              background: "#EFF6FF", padding: "2px 7px", borderRadius: 5,
+                            }}>
+                              <Link2 size={11} /> Org Link
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: 11, color: "var(--text-3)" }}>Direct</span>
+                          )}
                         </td>
                         <td>
                           {req.joined_at ? new Date(req.joined_at).toLocaleDateString() : "Recently"}
@@ -1913,7 +2237,13 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 800, fontSize: 15, overflowWrap: "anywhere" }}>{actionsMember.display_name || "Member"}</div>
-                  <div style={{ fontSize: 11.5, color: "var(--text-3)", overflowWrap: "anywhere" }}>{actionsMember.email || "No email on file"}</div>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", overflowWrap: "anywhere" }}>
+                    {actionsMember.email && actionsMember.email.includes("@")
+                      ? actionsMember.email
+                      : actionsMember.status === "link_clicked"
+                      ? "None (Has not signed up yet)"
+                      : "No email on file"}
+                  </div>
                 </div>
               </div>
               <button className="ta-btn ta-btn-ghost ta-btn-sm" onClick={() => setActionsMember(null)} aria-label="Close"><X size={16} /></button>
@@ -1992,6 +2322,11 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
         onClose={() => setDetailMember(null)}
         onChanged={refreshDirectory}
         showToast={showToast}
+        onIssueCertificate={(m) => {
+          setCertModalUser(m);
+          setCertTitle("");
+          setCertFileUrl("");
+        }}
       />
 
       <PortalModal
@@ -2153,10 +2488,24 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                 onClick={async () => {
                   setIssuingCert(true);
                   try {
-                    const result = await issueCertificateDirectly(certModalUser.user_id || certModalUser.id, orgId, certTitle.trim(), null, certFileUrl || null);
+                    const result = await issueCertificateDirectly(
+                      certModalUser.user_id || certModalUser.id,
+                      orgId,
+                      certTitle.trim(),
+                      null,
+                      certFileUrl || null,
+                      {
+                        themeId: certThemeId,
+                        presentationText: certPresentation,
+                        completionStatement: certStatement,
+                        honorsText: certHonors,
+                        signatoryName: certSignatory,
+                        recipientName: certModalUser.display_name || certModalUser.full_name || certModalUser.email || "Learner",
+                      }
+                    );
                     if (!result.success) showToast(result.error);
                     else {
-                      showToast(`Certificate issued to ${certModalUser.display_name}.`);
+                      showToast(`Certificate issued to ${certModalUser.display_name || "Learner"}.`);
                       setCertModalUser(null);
                     }
                   } finally {

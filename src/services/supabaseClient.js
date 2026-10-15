@@ -38,11 +38,29 @@ function isValidHttpUrl(string) {
   }
 }
 
-const DEFAULT_ORG_DB_URL = "https://djikuoucsuhdiyrhsduz.supabase.co";
-const DEFAULT_ORG_DB_ANON_KEY = "sb_publishable_mZQWX6ByDTehCprpYsP85g_1NCE0NIx";
+const env = (typeof import.meta !== "undefined" && import.meta.env) ? import.meta.env : (typeof process !== "undefined" && process.env ? process.env : {});
 
-const DEFAULT_SARA_URL = "https://jeobggrtxeybxvlwpxvn.supabase.co";
-const DEFAULT_SARA_ANON_KEY = "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
+const DEFAULT_ORG_DB_URL =
+  env.VITE_SUPABASE_ORGANIZATION_URL ||
+  env.VITE_SUPABASE_SHARED_URL ||
+  env.VITE_SUPABASE_URL ||
+  "https://djikuoucsuhdiyrhsduz.supabase.co";
+
+const DEFAULT_ORG_DB_ANON_KEY =
+  env.VITE_SUPABASE_ORGANIZATION_ANON_KEY ||
+  env.VITE_SUPABASE_SHARED_ANON_KEY ||
+  env.VITE_SUPABASE_ANON_KEY ||
+  "sb_publishable_mZQWX6ByDTehCprpYsP85g_1NCE0NIx";
+
+const DEFAULT_SARA_URL =
+  env.VITE_SUPABASE_SARA_URL ||
+  env.VITE_SUPABASE_URL ||
+  "https://jeobggrtxeybxvlwpxvn.supabase.co";
+
+const DEFAULT_SARA_ANON_KEY =
+  env.VITE_SUPABASE_SARA_ANON_KEY ||
+  env.VITE_SUPABASE_ANON_KEY ||
+  "sb_publishable_BvoX4QvVa1-pG6mx7NsVUQ_4GXGlwaJ";
 
 function buildClient(projectUrl, publishableKey, authOptions = {}) {
   const url = normalizeSupabaseUrl(projectUrl);

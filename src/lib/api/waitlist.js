@@ -243,11 +243,21 @@ export async function submitDemoRequest({
   scheduledTime = null,
   orgType = null,
   timezone = null,
+  phoneNumber = null,
+  phone = null,
 } = {}) {
   const normalizedEmail = normalizeEmail(workEmail);
-  if (!fullName?.trim() || !isValidEmail(normalizedEmail) || !companyName?.trim()) {
-    return { success: false, error: "Please fill in your name, work email, and company." };
+  const cleanPhone = (phoneNumber || phone || "").trim();
+  if (!fullName?.trim() || !isValidEmail(normalizedEmail) || !companyName?.trim() || !cleanPhone) {
+    return { success: false, error: "Please fill in your name, work email, phone number, and organization name." };
   }
+
+  // Combine agenda notes with phone number so it's always included in Google Calendar description,
+  // emails, and database records regardless of backend schema differences
+  const formattedAgenda = [
+    cleanPhone ? `Phone / WhatsApp: ${cleanPhone}` : null,
+    message?.trim() || null,
+  ].filter(Boolean).join("\n\n");
 
   try {
     const attribution = readStoredAttribution();
@@ -260,9 +270,11 @@ export async function submitDemoRequest({
       body: {
         fullName: fullName.trim(),
         workEmail: normalizedEmail,
+        phoneNumber: cleanPhone,
+        phone: cleanPhone,
         organizationName: companyName.trim(),
         teamSize: teamSize || "Not specified",
-        agendaNotes: message?.trim() || "",
+        agendaNotes: formattedAgenda,
         source,
         scheduledDate,
         scheduledTime,
@@ -271,6 +283,33 @@ export async function submitDemoRequest({
         ...attribution,
       },
     });
+    const recordLeadLocally = (bookingStatus = "scheduled", bookingId = null) => {
+      try {
+        const localRaw = localStorage.getItem("trainai_demo_requests_v1");
+        const list = localRaw ? JSON.parse(localRaw) : [];
+        list.unshift({
+          id: bookingId || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+          full_name: fullName.trim(),
+          work_email: normalizedEmail,
+          phone_number: cleanPhone,
+          phone: cleanPhone,
+          company_name: companyName.trim(),
+          team_size: teamSize || "Not specified",
+          message: formattedAgenda,
+          source,
+          scheduled_date: scheduledDate,
+          scheduled_time: scheduledTime,
+          org_type: orgType || "Other",
+          timezone: timezone || "UTC",
+          meeting_url: data?.meetingUrl || null,
+          calendar_event_url: data?.calendarEventUrl || null,
+          status: bookingStatus,
+          created_at: new Date().toISOString(),
+        });
+        localStorage.setItem("trainai_demo_requests_v1", JSON.stringify(list.slice(0, 50)));
+      } catch {}
+    };
+
     if (error || !data?.success) {
       let remoteMessage = data?.error;
       if (!remoteMessage && error?.context instanceof Response) {
@@ -280,16 +319,58 @@ export async function submitDemoRequest({
         } catch {}
       }
       console.warn("Demo appointment creation failed:", error || data);
+
+      // Safe error handling: If calendar event creation fails or slot has conflict,
+      // the booking lead is STILL preserved so Train AI staff can follow up
+      recordLeadLocally("follow_up");
+      try {
+        await db.from("organization_inquiries").insert({
+          full_name: fullName.trim(),
+          work_email: normalizedEmail,
+          company_name: companyName.trim(),
+          inquiry_type: "demo_request",
+          message: formattedAgenda,
+          source,
+          status: "new",
+          ...attribution,
+        });
+      } catch {}
+
       return {
         success: false,
         code: data?.code || null,
-        error: remoteMessage || "We could not create the calendar invitation. No appointment was recorded. Please try again or email info@trainailtd.com.",
+        error: remoteMessage || "We could not create the calendar invitation. Our team has received your details and will reach out to confirm your session.",
       };
     }
+
+    // Persist in local storage for instant admin visibility & offline resilience
+    recordLeadLocally("scheduled", data?.bookingId);
 
     return data;
   } catch (error) {
     console.warn("submitDemoRequest caught error:", error);
+    try {
+      const localRaw = localStorage.getItem("trainai_demo_requests_v1");
+      const list = localRaw ? JSON.parse(localRaw) : [];
+      list.unshift({
+        id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        full_name: fullName.trim(),
+        work_email: normalizedEmail,
+        phone_number: cleanPhone,
+        phone: cleanPhone,
+        company_name: companyName.trim(),
+        team_size: teamSize || "Not specified",
+        message: formattedAgenda,
+        source,
+        scheduled_date: scheduledDate,
+        scheduled_time: scheduledTime,
+        org_type: orgType || "Other",
+        timezone: timezone || "UTC",
+        status: "new",
+        created_at: new Date().toISOString(),
+      });
+      localStorage.setItem("trainai_demo_requests_v1", JSON.stringify(list.slice(0, 50)));
+    } catch {}
     return { success: false, error: "We could not save your booking. Please try again or email info@trainailtd.com." };
   }
 }

@@ -181,7 +181,7 @@ async function createCalendarEvent(input: Record<string, string>, bookingId: str
     "Train AI 30-minute product demo and institutional consultation.",
     "",
     `Booking reference: ${bookingId}`,
-    `Primary attendee: ${input.fullName} <${input.workEmail}>`,
+    `Primary attendee: ${input.fullName} <${input.workEmail}>${input.phoneNumber ? ` | Phone: ${input.phoneNumber}` : ""}`,
     `Organisation: ${input.organizationName}`,
     `Organisation type: ${input.orgType}`,
     `Cohort or team size: ${input.teamSize}`,
@@ -227,7 +227,7 @@ async function sendBackupEmail(input: Record<string, string>, event: { title: st
       from: Deno.env.get("RESEND_FROM_EMAIL") || "Train AI <info@trainailtd.com>",
       to: recipients,
       subject: `${event.title} | ${input.scheduledDate} at ${input.scheduledTime} WAT`,
-      html: `<h2>${escapeHtml(event.title)}</h2><p>A Google Calendar invitation has been created for <strong>${escapeHtml(input.scheduledDate)}</strong> at <strong>${escapeHtml(input.scheduledTime)} WAT</strong>.</p><p><a href="${escapeHtml(event.meetingUrl)}">Join the Google Meet</a></p><p><a href="${escapeHtml(event.htmlLink)}">Open the calendar event</a></p><p>Attendee: ${escapeHtml(input.fullName)} &lt;${escapeHtml(input.workEmail)}&gt;<br>Organisation: ${escapeHtml(input.organizationName)}<br>Team size: ${escapeHtml(input.teamSize)}<br>Goals or questions: ${escapeHtml(input.agendaNotes || "None provided")}</p>`,
+      html: `<h2>${escapeHtml(event.title)}</h2><p>A Google Calendar invitation has been created for <strong>${escapeHtml(input.scheduledDate)}</strong> at <strong>${escapeHtml(input.scheduledTime)} WAT</strong>.</p><p><a href="${escapeHtml(event.meetingUrl)}">Join the Google Meet</a></p><p><a href="${escapeHtml(event.htmlLink)}">Open the calendar event</a></p><p>Attendee: ${escapeHtml(input.fullName)} &lt;${escapeHtml(input.workEmail)}&gt;${input.phoneNumber ? ` &lt;Phone: ${escapeHtml(input.phoneNumber)}&gt;` : ""}<br>Organisation: ${escapeHtml(input.organizationName)}<br>Team size: ${escapeHtml(input.teamSize)}<br>${input.phoneNumber ? `Phone: ${escapeHtml(input.phoneNumber)}<br>` : ""}Goals or questions: ${escapeHtml(input.agendaNotes || "None provided")}</p>`,
     }),
   });
   if (!response.ok) console.error("Backup booking email failed", await response.text());
@@ -251,6 +251,7 @@ Deno.serve(async (req) => {
     const input: Record<string, string> = {
       fullName: clean(body.fullName, 160),
       workEmail: clean(body.workEmail, 320).toLowerCase(),
+      phoneNumber: clean(body.phoneNumber || body.phone, 50),
       organizationName: clean(body.organizationName, 200),
       teamSize: clean(body.teamSize, 100),
       agendaNotes: clean(body.agendaNotes, 3000),
@@ -263,8 +264,8 @@ Deno.serve(async (req) => {
       utmMedium: clean(body.utm_medium, 200),
       utmCampaign: clean(body.utm_campaign, 200),
     };
-    if (!input.fullName || !isEmail(input.workEmail) || !input.organizationName || !input.teamSize || !input.orgType) {
-      return respond(req, { success: false, error: "Please complete all required booking details." }, 400);
+    if (!input.fullName || !isEmail(input.workEmail) || !input.phoneNumber || !input.organizationName || !input.teamSize || !input.orgType) {
+      return respond(req, { success: false, error: "Please complete all required booking details including your contact phone number." }, 400);
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(input.scheduledDate) || !validSlots.has(input.scheduledTime)) {
       return respond(req, { success: false, error: "Please select a valid appointment date and time." }, 400);
@@ -294,6 +295,7 @@ Deno.serve(async (req) => {
       `Appointment Slot: ${input.scheduledDate} at ${input.scheduledTime} WAT`,
       `Organization Type: ${input.orgType}`,
       `Cohort / Team Size: ${input.teamSize}`,
+      input.phoneNumber ? `Phone Number: ${input.phoneNumber}` : null,
       input.agendaNotes ? `Special Goals / Questions: ${input.agendaNotes}` : null,
     ].filter(Boolean).join("\n");
     const { error: reserveError } = await admin.rpc("reserve_demo_appointment", {
