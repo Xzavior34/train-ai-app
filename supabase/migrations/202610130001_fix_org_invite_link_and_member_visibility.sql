@@ -6,9 +6,13 @@
 -- organization admins in People & Access (both active Directory and Pending Approvals).
 -- ============================================================================
 
+-- Remove the older enum-typed overload. Keeping both the enum and text
+-- variants makes PostgREST unable to choose reliably from a JSON string.
+DROP FUNCTION IF EXISTS public.join_organization_by_invite(text, public.platform_role);
+
 CREATE OR REPLACE FUNCTION public.join_organization_by_invite(
   p_org_target text,
-  p_role text DEFAULT 'learner'
+  p_role text
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -32,6 +36,21 @@ BEGIN
   IF v_clean_input = '' THEN
     RETURN jsonb_build_object('success', false, 'error', 'Organization identifier is required');
   END IF;
+
+  -- A fresh auth.users account may not have a profile yet. The membership
+  -- table references user_profiles, so materialize the safe learner profile
+  -- before attempting an organization or cohort relationship.
+  INSERT INTO public.user_profiles (id, display_name)
+  SELECT
+    au.id,
+    COALESCE(
+      NULLIF(trim(au.raw_user_meta_data ->> 'full_name'), ''),
+      NULLIF(trim(au.raw_user_meta_data ->> 'name'), ''),
+      split_part(au.email, '@', 1)
+    )
+  FROM auth.users au
+  WHERE au.id = v_user_id
+  ON CONFLICT (id) DO NOTHING;
 
   -- Resolve organization by UUID, slug, name, or common aliases
   SELECT *
@@ -195,6 +214,18 @@ BEGIN
   IF auth.role() <> 'service_role' AND auth.uid() IS DISTINCT FROM p_user_id THEN
     RAISE EXCEPTION 'Not authorized to record this organization join';
   END IF;
+
+  INSERT INTO public.user_profiles (id, display_name)
+  SELECT
+    au.id,
+    COALESCE(
+      NULLIF(trim(au.raw_user_meta_data ->> 'full_name'), ''),
+      NULLIF(trim(au.raw_user_meta_data ->> 'name'), ''),
+      split_part(au.email, '@', 1)
+    )
+  FROM auth.users au
+  WHERE au.id = p_user_id
+  ON CONFLICT (id) DO NOTHING;
 
   SELECT *
   INTO v_org

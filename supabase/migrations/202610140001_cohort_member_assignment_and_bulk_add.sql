@@ -130,9 +130,12 @@ BEGIN
 END;
 $$;
 
--- Grant execute permissions to authenticated users (functions handle authorization internally)
-GRANT EXECUTE ON FUNCTION public.find_cohort_user_by_email(uuid, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.add_cohort_member_by_email(uuid, text, uuid) TO authenticated;
+-- SECURITY DEFINER functions must not retain PostgreSQL's default PUBLIC
+-- execute privilege. Authorization is enforced inside each function too.
+REVOKE ALL ON FUNCTION public.find_cohort_user_by_email(uuid, text) FROM public, anon;
+REVOKE ALL ON FUNCTION public.add_cohort_member_by_email(uuid, text, uuid) FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.find_cohort_user_by_email(uuid, text) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.add_cohort_member_by_email(uuid, text, uuid) TO authenticated, service_role;
 
 -- 3. Update cohort_members RLS write policy to allow organization admins/managers
 DROP POLICY IF EXISTS cm_write_admin ON public.cohort_members;
