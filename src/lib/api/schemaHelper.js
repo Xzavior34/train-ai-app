@@ -1754,9 +1754,19 @@ export async function createStudyGroup({ organizationId, name, description, cour
 
   if (!orgId || !isRealDatabaseId(orgId)) {
     try {
-      const { data: defOrg } = await supabase.from("organizations").select("id").eq("slug", "tech-learning").maybeSingle();
-      orgId = defOrg?.id || null;
+      const { data: memberships } = await supabase
+        .from("organization_members")
+        .select("organization_id, joined_at")
+        .eq("user_id", actualCreatedBy)
+        .eq("status", "active")
+        .order("joined_at", { ascending: false, nullsFirst: false })
+        .limit(1);
+      orgId = memberships?.[0]?.organization_id || null;
     } catch { /* ignore */ }
+  }
+
+  if (!orgId || !isRealDatabaseId(orgId)) {
+    throw new Error("Your organization membership is not active yet. Ask an administrator to approve your account before creating a study group.");
   }
 
   const insertPayload = {

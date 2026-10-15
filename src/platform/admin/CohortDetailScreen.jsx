@@ -403,14 +403,20 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
   // --- Members ---
   const [addUserId, setAddUserId] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
   const [bulkEmails, setBulkEmails] = useState("");
   const [bulkAdding, setBulkAdding] = useState(false);
   async function handleAddMember() {
     if (!addUserId || !cohortId) return;
-    await addCohortMember({ cohortId, userId: addUserId, addedBy: currentUserId });
-    setAddUserId("");
-    detailQuery.refetch();
-    showToast("Member added to cohort");
+    try {
+      await addCohortMember({ cohortId, userId: addUserId, addedBy: currentUserId });
+      setAddUserId("");
+      setMemberSearch("");
+      await Promise.all([detailQuery.refetch(), orgUsersQuery.refetch()]);
+      showToast("Member added to cohort");
+    } catch (error) {
+      showToast(error?.message || "Could not add this member to the cohort.");
+    }
   }
 
   async function handleRemoveMember(memberRowId, name) {
@@ -600,13 +606,31 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
             {tab === "members" && (
               <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
+                <div className="ta-label">Find an organization member</div>
+                <input
+                  className="ta-input ta-mt8"
+                  style={{ width: "100%", marginBottom: 8 }}
+                  value={memberSearch}
+                  onChange={(event) => setMemberSearch(event.target.value)}
+                  placeholder="Search by name or email"
+                />
                 <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
                   <select className="ta-input" style={{ flex: 1, minWidth: 200 }} value={addUserId} onChange={(e) => setAddUserId(e.target.value)}>
                     <option value="">Add a member from org...</option>
-                    {availableUsers.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                    {availableUsers
+                      .filter((user) => {
+                        const needle = memberSearch.trim().toLowerCase();
+                        return !needle || `${user.name || ""} ${user.email || ""}`.toLowerCase().includes(needle);
+                      })
+                      .map((u) => <option key={u.id} value={u.id}>{u.name}{u.email ? ` (${u.email})` : ""}</option>)}
                   </select>
                   <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAddMember} disabled={!addUserId}><Plus size={14} /> Add</button>
                 </div>
+                {availableUsers.length === 0 && !orgUsersQuery.loading && (
+                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 8 }}>
+                    No approved organization members are available. New sign-ups must be approved in People &amp; Access before they can be added to a cohort.
+                  </div>
+                )}
                 <div className="ta-mt12">
                   <div className="ta-label">Bulk add by email</div>
                   <textarea

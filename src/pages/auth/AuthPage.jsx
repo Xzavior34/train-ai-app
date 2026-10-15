@@ -627,6 +627,17 @@ export default function AuthPage({
                   </div>
                 )}
 
+                {!forgotResult.emailSent && !forgotResult.rateLimited && (
+                  <div style={{ padding: "14px", background: "#FFF7ED", border: "1px solid #FED7AA", borderRadius: 8, marginBottom: 14 }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                      <Clock size={18} color="#C2410C" style={{ flexShrink: 0, marginTop: 1 }} />
+                      <div style={{ fontSize: 12.5, color: "#9A3412", lineHeight: 1.45 }}>
+                        <strong>Email delivery could not be confirmed.</strong> Check the address, then use Resend email below. If the message still does not arrive, contact <a href="mailto:info@trainailtd.com" style={{ color: "#9A3412", fontWeight: 700 }}>info@trainailtd.com</a>.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Instant Recovery Action Link or OTP Code if generated */}
                 {forgotResult.actionLink && (
                   <div style={{ marginBottom: 14 }}>

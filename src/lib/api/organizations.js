@@ -1269,22 +1269,29 @@ export async function fetchPendingOrgJoinRequests(orgId) {
     if (!memberRows || !memberRows.length) return [];
 
     const userIds = memberRows.map((m) => m.user_id).filter(Boolean);
-    const { data: profiles, error: profErr } = await supabase
-      .from("user_profiles")
-      .select("id, display_name, email, avatar_url, role")
-      .in("id", userIds);
+    const [{ data: directoryRows, error: directoryErr }, { data: profiles, error: profErr }] = await Promise.all([
+      supabase.rpc("list_organization_users", { p_organization_id: orgId }),
+      supabase
+        .from("user_profiles")
+        .select("id, display_name, avatar_url, role")
+        .in("id", userIds),
+    ]);
 
     if (profErr) throw profErr;
     const profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+    const directoryMap = directoryErr
+      ? {}
+      : Object.fromEntries((directoryRows || []).map((row) => [row.user_id, row]));
 
     return memberRows.map((m) => {
       const p = profileMap[m.user_id] || {};
+      const directory = directoryMap[m.user_id] || {};
       return {
         ...m,
-        display_name: p.display_name || "Learner",
-        email: p.email || "No email on file",
+        display_name: directory.display_name || p.display_name || directory.email || "Learner",
+        email: directory.email || null,
         avatar_url: p.avatar_url || null,
-        user_role: p.role || m.role || "learner",
+        user_role: directory.role || p.role || m.role || "learner",
         join_source: m.join_source || (m.invited_by ? "email_invite" : "shareable_link"),
         referral_link: m.referral_link || getOrganizationJoinUrl(orgId)
       };

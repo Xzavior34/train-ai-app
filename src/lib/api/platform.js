@@ -234,12 +234,44 @@ export async function fetchOrgMembers(organizationId) {
       },
     ];
   }
-  let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
-  if (organizationId && organizationId !== "demo-org-id") query = query.eq("organization_id", organizationId);
-  const { data, error } = await query;
-  if (error) throw error;
-  const profiles = data || [];
+  const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
+  let directoryRows = [];
+  if (orgFilter) {
+    const { data: rpcRows, error: rpcError } = await supabase.rpc("list_organization_users", {
+      p_organization_id: orgFilter,
+    });
+    if (!rpcError) directoryRows = rpcRows || [];
+  }
+
+  let profiles = [];
+  if (directoryRows.length) {
+    profiles = await safeInQuery("user_profiles", "*", "id", directoryRows.map((row) => row.user_id));
+  } else {
+    let membershipRows = [];
+    if (orgFilter) {
+      const { data: memberships, error: membershipError } = await supabase
+        .from("organization_members")
+        .select("user_id, organization_id, status, joined_at, invited_at")
+        .eq("organization_id", orgFilter);
+      if (!membershipError) membershipRows = memberships || [];
+    }
+    if (membershipRows.length) {
+      directoryRows = membershipRows.map((row) => ({
+        ...row,
+        member_status: row.status,
+      }));
+      profiles = await safeInQuery("user_profiles", "*", "id", membershipRows.map((row) => row.user_id));
+    } else {
+      let query = supabase.from("user_profiles").select("*").order("last_active_at", { ascending: false });
+      if (orgFilter) query = query.eq("organization_id", orgFilter);
+      const { data, error } = await query;
+      if (error) throw error;
+      profiles = data || [];
+    }
+  }
   if (!profiles.length) return profiles;
+
+  const directoryByUserId = Object.fromEntries(directoryRows.map((row) => [row.user_id, row]));
 
   const userIds = profiles.map((p) => p.id);
   const [memberRows, orgMemberRows, { data: orgRows }] = await Promise.all([
@@ -271,14 +303,14 @@ export async function fetchOrgMembers(organizationId) {
   });
 
   return profiles.map((p) => {
+    const directory = directoryByUserId[p.id] || null;
     const om = orgMemberByUserId[p.id] || null;
-    const effectiveOrgId = p.organization_id || om?.organization_id || organizationId || null;
+    const effectiveOrgId = directory?.organization_id || om?.organization_id || p.organization_id || organizationId || null;
     const orgObj = effectiveOrgId ? orgById[effectiveOrgId] : null;
     const isSara =
       effectiveOrgId === "sara-org-1" ||
       String(orgObj?.slug || orgObj?.name || p.organization || "").toLowerCase().includes("sara");
-    const defaultDomain = isSara ? "sarafoundationafrica.com" : "trainailtd.com";
-    const email = p.email || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@${defaultDomain}` : null);
+    const email = directory?.email || p.email || null;
     const cohortNames = cohortNamesByUserId[p.id] || [];
     const orgSlug =
       orgObj?.slug ||
@@ -290,6 +322,7 @@ export async function fetchOrgMembers(organizationId) {
 
     const joinedAt =
       p.joined_at ||
+      directory?.joined_at ||
       om?.joined_at ||
       om?.invited_at ||
       p.created_at ||
@@ -309,7 +342,7 @@ export async function fetchOrgMembers(organizationId) {
     return {
       ...p,
       email,
-      status: p.status || om?.status || "active",
+      status: directory?.member_status || om?.status || p.status || "active",
       joined_at: joinedAt,
       created_at: p.created_at || joinedAt,
       organization_id: effectiveOrgId,
@@ -333,14 +366,60 @@ export async function fetchUsersInOrg(organizationId) {
     ];
   }
   const orgFilter = (organizationId && organizationId !== "demo-org-id") ? organizationId : null;
-  let query = supabase
-    .from("user_profiles")
-    .select("id, display_name")
-    .order("display_name", { ascending: true });
+
+  // Prefer the authorized directory RPC. It reads active organization
+  // membership as the source of truth and includes real Auth emails without
+  // exposing another organization's users. The direct profile query below is
+  // retained for deployments that have not received the sync migration yet.
+  if (orgFilter) {
+    const { data: directoryRows, error: directoryError } = await supabase.rpc("list_organization_users", {
+      p_organization_id: orgFilter,
+    });
+    if (!directoryError) {
+      return (directoryRows || [])
+        .filter((row) => !row.member_status || row.member_status === "active")
+        .map((row) => {
+          const name = row.display_name || row.email || "Unnamed user";
+          return {
+            id: row.user_id,
+            name,
+            email: row.email || null,
+            role: row.role || "learner",
+            status: row.member_status || "active",
+            initials: name.split(" ").map((word) => word[0]).join("").slice(0, 2).toUpperCase(),
+          };
+        });
+    }
+  }
+
+  if (orgFilter) {
+    const { data: membershipRows, error: membershipError } = await supabase
+      .from("organization_members")
+      .select("user_id, status")
+      .eq("organization_id", orgFilter)
+      .eq("status", "active");
+    if (!membershipError && membershipRows?.length) {
+      const profiles = await safeInQuery("user_profiles", "id, display_name, role", "id", membershipRows.map((row) => row.user_id));
+      return profiles.map((user) => ({
+        id: user.id,
+        name: user.display_name || "Unnamed user",
+        role: user.role || "learner",
+        status: "active",
+        initials: (user.display_name || "U").split(" ").map((word) => word[0]).join("").slice(0, 2).toUpperCase(),
+      }));
+    }
+  }
+
+  let query = supabase.from("user_profiles").select("id, display_name, role").order("display_name", { ascending: true });
   if (orgFilter) query = query.eq("organization_id", orgFilter);
   const { data, error } = await query;
   if (error) throw error;
-  return (data || []).map(u => ({ id: u.id, name: u.display_name || "Unnamed user", initials: (u.display_name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() }));
+  return (data || []).map((user) => ({
+    id: user.id,
+    name: user.display_name || "Unnamed user",
+    role: user.role || "learner",
+    initials: (user.display_name || "U").split(" ").map((word) => word[0]).join("").slice(0, 2).toUpperCase(),
+  }));
 }
 
 export async function fetchOrgMembersWithStatus() {
@@ -1970,7 +2049,10 @@ export async function addCohortMember({ cohortId, userId, addedBy }) {
   if (!supabase || !cohortId || !userId) return null;
   const { data, error } = await supabase
     .from("cohort_members")
-    .insert({ cohort_id: cohortId, user_id: userId, added_by: addedBy || null })
+    .upsert(
+      { cohort_id: cohortId, user_id: userId, added_by: addedBy || null },
+      { onConflict: "cohort_id,user_id" }
+    )
     .select()
     .single();
   if (error) throw error;
@@ -1985,12 +2067,24 @@ export async function addCohortMember({ cohortId, userId, addedBy }) {
 // the caller can see exactly which ones failed and why.
 export async function bulkAddCohortMembersByEmail(cohortId, emails, addedBy) {
   if (!supabase) return { success: false, error: "Not available in demo mode.", added: [], failed: [] };
+  const { data: cohort, error: cohortError } = await supabase
+    .from("cohorts")
+    .select("organization_id")
+    .eq("id", cohortId)
+    .maybeSingle();
+  if (cohortError || !cohort?.organization_id) {
+    return { success: false, error: cohortError?.message || "Cohort organization could not be resolved.", added: [], failed: [] };
+  }
   const list = (emails || "").split(",").map((e) => e.trim()).filter(Boolean);
   const added = [];
   const failed = [];
   for (const email of list) {
     try {
-      const userId = await findUserIdByEmail(email);
+      const { data: userId, error: lookupError } = await supabase.rpc("find_organization_user_by_email", {
+        p_organization_id: cohort.organization_id,
+        p_email: email,
+      });
+      if (lookupError) throw lookupError;
       if (!userId) { failed.push({ email, reason: "No account found with this email" }); continue; }
       await addCohortMember({ cohortId, userId, addedBy });
       added.push(email);
@@ -2505,8 +2599,9 @@ export async function sendBroadcastEmail({ recipientGroup, specificEmail, subjec
 // that could silently notify the wrong set of people.
 export async function fetchUserIdByEmail(email) {
   if (!supabase || !email) return null;
-  const { data } = await supabase.from("user_profiles").select("id").eq("email", email.trim()).maybeSingle();
-  return data?.id || null;
+  const { data, error } = await supabase.rpc("find_user_id_by_email", { p_email: email.trim() });
+  if (error) throw error;
+  return data || null;
 }
 
 export async function createInAppNotificationsForUsers(userIds, { title, message, actionUrl } = {}) {

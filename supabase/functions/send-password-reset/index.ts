@@ -81,7 +81,11 @@ Deno.serve(async (req) => {
     const { data, error } = await admin.auth.admin.generateLink({ type: "recovery", email, options: { redirectTo } });
     if (error) {
       const unknownUser = /not found|does not exist/i.test(error.message || "");
-      if (unknownUser) return respond({ success: true, emailSent: true, rateLimited: false });
+      // Keep the public response neutral without claiming that this project
+      // delivered mail. The browser checks both Auth projects, and treating an
+      // unknown account as delivered can hide a real delivery failure from the
+      // project that actually owns the user.
+      if (unknownUser) return respond({ success: true, emailSent: false, rateLimited: false });
       return respond({ success: false, emailSent: false, rateLimited: false, error: "Recovery could not be started. Please try again." }, 400);
     }
 
