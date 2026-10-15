@@ -595,33 +595,10 @@ export function useAuth() {
     let rateLimited = false;
     let lastError = null;
 
-    const edgeResults = await Promise.allSettled(resetClients.map((client) =>
-      client.functions.invoke("send-password-reset", {
-        body: { email: normalizedEmail, redirectTo: targetRedirectUrl }
-      })
-    ));
-    const edgeSuccess = edgeResults.find((result) =>
-      result.status === "fulfilled" && !result.value?.error && result.value?.data?.emailSent === true
-    );
-    rateLimited = edgeResults.some((result) =>
-      result.status === "fulfilled" && result.value?.data?.rateLimited === true
-    );
-    if (edgeSuccess) {
-      const data = edgeSuccess.value?.data;
-      return {
-        success: true,
-        emailSent: Boolean(data?.emailSent),
-        rateLimited: false,
-        otp: data?.otp || null,
-        actionLink: data?.actionLink || null,
-        email: normalizedEmail,
-        viaResend: true
-      };
-    }
-
-    // If a custom mail function is unavailable, ask both Auth projects to
-    // dispatch their standard recovery email. Their neutral response keeps
-    // account existence private while ensuring the owning project is tried.
+    // Use the native Auth recovery endpoint until the corrected custom edge
+    // function has been deployed to both live projects. The currently deployed
+    // legacy function can expose recovery material in its public response, so
+    // the browser must not call it.
     for (const client of resetClients) {
       try {
         const resetRes = await client.auth.resetPasswordForEmail(normalizedEmail, { redirectTo: targetRedirectUrl });
