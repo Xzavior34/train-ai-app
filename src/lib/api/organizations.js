@@ -617,11 +617,15 @@ export async function fetchAvailableOrganizations(searchQuery = "") {
           const mapKey = normalizeKey(row);
           const existing = mergedByKey.get(mapKey);
           if (existing) {
+            const belongsToSameProject = !existing.projectKey || existing.projectKey === projectKey;
             mergedByKey.set(mapKey, {
               ...existing,
-              id: row.id || existing.id,
+              // Never replace a canonical entry with a UUID sourced from a
+              // different Supabase project. UUIDs only have meaning inside
+              // the database that issued them.
+              id: belongsToSameProject ? (row.id || existing.id) : existing.id,
               logo_url: row.logo_url || existing.logo_url || null,
-              slug: row.slug || existing.slug,
+              slug: belongsToSameProject ? (row.slug || existing.slug) : existing.slug,
               isExisting: true,
             });
           } else {

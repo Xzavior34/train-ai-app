@@ -512,7 +512,10 @@ export default function AuthPage({
         const joinTarget = matchedOrg?.slug || matchedOrg?.id || targetOrgTarget;
         const orgMeta = joinTarget ? {
           organization: orgInfo?.name || matchedOrg?.name || joinTarget,
-          organization_id: orgInfo?.id || matchedOrg?.id || joinTarget,
+          // Organization UUIDs are project-local. Persist the stable slug so
+          // the destination project's bootstrap trigger can resolve its own
+          // tenant row instead of receiving an ID from the other database.
+          organization_id: orgInfo?.slug || matchedOrg?.slug || joinTarget,
           organization_slug: orgInfo?.slug || matchedOrg?.slug || joinTarget,
           join_source: "shareable_link",
           referral_link: `${typeof window !== "undefined" ? window.location.origin : "https://trainailtd.com"}/?join=${encodeURIComponent(orgInfo?.slug || matchedOrg?.slug || joinTarget)}`
