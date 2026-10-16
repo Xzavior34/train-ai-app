@@ -346,7 +346,14 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
   const [tab, setTab] = useState("members");
 
   const detailQuery = useSupabaseQuery(async () => (cohortId ? fetchCohortDetail(cohortId) : null), [cohortId]);
-  const orgUsersQuery = useSupabaseQuery(async () => fetchUsersInOrg(orgId || "demo-org-id"), [orgId]);
+  // Sara's directory deliberately includes learners who selected the
+  // organization during signup but have not been assigned to a cohort yet.
+  // Keep those candidates in the cohort picker; the atomic assignment RPC
+  // activates their Sara membership when the admin adds them.
+  const orgUsersQuery = useSupabaseQuery(
+    async () => fetchUsersInOrg(orgId || "demo-org-id", { includeCandidates: true }),
+    [orgId],
+  );
   const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
 
   const detail = detailQuery.data;

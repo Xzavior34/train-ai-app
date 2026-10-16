@@ -592,7 +592,7 @@ export async function fetchOrgMembers(organizationId) {
   });
 }
 
-export async function fetchUsersInOrg(organizationId) {
+export async function fetchUsersInOrg(organizationId, { includeCandidates = false } = {}) {
   const roster = getReferralSignupsRoster(organizationId);
   const clicks = getLinkClicksRoster(organizationId);
   const rosterMapped = [
@@ -635,7 +635,8 @@ export async function fetchUsersInOrg(organizationId) {
       for (const m of members) {
         const id = m.id || m.user_id;
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id || ""));
-        if (!id || !isUuid || seen.has(id) || (m.status && m.status !== "active")) continue;
+        const isAssignableCandidate = includeCandidates && m.status === "pending";
+        if (!id || !isUuid || seen.has(id) || (m.status && m.status !== "active" && !isAssignableCandidate)) continue;
         seen.add(id);
         const name = m.display_name || m.name || (m.email ? m.email.split("@")[0].replace(/[._-]/g, " ") : "Learner");
         const email = m.email || "";
