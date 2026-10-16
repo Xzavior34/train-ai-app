@@ -2484,50 +2484,18 @@ export async function bulkAddCohortMembersByEmail(cohortId, emails, addedBy) {
     return { success: false, error: "No valid email addresses provided.", added: [], failed: [] };
   }
 
-  const { data: cohort, error: cohortError } = await supabase
-    .from("cohorts")
-    .select("organization_id")
-    .eq("id", cohortId)
-    .maybeSingle();
-  if (cohortError || !cohort?.organization_id) {
-    return {
-      success: false,
-      error: cohortError?.message || "Cohort organization could not be resolved.",
-      added: [],
-      failed: [],
-    };
-  }
-
-  const orgMembers = await fetchOrgMembers(cohort.organization_id).catch(() => []);
-  const memberByEmail = new Map();
-  for (const m of orgMembers) {
-    const id = m.id || m.user_id;
-    if (m.email && id && (!m.status || m.status === "active")) {
-      memberByEmail.set(m.email.toLowerCase().trim(), id);
-    }
-  }
-
   const added = [];
   const failed = [];
 
   for (const email of uniqueEmails) {
     try {
-      let userId = memberByEmail.get(email) || null;
-      if (!userId) {
-        const { data: scopedUserId, error: lookupError } = await supabase.rpc("find_organization_user_by_email", {
-          p_organization_id: cohort.organization_id,
-          p_email: email,
-        });
-        if (lookupError) throw lookupError;
-        userId = scopedUserId || null;
-      }
-
-      if (!userId) {
-        failed.push({ email, reason: "No approved account with this email was found in the organization." });
-        continue;
-      }
-
-      await addCohortMember({ cohortId, userId, addedBy });
+      const { data: result, error } = await supabase.rpc("add_cohort_member_by_email", {
+        p_cohort_id: cohortId,
+        p_email: email,
+        p_added_by: addedBy || null,
+      });
+      if (error) throw error;
+      if (!result?.success) throw new Error(result?.error || "Could not add this learner to the cohort.");
       added.push(email);
     } catch (e) {
       failed.push({ email, reason: e?.message || "Could not add this member to the cohort" });
@@ -5325,24 +5293,14 @@ export function buildInvitationLink(invitation) {
 export async function assignMemberToCohort(userId, cohortId, addedBy, { exclusive = true } = {}) {
   if (!supabase || !userId || !cohortId) return { success: false, error: "Missing member or cohort." };
   try {
-    const { data: existing } = await supabase.from("cohort_members").select("id, cohort_id").eq("user_id", userId);
-    if ((existing || []).some((r) => r.cohort_id === cohortId)) return { success: true, alreadyMember: true };
-    if (exclusive) {
-      for (const row of existing || []) {
-        await supabase.from("cohort_members").delete().eq("id", row.id);
-      }
-    }
-    const isValidUuid = addedBy && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(addedBy));
-    const { error } = await supabase
-      .from("cohort_members")
-      .insert({ cohort_id: cohortId, user_id: userId, added_by: isValidUuid ? addedBy : null });
-    if (error) {
-      if (error.code === "23505" || error.message?.includes("unique") || error.message?.includes("duplicate")) {
-        return { success: true, alreadyMember: true };
-      }
-      throw error;
-    }
-    return { success: true };
+    const { data: result, error } = await supabase.rpc("assign_user_to_cohort", {
+      p_cohort_id: cohortId,
+      p_user_id: userId,
+      p_exclusive: Boolean(exclusive),
+    });
+    if (error) throw error;
+    if (!result?.success) throw new Error(result?.error || "Could not assign this learner to the cohort.");
+    return result;
   } catch (e) {
     return { success: false, error: e?.message || "Could not assign this member to the cohort." };
   }
