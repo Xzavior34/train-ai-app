@@ -166,6 +166,14 @@ export function useAuth() {
 
       if (resolvedSession) {
         setActiveSupabaseProject(resolvedProject || resolveProjectForSignIn(resolvedSession.user?.email));
+        // Legacy accounts can have a valid Auth session and profile but no
+        // organization membership. Repair that gap before the learner app
+        // starts its organization-scoped queries (courses, cohorts, groups).
+        await joinDefaultOrganization({
+          userId: resolvedSession.user?.id,
+          email: resolvedSession.user?.email,
+          displayName: resolvedSession.user?.user_metadata?.display_name,
+        });
         setSession(resolvedSession);
         safeStorage.setItem(AUTH_STORAGE_KEY, resolvedSession);
       } else {
@@ -312,6 +320,11 @@ export function useAuth() {
 
       if (activeSupaRes?.data?.session) {
         setActiveSupabaseProject(successfulProject);
+        await joinDefaultOrganization({
+          userId: activeSupaRes.data.session.user?.id,
+          email: activeSupaRes.data.session.user?.email,
+          displayName: activeSupaRes.data.session.user?.user_metadata?.display_name,
+        });
         resetPasswordRateLimit(normalizedEmail);
         setSession(activeSupaRes.data.session);
         safeStorage.setItem(AUTH_STORAGE_KEY, activeSupaRes.data.session);

@@ -46,11 +46,8 @@ function safeRedirect(value: unknown) {
   }
 }
 
-function resetEmail(email: string, actionLink: string, otp: string) {
-  const code = otp
-    ? `<p style="font-size:13px;color:#475569;margin-top:24px">Or enter this recovery code:</p><p style="font-size:28px;font-weight:800;letter-spacing:.2em;color:#2563eb">${otp}</p>`
-    : "";
-  return `<!doctype html><html><body style="margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px"><table width="100%" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:14px"><tr><td style="padding:32px"><p style="font-size:22px;font-weight:800;margin:0 0 24px">TRAIN<span style="color:#2563eb">AI</span></p><h1 style="font-size:24px;margin:0 0 12px">Reset your password</h1><p style="line-height:1.6;color:#475569">A password reset was requested for ${email}. Use the secure button below within 60 minutes.</p><p style="margin:28px 0"><a href="${actionLink}" style="background:#2563eb;color:#fff;padding:14px 24px;border-radius:9px;text-decoration:none;font-weight:700">Choose a new password</a></p>${code}<p style="font-size:13px;line-height:1.6;color:#64748b">If you did not request this, you can ignore this email. Need help? Contact info@trainailtd.com.</p></td></tr></table></td></tr></table></body></html>`;
+function resetEmail(email: string, actionLink: string) {
+  return `<!doctype html><html><body style="margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px"><table width="100%" style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:14px"><tr><td style="padding:32px"><p style="font-size:22px;font-weight:800;margin:0 0 24px">TRAIN<span style="color:#2563eb">AI</span></p><h1 style="font-size:24px;margin:0 0 12px">Reset your password</h1><p style="line-height:1.6;color:#475569">A password reset was requested for ${email}. Use the secure button below within 60 minutes.</p><p style="margin:28px 0"><a href="${actionLink}" style="background:#2563eb;color:#fff;padding:14px 24px;border-radius:9px;text-decoration:none;font-weight:700">Choose a new password</a></p><p style="font-size:13px;line-height:1.6;color:#64748b">If you did not request this, you can ignore this email. Need help? Contact info@trainailtd.com.</p></td></tr></table></td></tr></table></body></html>`;
 }
 
 async function sendThroughSupabase(url: string, anonKey: string, email: string, redirectTo: string) {
@@ -105,7 +102,6 @@ Deno.serve(async (req) => {
     }
 
     const actionLink = data?.properties?.action_link || redirectTo;
-    const otp = data?.properties?.email_otp || "";
     const resendKey = (Deno.env.get("RESEND_API_KEY") || Deno.env.get("RESEND_KEY") || "").trim();
     let delivered = false;
     if (resendKey) {
@@ -116,7 +112,7 @@ Deno.serve(async (req) => {
           from: Deno.env.get("RESEND_FROM_EMAIL") || "Train AI <info@trainailtd.com>",
           to: [email],
           subject: "Reset your Train AI password",
-          html: resetEmail(email, actionLink, otp),
+          html: resetEmail(email, actionLink),
         }),
       });
       delivered = response.ok;

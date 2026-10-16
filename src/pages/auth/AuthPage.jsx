@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock, KeyRound, HelpCircle, RefreshCw, Gift, CreditCard, Sparkles, Check, X, ChevronDown, Search, Plus } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, ShieldCheck, ShieldAlert, Building2, CheckCircle2, Eye, EyeOff, AlertCircle, Clock, HelpCircle, RefreshCw, Gift, CreditCard, Sparkles, Check, X, ChevronDown, Search, Plus } from "lucide-react";
 import { checkPasswordBreached } from "../../lib/api/mfa.js";
 import {
   registerOrganization,
@@ -18,7 +18,7 @@ import { supabase, getSupabaseClientForProject, resolveProjectForSignUp } from "
 
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "", initialMode = "",
-  onForgotPassword, onVerifyRecoveryOtp, recoveryMode = false, recoverySessionReady = false, onCompletePasswordReset,
+  onForgotPassword, recoveryMode = false, recoverySessionReady = false, onCompletePasswordReset,
   onGoHome, orgParam = ""
 }) {
   const [mode, setMode] = useState(() => {
@@ -74,9 +74,6 @@ export default function AuthPage({
   const [sendingReset, setSendingReset] = useState(false);
   const [forgotResult, setForgotResult] = useState(null);
   const [forgotError, setForgotError] = useState("");
-  const [recoveryOtpInput, setRecoveryOtpInput] = useState("");
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
-  const [otpError, setOtpError] = useState("");
   const [showOtpManualInput, setShowOtpManualInput] = useState(false);
 
   // Set new password (recovery mode) states
@@ -235,7 +232,6 @@ export default function AuthPage({
     if (!email.trim() || sendingReset) return;
     setForgotError("");
     setForgotResult(null);
-    setOtpError("");
     setSendingReset(true);
     try {
       const result = await onForgotPassword?.(email.trim());
@@ -243,9 +239,6 @@ export default function AuthPage({
         setForgotError(result.error || "No account found with this email address. Please check your spelling or create an account.");
       } else if (result?.success) {
         setForgotResult(result);
-        if (result.otp) {
-          setRecoveryOtpInput(result.otp);
-        }
       } else {
         setForgotError(result?.error || "Could not process password reset. Please try again or contact support at info@trainailtd.com.");
       }
@@ -253,28 +246,6 @@ export default function AuthPage({
       setForgotError(err?.message || "An unexpected error occurred. Please try again.");
     } finally {
       setSendingReset(false);
-    }
-  }
-
-  async function handleVerifyRecoveryOtp(tokenToVerify) {
-    const token = (tokenToVerify || recoveryOtpInput || "").trim();
-    if (!token) {
-      setOtpError("Please enter your verification code.");
-      return;
-    }
-    setOtpError("");
-    setVerifyingOtp(true);
-    try {
-      const res = await onVerifyRecoveryOtp?.(email.trim(), token);
-      if (res?.success) {
-        setMode("recovery");
-      } else {
-        setOtpError(res?.error || "Invalid or expired recovery code. Please check the code and try again.");
-      }
-    } catch (err) {
-      setOtpError(err?.message || "Verification failed. Please try again.");
-    } finally {
-      setVerifyingOtp(false);
     }
   }
 
@@ -744,7 +715,7 @@ export default function AuthPage({
                         <strong>Email Sent:</strong> We have dispatched a password reset link to <strong>{forgotResult.email}</strong>.
                         <div style={{ marginTop: 4, fontSize: 11.5, color: "#15803D" }}>
                           &bull; Please check your Inbox and Spam/Junk folders.<br />
-                          &bull; Click the link in the email or enter the 6-digit code below.
+                          &bull; Click the password reset link in that email to continue.
                         </div>
                       </div>
                     </div>
@@ -762,7 +733,8 @@ export default function AuthPage({
                   </div>
                 )}
 
-                {/* Instant Recovery Action Link or OTP Code if generated */}
+                {/* A direct action link is only rendered when the server safely
+                    returns one. Native Supabase recovery emails contain the link. */}
                 {forgotResult.actionLink && (
                   <div style={{ marginBottom: 14 }}>
                     <a
@@ -799,101 +771,6 @@ export default function AuthPage({
                     </div>
                   </div>
                 )}
-
-                {/* Instant recovery is only available when the server actually
-                    returned a one-time code. Never claim that a code exists
-                    merely because the mail provider is rate-limited. */}
-                {forgotResult.otp && (
-                  <div style={{ padding: "14px", background: "#EFF6FF", border: "1.5px solid #BFDBFE", borderRadius: 8, marginBottom: 14 }}>
-                    <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
-                      <KeyRound size={18} color="#2563EB" style={{ flexShrink: 0, marginTop: 1 }} />
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "#1E40AF" }}>
-                          {forgotResult.rateLimited ? "Instant Recovery Code Ready" : "One-Time Recovery Code"}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#3B82F6", lineHeight: 1.4, marginTop: 2 }}>
-                          {forgotResult.rateLimited
-                            ? "Mail provider rate limit active. Use your instant verification code below to set a new password right away:"
-                            : "You can reset your password immediately with this one-time code:"}
-                        </div>
-                      </div>
-                    </div>
-
-                    {forgotResult.otp && (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "10px", background: "#FFFFFF", borderRadius: 6, border: "1px dashed #93C5FD", marginBottom: 10 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#64748B", textTransform: "uppercase", letterSpacing: ".05em" }}>Your Code:</span>
-                        <span style={{ fontSize: 20, fontWeight: 900, color: "#1E3A8A", letterSpacing: "3px", fontFamily: "monospace" }}>
-                          {forgotResult.otp}
-                        </span>
-                      </div>
-                    )}
-
-                    <button
-                      type="button"
-                      disabled={verifyingOtp}
-                      onClick={() => handleVerifyRecoveryOtp(forgotResult.otp)}
-                      style={{
-                        width: "100%",
-                        padding: "9px 14px",
-                        background: "#2563EB",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: 6,
-                        fontWeight: 700,
-                        fontSize: 13,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6
-                      }}
-                    >
-                      {verifyingOtp ? "Verifying..." : "Verify Code & Set New Password"}
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                )}
-
-                {/* Direct 6 to 8 digit verification code entry */}
-                <div style={{ marginTop: 12, padding: "14px", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: 8 }}>
-                  <label style={styles.label}>Enter 6 to 8 Digit Recovery Code</label>
-                  <div style={{ fontSize: 11.5, color: "#64748B", marginBottom: 8 }}>
-                    If you received a recovery code in your email, paste or type it below to proceed:
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <input
-                      type="text"
-                      value={recoveryOtpInput}
-                      onChange={(e) => { setRecoveryOtpInput(e.target.value); setOtpError(""); }}
-                      placeholder="12345678"
-                      className="auth-input"
-                      style={{ ...styles.input, paddingLeft: 12, textAlign: "center", letterSpacing: "2px", fontWeight: 700 }}
-                    />
-                    <button
-                      type="button"
-                      disabled={verifyingOtp || !recoveryOtpInput.trim()}
-                      onClick={() => handleVerifyRecoveryOtp()}
-                      style={{
-                        padding: "0 16px",
-                        background: "#2563EB",
-                        color: "#FFFFFF",
-                        border: "none",
-                        borderRadius: 8,
-                        fontWeight: 700,
-                        fontSize: 13,
-                        cursor: "pointer",
-                        whiteSpace: "nowrap"
-                      }}
-                    >
-                      {verifyingOtp ? "Verifying..." : "Verify"}
-                    </button>
-                  </div>
-                  {otpError && (
-                    <div style={{ color: "#DC2626", fontSize: 11.5, marginTop: 6, fontWeight: 600 }}>
-                      {otpError}
-                    </div>
-                  )}
-                </div>
 
                 {/* Resend button */}
                 <div style={{ marginTop: 12, display: "flex", justifyContent: "center" }}>
@@ -935,7 +812,7 @@ export default function AuthPage({
             {!forgotResult && (
               <>
                 <p style={styles.sub}>
-                  Enter the email address registered on your account. We will send you a reset link or provide an instant recovery code.
+                  Enter the email address registered on your account. We will send you a secure password reset link.
                 </p>
                 <label style={styles.label}>Email Address</label>
                 <div style={styles.inputWrap}>
