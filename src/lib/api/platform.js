@@ -356,7 +356,44 @@ export async function fetchOrgMembers(organizationId) {
         seen.add(d.id);
       }
     }
-    return combined;
+
+    const orgSlug = resolvedOrgInfo?.slug || (String(organizationId || "").includes("sara") ? "sara-foundation" : "tech-learning");
+    const isSara = orgSlug.includes("sara") || organizationId === "sara-org-1";
+    const defaultDomain = isSara ? "sarafoundationafrica.com" : "trainailtd.com";
+
+    return combined.map((p) => {
+      const hasEmail = Boolean(p.email && p.email.includes("@"));
+      const isLinkClicked = p.status === "link_clicked" && !hasEmail;
+      const effectiveStatus = hasEmail && p.status === "link_clicked" ? "active" : (p.status || "active");
+      const effectiveEmail = isLinkClicked
+        ? null
+        : (p.email || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@${defaultDomain}` : null));
+
+      const cleanDisplayName =
+        p.display_name && !p.display_name.startsWith("Prospective Student")
+          ? p.display_name
+          : (hasEmail && effectiveEmail
+              ? effectiveEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+              : (effectiveStatus === "link_clicked" ? "Prospective Student (Link Visitor)" : "Member"));
+
+      const rawRefLink = p.referral_link || `/?join=${orgSlug}`;
+      const fullRefLink = rawRefLink.startsWith("http")
+        ? rawRefLink
+        : `${baseOrigin}${rawRefLink.startsWith("/") ? "" : "/"}${rawRefLink}`;
+
+      return {
+        ...p,
+        email: effectiveEmail,
+        status: effectiveStatus,
+        display_name: cleanDisplayName,
+        organization_id: p.organization_id || resolvedOrgUuid || organizationId,
+        organization_slug: p.organization_slug || orgSlug,
+        join_source: p.join_source || "shareable_link",
+        referral_slug: p.organization_slug || orgSlug,
+        referral_link: fullRefLink,
+        cohort_name: p.cohort_name || (effectiveStatus === "link_clicked" ? "Awaiting Signup" : null),
+      };
+    });
   }
 
   let directoryRows = [];
@@ -487,15 +524,25 @@ export async function fetchOrgMembers(organizationId) {
   }
 
   // 7. Merge prospective link click visitors so visitors who clicked the invite link show up in Admin
+  const existingEmails = new Set(
+    combinedProfiles.map((p) => (p.email || "").toLowerCase().trim()).filter(Boolean)
+  );
+
   for (const cm of clickMembers) {
     const cId = cm.userId || cm.id || cm.user_id;
+    const cEmail = (cm.email || "").toLowerCase().trim();
+    if (cEmail && existingEmails.has(cEmail)) continue;
+
     if (cId && !profileMap[cId]) {
+      const hasRealEmail = Boolean(cEmail && cEmail.includes("@"));
       const syn = {
         id: cId,
-        display_name: cm.display_name || "Prospective Student (Link Visitor)",
+        display_name: cm.display_name && !cm.display_name.startsWith("Prospective Student")
+          ? cm.display_name
+          : (hasRealEmail ? cEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()) : "Prospective Student (Link Visitor)"),
         email: cm.email || null,
         role: cm.role || "learner",
-        status: "link_clicked",
+        status: hasRealEmail ? "active" : "link_clicked",
         organization_id: cm.organization_id || resolvedOrgUuid,
         organization_name: cm.organization_name,
         organization_slug: cm.organization_slug,
@@ -505,7 +552,7 @@ export async function fetchOrgMembers(organizationId) {
         join_source: "shareable_link",
         referral_slug: cm.organization_slug || resolvedOrgInfo?.slug || "workspace",
         referral_link: cm.referral_link || `${baseOrigin}/?join=${encodeURIComponent(cm.organization_slug || resolvedOrgInfo?.slug || "workspace")}`,
-        cohort_name: cm.cohort_name || "Awaiting Signup",
+        cohort_name: hasRealEmail ? (cm.cohort_name && cm.cohort_name !== "Awaiting Signup" ? cm.cohort_name : null) : "Awaiting Signup",
       };
       combinedProfiles.unshift(syn);
       profileMap[cId] = syn;
@@ -545,7 +592,16 @@ export async function fetchOrgMembers(organizationId) {
     const isSara =
       effectiveOrgId === "sara-org-1" ||
       String(orgObj?.slug || orgObj?.name || p.organization || "").toLowerCase().includes("sara");
-    const email = directory?.email || p.email || om?.email || null;
+    const rawEmail = directory?.email || p.email || om?.email || null;
+    const defaultDomain = isSara ? "sarafoundationafrica.com" : "trainailtd.com";
+    const hasEmail = Boolean(rawEmail && rawEmail.includes("@"));
+    const isLinkClicked = (p.status === "link_clicked" || om?.status === "link_clicked") && !hasEmail;
+    const email = isLinkClicked
+      ? null
+      : (rawEmail || (p.display_name ? `${p.display_name.toLowerCase().replace(/[^a-z0-9]/g, ".")}@${defaultDomain}` : null));
+    const effectiveStatus = hasEmail && (p.status === "link_clicked" || om?.status === "link_clicked")
+      ? "active"
+      : (directory?.member_status || om?.status || p.status || "active");
     const cohortNames = cohortNamesByUserId[p.id] || [];
     const orgSlug =
       orgObj?.slug ||
@@ -574,10 +630,19 @@ export async function fetchOrgMembers(organizationId) {
       ? rawRefLink
       : `${baseOrigin}${rawRefLink.startsWith("/") ? "" : "/"}${rawRefLink}`;
 
+    const cleanDisplayName =
+      directory?.display_name ||
+      (p.display_name && !p.display_name.startsWith("Prospective Student")
+        ? p.display_name
+        : (hasEmail && email
+            ? email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+            : (effectiveStatus === "link_clicked" ? "Prospective Student" : "Member")));
+
     return {
       ...p,
       email,
-      status: directory?.member_status || om?.status || p.status || "active",
+      status: effectiveStatus,
+      display_name: cleanDisplayName,
       joined_at: joinedAt,
       created_at: p.created_at || joinedAt,
       organization_id: effectiveOrgId,
@@ -586,7 +651,7 @@ export async function fetchOrgMembers(organizationId) {
       join_source: joinSource,
       referral_slug: orgSlug,
       referral_link: fullRefLink,
-      cohort_name: cohortNames.length ? cohortNames.join(", ") : (p.cohort_name || (p.status === "link_clicked" ? "Awaiting Signup" : null)),
+      cohort_name: cohortNames.length ? cohortNames.join(", ") : (p.cohort_name || (effectiveStatus === "link_clicked" ? "Awaiting Signup" : null)),
       cohort_names: cohortNames,
     };
   });

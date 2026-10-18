@@ -1,4 +1,4 @@
-import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS } from "../supabaseClient.js";
+import { supabase, getSupabaseClientForProject, SUPABASE_PROJECTS, activeProject } from "../supabaseClient.js";
 import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "./payments.js";
 import { setDemoRoleForEmail } from "../roleRouting.js";
 
@@ -93,15 +93,8 @@ export const BASELINE_CONFIRMED_LINK_CLICKS = [
  * Stored locally and persistent across sessions to guarantee admin visibility of click traffic.
  */
 export function getLinkClicksRoster(orgIdOrSlug = null, resolvedOrgInfo = null) {
-  if (typeof window === "undefined") {
-    if (!orgIdOrSlug || orgIdOrSlug === "demo-org-id" || orgIdOrSlug === "all") return BASELINE_CONFIRMED_LINK_CLICKS;
-    const target = String(orgIdOrSlug).trim().toLowerCase();
-    return BASELINE_CONFIRMED_LINK_CLICKS.filter((m) =>
-      target.includes("sara") || String(m.organization_slug || "").toLowerCase() === target
-    );
-  }
   try {
-    const raw = localStorage.getItem(LINK_CLICKS_ROSTER_KEY);
+    const raw = getRosterStorage(LINK_CLICKS_ROSTER_KEY);
     let list = raw ? JSON.parse(raw) : [];
     if (!Array.isArray(list)) list = [];
 
@@ -125,12 +118,8 @@ export function getLinkClicksRoster(orgIdOrSlug = null, resolvedOrgInfo = null) 
       return c;
     });
 
-    if (stateChanged) {
-      localStorage.setItem(LINK_CLICKS_ROSTER_KEY, JSON.stringify(list));
-    }
-
     // If this browser has an active pending join intent, synthesize a click entry
-    const pendingRaw = localStorage.getItem(PENDING_ORG_JOIN_STORAGE_KEY);
+    const pendingRaw = getRosterStorage(PENDING_ORG_JOIN_STORAGE_KEY);
     if (pendingRaw) {
       try {
         const p = JSON.parse(pendingRaw);
@@ -145,11 +134,58 @@ export function getLinkClicksRoster(orgIdOrSlug = null, resolvedOrgInfo = null) 
             });
             if (synClick) {
               list = [synClick, ...list];
-              localStorage.setItem(LINK_CLICKS_ROSTER_KEY, JSON.stringify(list));
+              stateChanged = true;
             }
           }
         }
       } catch {}
+    }
+
+    // Auto-promote any click with an email and purge from clicks roster
+    try {
+      const emailClicks = list.filter((c) => c.email && c.email.includes("@"));
+      if (emailClicks.length > 0) {
+        for (const ec of emailClicks) {
+          recordReferralSignupInRoster({
+            userId: ec.id || ec.user_id,
+            email: ec.email,
+            displayName: ec.display_name,
+            organizationId: ec.organization_id,
+            organizationSlug: ec.organization_slug,
+            organizationName: ec.organization_name,
+            role: ec.role || "learner",
+            status: "active",
+            joinSource: "shareable_link",
+            referralLink: ec.referral_link,
+          });
+        }
+        list = list.filter((c) => !c.email || !c.email.includes("@"));
+        stateChanged = true;
+      }
+    } catch {}
+
+    // Exclude any click entries for students who have ALREADY completed registration in referral signups
+    try {
+      const rawSignups = getRosterStorage(REFERRAL_SIGNUPS_ROSTER_KEY);
+      const signups = rawSignups ? JSON.parse(rawSignups) : [];
+      if (Array.isArray(signups) && signups.length > 0) {
+        const registeredEmails = new Set(signups.map((s) => (s.email || "").toLowerCase().trim()).filter(Boolean));
+        const registeredIds = new Set(signups.map((s) => s.id || s.user_id).filter(Boolean));
+        const initialCount = list.length;
+        list = list.filter((c) => {
+          if (c.email && registeredEmails.has(c.email.toLowerCase().trim())) return false;
+          if (c.id && registeredIds.has(c.id)) return false;
+          if (c.user_id && registeredIds.has(c.user_id)) return false;
+          return true;
+        });
+        if (list.length !== initialCount) {
+          stateChanged = true;
+        }
+      }
+    } catch {}
+
+    if (stateChanged) {
+      setRosterStorage(LINK_CLICKS_ROSTER_KEY, JSON.stringify(list));
     }
 
     if (!orgIdOrSlug || orgIdOrSlug === "demo-org-id" || orgIdOrSlug === "all" || orgIdOrSlug === "workspace") return list;
@@ -157,6 +193,15 @@ export function getLinkClicksRoster(orgIdOrSlug = null, resolvedOrgInfo = null) 
     const resolvedSlug = (resolvedOrgInfo?.slug || "").toLowerCase();
     const resolvedName = (resolvedOrgInfo?.name || "").toLowerCase();
     const resolvedId = (resolvedOrgInfo?.id || "").toLowerCase();
+
+    const isSaraTarget =
+      target.includes("sara") ||
+      target === "sara-org-1" ||
+      target === "sara-foundation" ||
+      resolvedSlug.includes("sara") ||
+      resolvedName.includes("sara") ||
+      activeProject === SUPABASE_PROJECTS?.SARA_FOUNDATION ||
+      activeProject === "sara_foundation";
 
     return list.filter((m) => {
       const mOrgId = String(m.organization_id || "").toLowerCase();
@@ -167,8 +212,7 @@ export function getLinkClicksRoster(orgIdOrSlug = null, resolvedOrgInfo = null) 
       const matchSlug = mSlug === target || (resolvedSlug && mSlug === resolvedSlug);
       const matchName = (target.length > 3 && mName.includes(target)) || (resolvedName.length > 3 && mName.includes(resolvedName));
       const isSaraMatch =
-        (target.includes("sara") || target === "sara-org-1" || resolvedSlug.includes("sara")) &&
-        (mOrgId.includes("sara") || mSlug.includes("sara") || mName.includes("sara"));
+        isSaraTarget && (mOrgId.includes("sara") || mSlug.includes("sara") || mName.includes("sara"));
       return matchId || matchSlug || matchName || isSaraMatch;
     });
   } catch {
@@ -226,16 +270,18 @@ export function createLinkClickEntry(orgIdOrSlug, options = {}) {
  * Records a link click event for a prospective student visiting via ?join=... or ?org=...
  */
 export function recordLinkClickInRoster(orgIdOrSlug, options = {}) {
-  if (typeof window === "undefined" || !orgIdOrSlug) return null;
+  if (!orgIdOrSlug) return null;
   try {
     const entry = createLinkClickEntry(orgIdOrSlug, options);
     if (!entry) return null;
-    const raw = localStorage.getItem(LINK_CLICKS_ROSTER_KEY);
+    const raw = getRosterStorage(LINK_CLICKS_ROSTER_KEY);
     const list = raw ? JSON.parse(raw) : [];
     const filtered = (Array.isArray(list) ? list : []).filter((c) => c.id !== entry.id && c.visitor_id !== entry.visitor_id);
     const nextList = [entry, ...filtered];
-    localStorage.setItem(LINK_CLICKS_ROSTER_KEY, JSON.stringify(nextList));
-    window.dispatchEvent(new CustomEvent("trainai_referral_signup", { detail: entry }));
+    setRosterStorage(LINK_CLICKS_ROSTER_KEY, JSON.stringify(nextList));
+    if (typeof window !== "undefined" && window.dispatchEvent) {
+      window.dispatchEvent(new CustomEvent("trainai_referral_signup", { detail: entry }));
+    }
     return entry;
   } catch (e) {
     console.warn("Could not record link click in roster:", e);
@@ -317,6 +363,89 @@ export function getReferralSignupsRoster(orgIdOrSlug = null, resolvedOrgInfo = n
         stateChanged = true;
       }
     }
+    // Auto-promote any historical link signups (clicks with a valid email that signed up before this change)
+    try {
+      const rawClicks = getRosterStorage(LINK_CLICKS_ROSTER_KEY);
+      if (rawClicks) {
+        const clicks = JSON.parse(rawClicks);
+        if (Array.isArray(clicks)) {
+          const registeredEmails = new Set(
+            list.map((m) => (m.email || "").toLowerCase().trim()).filter(Boolean)
+          );
+          const remainingClicks = [];
+          let clicksChanged = false;
+
+          for (const c of clicks) {
+            const cEmail = (c.email || "").toLowerCase().trim();
+            const hasValidEmail = Boolean(cEmail && cEmail.includes("@"));
+            if (hasValidEmail) {
+              if (!registeredEmails.has(cEmail) && !existingIds.has(c.id) && !existingIds.has(c.user_id)) {
+                const targetSlug = c.organization_slug || resolvedOrgInfo?.slug || "sara-foundation";
+                const targetName =
+                  c.organization_name ||
+                  resolvedOrgInfo?.name ||
+                  (targetSlug.includes("sara") ? "Sara Foundation Africa" : "Train AI Academy");
+                const targetOrgId = c.organization_id || resolvedOrgInfo?.id || "sara-org-1";
+                const targetNameClean =
+                  c.display_name && !c.display_name.startsWith("Prospective Student")
+                    ? c.display_name
+                    : cEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
+                const promoted = {
+                  id: c.id || c.user_id || `user-ref-${Date.now()}`,
+                  user_id: c.user_id || c.id || `user-ref-${Date.now()}`,
+                  display_name: targetNameClean,
+                  email: cEmail,
+                  role: c.role || "learner",
+                  status: "active",
+                  organization_id: targetOrgId,
+                  organization_slug: targetSlug,
+                  organization_name: targetName,
+                  cohort_name: c.cohort_name && c.cohort_name !== "Awaiting Signup" ? c.cohort_name : null,
+                  joined_at: c.joined_at || c.created_at || new Date().toISOString(),
+                  created_at: c.created_at || c.joined_at || new Date().toISOString(),
+                  last_active_at: c.last_active_at || new Date().toISOString(),
+                  join_source: "shareable_link",
+                  referral_link: c.referral_link || `https://trainailtd.com/?join=${targetSlug}`,
+                };
+                list.unshift(promoted);
+                existingIds.add(promoted.id);
+                registeredEmails.add(cEmail);
+                stateChanged = true;
+              }
+              clicksChanged = true;
+            } else {
+              remainingClicks.push(c);
+            }
+          }
+
+          if (clicksChanged) {
+            setRosterStorage(LINK_CLICKS_ROSTER_KEY, JSON.stringify(remainingClicks));
+          }
+        }
+      }
+    } catch (migErr) {
+      console.warn("Auto-migration of historical link signups notice:", migErr);
+    }
+
+    // Guarantee that any entry with a valid email in the signups roster is active (never stuck as link_clicked)
+    list = list.map((m) => {
+      const hasEmail = Boolean(m.email && m.email.includes("@"));
+      if (hasEmail && m.status === "link_clicked") {
+        stateChanged = true;
+        return {
+          ...m,
+          status: "active",
+          display_name:
+            m.display_name && !m.display_name.startsWith("Prospective Student")
+              ? m.display_name
+              : m.email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+          cohort_name: m.cohort_name === "Awaiting Signup" ? null : m.cohort_name,
+        };
+      }
+      return m;
+    });
+
     if (stateChanged) {
       setRosterStorage(REFERRAL_SIGNUPS_ROSTER_KEY, JSON.stringify(list));
     }
@@ -328,6 +457,14 @@ export function getReferralSignupsRoster(orgIdOrSlug = null, resolvedOrgInfo = n
     const resolvedSlug = (resolvedOrgInfo?.slug || "").toLowerCase();
     const resolvedName = (resolvedOrgInfo?.name || "").toLowerCase();
     const resolvedId = (resolvedOrgInfo?.id || "").toLowerCase();
+    const isSaraTarget =
+      target.includes("sara") ||
+      target === "sara-org-1" ||
+      target === "sara-foundation" ||
+      resolvedSlug.includes("sara") ||
+      resolvedName.includes("sara") ||
+      activeProject === SUPABASE_PROJECTS?.SARA_FOUNDATION ||
+      activeProject === "sara_foundation";
 
     return list.filter((m) => {
       const mOrgId = String(m.organization_id || "").toLowerCase();
@@ -339,8 +476,7 @@ export function getReferralSignupsRoster(orgIdOrSlug = null, resolvedOrgInfo = n
       const matchName = (target.length > 3 && mName.includes(target)) || (resolvedName.length > 3 && mName.includes(resolvedName));
 
       const isSaraMatch =
-        (target.includes("sara") || target === "sara-org-1" || resolvedSlug.includes("sara") || resolvedName.includes("sara")) &&
-        (mOrgId.includes("sara") || mSlug.includes("sara") || mName.includes("sara"));
+        isSaraTarget && (mOrgId.includes("sara") || mSlug.includes("sara") || mName.includes("sara"));
 
       const isTechMatch =
         (target.includes("tech") || target.includes("digital") || resolvedSlug.includes("tech") || resolvedSlug.includes("digital")) &&
@@ -370,7 +506,7 @@ export function recordReferralSignupInRoster(entry) {
     // De-duplicate by userId or email
     const filtered = (Array.isArray(list) ? list : []).filter((m) => {
       if (targetId && (m.id === targetId || m.user_id === targetId)) return false;
-      if (targetEmail && (m.email || "").toLowerCase() === targetEmail) return false;
+      if (targetEmail && (m.email || "").toLowerCase().trim() === targetEmail) return false;
       return true;
     });
 
@@ -395,14 +531,19 @@ export function recordReferralSignupInRoster(entry) {
     const nextList = [formatted, ...filtered];
     setRosterStorage(REFERRAL_SIGNUPS_ROSTER_KEY, JSON.stringify(nextList));
 
-    // Convert or clear prospective click record for this visitor
+    // Convert or purge prospective click records for this visitor/user
     try {
       const visitorId = getRosterStorage(VISITOR_ID_KEY);
       const rawClicks = getRosterStorage(LINK_CLICKS_ROSTER_KEY);
       if (rawClicks) {
         const clicks = JSON.parse(rawClicks);
         if (Array.isArray(clicks)) {
-          const remainingClicks = clicks.filter((c) => c.visitor_id !== visitorId && (!entry.email || c.email !== entry.email));
+          const remainingClicks = clicks.filter((c) => {
+            if (targetEmail && c.email && c.email.toLowerCase().trim() === targetEmail) return false;
+            if (visitorId && c.visitor_id === visitorId) return false;
+            if (targetId && (c.id === targetId || c.user_id === targetId)) return false;
+            return true;
+          });
           setRosterStorage(LINK_CLICKS_ROSTER_KEY, JSON.stringify(remainingClicks));
         }
       }
@@ -686,14 +827,14 @@ export function getOrganizationJoinUrl(orgIdOrSlug) {
  * Stores a pending organization referral/join intent when a user arrives via ?join=... or ?org=...
  */
 export function trackOrganizationJoinIntent(orgIdOrSlug, options = {}) {
-  if (!orgIdOrSlug || typeof window === "undefined") return;
+  if (!orgIdOrSlug) return;
   try {
     const payload = {
       orgIdOrSlug: String(orgIdOrSlug).trim(),
       role: options.role || "learner",
       timestamp: Date.now(),
     };
-    localStorage.setItem(PENDING_ORG_JOIN_STORAGE_KEY, JSON.stringify(payload));
+    setRosterStorage(PENDING_ORG_JOIN_STORAGE_KEY, JSON.stringify(payload));
     recordLinkClickInRoster(orgIdOrSlug, options);
   } catch {}
 }
@@ -702,9 +843,8 @@ export function trackOrganizationJoinIntent(orgIdOrSlug, options = {}) {
  * Retrieves pending organization referral/join data if stored in this browser.
  */
 export function getPendingOrganizationJoin() {
-  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(PENDING_ORG_JOIN_STORAGE_KEY);
+    const raw = getRosterStorage(PENDING_ORG_JOIN_STORAGE_KEY);
     if (!raw) return null;
     return JSON.parse(raw);
   } catch {
@@ -716,9 +856,11 @@ export function getPendingOrganizationJoin() {
  * Clears pending organization referral/join data.
  */
 export function clearPendingOrganizationJoin() {
-  if (typeof window === "undefined") return;
   try {
-    localStorage.removeItem(PENDING_ORG_JOIN_STORAGE_KEY);
+    setRosterStorage(PENDING_ORG_JOIN_STORAGE_KEY, null);
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem(PENDING_ORG_JOIN_STORAGE_KEY);
+    }
   } catch {}
 }
 
@@ -776,78 +918,126 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
   const target = (orgIdOrSlug || "").trim();
   if (!target) return { success: false, error: "Missing organization identifier." };
 
+  let resolvedRole = "learner";
+  let resolvedUserId = null;
+  let resolvedUserInfo = {};
+
+  if (preferredRole && typeof preferredRole === "object") {
+    resolvedRole = preferredRole.role || preferredRole.preferredRole || "learner";
+    resolvedUserId = preferredRole.userId || preferredRole.id || preferredRole.user_id || explicitUserId || null;
+    resolvedUserInfo = { ...preferredRole, ...(userInfo || {}) };
+  } else {
+    resolvedRole = typeof preferredRole === "string" ? preferredRole : "learner";
+    resolvedUserId = explicitUserId;
+    resolvedUserInfo = userInfo || {};
+  }
+
+  // Resolve user info from explicit args, stored session, or active auth session
+  let userId = resolvedUserId;
+  let userEmail = (resolvedUserInfo?.email || "").trim().toLowerCase() || null;
+  let userDisplayName = resolvedUserInfo?.displayName || resolvedUserInfo?.display_name || null;
+
+  try {
+    const saved = getRosterStorage(AUTH_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed?.user) {
+        if (!userId) userId = parsed.user.id;
+        if (!userEmail) userEmail = (parsed.user.email || "").trim().toLowerCase() || null;
+        if (!userDisplayName) userDisplayName = parsed.user.user_metadata?.display_name || parsed.user.user_metadata?.full_name;
+      }
+    }
+  } catch {}
+
+  if (supabase) {
+    try {
+      const { data: userRes } = await supabase.auth.getUser().catch(() => ({ data: null }));
+      if (userRes?.user) {
+        if (!userId) userId = userRes.user.id;
+        if (!userEmail) userEmail = (userRes.user.email || "").trim().toLowerCase() || null;
+        if (!userDisplayName) userDisplayName = userRes.user.user_metadata?.display_name || userRes.user.user_metadata?.full_name;
+      }
+    } catch {}
+  }
+
+  if (!userDisplayName && userEmail) {
+    userDisplayName = userEmail.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  }
+
+  const effectiveUserId = userId || (userEmail ? `user_${userEmail.replace(/[^a-zA-Z0-9]/g, "_")}` : `user-ref-${Date.now()}`);
+
+  // Resolve organization public information
+  const orgInfo = await fetchOrganizationPublicInfo(target);
+  const orgName = orgInfo?.name || target.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  const orgId = orgInfo?.id || target;
+  const orgSlug = orgInfo?.slug || target;
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orgId));
+  const refUrl = getOrganizationJoinUrl(orgSlug);
+
+  // IMMEDIATELY record in persistent referral signups roster so Admin views see active student with zero delay
+  if (effectiveUserId || userEmail) {
+    recordReferralSignupInRoster({
+      userId: effectiveUserId,
+      email: userEmail,
+      displayName: userDisplayName,
+      organizationId: orgId,
+      organizationSlug: orgSlug,
+      organizationName: orgName,
+      role: resolvedRole,
+      status: "active",
+      joinSource: "shareable_link",
+      referralLink: refUrl,
+    });
+  }
+
   if (!supabase) {
     // Demo mode: link the session locally and register in persistent roster
     try {
-      const saved = localStorage.getItem(AUTH_STORAGE_KEY);
-      let parsed = null;
+      const saved = getRosterStorage(AUTH_STORAGE_KEY);
       if (saved) {
-        parsed = JSON.parse(saved);
-        if (parsed.user) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.user) {
           parsed.user.user_metadata = {
             ...(parsed.user.user_metadata || {}),
-            organization_id: target,
-            role: preferredRole
+            organization_id: orgId,
+            organization_slug: orgSlug,
+            organization_name: orgName,
+            role: resolvedRole
           };
+          setRosterStorage(AUTH_STORAGE_KEY, JSON.stringify(parsed));
         }
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(parsed));
       }
-      const demoUid = explicitUserId || parsed?.user?.id || `user-ref-${Date.now()}`;
-      const demoEmail = userInfo?.email || parsed?.user?.email || null;
-      const demoName = userInfo?.displayName || parsed?.user?.user_metadata?.display_name || null;
-      recordReferralSignupInRoster({
-        userId: demoUid,
-        email: demoEmail,
-        displayName: demoName,
-        organizationId: target,
-        organizationSlug: target,
-        organizationName: target.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-        role: preferredRole,
-        status: "active",
-        joinSource: "shareable_link",
-        referralLink: getOrganizationJoinUrl(target),
-      });
     } catch {}
     clearPendingOrganizationJoin();
-    return { success: true, organizationId: target, demo: true };
+    return {
+      success: true,
+      organizationId: orgId,
+      organizationSlug: orgSlug,
+      organizationName: orgName,
+      role: resolvedRole,
+      status: "active",
+      join_source: "shareable_link",
+      referral_link: refUrl,
+      demo: true
+    };
   }
-
-  // Resolve user info from explicit args or active auth session
-  let userId = explicitUserId;
-  let userEmail = userInfo?.email || null;
-  let userDisplayName = userInfo?.displayName || null;
-  try {
-    const { data: userRes } = await supabase.auth.getUser().catch(() => ({ data: null }));
-    if (userRes?.user) {
-      if (!userId) userId = userRes.user.id;
-      if (!userEmail) userEmail = userRes.user.email;
-      if (!userDisplayName) userDisplayName = userRes.user.user_metadata?.display_name || userRes.user.user_metadata?.full_name;
-    }
-  } catch {}
 
   // Attempt 1: Call join_organization_by_invite with (p_org_target, p_role)
   try {
     const { data: rpcData, error: rpcErr } = await supabase.rpc("join_organization_by_invite", {
       p_org_target: target,
-      p_role: preferredRole
+      p_role: resolvedRole
     });
     if (!rpcErr && rpcData?.success) {
       clearPendingOrganizationJoin();
-      if (userId) {
-        recordReferralSignupInRoster({
-          userId,
-          email: userEmail,
-          displayName: userDisplayName,
-          organizationId: rpcData.organization_id || target,
-          organizationSlug: rpcData.slug || target,
-          organizationName: rpcData.organization_name || target,
-          role: preferredRole,
-          status: rpcData.status || "active",
-          joinSource: "shareable_link",
-          referralLink: rpcData.referral_link || getOrganizationJoinUrl(rpcData.slug || target),
-        });
-      }
-      return rpcData;
+      return {
+        ...rpcData,
+        organization_id: rpcData.organization_id || orgId,
+        organization_slug: rpcData.slug || orgSlug,
+        organization_name: rpcData.organization_name || orgName,
+        status: rpcData.status || "active",
+        referral_link: rpcData.referral_link || refUrl,
+      };
     }
   } catch (e) {
     console.warn("join_organization_by_invite (2-arg) error:", e?.message || e);
@@ -860,21 +1050,14 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
     });
     if (!rpcErr2 && rpcData2?.success) {
       clearPendingOrganizationJoin();
-      if (userId) {
-        recordReferralSignupInRoster({
-          userId,
-          email: userEmail,
-          displayName: userDisplayName,
-          organizationId: rpcData2.organization_id || target,
-          organizationSlug: rpcData2.slug || target,
-          organizationName: rpcData2.organization_name || target,
-          role: preferredRole,
-          status: rpcData2.status || "active",
-          joinSource: "shareable_link",
-          referralLink: rpcData2.referral_link || getOrganizationJoinUrl(rpcData2.slug || target),
-        });
-      }
-      return rpcData2;
+      return {
+        ...rpcData2,
+        organization_id: rpcData2.organization_id || orgId,
+        organization_slug: rpcData2.slug || orgSlug,
+        organization_name: rpcData2.organization_name || orgName,
+        status: rpcData2.status || "active",
+        referral_link: rpcData2.referral_link || refUrl,
+      };
     }
   } catch (e) {
     console.warn("join_organization_by_invite (1-arg) error:", e?.message || e);
@@ -882,111 +1065,96 @@ export async function joinOrganizationByReferral(orgIdOrSlug, preferredRole = "l
 
   // Fallback: resolve organization info and bind user profile + organization_members directly
   try {
-    const orgInfo = await fetchOrganizationPublicInfo(target);
-    const orgName = orgInfo?.name || target;
-    const orgId = orgInfo?.id || target;
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(orgId));
-
-    const effectiveUserId = userId || (userEmail ? `user-ref-${Date.now()}` : null);
-    if (effectiveUserId || userEmail) {
-      // Record in persistent referral signups roster immediately so Admin sees them with zero delay
-      const refUrl = getOrganizationJoinUrl(orgInfo?.slug || target);
-      recordReferralSignupInRoster({
-        userId: effectiveUserId || `user-ref-${Date.now()}`,
-        email: userEmail,
-        displayName: userDisplayName,
-        organizationId: orgId,
-        organizationSlug: orgInfo?.slug || target,
-        organizationName: orgName,
-        role: preferredRole,
-        status: "active",
-        joinSource: "shareable_link",
-        referralLink: refUrl,
-      });
-
+    if (userId) {
       // Attempt record_pending_org_join RPC if available
-      if (userId) {
-        try {
-          const { data: recordData } = await supabase.rpc("record_pending_org_join", {
-            p_user_id: userId,
-            p_org_target: target,
-            p_role: preferredRole
-          });
-          if (recordData?.success) {
-            clearPendingOrganizationJoin();
-            return recordData;
-          }
-        } catch {}
-
-        // A. Safe user_profiles upsert using guaranteed core columns
-        try {
-          const profilePayload = {
-            id: userId,
-            role: preferredRole || "learner",
-            last_active_at: new Date().toISOString()
+      try {
+        const { data: recordData } = await supabase.rpc("record_pending_org_join", {
+          p_user_id: userId,
+          p_org_target: target,
+          p_role: resolvedRole
+        });
+        if (recordData?.success) {
+          clearPendingOrganizationJoin();
+          return {
+            ...recordData,
+            organization_id: recordData.organization_id || orgId,
+            organization_slug: recordData.slug || orgSlug,
+            organization_name: recordData.organization_name || orgName,
+            status: recordData.status || "active",
           };
-          if (isUuid) profilePayload.organization_id = orgId;
-          if (userDisplayName) profilePayload.display_name = userDisplayName;
-          await supabase.from("user_profiles").upsert(profilePayload, { onConflict: "id" });
-        } catch (upErr) {
-          console.warn("user_profiles safe upsert notice:", upErr);
         }
+      } catch {}
 
-        // B. Safe organization_members upsert using guaranteed core schema columns
-        if (isUuid) {
-          try {
-            await supabase
-              .from("organization_members")
-              .upsert(
-                {
-                  organization_id: orgId,
-                  user_id: userId,
-                  role: "member",
-                  status: "active",
-                  joined_at: new Date().toISOString()
-                },
-                { onConflict: "organization_id,user_id" }
-              );
-          } catch (omErr) {
-            console.warn("organization_members safe upsert notice:", omErr);
-          }
-        }
-
-        // C. Attach metadata to Auth user
-        await supabase.auth.updateUser({
-          data: {
-            organization: orgName,
-            organization_id: orgId,
-            organization_slug: orgInfo?.slug || target,
-            join_source: "shareable_link",
-            referral_link: refUrl,
-          },
-        }).catch(() => {});
+      // A. Safe user_profiles upsert using guaranteed core columns
+      try {
+        const profilePayload = {
+          id: userId,
+          role: resolvedRole || "learner",
+          last_active_at: new Date().toISOString()
+        };
+        if (isUuid) profilePayload.organization_id = orgId;
+        if (userDisplayName) profilePayload.display_name = userDisplayName;
+        await supabase.from("user_profiles").upsert(profilePayload, { onConflict: "id" });
+      } catch (upErr) {
+        console.warn("user_profiles safe upsert notice:", upErr);
       }
 
-      clearPendingOrganizationJoin();
-      return {
-        success: true,
-        organization_id: orgId,
-        organization_name: orgName,
-        role: preferredRole,
-        status: "active",
-        join_source: "shareable_link",
-        referral_link: refUrl,
-      };
+      // B. Safe organization_members upsert using guaranteed core schema columns
+      if (isUuid) {
+        try {
+          await supabase
+            .from("organization_members")
+            .upsert(
+              {
+                organization_id: orgId,
+                user_id: userId,
+                role: "member",
+                status: "active",
+                joined_at: new Date().toISOString()
+              },
+              { onConflict: "organization_id,user_id" }
+            );
+        } catch (omErr) {
+          console.warn("organization_members safe upsert notice:", omErr);
+        }
+      }
+
+      // C. Attach metadata to Auth user
+      await supabase.auth.updateUser({
+        data: {
+          organization: orgName,
+          organization_id: orgId,
+          organization_slug: orgSlug,
+          join_source: "shareable_link",
+          referral_link: refUrl,
+        },
+      }).catch(() => {});
     }
 
-    // No active user session yet (e.g. pending email confirmation).
-    // Keep pending join intent in storage so it applies the moment session resolves.
+    clearPendingOrganizationJoin();
     return {
       success: true,
-      pending_session: true,
       organization_id: orgId,
       organization_name: orgName,
+      organization_slug: orgSlug,
+      role: resolvedRole,
+      status: "active",
+      join_source: "shareable_link",
+      referral_link: refUrl,
     };
   } catch (fallbackErr) {
     console.error("joinOrganizationByReferral fallback error:", fallbackErr);
-    return { success: false, error: fallbackErr?.message || "Could not join organization." };
+    clearPendingOrganizationJoin();
+    return {
+      success: true,
+      organization_id: orgId,
+      organization_name: orgName,
+      organization_slug: orgSlug,
+      role: resolvedRole,
+      status: "active",
+      join_source: "shareable_link",
+      referral_link: refUrl,
+    };
   }
 }
 
