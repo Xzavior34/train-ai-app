@@ -432,6 +432,37 @@ export async function assignCourseToCohortOrLearners({
     authUserId = authData?.user?.id || null;
   }
 
+  // Prefer the transactional server-side path. It validates that every
+  // selected learner belongs to this cohort, writes the cohort curriculum,
+  // individual assignments, and learner enrollments as one operation. The
+  // previous client-only path could partially succeed and also sent a
+  // non-existent `status` column to course_enrollments on the live schema.
+  const rpcArgs = {
+    p_cohort_id: cohortId,
+    p_course_id: courseId,
+    p_user_ids: scope === "cohort" ? null : memberUserIds,
+    p_assign_all: scope === "cohort",
+    p_due_at: dueAt || null,
+  };
+  const { data: rpcResult, error: rpcError } = await supabase.rpc("assign_course_to_cohort_members", rpcArgs);
+  if (!rpcError) {
+    const assignedCount = Number(rpcResult?.assigned_count || 0);
+    return {
+      success: true,
+      count: assignedCount,
+      scope,
+      newlyAssigned: Number(rpcResult?.new_assignment_count || 0),
+      message: scope === "cohort"
+        ? `Successfully assigned to entire cohort (${assignedCount} member${assignedCount === 1 ? "" : "s"}).`
+        : `Successfully assigned to ${assignedCount} selected member${assignedCount === 1 ? "" : "s"}.`,
+    };
+  }
+  // Keep compatibility during a rolling deployment, but never hide a real
+  // RPC failure once the function exists.
+  if (rpcError.code !== "PGRST202" && !String(rpcError.message || "").includes("assign_course_to_cohort_members")) {
+    throw rpcError;
+  }
+
   // 1. Determine target user IDs
   let targetUserIds = [];
   if (scope === "cohort") {
@@ -443,16 +474,13 @@ export async function assignCourseToCohortOrLearners({
     targetUserIds = (memberRows || []).map((m) => m.user_id).filter(Boolean);
 
     // Upsert into cohort_courses (cohort-level track syllabus)
-    try {
-      await supabase
-        .from("cohort_courses")
-        .upsert(
-          { cohort_id: cohortId, course_id: courseId, due_at: dueAt || null },
-          { onConflict: "cohort_id,course_id", ignoreDuplicates: false }
-        );
-    } catch (ccErr) {
-      console.warn("cohort_courses upsert error:", ccErr);
-    }
+    const { error: cohortCourseError } = await supabase
+      .from("cohort_courses")
+      .upsert(
+        { cohort_id: cohortId, course_id: courseId, due_at: dueAt || null },
+        { onConflict: "cohort_id,course_id", ignoreDuplicates: false }
+      );
+    if (cohortCourseError) throw cohortCourseError;
   } else {
     targetUserIds = Array.isArray(memberUserIds) ? memberUserIds.filter(Boolean) : [];
     if (!targetUserIds.length) {
@@ -460,22 +488,22 @@ export async function assignCourseToCohortOrLearners({
     }
 
     // Also record in cohort_courses so the cohort curriculum acknowledges this course
-    try {
-      await supabase
-        .from("cohort_courses")
-        .upsert(
-          { cohort_id: cohortId, course_id: courseId, due_at: dueAt || null },
-          { onConflict: "cohort_id,course_id", ignoreDuplicates: true }
-        );
-    } catch {}
+    const { error: cohortCourseError } = await supabase
+      .from("cohort_courses")
+      .upsert(
+        { cohort_id: cohortId, course_id: courseId, due_at: dueAt || null },
+        { onConflict: "cohort_id,course_id", ignoreDuplicates: true }
+      );
+    if (cohortCourseError) throw cohortCourseError;
   }
 
   // 2. Fetch existing cohort_learner_courses to prevent duplicates
-  const { data: existingAssignments } = await supabase
+  const { data: existingAssignments, error: existingAssignmentsError } = await supabase
     .from("cohort_learner_courses")
     .select("user_id")
     .eq("cohort_id", cohortId)
     .eq("course_id", courseId);
+  if (existingAssignmentsError) throw existingAssignmentsError;
 
   const alreadyAssignedUserIds = new Set((existingAssignments || []).map((r) => r.user_id));
   const newAssigneeIds = targetUserIds.filter((uid) => !alreadyAssignedUserIds.has(uid));
@@ -491,9 +519,7 @@ export async function assignCourseToCohortOrLearners({
     const { error: insertErr } = await supabase
       .from("cohort_learner_courses")
       .insert(learnerCourseRows);
-    if (insertErr) {
-      console.warn("cohort_learner_courses insert warning:", insertErr);
-    }
+    if (insertErr) throw insertErr;
   }
 
   // 4. Upsert into course_enrollments so each learner has it in their active dashboard
@@ -501,16 +527,12 @@ export async function assignCourseToCohortOrLearners({
     const enrollments = targetUserIds.map((uid) => ({
       user_id: uid,
       course_id: courseId,
-      status: "enrolled",
       progress_percentage: 0,
     }));
-    try {
-      await supabase
-        .from("course_enrollments")
-        .upsert(enrollments, { onConflict: "user_id,course_id", ignoreDuplicates: true });
-    } catch (enrErr) {
-      console.warn("course_enrollments upsert warning:", enrErr);
-    }
+    const { error: enrollmentError } = await supabase
+      .from("course_enrollments")
+      .upsert(enrollments, { onConflict: "user_id,course_id", ignoreDuplicates: true });
+    if (enrollmentError) throw enrollmentError;
   }
 
   // 5. Post an activity announcement to cohort feed

@@ -6,7 +6,7 @@ import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { calculateCohortProgress, extendCohortTimeline, assignCourseToCohortOrLearners, unassignCohortCourse } from "../../lib/api/cohorts.js";
 import {
   fetchCohortDetail, updateCohort, addCohortMember, removeCohortMember,
-  createCohortPost, assignCohortLearnerCourse, removeCohortLearnerCourse,
+  createCohortPost, removeCohortLearnerCourse,
   fetchUsersInOrg, fetchCourses,
   addCohortResource, deleteCohortResource, createCohortSession, deleteCohortSession,
   bulkAddCohortMembersByEmail, batchAssignTrackCoursesToCohort,
@@ -437,18 +437,6 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
     showToast(`${name} removed from cohort`);
   }
 
-  // --- Course assignments ---
-  const [assignUserId, setAssignUserId] = useState("");
-  const [assignCourseId, setAssignCourseId] = useState("");
-  async function handleAssignCourse() {
-    if (!assignUserId || !assignCourseId || !cohortId) return;
-    await assignCohortLearnerCourse({ cohortId, userId: assignUserId, courseId: assignCourseId, assignedBy: currentUserId });
-    setAssignUserId("");
-    setAssignCourseId("");
-    detailQuery.refetch();
-    showToast("Course assigned");
-  }
-
   async function handleRemoveAssignment(id) {
     await removeCohortLearnerCourse(id);
     detailQuery.refetch();
@@ -723,17 +711,17 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
             {tab === "courses" && (
               <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
-                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-                  <select className="ta-input" style={{ flex: 1, minWidth: 180 }} value={assignUserId} onChange={(e) => setAssignUserId(e.target.value)}>
-                    <option value="">Select member...</option>
-                    {members.map((m) => <option key={m.user_id} value={m.user_id}>{m.user_profiles?.display_name || m.user_id}</option>)}
-                  </select>
-                  <select className="ta-input" style={{ flex: 1, minWidth: 180 }} value={assignCourseId} onChange={(e) => setAssignCourseId(e.target.value)}>
-                    <option value="">Select course...</option>
-                    {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-                  </select>
-                  <button className="ta-btn ta-btn-primary ta-btn-sm" onClick={handleAssignCourse} disabled={!assignUserId || !assignCourseId}><BookOpen size={14} /> Assign</button>
-                </div>
+                <CohortCourseAssignmentSection
+                  cohortId={cohortId}
+                  members={members}
+                  courses={courses}
+                  cohortCourses={cohortCourses}
+                  learnerCourses={learnerCourses}
+                  currentUserId={currentUserId}
+                  onUpdated={() => detailQuery.refetch()}
+                  showToast={showToast}
+                />
+                <div style={{ fontSize: 12.5, fontWeight: 700, marginTop: 20 }}>Individual assignment records</div>
                 <div className="ta-table-wrap">
                 <table className="ta-table ta-mt16">
                   <thead><tr><th>Member</th><th>Course</th><th>Assigned</th><th></th></tr></thead>

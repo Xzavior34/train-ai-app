@@ -904,6 +904,8 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
     cohortsQuery.refetch();
     joinRequestsQuery.refetch();
     seatsQuery.refetch();
+    instructorsQuery.refetch();
+    applicationsQuery.refetch();
   }
 
   useEffect(() => {
