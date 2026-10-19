@@ -495,20 +495,20 @@ export function useAuth() {
       const finalName = extraData?.display_name || extraData?.full_name || normalizedEmail.split("@")[0].replace(/[._-]/g, " ");
       try {
         const pendingJoin = safeStorage.getJSON("trainai_pending_org_join", null);
-        if (activeSession && pendingJoin?.orgIdOrSlug) {
-          joinOrganizationByReferral(pendingJoin.orgIdOrSlug, {
+        if (pendingJoin?.orgIdOrSlug) {
+          joinOrganizationByReferral(pendingJoin.orgIdOrSlug, finalRole, finalUid, {
             userId: finalUid,
             email: normalizedEmail,
             displayName: finalName,
             role: finalRole,
-          });
-        } else if (activeSession) {
+          }).catch(() => {});
+        } else {
           joinDefaultOrganization({
             userId: finalUid,
             email: normalizedEmail,
             displayName: finalName,
             role: finalRole,
-          });
+          }).catch(() => {});
         }
       } catch {}
 
@@ -526,11 +526,13 @@ export function useAuth() {
     if (isDemoAdminMarker(normalizedEmail)) {
       finalRole = "admin";
     }
+    const demoUid = `user_${normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_")}`;
+    const demoDisplayName = extraData?.display_name || extraData?.full_name || normalizedEmail.split("@")[0].replace(/[._-]/g, " ");
     const newSession = {
       user: {
-        id: `user_${normalizedEmail.replace(/[^a-zA-Z0-9]/g, "_")}`,
+        id: demoUid,
         email: normalizedEmail,
-        user_metadata: { display_name: normalizedEmail.split("@")[0].replace(".", " "), role: finalRole }
+        user_metadata: { display_name: demoDisplayName, role: finalRole }
       },
       role: finalRole,
       _demo: true
@@ -538,6 +540,26 @@ export function useAuth() {
     setSession(newSession);
     safeStorage.setItem(AUTH_STORAGE_KEY, newSession);
     setDemoRoleForEmail(normalizedEmail, finalRole);
+
+    try {
+      const pendingJoin = safeStorage.getJSON("trainai_pending_org_join", null);
+      if (pendingJoin?.orgIdOrSlug) {
+        joinOrganizationByReferral(pendingJoin.orgIdOrSlug, finalRole, demoUid, {
+          userId: demoUid,
+          email: normalizedEmail,
+          displayName: demoDisplayName,
+          role: finalRole,
+        }).catch(() => {});
+      } else {
+        joinDefaultOrganization({
+          userId: demoUid,
+          email: normalizedEmail,
+          displayName: demoDisplayName,
+          role: finalRole,
+        }).catch(() => {});
+      }
+    } catch {}
+
     return { data: newSession, error: null };
   }, []);
 

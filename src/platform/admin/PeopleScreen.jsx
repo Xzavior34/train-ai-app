@@ -847,9 +847,17 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
     if (cohortFilter !== "all" && cohortFilter !== "none" && m.cohort_name !== cohortFilter) return false;
     if (referralFilter !== "all") {
       const memberJoinSource = m.join_source || "shareable_link";
-      if (referralFilter === "shareable_link" && memberJoinSource !== "shareable_link") return false;
+      const isShareableLink =
+        memberJoinSource === "shareable_link" ||
+        memberJoinSource === "direct_signup" ||
+        memberJoinSource === "link" ||
+        memberJoinSource === "invite_link" ||
+        Boolean(m.referral_link) ||
+        Boolean(m.referral_slug) ||
+        m.status === "link_clicked";
+      if (referralFilter === "shareable_link" && !isShareableLink) return false;
       if (referralFilter === "email_invite" && memberJoinSource !== "email_invite") return false;
-      if (referralFilter === "direct" && memberJoinSource !== "direct") return false;
+      if (referralFilter === "direct" && memberJoinSource !== "direct" && memberJoinSource !== "direct_signup") return false;
     }
     const effectiveDate = m.joined_at || m.created_at || m.last_active_at;
     if (!matchesDateRangeFilter(effectiveDate, dateFilter, dateFrom, dateTo)) return false;
@@ -857,7 +865,16 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
   }), [members, search, roleFilter, statusFilter, cohortFilter, referralFilter, dateFilter, dateFrom, dateTo]);
 
   const linkMembers = useMemo(() => {
-    return members.filter((m) => (m.join_source || "shareable_link") === "shareable_link");
+    return members.filter((m) =>
+      !m.join_source ||
+      m.join_source === "shareable_link" ||
+      m.join_source === "direct_signup" ||
+      m.join_source === "link" ||
+      m.join_source === "invite_link" ||
+      Boolean(m.referral_link) ||
+      Boolean(m.referral_slug) ||
+      m.status === "link_clicked"
+    );
   }, [members]);
 
   const linkFilteredMembers = useMemo(() => linkMembers.filter(m => {
@@ -1279,10 +1296,10 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           </td>
                           <td style={{ minWidth: 180 }}>
                             <div className="ta-row ta-gap10" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => setDetailMember(m)}>
-                              <Avatar initials={m.status === "link_clicked" ? "LV" : initials} size={34} src={m.avatar_url || undefined} />
+                              <Avatar initials={m.status === "link_clicked" && (!m.email || !m.email.includes("@")) ? "LV" : initials} size={34} src={m.avatar_url || undefined} />
                               <div style={{ minWidth: 130, flex: 1 }}>
                                 <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)", whiteSpace: "normal", wordBreak: "break-word" }}>
-                                  {m.display_name || (m.status === "link_clicked" ? "Prospective Student" : "Member")}
+                                  {m.display_name || (m.status === "link_clicked" && (!m.email || !m.email.includes("@")) ? "Prospective Student" : "Member")}
                                 </div>
                                 <div style={{ fontSize: 11, color: "var(--text-3)", whiteSpace: "normal", wordBreak: "break-all", marginTop: 2 }}>
                                   {m.email && m.email.includes("@") ? (
@@ -1341,7 +1358,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                           </td>
                           <td>
                             <span style={{ fontSize: 12.5, fontWeight: 500, color: m.cohort_name ? "var(--text)" : "var(--text-3)" }}>
-                              {m.cohort_name || (m.status === "link_clicked" ? "Awaiting Signup" : "Not in a cohort")}
+                              {m.cohort_name || (m.status === "link_clicked" && (!m.email || !m.email.includes("@")) ? "Awaiting Signup" : "Not in a cohort")}
                             </span>
                           </td>
                           <td>
@@ -1350,7 +1367,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                             </span>
                           </td>
                           <td style={{ cursor: "pointer" }} onClick={() => setDetailMember(m)} title="Click to view detailed course breakdown & scores">
-                            {m.status === "link_clicked" ? (
+                            {m.status === "link_clicked" && (!m.email || !m.email.includes("@")) ? (
                               <span style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 600 }}>Awaiting Signup</span>
                             ) : (
                               <div style={{ width: "100%", maxWidth: 140 }}>
@@ -1365,7 +1382,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                             )}
                           </td>
                           <td>
-                            {m.status === "link_clicked" ? (
+                            {m.status === "link_clicked" && (!m.email || !m.email.includes("@")) ? (
                               <Tag tone="warning">Link Clicked</Tag>
                             ) : m.status === "pending" || m.status === "pending_approval" ? (
                               <Tag tone="attention">Pending Approval</Tag>
@@ -1420,7 +1437,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
                 <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Active Members</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#10B981", marginTop: 4 }}>
-                  {linkMembers.filter(m => (m.status || "active") === "active").length}
+                  {linkMembers.filter(m => (m.status || "active") === "active" || (m.email && m.email.includes("@"))).length}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Enrolled with workspace access</div>
               </div>
@@ -1440,7 +1457,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
               <div className="ta-card" style={{ padding: "14px 18px", borderRadius: 10 }}>
                 <div style={{ fontSize: 11.5, color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em" }}>Prospective Visitors</div>
                 <div style={{ fontSize: 24, fontWeight: 800, color: "#6366F1", marginTop: 4 }}>
-                  {linkMembers.filter(m => m.status === "link_clicked").length}
+                  {linkMembers.filter(m => m.status === "link_clicked" && (!m.email || !m.email.includes("@"))).length}
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>Clicked link • awaiting signup</div>
               </div>
@@ -1521,10 +1538,10 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                         <tr key={m.id}>
                           <td style={{ minWidth: 180 }}>
                             <div className="ta-row ta-gap10" style={{ cursor: "pointer", alignItems: "center" }} onClick={() => setDetailMember(m)}>
-                              <Avatar initials={m.status === "link_clicked" ? "LV" : initials} size={34} src={m.avatar_url || undefined} />
+                              <Avatar initials={m.status === "link_clicked" && (!m.email || !m.email.includes("@")) ? "LV" : initials} size={34} src={m.avatar_url || undefined} />
                               <div style={{ minWidth: 130, flex: 1 }}>
                                 <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>
-                                  {m.display_name || (m.status === "link_clicked" ? "Prospective Student" : "Member")}
+                                  {m.display_name || (m.status === "link_clicked" && (!m.email || !m.email.includes("@")) ? "Prospective Student" : "Member")}
                                 </div>
                                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
                                   {m.email && m.email.includes("@") ? (
@@ -1548,7 +1565,7 @@ export function PeopleScreen({ orgId, orgSelector, setScreen, currentUserId }) {
                             </span>
                           </td>
                           <td>
-                            {m.status === "link_clicked" ? (
+                            {m.status === "link_clicked" && (!m.email || !m.email.includes("@")) ? (
                               <Tag tone="info">🔗 Link Clicked</Tag>
                             ) : m.status === "pending" ? (
                               <Tag tone="warning">Pending Approval</Tag>
