@@ -1238,6 +1238,16 @@ export async function fetchMyCohortMemberships(userId) {
 // above.
 export async function fetchCohortPostsFeed(cohortId) {
   if (!supabase || !cohortId) return [];
+  // Use the security-definer read model first. It returns only the cohort
+  // feed and safe public profile fields after verifying that the caller is a
+  // member or an authorized organization administrator. This avoids nested
+  // PostgREST reads being partially stripped by the independent RLS policies
+  // on replies, reactions, cohort_members, and user_profiles.
+  const { data: feedData, error: feedError } = await supabase.rpc("get_cohort_feed_for_member", {
+    p_cohort_id: cohortId,
+  });
+  if (!feedError && Array.isArray(feedData)) return feedData;
+
   const { data, error } = await supabase
     .from("cohort_posts")
     .select("*, cohort_post_replies(*), cohort_post_reactions(id, user_id)")
@@ -1278,9 +1288,7 @@ export async function createCohortPost({ cohortId, authorId, content, isAnnounce
 }
 
 // Reply to a cohort post (real `cohort_post_replies` table). The live RLS
-// policy (cpr_insert_member in 0007_missing_schema.sql) only checks
-// author_id = auth.uid() for inserts - no separate client-side membership
-// gate is faked here since the DB doesn't actually enforce one beyond that.
+// policy verifies both author identity and access to the post's cohort.
 export async function addCohortPostReply({ postId, authorId, content }) {
   if (!supabase || !postId || !authorId || !content?.trim()) return null;
   const { data, error } = await supabase
@@ -1678,6 +1686,15 @@ export async function fetchCohortAssignedCourses(cohortId, userId = null) {
 
 export async function fetchCohortMembers(cohortId) {
   if (!supabase || !cohortId) return [];
+  // The direct table policy intentionally protects membership rows from
+  // unrelated users. This RPC exposes the complete roster only after a
+  // server-side same-cohort check and returns a deliberately small profile
+  // projection (name, avatar, role), never private profile fields.
+  const { data: directory, error: directoryError } = await supabase.rpc("get_cohort_member_directory", {
+    p_cohort_id: cohortId,
+  });
+  if (!directoryError && Array.isArray(directory)) return directory;
+
   // `cohort_members` has two foreign keys to user_profiles (user_id and
   // added_by), so a bare `user_profiles(...)` embed is ambiguous and PostgREST
   // refuses the query outright - which is why cohort member lists rendered

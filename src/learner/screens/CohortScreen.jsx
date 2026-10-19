@@ -18,7 +18,7 @@ export function CohortScreen({
   session, showToast = () => {}, back, push, goTab, params
 }) {
   const [tab, setTab] = useState("chat"); // "chat" | "courses" | "resources" | "sessions" | "members"
-  const [expandedPostId, setExpandedPostId] = useState(null);
+  const [replyVisibility, setReplyVisibility] = useState({});
   const [newPostText, setNewPostText] = useState("");
   const [posting, setPosting] = useState(false);
   const [replyInputs, setReplyInputs] = useState({});
@@ -458,7 +458,10 @@ export function CohortScreen({
           {!cohortPostsQuery?.loading && posts.length === 0 && (
             <div className="tai-empty">No announcements from your instructor yet.</div>
           )}
-          {posts.map(cp => (
+          {posts.map(cp => {
+            const replies = cp.cohort_post_replies || [];
+            const repliesOpen = replyVisibility[cp.id] ?? replies.length > 0;
+            return (
             <div
               key={cp.id}
               className="tai-card"
@@ -521,15 +524,15 @@ export function CohortScreen({
 
                 <button
                   className="tai-btn tai-btn-ghost tai-btn-sm"
-                  onClick={() => setExpandedPostId(expandedPostId === cp.id ? null : cp.id)}
+                  onClick={() => setReplyVisibility(prev => ({ ...prev, [cp.id]: !repliesOpen }))}
                 >
-                  <MessageCircle size={13} /> {(cp.cohort_post_replies || []).length} Replies
+                  <MessageCircle size={13} /> {replies.length} Replies
                 </button>
               </div>
 
-              {expandedPostId === cp.id && (
+              {repliesOpen && (
                 <div className="tai-col tai-gap8" style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border)" }}>
-                  {(cp.cohort_post_replies || []).map(rep => (
+                  {replies.map(rep => (
                     <div key={rep.id} style={{ background: "var(--surface-3)", padding: "10px 14px", borderRadius: 8 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
                         <span style={{ fontWeight: 800, fontSize: 12.5, color: "var(--text)" }}>{rep.user_profiles?.display_name || "Peer"}:</span>
@@ -604,7 +607,8 @@ export function CohortScreen({
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
