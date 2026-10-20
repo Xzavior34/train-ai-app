@@ -49,13 +49,8 @@ export function AIQuizScreen({
   const practiceStreakDays = gamificationStatsQuery?.data?.streak_days ?? null;
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
-  const [activeThreadId, setActiveThreadId] = useState("thread-1");
-  const [chatThreads, setChatThreads] = useState([
-    { id: "thread-1", title: "Design Tokens & Variable Governance", date: "Today, 02:40 PM", messagesCount: 6, snippet: "Can you explain how design tokens and variables work in Figma and code..." },
-    { id: "thread-2", title: "RAG Pipeline vs Fine-Tuning Architectures", date: "Yesterday", messagesCount: 12, snippet: "What are the tradeoffs of using vector embeddings vs fine-tuning a base model..." },
-    { id: "thread-3", title: "Spatial UI Gaze Padding in VisionOS", date: "Aug 18", messagesCount: 8, snippet: "Explain minimum 60pt gaze target bounding boxes in spatial computing..." },
-    { id: "thread-4", title: "Prompt Caching & Multi-Modal API Cost Optimization", date: "Aug 15", messagesCount: 4, snippet: "How does prefix caching reduce latency in large context windows..." }
-  ]);
+  const activeThreadId = "current";
+  const chatThreads = coachMessages.length ? [{ id: "current", title: "Current AI conversation", date: "", messagesCount: coachMessages.length, snippet: coachMessages[0]?.content || coachMessages[0]?.text || "Your saved messages" }] : [];
 
   const currentQuiz = (quizzesQuery.data || []).find(q => q.id === quizTopic) || quizzesQuery.data?.[0];
   const questions = activeQuizSource === "ai" ? (aiQuiz?.questions || []) : (selectedQuizQuestionsQuery?.data || []);
@@ -69,24 +64,10 @@ export function AIQuizScreen({
   }
 
   function handleStartNewChat() {
-    const newThread = {
-      id: `thread-${Date.now()}`,
-      title: "New AI Learning Session",
-      date: "Just now",
-      messagesCount: 0,
-      snippet: "New inquiry started..."
-    };
-    setChatThreads(prev => [newThread, ...prev]);
-    setActiveThreadId(newThread.id);
     if (setCoachInput) setCoachInput("");
-    showToast?.("Started new chat session");
-  }
-
-  function handleSelectThread(t) {
-    setActiveThreadId(t.id);
     setShowHistory(false);
-    showToast?.(`Loaded: ${t.title}`);
   }
+  function handleSelectThread() { setShowHistory(false); }
 
   const chatBottomRef = useRef(null);
 
@@ -326,7 +307,7 @@ export function AIQuizScreen({
               }}
             >
               <MessageSquarePlus size={14} />
-              <span>New Conversation</span>
+              <span>Write a question</span>
             </button>
           </div>
 
@@ -528,7 +509,7 @@ export function AIQuizScreen({
 
           {typeof credits === "number" && credits <= 0 && (
             <div style={{ padding: "10px 14px", borderRadius: 8, background: "var(--danger-bg)", color: "var(--danger)", fontSize: 12.5, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-              <span>You have used all 20 free AI credits. Buy AI credits to continue using AI Coach and AI Quizzes.</span>
+              <span>You have no AI credits remaining. Buy credits or request more from your organization.</span>
               {onBuyCredits && (
                 <button
                   type="button"

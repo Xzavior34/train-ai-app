@@ -749,8 +749,8 @@
     {
       "file": "src/learner/screens/AIQuizScreen.jsx",
       "name": "AIQuizScreen",
-      "status": "FAIL",
-      "message": "Cannot read properties of undefined (reading 'data')"
+      "status": "PASS",
+      "renderedBytes": 11159
     },
     {
       "file": "src/learner/screens/CapCohort3Screen.jsx",
@@ -804,19 +804,19 @@
       "file": "src/learner/screens/LeaderboardScreen.jsx",
       "name": "LeaderboardScreen",
       "status": "PASS",
-      "renderedBytes": 8557
+      "renderedBytes": 8562
     },
     {
       "file": "src/learner/screens/LessonScreen.jsx",
       "name": "LessonScreen",
-      "status": "FAIL",
-      "message": "Cannot read properties of undefined (reading 'has')"
+      "status": "PASS",
+      "renderedBytes": 166
     },
     {
       "file": "src/learner/screens/MentorsScreen.jsx",
       "name": "MentorsScreen",
-      "status": "FAIL",
-      "message": "Cannot read properties of undefined (reading 'trim')"
+      "status": "PASS",
+      "renderedBytes": 3230
     },
     {
       "file": "src/learner/screens/MessagesScreen.jsx",
@@ -845,8 +845,8 @@
     {
       "file": "src/learner/screens/ProfileScreen.jsx",
       "name": "ProfileScreen",
-      "status": "FAIL",
-      "message": "Cannot read properties of undefined (reading 'avatarUrl')"
+      "status": "PASS",
+      "renderedBytes": 15794
     },
     {
       "file": "src/learner/screens/StudyGroupScreen.jsx",
@@ -1176,16 +1176,9 @@
   "missingAssets": [],
   "databaseContracts": {
     "literalTables": 118,
-    "literalRpcs": 76,
+    "literalRpcs": 75,
     "missingRelations": [],
-    "missingRpcs": [
-      {
-        "name": "record_verified_marketplace_purchase",
-        "files": [
-          "src/lib/api/marketplace.js"
-        ]
-      }
-    ]
+    "missingRpcs": []
   },
   "tablesWithoutRls": []
 }

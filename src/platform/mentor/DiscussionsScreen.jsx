@@ -83,7 +83,7 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
     menteeAvatar: defaultDiscussions[i % defaultDiscussions.length].menteeAvatar,
     module: d.module || "General Course Q&A",
     createdAt: d.created_at ? new Date(d.created_at).toLocaleDateString() : "Recent",
-    upvotes: d.upvotes || Math.floor(Math.random() * 8) + 2,
+    upvotes: d.upvotes ?? 0,
     replies: d.replies || []
   })) : (isMockDataEnabled() ? defaultDiscussions : []);
 
@@ -114,14 +114,8 @@ export function DiscussionsScreen({ mentorId, orgSelector }) {
     }
   }
 
-  function handleAiDraft(id, question) {
-    setAiDrafting(id);
-    setTimeout(() => {
-      const draft = `Great question, ${question.mentee}! To resolve this cleanly: 1) Ensure your state is persisted in a global store before the transition begins; 2) Hook into the view-transition-start event to sync coordinates. Check the sample repository in Module Resources for the reference implementation.`;
-      setReplyTexts(prev => ({ ...prev, [id]: draft }));
-      setAiDrafting(null);
-      showToast("AI Co-Pilot drafted an answer. Review and post!");
-    }, 1000);
+  function handleAiDraft() {
+    showToast("Automated instructor drafts are not configured. Write and review your answer before posting.");
   }
 
   async function handlePostReply(id) {

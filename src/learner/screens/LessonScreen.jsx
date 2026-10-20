@@ -1,3 +1,4 @@
+import { fetchOrCreateAIConversation, sendAIChatMessage, requestAIReply } from "../../lib/api/schemaHelper.js";
 import React, { useState, useEffect, useRef } from "react";
 import { TopBar, ProgressBar, Tag, Avatar, initialsOf } from "../components/LearnerUI.jsx";
 import {
@@ -50,7 +51,7 @@ export function LessonScreen({
   course, lessons = [], lessonId, session, lessonNotesQuery, noteInputText, setNoteInputText,
   back, push, showToast, markLessonComplete, enrollmentsQuery, lessonProgressQuery,
   completedLessonIds, setCompletedLessonIds, addLessonNote,
-  lessonDiscussionQuery, postCourseDiscussionMessage
+  lessonDiscussionQuery, postCourseDiscussionMessage, onCreditsChanged
 }) {
   const videoPlayerRef = useRef(null);
 
@@ -100,20 +101,15 @@ export function LessonScreen({
   const [feedbackHelpful, setFeedbackHelpful] = useState(true);
 
   // Normalize current lesson
-  const rawLessons = lessons && lessons.length > 0 ? lessons : [
-    { id: "l-1", title: "1. Foundations of Spatial Systems & Multi-Agent AI", duration: 18, module: "Module 1: Foundations" },
-    { id: "l-2", title: "2. Structuring Design Tokens with Figma Variables", duration: 22, module: "Module 1: Foundations" },
-    { id: "l-3", title: "3. Vector Databases & pgvector Index Architectures", duration: 26, module: "Module 2: Core Engineering" },
-    { id: "l-4", title: "4. Building Autonomous Function Calling Agents", duration: 32, module: "Module 2: Core Engineering" },
-    { id: "l-5", title: "5. Production Deployment, Caching & Performance Benchmark", duration: 24, module: "Module 3: Production & Scaling" },
-    { id: "l-6", title: "6. Final Capstone Project & Portfolio Submission", duration: 40, module: "Module 4: Capstone" }
-  ];
-
-  const currentLessonIndex = rawLessons.findIndex(l => l.id === lessonId);
-  const lesson = rawLessons[currentLessonIndex >= 0 ? currentLessonIndex : 0] || rawLessons[0];
+  const rawLessons = Array.isArray(lessons) ? lessons : [];
+  const currentLessonIndex = Math.max(0, rawLessons.findIndex(item => item.id === lessonId));
+  const lesson = rawLessons[currentLessonIndex];
   const nextLesson = rawLessons[currentLessonIndex + 1];
   const prevLesson = currentLessonIndex > 0 ? rawLessons[currentLessonIndex - 1] : null;
-  const isCompleted = lesson && completedLessonIds.has(`${course?.id}-${lesson.id}`);
+  const isCompleted = !!lesson && !!completedLessonIds?.has(`${course?.id}-${lesson.id}`);
+  const lessonChapters = Array.isArray(lesson?.chapters) ? lesson.chapters : [];
+  const lessonTranscript = Array.isArray(lesson?.transcript) ? lesson.transcript : [];
+  if (!lesson) return <div className="tai-content"><button onClick={back} className="tai-btn">Back to course</button><div className="tai-empty">No lesson is available yet. Return to the course and retry.</div></div>;
 
   // Format MM:SS helper
   const formatTime = (secs) => {
@@ -129,30 +125,25 @@ export function LessonScreen({
     setCompletedLessonIds(prev => new Set([...prev, `${course?.id}-${lesson.id}`]));
     enrollmentsQuery?.refetch?.();
     lessonProgressQuery?.refetch?.();
-    showToast?.("Lesson completed! +50 XP awarded");
+    showToast?.("Lesson completed.");
     setShowFeedbackPrompt(true);
   }
 
   // Handle AI Tutor Query
-  function handleSendAiMessage(customPrompt) {
-    const query = customPrompt || aiInput.trim();
-    if (!query) return;
-
-    const userMsg = { id: `msg-${Date.now()}`, sender: "user", text: query };
-    setAiChatMessages(prev => [...prev, userMsg]);
-    if (!customPrompt) setAiInput("");
+  async function handleSendAiMessage(customPrompt) {
+    const query = (typeof customPrompt === "string" ? customPrompt : aiInput).trim();
+    if (!query || aiThinking || !session?.user?.id) return;
     setAiThinking(true);
-
-    setTimeout(() => {
-      let replyText = `Great question! In this section of the lesson (${formatTime(currentTimeSec)}), the key takeaway is ensuring your state variables are fully decoupled from asynchronous render loops. This prevents race conditions when multiple agent functions resolve out-of-order.`;
-      if (query.toLowerCase().includes("summar")) {
-        replyText = `**Key Takeaways for this Lesson:**\n\n1. **Decoupled Architecture**: Separate prompt reasoning from execution engines.\n2. **Vector Indexing**: Use HNSW with Supabase pgvector for sub-200ms semantic lookups.\n3. **Resilience**: Implement token-bucket throttling and exponential backoff retry hooks.`;
-      } else if (query.toLowerCase().includes("code") || query.toLowerCase().includes("example")) {
-        replyText = `Here is the production implementation pattern demonstrated in Chapter ${activeChapterIndex + 1}:\n\n\`\`\`javascript\nconst agentResponse = await executeAutonomousWorkflow({\n  model: "gemini-1.5-pro",\n  tools: [vectorSearchTool, databaseTool],\n  maxSteps: 5,\n  timeoutMs: 8000\n});\n\`\`\``;
-      }
-      setAiChatMessages(prev => [...prev, { id: `msg-${Date.now() + 1}`, sender: "ai", text: replyText }]);
-      setAiThinking(false);
-    }, 900);
+    try {
+      const conversation = await fetchOrCreateAIConversation(session.user.id);
+      if (!conversation?.id) throw new Error("Could not open your AI conversation. Please retry.");
+      const message = `Course: ${course?.title || "Current course"}. Lesson: ${lesson.title}. Question: ${query}`;
+      await sendAIChatMessage({ conversationId: conversation.id, userId: session.user.id, content: message, role: "user" });
+      const reply = await requestAIReply({ conversationId: conversation.id, message });
+      setAiChatMessages(previous => [...previous, { id: `user-${Date.now()}`, sender: "user", text: query }, { id: `ai-${Date.now()}`, sender: "ai", text: reply.reply }]);
+      setAiInput("");
+    } catch (error) { showToast?.(error.message || "AI Coach is unavailable. Please retry."); }
+    finally { setAiThinking(false); onCreditsChanged?.(); }
   }
 
   // Handle New Q&A Question - a real row in course_discussion_messages,
@@ -417,7 +408,7 @@ export function LessonScreen({
                   <div className="tai-row tai-gap6" style={{ alignItems: "center", flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
                     <span style={{ fontSize: 11, fontWeight: 800, color: "#94A3B8", minWidth: 54 }}>Moments:</span>
                     <div className="tai-scrollx tai-gap6" style={{ flex: 1, alignItems: "center", paddingBottom: 2, scrollbarWidth: "none" }}>
-                      {DEFAULT_CHAPTERS.slice(0, 4).map((ch, idx) => (
+                      {lessonChapters.slice(0, 4).map((ch, idx) => (
                         <button
                           key={idx}
                           className="tai-video-control-pill"
@@ -840,10 +831,10 @@ export function LessonScreen({
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 380, overflowY: "auto" }}>
-                {DEFAULT_TRANSCRIPT
+                {lessonTranscript
                   .filter(line => !transcriptSearch || line.text.toLowerCase().includes(transcriptSearch.toLowerCase()))
                   .map((line, idx) => {
-                    const isCurrent = currentTimeSec >= line.seconds && (idx === DEFAULT_TRANSCRIPT.length - 1 || currentTimeSec < DEFAULT_TRANSCRIPT[idx + 1].seconds);
+                    const isCurrent = currentTimeSec >= line.seconds && (idx === lessonTranscript.length - 1 || currentTimeSec < lessonTranscript[idx + 1].seconds);
                     return (
                       <div
                         key={line.time}

@@ -336,7 +336,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
                               setSelectedCourse(course);
                             }}
                           >
-                            View &amp; Enroll <ArrowRight size={13} />
+                            View course details <ArrowRight size={13} />
                           </button>
                         </div>
                       </div>
@@ -510,7 +510,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
               style={{ width: "100%", justifyContent: "center", padding: "12px", fontSize: 14 }}
               onClick={handlePurchase}
             >
-              Sign in to purchase and enrol
+              Sign in to explore learning options
             </button>
           </div>
         </div>

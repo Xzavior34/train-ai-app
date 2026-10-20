@@ -1425,46 +1425,15 @@ export async function fetchOrCreateAIConversation(userId) {
 }
 
 export async function requestAIReply({ conversationId, message }) {
-  if (!supabase) {
-    return {
-      reply: generateContextualAIFallback(message),
-      fallback: true
-    };
+  if (!supabase) throw new Error("AI Coach requires an online connection.");
+  const { data, error } = await supabase.functions.invoke("ai-chat", { body: { conversationId, message } });
+  if (error) {
+    let message = error.message || "AI Coach is unavailable. Please retry.";
+    try { const body = await error.context?.json?.(); if (body?.error) message = body.error; } catch {}
+    throw new Error(message);
   }
-  try {
-    const { data, error } = await supabase.functions.invoke("ai-chat", { body: { conversationId, message } });
-    if (error) {
-      let errMsg = error.message;
-      try {
-        if (error.context && typeof error.context.json === "function") {
-          const body = await error.context.json();
-          if (body?.error) errMsg = body.error;
-        }
-      } catch (_) {}
-
-      console.warn("requestAIReply error from function:", errMsg);
-      return {
-        reply: generateContextualAIFallback(message),
-        fallback: true,
-        warning: errMsg
-      };
-    }
-    if (data?.error) {
-      return {
-        reply: generateContextualAIFallback(message),
-        fallback: true,
-        warning: data.error
-      };
-    }
-    return data;
-  } catch (e) {
-    console.warn("requestAIReply catch:", e);
-    return {
-      reply: generateContextualAIFallback(message),
-      fallback: true,
-      warning: e?.message
-    };
-  }
+  if (data?.error || !data?.reply || data?.fallback) throw new Error(data?.error || data?.warning || "AI Coach could not generate a response. Please retry.");
+  return data;
 }
 
 // Real learner-scoped AI insights. The live `ai-insights` edge function

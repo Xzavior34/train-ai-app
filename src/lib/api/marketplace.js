@@ -218,38 +218,8 @@ export async function fetchMarketplaceCourseById(idOrSlug) {
 /**
  * Records a marketplace purchase with 15% platform commission ledger
  */
-export async function recordMarketplacePurchase({ courseId, userId, txId, commissionPercent = 15.0 }) {
-  if (!supabase) return { success: false, error: "Marketplace checkout requires an online account." };
-  if (!userId) return { success: false, error: "Sign in before purchasing a course." };
-  if (!txId) return { success: false, error: "A verified payment reference is required." };
-  const course = await fetchMarketplaceCourseById(courseId);
-  if (!course) return { success: false, error: "Course not found." };
-
-  const split = calculateMarketplaceSplit(course.price_amount, commissionPercent);
-
-  const newPurchase = {
-    id: `pur-${Date.now()}`,
-    course_id: course.id,
-    course_title: course.title,
-    academy_id: course.academy_id,
-    academy_name: course.academy_name,
-    user_id: userId || "user-current",
-    gross_amount: split.grossAmount,
-    platform_fee_amount: split.platformFeeAmount,
-    instructor_revenue_amount: split.instructorRevenueAmount,
-    currency: course.currency || "USD",
-    payment_provider_tx_id: txId || `tx-${Date.now()}`,
-    settlement_status: "settled",
-    created_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase.rpc("record_verified_marketplace_purchase", {
-    p_course_id: course.id,
-    p_payment_reference: txId,
-  });
-  if (error) return { success: false, error: error.message || "Could not record the verified purchase." };
-
-  return { success: true, data: data || newPurchase };
+export async function recordMarketplacePurchase() {
+  return { success: false, error: "Marketplace purchases are not enabled. Contact the academy before making a payment." };
 }
 
 /**

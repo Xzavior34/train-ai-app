@@ -1,63 +1,64 @@
 [
   {
-    "name": "Invitation definer RPC denies another tenant",
+    "name": "Organization admins cannot invite into another tenant through the definer RPC",
     "status": "PASS"
   },
   {
-    "name": "Invitation cannot grant platform or organization ownership",
+    "name": "Organization invitation cannot grant platform-owner or organization-owner access",
     "status": "PASS"
   },
   {
-    "name": "Administrator invitations require the organization owner",
+    "name": "Administrator invitation requires the organization owner",
     "status": "PASS"
   },
   {
-    "name": "Organization admin can invite a mentor",
+    "name": "Organization admin can invite a mentor through the secured RPC",
     "status": "PASS"
   },
   {
-    "name": "Foreign admins cannot read or cancel invitations",
+    "name": "Another tenant administrator cannot read or cancel private invitations",
     "status": "PASS"
   },
   {
-    "name": "Approved invitation grants only its role to the matching account",
+    "name": "Accepted invitation grants only its approved role to the matching account",
     "status": "PASS"
   },
   {
-    "name": "Legacy privileged invitations roll back at redemption",
+    "name": "Legacy privileged invitation is rejected at redemption without granting roles",
+    "status": "PASS"
+  },
+  {
+    "name": "Recovery throttle serializes concurrent requests per email",
     "status": "FAIL",
-    "message": "Missing expected rejection."
+    "message": "Expected values to be strictly equal:\n\n0 !== 5\n"
   },
   {
-    "name": "Concurrent recovery requests enforce five per email",
+    "name": "Recovery throttle enforces an IP cap across different addresses",
+    "status": "FAIL",
+    "message": "Expected values to be strictly equal:\n\n0 !== 20\n"
+  },
+  {
+    "name": "Clients cannot manipulate password-reset counters",
     "status": "PASS"
   },
   {
-    "name": "Concurrent recovery requests enforce twenty per IP",
+    "name": "Fake references cannot mint paid seats or activate subscriptions",
     "status": "PASS"
   },
   {
-    "name": "Clients cannot manipulate recovery counters",
+    "name": "Authenticated callers cannot create a verified payment receipt",
     "status": "PASS"
   },
   {
-    "name": "Fake references cannot mint seats or activate a subscription",
+    "name": "Receipt parameters cannot be altered or used by another purchaser",
     "status": "PASS"
   },
   {
-    "name": "Clients cannot mint provider-verified receipts",
+    "name": "Concurrent payment callback retries add the purchased seats exactly once",
     "status": "PASS"
   },
   {
-    "name": "Receipts cannot be altered or claimed by another purchaser",
-    "status": "PASS"
-  },
-  {
-    "name": "Concurrent seat callbacks fulfill exactly once",
-    "status": "PASS"
-  },
-  {
-    "name": "Provider reference cannot be rebound to a different purchase",
+    "name": "A verified provider reference cannot be rebound to another purchase",
     "status": "PASS"
   },
   {
@@ -65,15 +66,15 @@
     "status": "PASS"
   },
   {
-    "name": "Subscription retries activate once and record one audit event",
+    "name": "Verified subscription retries activate once and create one audit record",
     "status": "PASS"
   },
   {
-    "name": "Organization admins and owners cannot self-grant free paid seats",
+    "name": "Organization admins and owners cannot grant themselves free paid seats",
     "status": "PASS"
   },
   {
-    "name": "Platform-owner free-seat grants remain available",
+    "name": "Platform-owner free seat grants remain available",
     "status": "PASS"
   }
 ]

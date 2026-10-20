@@ -372,7 +372,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     const content = (typeof customPrompt === "string" ? customPrompt : coachInput).trim();
     if (!content || coachSending) return;
     if (typeof credits === "number" && credits <= 0) {
-      showToast("You have used all 20 free AI credits. Please buy AI credits to continue using AI Coach.");
+      showToast("You have no AI credits remaining. Buy credits or request more from your organization.");
       push("creditsCheckout", { mode: "credits" });
       return;
     }
@@ -409,27 +409,13 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
         return;
       }
 
-      const reply = await requestAIReply({ conversationId: convId, message: content });
-      if (reply?.reply) {
-        if (reply.fallback) {
-          await sendAIChatMessage({ conversationId: convId, userId: currentUserId, content: reply.reply, role: "assistant" });
-        }
-      } else {
-        const fallbackText = generateContextualAIFallback(content);
-        await sendAIChatMessage({ conversationId: convId, userId: currentUserId, content: fallbackText, role: "assistant" });
-      }
-      if (consumeCredit) {
-        await consumeCredit(1, "ai_chat_message");
-      }
+      await requestAIReply({ conversationId: convId, message: content });
+      if (consumeCredit) await consumeCredit(1, "ai_chat_message");
       coachMessagesQuery.refetch();
-    } catch (e) {
-      console.warn("handleSendCoachMessage catch:", e);
-      try {
-        const convId = coachConversationId || `conv_${session?.user?.id || "learner"}_coach`;
-        const fallbackText = generateContextualAIFallback(content);
-        await sendAIChatMessage({ conversationId: convId, userId: session?.user?.id || "learner", content: fallbackText, role: "assistant" });
-        coachMessagesQuery.refetch();
-      } catch (_) {}
+    } catch (error) {
+      setCoachInput(content);
+      showToast(error.message || "AI Coach is unavailable. Please retry.");
+      if (consumeCredit) await consumeCredit(0, "refresh");
     } finally {
       setCoachSending(false);
     }
@@ -867,6 +853,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
               })()}
               {screen === "lesson" && (
                 <LessonScreen
+                  onCreditsChanged={refreshCredits}
                   course={courseById(params.id)}
                   lessons={lessonsForCurrentCourse()}
                   lessonId={params.lessonId}

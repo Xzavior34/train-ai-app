@@ -1124,7 +1124,7 @@ export default function AuthPage({
             <p style={styles.sub}>
               {mode === "signin"
                 ? "Sign in with your email and password."
-                : "Join Train AI to start your workforce learning path (includes 20 free AI credits)."}
+                : "Join Train AI to start learning with 3 free AI questions."}
             </p>
 
             {mode === "signup" && (
@@ -1150,7 +1150,7 @@ export default function AuthPage({
                   <span style={{ fontSize: 11.5, color: "#64748B", lineHeight: 1.4 }}>
                     {orgInfo?.name
                       ? `Enroll as a learner under ${orgInfo.name} and receive 20 free AI credits.`
-                      : "Access courses, AI quizzes, and community independently (includes 20 free AI credits)."}
+                      : "Access courses, AI quizzes, and community independently with 3 free AI questions."}
                   </span>
                 </div>
 
