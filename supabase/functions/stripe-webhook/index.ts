@@ -1,3 +1,4 @@
+import { validatePayment, recordVerifiedPayment } from "../_shared/paymentValidation.js";
 // Train AI - stripe-webhook
 //
 // Real Stripe webhook signature verification, using Stripe's own
@@ -129,21 +130,26 @@ Deno.serve(async (req) => {
       const session = event.data?.object;
       const context = session?.metadata?.context;
       const eventId = event.id; // Stripe's own event id - the real idempotency key
-      if (context === "credits") {
+      if (context === "credits" && session?.payment_status === "paid") {
         const userId = session?.metadata?.user_id;
-        const creditsToAdd = Number(session?.metadata?.credits_to_add || 0);
+        let metadata;
+        try { metadata = JSON.parse(session?.metadata?.metadata_json || "{}"); } catch { throw Error("Invalid payment metadata"); }
+        metadata = await validatePayment(db,userId,"credits",Number(session.amount_total)/100,session.currency,metadata);
+        const creditsToAdd = metadata.credits_to_add;
+        const reference = session.metadata?.reference || session.client_reference_id || session.id;
+        await recordVerifiedPayment(db,{provider:"stripe",reference,userId,context:"credits",amount:Number(session.amount_total)/100,currency:session.currency,metadata});
         if (userId && creditsToAdd > 0) {
           const { data, error } = await db.rpc("record_and_grant_ai_credit_payment", {
             p_provider: "stripe",
-            p_provider_reference: eventId,
+            p_provider_reference: reference,
             p_account_scope: "learner",
             p_organization_id: null,
             p_user_id: userId,
             p_credits: creditsToAdd,
-            p_amount: session?.amount_total ?? null,
+            p_amount: Number(session.amount_total)/100,
             p_currency: (session?.currency || "usd").toUpperCase(),
           });
-          if (error) console.error("stripe-webhook: grant failed:", error);
+          if (error) return jsonResponse({ error: "Credit settlement failed. Please retry." }, 500);
           else console.log("stripe-webhook: processed", eventId, data);
         }
       }

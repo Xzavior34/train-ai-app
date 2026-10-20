@@ -921,15 +921,15 @@ export async function joinStudyGroup({ studyGroupId, userId }) {
     throw new Error("Please sign in to join this study group.");
   }
 
-  // Gracefully handle demo mode or non-UUID inputs without database error
+  // Invalid live IDs must not be reported as successful membership changes.
   if (!isRealDatabaseId(actualUserId) || !isRealDatabaseId(studyGroupId)) {
-    return { success: true, demo: true };
+    throw new Error("A valid signed-in account and study group are required.");
   }
 
   // Upsert member record to prevent duplicate key errors (23505) on rapid or repeated clicks
   let { error } = await supabase
     .from("study_group_members")
-    .upsert({ group_id: studyGroupId, user_id: actualUserId, role: "member" }, { onConflict: "group_id, user_id" });
+    .upsert({ group_id: studyGroupId, user_id: actualUserId, role: "member" }, { onConflict: "group_id, user_id", ignoreDuplicates: true });
 
   // If foreign key violation (23503), the user's profile is not yet in public.user_profiles.
   // Auto-provision the profile via join_default_organization RPC and retry.

@@ -1,3 +1,4 @@
+import { hasRequiredMfa } from "../_shared/accountSecurity.js";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
@@ -16,6 +17,7 @@ Deno.serve(async (req) => {
     const caller = createClient(url, anon, { global: { headers: { Authorization: authHeader } } });
     const { data: callerData, error: callerError } = await caller.auth.getUser(jwt);
     if (callerError || !callerData.user) return json({ error: "Invalid or expired session" }, 401);
+    if (!hasRequiredMfa(callerData.user, jwt)) return json({ error: "Two-factor verification required." }, 403);
     const body = await req.json().catch(() => ({}));
     const email = String(body.email || "").trim().toLowerCase();
     const organizationId = String(body.organization_id || "");
@@ -30,6 +32,10 @@ Deno.serve(async (req) => {
     ]);
     const authorized = ["owner", "admin"].includes(membership?.role) || (roles || []).some((row) => row.role === "super_admin");
     if (!authorized) return json({ error: "Organization administrator access required." }, 403);
+    const isSuper = (roles || []).some(row => row.role === "super_admin");
+    if (!["learner", "mentor", "manager", "admin"].includes(role) || !["member", "content_manager", "people_manager", "admin"].includes(organizationRole)) return json({ error: "Unsupported invitation role." }, 400);
+    if ((role === "admin" || organizationRole === "admin") && !isSuper && membership?.role !== "owner") return json({ error: "Only the organization owner can invite administrators." }, 403);
+    if ((role === "admin") !== (organizationRole === "admin")) return json({ error: "Administrator invitation roles must match." }, 400);
     const existing = await db.from("user_invitations").select("id,token").eq("organization_id", organizationId).eq("email", email).eq("status", "pending").gt("expires_at", new Date().toISOString()).maybeSingle();
     let invitation = existing.data;
     if (!invitation) {
@@ -42,7 +48,7 @@ Deno.serve(async (req) => {
     const inviteUrl = `https://trainailtd.com/?invite=${encodeURIComponent(invitation.token)}`;
     const resendKey = Deno.env.get("RESEND_API_KEY") || Deno.env.get("RESEND_KEY") || "";
     if (!resendKey) return json({ error: "Invitation created, but email delivery is not configured.", invitation_id: invitation.id }, 503);
-    const mail = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: Deno.env.get("RESEND_FROM_EMAIL") || "Train AI <info@trainailtd.com>", to: [email], subject: `You're invited to ${org?.name || "Train AI"}`, html: `<p>You have been invited to join <strong>${org?.name || "Train AI"}</strong>.</p><p><a href="${inviteUrl}">Accept invitation</a></p><p>This invitation expires in 7 days.</p>`, text: `You have been invited to join ${org?.name || "Train AI"}. Accept here: ${inviteUrl}` }) });
+    const mail = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ from: Deno.env.get("RESEND_FROM_EMAIL") || "Train AI <info@trainailtd.com>", to: [email], subject: `You're invited to ${org?.name || "Train AI"}`, html: `<p>You have been invited to join <strong>${String(org?.name || "Train AI").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "'":"&#39;"}[char]))}</strong>.</p><p><a href="${inviteUrl}">Accept invitation</a></p><p>This invitation expires in 7 days.</p>`, text: `You have been invited to join ${org?.name || "Train AI"}. Accept here: ${inviteUrl}` }) });
     if (!mail.ok) return json({ error: "Invitation created, but the email could not be delivered.", invitation_id: invitation.id }, 502);
     return json({ success: true, results: [{ success: true, invitation_id: invitation.id }] });
   } catch (error) {

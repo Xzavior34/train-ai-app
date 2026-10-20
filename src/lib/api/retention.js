@@ -66,44 +66,11 @@ export async function fetchDailyLoginRewardState(userId) {
 // (same direct upsert pattern `markLessonComplete` in learner.js already
 // uses for awarding points - there's no separate "award points" RPC in
 // this schema).
-export async function claimDailyLoginReward(userId, dayInCycle) {
+export async function claimDailyLoginReward(userId) {
   if (!supabase || !userId) return null;
-  const rung = DAILY_LOGIN_REWARD_LADDER[Math.min(Math.max(dayInCycle, 1), 7) - 1];
-  const today = todayISODate();
-
-  const { error: insertErr } = await supabase.from("daily_login_rewards").insert({
-    user_id: userId,
-    claimed_date: today,
-    day_in_cycle: dayInCycle,
-    points_awarded: rung.points,
-    bonus_reward: rung.bonus,
-  });
-  if (insertErr) {
-    console.warn("Daily login reward claim warning:", insertErr);
-    return null;
-  }
-
-  try {
-    const { data: stats } = await supabase
-      .from("user_gamification_stats")
-      .select("total_points, streak_freezes_available")
-      .eq("user_id", userId)
-      .maybeSingle();
-    const freezeBonus = dayInCycle >= 7 ? 1 : 0;
-    await supabase.from("user_gamification_stats").upsert(
-      {
-        user_id: userId,
-        total_points: (stats?.total_points || 0) + rung.points,
-        streak_freezes_available: (stats?.streak_freezes_available || 0) + freezeBonus,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" }
-    );
-  } catch (e) {
-    console.warn("Gamification stats sync warning (daily login reward):", e);
-  }
-
-  return rung;
+  const { data, error } = await supabase.rpc("claim_my_daily_login_reward");
+  if (error) throw new Error("Could not claim today's reward. Please retry.");
+  return data;
 }
 
 // Daily challenges removed per the product brief ("Features Removed:

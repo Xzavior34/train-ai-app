@@ -1,3 +1,4 @@
+import { hasRequiredMfa } from "../_shared/accountSecurity.js";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -30,6 +31,7 @@ Deno.serve(async (req) => {
     const callerClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: callerData, error: callerError } = await callerClient.auth.getUser(jwt);
     if (callerError || !callerData.user) return json({ error: "Invalid or expired session" }, 401);
+    if (!hasRequiredMfa(callerData.user, jwt)) return json({ error: "Two-factor verification required." }, 403);
 
     const body = await req.json().catch(() => ({}));
     const targetUserId = String(body.user_id || callerData.user.id);
@@ -41,10 +43,18 @@ Deno.serve(async (req) => {
     const admin = createClient(url, serviceKey);
     if (targetUserId !== callerData.user.id) {
       const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", callerData.user.id);
-      if (!(roles || []).some((row) => ["super_admin", "admin"].includes(row.role))) {
-        return json({ error: "You cannot notify another user." }, 403);
+      const isSuper = (roles || []).some(row => row.role === "super_admin");
+      if (!isSuper) {
+        const { data: memberships, error: scopeError } = await admin.from("organization_members").select("organization_id").eq("user_id", callerData.user.id).eq("status", "active").in("role", ["owner", "admin"]);
+        const orgIds = (memberships || []).map(row => row.organization_id);
+        if (scopeError || !orgIds.length) return json({ error: "You cannot notify another user." }, 403);
+        const { data: target, error: targetError } = await admin.from("organization_members").select("user_id").eq("user_id", targetUserId).eq("status", "active").in("organization_id", orgIds).limit(1);
+        if (targetError || !target?.length) return json({ error: "Recipient must be an active member of your organization." }, 403);
       }
     }
+    let destination;
+    try { destination = new URL(launchUrl); } catch { return json({ error: "Invalid notification link." }, 400); }
+    if (destination.protocol !== "https:" || !["trainailtd.com", "www.trainailtd.com"].includes(destination.hostname)) return json({ error: "Notification links must stay on Train AI." }, 400);
 
     const response = await fetch("https://api.onesignal.com/notifications", {
       method: "POST",

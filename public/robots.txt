@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /admin
 
-Sitemap: https://train-ai-app.vercel.app/sitemap.xml
+Sitemap: https://trainailtd.com/sitemap.xml

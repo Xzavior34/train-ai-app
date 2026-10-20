@@ -9,6 +9,8 @@
 -- Remove the older enum-typed overload. Keeping both the enum and text
 -- variants makes PostgREST unable to choose reliably from a JSON string.
 DROP FUNCTION IF EXISTS public.join_organization_by_invite(text, public.platform_role);
+-- PostgreSQL cannot remove an existing parameter default with CREATE OR REPLACE.
+DROP FUNCTION IF EXISTS public.join_organization_by_invite(text, text);
 
 CREATE OR REPLACE FUNCTION public.join_organization_by_invite(
   p_org_target text,

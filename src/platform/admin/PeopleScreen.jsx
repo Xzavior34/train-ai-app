@@ -1,3 +1,4 @@
+import { MemberLearningTrack } from "../components/MemberLearningTrack.jsx";
 import React, { useState, useEffect, useContext, useMemo } from "react";
 import { TopBar, Avatar, Tag, ToastContext, Switch } from "../components/PlatformUI.jsx";
 import {
@@ -5,6 +6,7 @@ import {
   Minus, Award, Eye, Pencil, ShieldCheck, Layers, UserMinus, RefreshCw, Link2,
   BookOpen, GraduationCap, MoreHorizontal, Save, CheckCircle2,
   Mail, TrendingUp, AlertTriangle, Sparkles, Copy, Check, QrCode, Share2, Users, ExternalLink,
+  Route, Lock,
 } from "lucide-react";
 import { CERTIFICATE_THEMES } from "../../components/certificates/certificateThemes.js";
 import { CertificateDocument } from "../../components/certificates/CertificateDocument.jsx";
@@ -107,14 +109,14 @@ function downloadDirectoryCsv(rows, progressByMemberId) {
 /* ==========================================================================
    Member record drawer - the whole of one member, in one place
    ========================================================================= */
-function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToast, onIssueCertificate }) {
+export function MemberDetailModal({ member, orgId, cohorts, initialTab = "track", onClose, onChanged, showToast, onIssueCertificate }) {
   const detailQuery = useSupabaseQuery(
     async () => (member ? fetchUserDetailForAdmin(member.id, orgId) : null),
     [member?.id, orgId]
   );
   const detail = detailQuery.data;
 
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState(initialTab || "track");
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ displayName: "", department: "", school: "", bio: "" });
   const [savingProfile, setSavingProfile] = useState(false);
@@ -125,7 +127,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
 
   React.useEffect(() => {
     if (!member) return;
-    setTab("overview");
+    setTab(initialTab || "track");
     setEditing(false);
     setRole(member.role || "learner");
     setCohortId("");
@@ -136,7 +138,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
       school: member.school || "",
       bio: member.bio || "",
     });
-  }, [member?.id]);
+  }, [member?.id, initialTab]);
 
   if (!member) return null;
 
@@ -230,17 +232,21 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
 
       <div className="ta-tabs ta-mt16">
         {[
+          { k: "track", label: `Learning track${detail?.tracks?.length ? ` (${detail.tracks.length})` : ""}` },
           { k: "overview", label: "Overview" },
-          { k: "learning", label: `Learning${detail?.enrollments?.length ? ` (${detail.enrollments.length})` : ""}` },
+          { k: "learning", label: `Courses${detail?.enrollments?.length ? ` (${detail.enrollments.length})` : ""}` },
           { k: "access", label: "Role & access" },
         ].map((t) => (
           <div key={t.k} className={`ta-tab ${tab === t.k ? "active" : ""}`} onClick={() => setTab(t.k)}>{t.label}</div>
         ))}
       </div>
 
+      {detailQuery.error && tab !== "track" && <div className="ta-empty" role="alert">{detailQuery.error} <button className="ta-btn ta-btn-outline" onClick={detailQuery.refetch}>Retry</button></div>}
       {detailQuery.loading && <div className="ta-empty ta-mt16">Loading this member's record...</div>}
 
-      {!detailQuery.loading && tab === "overview" && (
+      {tab === "track" && <MemberLearningTrack orgId={orgId} userId={member.id} />}
+
+      {!detailQuery.loading && !detailQuery.error && tab === "overview" && (
         <div className="ta-mt16">
           <div className="ta-grid ta-grid-4 ta-gap8">
             {[
@@ -338,7 +344,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
         </div>
       )}
 
-      {!detailQuery.loading && tab === "learning" && (
+      {!detailQuery.loading && !detailQuery.error && tab === "learning" && (
         <div className="ta-mt16">
           <div className="ta-card" style={{ padding: 16 }}>
             <div style={{ fontWeight: 800, fontSize: 14 }}>Course enrollments</div>
@@ -400,7 +406,7 @@ function MemberDetailModal({ member, orgId, cohorts, onClose, onChanged, showToa
         </div>
       )}
 
-      {!detailQuery.loading && tab === "access" && (
+      {!detailQuery.loading && !detailQuery.error && tab === "access" && (
         <div className="ta-mt16">
           <div className="ta-card" style={{ padding: 16 }}>
             <div className="ta-row ta-gap8"><ShieldCheck size={15} color="var(--primary)" /><div style={{ fontWeight: 800, fontSize: 14 }}>Platform role</div></div>

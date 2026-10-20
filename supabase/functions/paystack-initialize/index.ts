@@ -1,3 +1,4 @@
+import { validatePayment, recordVerifiedPayment, isAllowedPaymentReturn } from "../_shared/paymentValidation.js";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
@@ -7,6 +8,8 @@ const respond = (body: unknown, status = 200) => new Response(JSON.stringify(bod
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method !== "POST") return respond({ error: "Method not allowed" }, 405);
+  try {
   const auth = req.headers.get("Authorization") || "";
   const jwt = auth.replace(/^Bearer\s+/i, "");
   const url = Deno.env.get("SUPABASE_URL") || "";
@@ -27,16 +30,19 @@ Deno.serve(async (req) => {
     }
   }
   if (!secret) return respond({ error: "Payment provider is not configured" }, 503);
+  if (!service) return respond({ error: "Payment verification is not configured" }, 503);
+  const db = createClient(url, service);
 
   const body = await req.json().catch(() => ({}));
   const amount = Number(body.amount);
   const context = String(body.context || "");
   if (!Number.isFinite(amount) || amount <= 0 || !allowedContexts.has(context)) return respond({ error: "Invalid payment request" }, 400);
+  const verifiedMetadata = await validatePayment(db, userData.user.id, context, amount, body.currency || "NGN", body.metadata);
   let callbackUrl: URL;
   try { callbackUrl = new URL(body.callback_url); } catch { return respond({ error: "Invalid callback URL" }, 400); }
-  if (!allowedHosts.has(callbackUrl.hostname)) return respond({ error: "Callback host is not allowed" }, 400);
+  if (!isAllowedPaymentReturn(callbackUrl.toString())) return respond({ error: "Callback host is not allowed" }, 400);
 
-  const metadata = { ...(body.metadata || {}), context, user_id: userData.user.id };
+  const metadata = { ...verifiedMetadata, context, user_id: userData.user.id };
   const response = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
     headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
@@ -51,4 +57,5 @@ Deno.serve(async (req) => {
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result?.status) return respond({ error: result?.message || "Could not initialize payment" }, 502);
   return respond({ authorization_url: result.data.authorization_url, access_code: result.data.access_code, reference: result.data.reference });
+  } catch (error) { return respond({ error: error?.message || "Payment service unavailable. Please retry." }, 400); }
 });

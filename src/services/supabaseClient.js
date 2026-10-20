@@ -95,7 +95,10 @@ const sara = buildClient(
 );
 
 // 2. Train AI 2.0 / Organization Database - central platform & tenant project (djikuoucsuhdiyrhsduz)
-const orgDb = buildClient(
+const orgDb = normalizeSupabaseUrl(DEFAULT_ORG_DB_URL) === normalizeSupabaseUrl(DEFAULT_SARA_URL)
+  && DEFAULT_ORG_DB_ANON_KEY.trim() === DEFAULT_SARA_ANON_KEY.trim()
+  ? sara
+  : buildClient(
   DEFAULT_ORG_DB_URL,
   DEFAULT_ORG_DB_ANON_KEY,
   { detectSessionInUrl: false }

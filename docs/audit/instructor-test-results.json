@@ -1,0 +1,62 @@
+[
+  {
+    "name": "Organization admin atomically promotes and assigns an instructor",
+    "status": "PASS"
+  },
+  {
+    "name": "Instructor roles are own, authoritative and exclude administrator",
+    "status": "PASS"
+  },
+  {
+    "name": "Only explicit teaching assignments appear; learner membership is insufficient",
+    "status": "PASS"
+  },
+  {
+    "name": "Instructor cannot assign, self-promote or edit organization member roles",
+    "status": "PASS"
+  },
+  {
+    "name": "Foreign organization admin and foreign assignee are denied",
+    "status": "PASS"
+  },
+  {
+    "name": "Admin track includes whole-cohort and individual coursework with genuine progress",
+    "status": "PASS"
+  },
+  {
+    "name": "Empty member record stays empty",
+    "status": "PASS"
+  },
+  {
+    "name": "Instructor sees only assigned cohort learning, without global private metadata",
+    "status": "PASS"
+  },
+  {
+    "name": "Learners and foreign admins cannot read another learner record",
+    "status": "PASS"
+  },
+  {
+    "name": "Assigned instructor can manage resources and sessions only in assigned cohort",
+    "status": "PASS"
+  },
+  {
+    "name": "Assignment removal immediately revokes teaching on an existing session",
+    "status": "PASS"
+  },
+  {
+    "name": "Reassignment restores only the selected cohort",
+    "status": "PASS"
+  },
+  {
+    "name": "Inactive organization membership removes teaching access",
+    "status": "PASS"
+  },
+  {
+    "name": "Admin can inspect suspended members while their teaching access stays revoked",
+    "status": "PASS"
+  },
+  {
+    "name": "Admin role picker atomically updates both stores without granting admin",
+    "status": "PASS"
+  }
+]

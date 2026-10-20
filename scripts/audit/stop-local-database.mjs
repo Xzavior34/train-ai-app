@@ -1,0 +1,11 @@
+﻿import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import {spawnSync} from 'node:child_process';
+const config=JSON.parse(fs.readFileSync('docs/audit/local-test-cluster.json','utf8'));
+const target=fs.realpathSync.native(config.dir);
+const tempRoot=fs.realpathSync.native(os.tmpdir());
+if(!target.toLowerCase().startsWith((tempRoot+path.sep).toLowerCase()) || !path.basename(target).startsWith('trainai-audit-pg-') || config.port!==55439) throw Error('Refusing non-fixture database directory');
+const result=spawnSync(path.join(config.bin,'pg_ctl.exe'),['-D',path.join(target,'data'),'-m','fast','-w','stop'],{windowsHide:true,stdio:'ignore',timeout:15000});
+if(result.status!==0 && fs.existsSync(path.join(target,'data','postmaster.pid')))throw Error('Could not stop the isolated fixture');
+console.log('Isolated fixture stopped; its files were retained.');

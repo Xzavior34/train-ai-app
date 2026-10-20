@@ -468,6 +468,7 @@ export function DemoRequestsScreen({ orgSelector }) {
                               {req.org_type}
                             </span>
                           )}
+                          <span style={{ fontSize: 11, color: "var(--text-3)" }}>{req.contact_verification === "verified" ? "Email contact verified" : "Email contact unverified"}</span>
                           {req.team_size && (
                             <span
                               style={{

@@ -1,3 +1,4 @@
+import { hasRequiredMfa } from "../_shared/accountSecurity.js";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -27,6 +28,7 @@ Deno.serve(async (req) => {
   const { data: userData, error: userError } = await caller.auth.getUser(jwt);
   if (userError || !userData?.user) return json({ error: "Invalid session" }, 401);
 
+  if (!hasRequiredMfa(userData.user, jwt)) return json({ error: "Two-factor verification required." }, 403);
   const body = await req.json().catch(() => ({}));
   const organizationId = String(body.organization_id || "");
   if (!/^[0-9a-f-]{36}$/i.test(organizationId)) return json({ error: "Valid organization_id is required" }, 400);
@@ -35,7 +37,7 @@ Deno.serve(async (req) => {
   const userId = userData.user.id;
   const [{ data: roles }, { data: membership }] = await Promise.all([
     db.from("user_roles").select("role").eq("user_id", userId),
-    db.from("organization_members").select("role").eq("user_id", userId).eq("organization_id", organizationId).maybeSingle(),
+    db.from("organization_members").select("role").eq("user_id", userId).eq("organization_id", organizationId).eq("status", "active").maybeSingle(),
   ]);
   const isSuperAdmin = (roles || []).some((row) => row.role === "super_admin");
   const isOrgAdmin = membership && ["owner", "admin"].includes(membership.role);

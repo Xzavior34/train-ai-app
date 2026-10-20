@@ -17,6 +17,7 @@ Deno.serve(async (req) => {
     const db = createClient(url, service, { auth: { autoRefreshToken: false, persistSession: false } });
     const { data: invitation, error: inviteError } = await db.from("user_invitations").select("email,organization_id,organization_role,role,expires_at,status,organizations(name)").eq("token", token).maybeSingle();
     if (inviteError || !invitation || invitation.status !== "pending" || new Date(invitation.expires_at) <= new Date()) return json({ error: "This invitation is invalid, expired, or already used." }, 400);
+    if (!["learner", "mentor", "manager", "admin"].includes(invitation.role) || invitation.organization_role === "owner") return json({ error: "This invitation requires administrator review." }, 403);
     let user = null;
     for (let page = 1; page <= 100 && !user; page += 1) {
       const { data, error } = await db.auth.admin.listUsers({ page, perPage: 1000 });

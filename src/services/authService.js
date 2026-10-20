@@ -3,14 +3,16 @@ import { isDemoAdminMarker, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 import { safeStorage } from "../lib/storage.js";
 
 export async function fetchMyRoles() {
-  let email = "";
   if (supabase) {
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      email = sessionData?.session?.user?.email || "";
-    } catch {}
+    const { data, error } = await supabase.rpc("get_my_workspace_roles");
+    if (error) throw error;
+    return Array.isArray(data) && data.length ? data : ["learner"];
   }
+  return fetchDemoRoles();
+}
 
+async function fetchDemoRoles() {
+  let email = "";
   const parsed = safeStorage.getJSON("trainai_active_session_v1");
   if (parsed) {
     try {
@@ -23,23 +25,9 @@ export async function fetchMyRoles() {
             : ["admin", "learner"];
         }
         if (demoRole === "mentor") return ["mentor", "learner"];
+        if (demoRole === "manager") return ["manager", "learner"];
       }
     } catch {}
-  }
-
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.from("user_roles").select("role");
-      if (!error && data && data.length > 0) {
-        const roles = data.map((r) => r.role);
-        if (!isPlatformOwnerEmail(email)) {
-          return roles.map(r => r === "super_admin" ? "admin" : r);
-        }
-        return roles;
-      }
-    } catch (e) {
-      console.warn("Could not query user_roles table:", e);
-    }
   }
 
   return ["learner"];

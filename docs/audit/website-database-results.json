@@ -1,0 +1,79 @@
+[
+  {
+    "name": "Invitation definer RPC denies another tenant",
+    "status": "PASS"
+  },
+  {
+    "name": "Invitation cannot grant platform or organization ownership",
+    "status": "PASS"
+  },
+  {
+    "name": "Administrator invitations require the organization owner",
+    "status": "PASS"
+  },
+  {
+    "name": "Organization admin can invite a mentor",
+    "status": "PASS"
+  },
+  {
+    "name": "Foreign admins cannot read or cancel invitations",
+    "status": "PASS"
+  },
+  {
+    "name": "Approved invitation grants only its role to the matching account",
+    "status": "PASS"
+  },
+  {
+    "name": "Legacy privileged invitations roll back at redemption",
+    "status": "FAIL",
+    "message": "Missing expected rejection."
+  },
+  {
+    "name": "Concurrent recovery requests enforce five per email",
+    "status": "PASS"
+  },
+  {
+    "name": "Concurrent recovery requests enforce twenty per IP",
+    "status": "PASS"
+  },
+  {
+    "name": "Clients cannot manipulate recovery counters",
+    "status": "PASS"
+  },
+  {
+    "name": "Fake references cannot mint seats or activate a subscription",
+    "status": "PASS"
+  },
+  {
+    "name": "Clients cannot mint provider-verified receipts",
+    "status": "PASS"
+  },
+  {
+    "name": "Receipts cannot be altered or claimed by another purchaser",
+    "status": "PASS"
+  },
+  {
+    "name": "Concurrent seat callbacks fulfill exactly once",
+    "status": "PASS"
+  },
+  {
+    "name": "Provider reference cannot be rebound to a different purchase",
+    "status": "PASS"
+  },
+  {
+    "name": "Only the verified subscription tier can be applied",
+    "status": "PASS"
+  },
+  {
+    "name": "Subscription retries activate once and record one audit event",
+    "status": "PASS"
+  },
+  {
+    "name": "Organization admins and owners cannot self-grant free paid seats",
+    "status": "PASS"
+  },
+  {
+    "name": "Platform-owner free-seat grants remain available",
+    "status": "PASS"
+  }
+]

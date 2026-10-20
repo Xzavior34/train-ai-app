@@ -42,7 +42,7 @@ create policy "KPI activities editable by admins and staff" on public.kpi_activi
     exists (
       select 1 from public.user_roles ur 
       where ur.user_id = auth.uid() 
-      and ur.role in ('super_admin', 'admin', 'trainer', 'manager')
+      and ur.role in ('super_admin', 'admin', 'mentor', 'manager')
     )
   );
 
@@ -192,7 +192,7 @@ create policy "Access codes manageable by staff" on public.access_codes
     exists (
       select 1 from public.user_roles ur 
       where ur.user_id = auth.uid() 
-      and ur.role in ('super_admin', 'admin', 'trainer')
+      and ur.role in ('super_admin', 'admin', 'mentor')
     )
   );
 
@@ -202,7 +202,7 @@ create policy "Redemptions readable by owner and staff" on public.access_code_re
     exists (
       select 1 from public.user_roles ur 
       where ur.user_id = auth.uid() 
-      and ur.role in ('super_admin', 'admin', 'trainer')
+      and ur.role in ('super_admin', 'admin', 'mentor')
     )
   );
 
@@ -366,7 +366,7 @@ create policy "CAP teams editable by staff and team members" on public.cap_teams
     exists (
       select 1 from public.user_roles ur 
       where ur.user_id = auth.uid() 
-      and ur.role in ('super_admin', 'admin', 'trainer', 'mentor')
+      and ur.role in ('super_admin', 'admin', 'mentor', 'mentor')
     ) or exists (
       select 1 from public.cap_team_members ctm 
       where ctm.team_id = id and ctm.user_id = auth.uid()
@@ -381,7 +381,7 @@ create policy "CAP team members manageable by staff and team members" on public.
     exists (
       select 1 from public.user_roles ur 
       where ur.user_id = auth.uid() 
-      and ur.role in ('super_admin', 'admin', 'trainer', 'mentor')
+      and ur.role in ('super_admin', 'admin', 'mentor', 'mentor')
     ) or user_id = auth.uid()
   );
 
@@ -425,7 +425,7 @@ create policy "Mentorship checkins editable by mentor and admin" on public.mento
     exists (
       select 1 from public.user_roles ur 
       where ur.user_id = auth.uid() 
-      and ur.role in ('super_admin', 'admin', 'trainer')
+      and ur.role in ('super_admin', 'admin', 'mentor')
     )
   );
 

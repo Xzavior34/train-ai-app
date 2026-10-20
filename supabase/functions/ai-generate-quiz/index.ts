@@ -63,6 +63,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Topic is required" }, 400);
     }
 
+    if (topic.trim().length > 300 || !Number.isInteger(questionCount) || questionCount < 1 || questionCount > 20 || !["beginner","intermediate","advanced"].includes(difficulty)) {
+      return jsonResponse({ error: "Use a topic under 300 characters and 1 to 20 questions with a supported difficulty." }, 400);
+    }
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       return jsonResponse({ error: "AI provider not configured - OPENAI_API_KEY missing" }, 402);
@@ -163,7 +166,7 @@ Deno.serve(async (req) => {
     }
 
     const assessment = parsed?.assessment;
-    if (!assessment || !Array.isArray(assessment.questions) || assessment.questions.length === 0) {
+    if (!assessment || !Array.isArray(assessment.questions) || assessment.questions.length === 0 || assessment.questions.length > 20) {
       await refundOnFailure();
       return jsonResponse({ error: "Model returned invalid assessment structure" }, 500);
     }
@@ -172,14 +175,19 @@ Deno.serve(async (req) => {
     for (let i = 0; i < assessment.questions.length; i++) {
       const q = assessment.questions[i];
       if (!q.id) q.id = `q_${i + 1}_${Date.now()}`;
-      if (!Array.isArray(q.options) || q.options.length < 2) {
-        q.options = ["Option A", "Option B", "Option C", "Option D"];
+      if (!Array.isArray(q.options) || q.options.length !== 4 || !q.options.every((option) => typeof option === "string" && option.trim()) || typeof q.question !== "string" || !q.question.trim() || !Number.isInteger(q.correctAnswer) || q.correctAnswer < 0 || q.correctAnswer >= q.options.length) {
+        await refundOnFailure();
+        return jsonResponse({ error: "Model returned invalid quiz questions. Please try again." }, 502);
       }
-      if (typeof q.correctAnswer !== "number" || q.correctAnswer < 0 || q.correctAnswer >= q.options.length) {
-        q.correctAnswer = 0;
-      }
+
     }
 
+    const { data: attempt, error: attemptError } = await db.from("ai_generated_quiz_attempts").insert({ user_id: userData.user.id, questions: assessment.questions }).select("id").single();
+    if (attemptError || !attempt) {
+      await refundOnFailure();
+      return jsonResponse({ error: "Could not save the generated quiz. Please retry." }, 503);
+    }
+    assessment.attempt_id = attempt.id;
     return jsonResponse({ assessment });
   } catch (error) {
     console.error("ai-generate-quiz unhandled error:", error);

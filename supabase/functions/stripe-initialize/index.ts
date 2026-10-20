@@ -1,3 +1,4 @@
+import { validatePayment, recordVerifiedPayment, isAllowedPaymentReturn } from "../_shared/paymentValidation.js";
 import { createClient } from "npm:@supabase/supabase-js@2";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const allowedContexts = new Set(["credits", "course_enrollment", "waitlist_premium", "seat_purchase", "organization_subscription"]);
@@ -5,6 +6,8 @@ const allowedHosts = new Set(["trainailtd.com", "www.trainailtd.com", "localhost
 const respond = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method !== "POST") return respond({ error: "Method not allowed" }, 405);
+  try {
   const auth = req.headers.get("Authorization") || "";
   const jwt = auth.replace(/^Bearer\s+/i, "");
   const url = Deno.env.get("SUPABASE_URL") || "";
@@ -25,12 +28,15 @@ Deno.serve(async (req) => {
     }
   }
   if (!secret) return respond({ error: "Payment provider is not configured" }, 503);
+  if (!service) return respond({ error: "Payment verification is not configured" }, 503);
+  const db = createClient(url, service);
   const body = await req.json().catch(() => ({}));
   const amount = Number(body.amount); const context = String(body.context || "");
   if (!Number.isFinite(amount) || amount <= 0 || !allowedContexts.has(context)) return respond({ error: "Invalid payment request" }, 400);
+  const verifiedMetadata = await validatePayment(db, userData.user.id, context, amount, body.currency || "USD", body.metadata);
   let success: URL; let cancel: URL;
   try { success = new URL(body.success_url); cancel = new URL(body.cancel_url); } catch { return respond({ error: "Invalid return URL" }, 400); }
-  if (!allowedHosts.has(success.hostname) || !allowedHosts.has(cancel.hostname)) return respond({ error: "Return host is not allowed" }, 400);
+  if (!isAllowedPaymentReturn(success.toString()) || !isAllowedPaymentReturn(cancel.toString())) return respond({ error: "Return host is not allowed" }, 400);
   success.searchParams.set("session_id", "{CHECKOUT_SESSION_ID}");
   const reference = crypto.randomUUID();
   success.searchParams.set("reference", reference);
@@ -42,10 +48,11 @@ Deno.serve(async (req) => {
     "line_items[0][price_data][product_data][name]": String(body.description || "Train AI purchase"),
     "line_items[0][quantity]": "1", "metadata[user_id]": userData.user.id,
     "metadata[context]": context, "metadata[reference]": reference,
-    "metadata[metadata_json]": JSON.stringify(body.metadata || {}).slice(0, 450),
+    "metadata[metadata_json]": JSON.stringify(verifiedMetadata),
   });
   const response = await fetch("https://api.stripe.com/v1/checkout/sessions", { method: "POST", headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/x-www-form-urlencoded" }, body: form });
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result?.url) return respond({ error: result?.error?.message || "Could not initialize payment" }, 502);
   return respond({ checkout_url: result.url, session_id: result.id, reference });
+  } catch (error) { return respond({ error: error?.message || "Payment service unavailable. Please retry." }, 400); }
 });

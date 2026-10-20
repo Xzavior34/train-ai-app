@@ -1,3 +1,4 @@
+import { useAssignmentRefresh } from "../../lib/useAssignmentRefresh.js";
 import React, { useState, useContext } from "react";
 import { TopBar, StatCard, Tag, ToastContext } from "../components/PlatformUI.jsx";
 import { AnalysisNotesCard } from "../components/AnalysisNotesCard.jsx";
@@ -9,26 +10,26 @@ import {
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { fetchMentorSessions, fetchMentorEarnings } from "../../lib/api/schemaHelper.js";
-import { fetchMentorActiveCohorts, fetchStudentRiskList } from "../../lib/api/platform.js";
+import { fetchMentorActiveCohorts, fetchMyLearnerActivityAlerts } from "../../lib/api/platform.js";
 import { isMockDataEnabled } from "../../lib/mockDataManager.js";
 
 export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, orgId, orgSelector, onNavigate }) {
   const showToast = useContext(ToastContext);
   const [quickActionOpen, setQuickActionOpen] = useState(false);
-  const [tasks, setTasks] = useState([
+  const [tasks, setTasks] = useState(isMockDataEnabled() ? [
     { id: 1, text: "Grade pending coursework submissions", done: false, priority: "high" },
     { id: 2, text: "Prepare Workshop Asset Kit for upcoming cohort", done: true, priority: "normal" },
     { id: 3, text: "1:1 Clarification session with struggling learners", done: false, priority: "high" },
     { id: 4, text: "Upload latest study materials & syllabus templates to Resources", done: false, priority: "normal" }
-  ]);
+  ] : []);
 
-  const [aiActionRunning, setAiActionRunning] = useState(false);
-  const [aiActionSuccess, setAiActionSuccess] = useState(false);
+  const aiActionRunning = false;
 
   const sessionsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorSessions(mentorId) : [], [mentorId]);
   const activeCohortsQuery = useSupabaseQuery(async () => currentUserId ? fetchMentorActiveCohorts(currentUserId) : [], [currentUserId]);
+  useAssignmentRefresh(currentUserId, activeCohortsQuery.refetch);
   const earningsQuery = useSupabaseQuery(async () => mentorId ? fetchMentorEarnings(mentorId) : [], [mentorId]);
-  const riskQuery = useSupabaseQuery(async () => orgId ? fetchStudentRiskList(orgId) : [], [orgId]);
+  const riskQuery = useSupabaseQuery(async () => currentUserId ? fetchMyLearnerActivityAlerts() : [], [currentUserId]);
   
   const mentorSessions = sessionsQuery.data || [];
   const activeCohorts = activeCohortsQuery.data || [];
@@ -47,14 +48,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
   };
 
-  const handleRunAiSession = () => {
-    setAiActionRunning(true);
-    setTimeout(() => {
-      setAiActionRunning(false);
-      setAiActionSuccess(true);
-      setTimeout(() => setAiActionSuccess(false), 4000);
-    }, 1200);
-  };
+  const handleRunAiSession = () => onNavigate?.("schedule");
 
   const studentRisks = (riskQuery.data || []).map(r => ({
     name: r.name || r.user_name || "Learner",
@@ -62,7 +56,7 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
     risk: r.risk === "high" ? "High Risk" : "Needs Attention",
     riskTone: r.risk === "high" ? "danger" : "warning",
     lastActive: r.days === "N/A" ? "Inactive" : `${r.days}d ago`,
-    avatar: r.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+    avatar: r.avatar || null
   }));
 
   const activeLiveSession = mentorSessions.find(s => s.status === "in_progress" || s.status === "live") || null;
@@ -247,7 +241,8 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
 
               <div className="ta-col ta-gap16 ta-mt16 anim-stagger">
                 {activeCohortsQuery.loading && <div className="ta-empty">Loading your cohorts...</div>}
-                {!activeCohortsQuery.loading && activeCohorts.length === 0 && (
+                {activeCohortsQuery.error && <div className="ta-empty" role="alert">{activeCohortsQuery.error} <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={activeCohortsQuery.refetch}>Retry</button></div>}
+                {!activeCohortsQuery.loading && !activeCohortsQuery.error && activeCohorts.length === 0 && (
                   <div className="ta-empty">You're not assigned to any active cohorts yet.</div>
                 )}
                 {activeCohorts.map(c => {
@@ -284,22 +279,15 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
               <div style={{ fontSize: 13, color: "var(--text-2)", marginTop: 10, lineHeight: 1.55 }}>
                 {studentRisks.length > 0 ? (
                   <>
-                    Based on recent activity and course progress, <strong>{studentRisks.length} learner{studentRisks.length === 1 ? "" : "s"}</strong> currently need extra support. We recommend scheduling a targeted clarification workshop or 1:1 check-in.
+                    Based on recent activity, <strong>{studentRisks.length} learner{studentRisks.length === 1 ? "" : "s"}</strong> currently need extra support. We recommend scheduling a targeted clarification workshop or 1:1 check-in.
                   </>
                 ) : (
                   <>
-                    All learners across your {activeCohorts.length || 0} active cohort{activeCohorts.length === 1 ? "" : "s"} are currently on track. You can schedule a live review workshop or generate a study guide anytime.
+                    No inactivity alerts for your assigned cohorts. Open your schedule to arrange a check-in.
                   </>
                 )}
               </div>
 
-              {aiActionSuccess && (
-                <div className="ta-card ta-mt12 anim-pop" style={{ background: "rgba(16, 185, 129, 0.1)", borderColor: "#10B981", padding: 10 }}>
-                  <div className="ta-row ta-gap8" style={{ color: "#10B981", fontSize: 12.5, fontWeight: 600 }}>
-                    <CheckCircle2 size={15} /> Workshop scheduled and invitations broadcasted to {studentRisks.length || activeLearnerCount || 0} learners.
-                  </div>
-                </div>
-              )}
 
               <div className="ta-row ta-gap10 ta-mt16" style={{ flexWrap: "wrap" }}>
                 <button 
@@ -311,42 +299,44 @@ export function MentorDashboardScreen({ mentorId, currentUserId, profileQuery, o
                 </button>
                 <button 
                   className="ta-btn ta-btn-outline ta-btn-sm"
-                  onClick={() => showToast("Diagnostic study guide generated and synced to student resource library.")}
+                  onClick={() => onNavigate?.("cohorts")}
                 >
-                  Generate study guide
+                  Open cohort resources
                 </button>
               </div>
             </div>
 
           </div>
 
-          {/* Right Column: Student Risk Monitor & My Schedule */}
+          {/* Right Column: Learner Activity Alerts & My Schedule */}
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             
-            {/* Student Risk Monitor */}
+            {/* Learner Activity Alerts */}
             <div className="ta-card" style={{ padding: 22 }}>
               <div className="ta-row ta-between" style={{ paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
                 <div>
-                  <div className="ta-title" style={{ fontSize: 16 }}>Student Risk Monitor</div>
-                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Learners needing academic or attendance support</div>
+                  <div className="ta-title" style={{ fontSize: 16 }}>Learner Activity Alerts</div>
+                  <div className="ta-sub" style={{ fontSize: 12, marginTop: 2 }}>Inactivity signals for learners in your assigned cohorts</div>
                 </div>
                 {studentRisks.length > 0 && <Tag tone="danger">{studentRisks.filter(s => s.riskTone === "danger").length} High Risk</Tag>}
               </div>
 
               <div className="ta-col ta-gap12 ta-mt16 anim-stagger">
-                {studentRisks.length === 0 && (
+                {riskQuery.loading && <div className="ta-empty">Loading learner activity...</div>}
+                {riskQuery.error && <div className="ta-empty" role="alert">{riskQuery.error} <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={riskQuery.refetch}>Retry</button></div>}
+                {!riskQuery.loading && !riskQuery.error && studentRisks.length === 0 && (
                   <div className="ta-empty" style={{ padding: "16px 8px" }}>
-                    All learners in your assigned cohorts are currently in good academic standing.
+                    No inactivity alerts for your assigned cohorts.
                   </div>
                 )}
                 {studentRisks.map(s => (
                   <div key={s.name} className="ta-row ta-between" style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-3)", flexWrap: "wrap", gap: 10 }}>
                     <div className="ta-row ta-gap10" style={{ minWidth: 0, flex: "1 1 160px" }}>
-                      <img
+                      {s.avatar ? <img
                         src={s.avatar}
                         alt={s.name}
                         style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover", border: "1px solid var(--border)", flexShrink: 0 }}
-                      />
+                      /> : <span aria-hidden="true" style={{ width: 38, height: 38, display: "grid", placeItems: "center", borderRadius: 10, background: "var(--surface-3)" }}>{s.name.slice(0, 1).toUpperCase()}</span>}
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</div>
                         <div style={{ fontSize: 11, color: "var(--text-3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.role} • {s.lastActive}</div>

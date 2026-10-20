@@ -738,7 +738,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <div className="apt-input-group" style={S.inputGroup}>
                       <User size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
                       <input required type="text" placeholder="e.g. Dr. Sarah Jenkins"
-                        value={fullName} onChange={(e) => setFullName(e.target.value)}
+                        aria-label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)}
                         className="apt-input-field" style={S.textInput} />
                     </div>
                   </div>
@@ -749,7 +749,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <div className="apt-input-group" style={S.inputGroup}>
                       <Mail size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
                       <input required type="email" placeholder="sarah@institution.edu or name@company.org"
-                        value={workEmail} onChange={(e) => setWorkEmail(e.target.value)}
+                        aria-label="Institutional or work email" value={workEmail} onChange={(e) => setWorkEmail(e.target.value)}
                         className="apt-input-field" style={S.textInput} />
                     </div>
                   </div>
@@ -760,7 +760,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <div className="apt-input-group" style={S.inputGroup}>
                       <Phone size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
                       <input required type="tel" placeholder="e.g. +234 801 234 5678 or +1 (555) 019-2834"
-                        value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)}
+                        aria-label="Phone number or WhatsApp" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)}
                         className="apt-input-field" style={S.textInput} />
                     </div>
                   </div>
@@ -771,7 +771,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                     <div className="apt-input-group" style={S.inputGroup}>
                       <Building2 size={15} color="#94A3B8" style={{ marginLeft: 10, flexShrink: 0 }} />
                       <input required type="text" placeholder="e.g. Westford Institute / Global Hope Foundation"
-                        value={organizationName} onChange={(e) => setOrganizationName(e.target.value)}
+                        aria-label="Organization name" value={organizationName} onChange={(e) => setOrganizationName(e.target.value)}
                         className="apt-input-field" style={S.textInput} />
                     </div>
                   </div>
@@ -780,13 +780,13 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <div>
                       <label style={S.label}>Organization Type</label>
-                      <select value={orgType} onChange={(e) => setOrgType(e.target.value)} className="apt-input-field" style={S.selectInput}>
+                      <select aria-label="Organization type" value={orgType} onChange={(e) => setOrgType(e.target.value)} className="apt-input-field" style={S.selectInput}>
                         {ORG_TYPE_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                       </select>
                     </div>
                     <div>
                       <label style={S.label}>Learner / Team Size</label>
-                      <select value={teamSize} onChange={(e) => setTeamSize(e.target.value)} className="apt-input-field" style={S.selectInput}>
+                      <select aria-label="Learner or team size" value={teamSize} onChange={(e) => setTeamSize(e.target.value)} className="apt-input-field" style={S.selectInput}>
                         {TEAM_SIZE_OPTIONS.map((sz) => <option key={sz} value={sz}>{sz}</option>)}
                       </select>
                     </div>
@@ -796,7 +796,7 @@ export default function AppointmentBookingPage({ onBack, onNavigate, initialSect
                   <div>
                     <label style={S.label}>Topics or Goals to Focus On <span style={{ color: "#94A3B8", fontWeight: 400 }}>(Optional)</span></label>
                     <textarea rows={2} placeholder="e.g. Semester cohort timeline, grant proposal needs, custom LMS integration..."
-                      value={agendaNotes} onChange={(e) => setAgendaNotes(e.target.value)}
+                      aria-label="Topics or goals" value={agendaNotes} onChange={(e) => setAgendaNotes(e.target.value)}
                       className="apt-input-field" style={S.textareaInput} />
                   </div>
 

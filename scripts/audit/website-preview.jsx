@@ -1,0 +1,7 @@
+import React, { Suspense } from 'react';
+import { createRoot } from 'react-dom/client';
+import App from '../../src/App.jsx';
+import ErrorBoundary from '../../src/components/common/ErrorBoundary.jsx';
+import '../../src/index.css';
+function choose(role){localStorage.clear();sessionStorage.clear();if(role!=='public')localStorage.setItem('trainai_active_session_v1',JSON.stringify({_demo:true,user:{id:'fixture-'+role,email:role==='owner'?'owner+admin@example.invalid':role+'@example.invalid',user_metadata:{display_name:'Fixture '+role,role:role==='owner'?'admin':role}}}));window.location.href='/';}
+createRoot(document.getElementById('root')).render(<><nav aria-label="Local audit fixtures" style={{position:'sticky',top:0,zIndex:50000,display:'flex',flexWrap:'wrap',gap:8,padding:10,background:'#e8efff',fontSize:12}}><strong>Isolated local audit</strong>{['public','learner','mentor','admin','manager','owner'].map(role=><button key={role} onClick={()=>choose(role)}>{role} fixture</button>)}</nav><ErrorBoundary><Suspense fallback={<p>Loading...</p>}><App/></Suspense></ErrorBoundary></>);

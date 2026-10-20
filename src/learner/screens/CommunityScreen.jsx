@@ -1303,6 +1303,7 @@ export function CommunityScreen({
   return (
     <div className="tai-fade-in" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
+      {(postsQuery.error || studyGroupsQuery.error) && <div role="alert" className="tai-card" style={{ padding: 14 }}>Some community content could not be loaded. <button className="tai-btn tai-btn-ghost tai-btn-sm" onClick={() => { postsQuery.refetch?.(); studyGroupsQuery.refetch?.(); }}>Retry</button></div>}
       {/* Hero Banner */}
       <CommunityHero user={user} onCreatePost={() => setComposerOpen(true)} />
 
@@ -1452,12 +1453,10 @@ export function CommunityScreen({
               <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 0" }}>
                 <SkeletonDiscussionItem />
                 <SkeletonDiscussionItem />
-                <SkeletonDiscussionItem />
-                <SkeletonDiscussionItem />
               </div>
             )}
 
-            {!postsQuery.loading && filteredPosts.length === 0 && (
+            {!postsQuery.loading && !postsQuery.error && filteredPosts.length === 0 && (
               <div style={{ padding: 28, textAlign: "center" }}>
                 <MessageSquare size={22} color="var(--text-3)" style={{ margin: "0 auto 8px" }} />
                 <div style={{ fontWeight: 800, fontSize: 13.5 }}>{feedSearch || activeTagFilter ? "No matching discussions" : "No discussions yet"}</div>
@@ -1466,7 +1465,7 @@ export function CommunityScreen({
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {(viewAllPosts ? filteredPosts : filteredPosts.slice(0, 5)).map((post) => {
+              {(viewAllPosts ? filteredPosts : filteredPosts.slice(0, 2)).map((post) => {
                 const isExpanded = expandedPostId === post.id;
                 const rawContent = (post.content || "").replace(/#[#a-zA-Z0-9_@]+/g, "").trim();
                 const contentLines = rawContent.split("\n").map(l => l.trim()).filter(Boolean);
@@ -1654,9 +1653,11 @@ export function CommunityScreen({
               </div>
             )}
 
+            {studyGroupsQuery.loading && <div role="status" style={{ padding: 16 }}>Loading study groups...</div>}
+            {!studyGroupsQuery.loading && !studyGroupsQuery.error && filteredGroups.length === 0 && <div style={{ padding: 16, color: "var(--text-3)" }}>No study groups are available yet. Check back or ask your instructor about your groups.</div>}
             {/* Groups Grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
-              {filteredGroups.slice(0, 4).map((g) => {
+              {filteredGroups.slice(0, 2).map((g) => {
                 const isMember = myGroupIds.has(g.id);
                 const memberCount = g.member_count || g.study_group_members?.[0]?.count || (isMember ? 1 : 0);
 
@@ -1890,7 +1891,7 @@ export function CommunityScreen({
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-              {mentorsList.slice(0, 3).map((m) => (
+              {mentorsList.slice(0, 2).map((m) => (
                 <div
                   key={m.id}
                   className="tai-card-hover"
@@ -1963,7 +1964,7 @@ export function CommunityScreen({
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {leaderboardRows.slice(0, 5).map((row, idx) => {
+              {leaderboardRows.slice(0, 3).map((row, idx) => {
                 const isYou = row.user_id === myId;
                 return (
                   <div
@@ -1985,12 +1986,12 @@ export function CommunityScreen({
                       <Avatar size={28} src={row.avatar_url} initials={row.initials || "L"} />
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 12.5, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {row.name} {isYou ? "(You)" : ""}
+                          {row.name || row.display_name || "Learner"} {isYou ? "(You)" : ""}
                         </div>
                       </div>
                     </div>
                     <span style={{ fontWeight: 800, fontSize: 12, color: "var(--primary)", flexShrink: 0 }}>
-                      {row.points ?? 0} pts
+                      {row.points ?? row.total_points ?? 0} pts
                     </span>
                   </div>
                 );

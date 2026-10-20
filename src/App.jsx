@@ -1,4 +1,6 @@
-import React, { lazy, useState, useEffect } from "react";
+import { resolveMfaGate } from "./lib/securityGate.js";
+import { parsePublicLocation } from "./lib/publicRouting.js";
+import React, { lazy, useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "./hooks/useAuth.js";
 import LoadingScreen from "./components/common/LoadingScreen.jsx";
 import ConsentBanner from "./components/common/ConsentBanner.jsx";
@@ -7,7 +9,7 @@ import CertificateVerificationPage from "./pages/public/CertificateVerificationP
 import MarketplacePage from "./pages/public/MarketplacePage.jsx";
 import { applyAccessibilityPrefs, getStoredAccessibilityPrefs } from "./components/common/AccessibilityPanel.jsx";
 import { fetchMyRoles, fetchMyPersonalization, saveMyPersonalization } from "./services/authService.js";
-import { resolveViewMode, DASHBOARDS } from "./lib/roleRouting.js";
+import { resolveViewMode, getAvailableDashboards, DASHBOARDS } from "./lib/roleRouting.js";
 import { getAuthenticatorAssuranceLevel } from "./lib/api/mfa.js";
 import { trackOrganizationJoinIntent, getPendingOrganizationJoin, joinOrganizationByReferral } from "./lib/api/organizations.js";
 
@@ -66,6 +68,9 @@ export default function App() {
   // Supabase project configured) never has real MFA factors, so it always
   // resolves straight to "clear".
   const [mfaGate, setMfaGate] = useState("checking");
+  const handleMfaVerified = useCallback(() => setMfaGate("clear"), []);
+  const [mfaRetry, setMfaRetry] = useState(0);
+  const [mfaError, setMfaError] = useState(null);
 
   useEffect(() => {
     if (loading) return;
@@ -75,29 +80,12 @@ export default function App() {
     }
     let cancelled = false;
     setMfaGate("checking");
-    const mfaTimeout = setTimeout(() => {
-      if (!cancelled) setMfaGate("clear");
-    }, 2500);
-
-    getAuthenticatorAssuranceLevel()
-      .then(({ currentLevel, nextLevel }) => {
-        if (cancelled) return;
-        clearTimeout(mfaTimeout);
-        setMfaGate(currentLevel === "aal1" && nextLevel === "aal2" ? "required" : "clear");
-      })
-      .catch(() => {
-        // Fail open on transient errors so a user is never trapped outside
-        // their own account because an AAL lookup hiccuped.
-        if (!cancelled) {
-          clearTimeout(mfaTimeout);
-          setMfaGate("clear");
-        }
-      });
-    return () => {
-      cancelled = true;
-      clearTimeout(mfaTimeout);
-    };
-  }, [loading, session?.user?.id, isDemoMode]);
+    setMfaError(null);
+    resolveMfaGate(getAuthenticatorAssuranceLevel)
+      .then(gate => { if (!cancelled) setMfaGate(gate); })
+      .catch(error => { if (!cancelled) { setMfaError(error.message); setMfaGate("error"); } });
+    return () => { cancelled = true; };
+  }, [loading, session?.user?.id, isDemoMode, mfaRetry]);
 
   // Apply persisted accessibility and theme preferences immediately on boot
   useEffect(() => {
@@ -155,26 +143,7 @@ export default function App() {
     }
   });
 
-  const [certVerifyCode, setCertVerifyCode] = useState(() => {
-    try {
-      const search = new URLSearchParams(window.location.search);
-      const code = search.get("verify") || search.get("cert") || search.get("certificate") || search.get("code") || null;
-      if (code) return code;
-      const path = window.location.pathname;
-      if (path.startsWith("/certificate/")) {
-        return path.replace("/certificate/", "");
-      }
-      if (path.startsWith("/verify/")) {
-        return path.replace("/verify/", "");
-      }
-      if (path === "/verify" || path === "/certificate") {
-        return "1";
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  });
+  const [certVerifyCode, setCertVerifyCode] = useState(() => parsePublicLocation(window.location).certCode);
 
   const [orgSlugParam] = useState(() => {
     try {
@@ -194,33 +163,19 @@ export default function App() {
   // signup, or an existing-but-signed-out account) - set right before
   // switching publicView to "auth" below.
   const [inviteAuthEmail, setInviteAuthEmail] = useState("");
-  const [authInitialMode, setAuthInitialMode] = useState(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const m = params.get("mode");
-      if (m === "signup" || m === "signin") return m;
-      if (params.get("join") || params.get("org") || params.get("ref_org")) return "signup";
-    } catch {}
-    return "";
-  });
+  const [authInitialMode, setAuthInitialMode] = useState(() => parsePublicLocation(window.location).authMode);
+
+  const handleAuthModeChange = useCallback(mode => {
+    setAuthInitialMode(mode);
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("mode") !== mode) {
+      url.searchParams.set("view", "auth"); url.searchParams.set("mode", mode);
+      window.history.pushState({}, "", url.toString());
+    }
+  }, []);
 
   const [demoSectorParam, setDemoSectorParam] = useState("academies");
-  const [publicView, setPublicView] = useState(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const view = params.get("view");
-      if (view === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") {
-        return "book-demo";
-      }
-      if (view === "auth") {
-        return "auth";
-      }
-      if (view === "marketplace" || window.location.pathname === "/marketplace") {
-        return "marketplace";
-      }
-    } catch {}
-    return orgSlugParam ? "auth" : "landing";
-  }); // "landing" | "auth" | "book-demo" | "marketplace"
+  const [publicView, setPublicView] = useState(() => parsePublicLocation(window.location).view);
 
   // Auto-join if user is already authenticated and lands on an organization join/referral link or has pending intent
   useEffect(() => {
@@ -239,29 +194,28 @@ export default function App() {
   // Handle browser back/forward buttons smoothly
   useEffect(() => {
     function handlePopState() {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("view") === "book-demo" || params.get("demo") === "true" || params.get("book") === "demo") {
-          setPublicView("book-demo");
-        } else if (params.get("view") === "marketplace" || window.location.pathname === "/marketplace") {
-          setPublicView("marketplace");
-        } else if (params.get("view") === "auth") {
-          const modeParam = params.get("mode");
-          if (modeParam === "signup" || modeParam === "signin") setAuthInitialMode(modeParam);
-          setPublicView("auth");
-        } else if (params.get("verify") || window.location.pathname.startsWith("/verify") || window.location.pathname.startsWith("/certificate")) {
-          const vCode = params.get("verify") || window.location.pathname.replace(/^\/(verify|certificate)\/?/, "") || "1";
-          setCertVerifyCode(vCode);
-        } else if (!session) {
-          setPublicView("landing");
-        }
-      } catch {}
+      const route = parsePublicLocation(window.location);
+      setCertVerifyCode(route.certCode);
+      setInviteToken(route.inviteToken);
+      setAuthInitialMode(route.authMode);
+      setPublicView(route.view);
     }
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [session]);
 
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [roleError, setRoleError] = useState(null);
+  const [roleRefresh, setRoleRefresh] = useState(0);
+  const previousRoles = useRef(null);
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const refresh = () => setRoleRefresh(value => value + 1);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("trainai-role-changed", refresh);
+    const timer = window.setInterval(() => { if (!document.hidden) refresh(); }, 30000);
+    return () => { window.removeEventListener("focus", refresh); window.removeEventListener("trainai-role-changed", refresh); window.clearInterval(timer); };
+  }, [session?.user?.id]);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [viewMode, setViewMode] = useState("learner");
   const [hasPlatformRole, setHasPlatformRole] = useState(false);
@@ -277,6 +231,7 @@ export default function App() {
   const [superAdminSelectedOrgId, setSuperAdminSelectedOrgId] = useState("");
 
   function switchDashboard(target) {
+    if (!getAvailableDashboards(userRoles).includes(target)) return;
     if (target === DASHBOARDS.LEARNER) setViewMode("learner");
     else if (target === DASHBOARDS.ORGANISATION) setViewMode("platform");
     else if (target === DASHBOARDS.OWNER) setViewMode("owner");
@@ -285,29 +240,32 @@ export default function App() {
   useEffect(() => {
     if (loading) return;
     if (!session) {
+      previousRoles.current = null;
+      setUserRoles([]);
+      setHasPlatformRole(false);
+      setViewMode("learner");
+      setRoleError(null);
       setOnboardingChecked(true);
       return;
     }
 
     let cancelled = false;
-    const timer = setTimeout(() => {
-      if (!cancelled && !onboardingChecked) {
-        setOnboardingChecked(true);
-      }
-    }, 400);
-
+    if (!previousRoles.current?.startsWith(session.user.id + ":")) setOnboardingChecked(false);
+    setRoleError(null);
     (async () => {
       try {
         const [personalization, roles] = await Promise.all([
           fetchMyPersonalization().catch(() => null),
-          fetchMyRoles().catch(() => ["learner"])
+          fetchMyRoles()
         ]);
         const rolesList = Array.isArray(roles) && roles.length > 0 ? roles : ["learner"];
         const mode = resolveViewMode(rolesList);
         if (!cancelled) {
           setUserRoles(rolesList);
           setHasPlatformRole(mode === "platform");
-          setViewMode(mode);
+          const rolesKey = session.user.id + ":" + [...rolesList].sort().join(",");
+          if (previousRoles.current !== rolesKey) setViewMode(mode);
+          previousRoles.current = rolesKey;
           // Admin-Managed Grouping: organizations/admins now control learner
           // groupings, track badges, and course visibility directly (cohort
           // assignment + per-cohort course assignment in the admin People/
@@ -324,22 +282,15 @@ export default function App() {
           }
           setOnboardingChecked(true);
         }
-      } catch {
-        if (!cancelled) {
-          setUserRoles(["learner"]);
-          setHasPlatformRole(false);
-          setViewMode("learner");
-          setNeedsOnboarding(false);
-          setOnboardingChecked(true);
-        }
+      } catch (error) {
+        if (!cancelled) { setRoleError(error.message || "Could not verify workspace access."); setOnboardingChecked(true); }
       }
     })();
 
     return () => {
       cancelled = true;
-      clearTimeout(timer);
     };
-  }, [loading, session?.user?.id]);
+  }, [loading, session?.user?.id, roleRefresh]);
 
   async function handleOnboardingComplete({ tracks, level }) {
     if (session?.user?.id) {
@@ -372,7 +323,7 @@ export default function App() {
     );
   }
 
-  if (isOwnerPortalURL && !ownerPortalAuthenticated) {
+  if (isOwnerPortalURL && (!ownerPortalAuthenticated || !session)) {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
@@ -380,21 +331,6 @@ export default function App() {
       </>
     );
   }
-  if (isOwnerPortalURL && ownerPortalAuthenticated) {
-    return (
-      <>
-        <OfflineIndicator mode={offlineMode} />
-        <PlatformOwnerApp
-          onSwitchDashboard={switchDashboard}
-          userRoles={["super_admin"]}
-          superAdminSelectedOrgId={superAdminSelectedOrgId}
-          setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
-          onSignOut={handleGlobalSignOut}
-        />
-      </>
-    );
-  }
-
   // A password-reset email link click lands here with a real (temporary)
   // session already established by Supabase - checked before every other
   // gate below (including the normal !session -> AuthPage branch) since
@@ -422,7 +358,7 @@ export default function App() {
         <CertificateVerificationPage
           certCode={certVerifyCode === "1" ? "" : certVerifyCode}
           onGoHome={() => {
-            try { window.history.pushState({}, "", window.location.pathname); } catch {}
+            try { window.history.pushState({}, "", "/"); } catch {}
             setCertVerifyCode(null);
             setPublicView("landing");
           }}
@@ -443,11 +379,11 @@ export default function App() {
           token={inviteToken}
           session={session}
           onGoHome={() => {
-            window.history.replaceState({}, "", window.location.pathname);
+            window.history.replaceState({}, "", "/");
             setInviteToken(null);
           }}
           onNeedsSignIn={(email) => {
-            window.history.replaceState({}, "", window.location.pathname);
+            window.history.replaceState({}, "", "/");
             setInviteAuthEmail(email || "");
             setPublicView("auth");
             setInviteToken(null);
@@ -457,7 +393,7 @@ export default function App() {
             // the org - hard-reload so every downstream role/org lookup in
             // this file (userRoles, hasPlatformRole, viewMode, etc.) recomputes
             // from scratch instead of trying to patch each piece by hand.
-            window.location.replace(window.location.pathname);
+            window.location.replace("/");
           }}
         />
         <ConsentBanner session={session} />
@@ -472,7 +408,7 @@ export default function App() {
           <OfflineIndicator mode={offlineMode} />
           <MarketplacePage
             onGoHome={() => {
-              try { window.history.pushState({}, "", window.location.pathname); } catch {}
+              try { window.history.pushState({}, "", "/"); } catch {}
               setPublicView("landing");
             }}
             onBookDemo={() => {
@@ -498,11 +434,12 @@ export default function App() {
             authError={authError}
             initialEmail={inviteAuthEmail}
             initialMode={authInitialMode}
+            onModeChange={handleAuthModeChange}
             onForgotPassword={sendPasswordReset}
             onVerifyRecoveryOtp={verifyRecoveryOtp}
             onCompletePasswordReset={completePasswordReset}
             onGoHome={() => {
-              try { window.history.pushState({}, "", window.location.pathname); } catch {}
+              try { window.history.pushState({}, "", "/"); } catch {}
               setPublicView("landing");
             }}
             orgParam={orgSlugParam}
@@ -518,7 +455,7 @@ export default function App() {
           <AppointmentBookingPage
             initialSector={demoSectorParam}
             onBack={() => {
-              try { window.history.pushState({}, "", window.location.pathname); } catch {}
+              try { window.history.pushState({}, "", "/"); } catch {}
               setPublicView("landing");
             }}
             onNavigate={(target) => {
@@ -531,7 +468,7 @@ export default function App() {
                 try { window.history.pushState({}, "", "?view=marketplace"); } catch {}
                 setPublicView("marketplace");
               } else {
-                try { window.history.pushState({}, "", window.location.pathname); } catch {}
+                try { window.history.pushState({}, "", "/"); } catch {}
                 setPublicView("landing");
               }
             }}
@@ -561,7 +498,7 @@ export default function App() {
               try { window.history.pushState({}, "", "?view=book-demo"); } catch {}
               setPublicView("book-demo");
             } else {
-              try { window.history.pushState({}, "", window.location.pathname); } catch {}
+              try { window.history.pushState({}, "", "/"); } catch {}
               setPublicView("landing");
             }
           }}
@@ -571,6 +508,7 @@ export default function App() {
     );
   }
 
+  if (mfaGate === "error") return <div role="alert" style={{ padding: 40 }}><p>{mfaError || "Could not verify account security."}</p><button onClick={() => setMfaRetry(value => value + 1)}>Retry security check</button> <button onClick={handleGlobalSignOut}>Sign out</button></div>;
   if (mfaGate === "checking") {
     return (
       <>
@@ -583,12 +521,13 @@ export default function App() {
     return (
       <>
         <OfflineIndicator mode={offlineMode} />
-        <MfaChallengeScreen onVerified={() => setMfaGate("clear")} onSignOut={handleGlobalSignOut} />
+        <MfaChallengeScreen onVerified={handleMfaVerified} onSignOut={handleGlobalSignOut} />
         <ConsentBanner session={session} />
       </>
     );
   }
 
+  if (roleError) return <div role="alert" style={{ padding: 40 }}><p>Could not verify your workspace access. {roleError}</p><button onClick={() => setRoleRefresh(value => value + 1)}>Retry</button></div>;
   if (!onboardingChecked) {
     return (
       <>
@@ -597,6 +536,21 @@ export default function App() {
       </>
     );
   }
+  if (isOwnerPortalURL && ownerPortalAuthenticated && userRoles.includes("super_admin")) {
+    return (
+      <>
+        <OfflineIndicator mode={offlineMode} />
+        <PlatformOwnerApp
+          onSwitchDashboard={switchDashboard}
+          userRoles={userRoles}
+          superAdminSelectedOrgId={superAdminSelectedOrgId}
+          setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
+          onSignOut={handleGlobalSignOut}
+        />
+      </>
+    );
+  }
+
   // needsOnboarding is intentionally always false now - see the effect above
   // for why (Admin-Managed Grouping: learners no longer self-select a track/
   // level before entering the app; admins assign cohorts/courses instead).
@@ -618,7 +572,7 @@ export default function App() {
           onSignOut={handleGlobalSignOut}
         />
       </div>
-      <div style={{ display: viewMode === "platform" ? "block" : "none" }}>
+      {userRoles.some(role => ["admin", "mentor", "manager", "super_admin"].includes(role)) && <div style={{ display: viewMode === "platform" ? "block" : "none" }}>
         <TrainAIPlatformApp
           isActive={viewMode === "platform"}
           onSwitchToLearner={() => setViewMode("learner")}
@@ -628,8 +582,8 @@ export default function App() {
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
           onSignOut={handleGlobalSignOut}
         />
-      </div>
-      <div style={{ display: viewMode === "owner" ? "block" : "none" }}>
+      </div>}
+      {userRoles.includes("super_admin") && <div style={{ display: viewMode === "owner" ? "block" : "none" }}>
         <PlatformOwnerApp
           onSwitchDashboard={switchDashboard}
           userRoles={userRoles}
@@ -637,7 +591,7 @@ export default function App() {
           setSuperAdminSelectedOrgId={setSuperAdminSelectedOrgId}
           onSignOut={handleGlobalSignOut}
         />
-      </div>
+      </div>}
       <ConsentBanner session={session} />
     </>
   );

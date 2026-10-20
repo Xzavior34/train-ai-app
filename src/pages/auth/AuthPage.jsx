@@ -19,7 +19,7 @@ import { supabase, getSupabaseClientForProject, resolveProjectForSignUp } from "
 export default function AuthPage({
   onSignIn, onSignUp, authError, initialEmail = "", initialMode = "",
   onForgotPassword, recoveryMode = false, recoverySessionReady = false, onCompletePasswordReset,
-  onGoHome, orgParam = ""
+  onGoHome, onModeChange, orgParam = ""
 }) {
   const [mode, setMode] = useState(() => {
     if (recoveryMode) return "recovery";
@@ -42,6 +42,8 @@ export default function AuthPage({
       setMode(initialMode);
     }
   }, [initialMode, recoveryMode]);
+
+  useEffect(() => { if (!recoveryMode && ["signin", "signup"].includes(mode)) onModeChange?.(mode); }, [mode, recoveryMode, onModeChange]);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState(initialEmail);
@@ -619,13 +621,13 @@ export default function AuthPage({
           <div onClick={onGoHome || (() => { window.location.href = "/"; })} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
             <img src="/train-ai-logo.png" alt="Train AI" style={{ height: 28, width: "auto", objectFit: "contain", display: "block" }} />
           </div>
-          <span
+          <button type="button"
             onClick={onGoHome || (() => { window.location.href = "/"; })}
-            style={{ fontSize: 12, color: "#64748B", fontWeight: 600, cursor: "pointer" }}
+            style={{ fontSize: 12, color: "#64748B", fontWeight: 600, cursor: "pointer", background: "none", border: 0 }}
             className="auth-switch"
           >
             &larr; Back to website
-          </span>
+          </button>
         </div>
 
         {targetOrgTarget && (
@@ -823,7 +825,8 @@ export default function AuthPage({
                   <input
                     type="email"
                     required
-                    value={email}
+                    aria-label={mode === "signin" ? "Email or Username" : "Email Address"}
+                value={email}
                     onChange={(e) => { setEmail(e.target.value); setForgotError(""); }}
                     className="auth-input"
                     style={styles.input}
@@ -895,6 +898,7 @@ export default function AuthPage({
                   <input
                     type={showNewPassword ? "text" : "password"}
                     required
+                    aria-label="New password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="auth-input"
@@ -907,7 +911,7 @@ export default function AuthPage({
                     style={styles.eyeBtn}
                     aria-label={showNewPassword ? "Hide password" : "Show password"}
                     title={showNewPassword ? "Hide password" : "Show password"}
-                    tabIndex={-1}
+                    tabIndex={0}
                   >
                     {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -919,6 +923,7 @@ export default function AuthPage({
                   <input
                     type={showNewPasswordConfirm ? "text" : "password"}
                     required
+                    aria-label="Confirm new password"
                     value={newPasswordConfirm}
                     onChange={(e) => setNewPasswordConfirm(e.target.value)}
                     className="auth-input"
@@ -931,7 +936,7 @@ export default function AuthPage({
                     style={styles.eyeBtn}
                     aria-label={showNewPasswordConfirm ? "Hide password" : "Show password"}
                     title={showNewPasswordConfirm ? "Hide password" : "Show password"}
-                    tabIndex={-1}
+                    tabIndex={0}
                   >
                     {showNewPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -1251,7 +1256,7 @@ export default function AuthPage({
                           }}
                           aria-label="Clear organization"
                           title="Clear organization"
-                          tabIndex={-1}
+                          tabIndex={0}
                         >
                           <X size={14} />
                         </button>
@@ -1275,7 +1280,7 @@ export default function AuthPage({
                         }}
                         aria-label="Toggle available organizations dropdown"
                         title="Show available organizations"
-                        tabIndex={-1}
+                        tabIndex={0}
                       >
                         <ChevronDown
                           size={16}
@@ -1584,6 +1589,7 @@ export default function AuthPage({
                   <input
                     type="text"
                     required
+                    aria-label="Full name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="auth-input"
@@ -1601,6 +1607,7 @@ export default function AuthPage({
               <input
                 type={mode === "signin" ? "text" : "email"}
                 required
+                aria-label={mode === "signin" ? "Email or Username" : "Email Address"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="auth-input"
@@ -1612,7 +1619,7 @@ export default function AuthPage({
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
               <label style={styles.label}>Password</label>
               {mode === "signin" && (
-                <span className="auth-switch" style={{ ...styles.switchLink, fontSize: 12 }} onClick={() => setMode("forgot")}>Forgot password?</span>
+                <button type="button" className="auth-switch" style={{ ...styles.switchLink, fontSize: 12, border: 0, background: "none" }} onClick={() => setMode("forgot")}>Forgot password?</button>
               )}
             </div>
             <div style={styles.inputWrap}>
@@ -1620,7 +1627,8 @@ export default function AuthPage({
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                value={password}
+                aria-label="Password"
+                    value={password}
                 onChange={(e) => handlePasswordChange(e.target.value)}
                 onBlur={mode === "signup" ? handlePasswordBlur : undefined}
                 disabled={mode === "signin" && rateLimit.isLocked}
@@ -1640,7 +1648,7 @@ export default function AuthPage({
                 style={styles.eyeBtn}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 title={showPassword ? "Hide password" : "Show password"}
-                tabIndex={-1}
+                tabIndex={0}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -1848,9 +1856,9 @@ export default function AuthPage({
 
             <div style={styles.switchRow}>
               {mode === "signin" ? (
-                <>Don't have an account? <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signup"); setBreachWarning(false); }}>Sign up</span></>
+                <>Don't have an account? <button type="button" className="auth-switch" style={{ ...styles.switchLink, border: 0, background: "none" }} onClick={() => { setMode("signup"); setBreachWarning(false); }}>Sign up</button></>
               ) : (
-                <>Already have an account? <span className="auth-switch" style={styles.switchLink} onClick={() => { setMode("signin"); setBreachWarning(false); }}>Sign in</span></>
+                <>Already have an account? <button type="button" className="auth-switch" style={{ ...styles.switchLink, border: 0, background: "none" }} onClick={() => { setMode("signin"); setBreachWarning(false); }}>Sign in</button></>
               )}
             </div>
               </>

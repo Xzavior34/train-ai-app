@@ -128,7 +128,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
   const [params, setParams] = useState({});
   const [stack, setStack] = useState([]);
   const [communityTab, setCommunityTab] = useState("posts");
-  const { credits, addCredits, consume: consumeCredit } = useCredits(session?.user?.id);
+  const { credits, addCredits, consume: consumeCredit, error: creditError, refresh: refreshCredits } = useCredits(session?.user?.id);
 
   useEffect(() => {
     if (screen === "community" && params?.tab && params.tab !== communityTab) {
@@ -732,6 +732,7 @@ export default function TrainAILearnerApp({ isActive = true, onSwitchToPlatform,
     <div className={`tai ${dark ? "dark" : ""}`} style={brandPrimaryColor ? { "--primary": brandPrimaryColor } : undefined}>
       <style>{TOKENS}</style>
       <div className="tai-app-outer">
+        {creditError && <div role="alert" style={{ padding: "10px 16px", background: "var(--surface-2)" }}>{creditError} <button className="tai-btn tai-btn-ghost tai-btn-sm" onClick={refreshCredits}>Retry balance</button></div>}
         {/* Global Top Header matching Screenshot 1 & 2 */}
         <LearnerHeader
           user={user}

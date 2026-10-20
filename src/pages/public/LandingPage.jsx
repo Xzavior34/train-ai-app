@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useDialogFocus } from "../../lib/useDialogFocus.js";
+import React, { useRef, useEffect, useState } from "react";
 import {
   ArrowRight, BarChart3, BookOpen, Brain, Building2, Check, ChevronDown,
   ChevronLeft, ChevronRight, GraduationCap, Heart, Instagram, Layers, Lock, Mail, Menu, MessageSquare, Target,
@@ -104,6 +105,8 @@ export default function LandingPage({ onNavigate }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [legalModal, setLegalModal] = useState(null);
+  const legalRef = useRef(null);
+  useDialogFocus(!!legalModal, legalRef, () => setLegalModal(null));
   const [photoIndex, setPhotoIndex] = useState(0);
 
 
@@ -454,7 +457,7 @@ export default function LandingPage({ onNavigate }) {
 
       {legalModal && (
         <div className="lp-modal-overlay" onClick={() => setLegalModal(null)} role="presentation">
-          <div className="lp-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="legal-title">
+          <div ref={legalRef} tabIndex={-1} className="lp-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="legal-title">
             <button className="lp-modal-close" onClick={() => setLegalModal(null)} aria-label="Close"><X size={18} /></button><Lock size={22} />
             <h2 id="legal-title">{LEGAL_CONTENT[legalModal][0]}</h2><p>{LEGAL_CONTENT[legalModal][1]}</p>
           </div>

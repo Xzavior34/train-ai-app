@@ -131,21 +131,18 @@ export function hasStaffOrAdminRole(roles = []) {
   return roles.some((r) => PLATFORM_ROLES.includes(r));
 }
 
-export function getAvailableDashboards(roles = [], email = "") {
-  const normalizedEmail = (email || "").toLowerCase().trim();
-  
-  // Platform Owner Dashboard ONLY shows when signed in with trainailtd@gmail.com
-  if (isPlatformOwnerEmail(normalizedEmail) && (roles.includes("super_admin") || roles.includes("admin") || roles.length > 0)) {
-    return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION, DASHBOARDS.OWNER];
-  }
-  
-  // For instructors, managers, and admins (e.g. info@sarafoundationafrica.com):
-  // They see Learner and Organisation dashboards only. Platform Owner never shows.
-  if (roles.some((r) => PLATFORM_ROLES.includes(r))) {
-    return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION];
-  }
-  
-  // Plain learners have no other dashboard to switch to
+export function getAllowedWorkspaces(roles = []) {
+  if (roles.includes("admin") || roles.includes("super_admin")) return ["admin", "mentor", "manager"];
+  return [roles.includes("mentor") && "mentor", roles.includes("manager") && "manager"].filter(Boolean);
+}
+
+export function defaultWorkspaceForRoles(roles = []) {
+  return getAllowedWorkspaces(roles)[0] || null;
+}
+
+export function getAvailableDashboards(roles = []) {
+  if (roles.includes("super_admin")) return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION, DASHBOARDS.OWNER];
+  if (hasStaffOrAdminRole(roles)) return [DASHBOARDS.LEARNER, DASHBOARDS.ORGANISATION];
   return [DASHBOARDS.LEARNER];
 }
 

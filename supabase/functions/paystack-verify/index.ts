@@ -1,8 +1,11 @@
+import { validatePayment, recordVerifiedPayment, isAllowedPaymentReturn } from "../_shared/paymentValidation.js";
 import { createClient } from "npm:@supabase/supabase-js@2";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const respond = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
+  if (req.method !== "POST") return respond({ error: "Method not allowed" }, 405);
+  try {
   const auth = req.headers.get("Authorization") || "";
   const jwt = auth.replace(/^Bearer\s+/i, "");
   const url = Deno.env.get("SUPABASE_URL") || "";
@@ -23,16 +26,24 @@ Deno.serve(async (req) => {
     }
   }
   if (!secret) return respond({ error: "Payment provider is not configured" }, 503);
+  if (!service) return respond({ error: "Payment verification is not configured" }, 503);
+  const db = createClient(url, service);
   const { reference } = await req.json().catch(() => ({}));
   if (!reference || !/^[A-Za-z0-9._=-]{5,200}$/.test(reference)) return respond({ error: "Invalid reference" }, 400);
   const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, { headers: { Authorization: `Bearer ${secret}` } });
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result?.status) return respond({ error: result?.message || "Could not verify payment" }, 502);
   const tx = result.data || {};
-  if (tx.metadata?.user_id && tx.metadata.user_id !== userData.user.id) return respond({ error: "Payment does not belong to this account" }, 403);
+  if (tx.metadata?.user_id !== userData.user.id) return respond({ error: "Payment does not belong to this account" }, 403);
+  let metadata = tx.metadata || {};
+  if (tx.status === "success") {
+    metadata = await validatePayment(db, userData.user.id, metadata.context, Number(tx.amount)/100, tx.currency, metadata);
+    await recordVerifiedPayment(db, { provider: "paystack", reference: tx.reference, userId: userData.user.id, context: tx.metadata.context, amount: Number(tx.amount)/100, currency: tx.currency, metadata });
+  }
   return respond({
     success: tx.status === "success", status: tx.status === "success" ? "completed" : tx.status,
     amount: Number(tx.amount || 0) / 100, currency: tx.currency, context: tx.metadata?.context,
-    reference: tx.reference, metadata: tx.metadata || {},
+    reference: tx.reference, metadata,
   });
+  } catch (error) { return respond({ error: error?.message || "Payment service unavailable. Please retry." }, 400); }
 });

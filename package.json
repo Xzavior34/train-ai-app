@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test scripts/audit/unit.test.mjs",
+    "test:database": "node scripts/audit/replay-local.mjs && node scripts/audit/database-regression.mjs && node scripts/audit/instructor-regression.mjs",
+    "test:database:start": "node scripts/audit/start-local-database.mjs",
+    "test:database:stop": "node scripts/audit/stop-local-database.mjs",
+    "test:community": "node scripts/audit/render-community.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.9",

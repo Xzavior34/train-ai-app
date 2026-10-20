@@ -4,7 +4,7 @@ import {
   CheckCircle2, Clock, Star, MessageSquare, AlertCircle,
   KeyRound, ShieldCheck, ChevronRight, Play, FileText, Plus, Edit3, X, Check, Code
 } from "lucide-react";
-import { fetchCapTeams, saveCapTeam, joinCapTeam, updateDemoDayReview } from "../../lib/api/capProgram.js";
+import { fetchCapTeams, saveCapTeam, joinCapTeam, updateDemoDayReview, canManageCapCohort } from "../../lib/api/capProgram.js";
 import { fetchMentorshipCheckins, createMentorCheckin } from "../../lib/api/mentorship.js";
 import { redeemAccessCode } from "../../lib/api/accessCodes.js";
 import { CAP_PHASES, CAP_ROLES } from "../../lib/constants/terminology.js";
@@ -89,13 +89,14 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
   const currentUserName = user?.name || session?.user?.user_metadata?.display_name || session?.user?.email?.split("@")[0] || "Learner";
   const currentUserEmail = session?.user?.email || "";
 
-  const isAdminOrMentor =
-    user?.role === "admin" ||
-    user?.role === "mentor" ||
-    user?.role === "instructor" ||
-    session?.user?.user_metadata?.role === "admin" ||
-    session?.user?.user_metadata?.role === "mentor" ||
-    String(currentUserEmail || "").toLowerCase().includes("admin");
+  const [isAdminOrMentor, setIsAdminOrMentor] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    setIsAdminOrMentor(false);
+    canManageCapCohort(cohortId).then(allowed => { if (!cancelled) setIsAdminOrMentor(allowed); });
+    return () => { cancelled = true; };
+  }, [cohortId, currentUserId]);
 
   async function loadData() {
     setLoading(true);
@@ -110,7 +111,9 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
         setCheckinTeamId(teamsData[0].id);
       }
     } catch (e) {
-      console.warn("Could not load CAP Cohort 3 data:", e);
+      setTeams([]);
+      setCheckins([]);
+      setLoadError("Could not load CAP teams and check-ins. Please retry.");
     } finally {
       setLoading(false);
     }
@@ -361,6 +364,7 @@ export default function CapCohort3Screen({ session, showToast, push, goTab, coho
 
   return (
     <div className="ta-fade" style={{ maxWidth: 1100, margin: "0 auto", padding: "16px 20px 60px" }}>
+      {loadError && <div role="alert" className="ta-card" style={{ padding: 16, marginBottom: 16 }}>{loadError} <button className="ta-btn ta-btn-outline ta-btn-sm" onClick={loadData}>Retry</button></div>}
       {/* CAP Hero Header */}
       <div
         style={{

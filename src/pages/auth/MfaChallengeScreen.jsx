@@ -22,12 +22,7 @@ export default function MfaChallengeScreen({ onVerified, onSignOut }) {
       try {
         const factors = await listMfaFactors();
         const totp = (factors?.totp || []).find((f) => f.status === "verified");
-        if (!totp) {
-          // Nothing to challenge against - let the app proceed rather than
-          // trap the user on a dead-end screen.
-          if (!cancelled) onVerified?.();
-          return;
-        }
+        if (!totp) throw new Error("No supported verified authenticator is available. Contact support to restore account access.");
         const { challengeId: newChallengeId } = await createMfaChallenge(totp.id);
         if (cancelled) return;
         setFactorId(totp.id);

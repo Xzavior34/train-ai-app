@@ -1,3 +1,4 @@
+import { validateDemoInput } from "../_shared/demoValidation.js";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const allowedOrigins = new Set([
@@ -248,6 +249,8 @@ Deno.serve(async (req) => {
   let bookingId = "";
   try {
     const body = await req.json().catch(() => ({}));
+    const validation = validateDemoInput(body);
+    if (validation.error) return respond(req, { success: false, error: validation.error }, 400);
     const input: Record<string, string> = {
       fullName: clean(body.fullName, 160),
       workEmail: clean(body.workEmail, 320).toLowerCase(),
@@ -279,15 +282,9 @@ Deno.serve(async (req) => {
 
     const clientIp = (req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown").split(",")[0].trim();
     const [emailHash, ipHash] = await Promise.all([sha256(input.workEmail), sha256(clientIp)]);
-    const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    const [{ count: emailCount }, { count: ipCount }] = await Promise.all([
-      admin.from("demo_booking_attempts").select("id", { count: "exact", head: true }).eq("email_hash", emailHash).gte("created_at", since),
-      admin.from("demo_booking_attempts").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since),
-    ]);
-    if ((emailCount || 0) >= 5 || (ipCount || 0) >= 20) {
-      return respond(req, { success: false, error: "Too many booking attempts. Please wait 15 minutes and try again." }, 429);
-    }
-    await admin.from("demo_booking_attempts").insert({ email_hash: emailHash, ip_hash: ipHash });
+    const { data: allowed, error: rateError } = await admin.rpc("take_demo_booking_attempt", { p_email_hash: emailHash, p_ip_hash: ipHash });
+    if (rateError) return respond(req, { success: false, error: "Booking validation is temporarily unavailable. Please retry." }, 503);
+    if (!allowed) return respond(req, { success: false, error: "Too many booking attempts. Please wait 15 minutes and try again." }, 429);
 
     bookingId = crypto.randomUUID();
     const message = [

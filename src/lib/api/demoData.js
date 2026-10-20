@@ -7,7 +7,7 @@
 export const DEMO_PROJECT_DATA = {
   sara_foundation: {
     orgs: [
-      { id: "sara-org-1", name: "Sara Foundation Africa", slug: "sara-foundation", status: "active", subscription_tier: "enterprise", created_at: "2025-01-15T00:00:00.000Z", user_count: 1420 },
+      { id: "sara-org-1", name: "Sara Foundation Africa", slug: "sara-foundation", status: "active", subscription_tier: "enterprise", created_at: "2025-01-15T00:00:00.000Z", user_count: 1420, max_users: 350, seats: 350, purchased_seats: 350 },
       { id: "sara-org-2", name: "Sara Youth Tech Fellowship", slug: "sara-fellowship", status: "active", subscription_tier: "growth", created_at: "2025-03-10T00:00:00.000Z", user_count: 350 },
       { id: "sara-org-3", name: "Sara Digital Women Initiative", slug: "sara-women", status: "active", subscription_tier: "growth", created_at: "2025-05-20T00:00:00.000Z", user_count: 280 }
     ],
@@ -28,7 +28,7 @@ export const DEMO_PROJECT_DATA = {
   },
   train_ai_shared: {
     orgs: [
-      { id: "trainai-hq", name: "Train AI LTD / Ajimi.com (Platform Owner)", slug: "trainai-ltd", status: "active", subscription_tier: "enterprise", created_at: "2024-11-01T00:00:00.000Z", user_count: 3850 },
+      { id: "trainai-hq", name: "Train AI LTD / Ajimi.com (Platform Owner)", slug: "trainai-ltd", status: "active", subscription_tier: "enterprise", created_at: "2024-11-01T00:00:00.000Z", user_count: 3850, max_users: 1000, seats: 1000, free_seats: 1000, purchased_seats: 1000 },
       { id: "digital-users-org", name: "Digital Users (Individual Signups)", slug: "digital-users", status: "active", subscription_tier: "starter", created_at: "2024-11-01T00:00:00.000Z", user_count: 5120 },
       { id: "b2b-org-1", name: "Apex Global Learning Academy", slug: "apex-learning", status: "active", subscription_tier: "enterprise", created_at: "2025-01-10T00:00:00.000Z", user_count: 1450 },
       { id: "b2b-org-2", name: "Nexus AI Corporate Institute", slug: "nexus-corporate", status: "active", subscription_tier: "growth", created_at: "2025-02-18T00:00:00.000Z", user_count: 820 },

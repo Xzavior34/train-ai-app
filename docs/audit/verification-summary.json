@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-20",
+  "baselineBuild": "PASS",
+  "finalBuild": "PASS",
+  "unitTests": 10,
+  "databaseTests": 44,
+  "databaseFailures": 0,
+  "migrationReplay": 103,
+  "migrationFailures": 0,
+  "communityRenderChecks": 2,
+  "browserFixture": {
+    "desktop": "PASS",
+    "mobile390px": "PASS",
+    "fullListButtons": "PASS",
+    "freshPageConsoleErrors": 0
+  },
+  "productionChecked": false,
+  "productionChanged": false,
+  "readOnlySqlChecks": 3,
+  "instructorDatabaseTests": 15,
+  "instructorBrowserFixture": {
+    "assignedCohortNavigation": "PASS",
+    "individualTrackExpansion": "PASS",
+    "adminTrack": "PASS",
+    "realAuthentication": "NOT_TESTED",
+    "mobile": "NOT_TESTED"
+  }
+}

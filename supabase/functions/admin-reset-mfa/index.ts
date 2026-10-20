@@ -1,3 +1,4 @@
+import { hasRequiredMfa } from "../_shared/accountSecurity.js";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -27,6 +28,7 @@ Deno.serve(async (req) => {
     const callerClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
     const { data: callerData, error: callerError } = await callerClient.auth.getUser(jwt);
     if (callerError || !callerData.user) return json({ error: "Invalid or expired session" }, 401);
+    if (!hasRequiredMfa(callerData.user, jwt)) return json({ error: "Two-factor verification required." }, 403);
 
     const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
     const { data: roles, error: roleError } = await admin

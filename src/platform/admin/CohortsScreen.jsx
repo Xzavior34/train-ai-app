@@ -2,10 +2,11 @@ import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, ToastContext } from "../components/PlatformUI.jsx";
 import {
   Plus, Layers, Users, Calendar, ArrowRight, X, Send, Copy,
-  Archive, Trash2, Clock, CheckCircle2, AlertTriangle, Sparkles
+  Archive, Trash2, Clock, CheckCircle2, AlertTriangle, Sparkles,
+  GraduationCap, UserCheck
 } from "lucide-react";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
-import { fetchCohortsWithStats, createCohort, fetchUpcomingOrgSessions } from "../../lib/api/platform.js";
+import { fetchCohortsWithStats, createCohort, fetchUpcomingOrgSessions, fetchOrgInstructors } from "../../lib/api/platform.js";
 import { calculateCohortProgress, deleteOrArchiveCohort, duplicateCohort } from "../../lib/api/cohorts.js";
 import { createCohortPost } from "../../lib/api/schemaHelper.js";
 import { PortalModal } from "../../components/common/PortalModal.jsx";
@@ -19,6 +20,7 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(() => new Date(Date.now() + 42 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)); // Default 6 weeks
   const [trialStatus, setTrialStatus] = useState("none");
+  const [instructorId, setInstructorId] = useState("");
   const [saving, setSaving] = useState(false);
 
   // Archive / Delete Confirmation State
@@ -32,6 +34,8 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
   const cohorts = cohortsQuery.data || [];
   const sessionsQuery = useSupabaseQuery(async () => fetchUpcomingOrgSessions(orgId || "demo-org-id"), [orgId]);
   const upcomingSessions = sessionsQuery.data || [];
+  const instructorsQuery = useSupabaseQuery(async () => fetchOrgInstructors(orgId || "demo-org-id"), [orgId]);
+  const orgInstructors = instructorsQuery.data || [];
 
   async function handleCreateCohort(e) {
     e.preventDefault();
@@ -54,9 +58,11 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
         endDate,
         trialStatus,
         createdBy: currentUserId,
+        instructorId: instructorId || undefined,
       });
       setNewCohortOpen(false);
       setName("");
+      setInstructorId("");
       cohortsQuery.refetch();
       showToast("Cohort created successfully!");
     } catch (err) {
@@ -179,8 +185,13 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                         </div>
                         <ProgressBar value={progressInfo.percent} />
 
-                        <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 8, display: "flex", alignItems: "center", gap: 4 }}>
-                          <Clock size={12} /> {progressInfo.statusLabel}
+                        <div className="ta-row ta-between" style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 8, alignItems: "center" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <Clock size={12} /> {progressInfo.statusLabel}
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 4, color: c.instructor ? "var(--text)" : "var(--text-3)", fontWeight: c.instructor ? 600 : 400 }}>
+                            <GraduationCap size={12} color="var(--primary)" /> {c.instructor?.name || "No instructor"}
+                          </div>
                         </div>
                       </div>
 
@@ -277,6 +288,25 @@ export function CohortsScreen({ orgId, onOpenCohort, orgSelector, setScreen, cur
                       <option value="none">Standard / None</option>
                       <option value="active">Active 6-Week Trial</option>
                     </select>
+                  </div>
+                </div>
+
+                <div className="ta-mt12">
+                  <div className="ta-label">Assigned Lead Instructor</div>
+                  <select
+                    className="ta-input ta-mt6"
+                    value={instructorId}
+                    onChange={e => setInstructorId(e.target.value)}
+                  >
+                    <option value="">-- No instructor assigned yet --</option>
+                    {orgInstructors.map(inst => (
+                      <option key={inst.id} value={inst.id}>
+                        {inst.name} {inst.email ? `(${inst.email})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: 11.5, color: "var(--text-3)", marginTop: 4 }}>
+                    The instructor will be automatically enrolled and granted cohort management privileges.
                   </div>
                 </div>
 

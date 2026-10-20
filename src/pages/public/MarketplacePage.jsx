@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   ShoppingBag, Search, Filter, Star, BookOpen, Clock, Users,
   ArrowRight, Check, ShieldCheck, DollarSign, Sparkles, Building2,
@@ -14,6 +14,8 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
   const [tab, setTab] = useState("courses"); // courses | plans
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const requestId = useRef(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSkill, setSelectedSkill] = useState("all");
@@ -24,24 +26,27 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
   const plans = fetchInstructorSeatPlans();
 
   async function loadCourses() {
+    const id = ++requestId.current;
     setLoading(true);
+    setError(null);
     try {
       const data = await fetchMarketplaceCourses({
         category: selectedCategory,
         skillLevel: selectedSkill,
         searchQuery,
       });
-      setCourses(data);
+      if (id === requestId.current) setCourses(data);
     } catch (e) {
-      console.warn("Could not load marketplace courses:", e);
+      if (id === requestId.current) { setError("Could not load courses. Please retry."); setCourses([]); }
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadCourses();
-  }, [selectedCategory, selectedSkill]);
+    const timer = setTimeout(loadCourses, 250);
+    return () => { clearTimeout(timer); requestId.current += 1; };
+  }, [selectedCategory, selectedSkill, searchQuery]);
 
   function handlePurchase() {
     setSelectedCourse(null);
@@ -70,6 +75,8 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: 16,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={onGoHome}>
@@ -82,7 +89,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
           </span>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <button
             onClick={onBookDemo}
             style={{
@@ -176,6 +183,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px 80px" }}>
         {tab === "courses" && (
           <>
+            {error && <div role="alert" style={{ padding: 20, marginBottom: 16 }}>{error} <button onClick={loadCourses}>Retry</button></div>}
             {/* Filter Bar */}
             <div
               style={{
@@ -204,6 +212,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
                       border: "1px solid #334155",
                       color: "#FFF",
                     }}
+                    aria-label="Search courses, skills and academies"
                     placeholder="Search courses, skills, academies..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -216,6 +225,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
                 <select
                   className="ta-input"
                   style={{ background: "#1E293B", border: "1px solid #334155", color: "#FFF", width: "auto", fontSize: 13 }}
+                  aria-label="Course category"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                 >
@@ -229,6 +239,7 @@ export default function MarketplacePage({ onGoHome, onBookDemo, onSignIn }) {
                 <select
                   className="ta-input"
                   style={{ background: "#1E293B", border: "1px solid #334155", color: "#FFF", width: "auto", fontSize: 13 }}
+                  aria-label="Course skill level"
                   value={selectedSkill}
                   onChange={(e) => setSelectedSkill(e.target.value)}
                 >

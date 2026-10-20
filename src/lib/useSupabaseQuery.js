@@ -13,6 +13,7 @@ export function useSupabaseQuery(fetcher, deps = []) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setData(null);
     setError(null);
     fetcher()
       .then((result) => { if (!cancelled) setData(result); })

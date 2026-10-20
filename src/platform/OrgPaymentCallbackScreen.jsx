@@ -39,7 +39,7 @@ export function OrgPaymentCallbackScreen({ onDone }) {
           const orgId = result?.metadata?.org_id || pending?.metadata?.org_id;
           const tier = result?.metadata?.tier || pending?.metadata?.tier;
           const applyResult = await applyOrganizationSubscriptionPayment(
-            orgId, tier, isStripe ? "stripe" : "paystack", reference || sessionId, result?.amount
+            orgId, tier, isStripe ? "stripe" : "paystack", result.reference, result?.amount
           );
           if (applyResult.success) {
             setState("success");
@@ -51,7 +51,7 @@ export function OrgPaymentCallbackScreen({ onDone }) {
         } else if (result?.success && result?.status === "completed" && context === PAYMENT_CONTEXTS.SEAT_PURCHASE) {
           const orgId = result?.metadata?.org_id || pending?.metadata?.org_id;
           const seats = result?.metadata?.seats || pending?.metadata?.seats;
-          const applyResult = await purchaseSeats(orgId, seats, result?.amount, reference || sessionId);
+          const applyResult = await purchaseSeats(orgId, seats, result?.amount, result.reference);
           if (applyResult.success) {
             setState("success");
             setMessage(`Payment confirmed. ${seats} seat${seats === 1 ? "" : "s"} added to your organization.`);

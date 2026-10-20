@@ -1,3 +1,4 @@
+import { validatePayment, recordVerifiedPayment } from "../_shared/paymentValidation.js";
 // Train AI - paystack-webhook
 //
 // Real Paystack webhook signature verification, using Paystack's own
@@ -105,7 +106,9 @@ Deno.serve(async (req) => {
       const reference = data?.reference;
       if (context === "credits" && reference) {
         const userId = data?.metadata?.user_id;
-        const creditsToAdd = Number(data?.metadata?.credits_to_add || 0);
+        const metadata = await validatePayment(db, userId, "credits", Number(data.amount)/100, data.currency, data.metadata);
+        const creditsToAdd = metadata.credits_to_add;
+        await recordVerifiedPayment(db, { provider:"paystack",reference,userId,context:"credits",amount:Number(data.amount)/100,currency:data.currency,metadata });
         if (userId && creditsToAdd > 0) {
           const { data: grantData, error } = await db.rpc("record_and_grant_ai_credit_payment", {
             p_provider: "paystack",
@@ -114,10 +117,10 @@ Deno.serve(async (req) => {
             p_organization_id: null,
             p_user_id: userId,
             p_credits: creditsToAdd,
-            p_amount: data?.amount ?? null,
+            p_amount: Number(data.amount)/100,
             p_currency: data?.currency ?? "NGN",
           });
-          if (error) console.error("paystack-webhook: grant failed:", error);
+          if (error) return jsonResponse({ error: "Credit settlement failed. Please retry." }, 500);
           else console.log("paystack-webhook: processed", reference, grantData);
         }
       }

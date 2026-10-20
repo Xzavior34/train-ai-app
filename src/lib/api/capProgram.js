@@ -109,13 +109,15 @@ export async function fetchCapTeams(cohortId) {
 
   try {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(cohortId || ""));
+    if (!isUuid) return [];
     let query = supabase.from("cap_teams").select("*, cap_team_members(*)").order("created_at", { ascending: false });
     if (isUuid) {
       query = query.eq("cohort_id", cohortId);
     }
 
     const { data, error } = await query;
-    if (error || !data || data.length === 0) return cached;
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
 
     const formatted = data.map((t) => ({
       ...t,
@@ -133,7 +135,7 @@ export async function fetchCapTeams(cohortId) {
     // Merge with seeds if user is looking at CAP Cohort 3 so pre-configured tracks are always visible
     const existingIds = new Set(formatted.map((t) => t.id));
     const merged = [...formatted, ...cached.filter((t) => !existingIds.has(t.id))];
-    saveCachedTeams(merged);
+    // Live data must never be merged with browser fixtures.
     return merged;
   } catch {
     return cached;
@@ -155,34 +157,21 @@ export async function saveCapTeam(teamData) {
   };
 
   if (supabase) {
-    try {
-      const dbPayload = {
-        name: teamData.name,
-        project_title: teamData.project_title,
-        problem_statement: teamData.problem_statement,
-        technologies: teamData.technologies || [],
-        github_url: teamData.github_url || null,
-        demo_url: teamData.demo_url || null,
-        presentation_url: teamData.presentation_url || null,
-        demo_video_url: teamData.demo_video_url || null,
-        screenshot_url: teamData.screenshot_url || null,
-        mentor_name: teamData.mentor_name || null,
-        phase: teamData.phase || "BUILD",
-        demo_day_status: teamData.demo_day_status || "Pending Review",
-        updated_at: new Date().toISOString(),
-      };
-      if (isUuid) {
-        dbPayload.cohort_id = teamData.cohort_id;
-      }
-
-      if (isNew) {
-        await supabase.from("cap_teams").insert(dbPayload);
-      } else {
-        await supabase.from("cap_teams").update(dbPayload).eq("id", id);
-      }
-    } catch (e) {
-      console.warn("saveCapTeam Supabase sync notice:", e?.message || e);
+    if (!isUuid) throw new Error("Select your enrolled cohort before saving a team.");
+    if (isNew) {
+      const { data, error } = await supabase.rpc("register_my_cap_team", {
+        p_cohort_id: teamData.cohort_id, p_name: teamData.name,
+        p_project_title: teamData.project_title, p_problem_statement: teamData.problem_statement || "",
+        p_technologies: teamData.technologies || [], p_role: teamData.members?.[0]?.role || "Software Engineer",
+      });
+      if (error) throw error;
+      return { success: true, data };
     }
+    const fields = ["name","project_title","problem_statement","technologies","github_url","demo_url","presentation_url","demo_video_url","screenshot_url","mentor_name","mentor_id","phase","demo_day_status"];
+    const patch = Object.fromEntries(fields.filter(key => teamData[key] !== undefined).map(key => [key,teamData[key]]));
+    const { data, error } = await supabase.from("cap_teams").update(patch).eq("id",id).select().single();
+    if (error) throw error;
+    return { success: true, data };
   }
 
   const existing = getCachedTeams();
@@ -205,22 +194,10 @@ export async function joinCapTeam({ teamId, userId, name, email, role = "Softwar
     role: role || "Software Engineer",
   };
 
-  if (supabase && userId) {
-    const isTeamUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(teamId));
-    const isUserUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(userId));
-    if (isTeamUuid && isUserUuid) {
-      try {
-        await supabase.from("cap_team_members").insert({
-          team_id: teamId,
-          user_id: userId,
-          name: name || "Learner",
-          email: email || "",
-          role,
-        });
-      } catch (err) {
-        console.warn("joinCapTeam Supabase sync notice:", err);
-      }
-    }
+  if (supabase) {
+    const { data, error } = await supabase.from("cap_team_members").upsert({ team_id: teamId, user_id: userId, name, role }, { onConflict: "team_id,user_id", ignoreDuplicates: true }).select();
+    if (error) throw error;
+    return { success: true, member: data?.[0] || null };
   }
 
   const existing = getCachedTeams();
@@ -263,4 +240,11 @@ export async function updateDemoDayReview(teamId, { demoDayStatus, finalScore, j
   const updated = existing.map((t) => (t.id === teamId ? { ...t, ...patch } : t));
   saveCachedTeams(updated);
   return { success: true };
+}
+
+export async function canManageCapCohort(cohortId) {
+  if (!supabase || !cohortId) return false;
+  const { data, error } = await supabase.rpc("can_manage_cohort", { p_cohort_id: cohortId });
+  if (error) return false;
+  return data === true;
 }

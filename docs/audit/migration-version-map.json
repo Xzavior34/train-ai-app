@@ -1,0 +1,6 @@
+{
+  "0160_join_organization_by_invite_link.sql": "0165_join_organization_by_invite_link.sql",
+  "0161_organization_join_approval_queue.sql": "0166_organization_join_approval_queue.sql",
+  "0162_platform_stability_kpi_cohorts_trials.sql": "0167_platform_stability_kpi_cohorts_trials.sql",
+  "0164_demo_calendar_delivery.sql": "0168_demo_calendar_delivery.sql"
+}

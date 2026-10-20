@@ -13,10 +13,10 @@ function isAllowedHost(host: string): boolean {
     h === "www.trainailtd.com" ||
     h.endsWith(".trainailtd.com") ||
     h === "train-ai-app.vercel.app" ||
-    h.endsWith(".vercel.app") ||
+    
     h === "localhost" ||
     h === "127.0.0.1" ||
-    h.endsWith(".local")
+    false
   );
 }
 
@@ -79,15 +79,9 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
     const clientIp = (req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown").split(",")[0].trim();
     const [emailHash, ipHash] = await Promise.all([hash(email), hash(clientIp)]);
-    const since = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    const [{ count: emailCount }, { count: ipCount }] = await Promise.all([
-      admin.from("password_reset_attempts").select("id", { count: "exact", head: true }).eq("email_hash", emailHash).gte("created_at", since),
-      admin.from("password_reset_attempts").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", since),
-    ]);
-    if ((emailCount || 0) >= 5 || (ipCount || 0) >= 20) {
-      return respond({ success: false, emailSent: false, rateLimited: true, error: "Too many reset requests. Please wait 15 minutes and try again." }, 429);
-    }
-    await admin.from("password_reset_attempts").insert({ email_hash: emailHash, ip_hash: ipHash });
+    const { data: allowed, error: limitError } = await admin.rpc("take_password_reset_attempt", { p_email_hash: emailHash, p_ip_hash: ipHash });
+    if (limitError) return respond({ success: false, emailSent: false, error: "Recovery is temporarily unavailable. Please retry." }, 503);
+    if (!allowed) return respond({ success: false, emailSent: false, rateLimited: true, error: "Too many reset requests. Please wait 15 minutes and try again." }, 429);
 
     const redirectTo = safeRedirect(body.redirectTo);
     const { data, error } = await admin.auth.admin.generateLink({ type: "recovery", email, options: { redirectTo } });

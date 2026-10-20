@@ -111,7 +111,7 @@ export function AIQuizScreen({
       return;
     }
     if (typeof credits === "number" && credits <= 0) {
-      setQuizGenError("You've used all your free AI credits (20/20). Buy more AI credits to continue generating AI quizzes.");
+      setQuizGenError("Your AI credits are exhausted. Purchase personal credits or ask your organization administrator for more.");
       return;
     }
     setQuizGenError(null);
@@ -159,23 +159,12 @@ export function AIQuizScreen({
       if (!aiQuiz || questions.length === 0) return;
       setQuizSubmitting(true);
       try {
-        let correctCount = 0;
-        const details = questions.map((q) => {
-          const selected = quizAnswers[q.id];
-          const correctOption = q.options[q.correctAnswer];
-          const isCorrect = selected != null && selected === correctOption;
-          if (isCorrect) correctCount++;
-          return { question: q.question_text, selected: selected ?? null, correctOption, isCorrect, explanation: q.explanation };
-        });
-        const total = questions.length;
-        const score = total ? Math.round((correctCount / total) * 100) : 0;
-        const totalPoints = correctCount * 10;
-        setQuizResult({ score, correct_count: correctCount, total, total_points: totalPoints, details, isAIQuiz: true, topic: aiQuiz.title });
+        const result = await awardAIQuizCompletionPoints(session?.user?.id, aiQuiz.attempt_id, quizAnswers);
+        setQuizResult({ ...result, isAIQuiz: true, topic: aiQuiz.title });
         setQuizStage("result");
-        if (session?.user?.id && totalPoints > 0) {
-          awardAIQuizCompletionPoints(session.user.id, totalPoints);
-        }
-        showToast(`Quiz completed! Score: ${score}%`);
+        showToast(`Quiz completed! Score: ${result.score}%`);
+      } catch (error) {
+        showToast(error.message || "Could not save your quiz result. Please retry.");
       } finally {
         setQuizSubmitting(false);
       }

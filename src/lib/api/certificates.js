@@ -59,76 +59,12 @@ function saveCachedCerts(items) {
  * Verifies a certificate publicly by its unique code or UUID
  */
 export async function verifyPublicCertificate(codeOrId) {
-  const target = (codeOrId || "").trim();
-  if (!target) return { verified: false, error: "Missing certificate identifier." };
-
-  if (supabase) {
-    try {
-      const { data, error } = await supabase.rpc("verify_public_certificate", {
-        p_certificate_code: target,
-      });
-      if (!error && data) return data;
-    } catch {}
-
-    try {
-      const { data: dbData } = await supabase
-        .from("certificates")
-        .select("*, courses(title, name), organizations(name), user_profiles:user_id(display_name, full_name, email)")
-        .or(`certificate_code.eq.${target},certificate_number.eq.${target},id.eq.${target}`)
-        .maybeSingle();
-
-      if (dbData) {
-        if (dbData.is_revoked || dbData.status === "revoked") {
-          return {
-            verified: false,
-            is_revoked: true,
-            reason: dbData.revoked_reason || "This certificate has been revoked by the issuing authority.",
-            issued_at: dbData.issued_at,
-          };
-        }
-        return {
-          verified: true,
-          certificate_code: dbData.certificate_code || dbData.certificate_number || dbData.id,
-          recipient_name: dbData.recipient_name || dbData.user_profiles?.full_name || dbData.user_profiles?.display_name || "Certified Learner",
-          course_name: dbData.course_name || dbData.title || dbData.courses?.title || dbData.courses?.name || "Train AI Certified Programme",
-          organization_name: dbData.organization_name || dbData.organizations?.name || "Train AI Academy",
-          issued_at: dbData.issued_at,
-          template_type: dbData.template_type || "train_ai_default",
-        };
-      }
-    } catch {}
-  }
-
-  const certs = getCachedCerts();
-  const matched = certs.find(
-    (c) =>
-      c.certificate_code?.toUpperCase() === target.toUpperCase() ||
-      c.certificate_number?.toUpperCase() === target.toUpperCase() ||
-      c.id?.toLowerCase() === target.toLowerCase()
-  );
-
-  if (!matched) {
-    return { verified: false, error: "Certificate not found or identifier invalid." };
-  }
-
-  if (matched.is_revoked || matched.status === "revoked") {
-    return {
-      verified: false,
-      is_revoked: true,
-      reason: matched.revoked_reason || "This certificate has been revoked by the issuing authority.",
-      issued_at: matched.issued_at,
-    };
-  }
-
-  return {
-    verified: true,
-    certificate_code: matched.certificate_code || matched.certificate_number || matched.id,
-    recipient_name: matched.recipient_name || matched.learnerName || "Certified Learner",
-    course_name: matched.course_name || matched.title || matched.courseTitle || "Train AI Certified Programme",
-    organization_name: matched.organization_name || "Train AI Academy",
-    issued_at: matched.issued_at,
-    template_type: matched.template_type || "train_ai_default",
-  };
+  const target = String(codeOrId || "").trim();
+  if (!target || target.length > 200) return { verified: false, error: "Enter a valid certificate identifier." };
+  if (!supabase) return { verified: false, unavailable: true, error: "Certificate verification requires an online connection." };
+  const { data, error } = await supabase.rpc("verify_public_certificate", { p_certificate_code: target });
+  if (error || !data) throw new Error("Certificate verification is temporarily unavailable. Please retry.");
+  return data;
 }
 
 /**

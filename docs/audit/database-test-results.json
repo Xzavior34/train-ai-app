@@ -1,0 +1,118 @@
+[
+  {
+    "name": "Mentor sees only assigned cohorts and roster",
+    "status": "PASS"
+  },
+  {
+    "name": "Learner cannot self-enroll in private cohort",
+    "status": "PASS"
+  },
+  {
+    "name": "Assigned mentor manages resources; other org cannot read",
+    "status": "PASS"
+  },
+  {
+    "name": "Mentor ID resolves through mentors.user_id; recurrence links children",
+    "status": "PASS"
+  },
+  {
+    "name": "Other organization admin cannot create or cancel sessions",
+    "status": "PASS"
+  },
+  {
+    "name": "Mentor can cancel recurring family",
+    "status": "PASS"
+  },
+  {
+    "name": "Unassignment removes access on an existing session",
+    "status": "PASS"
+  },
+  {
+    "name": "Enrolled learner can message group; private self-join denied",
+    "status": "PASS"
+  },
+  {
+    "name": "Cross-tenant study-group messaging denied",
+    "status": "PASS"
+  },
+  {
+    "name": "Authorized mentor direct messages remain available; cross-tenant and learner pairs denied",
+    "status": "PASS"
+  },
+  {
+    "name": "Compliance refresh affects only the admin organization",
+    "status": "PASS"
+  },
+  {
+    "name": "Unaffiliated balance initializes to exactly three",
+    "status": "PASS"
+  },
+  {
+    "name": "Concurrent requests cannot spend more than three credits",
+    "status": "PASS"
+  },
+  {
+    "name": "Clients cannot refund; concurrent server refunds restore once",
+    "status": "PASS"
+  },
+  {
+    "name": "Unknown AI operation cannot bypass cost",
+    "status": "PASS"
+  },
+  {
+    "name": "Affiliated welcome allowance preserved",
+    "status": "PASS"
+  },
+  {
+    "name": "Achievement eligibility and direct statistics writes enforced",
+    "status": "PASS"
+  },
+  {
+    "name": "Concurrent achievement calls award points only once",
+    "status": "PASS"
+  },
+  {
+    "name": "Concurrent demo submissions enforce five per email",
+    "status": "PASS"
+  },
+  {
+    "name": "Daily login rewards serialize and preserve server points",
+    "status": "PASS"
+  },
+  {
+    "name": "Generated quiz scores and points are server-derived and idempotent",
+    "status": "PASS"
+  },
+  {
+    "name": "Cohort creation and instructor assignment are atomic",
+    "status": "PASS"
+  },
+  {
+    "name": "Platform owner can create a tenant cohort without being enrolled in that tenant",
+    "status": "PASS"
+  },
+  {
+    "name": "Reassignment is visible in an existing mentor session",
+    "status": "PASS"
+  },
+  {
+    "name": "CAP registration joins creator; team writes cannot forge reviews",
+    "status": "PASS"
+  },
+  {
+    "name": "Mentor activity alerts exclude unassigned learners",
+    "status": "PASS"
+  },
+  {
+    "name": "Full organization signup queues instead of exceeding seats",
+    "status": "PASS"
+  },
+  {
+    "name": "Leaving an organization clamps free credits while preserving paid credits",
+    "status": "PASS"
+  },
+  {
+    "name": "Organization suspension removes private group access despite stale group enrollment",
+    "status": "PASS"
+  }
+]

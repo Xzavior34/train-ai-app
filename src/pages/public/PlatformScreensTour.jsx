@@ -680,7 +680,7 @@ export default function PlatformScreensTour() {
                 <Lock size={12} color="#64748B" />
                 <span className="pst-url-text">{activeScreen.urlPath}</span>
               </div>
-              <span className="pst-live-chip">Live Preview</span>
+              <span className="pst-live-chip">Illustrative Preview</span>
             </div>
 
             {/* Screen Content Render */}

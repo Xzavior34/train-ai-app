@@ -288,17 +288,11 @@ export async function submitQuizAnswers(quizId, answersByQuestionId, userId = nu
 // into `quizzes`) - this intentionally only touches the stats table, and
 // only when points are actually owed (never a fabricated write for a
 // mismatched/failed attempt).
-export async function awardAIQuizCompletionPoints(userId, points) {
-  if (!supabase || !userId || !points) return;
-  try {
-    const { data: stats } = await supabase.from("user_gamification_stats").select("total_points").eq("user_id", userId).maybeSingle();
-    const currentPoints = stats?.total_points || 0;
-    await supabase
-      .from("user_gamification_stats")
-      .upsert({ user_id: userId, total_points: currentPoints + points, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
-  } catch (e) {
-    console.warn("AI quiz points award warning:", e);
-  }
+export async function awardAIQuizCompletionPoints(userId, attemptId, answers) {
+  if (!supabase || !userId || !attemptId) throw new Error("This quiz must be generated again before points can be recorded.");
+  const { data, error } = await supabase.rpc("submit_generated_quiz", { p_attempt_id: attemptId, p_answers: answers });
+  if (error) throw new Error("Could not save your quiz result. Please retry.");
+  return data;
 }
 
 export async function fetchAvailableQuizzes() {
@@ -1370,7 +1364,8 @@ export async function checkAndAwardAchievements(userId, stats, alreadyEarnedSlug
     else if (def.category === "social") current = statsForCatalog.sessionsCompleted;
     if (current >= def.threshold) {
       try {
-        await supabase.rpc("award_achievement_by_slug", { p_user_id: userId, p_slug: def.id });
+        const { error } = await supabase.rpc("award_achievement_by_slug", { p_user_id: userId, p_slug: def.id });
+        if (error) throw error;
         if (!earnedSet.has(def.id)) newlyAwarded.push(def);
       } catch (e) {
         console.warn(`Could not award achievement ${def.id}:`, e);

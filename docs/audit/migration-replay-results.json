@@ -1,0 +1,426 @@
+[
+  {
+    "file": "0001_init_schema.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0002_progress_quizzes_cohorts.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0003_mentors_sessions_messaging.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0004_community_gamification_admin.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0005_functions.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0006_rls_policies.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0007_missing_schema.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0008_learner_app_rls_gapfill.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0009_forum_rls_gapfill.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0100_course_applications.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0101_demo_requests.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0102_org_self_serve_signup.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0103_organization_inquiries.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0104_rename_growth_tier.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0105_tech_learning_default_org.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0106_join_default_organization.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0107_bookmarks_rls.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0108_messaging_restriction.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0109_ai_coach_settings.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0110_learning_paths_rls_fix.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0111_ai_usage_tracking.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0112_assessments_pipeline.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0113_super_admin_impersonation.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0114_organization_subscription_payment.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0115_organization_feature_flags.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0116_digital_training_org_and_demos.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0117_organization_status_control.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0118_sara_foundation_tenant.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0119_super_admin_trainai_only.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0120_certificates.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0121_feedback_notes.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0122_support_tickets.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0123_campaign_attribution.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0124_cohort_courses_rls_fix.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0125_external_course_approval.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0126_no_learner_to_learner_messaging.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0127_suspend_instructor_payouts.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0128_org_level_rbac.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0129_seat_based_payments.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0130_admin_issue_certificate_directly.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0131_mentor_settings_rls_gapfill.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0132_seed_demo_course.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0133_per_instructor_payouts_and_learner_payments.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0134_comprehensive_demo_data.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0135_analysis_notes.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0136_cohort_banner.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0137_admin_audit_log_org_scope_fix.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0138_course_materials.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0139_mentor_messages_org_scope_fix.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0140_cohort_activity_today.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0141_course_quality_reviews.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0142_lesson_feedback.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0143_weekly_lesson_goal.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0144_seed_achievements_and_award_bridge.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0145_achievement_display_fields_and_notification.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0146_credit_requests.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0147_get_waitlist_count.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0148_leaderboard_period_and_cohort.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0149_course_content_tenant_isolation.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0150_cohort_course_org_referential_integrity.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0151_user_profile_self_escalation_fix.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0152_cohort_collaboration_org_scoping.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0153_remaining_wide_open_policies.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0154_security_definer_authorization_gaps.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0155_user_personalization_and_final_gaps.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0156_ai_credit_ledger.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0157_ai_credit_payment_verification.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0158_billing_foundation.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0159_seat_concurrency_fix.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0160_entitlement_enforcement_and_payment_hardening.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0161_demo_requests_scheduling.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0162_platform_integrity_hardening.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0163_credit_helper_authorization.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0164_foundation_free_plan_and_org_promo_codes.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0165_join_organization_by_invite_link.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0166_organization_join_approval_queue.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0167_platform_stability_kpi_cohorts_trials.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "0168_demo_calendar_delivery.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610060001_meeting_followups_security_and_workflows.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610060002_database_security_hardening.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610060003_security_invoker_views.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610100001_public_organizations_directory_and_promo_codes.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610100002_free_20_ai_credits_and_org_join_links.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610100003_cap_cohort_3_timeline_and_accelerator_tables.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610120001_user_referral_link_and_date_tracking.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610130001_fix_org_invite_link_and_member_visibility.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610130002_add_phone_number_to_demo_requests.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610140001_cohort_member_assignment_and_bulk_add.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610150001_identity_organization_cohort_sync.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610150002_auth_profile_bootstrap.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610160001_global_study_groups_and_membership_repair.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610160002_new_learner_directory_and_cohort_claim.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610160003_sara_signup_target_membership_repair.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610160004_claim_recent_generic_learners_for_sara.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610160005_cross_project_sara_signup_and_cap3_repair.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610190001_cohort_peer_directory_and_discussion_visibility.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610190002_mentor_sync_and_bulk_course_assignment.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200001_assignment_and_database_security.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200002_canonical_ai_credit_allowance.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200003_demo_validation_and_group_participation.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200004_trusted_activity_and_atomic_assignment.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200005_cap_scope_and_mentor_activity.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200006_instructor_assignment_and_member_tracking.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200007_website_account_security.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200008_verified_billing_receipts.sql",
+    "result": "PASS"
+  },
+  {
+    "file": "202610200009_grant_sara_and_platform_owner_free_seats.sql",
+    "result": "PASS"
+  }
+]

@@ -1,0 +1,1191 @@
+{
+  "sourceModules": 163,
+  "edgeHandlers": 21,
+  "syntax": [
+    {
+      "file": "src/App.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/certificates/CertificateDocument.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/certificates/certificateThemes.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/certificates/OrgCertificateStudio.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/AccessibilityPanel.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/ConsentBanner.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/ErrorBoundary.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/FileUploadZone.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/LoadingScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/OfflineIndicator.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/PortalModal.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/Skeleton.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/components/common/UIControls.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/hooks/useAuth.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/hooks/useSupabaseQuery.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/achievementCatalog.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/AIInsightsCard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/AIRecommendationsCard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/CommunityHero.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/CourseVideoPlayer.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/FormattedAIResponse.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/GamificationCard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/LeaderboardPanel.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/LearnerUI.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/retention/AlmostThereNudge.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/retention/ComebackBanner.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/retention/DailyLoginReward.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/retention/WeeklyLeagueCard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/SearchBar.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/components/SkillMasteryCard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/hooks/useCredits.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/hooks/useLearnerData.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/hooks/usePushNotifications.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/AchievementsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/AIQuizScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/CapCohort3Screen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/CohortScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/CommunityFeedScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/CommunityScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/CourseDetailScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/CoursesScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/CreditsCheckoutScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/HomeScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/LeaderboardScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/LessonScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/MentorsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/MessagesScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/MyProgressScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/NotificationsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/PaymentCallbackScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/ProfileScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/screens/StudyGroupScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/TrainAILearnerApp.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/learner/utils/creditBalance.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/accessCodes.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/auditService.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/capProgram.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/certificates.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/cohorts.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/creditRequests.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/demoData.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/gdprService.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/invitations.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/kpi.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/learner.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/live/learnerCourseLive.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/live/learnerMiscLive.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/live/learnerProgressLive.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/live/mentorLive.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/live/ownerLive.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/marketplace.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/mentorship.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/mfa.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/organizations.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/payments.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/platform.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/retention.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/schemaHelper.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/api/waitlist.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/authRateLimiter.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/constants/terminology.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/demoMode.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/mockDataManager.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/OnboardingScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/onesignal.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/publicRouting.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/roleRouting.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/securityGate.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/storage.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/supabaseClient.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/tierFeatures.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/useAssignmentRefresh.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/useAuth.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/useDialogFocus.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/lib/useSupabaseQuery.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/main.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/auth/AcceptInvitationScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/auth/AuthPage.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/auth/MfaChallengeScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/auth/MfaSetupScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/onboarding/OnboardingPage.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/PlatformOwnerLoginScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/public/AppointmentBookingPage.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/public/CertificateVerificationPage.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/public/LandingPage.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/public/MarketplacePage.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/pages/public/PlatformScreensTour.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/AdminAnalyticsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/AdminDashboardScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/AdminStudyGroupsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/AssessmentsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/CohortDetailScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/CohortsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/ComplianceScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/ContentScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/CourseBuilderWizard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/EmailCenterScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/ForumsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/GJPScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/IntegrationsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/LearningPathsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/ModerationScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/OrgRoleAccessScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/PayoutsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/PeopleScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/SeatsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/SettingsHubScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/admin/WorkforceIntelligenceScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/components/AnalysisNotesCard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/components/KPITrackerCard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/components/MemberLearningTrack.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/components/PlatformUI.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/hooks/usePlatformData.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/hr/HrDashboardScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/manager/ManagerDashboardScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/AdministrativeScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/DiscussionsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/InstructorCohortsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/MenteesScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/MentorAnalyticsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/MentorDashboardScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/MentorMessagesScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/MentorScheduleScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/MentorSettingsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/mentor/MentorStudyGroupsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/OrgPaymentCallbackScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/PlatformOwnerApp.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/AccessControlScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/BrandingScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/DemoRequestsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/EmailsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/OrganizationsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/OrgOnboardingWizard.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/OverviewScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/PlatformSettingsScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/SupportQueueScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/superadmin/TracksScreen.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/platform/TrainAIPlatformApp.jsx",
+      "status": "PASS"
+    },
+    {
+      "file": "src/services/authService.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/services/emailService.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/services/learnerService.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/services/platformService.js",
+      "status": "PASS"
+    },
+    {
+      "file": "src/services/supabaseClient.js",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/accept-invitation/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/admin-reset-mfa/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/advanced-broadcast-email/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/ai-chat/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/ai-content-moderation/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/ai-generate-quiz/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/ai-insights/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/book-demo-appointment/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/generate-ai-recommendations/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/grant-ai-credits-from-payment/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/invite-user/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/org-payment-credentials/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/password-breach-check/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/paystack-initialize/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/paystack-verify/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/paystack-webhook/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/send-password-reset/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/send-push-notification/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/stripe-initialize/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/stripe-verify/index.ts",
+      "status": "PASS"
+    },
+    {
+      "file": "supabase/functions/stripe-webhook/index.ts",
+      "status": "PASS"
+    }
+  ],
+  "screens": [
+    {
+      "file": "src/learner/screens/AchievementsScreen.jsx",
+      "name": "AchievementsScreen",
+      "status": "PASS",
+      "renderedBytes": 13642
+    },
+    {
+      "file": "src/learner/screens/AIQuizScreen.jsx",
+      "name": "AIQuizScreen",
+      "status": "FAIL",
+      "message": "Cannot read properties of undefined (reading 'data')"
+    },
+    {
+      "file": "src/learner/screens/CapCohort3Screen.jsx",
+      "name": "CapCohort3Screen",
+      "status": "PASS",
+      "renderedBytes": 8089
+    },
+    {
+      "file": "src/learner/screens/CohortScreen.jsx",
+      "name": "CohortScreen",
+      "status": "PASS",
+      "renderedBytes": 602
+    },
+    {
+      "file": "src/learner/screens/CommunityFeedScreen.jsx",
+      "name": "CommunityFeedScreen",
+      "status": "PASS",
+      "renderedBytes": 8496
+    },
+    {
+      "file": "src/learner/screens/CommunityScreen.jsx",
+      "name": "CommunityScreen",
+      "status": "PASS",
+      "renderedBytes": 17261
+    },
+    {
+      "file": "src/learner/screens/CourseDetailScreen.jsx",
+      "name": "CourseDetailScreen",
+      "status": "PASS",
+      "renderedBytes": 55
+    },
+    {
+      "file": "src/learner/screens/CoursesScreen.jsx",
+      "name": "CoursesScreen",
+      "status": "PASS",
+      "renderedBytes": 13179
+    },
+    {
+      "file": "src/learner/screens/CreditsCheckoutScreen.jsx",
+      "name": "CreditsCheckoutScreen",
+      "status": "PASS",
+      "renderedBytes": 19601
+    },
+    {
+      "file": "src/learner/screens/HomeScreen.jsx",
+      "name": "HomeScreen",
+      "status": "PASS",
+      "renderedBytes": 13209
+    },
+    {
+      "file": "src/learner/screens/LeaderboardScreen.jsx",
+      "name": "LeaderboardScreen",
+      "status": "PASS",
+      "renderedBytes": 8557
+    },
+    {
+      "file": "src/learner/screens/LessonScreen.jsx",
+      "name": "LessonScreen",
+      "status": "FAIL",
+      "message": "Cannot read properties of undefined (reading 'has')"
+    },
+    {
+      "file": "src/learner/screens/MentorsScreen.jsx",
+      "name": "MentorsScreen",
+      "status": "FAIL",
+      "message": "Cannot read properties of undefined (reading 'trim')"
+    },
+    {
+      "file": "src/learner/screens/MessagesScreen.jsx",
+      "name": "MessagesScreen",
+      "status": "PASS",
+      "renderedBytes": 4005
+    },
+    {
+      "file": "src/learner/screens/MyProgressScreen.jsx",
+      "name": "MyProgressScreen",
+      "status": "PASS",
+      "renderedBytes": 9250
+    },
+    {
+      "file": "src/learner/screens/NotificationsScreen.jsx",
+      "name": "NotificationsScreen",
+      "status": "PASS",
+      "renderedBytes": 4172
+    },
+    {
+      "file": "src/learner/screens/PaymentCallbackScreen.jsx",
+      "name": "PaymentCallbackScreen",
+      "status": "PASS",
+      "renderedBytes": 614
+    },
+    {
+      "file": "src/learner/screens/ProfileScreen.jsx",
+      "name": "ProfileScreen",
+      "status": "FAIL",
+      "message": "Cannot read properties of undefined (reading 'avatarUrl')"
+    },
+    {
+      "file": "src/learner/screens/StudyGroupScreen.jsx",
+      "name": "StudyGroupScreen",
+      "status": "PASS",
+      "renderedBytes": 3579
+    },
+    {
+      "file": "src/pages/auth/AcceptInvitationScreen.jsx",
+      "name": "AcceptInvitationScreen",
+      "status": "PASS",
+      "renderedBytes": 2031
+    },
+    {
+      "file": "src/pages/auth/AuthPage.jsx",
+      "name": "AuthPage",
+      "status": "PASS",
+      "renderedBytes": 6491
+    },
+    {
+      "file": "src/pages/auth/MfaChallengeScreen.jsx",
+      "name": "MfaChallengeScreen",
+      "status": "PASS",
+      "renderedBytes": 2905
+    },
+    {
+      "file": "src/pages/auth/MfaSetupScreen.jsx",
+      "name": "MfaSetupScreen",
+      "status": "PASS",
+      "renderedBytes": 3448
+    },
+    {
+      "file": "src/pages/onboarding/OnboardingPage.jsx",
+      "name": "OnboardingPage",
+      "status": "PASS",
+      "renderedBytes": 5873
+    },
+    {
+      "file": "src/pages/PlatformOwnerLoginScreen.jsx",
+      "name": "PlatformOwnerLoginScreen",
+      "status": "PASS",
+      "renderedBytes": 3701
+    },
+    {
+      "file": "src/pages/public/AppointmentBookingPage.jsx",
+      "name": "AppointmentBookingPage",
+      "status": "PASS",
+      "renderedBytes": 23751
+    },
+    {
+      "file": "src/pages/public/CertificateVerificationPage.jsx",
+      "name": "CertificateVerificationPage",
+      "status": "PASS",
+      "renderedBytes": 2408
+    },
+    {
+      "file": "src/pages/public/LandingPage.jsx",
+      "name": "LandingPage",
+      "status": "PASS",
+      "renderedBytes": 55641
+    },
+    {
+      "file": "src/pages/public/MarketplacePage.jsx",
+      "name": "MarketplacePage",
+      "status": "PASS",
+      "renderedBytes": 5955
+    },
+    {
+      "file": "src/pages/public/PlatformScreensTour.jsx",
+      "name": "PlatformScreensTour",
+      "status": "PASS",
+      "renderedBytes": 10353
+    },
+    {
+      "file": "src/platform/admin/AdminAnalyticsScreen.jsx",
+      "name": "AdminAnalyticsScreen",
+      "status": "PASS",
+      "renderedBytes": 10728
+    },
+    {
+      "file": "src/platform/admin/AdminDashboardScreen.jsx",
+      "name": "AdminDashboardScreen",
+      "status": "PASS",
+      "renderedBytes": 24439
+    },
+    {
+      "file": "src/platform/admin/AdminStudyGroupsScreen.jsx",
+      "name": "AdminStudyGroupsScreen",
+      "status": "PASS",
+      "renderedBytes": 6938
+    },
+    {
+      "file": "src/platform/admin/AssessmentsScreen.jsx",
+      "name": "AssessmentsScreen",
+      "status": "PASS",
+      "renderedBytes": 2896
+    },
+    {
+      "file": "src/platform/admin/CohortDetailScreen.jsx",
+      "name": "CohortDetailScreen",
+      "status": "PASS",
+      "renderedBytes": 47
+    },
+    {
+      "file": "src/platform/admin/CohortsScreen.jsx",
+      "name": "CohortsScreen",
+      "status": "PASS",
+      "renderedBytes": 6054
+    },
+    {
+      "file": "src/platform/admin/ComplianceScreen.jsx",
+      "name": "ComplianceScreen",
+      "status": "PASS",
+      "renderedBytes": 8351
+    },
+    {
+      "file": "src/platform/admin/ContentScreen.jsx",
+      "name": "ContentScreen",
+      "status": "PASS",
+      "renderedBytes": 3833
+    },
+    {
+      "file": "src/platform/admin/EmailCenterScreen.jsx",
+      "name": "EmailCenterScreen",
+      "status": "PASS",
+      "renderedBytes": 12207
+    },
+    {
+      "file": "src/platform/admin/ForumsScreen.jsx",
+      "name": "ForumsScreen",
+      "status": "PASS",
+      "renderedBytes": 3155
+    },
+    {
+      "file": "src/platform/admin/GJPScreen.jsx",
+      "name": "GJPScreen",
+      "status": "PASS",
+      "renderedBytes": 3589
+    },
+    {
+      "file": "src/platform/admin/IntegrationsScreen.jsx",
+      "name": "IntegrationsScreen",
+      "status": "PASS",
+      "renderedBytes": 4354
+    },
+    {
+      "file": "src/platform/admin/LearningPathsScreen.jsx",
+      "name": "LearningPathsScreen",
+      "status": "PASS",
+      "renderedBytes": 3917
+    },
+    {
+      "file": "src/platform/admin/ModerationScreen.jsx",
+      "name": "ModerationScreen",
+      "status": "PASS",
+      "renderedBytes": 6503
+    },
+    {
+      "file": "src/platform/admin/OrgRoleAccessScreen.jsx",
+      "name": "OrgRoleAccessScreen",
+      "status": "PASS",
+      "renderedBytes": 6949
+    },
+    {
+      "file": "src/platform/admin/PayoutsScreen.jsx",
+      "name": "PayoutsScreen",
+      "status": "PASS",
+      "renderedBytes": 6408
+    },
+    {
+      "file": "src/platform/admin/PeopleScreen.jsx",
+      "name": "PeopleScreen",
+      "status": "PASS",
+      "renderedBytes": 15269
+    },
+    {
+      "file": "src/platform/admin/SeatsScreen.jsx",
+      "name": "SeatsScreen",
+      "status": "PASS",
+      "renderedBytes": 16158
+    },
+    {
+      "file": "src/platform/admin/SettingsHubScreen.jsx",
+      "name": "SettingsHubScreen",
+      "status": "PASS",
+      "renderedBytes": 3873
+    },
+    {
+      "file": "src/platform/admin/WorkforceIntelligenceScreen.jsx",
+      "name": "WorkforceIntelligenceScreen",
+      "status": "PASS",
+      "renderedBytes": 6024
+    },
+    {
+      "file": "src/platform/hr/HrDashboardScreen.jsx",
+      "name": "HrDashboardScreen",
+      "status": "PASS",
+      "renderedBytes": 8767
+    },
+    {
+      "file": "src/platform/manager/ManagerDashboardScreen.jsx",
+      "name": "ManagerDashboardScreen",
+      "status": "PASS",
+      "renderedBytes": 12519
+    },
+    {
+      "file": "src/platform/mentor/AdministrativeScreen.jsx",
+      "name": "AdministrativeScreen",
+      "status": "PASS",
+      "renderedBytes": 8994
+    },
+    {
+      "file": "src/platform/mentor/DiscussionsScreen.jsx",
+      "name": "DiscussionsScreen",
+      "status": "PASS",
+      "renderedBytes": 5645
+    },
+    {
+      "file": "src/platform/mentor/InstructorCohortsScreen.jsx",
+      "name": "InstructorCohortsScreen",
+      "status": "PASS",
+      "renderedBytes": 2826
+    },
+    {
+      "file": "src/platform/mentor/MenteesScreen.jsx",
+      "name": "MenteesScreen",
+      "status": "PASS",
+      "renderedBytes": 6288
+    },
+    {
+      "file": "src/platform/mentor/MentorAnalyticsScreen.jsx",
+      "name": "MentorAnalyticsScreen",
+      "status": "PASS",
+      "renderedBytes": 18610
+    },
+    {
+      "file": "src/platform/mentor/MentorDashboardScreen.jsx",
+      "name": "MentorDashboardScreen",
+      "status": "PASS",
+      "renderedBytes": 13374
+    },
+    {
+      "file": "src/platform/mentor/MentorMessagesScreen.jsx",
+      "name": "MentorMessagesScreen",
+      "status": "PASS",
+      "renderedBytes": 4881
+    },
+    {
+      "file": "src/platform/mentor/MentorScheduleScreen.jsx",
+      "name": "MentorScheduleScreen",
+      "status": "PASS",
+      "renderedBytes": 8195
+    },
+    {
+      "file": "src/platform/mentor/MentorSettingsScreen.jsx",
+      "name": "MentorSettingsScreen",
+      "status": "PASS",
+      "renderedBytes": 11859
+    },
+    {
+      "file": "src/platform/mentor/MentorStudyGroupsScreen.jsx",
+      "name": "MentorStudyGroupsScreen",
+      "status": "PASS",
+      "renderedBytes": 4932
+    },
+    {
+      "file": "src/platform/OrgPaymentCallbackScreen.jsx",
+      "name": "OrgPaymentCallbackScreen",
+      "status": "PASS",
+      "renderedBytes": 32633
+    },
+    {
+      "file": "src/platform/superadmin/AccessControlScreen.jsx",
+      "name": "AccessControlScreen",
+      "status": "PASS",
+      "renderedBytes": 6848
+    },
+    {
+      "file": "src/platform/superadmin/BrandingScreen.jsx",
+      "name": "BrandingScreen",
+      "status": "PASS",
+      "renderedBytes": 10843
+    },
+    {
+      "file": "src/platform/superadmin/DemoRequestsScreen.jsx",
+      "name": "DemoRequestsScreen",
+      "status": "PASS",
+      "renderedBytes": 12642
+    },
+    {
+      "file": "src/platform/superadmin/EmailsScreen.jsx",
+      "name": "EmailsScreen",
+      "status": "PASS",
+      "renderedBytes": 7161
+    },
+    {
+      "file": "src/platform/superadmin/OrganizationsScreen.jsx",
+      "name": "OrganizationsScreen",
+      "status": "PASS",
+      "renderedBytes": 8434
+    },
+    {
+      "file": "src/platform/superadmin/OverviewScreen.jsx",
+      "name": "OverviewScreen",
+      "status": "PASS",
+      "renderedBytes": 26470
+    },
+    {
+      "file": "src/platform/superadmin/PlatformSettingsScreen.jsx",
+      "name": "PlatformSettingsScreen",
+      "status": "PASS",
+      "renderedBytes": 3233
+    },
+    {
+      "file": "src/platform/superadmin/SupportQueueScreen.jsx",
+      "name": "SupportQueueScreen",
+      "status": "PASS",
+      "renderedBytes": 3443
+    },
+    {
+      "file": "src/platform/superadmin/TracksScreen.jsx",
+      "name": "TracksScreen",
+      "status": "PASS",
+      "renderedBytes": 2839
+    }
+  ],
+  "missingAssets": [],
+  "databaseContracts": {
+    "literalTables": 118,
+    "literalRpcs": 76,
+    "missingRelations": [],
+    "missingRpcs": [
+      {
+        "name": "record_verified_marketplace_purchase",
+        "files": [
+          "src/lib/api/marketplace.js"
+        ]
+      }
+    ]
+  },
+  "tablesWithoutRls": []
+}

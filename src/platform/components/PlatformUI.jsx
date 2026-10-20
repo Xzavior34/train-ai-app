@@ -1037,7 +1037,7 @@ export function OwnerSidebar({ screen, setScreen, mobileOpen, onClose, onOpenDas
   );
 }
 
-export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, userRoles = ["admin", "mentor", "super_admin"], onSignOut }) {
+export function Sidebar({ workspace, setWorkspace, screen, setScreen, mobileOpen, onClose, onOpenDashboardSwitcher, userRoles = [], onSignOut }) {
   const [isMinimized, setIsMinimized] = useState(() => localStorage.getItem("ta_sidebar_minimized") === "true");
   const [collapsedSections, setCollapsedSections] = useState({});
   const [isDarkTheme, setIsDarkTheme] = useState(() => getStoredThemeDark());
@@ -1393,7 +1393,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
     };
   }, []);
 
-  const userDisplayName = profileQuery?.data?.display_name || "Admin User";
+  const userDisplayName = profileQuery?.data?.display_name || "Member";
   const userInitials = userDisplayName.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "AU";
 
   useEffect(() => {
@@ -1586,7 +1586,7 @@ export function TopBar({ title, sub, right, orgSelector, profileQuery, onNavigat
             <Avatar initials={userInitials} size={32} />
             <div className="ta-col ta-profile-pill-text" style={{ lineHeight: 1.2, paddingRight: 4 }}>
               <span className="ta-profile-pill-name" style={{ fontSize: 12, fontWeight: 700 }}>{userDisplayName.split(" ")[0]}</span>
-              <span className="ta-profile-pill-name" style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Admin"}</span>
+              <span className="ta-profile-pill-name" style={{ fontSize: 10, color: "var(--text-3)", textTransform: "capitalize" }}>{profileQuery?.data?.role || "Member"}</span>
             </div>
           </div>
 

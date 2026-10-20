@@ -1,16 +1,21 @@
 import React, { useState, useContext } from "react";
 import { TopBar, Tag, ProgressBar, Avatar, ToastContext } from "../components/PlatformUI.jsx";
-import { ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon, Layers, Sparkles, Filter, Clock, Users } from "lucide-react";
+import {
+  ArrowLeft, Plus, Trash2, Megaphone, BookOpen, Settings as SettingsIcon,
+  Layers, Sparkles, Filter, Clock, Users, GraduationCap, UserCheck, Route, Eye,
+  ShieldCheck, CheckCircle2, Award
+} from "lucide-react";
 import FileUploadZone from "../../components/common/FileUploadZone.jsx";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 import { calculateCohortProgress, extendCohortTimeline, assignCourseToCohortOrLearners, unassignCohortCourse } from "../../lib/api/cohorts.js";
 import {
-  fetchCohortDetail, updateCohort, addCohortMember, removeCohortMember,
-  createCohortPost, removeCohortLearnerCourse,
-  fetchUsersInOrg, fetchCourses,
+  assignCohortInstructor, fetchCohortDetail, updateCohort, addCohortMember, removeCohortMember,
+  createCohortPost, assignCohortLearnerCourse, removeCohortLearnerCourse,
+  fetchUsersInOrg, fetchCourses, fetchOrgInstructors,
   addCohortResource, deleteCohortResource, createCohortSession, deleteCohortSession,
   bulkAddCohortMembersByEmail, batchAssignTrackCoursesToCohort,
 } from "../../lib/api/platform.js";
+import { MemberDetailModal } from "./PeopleScreen.jsx";
 
 
 // Cohort detail/space - reached from CohortsScreen by clicking a cohort card.
@@ -355,6 +360,10 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
     [orgId],
   );
   const coursesQuery = useSupabaseQuery(async () => fetchCourses(), []);
+  const instructorsQuery = useSupabaseQuery(
+    async () => fetchOrgInstructors(orgId || "demo-org-id"),
+    [orgId]
+  );
 
   const detail = detailQuery.data;
   const cohort = detail?.cohort || null;
@@ -367,9 +376,35 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
 
   const orgUsers = orgUsersQuery.data || [];
   const courses = coursesQuery.data || [];
+  const allOrgInstructors = instructorsQuery.data || [];
+
+  const instructors = detail?.instructors || members.filter((m) => m.isInstructor || m.role === "mentor" || m.role === "instructor");
+  const learners = detail?.learners || members.filter((m) => !m.isInstructor && m.role !== "mentor" && m.role !== "instructor");
+  const leadInstructor = detail?.cohort?.instructor || instructors[0] || null;
 
   const memberUserIds = new Set(members.map((m) => m.user_id));
   const availableUsers = orgUsers.filter((u) => !memberUserIds.has(u.id));
+  const availableInstructors = orgUsers.filter(u => (u.status || "active") === "active" && !members.some(m => m.user_id === u.id && m.cohort_role === "instructor"));
+
+  const [selectedInstructorToAdd, setSelectedInstructorToAdd] = useState("");
+  const [addingInstructor, setAddingInstructor] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [memberRoleFilter, setMemberRoleFilter] = useState("all"); // "all" | "learners" | "instructors"
+
+  async function handleAddInstructor() {
+    if (!selectedInstructorToAdd || !cohortId) return;
+    setAddingInstructor(true);
+    try {
+      await assignCohortInstructor(cohortId, selectedInstructorToAdd);
+      setSelectedInstructorToAdd("");
+      await Promise.all([detailQuery.refetch(), orgUsersQuery.refetch(), instructorsQuery.refetch()]);
+      showToast("Instructor assigned to cohort successfully!");
+    } catch (err) {
+      showToast(err?.message || "Failed to assign instructor");
+    } finally {
+      setAddingInstructor(false);
+    }
+  }
 
   // --- Settings (name / description / dates) ---
   const [editingSettings, setEditingSettings] = useState(false);
@@ -505,10 +540,47 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
             <ArrowLeft size={14} /> Back to cohorts
           </button>
         </div>
+        {detailQuery.error && <div role="alert" className="ta-empty">{detailQuery.error} <button className="ta-btn ta-btn-outline" onClick={detailQuery.refetch}>Retry</button></div>}
         {detailQuery.loading && <div className="ta-empty">Loading cohort...</div>}
         {!detailQuery.loading && !cohort && <div className="ta-empty">Cohort not found.</div>}
         {cohort && !editingSettings && (
-          <div className="ta-card" style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 10 }}>
+          <div className="ta-card" style={{ marginBottom: 16, padding: "16px 20px", borderRadius: 12, background: "var(--surface)", border: "1px solid var(--border)" }}>
+            <div className="ta-row ta-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 14, marginBottom: 14 }}>
+              <div className="ta-row ta-gap12" style={{ alignItems: "center", minWidth: 260 }}>
+                <Avatar initials={(leadInstructor?.name || leadInstructor?.user_profiles?.display_name || "IN").slice(0, 2).toUpperCase()} size={42} />
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--primary)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 5 }}>
+                    <GraduationCap size={13} /> Cohort Lead Instructor
+                  </div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)", marginTop: 2 }}>
+                    {leadInstructor?.name || leadInstructor?.user_profiles?.display_name || "No Instructor Assigned"}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+                    {leadInstructor?.email || leadInstructor?.user_profiles?.email || "Assign an instructor below to lead this batch"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", alignItems: "center" }}>
+                <div style={{ padding: "6px 12px", background: "var(--surface-2)", borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>{learners.length}</div>
+                  <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 600 }}>Learners</div>
+                </div>
+                <div style={{ padding: "6px 12px", background: "var(--surface-2)", borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "var(--primary)" }}>{instructors.length}</div>
+                  <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 600 }}>Instructors</div>
+                </div>
+                <div style={{ padding: "6px 12px", background: "var(--surface-2)", borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "#10B981" }}>{cohortCourses.length + learnerCourses.length}</div>
+                  <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 600 }}>Assignments</div>
+                </div>
+                <div style={{ padding: "6px 12px", background: "var(--surface-2)", borderRadius: 8, textAlign: "center" }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)" }}>{progressInfo.percent}%</div>
+                  <div style={{ fontSize: 10.5, color: "var(--text-3)", fontWeight: 600 }}>Elapsed</div>
+                </div>
+              </div>
+            </div>
+
             <div className="ta-row ta-between" style={{ marginBottom: 8, alignItems: "center", flexWrap: "wrap", gap: 8 }}>
               <div className="ta-row ta-gap8" style={{ alignItems: "center" }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#10B981" }} />
@@ -605,106 +677,295 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
             </div>
 
             {tab === "members" && (
-              <div className="ta-card ta-mt16" style={{ borderRadius: 10 }}>
-                <div className="ta-label">Find an approved organization member</div>
-                <input
-                  className="ta-input ta-mt8"
-                  style={{ width: "100%", marginBottom: 8 }}
-                  value={memberSearch}
-                  onChange={(event) => setMemberSearch(event.target.value)}
-                  placeholder="Search by name or email"
-                />
-                <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
-                  <select
-                    className="ta-input"
-                    style={{ flex: 1, minWidth: 200 }}
-                    value={addUserId}
-                    onChange={(e) => setAddUserId(e.target.value)}
-                    disabled={addingMember}
-                  >
-                    <option value="">
-                      {availableUsers.length === 0 ? "No eligible members to add" : "Add a member from org..."}
-                    </option>
-                    {availableUsers
-                      .filter((user) => {
-                        const needle = memberSearch.trim().toLowerCase();
-                        return !needle || `${user.name || ""} ${user.email || ""}`.toLowerCase().includes(needle);
-                      })
-                      .map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.label || (u.email && !u.name.includes("@") ? `${u.name} (${u.email})` : u.name)}
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }} className="ta-mt16">
+                {/* 1. Dedicated Instructors & Mentors Management */}
+                <div className="ta-card" style={{ borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface)" }}>
+                  <div className="ta-row ta-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                    <div className="ta-row ta-gap8" style={{ alignItems: "center" }}>
+                      <GraduationCap size={18} color="var(--primary)" />
+                      <span style={{ fontWeight: 800, fontSize: 15, color: "var(--text)" }}>
+                        Cohort Instructors &amp; Mentors ({instructors.length})
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 12, color: "var(--text-3)" }}>
+                      Assigned instructors manage course pacing, conduct sessions, and guide learners
+                    </span>
+                  </div>
+
+                  {/* Form to Assign Instructor to this Cohort */}
+                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap", marginBottom: 14 }}>
+                    <select
+                      className="ta-input"
+                      style={{ flex: 1, minWidth: 220 }}
+                      value={selectedInstructorToAdd}
+                      onChange={(e) => setSelectedInstructorToAdd(e.target.value)}
+                      disabled={addingInstructor}
+                    >
+                      <option value="">
+                        {availableInstructors.length === 0 ? "No active members available" : "-- Choose an active member to teach this cohort --"}
+                      </option>
+                      {availableInstructors.map((inst) => (
+                        <option key={inst.id} value={inst.id}>
+                          {inst.name || inst.display_name || inst.email || "Organization member"} {inst.email ? `(${inst.email})` : ""}
                         </option>
                       ))}
-                  </select>
-                  <button
-                    className="ta-btn ta-btn-primary ta-btn-sm"
-                    onClick={handleAddMember}
-                    disabled={!addUserId || addingMember}
-                  >
-                    <Plus size={14} /> {addingMember ? "Adding..." : "Add"}
-                  </button>
-                </div>
-                {availableUsers.length === 0 && !orgUsersQuery.loading && (
-                  <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 8 }}>
-                    No approved organization members are available. Approve new sign-ups in People &amp; Access before adding them to a cohort.
+                    </select>
+                    <button
+                      className="ta-btn ta-btn-primary ta-btn-sm"
+                      onClick={handleAddInstructor}
+                      disabled={!selectedInstructorToAdd || addingInstructor}
+                    >
+                      <UserCheck size={14} /> {addingInstructor ? "Assigning..." : "Assign Instructor"}
+                    </button>
                   </div>
-                )}
-                <div className="ta-mt12">
-                  <div className="ta-label">Bulk add by email</div>
-                  <textarea
-                    className="ta-input ta-mt8"
-                    style={{ width: "100%", minHeight: 60 }}
-                    placeholder="one@example.com, two@example.com (or paste one per line)"
-                    value={bulkEmails}
-                    onChange={(e) => setBulkEmails(e.target.value)}
-                  />
-                  <button
-                    className="ta-btn ta-btn-primary ta-mt8"
-                    disabled={bulkAdding || !bulkEmails.trim()}
-                    onClick={async () => {
-                      setBulkAdding(true);
-                      try {
-                        const result = await bulkAddCohortMembersByEmail(cohortId, bulkEmails, currentUserId);
-                        if (result.added?.length) {
-                          showToast(`Added ${result.added.length} member${result.added.length === 1 ? "" : "s"} to cohort.`);
-                          await Promise.all([detailQuery.refetch(), orgUsersQuery.refetch()]);
-                          setBulkEmails("");
-                        }
-                        if (result.failed?.length) {
-                          const summary = result.failed.slice(0, 3).map((f) => `${f.email} (${f.reason})`).join("; ");
-                          showToast(`Could not add ${result.failed.length} email(s): ${summary}${result.failed.length > 3 ? "..." : ""}`);
-                        }
-                        if (!result.added?.length && !result.failed?.length) {
-                          showToast(result.error || "No valid email addresses provided.");
-                        }
-                      } catch (err) {
-                        showToast(err?.message || "Failed to bulk add cohort members");
-                      } finally {
-                        setBulkAdding(false);
-                      }
-                    }}
-                  >
-                    {bulkAdding ? "Adding..." : "Add members"}
-                  </button>
+
+                  {/* Assigned Instructors List */}
+                  {instructors.length === 0 ? (
+                    <div className="ta-empty" style={{ padding: "12px 0" }}>
+                      No instructors assigned to this cohort yet. Select an instructor above to lead this cohort.
+                    </div>
+                  ) : (
+                    <div className="ta-col ta-gap8">
+                      {instructors.map((inst) => {
+                        const name = inst.user_profiles?.display_name || inst.user_profiles?.email || inst.name || "Instructor";
+                        const email = inst.user_profiles?.email || inst.email || "";
+                        return (
+                          <div
+                            key={inst.id || inst.user_id}
+                            className="ta-row ta-between"
+                            style={{
+                              padding: "9px 12px",
+                              background: "var(--surface-2)",
+                              borderRadius: 8,
+                              alignItems: "center",
+                              gap: 10,
+                            }}
+                          >
+                            <div className="ta-row ta-gap10" style={{ alignItems: "center" }}>
+                              <Avatar initials={(name || "IN").slice(0, 2).toUpperCase()} size={32} />
+                              <div>
+                                <div className="ta-row ta-gap6" style={{ alignItems: "center" }}>
+                                  <span style={{ fontWeight: 700, fontSize: 13.5 }}>{name}</span>
+                                  <Tag tone="primary">Cohort Instructor</Tag>
+                                </div>
+                                {email && <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{email}</div>}
+                              </div>
+                            </div>
+                            <div className="ta-row ta-gap6">
+                              <button
+                                className="ta-btn ta-btn-outline ta-btn-sm"
+                                onClick={() => setSelectedStudent({ id: inst.user_id, display_name: name, email, role: "instructor" })}
+                                title="View Record"
+                              >
+                                <Eye size={12} /> Inspect
+                              </button>
+                              <button
+                                className="ta-btn ta-btn-danger ta-btn-sm"
+                                style={{ padding: "3px 8px", fontSize: 11.5 }}
+                                onClick={() => handleRemoveMember(inst.id, name)}
+                              >
+                                <Trash2 size={12} /> Remove
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <div className="ta-table-wrap">
-                <table className="ta-table ta-mt16">
-                  <thead><tr><th>Member</th><th>Progress</th><th>Added</th><th></th></tr></thead>
-                  <tbody>
-                    {members.length === 0 && <tr><td colSpan={4} className="ta-empty">No members in this cohort yet.</td></tr>}
-                    {members.map((m) => {
-                      const name = m.user_profiles?.display_name || m.user_profiles?.email || m.display_name || m.name || m.email || "Learner";
-                      return (
-                        <tr key={m.id}>
-                          <td><div className="ta-row ta-gap10"><Avatar initials={(name || "L").slice(0, 2).toUpperCase()} size={30} /><span style={{ fontWeight: 600 }}>{name}</span></div></td>
-                          <td><div className="ta-row ta-gap8" style={{ width: 130 }}><ProgressBar value={m.progress} /><span style={{ fontSize: 12 }}>{m.progress}%</span></div></td>
-                          <td>{m.added_at ? new Date(m.added_at).toLocaleDateString() : "N/A"}</td>
-                          <td><button className="ta-btn ta-btn-danger ta-btn-sm" onClick={() => handleRemoveMember(m.id, name)}><Trash2 size={13} /> Remove</button></td>
+
+                {/* 2. Learners & Members Directory */}
+                <div className="ta-card" style={{ borderRadius: 10, border: "1px solid var(--border)", background: "var(--surface)" }}>
+                  <div className="ta-row ta-between" style={{ alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+                    <div>
+                      <div className="ta-title" style={{ fontSize: 16 }}>Cohort Members &amp; Student Tracks</div>
+                      <div style={{ fontSize: 12, color: "var(--text-3)" }}>Click on any learner to view their track progress and course milestone breakdown</div>
+                    </div>
+                    {/* Role Filter Tabs */}
+                    <div className="ta-row ta-gap6" style={{ background: "var(--surface-2)", padding: 3, borderRadius: 8 }}>
+                      <button
+                        className={`ta-btn ta-btn-sm ${memberRoleFilter === "all" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                        style={{ padding: "3px 10px", fontSize: 11.5 }}
+                        onClick={() => setMemberRoleFilter("all")}
+                      >
+                        All ({members.length})
+                      </button>
+                      <button
+                        className={`ta-btn ta-btn-sm ${memberRoleFilter === "learners" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                        style={{ padding: "3px 10px", fontSize: 11.5 }}
+                        onClick={() => setMemberRoleFilter("learners")}
+                      >
+                        Learners ({learners.length})
+                      </button>
+                      <button
+                        className={`ta-btn ta-btn-sm ${memberRoleFilter === "instructors" ? "ta-btn-primary" : "ta-btn-ghost"}`}
+                        style={{ padding: "3px 10px", fontSize: 11.5 }}
+                        onClick={() => setMemberRoleFilter("instructors")}
+                      >
+                        Instructors ({instructors.length})
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="ta-label">Find and add organization member to cohort</div>
+                  <input
+                    className="ta-input ta-mt8"
+                    style={{ width: "100%", marginBottom: 8 }}
+                    value={memberSearch}
+                    onChange={(event) => setMemberSearch(event.target.value)}
+                    placeholder="Search by name or email"
+                  />
+                  <div className="ta-row ta-gap8" style={{ flexWrap: "wrap" }}>
+                    <select
+                      className="ta-input"
+                      style={{ flex: 1, minWidth: 200 }}
+                      value={addUserId}
+                      onChange={(e) => setAddUserId(e.target.value)}
+                      disabled={addingMember}
+                    >
+                      <option value="">
+                        {availableUsers.length === 0 ? "No eligible members to add" : "Add a member from org..."}
+                      </option>
+                      {availableUsers
+                        .filter((user) => {
+                          const needle = memberSearch.trim().toLowerCase();
+                          return !needle || `${user.name || ""} ${user.email || ""}`.toLowerCase().includes(needle);
+                        })
+                        .map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.label || (u.email && !u.name.includes("@") ? `${u.name} (${u.email})` : u.name)}
+                          </option>
+                        ))}
+                    </select>
+                    <button
+                      className="ta-btn ta-btn-primary ta-btn-sm"
+                      onClick={handleAddMember}
+                      disabled={!addUserId || addingMember}
+                    >
+                      <Plus size={14} /> {addingMember ? "Adding..." : "Add"}
+                    </button>
+                  </div>
+                  {availableUsers.length === 0 && !orgUsersQuery.loading && (
+                    <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 8 }}>
+                      No approved organization members are available. Approve new sign-ups in People &amp; Access before adding them to a cohort.
+                    </div>
+                  )}
+
+                  <div className="ta-mt12">
+                    <div className="ta-label">Bulk add by email</div>
+                    <textarea
+                      className="ta-input ta-mt8"
+                      style={{ width: "100%", minHeight: 60 }}
+                      placeholder="one@example.com, two@example.com (or paste one per line)"
+                      value={bulkEmails}
+                      onChange={(e) => setBulkEmails(e.target.value)}
+                    />
+                    <button
+                      className="ta-btn ta-btn-primary ta-mt8"
+                      disabled={bulkAdding || !bulkEmails.trim()}
+                      onClick={async () => {
+                        setBulkAdding(true);
+                        try {
+                          const result = await bulkAddCohortMembersByEmail(cohortId, bulkEmails, currentUserId);
+                          if (result.added?.length) {
+                            showToast(`Added ${result.added.length} member${result.added.length === 1 ? "" : "s"} to cohort.`);
+                            await Promise.all([detailQuery.refetch(), orgUsersQuery.refetch()]);
+                            setBulkEmails("");
+                          }
+                          if (result.failed?.length) {
+                            const summary = result.failed.slice(0, 3).map((f) => `${f.email} (${f.reason})`).join("; ");
+                            showToast(`Could not add ${result.failed.length} email(s): ${summary}${result.failed.length > 3 ? "..." : ""}`);
+                          }
+                          if (!result.added?.length && !result.failed?.length) {
+                            showToast(result.error || "No valid email addresses provided.");
+                          }
+                        } catch (err) {
+                          showToast(err?.message || "Failed to bulk add cohort members");
+                        } finally {
+                          setBulkAdding(false);
+                        }
+                      }}
+                    >
+                      {bulkAdding ? "Adding..." : "Add members"}
+                    </button>
+                  </div>
+
+                  <div className="ta-table-wrap">
+                    <table className="ta-table ta-mt16">
+                      <thead>
+                        <tr>
+                          <th>Member</th>
+                          <th>Role</th>
+                          <th>Track Progress</th>
+                          <th>Added</th>
+                          <th style={{ textAlign: "right" }}>Actions</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody>
+                        {members.length === 0 && (
+                          <tr><td colSpan={5} className="ta-empty">No members in this cohort yet.</td></tr>
+                        )}
+                        {members
+                          .filter((m) => {
+                            if (memberRoleFilter === "learners") return !m.isInstructor && m.role !== "mentor" && m.role !== "instructor";
+                            if (memberRoleFilter === "instructors") return m.isInstructor || m.role === "mentor" || m.role === "instructor";
+                            return true;
+                          })
+                          .map((m) => {
+                            const name = m.user_profiles?.display_name || m.user_profiles?.email || m.display_name || m.name || m.email || "Learner";
+                            const email = m.user_profiles?.email || m.email || "";
+                            const isInst = m.isInstructor || m.role === "mentor" || m.role === "instructor";
+                            return (
+                              <tr key={m.id || m.user_id}>
+                                <td>
+                                  <div
+                                    className="ta-row ta-gap10"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={() => setSelectedStudent({ id: m.user_id, display_name: name, email, role: isInst ? "instructor" : "learner" })}
+                                  >
+                                    <Avatar initials={(name || "L").slice(0, 2).toUpperCase()} size={32} />
+                                    <div>
+                                      <span style={{ fontWeight: 700, color: "var(--text)" }}>{name}</span>
+                                      {email && <div style={{ fontSize: 11.5, color: "var(--text-3)" }}>{email}</div>}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <Tag tone={isInst ? "primary" : "default"}>
+                                    {isInst ? "Instructor" : "Learner"}
+                                  </Tag>
+                                </td>
+                                <td>
+                                  <div className="ta-row ta-gap8" style={{ width: 140 }}>
+                                    <ProgressBar value={m.progress || 0} />
+                                    <span style={{ fontSize: 12, fontWeight: 700 }}>{m.progress || 0}%</span>
+                                  </div>
+                                </td>
+                                <td>{m.added_at ? new Date(m.added_at).toLocaleDateString() : "N/A"}</td>
+                                <td style={{ textAlign: "right" }}>
+                                  <div className="ta-row ta-gap6" style={{ justifyContent: "flex-end" }}>
+                                    <button
+                                      className="ta-btn ta-btn-outline ta-btn-sm"
+                                      onClick={() => setSelectedStudent({ id: m.user_id, display_name: name, email, role: isInst ? "instructor" : "learner" })}
+                                      title="Inspect Student Track & Milestones"
+                                    >
+                                      <Route size={13} /> View Track
+                                    </button>
+                                    <button
+                                      className="ta-btn ta-btn-danger ta-btn-sm"
+                                      onClick={() => handleRemoveMember(m.id, name)}
+                                      title="Remove from Cohort"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}
@@ -880,6 +1141,19 @@ export function CohortDetailScreen({ orgId, cohortId, currentUserId, onBack, org
               </div>
             )}
           </>
+        )}
+
+        {/* Student Track & Member Record Inspection Drawer */}
+        {selectedStudent && (
+          <MemberDetailModal
+            member={selectedStudent}
+            orgId={orgId}
+            cohorts={cohort ? [{ id: cohort.id, name: cohort.name }] : []}
+            initialTab="track"
+            onClose={() => setSelectedStudent(null)}
+            onChanged={() => detailQuery.refetch()}
+            showToast={showToast}
+          />
         )}
       </div>
     </div>

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useDialogFocus } from "../../lib/useDialogFocus.js";
+import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 
 /**
@@ -14,8 +15,12 @@ export function PortalModal({
   maxWidth = 580,
   zIndex = 9999,
   className = "",
+  ariaLabel = "Dialog",
+  ariaLabelledBy,
   style = {}
 }) {
+  const dialogRef = useRef(null);
+  useDialogFocus(isOpen, dialogRef, onClose);
   const [isDark, setIsDark] = useState(() => {
     if (typeof document === "undefined") return false;
     return (
@@ -44,25 +49,11 @@ export function PortalModal({
 
     window.addEventListener("storage", checkTheme);
 
-    // Lock body scroll while modal is open
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    // Handle ESC key press
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape" && onClose) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       observer.disconnect();
       window.removeEventListener("storage", checkTheme);
-      document.body.style.overflow = originalOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -112,6 +103,12 @@ export function PortalModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabelledBy ? undefined : ariaLabel}
+        aria-labelledby={ariaLabelledBy}
+        tabIndex={-1}
         className={`anim-slide-down ${className}`}
         style={{
           maxWidth,

@@ -1,141 +1,33 @@
--- ============================================================
--- Migration: 20 Free AI Credits for All New Users & Organization Join Links
--- 1. Grants 20 free AI credits on learner credit account creation
--- 2. Lazily initializes the 20 free AI credits in get_my_ai_credits()
--- 3. Backfills existing zero-lifetime learner accounts with 20 free AI credits
--- 4. Enhances join_organization_by_invite(p_org_target, p_role) to resolve organizations by slug or UUID
--- ============================================================
-
--- 1. Update get_or_create_learner_credit_account to grant 20 free AI credits on initial creation
-CREATE OR REPLACE FUNCTION public.get_or_create_learner_credit_account(p_user_id uuid, p_org_id uuid DEFAULT NULL)
-RETURNS public.ai_credit_accounts
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_account public.ai_credit_accounts;
-BEGIN
-  IF p_user_id IS NULL THEN
-    RAISE EXCEPTION 'User ID is required to initialize learner AI credit account';
-  END IF;
-
-  INSERT INTO public.ai_credit_accounts (
-    owner_type,
-    user_id,
-    org_id,
-    balance,
-    lifetime_credited,
-    lifetime_consumed
-  )
-  VALUES (
-    'learner',
-    p_user_id,
-    p_org_id,
-    20,
-    20,
-    0
-  )
-  ON CONFLICT (user_id) WHERE owner_type = 'learner'
-  DO UPDATE SET
-    org_id = COALESCE(public.ai_credit_accounts.org_id, EXCLUDED.org_id),
-    updated_at = now()
-  RETURNING * INTO v_account;
-
-  -- Record the initial welcome grant transaction if no welcome_grant exists yet
-  IF NOT EXISTS (
-    SELECT 1
-    FROM public.ai_credit_transactions
-    WHERE account_id = v_account.id
-      AND reference_type = 'welcome_grant'
-  ) AND v_account.lifetime_credited = 20 AND v_account.lifetime_consumed = 0 THEN
-    INSERT INTO public.ai_credit_transactions (
-      account_id,
-      owner_type,
-      org_id,
-      user_id,
-      actor_user_id,
-      transaction_type,
-      credits_delta,
-      balance_after,
-      reference_type,
-      reference_id,
-      metadata
-    )
-    VALUES (
-      v_account.id,
-      'learner',
-      v_account.org_id,
-      p_user_id,
-      p_user_id,
-      'top_up',
-      20,
-      v_account.balance,
-      'welcome_grant',
-      'signup_free_20_credits',
-      jsonb_build_object('reason', 'Welcome allocation of 20 free AI credits')
-    );
-  END IF;
-
-  RETURN v_account;
-END;
-$$;
-
--- 2. Backfill existing learner accounts that were created with 0 lifetime credits
-UPDATE public.ai_credit_accounts
-SET
-  balance = 20,
-  lifetime_credited = 20,
-  updated_at = now()
-WHERE owner_type = 'learner'
-  AND lifetime_credited = 0
-  AND lifetime_consumed = 0
-  AND balance = 0;
-
--- 3. Update get_my_ai_credits so new users immediately get their 20 free AI credits initialized
-CREATE OR REPLACE FUNCTION public.get_my_ai_credits()
-RETURNS jsonb
-LANGUAGE plpgsql
-VOLATILE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_user_id uuid := auth.uid();
-  v_org_id uuid;
-  v_org_balance integer := 0;
-  v_user_account public.ai_credit_accounts;
-  v_user_balance integer := 0;
-  v_is_suspended boolean := false;
-BEGIN
-  IF v_user_id IS NULL THEN
-    RETURN jsonb_build_object('error', 'unauthenticated');
-  END IF;
-
-  SELECT org_id INTO v_org_id FROM public.profiles WHERE id = v_user_id;
-
-  IF v_org_id IS NOT NULL THEN
-    SELECT COALESCE(balance, 0), COALESCE(is_suspended, false)
-    INTO v_org_balance, v_is_suspended
-    FROM public.ai_credit_accounts
-    WHERE owner_type = 'organization' AND org_id = v_org_id;
-  END IF;
-
-  v_user_account := public.get_or_create_learner_credit_account(v_user_id, v_org_id);
-  v_user_balance := COALESCE(v_user_account.balance, 20);
-
-  RETURN jsonb_build_object(
-    'org_id', v_org_id,
-    'org_balance', COALESCE(v_org_balance, 0),
-    'org_suspended', COALESCE(v_is_suspended, false),
-    'personal_balance', COALESCE(v_user_balance, 20),
-    'total_available', (CASE WHEN v_is_suspended THEN 0 ELSE COALESCE(v_org_balance, 0) END) + COALESCE(v_user_balance, 20)
-  );
-END;
-$$;
-
-GRANT EXECUTE ON FUNCTION public.get_or_create_learner_credit_account(uuid, uuid) TO authenticated, service_role;
-GRANT EXECUTE ON FUNCTION public.get_my_ai_credits() TO authenticated, service_role;
+-- Canonical UUID credit helper contract; corrected from incompatible legacy aliases.
+create or replace function public.get_or_create_learner_credit_account(p_user_id uuid,p_org_id uuid default null)
+returns uuid language plpgsql security definer set search_path=public,pg_temp as $$
+declare v_id uuid; v_balance int; v_grant int:=20;
+begin
+ if p_user_id is null then raise exception 'User ID required'; end if;
+ insert into public.ai_credit_accounts(organization_id,owner_user_id,account_type,balance) values(p_org_id,p_user_id,'learner',0)
+ on conflict(owner_user_id) where account_type='learner' do nothing;
+ select id,balance into v_id,v_balance from public.ai_credit_accounts where owner_user_id=p_user_id and account_type='learner' for update;
+ if exists(select 1 from public.ai_credit_accounts where id=v_id and lifetime_credited=0 and lifetime_consumed=0)
+ and not exists(select 1 from public.ai_credit_transactions where account_id=v_id and reference_type='welcome_grant') then
+ update public.ai_credit_accounts set balance=balance+v_grant,lifetime_credited=lifetime_credited+v_grant,updated_at=now() where id=v_id;
+ insert into public.ai_credit_transactions(organization_id,account_id,user_id,transaction_type,amount,balance_before,balance_after,reference_type,reference_id)
+ values(p_org_id,v_id,p_user_id,'top_up',v_grant,v_balance,v_balance+v_grant,'welcome_grant','signup_welcome');
+ end if;
+ return v_id;
+end $$;
+create or replace function public.get_my_ai_credits()
+returns jsonb language plpgsql volatile security definer set search_path=public,pg_temp as $$
+declare v_id uuid; v_org uuid; v_personal int; v_org_balance int:=0;
+begin
+ if auth.uid() is null then raise exception 'Authentication required'; end if;
+ v_org:=public.get_user_organization_id(auth.uid());
+ v_id:=public.get_or_create_learner_credit_account(auth.uid(),v_org);
+ select balance into v_personal from public.ai_credit_accounts where id=v_id;
+ select balance into v_org_balance from public.ai_credit_accounts where account_type='organization' and organization_id=v_org;
+ return jsonb_build_object('organization_balance',coalesce(v_org_balance,0),'org_balance',coalesce(v_org_balance,0),'personal_balance',coalesce(v_personal,0),'total_available',coalesce(v_org_balance,0)+coalesce(v_personal,0));
+end $$;
+revoke all on function public.get_or_create_learner_credit_account(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.get_my_ai_credits() to authenticated,service_role;
 
 -- 4. Ensure join_organization_by_invite resolves organizations by UUID, slug, or Sara Foundation alias
 CREATE OR REPLACE FUNCTION public.join_organization_by_invite(

@@ -9,3 +9,7 @@ bin/
 Claude outputs/
 the-art-assembly-redux/
 scratch/
+
+# Machine-local isolated database fixture
+docs/audit/local-test-cluster.json
+scripts/audit/.generated/

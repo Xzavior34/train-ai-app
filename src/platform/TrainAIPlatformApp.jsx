@@ -1,3 +1,5 @@
+import { InstructorCohortsScreen } from "./mentor/InstructorCohortsScreen.jsx";
+import { useAssignmentRefresh } from "../lib/useAssignmentRefresh.js";
 import React, { useState, useEffect } from "react";
 import { usePlatformData } from "./hooks/usePlatformData.js";
 import { useSupabaseQuery } from "../lib/useSupabaseQuery.js";
@@ -38,7 +40,7 @@ import { CheckCircle2 } from "lucide-react";
 import { ManagerDashboardScreen } from "./manager/ManagerDashboardScreen.jsx";
 import { LeaderboardScreen } from "../learner/screens/LeaderboardScreen.jsx";
 import { CommunityScreen } from "../learner/screens/CommunityScreen.jsx";
-import { getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
+import { defaultWorkspaceForRoles, getAllowedWorkspaces, getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib/roleRouting.js";
 
 // Picks which workspace tab a signed-in platform user lands on by default,
 // in descending order of privilege - admin/super_admin keep the previous
@@ -47,13 +49,6 @@ import { getAvailableDashboards, DASHBOARDS, isPlatformOwnerEmail } from "../lib
 // workspace's full CRUD screens by accident) gets its own scoped landing
 // spot instead. HR removed entirely - confirmed directly that HR is not an
 // organization role; Admin/Manager/Instructor is the full set.
-function defaultWorkspaceForRoles(roles = []) {
-  if (roles.includes("admin") || roles.includes("super_admin")) return "admin";
-  if (roles.includes("mentor")) return "mentor";
-  if (roles.includes("manager")) return "manager";
-  return "admin";
-}
-
 import { fetchAllOrganizationsWithUserCounts } from "../lib/api/platform.js";
 
 export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboard, userRoles: userRolesProp, superAdminSelectedOrgId, setSuperAdminSelectedOrgId, onSignOut } = {}) {
@@ -74,13 +69,14 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
   const mentorCohortsForCommunityQuery = useSupabaseQuery(async () => (
     session?.user?.id ? fetchMentorActiveCohorts(session.user.id) : []
   ), [session?.user?.id]);
+  useAssignmentRefresh(session?.user?.id, mentorCohortsForCommunityQuery.refetch);
   const mentorFirstCohort = (mentorCohortsForCommunityQuery.data || [])[0] || null;
   const mentorCohortSessionsQuery = useSupabaseQuery(async () => (
     mentorFirstCohort?.id ? fetchCohortSessions(mentorFirstCohort.id) : []
   ), [mentorFirstCohort?.id]);
   const mentorStudyGroupsQuery = useSupabaseQuery(async () => (
-    mentorId ? fetchMyManagedStudyGroups(mentorId) : []
-  ), [mentorId]);
+    session?.user?.id ? fetchMyManagedStudyGroups(session.user.id) : []
+  ), [session?.user?.id]);
   const mentorLeaderboardQuery = useSupabaseQuery(async () => fetchLeaderboard(50), []);
 
   const allOrgsQuery = useSupabaseQuery(async () => {
@@ -104,7 +100,10 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
     onSelectOrg: (id) => setSuperAdminSelectedOrgId(id),
   } : null;
 
-  const [workspace, setWorkspace] = useState(() => defaultWorkspaceForRoles(userRoles));
+  const [requestedWorkspace, setRequestedWorkspace] = useState(() => defaultWorkspaceForRoles(userRoles));
+  const allowedWorkspaces = getAllowedWorkspaces(userRoles);
+  const workspace = allowedWorkspaces.includes(requestedWorkspace) ? requestedWorkspace : defaultWorkspaceForRoles(userRoles);
+  function setWorkspace(value) { if (allowedWorkspaces.includes(value)) setRequestedWorkspace(value); }
   const [screenByWorkspace, setScreenByWorkspace] = useState({
     admin: "dashboard",
     mentor: "dashboard",
@@ -136,9 +135,10 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
       } else if (["manager-overview"].includes(targetScreen)) {
         ws = "manager";
       } else {
-        ws = "admin";
+        ws = workspace;
       }
     }
+    if (!allowedWorkspaces.includes(ws)) return;
     if (extraState?.courseId !== undefined) {
       setSelectedCourseId(extraState.courseId);
     }
@@ -190,6 +190,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
       return false;
     }
   });
+  if (!workspace) return <div className="ta-empty">Loading workspace permissions...</div>;
   if (orgPaymentCallbackActive) {
     return <OrgPaymentCallbackScreen onDone={() => setOrgPaymentCallbackActive(false)} />;
   }
@@ -267,28 +268,8 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
               {workspace === "mentor" && (
                 <>
                   {screen === "dashboard" && <MentorDashboardScreen mentorId={mentorId} orgSelector={orgSelector} currentUserId={session?.user?.id} profileQuery={profileQuery} orgId={effectiveOrgId} onNavigate={navigateToScreen} />}
-                  {screen === "cohorts" && (
-                    <CohortsScreen
-                      orgId={effectiveOrgId}
-                      orgSelector={orgSelector}
-                      setScreen={setScreen}
-                      currentUserId={session?.user?.id}
-                      onOpenCohort={(cohortId) => {
-                        setSelectedCohortId(cohortId);
-                        setScreen("mentor-cohort-detail");
-                      }}
-                    />
-                  )}
-                  {screen === "mentor-cohort-detail" && (
-                    <CohortDetailScreen
-                      orgId={effectiveOrgId}
-                      cohortId={selectedCohortId}
-                      currentUserId={session?.user?.id}
-                      onBack={() => setScreen("cohorts")}
-                      orgSelector={orgSelector}
-                      setScreen={setScreen}
-                    />
-                  )}
+                  {screen === "cohorts" && <InstructorCohortsScreen profileQuery={profileQuery} currentUserId={session?.user?.id} onOpenCohort={id => { setSelectedCohortId(id); setScreen("mentor-cohort-detail"); }} />}
+                  {screen === "mentor-cohort-detail" && <InstructorCohortsScreen profileQuery={profileQuery} key={selectedCohortId} currentUserId={session?.user?.id} cohortId={selectedCohortId} onBack={() => setScreen("cohorts")} />}
                   {screen === "studygroups" && <MentorStudyGroupsScreen mentorId={session?.user?.id} orgId={effectiveOrgId} orgSelector={orgSelector} />}
                   {screen === "leaderboard" && <LeaderboardScreen back={() => setScreen("dashboard")} push={(s) => setScreen(s)} />}
                   {screen === "assessments" && <AssessmentsScreen orgId={effectiveOrgId} orgSelector={orgSelector} setScreen={setScreen} setSelectedCourseId={setSelectedCourseId} scope="mentor" />}
@@ -344,7 +325,7 @@ export default function TrainAIPlatformApp({ onSwitchToLearner, onSwitchDashboar
               currentDashboard={DASHBOARDS.ORGANISATION}
               availableDashboards={getAvailableDashboards(userRoles, session?.user?.email || profileQuery?.data?.email)}
               roleLabel={
-                isPlatformOwnerEmail(session?.user?.email || profileQuery?.data?.email) && userRoles.includes("super_admin")
+                userRoles.includes("super_admin")
                   ? "Super Admin"
                   : userRoles.includes("admin") || userRoles.includes("manager")
                     ? "Admin"

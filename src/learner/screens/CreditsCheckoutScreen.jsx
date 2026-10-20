@@ -1,3 +1,4 @@
+import { CREDIT_PACKAGES as PACKAGES } from "../../../supabase/functions/_shared/paymentCatalog.js";
 import React, { useState } from "react";
 import { TopBar, Tag } from "../components/LearnerUI.jsx";
 import { Zap, ShieldCheck, Loader2, CreditCard, Plus, CheckCircle2, Lock, Mail, ArrowRight, HelpCircle, Send, Clock3 } from "lucide-react";
@@ -5,43 +6,6 @@ import { startPaystackPayment, startStripePayment, PAYMENT_CONTEXTS } from "../.
 import { requestCredits, fetchMyCreditRequests } from "../../lib/api/creditRequests.js";
 import { useSupabaseQuery } from "../../lib/useSupabaseQuery.js";
 
-const PACKAGES = [
-  {
-    id: "starter",
-    credits: 50,
-    label: "Starter",
-    tagline: "Essential AI simulations & code reviews",
-    features: ["50 AI Tutor Queries", "Automated Code Analysis", "Instant credit allocation", "Never expires"],
-    priceUSD: 5,
-    priceNGN: 7500,
-    priceGBP: 4,
-    priceEUR: 4.5
-  },
-  {
-    id: "pro",
-    credits: 200,
-    label: "Pro",
-    highlight: true,
-    tagline: "Most popular for active career learners",
-    features: ["200 AI Tutor Queries", "Full Mock Technical Interviews", "Live Project Feedback", "Priority AI model response", "Never expires"],
-    priceUSD: 15,
-    priceNGN: 22000,
-    priceGBP: 12,
-    priceEUR: 14
-  },
-  {
-    id: "team",
-    credits: 600,
-    label: "Power Learner",
-    badge: "BEST VALUE",
-    tagline: "Comprehensive career track mastery",
-    features: ["600 AI Tutor Queries", "Unlimited Interview Simulations", "Deep Architectural Reviews", "Portfolio & Resume AI Polish", "Never expires"],
-    priceUSD: 35,
-    priceNGN: 50000,
-    priceGBP: 28,
-    priceEUR: 32
-  },
-];
 
 const SYMBOL = { NGN: "₦", USD: "$", GBP: "£", EUR: "€" };
 const CREDITS_CURRENCIES = ["NGN", "USD", "GBP", "EUR"];
@@ -94,7 +58,7 @@ export function CreditsCheckoutScreen({ session, params, back, showToast, orgId 
   }
 
   const [selectedPackageId, setSelectedPackageId] = useState(PACKAGES[1].id);
-  const [currency, setCurrency] = useState("NGN");
+  const [currency, setCurrency] = useState(isCourseMode ? "USD" : "NGN");
   const [providerOverride, setProviderOverride] = useState(null);
   const [email, setEmail] = useState(session?.user?.email || "");
   const [loading, setLoading] = useState(false);

@@ -100,10 +100,14 @@ export default function CertificateVerificationPage({ certCode, onGoHome }) {
             style={{ display: "flex", gap: 8 }}
           >
             <input
+              aria-label="Certificate identifier"
+              required
+              maxLength={200}
               type="text"
               className="ta-input"
               style={{
                 flex: 1,
+                minWidth: 0,
                 background: "#1E293B",
                 border: "1px solid #334155",
                 color: "#FFFFFF",
@@ -116,6 +120,7 @@ export default function CertificateVerificationPage({ certCode, onGoHome }) {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button
+              disabled={loading || !searchQuery.trim()}
               type="submit"
               className="ta-btn ta-btn-primary"
               style={{ padding: "0 18px", fontSize: 13.5 }}
