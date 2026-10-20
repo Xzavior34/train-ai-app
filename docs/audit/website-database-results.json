@@ -29,13 +29,11 @@
   },
   {
     "name": "Recovery throttle serializes concurrent requests per email",
-    "status": "FAIL",
-    "message": "Expected values to be strictly equal:\n\n0 !== 5\n"
+    "status": "PASS"
   },
   {
     "name": "Recovery throttle enforces an IP cap across different addresses",
-    "status": "FAIL",
-    "message": "Expected values to be strictly equal:\n\n0 !== 20\n"
+    "status": "PASS"
   },
   {
     "name": "Clients cannot manipulate password-reset counters",
