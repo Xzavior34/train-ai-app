@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import { webcrypto } from 'node:crypto';
+import { webcrypto, createHmac } from 'node:crypto';
 import { build } from 'esbuild';
 import { resolveMfaGate } from '../../src/lib/securityGate.js';
 import { parsePublicLocation } from '../../src/lib/publicRouting.js';
@@ -120,4 +120,30 @@ test('Organization invitation endpoint rejects a platform-owner grant',async()=>
 test('Sensitive handler denies an unchallenged MFA session before admin operations',async()=>{
  const handler=await edge('admin-reset-mfa',{user:{id:'owner',factors:[{status:'verified'}]},db:{}});
  assert.equal((await handler(post({email:'person@example.invalid'}))).status,403);
+});
+
+
+test('Stripe webhook and browser verification share a canonical reference and major currency units',async()=>{
+ const grants=[];
+ const db={rpc:async(name,args)=>{if(name==='record_and_grant_ai_credit_payment')grants.push(args);return {data:{granted:true}};}};
+ const handler=await edge('stripe-webhook',{db});
+ for(const eventId of ['event-one','event-retry']){
+  const payload=JSON.stringify({id:eventId,type:'checkout.session.completed',data:{object:{id:'cs_test_fixture',payment_status:'paid',amount_total:500,currency:'usd',metadata:{context:'credits',user_id:'buyer',reference:'canonical-reference',metadata_json:JSON.stringify({package:'starter',credits_to_add:99999})}}}});
+  const timestamp=Math.floor(Date.now()/1000);
+  const signature=createHmac('sha256','fixture-secret').update(timestamp+'.'+payload).digest('hex');
+  const response=await handler(new Request('https://fixture.invalid',{method:'POST',headers:{'stripe-signature':`t=${timestamp},v1=${signature}`},body:payload}));
+  assert.equal(response.status,200);
+ }
+ assert.equal(grants.length,2);
+ assert(grants.every(item=>item.p_provider_reference==='canonical-reference'&&item.p_amount===5&&item.p_credits===50));
+});
+
+test('AI Coach errors remain errors instead of fabricated assistant answers',async()=>{
+ const source=fs.readFileSync('src/lib/api/schemaHelper.js','utf8');
+ const start=source.indexOf('export async function requestAIReply');
+ const fn=source.slice(start,source.indexOf('// Real learner-scoped AI insights',start)).replace('export ','');
+ const context={supabase:{functions:{invoke:async()=>({error:{message:'No AI credits remaining'}})}}};
+ vm.createContext(context);vm.runInContext(fn,context);
+ await assert.rejects(context.requestAIReply({conversationId:'fixture',message:'Explain the lesson'}),/credits/);
+ context.supabase=null;await assert.rejects(context.requestAIReply({message:'Explain the lesson'}),/online/);
 });
